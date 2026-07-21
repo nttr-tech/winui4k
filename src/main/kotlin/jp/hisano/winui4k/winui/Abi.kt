@@ -42,6 +42,8 @@ object Abi {
 
     // ---- Microsoft.UI.Xaml.UIElement / FrameworkElement ----
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
+    const val IUIElement_get_XamlRoot = 109            // get_XamlRoot(out XamlRoot)
+    const val IUIElement_put_XamlRoot = 110            // put_XamlRoot(XamlRoot)
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_put_Width = 16
     const val IFrameworkElement_put_Height = 18
@@ -257,6 +259,71 @@ object Abi {
     const val IFlyoutBase_get_IsOpen = 27              // get_IsOpen(out boolean)
     const val IFlyoutBase_ShowAt = 38                  // ShowAt(FrameworkElement)
     const val IFlyoutBase_Hide = 40                    // Hide()
+
+    // ---- Microsoft.UI.Xaml.Controls.ContentDialog ----
+    const val CLS_ContentDialog = "Microsoft.UI.Xaml.Controls.ContentDialog"
+    const val IID_IContentDialogFactory = "a05b3ad7-c60e-545a-9ee4-f098220ed816"
+    const val IID_IContentDialog = "ac2145a3-4a32-5305-a81d-47509515bfce"
+    const val IContentDialog_put_Title = 7             // put_Title(IInspectable)
+    const val IContentDialog_get_PrimaryButtonText = 12 // get_PrimaryButtonText(out HSTRING)
+    const val IContentDialog_put_PrimaryButtonText = 13 // put_PrimaryButtonText(HSTRING)
+    const val IContentDialog_get_SecondaryButtonText = 14 // get_SecondaryButtonText(out HSTRING)
+    const val IContentDialog_put_SecondaryButtonText = 15 // put_SecondaryButtonText(HSTRING)
+    const val IContentDialog_get_CloseButtonText = 16  // get_CloseButtonText(out HSTRING)
+    const val IContentDialog_put_CloseButtonText = 17  // put_CloseButtonText(HSTRING)
+    const val IContentDialog_get_IsPrimaryButtonEnabled = 30 // get_IsPrimaryButtonEnabled(out boolean)
+    const val IContentDialog_put_IsPrimaryButtonEnabled = 31 // put_IsPrimaryButtonEnabled(boolean)
+    const val IContentDialog_get_IsSecondaryButtonEnabled = 32 // get_IsSecondaryButtonEnabled(out boolean)
+    const val IContentDialog_put_IsSecondaryButtonEnabled = 33 // put_IsSecondaryButtonEnabled(boolean)
+    const val IContentDialog_get_DefaultButton = 40    // get_DefaultButton(out ContentDialogButton)
+    const val IContentDialog_put_DefaultButton = 41    // put_DefaultButton(ContentDialogButton)
+    const val IContentDialog_add_Closed = 44           // add_Closed(TypedEventHandler, out token)
+    const val IContentDialog_remove_Closed = 45        // remove_Closed(token)
+    const val IContentDialog_Hide = 54                 // Hide()
+    const val IContentDialog_ShowAsync = 55            // ShowAsync(out IAsyncOperation<ContentDialogResult>)
+    const val IID_IContentDialogClosedEventArgs = "9b84e681-1ab6-5485-88b2-d0d3c05b29f3"
+    const val IContentDialogClosedEventArgs_get_Result = 6 // get_Result(out ContentDialogResult)
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.Popup ----
+    const val CLS_Popup = "Microsoft.UI.Xaml.Controls.Primitives.Popup"
+    const val IID_IPopup = "4e3ab19d-2f95-579c-9535-906c58629437"
+    const val IPopup_put_Child = 7                     // put_Child(UIElement)
+    const val IPopup_get_IsOpen = 8                    // get_IsOpen(out boolean)
+    const val IPopup_put_IsOpen = 9                    // put_IsOpen(boolean)
+    const val IPopup_get_HorizontalOffset = 10         // get_HorizontalOffset(out DOUBLE)
+    const val IPopup_put_HorizontalOffset = 11         // put_HorizontalOffset(DOUBLE)
+    const val IPopup_get_VerticalOffset = 12           // get_VerticalOffset(out DOUBLE)
+    const val IPopup_put_VerticalOffset = 13           // put_VerticalOffset(DOUBLE)
+    const val IPopup_get_IsLightDismissEnabled = 16    // get_IsLightDismissEnabled(out boolean)
+    const val IPopup_put_IsLightDismissEnabled = 17    // put_IsLightDismissEnabled(boolean)
+    const val IPopup_add_Opened = 23                   // add_Opened(EventHandler<Object>, out token)
+    const val IPopup_remove_Opened = 24                // remove_Opened(token)
+    const val IPopup_add_Closed = 25                   // add_Closed(EventHandler<Object>, out token)
+    const val IPopup_remove_Closed = 26                // remove_Closed(token)
+
+    // ---- Microsoft.UI.Xaml.Controls.TeachingTip ----
+    const val CLS_TeachingTip = "Microsoft.UI.Xaml.Controls.TeachingTip"
+    const val IID_ITeachingTipFactory = "a3ecd47d-2972-5d19-a62e-ddfbc5e1ad57"
+    const val IID_ITeachingTip = "daebd5f7-3b47-5b12-b804-f4e1442b2113"
+    const val ITeachingTip_get_Title = 6               // get_Title(out HSTRING)
+    const val ITeachingTip_put_Title = 7               // put_Title(HSTRING)
+    const val ITeachingTip_get_Subtitle = 8            // get_Subtitle(out HSTRING)
+    const val ITeachingTip_put_Subtitle = 9            // put_Subtitle(HSTRING)
+    const val ITeachingTip_get_IsOpen = 10             // get_IsOpen(out boolean)
+    const val ITeachingTip_put_IsOpen = 11             // put_IsOpen(boolean)
+    const val ITeachingTip_put_Target = 13             // put_Target(FrameworkElement)
+    const val ITeachingTip_put_ActionButtonContent = 17 // put_ActionButtonContent(IInspectable)
+    const val ITeachingTip_put_CloseButtonContent = 25 // put_CloseButtonContent(IInspectable)
+    const val ITeachingTip_get_IsLightDismissEnabled = 36 // get_IsLightDismissEnabled(out boolean)
+    const val ITeachingTip_put_IsLightDismissEnabled = 37 // put_IsLightDismissEnabled(boolean)
+    const val ITeachingTip_get_PreferredPlacement = 38 // get_PreferredPlacement(out TeachingTipPlacementMode)
+    const val ITeachingTip_put_PreferredPlacement = 39 // put_PreferredPlacement(TeachingTipPlacementMode)
+    const val ITeachingTip_add_ActionButtonClick = 47  // add_ActionButtonClick(TypedEventHandler<TeachingTip, Object>, out token)
+    const val ITeachingTip_remove_ActionButtonClick = 48 // remove_ActionButtonClick(token)
+    const val ITeachingTip_add_Closed = 53             // add_Closed(TypedEventHandler, out token)
+    const val ITeachingTip_remove_Closed = 54          // remove_Closed(token)
+    const val IID_ITeachingTipClosedEventArgs = "2536f506-4038-59db-9e35-a9252fb5adb2"
+    const val ITeachingTipClosedEventArgs_get_Reason = 6 // get_Reason(out TeachingTipCloseReason)
 
     // ---- Microsoft.UI.Xaml.Controls.ListView ----
     const val CLS_ListView = "Microsoft.UI.Xaml.Controls.ListView"
@@ -634,6 +701,48 @@ object Abi {
             "pinterface({$IID_TypedEventHandler_OPEN};" +
                 "rc(Microsoft.UI.Xaml.FrameworkElement;{$IID_IFrameworkElement});" +
                 "cinterface(IInspectable))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs>. */
+    val IID_ContentDialogClosedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialogClosedEventArgs;" +
+                "{$IID_IContentDialogClosedEventArgs}))",
+        )
+    }
+
+    /**
+     * The actual IID (computed at runtime) of TypedEventHandler<TeachingTip, Object>.
+     * Both ActionButtonClick and CloseButtonClick share this type (TArgs is Object).
+     */
+    val IID_TeachingTipObjectHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TeachingTip;{$IID_ITeachingTip});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<TeachingTip, TeachingTipClosedEventArgs>. */
+    val IID_TeachingTipClosedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TeachingTip;{$IID_ITeachingTip});" +
+                "rc(Microsoft.UI.Xaml.Controls.TeachingTipClosedEventArgs;" +
+                "{$IID_ITeachingTipClosedEventArgs}))",
+        )
+    }
+
+    /** Base IID of Windows.Foundation.EventHandler`1. */
+    private const val IID_EventHandler_OPEN = "9de1c535-6ae1-11e0-84e1-18a905bcc53f"
+
+    /** The actual IID (computed at runtime) of EventHandler<Object>. Used by Popup.Opened / Closed. */
+    val IID_EventHandler_Object: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_EventHandler_OPEN};cinterface(IInspectable))",
         )
     }
 
