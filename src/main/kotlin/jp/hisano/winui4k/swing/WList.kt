@@ -1,0 +1,214 @@
+package jp.hisano.winui4k.swing
+
+import jp.hisano.winui4k.ffi.ComPtr
+import jp.hisano.winui4k.ffi.KComObject
+import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winui.Abi
+import java.lang.foreign.Arena
+import java.lang.foreign.FunctionDescriptor
+import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout.ADDRESS
+import java.lang.foreign.ValueLayout.JAVA_INT
+import java.lang.foreign.ValueLayout.JAVA_LONG
+
+/**
+ * Microsoft.UI.Xaml.Controls.ListViewSelectionMode (how many items can be selected).
+ * Values extracted from the winmd (None=0, Single=1, Multiple=2, Extended=3).
+ */
+enum class ListViewSelectionMode(internal val native: Int) {
+    /** Nothing can be selected. */
+    NONE(0),
+
+    /** Only one item can be selected (default). */
+    SINGLE(1),
+
+    /** Clicking toggles multiple selection. */
+    MULTIPLE(2),
+
+    /** Multiple selection using Ctrl / Shift. */
+    EXTENDED(3),
+    ;
+
+    internal companion object {
+        fun of(native: Int): ListViewSelectionMode = entries.first { it.native == native }
+    }
+}
+
+/**
+ * JList-like: WinUI 3's ListView.
+ *
+ * Provides display and selection of a list of string items:
+ * [addItem] / [getItem] / [removeItem] / [removeAllItems] / [itemCount],
+ * [selectedIndex] / [selectedItem] / [selectionMode] / [selectAll],
+ * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged),
+ * [isItemClickEnabled] / [addItemClickListener] / [removeItemClickListener] (ItemClick).
+ */
+class WList(items: List<String> = emptyList()) : WControl(
+    WinRt.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
+) {
+    private val selector: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_ISelector)
+    }
+    private val listViewBase: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_IListViewBase)
+    }
+
+    /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
+    private val itemVector: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_IItemsControl)
+            .getPtr(Abi.IItemsControl_get_Items)
+            .queryInterface(Abi.IID_IVector_Object)
+    }
+
+    /** SelectionChanged event tokens registered via addListSelectionListener. */
+    private val selectionTokens = ArrayDeque<Pair<() -> Unit, Long>>()
+
+    /** ItemClick event tokens registered via addItemClickListener. */
+    private val itemClickTokens = ArrayDeque<Pair<(String) -> Unit, Long>>()
+
+    /** Item count (Items.Size). */
+    val itemCount: Int
+        get() = itemVector.getInt(Abi.IVector_get_Size)
+
+    /**
+     * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
+     * With multiple selection, this is the first selected position.
+     */
+    var selectedIndex: Int
+        get() = selector.getInt(Abi.ISelector_get_SelectedIndex)
+        set(value) = selector.call(Abi.ISelector_put_SelectedIndex, value)
+
+    /** The selected item string, or null if nothing is selected (Selector.SelectedItem). */
+    val selectedItem: String?
+        get() {
+            val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
+            return try {
+                WinRt.unboxString(boxed)
+            } finally {
+                boxed.release()
+            }
+        }
+
+    /** The selection mode (ListViewBase.SelectionMode). */
+    var selectionMode: ListViewSelectionMode
+        get() = ListViewSelectionMode.of(listViewBase.getInt(Abi.IListViewBase_get_SelectionMode))
+        set(value) = listViewBase.call(Abi.IListViewBase_put_SelectionMode, value.native)
+
+    /**
+     * Whether clicking an item fires ItemClick (ListViewBase.IsItemClickEnabled).
+     * Set this to true if you use [addItemClickListener].
+     */
+    var isItemClickEnabled: Boolean
+        get() = listViewBase.getBool(Abi.IListViewBase_get_IsItemClickEnabled)
+        set(value) = listViewBase.putBool(Abi.IListViewBase_put_IsItemClickEnabled, value)
+
+    init {
+        for (item in items) addItem(item)
+    }
+
+    /** Appends an item at the end (Items.Append). The string is boxed before being passed. */
+    fun addItem(item: String) {
+        val boxed = WinRt.boxString(item)
+        itemVector.call(Abi.IVector_Append, boxed.ptr)
+        boxed.release()
+    }
+
+    /** Returns the item string at [index] (Items.GetAt). */
+    fun getItem(index: Int): String {
+        val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
+        return try {
+            WinRt.unboxString(boxed) ?: ""
+        } finally {
+            boxed.release()
+        }
+    }
+
+    /** Removes the item at [index] (Items.RemoveAt). */
+    fun removeItem(index: Int) {
+        itemVector.call(Abi.IVector_RemoveAt, index)
+    }
+
+    /** Removes all items (Items.Clear). */
+    fun removeAllItems() {
+        itemVector.call(Abi.IVector_Clear)
+    }
+
+    /** Selects all items (ListViewBase.SelectAll). Only effective in Multiple / Extended mode. */
+    fun selectAll() {
+        listViewBase.call(Abi.IListViewBase_SelectAll)
+    }
+
+    /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
+    fun addListSelectionListener(listener: () -> Unit) {
+        val handler = KComObject("WinUI4K.SelectionChangedHandler", inspectable = false)
+            .addInterface(
+                Abi.IID_SelectionChangedEventHandler,
+                listOf(
+                    // Invoke(this, IInspectable sender, SelectionChangedEventArgs e) — vtbl[3]
+                    KComObject.Method(
+                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS),
+                    ) {
+                        listener()
+                        KComObject.S_OK
+                    },
+                ),
+            )
+        val token = Arena.ofConfined().use { a ->
+            val out = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
+            selector.call(Abi.ISelector_add_SelectionChanged, handler.primary, out)
+            out.get(JAVA_LONG, 0)
+        }
+        selectionTokens.addLast(listener to token)
+    }
+
+    /** Unsubscribes a listener registered via [addListSelectionListener]. */
+    fun removeListSelectionListener(listener: () -> Unit) {
+        val index = selectionTokens.indexOfLast { it.first === listener }
+        if (index < 0) return
+        val (_, token) = selectionTokens.removeAt(index)
+        selector.call(Abi.ISelector_remove_SelectionChanged, token)
+    }
+
+    /**
+     * Subscribes to item clicks (ListViewBase.ItemClick).
+     * The listener receives the clicked item's string.
+     * Only fires while [isItemClickEnabled] is true.
+     */
+    fun addItemClickListener(listener: (String) -> Unit) {
+        val handler = KComObject("WinUI4K.ItemClickHandler", inspectable = false)
+            .addInterface(
+                Abi.IID_ItemClickEventHandler,
+                listOf(
+                    // Invoke(this, IInspectable sender, ItemClickEventArgs e) — vtbl[3]
+                    KComObject.Method(
+                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS),
+                    ) { args ->
+                        // e is ItemClickEventArgs's default interface, so it can be called directly
+                        val e = ComPtr(args[2] as MemorySegment)
+                        val boxed = e.getPtr(Abi.IItemClickEventArgs_get_ClickedItem)
+                        val item = try {
+                            WinRt.unboxString(boxed) ?: ""
+                        } finally {
+                            boxed.release()
+                        }
+                        listener(item)
+                        KComObject.S_OK
+                    },
+                ),
+            )
+        val token = Arena.ofConfined().use { a ->
+            val out = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
+            listViewBase.call(Abi.IListViewBase_add_ItemClick, handler.primary, out)
+            out.get(JAVA_LONG, 0)
+        }
+        itemClickTokens.addLast(listener to token)
+    }
+
+    /** Unsubscribes a listener registered via [addItemClickListener]. */
+    fun removeItemClickListener(listener: (String) -> Unit) {
+        val index = itemClickTokens.indexOfLast { it.first === listener }
+        if (index < 0) return
+        val (_, token) = itemClickTokens.removeAt(index)
+        listViewBase.call(Abi.IListViewBase_remove_ItemClick, token)
+    }
+}

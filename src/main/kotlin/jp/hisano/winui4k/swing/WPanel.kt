@@ -50,4 +50,9 @@ class WPanel(
         // type, we can just call vtbl[13] directly
         children.call(Abi.IVector_Append, component.uiElement.ptr)
     }
+
+    /** Removes all children (IVector<UIElement>.Clear). */
+    fun removeAll() {
+        children.call(Abi.IVector_Clear)
+    }
 }

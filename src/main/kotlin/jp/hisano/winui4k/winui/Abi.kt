@@ -120,6 +120,35 @@ object Abi {
     const val IFlyoutBase_ShowAt = 38                  // ShowAt(FrameworkElement)
     const val IFlyoutBase_Hide = 40                    // Hide()
 
+    // ---- Microsoft.UI.Xaml.Controls.ListView ----
+    const val CLS_ListView = "Microsoft.UI.Xaml.Controls.ListView"
+    const val IID_IListViewFactory = "03ebefb8-f64a-5bf9-9570-cb09eeea2335"
+    const val IID_IListView = "f6015db1-df63-52fd-a164-0df44715ee0a" // default interface (no members)
+    const val IID_IListViewBase = "775c57ac-abce-5beb-8e34-3b8158aedd80"
+    const val IListViewBase_get_SelectionMode = 7      // get_SelectionMode(out ListViewSelectionMode)
+    const val IListViewBase_put_SelectionMode = 8      // put_SelectionMode(ListViewSelectionMode)
+    const val IListViewBase_get_IsItemClickEnabled = 15 // get_IsItemClickEnabled(out boolean)
+    const val IListViewBase_put_IsItemClickEnabled = 16 // put_IsItemClickEnabled(boolean)
+    const val IListViewBase_add_ItemClick = 32         // add_ItemClick(ItemClickEventHandler, out token)
+    const val IListViewBase_remove_ItemClick = 33      // remove_ItemClick(token)
+    const val IListViewBase_SelectAll = 45             // SelectAll()
+    const val IID_ISelector = "8f7e2159-e61d-576f-8476-f83fde3d689e" // Controls.Primitives
+    const val ISelector_get_SelectedIndex = 6          // get_SelectedIndex(out INT32)
+    const val ISelector_put_SelectedIndex = 7          // put_SelectedIndex(INT32)
+    const val ISelector_get_SelectedItem = 8           // get_SelectedItem(out IInspectable)
+    const val ISelector_add_SelectionChanged = 16      // add_SelectionChanged(SelectionChangedEventHandler, out token)
+    const val ISelector_remove_SelectionChanged = 17   // remove_SelectionChanged(token)
+    const val IID_IItemsControl = "bf1ccb54-83e2-5b98-acbc-736f876c3d35"
+    const val IItemsControl_get_Items = 8              // get_Items(out ItemCollection)
+
+    /** delegate Controls.SelectionChangedEventHandler(sender, SelectionChangedEventArgs) — Invoke is vtbl[3] */
+    const val IID_SelectionChangedEventHandler = "a232390d-0e34-595e-8931-fa928a9909f4"
+
+    /** delegate Controls.ItemClickEventHandler(sender, ItemClickEventArgs) — Invoke is vtbl[3] */
+    const val IID_ItemClickEventHandler = "a3903624-3393-566c-a6b9-a6b4b3e301c3"
+    const val IID_IItemClickEventArgs = "1cf87a70-6348-57ec-9eac-fa0565adc60f"
+    const val IItemClickEventArgs_get_ClickedItem = 6  // get_ClickedItem(out IInspectable)
+
     // ---- Default control styles / metadata provider ----
     const val CLS_XamlControlsResources = "Microsoft.UI.Xaml.Controls.XamlControlsResources"
     const val IID_IResourceDictionary = "1b690975-a710-5783-a6e1-15836f6186c2"
@@ -159,8 +188,13 @@ object Abi {
     }
 
     // ---- Windows.Foundation.Collections.IVector<T> (OS side, FoundationContract.winmd) ----
-    // GetAt=6 get_Size=7 GetView=8 IndexOf=9 SetAt=10 InsertAt=11 RemoveAt=12 Append=13 ...
-    const val IVector_Append = 13
+    // GetAt=6 get_Size=7 GetView=8 IndexOf=9 SetAt=10 InsertAt=11 RemoveAt=12 Append=13
+    // RemoveAtEnd=14 Clear=15 GetMany=16 ReplaceAll=17
+    const val IVector_GetAt = 6                        // GetAt(UINT32, out T)
+    const val IVector_get_Size = 7                      // get_Size(out UINT32)
+    const val IVector_RemoveAt = 12                     // RemoveAt(UINT32)
+    const val IVector_Append = 13                       // Append(T)
+    const val IVector_Clear = 15                        // Clear()
     private const val IID_IVector_OPEN = "913337e9-11a1-4345-a3a2-4e7f956e222d" // base IID of IVector`1
 
     /**
@@ -180,5 +214,10 @@ object Abi {
             "pinterface({$IID_IVector_OPEN};" +
                 "rc(Microsoft.UI.Xaml.ResourceDictionary;{$IID_IResourceDictionary}))",
         )
+    }
+
+    /** The actual IID of IVector<Object> (ItemsControl.Items). Object's signature is cinterface(IInspectable). */
+    val IID_IVector_Object: String by lazy {
+        WinRt.pinterfaceIid("pinterface({$IID_IVector_OPEN};cinterface(IInspectable))")
     }
 }
