@@ -18,7 +18,7 @@ kotlin {
 }
 
 application {
-    mainClass = "jp.hisano.winui4k.MainKt"
+    mainClass = "jp.hisano.winui4k.gallery.GalleryAppKt"
 }
 
 // ---------------------------------------------------------------------------

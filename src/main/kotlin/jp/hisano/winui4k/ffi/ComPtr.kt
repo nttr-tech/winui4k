@@ -95,6 +95,13 @@ class ComPtr(val ptr: MemorySegment) {
         out.get(JAVA_INT, 0)
     }
 
+    /** `HRESULT f(DOUBLE* out)` pattern (e.g. FontSize's getter). */
+    fun getDouble(slot: Int): Double = Arena.ofConfined().use { a ->
+        val out = a.allocate(JAVA_DOUBLE)
+        call(slot, out)
+        out.get(JAVA_DOUBLE, 0)
+    }
+
     /** `HRESULT f(HSTRING* out)` pattern. */
     fun getString(slot: Int): String = Arena.ofConfined().use { a ->
         val out = a.allocate(ADDRESS)

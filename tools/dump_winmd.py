@@ -28,6 +28,9 @@ class Winmd:
         self.methods = list(md.MethodDef)
         self.customattrs = list(md.CustomAttribute)
         self.interfaceimpls = list(md.InterfaceImpl) if md.InterfaceImpl else []
+        self.fields = list(md.Field) if md.Field else []
+        self.constants = list(md.Constant) if md.Constant else []
+        self.field_rid = {id(f): i + 1 for i, f in enumerate(self.fields)}
         self.by_name = {}
         for i, td in enumerate(self.typedefs):
             self.by_name[f"{td.TypeNamespace}.{td.TypeName}"] = (i, td)
@@ -72,6 +75,27 @@ class Winmd:
                 d = blob[10:18]
                 return f"{a:08x}-{b:04x}-{c:04x}-{d[0]:02x}{d[1]:02x}-" + ''.join(f"{x:02x}" for x in d[2:])
         return None
+
+    def enum_values(self, td_index):
+        """(name, value) pairs of an enum TypeDef's constant fields (value__ excluded)."""
+        td = self.typedefs[td_index]
+        rids = set()
+        for f in td.FieldList:
+            rid = self.field_rid.get(id(f.row))
+            if rid is not None:
+                rids.add(rid)
+        out = []
+        for c in self.constants:
+            p = c.Parent
+            try:
+                if not (p.table and p.table.name == 'Field' and p.row_index in rids):
+                    continue
+            except Exception:
+                continue
+            frow = self.fields[p.row_index - 1]
+            val = struct.unpack_from('<i', c.Value.value_bytes())[0]
+            out.append((frow.Name, val))
+        return out
 
     def methods_of(self, td_index):
         td = self.typedefs[td_index]
@@ -137,6 +161,9 @@ def main():
                 base = "?"
             if base == 'System.MulticastDelegate':
                 print("    (delegate) Invoke at vtbl[3]")
+            elif base == 'System.Enum':
+                for n, v in w.enum_values(idx):
+                    print(f"    {n} = {v}")
             else:
                 ci = w.class_info(idx)
                 print(f"    base: {base}")

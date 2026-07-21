@@ -50,9 +50,19 @@ object Abi {
     const val CLS_StackPanel = "Microsoft.UI.Xaml.Controls.StackPanel"
     const val IID_IStackPanelFactory = "64c1d388-47a2-5a74-a75b-559d151ee5ac"
     const val IID_IStackPanel = "493ab00b-3a6a-5e4a-9452-407cd5197406"
+    const val IStackPanel_get_Orientation = 8          // get_Orientation(out Orientation)
+    const val IStackPanel_put_Orientation = 9          // put_Orientation(Orientation)
     const val IStackPanel_put_Spacing = 21
     const val IID_IPanel = "27a1b418-56f3-525e-b883-cefed905eed3"
     const val IPanel_get_Children = 6                  // -> IVector<UIElement>
+
+    // ---- Microsoft.UI.Xaml.Controls.TextBlock ----
+    const val CLS_TextBlock = "Microsoft.UI.Xaml.Controls.TextBlock"
+    const val IID_ITextBlock = "1ac8d84f-392c-5c7e-83f5-a53e3bf0abb0"
+    const val ITextBlock_get_FontSize = 6
+    const val ITextBlock_put_FontSize = 7
+    const val ITextBlock_get_Text = 26
+    const val ITextBlock_put_Text = 27
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox ----
     const val CLS_TextBox = "Microsoft.UI.Xaml.Controls.TextBox"
