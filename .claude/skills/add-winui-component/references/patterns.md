@@ -25,7 +25,8 @@
 | DOUBLE | `ptr.getDouble(slot)` | `ptr.call(slot, value)` | WLabel.fontSize |
 | オブジェクト参照 | `ptr.getPtr(slot)` / null になりうるなら `getPtrOrNull` | `ptr.call(slot, obj.ptr)`。null 許容は `?: MemorySegment.NULL` | WButton.flyout |
 | Object (box された値) | `WinRt.unboxString(boxed)` → 使用後 `boxed.release()` | `WinRt.boxString(value)` → put 後 `release()` | WButton.text |
-| 構造体の値渡し | — | `callWith(slot, 明示 FunctionDescriptor, struct)` | WComponent.margin (Thickness) |
+| 構造体の値渡し | — | `XamlStructs.putThickness / putCornerRadius / putGridLength / putColor` (新しい構造体はここに追加) | WComponent.margin, WBorder.cornerRadius |
+| Brush (色) | — | `WColor.createBrush()` で SolidColorBrush を作り put 後 `release()` | WBorder.borderColor |
 
 - enum は同じファイル内に `enum class Xxx(internal val native: Int)` +
   `internal companion object { fun of(native: Int) = entries.first { it.native == native } }`
@@ -33,6 +34,17 @@
   (規範実装: WButton.kt の ClickMode、WFlyout.kt の FlyoutPlacement)。
 - コンストラクタ引数で初期値を受けるときは、既定値のままなら put しない
   (`if (text.isNotEmpty()) this.text = text` の形。無駄な COM 呼び出しを避ける)。
+
+## 添付プロパティ (Canvas.Left, Grid.Row, RelativePanel.RightOf など)
+
+レイアウトパネルの添付プロパティは `IXxxStatics` の Set メソッドを呼ぶ。規範実装:
+**WCanvas / WGrid / WRelativePanel** の `private companion object { val statics }`。要点:
+
+- `WinRt.factory(Abi.CLS_Xxx, Abi.IID_IXxxStatics)` を companion の `by lazy` で保持する
+- 第 1 引数は winmd の宣言どおり UIElement か FrameworkElement (Grid は FrameworkElement)
+- boolean 引数 (RelativePanel.AlignXxxWithPanel) は 1 バイトなので
+  `callWith` で `JAVA_BYTE` を明示する (WRelativePanel.putBool 参照)
+- 子の追加前に Set しても効く (添付プロパティは要素側に保存される)
 
 ## イベント購読 (delegate の実装)
 
@@ -45,6 +57,10 @@ WinRT の delegate を `KComObject` で実装して `add_XXX` に渡す。規範
   remove 用に「リスナー → token」を `ArrayDeque` などで保持する
 - Invoke の FunctionDescriptor は winmd のシグネチャに合わせる
   (RoutedEventHandler は `(this, sender, args)` → `JAVA_INT, ADDRESS, ADDRESS, ADDRESS`)
+- イベントの型が `TypedEventHandler<TSender, TArgs>` の場合、IID は winmd に無いので
+  `WinRt.pinterfaceIid` で実行時計算する (規範実装: Abi.IID_ExpanderExpandingHandler と
+  WExpander.subscribe)。署名は
+  `pinterface({TypedEventHandler ベース IID};rc(TSender 完全名;{既定 IID});rc(TArgs 完全名;{既定 IID}))`
 
 ## Kotlin 側で WinRT インターフェースを実装する
 

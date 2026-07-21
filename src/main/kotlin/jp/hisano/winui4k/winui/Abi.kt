@@ -44,6 +44,7 @@ object Abi {
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_put_Width = 16
+    const val IFrameworkElement_put_Height = 18
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
 
     // ---- Microsoft.UI.Xaml.Controls.StackPanel ----
@@ -52,9 +53,127 @@ object Abi {
     const val IID_IStackPanel = "493ab00b-3a6a-5e4a-9452-407cd5197406"
     const val IStackPanel_get_Orientation = 8          // get_Orientation(out Orientation)
     const val IStackPanel_put_Orientation = 9          // put_Orientation(Orientation)
+    const val IStackPanel_get_Spacing = 20
     const val IStackPanel_put_Spacing = 21
     const val IID_IPanel = "27a1b418-56f3-525e-b883-cefed905eed3"
     const val IPanel_get_Children = 6                  // -> IVector<UIElement>
+
+    // ---- Microsoft.UI.Xaml.Controls.Border ----
+    const val CLS_Border = "Microsoft.UI.Xaml.Controls.Border"
+    const val IID_IBorder = "1ca13b47-ff5c-5abc-a411-a177df9482a9"
+    const val IBorder_put_BorderBrush = 7              // put_BorderBrush(Brush)
+    const val IBorder_put_BorderThickness = 9          // put_BorderThickness(Thickness) — struct passed by value
+    const val IBorder_put_Background = 11              // put_Background(Brush)
+    const val IBorder_put_CornerRadius = 15            // put_CornerRadius(CornerRadius) — struct passed by value
+    const val IBorder_put_Padding = 17                 // put_Padding(Thickness) — struct passed by value
+    const val IBorder_get_Child = 18                   // get_Child(out UIElement)
+    const val IBorder_put_Child = 19                   // put_Child(UIElement)
+
+    // ---- Microsoft.UI.Xaml.Media.SolidColorBrush ----
+    const val CLS_SolidColorBrush = "Microsoft.UI.Xaml.Media.SolidColorBrush"
+    const val IID_ISolidColorBrush = "b3865c31-37c8-55c1-8a72-d41c67642e2a"
+    const val ISolidColorBrush_put_Color = 7           // put_Color(Windows.UI.Color) — struct (u8×4: A,R,G,B) passed by value
+
+    // ---- Microsoft.UI.Xaml.Controls.Canvas ----
+    const val CLS_Canvas = "Microsoft.UI.Xaml.Controls.Canvas"
+    const val IID_ICanvasFactory = "374c5050-3481-5557-9948-804c0b8eea89"
+    const val IID_ICanvas = "457ba139-1146-51d2-807e-d9d65c927060" // default interface (no members)
+    const val IID_ICanvasStatics = "c00d5e0f-77e3-5c59-8fcd-86761f0c6607"
+    const val ICanvasStatics_GetLeft = 7               // GetLeft(UIElement, out DOUBLE)
+    const val ICanvasStatics_SetLeft = 8               // SetLeft(UIElement, DOUBLE)
+    const val ICanvasStatics_GetTop = 10               // GetTop(UIElement, out DOUBLE)
+    const val ICanvasStatics_SetTop = 11               // SetTop(UIElement, DOUBLE)
+    const val ICanvasStatics_SetZIndex = 14            // SetZIndex(UIElement, INT32)
+
+    // ---- Microsoft.UI.Xaml.Controls.Expander ----
+    const val CLS_Expander = "Microsoft.UI.Xaml.Controls.Expander"
+    const val IID_IExpanderFactory = "51a5afc2-b16d-516e-83ae-5a10476b13af"
+    const val IID_IExpander = "ca633942-e584-55c2-b7ee-cffc73c8127a"
+    const val IExpander_put_Header = 7                 // put_Header(IInspectable)
+    const val IExpander_get_IsExpanded = 12            // get_IsExpanded(out boolean)
+    const val IExpander_put_IsExpanded = 13            // put_IsExpanded(boolean)
+    const val IExpander_get_ExpandDirection = 14       // get_ExpandDirection(out ExpandDirection)
+    const val IExpander_put_ExpandDirection = 15       // put_ExpandDirection(ExpandDirection)
+    const val IExpander_add_Expanding = 16             // add_Expanding(TypedEventHandler, out token)
+    const val IExpander_remove_Expanding = 17          // remove_Expanding(token)
+    const val IExpander_add_Collapsed = 18             // add_Collapsed(TypedEventHandler, out token)
+    const val IExpander_remove_Collapsed = 19          // remove_Collapsed(token)
+    const val IID_IExpanderExpandingEventArgs = "433f2e36-19e7-579c-b4ce-9ce5d510d001"
+    const val IID_IExpanderCollapsedEventArgs = "968a6870-7426-535e-a526-279e6eedecd0"
+
+    // ---- Microsoft.UI.Xaml.Controls.Grid ----
+    const val CLS_Grid = "Microsoft.UI.Xaml.Controls.Grid"
+    const val IID_IGridFactory = "b16bf561-fc6c-57c6-8ebc-0b06ce4513aa"
+    const val IID_IGrid = "c4496219-9014-58a1-b4ad-c5044913a5bb"
+    const val IGrid_get_RowDefinitions = 6             // get_RowDefinitions(out IVector<RowDefinition>)
+    const val IGrid_get_ColumnDefinitions = 7          // get_ColumnDefinitions(out IVector<ColumnDefinition>)
+    const val IGrid_get_RowSpacing = 18                // get_RowSpacing(out DOUBLE)
+    const val IGrid_put_RowSpacing = 19                // put_RowSpacing(DOUBLE)
+    const val IGrid_get_ColumnSpacing = 20             // get_ColumnSpacing(out DOUBLE)
+    const val IGrid_put_ColumnSpacing = 21             // put_ColumnSpacing(DOUBLE)
+    const val IID_IGridStatics = "ef9cf81d-a431-50f4-abf5-3023fe447704"
+    const val IGridStatics_SetRow = 15                 // SetRow(FrameworkElement, INT32)
+    const val IGridStatics_SetColumn = 18              // SetColumn(FrameworkElement, INT32)
+    const val IGridStatics_SetRowSpan = 21             // SetRowSpan(FrameworkElement, INT32)
+    const val IGridStatics_SetColumnSpan = 24          // SetColumnSpan(FrameworkElement, INT32)
+    const val CLS_RowDefinition = "Microsoft.UI.Xaml.Controls.RowDefinition"
+    const val IID_IRowDefinition = "fe870f2f-89ef-5dac-9f33-968d0dc577c3"
+    const val IRowDefinition_put_Height = 7            // put_Height(GridLength) — struct passed by value
+    const val CLS_ColumnDefinition = "Microsoft.UI.Xaml.Controls.ColumnDefinition"
+    const val IID_IColumnDefinition = "454cea14-87ec-5890-bb62-f1d82a94758e"
+    const val IColumnDefinition_put_Width = 7          // put_Width(GridLength) — struct passed by value
+
+    // ---- Microsoft.UI.Xaml.Controls.RelativePanel ----
+    const val CLS_RelativePanel = "Microsoft.UI.Xaml.Controls.RelativePanel"
+    const val IID_IRelativePanelFactory = "c85f1443-d973-50fd-9497-b867f492468f"
+    const val IID_IRelativePanel = "c432fcc4-88f2-59d8-9d0e-a237beaeb07f"
+    const val IID_IRelativePanelStatics = "bdd929a2-76cc-59c4-82c1-f14b5da4221a"
+    // All the relative-placement Set* methods are SetXxx(UIElement element, Object value) — value is the anchor element
+    const val IRelativePanelStatics_SetLeftOf = 9
+    const val IRelativePanelStatics_SetAbove = 12
+    const val IRelativePanelStatics_SetRightOf = 15
+    const val IRelativePanelStatics_SetBelow = 18
+    const val IRelativePanelStatics_SetAlignHorizontalCenterWith = 21
+    const val IRelativePanelStatics_SetAlignVerticalCenterWith = 24
+    const val IRelativePanelStatics_SetAlignLeftWith = 27
+    const val IRelativePanelStatics_SetAlignTopWith = 30
+    const val IRelativePanelStatics_SetAlignRightWith = 33
+    const val IRelativePanelStatics_SetAlignBottomWith = 36
+    // All the panel-relative Set* methods are SetXxxWithPanel(UIElement element, boolean value)
+    const val IRelativePanelStatics_SetAlignLeftWithPanel = 39
+    const val IRelativePanelStatics_SetAlignTopWithPanel = 42
+    const val IRelativePanelStatics_SetAlignRightWithPanel = 45
+    const val IRelativePanelStatics_SetAlignBottomWithPanel = 48
+    const val IRelativePanelStatics_SetAlignHorizontalCenterWithPanel = 51
+    const val IRelativePanelStatics_SetAlignVerticalCenterWithPanel = 54
+
+    // ---- Microsoft.UI.Xaml.Controls.SplitView ----
+    const val CLS_SplitView = "Microsoft.UI.Xaml.Controls.SplitView"
+    const val IID_ISplitViewFactory = "389ece72-75ce-561b-aad3-c52125ca6a50"
+    const val IID_ISplitView = "10ae18f7-1666-5897-bbce-1e687e7784a8"
+    const val ISplitView_put_Content = 7               // put_Content(UIElement)
+    const val ISplitView_put_Pane = 9                  // put_Pane(UIElement)
+    const val ISplitView_get_IsPaneOpen = 10           // get_IsPaneOpen(out boolean)
+    const val ISplitView_put_IsPaneOpen = 11           // put_IsPaneOpen(boolean)
+    const val ISplitView_get_OpenPaneLength = 12       // get_OpenPaneLength(out DOUBLE)
+    const val ISplitView_put_OpenPaneLength = 13       // put_OpenPaneLength(DOUBLE)
+    const val ISplitView_get_PanePlacement = 16        // get_PanePlacement(out SplitViewPanePlacement)
+    const val ISplitView_put_PanePlacement = 17        // put_PanePlacement(SplitViewPanePlacement)
+    const val ISplitView_get_DisplayMode = 18          // get_DisplayMode(out SplitViewDisplayMode)
+    const val ISplitView_put_DisplayMode = 19          // put_DisplayMode(SplitViewDisplayMode)
+
+    // ---- Microsoft.UI.Xaml.Controls.VariableSizedWrapGrid ----
+    const val CLS_VariableSizedWrapGrid = "Microsoft.UI.Xaml.Controls.VariableSizedWrapGrid"
+    const val IID_IVariableSizedWrapGrid = "bfecd12b-e16a-58a0-af5f-4672627462d5"
+    const val IVariableSizedWrapGrid_put_ItemHeight = 7  // put_ItemHeight(DOUBLE)
+    const val IVariableSizedWrapGrid_put_ItemWidth = 9   // put_ItemWidth(DOUBLE)
+    const val IVariableSizedWrapGrid_get_Orientation = 10 // get_Orientation(out Orientation)
+    const val IVariableSizedWrapGrid_put_Orientation = 11 // put_Orientation(Orientation)
+    const val IVariableSizedWrapGrid_get_MaximumRowsOrColumns = 16 // get_MaximumRowsOrColumns(out INT32)
+    const val IVariableSizedWrapGrid_put_MaximumRowsOrColumns = 17 // put_MaximumRowsOrColumns(INT32)
+    const val IID_IVariableSizedWrapGridStatics = "0d979fe6-64af-5af5-914a-dd38f2ccf2d7"
+    const val IVariableSizedWrapGridStatics_SetRowSpan = 14    // SetRowSpan(UIElement, INT32)
+    const val IVariableSizedWrapGridStatics_SetColumnSpan = 17 // SetColumnSpan(UIElement, INT32)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBlock ----
     const val CLS_TextBlock = "Microsoft.UI.Xaml.Controls.TextBlock"
@@ -184,6 +303,26 @@ object Abi {
                 "cinterface(IInspectable);" +
                 "rc(Microsoft.UI.Xaml.ResourceManagerRequestedEventArgs;" +
                 "{$IID_IResourceManagerRequestedEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<Expander, ExpanderExpandingEventArgs>. */
+    val IID_ExpanderExpandingHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.Expander;{$IID_IExpander});" +
+                "rc(Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs;" +
+                "{$IID_IExpanderExpandingEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<Expander, ExpanderCollapsedEventArgs>. */
+    val IID_ExpanderCollapsedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.Expander;{$IID_IExpander});" +
+                "rc(Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs;" +
+                "{$IID_IExpanderCollapsedEventArgs}))",
         )
     }
 

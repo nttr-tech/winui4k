@@ -44,8 +44,30 @@ python tools/dump_winmd.py build/winmd/metadata/Microsoft.UI.Xaml.winmd \
    (Primitives.IToggleButton など) をダンプし、guid と vtbl スロットを得る
 3. enum はそのまま型名を渡すと `Name = value` 形式で出る
 4. delegate (イベントハンドラ型) は `Invoke at vtbl[3]` と出る。guid も控える
+5. 添付プロパティ (Canvas.Left, Grid.Row, ...) を使うなら `IXxxStatics` もダンプする。
+   Get/Set の引数型 (UIElement か FrameworkElement か、値の型) はメソッドシグネチャ
+   バイト列で確認する (下記スニペット参照)
 
 継承ツリーの探索が必要なら、クラスの `base:` をたどって親クラスも順にダンプする。
+
+構造体 (GridLength, Color など) のフィールド順は dump_winmd.py では出ない。
+同じ dnfile でフィールドを直接列挙する
+(シグネチャ末尾バイト: 0x02=bool, 0x05=u8, 0x08=i32, 0x0d=f64, 0x11=enum):
+
+```bash
+python - <<'EOF'
+import dnfile
+pe = dnfile.dnPE('build/winmd/metadata/Microsoft.UI.Xaml.winmd')
+for td in pe.net.mdtables.TypeDef:
+    if f"{td.TypeNamespace}.{td.TypeName}" == "Microsoft.UI.Xaml.GridLength":
+        for f in td.FieldList:
+            print(f.row.Name, f.row.Signature.value_bytes().hex())
+EOF
+```
+
+Windows.UI.Color など OS 側の型は Microsoft.UI.Xaml.winmd に無い。
+NuGet の `microsoft.windows.sdk.contracts` から
+`ref/netstandard2.0/Windows.Foundation.UniversalApiContract.winmd` を展開して同様に調べる。
 
 ### 3. Abi.kt に定数を追加する
 
@@ -61,7 +83,9 @@ python tools/dump_winmd.py build/winmd/metadata/Microsoft.UI.Xaml.winmd \
 
 `src/main/kotlin/jp/hisano/winui4k/swing/W<SwingName>.kt` を新規作成する。
 
-- 基底クラス: Control 派生なら `WControl`、それ以外の FrameworkElement 直系なら `WComponent`
+- 基底クラス: Control 派生なら `WControl`、Panel 派生 (StackPanel / Grid / Canvas /
+  RelativePanel / ...) なら `WContainer` (Children の add / removeAll を継承)、
+  それ以外の FrameworkElement 直系なら `WComponent`
 - インスタンス生成 (手順 2 のクラス情報で分岐):
   - `composable factory` あり → `WinRt.composeDefault(Abi.CLS_X, Abi.IID_IXFactory)`
     (戻り値は既定インターフェースのポインタ)
