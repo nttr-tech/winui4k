@@ -50,6 +50,10 @@ object Abi {
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
     const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
+    const val IFrameworkElement_put_RequestedTheme = 58 // put_RequestedTheme(ElementTheme)
+    const val IFrameworkElement_get_ActualTheme = 60   // get_ActualTheme(out ElementTheme)
+    const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
+    const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
 
     // ---- Microsoft.UI.Xaml.Controls.StackPanel ----
     const val CLS_StackPanel = "Microsoft.UI.Xaml.Controls.StackPanel"
@@ -203,6 +207,13 @@ object Abi {
     const val IID_IControl = "857d6e8a-d45a-5c69-a99c-bf6a5c54fb38"
     const val IControl_get_IsEnabled = 28              // get_IsEnabled(out boolean)
     const val IControl_put_IsEnabled = 29              // put_IsEnabled(boolean)
+    const val IControl_put_FontWeight = 17             // put_FontWeight(FontWeight) — struct passed by value
+    const val IControl_put_Padding = 35                // put_Padding(Thickness) — struct passed by value
+    const val IControl_put_HorizontalContentAlignment = 37 // put_HorizontalContentAlignment(HorizontalAlignment)
+    const val IControl_put_Background = 41             // put_Background(Brush)
+    const val IControl_put_BorderThickness = 45        // put_BorderThickness(Thickness) — struct passed by value
+    const val IControl_put_BorderBrush = 47            // put_BorderBrush(Brush)
+    const val IControl_put_CornerRadius = 53           // put_CornerRadius(CornerRadius) — struct passed by value
 
     // ---- Microsoft.UI.Xaml.Controls.Button ----
     const val CLS_Button = "Microsoft.UI.Xaml.Controls.Button"
@@ -259,6 +270,8 @@ object Abi {
     const val IListViewBase_add_ItemClick = 32         // add_ItemClick(ItemClickEventHandler, out token)
     const val IListViewBase_remove_ItemClick = 33      // remove_ItemClick(token)
     const val IListViewBase_SelectAll = 45             // SelectAll()
+    const val IListViewBase_get_Header = 54            // get_Header(out IInspectable)
+    const val IListViewBase_put_Header = 55            // put_Header(IInspectable)
     const val IID_ISelector = "8f7e2159-e61d-576f-8476-f83fde3d689e" // Controls.Primitives
     const val ISelector_get_SelectedIndex = 6          // get_SelectedIndex(out INT32)
     const val ISelector_put_SelectedIndex = 7          // put_SelectedIndex(INT32)
@@ -267,6 +280,15 @@ object Abi {
     const val ISelector_remove_SelectionChanged = 17   // remove_SelectionChanged(token)
     const val IID_IItemsControl = "bf1ccb54-83e2-5b98-acbc-736f876c3d35"
     const val IItemsControl_get_Items = 8              // get_Items(out ItemCollection)
+    const val IItemsControl_put_ItemContainerStyle = 19 // put_ItemContainerStyle(Style)
+
+    // ---- Microsoft.UI.Xaml.Style ----
+    const val IID_IStyle = "65e1d164-572f-5b0e-a80f-9c02441fac49"
+
+    // ---- Microsoft.UI.Xaml.Markup.XamlReader ----
+    const val CLS_XamlReader = "Microsoft.UI.Xaml.Markup.XamlReader"
+    const val IID_IXamlReaderStatics = "82a4cd9e-435e-5aeb-8c4f-300cece45cae"
+    const val IXamlReaderStatics_Load = 6              // Load(string, out IInspectable)
 
     /** delegate Controls.SelectionChangedEventHandler(sender, SelectionChangedEventArgs) — Invoke is vtbl[3] */
     const val IID_SelectionChangedEventHandler = "a232390d-0e34-595e-8931-fa928a9909f4"
@@ -602,6 +624,15 @@ object Abi {
         WinRt.pinterfaceIid(
             "pinterface({$IID_TypedEventHandler_OPEN};" +
                 "rc(Microsoft.UI.Xaml.Controls.RatingControl;{$IID_IRatingControl});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<FrameworkElement, Object>. Used for ActualThemeChanged. */
+    val IID_ActualThemeChangedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.FrameworkElement;{$IID_IFrameworkElement});" +
                 "cinterface(IInspectable))",
         )
     }

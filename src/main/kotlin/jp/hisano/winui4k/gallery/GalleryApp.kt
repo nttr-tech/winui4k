@@ -41,7 +41,10 @@ import jp.hisano.winui4k.swing.WRepeatButton
 import jp.hisano.winui4k.swing.WScrollPane
 import jp.hisano.winui4k.swing.WSlider
 import jp.hisano.winui4k.swing.WSplitButton
+import jp.hisano.winui4k.swing.SortDirection
 import jp.hisano.winui4k.swing.WSplitView
+import jp.hisano.winui4k.swing.WTable
+import jp.hisano.winui4k.swing.WTableColumn
 import jp.hisano.winui4k.swing.WTextField
 import jp.hisano.winui4k.swing.WToggleButton
 import jp.hisano.winui4k.swing.WToggleSplitButton
@@ -112,6 +115,7 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "SplitButton" to ::buildSplitButtonPage,
     "SplitView" to ::buildSplitViewPage,
     "StackPanel" to ::buildStackPanelPage,
+    "TableView" to ::buildTableViewPage,
     "ToggleButton" to ::buildToggleButtonPage,
     "ToggleSplitButton" to ::buildToggleSplitButtonPage,
     "ToggleSwitch" to ::buildToggleSwitchPage,
@@ -138,6 +142,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
     ),
     "Collections" to listOf(
         "ListView",
+        "TableView",
     ),
     "Layout" to listOf(
         "Border",
@@ -407,6 +412,140 @@ private fun buildListSelectionModeExample(): WComponent {
     body.add(list)
     body.add(mode)
     return buildExample("Selection mode (SelectionMode / SelectAll)", body)
+}
+
+/** The TableView page: lines up demos for trying out WTable's various features. */
+private fun buildTableViewPage(): WComponent {
+    val page = buildPage(
+        "TableView",
+        "A table that displays data in rows and columns. Try out WTable's various " +
+            "features, implemented on top of ListView based on the design of WinUI.TableView.",
+    )
+
+    page.add(buildSimpleTableExample())
+    page.add(buildTableSortExample())
+    page.add(buildTableRowOperationsExample())
+    return page
+}
+
+/** Sample data for the TableView demos (product name, price, quantity). */
+private fun buildProductTable(): WTable {
+    val table = WTable(
+        listOf(
+            WTableColumn("Product", width = 160.0),
+            WTableColumn("Price", width = 100.0),
+            WTableColumn("Quantity", width = 100.0),
+        ),
+    )
+    table.addRow("Apple", "150", "12")
+    table.addRow("Orange", "80", "30")
+    table.addRow("Grape", "480", "5")
+    table.addRow("Peach", "320", "8")
+    table.addRow("Cherry", "600", "3")
+    table.width = 400.0
+    return table
+}
+
+/** A basic table: responding to row selection (SelectionChanged). */
+private fun buildSimpleTableExample(): WComponent {
+    val result = WLabel("Selection: none")
+
+    val table = buildProductTable()
+    table.addRowSelectionListener {
+        val row = table.selectedRow
+        result.text = if (row < 0) {
+            "Selection: none"
+        } else {
+            "Selection: ${table.getValueAt(row, 0)} (row = $row)"
+        }
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(table)
+    body.add(result)
+    return buildExample("A basic table (row selection)", body)
+}
+
+/** Sorting columns: cycling through header clicks (ascending -> descending -> cleared) and sortBy / clearSort. */
+private fun buildTableSortExample(): WComponent {
+    val table = buildProductTable()
+
+    val sortByPriceButton = WButton("Sort by price descending")
+    sortByPriceButton.addActionListener {
+        table.sortBy(1, SortDirection.DESCENDING)
+    }
+
+    val clearButton = WButton("Clear sort")
+    clearButton.addActionListener {
+        table.clearSort()
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(sortByPriceButton)
+    buttons.add(clearButton)
+
+    val note = WLabel("Clicking a column header also cycles through ascending -> descending -> cleared.").also {
+        it.foreground = TEXT_SECONDARY
+        it.textWrapping = TextWrapping.WRAP
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(note)
+    body.add(buttons)
+    body.add(table)
+    return buildExample("Sorting columns (header click / SortBy / ClearSort)", body)
+}
+
+/** Adding and removing rows: addRow / removeRow / removeAllRows / setValueAt / rowCount. */
+private fun buildTableRowOperationsExample(): WComponent {
+    val table = buildProductTable()
+
+    val count = WLabel("Row count: ${table.rowCount}")
+    val updateCount = { count.text = "Row count: ${table.rowCount}" }
+
+    var nextItemNumber = 1
+    val addButton = WButton("Add row")
+    addButton.addActionListener {
+        table.addRow("New item $nextItemNumber", "${nextItemNumber * 100}", "1")
+        nextItemNumber++
+        updateCount()
+    }
+
+    val removeButton = WButton("Remove selected row")
+    removeButton.addActionListener {
+        val row = table.selectedRow
+        if (row >= 0) {
+            table.removeRow(row)
+            updateCount()
+        }
+    }
+
+    val incrementButton = WButton("Selected quantity +1")
+    incrementButton.addActionListener {
+        val row = table.selectedRow
+        if (row >= 0) {
+            val quantity = table.getValueAt(row, 2).toIntOrNull() ?: 0
+            table.setValueAt(row, 2, "${quantity + 1}")
+        }
+    }
+
+    val clearButton = WButton("Remove all")
+    clearButton.addActionListener {
+        table.removeAllRows()
+        updateCount()
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(addButton)
+    buttons.add(removeButton)
+    buttons.add(incrementButton)
+    buttons.add(clearButton)
+
+    val body = WPanel(spacing = 8.0)
+    body.add(buttons)
+    body.add(table)
+    body.add(count)
+    return buildExample("Adding and removing rows (AddRow / RemoveRow / SetValueAt)", body)
 }
 
 /** A colored tile for the layout demos (a Border painted with a background). Fills its parent if a size isn't given. */
