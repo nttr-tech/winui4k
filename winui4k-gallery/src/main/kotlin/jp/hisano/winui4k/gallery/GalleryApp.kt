@@ -91,7 +91,7 @@ import jp.hisano.winui4k.swing.WToggleSplitButton
 import jp.hisano.winui4k.swing.WToggleSwitch
 import jp.hisano.winui4k.swing.WVariableSizedWrapGrid
 import jp.hisano.winui4k.swing.WXamlUICommand
-import jp.hisano.winui4k.winui.WinUiToolkit
+import jp.hisano.winui4k.swing.WinUiUtilities
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +107,7 @@ import kotlinx.coroutines.withContext
  * Add more pages to [pages] as they're added.
  */
 fun main() {
-    WinUiToolkit.launch {
+    WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K Gallery")
 
         // Content gets set by the initial selection when the navigation is built

@@ -8,8 +8,8 @@
 |---|---|
 | `ffi` | COM/Panama の基盤 (ComPtr, KComObject, Hstring, Guid, Native) |
 | `winrt` | WinRT アクティベーションと box/unbox (WinRt) |
-| `winui` | ABI 定数 (Abi) とアプリ起動 (WinUiToolkit) |
-| `swing` | Swing 風の公開 API (W* クラス)。ユーザーが触るのはここだけ |
+| `winui` | ABI 定数 (Abi) と UI スレッド基盤 (Dispatcher) |
+| `swing` | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ |
 
 `inspectable` は各 W* クラスが持つ既定インターフェースのポインタ。別インターフェースの
 メンバーを使うときは `queryInterface` したものを `by lazy` で保持する (WButton の
@@ -100,5 +100,5 @@ ICommand のように XAML へ渡すオブジェクトを Kotlin で実装する
 - **HSTRING の一時利用は `Hstring.use`** でスコープ解放する。
 - **Content など Object 型プロパティ**は文字列と UIElement の両方が入りうる。
   get で `unboxString` が null を返すケースを考慮する (WButton.text / content の排他を参照)。
-- **UI スレッド制約**: すべての W* API は `WinUiToolkit.launch` のコールバック
-  (WinUI の UI スレッド) 上でのみ使用できる。
+- **UI スレッド制約**: すべての W* API は `WinUiUtilities.invokeLater` のコールバック
+  (WinUI の UI スレッド) 上でのみ使用できる。初回の invokeLater で WinUI が自動起動する。

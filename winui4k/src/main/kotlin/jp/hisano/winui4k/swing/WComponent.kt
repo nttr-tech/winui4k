@@ -53,7 +53,7 @@ enum class VerticalAlignment(internal val native: Int) {
 
 /**
  * A thin Swing-like API layer. Everything underneath is a native WinUI 3 control.
- * (Use only inside the WinUiToolkit.launch callback = on the UI thread)
+ * (Use only inside the WinUiUtilities.invokeLater callback = on the UI thread)
  */
 abstract class WComponent internal constructor(
     /** The control's default interface pointer (ITextBox, IButton, ...) */

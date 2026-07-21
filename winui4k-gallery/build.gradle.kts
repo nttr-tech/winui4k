@@ -27,7 +27,7 @@ application {
 // Windows App SDK 2.x splits the NuGet package, and the bootstrap DLL is
 // included in Microsoft.WindowsAppSDK.Foundation, which the meta-package
 // Microsoft.WindowsAppSDK (2.2.0) depends on
-val windowsAppSdkFoundationVersion = "2.1.0" // Dependency of Microsoft.WindowsAppSDK 2.2.0; matches 0x00020000 / 2.2.0.0 in Toolkit.kt
+val windowsAppSdkFoundationVersion = "2.1.0" // Dependency of Microsoft.WindowsAppSDK 2.2.0; matches 0x00020000 / 2.2.0.0 in WinUiUtilities.kt
 
 val nativeDir: Provider<Directory> =
     layout.buildDirectory.dir("native/$windowsAppSdkFoundationVersion")
@@ -73,7 +73,7 @@ tasks.named<JavaExec>("run") {
     // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-    // Let Toolkit load the bootstrap DLL via an absolute path
+    // Let WinUiUtilities load the bootstrap DLL via an absolute path
     val dllPath = nativeDir.map { it.file("Microsoft.WindowsAppRuntime.Bootstrap.dll").asFile.absolutePath }
     doFirst {
         systemProperty("winui4k.bootstrap.dll", dllPath.get())

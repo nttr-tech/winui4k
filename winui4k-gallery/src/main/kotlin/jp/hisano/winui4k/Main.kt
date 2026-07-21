@@ -1,21 +1,21 @@
 package jp.hisano.winui4k
 
 import jp.hisano.winui4k.swing.WButton
-import jp.hisano.winui4k.swing.WFlyout
 import jp.hisano.winui4k.swing.WFrame
 import jp.hisano.winui4k.swing.WTextField
-import jp.hisano.winui4k.winui.WinUiToolkit
+import jp.hisano.winui4k.swing.WinUiUtilities
 
 /**
  * Demo: a window with just a text field and a button.
  *
- * Build the UI inside the WinUiToolkit.launch { ... } callback (= the WinUI UI thread),
- * the same way you would with SwingUtilities.invokeLater { ... }.
+ * Build the UI inside WinUiUtilities.invokeLater { ... } (= the WinUI UI thread), the
+ * same way you would with SwingUtilities.invokeLater { ... }. WinUI starts automatically
+ * on the first invokeLater call, and the JVM stays alive until the last window closes.
  */
 fun main() {
     println("[winui4k] starting WinUI 3 ...")
 
-    WinUiToolkit.launch {
+    WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI for Kotlin Demo — WinUI 3 from Kotlin/JVM (Panama)")
 
         val nameField = WTextField(placeholder = "Enter your name")
@@ -31,6 +31,4 @@ fun main() {
         frame.add(greetButton)
         frame.isVisible = true
     }
-
-    println("[winui4k] application exited.")
 }

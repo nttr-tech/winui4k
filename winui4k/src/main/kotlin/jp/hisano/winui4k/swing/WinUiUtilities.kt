@@ -1,10 +1,12 @@
-package jp.hisano.winui4k.winui
+package jp.hisano.winui4k.swing
 
 import jp.hisano.winui4k.ffi.ComPtr
 import jp.hisano.winui4k.ffi.Hstring
 import jp.hisano.winui4k.ffi.KComObject
 import jp.hisano.winui4k.ffi.Native
 import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.Dispatcher
 import java.io.File
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
@@ -14,11 +16,19 @@ import java.lang.foreign.ValueLayout.ADDRESS
 import java.lang.foreign.ValueLayout.JAVA_CHAR
 import java.lang.foreign.ValueLayout.JAVA_INT
 import java.lang.foreign.ValueLayout.JAVA_LONG
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Toolkit responsible for launching a WinUI 3 application.
+ * WinUI 3's equivalent of SwingUtilities. Handles lazily starting the UI thread and
+ * posting work to it.
  *
- * Launch sequence:
+ * As with Swing's EDT, the developer doesn't need to think about startup explicitly.
+ * The first call to [invokeLater] (or [schedule]) automatically starts WinUI 3 on a
+ * dedicated worker thread. The JVM stays alive as long as this thread (non-daemon) is
+ * alive, i.e. until the last window is closed.
+ *
+ * Launch sequence (on the dedicated thread):
  *  1. Declare Per-Monitor v2 DPI awareness
  *  2. Windows App SDK bootstrap (MddBootstrapInitialize2) — binds an installed WinAppSDK
  *     runtime package to this process as a dynamic reference
@@ -27,7 +37,7 @@ import java.lang.foreign.ValueLayout.JAVA_LONG
  *     "subclass" via COM aggregation (WinRT composition) and builds the UI in OnLaunched
  *  5. Start returns once the last window closes, and the bootstrap is then released
  */
-object WinUiToolkit {
+object WinUiUtilities {
 
     /**
      * Windows App SDK 2.x (majorMinorVersion = 0x00020000 for MddBootstrapInitialize2).
@@ -60,11 +70,44 @@ object WinUiToolkit {
 
     private var currentApp: ComPtr? = null
 
+    private val started = AtomicBoolean(false)
+    private val ready = CountDownLatch(1)
+
+    @Volatile
+    private var startupError: Throwable? = null
+
+    @Volatile
+    private var exited = false
+
     /**
-     * Launches WinUI 3 and runs [onLaunched] on the UI thread.
-     * This method blocks until the application exits (the last window closes).
+     * Starts WinUI on a dedicated thread if it hasn't been started yet, and waits until
+     * the UI thread is ready to use. If startup fails, every call to this method throws
+     * [IllegalStateException].
      */
-    fun launch(onLaunched: () -> Unit) {
+    private fun ensureStarted() {
+        if (started.compareAndSet(false, true)) {
+            // A non-daemon thread: keeps the JVM alive until the last window closes
+            Thread({
+                try {
+                    runMessageLoop { ready.countDown() }
+                } catch (t: Throwable) {
+                    startupError = t
+                } finally {
+                    exited = true
+                    ready.countDown() // also release waiters if startup failed
+                }
+            }, "WinUI4K-UI").start()
+        }
+        ready.await()
+        startupError?.let { throw IllegalStateException("Failed to start WinUI", it) }
+        check(!exited) { "The WinUI application has already exited (the last window was closed)" }
+    }
+
+    /**
+     * Launches WinUI 3 and runs [onReady] on the UI thread.
+     * Blocks until the application exits (the last window closes).
+     */
+    private fun runMessageLoop(onReady: () -> Unit) {
         Native.enablePerMonitorDpiAwareness()
         bootstrapInitialize()
         try {
@@ -76,7 +119,7 @@ object WinUiToolkit {
                     Abi.IID_ApplicationInitializationCallback,
                     listOf(
                         KComObject.Method(DESC_THIS_PTR) { // Invoke(this, params)
-                            createApplication(onLaunched)
+                            createApplication(onReady)
                             KComObject.S_OK
                         },
                     ),
@@ -97,18 +140,24 @@ object WinUiToolkit {
 
     /**
      * Posts [block] to the UI thread's message loop (SwingUtilities.invokeLater-like).
-     * Can be called from any thread. Only usable while the UI thread is running via [launch].
+     * Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
+     * Calls made after the app has exited (the last window closed) throw [IllegalStateException].
+     * A [block] posted right before exit may not run.
      */
     fun invokeLater(block: () -> Unit) {
+        ensureStarted()
         Dispatcher.invokeLater(block)
     }
 
     /**
      * Runs [block] once on the UI thread after [delayMillis] milliseconds (a one-shot
      * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
-     * fired yet. Can be called from any thread.
+     * fired yet. Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
      */
-    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable = Dispatcher.schedule(delayMillis, block)
+    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable {
+        ensureStarted()
+        return Dispatcher.schedule(delayMillis, block)
+    }
 
     /**
      * Does at the ABI level what C#'s `class App : Application { override OnLaunched(...) }`
@@ -116,7 +165,7 @@ object WinUiToolkit {
      * IXamlMetadataProvider) to IApplicationFactory.CreateInstance and composes it with
      * the XAML Application via aggregation.
      */
-    private fun createApplication(onLaunched: () -> Unit) {
+    private fun createApplication(onReady: () -> Unit) {
         // Forwards all methods to the real provider (created lazily) that resolves XAML types for WinUI controls
         val realProvider: ComPtr by lazy {
             WinRt.activate(Abi.CLS_XamlControlsXamlMetaDataProvider)
@@ -133,7 +182,7 @@ object WinUiToolkit {
                     // init callback
                     Dispatcher.capture() // capture the UI thread's DispatcherQueue here
                     installControlStyles()
-                    onLaunched()
+                    onReady()
                     KComObject.S_OK
                 },
             ),

@@ -29,7 +29,7 @@ internal object Dispatcher {
 
     /**
      * Captures the current thread's (= the UI thread's) DispatcherQueue.
-     * Called by [WinUiToolkit] in OnLaunched.
+     * Called by WinUiUtilities in OnLaunched.
      */
     fun capture() {
         if (queue != null) return
@@ -45,7 +45,7 @@ internal object Dispatcher {
 
     /** Posts [block] to the UI thread's message loop. Can be called from any thread. */
     fun invokeLater(block: () -> Unit) {
-        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (only usable inside WinUiToolkit.launch)" }
+        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (start WinUI via WinUiUtilities before using this)" }
         val handler = KComObject("WinUI4K.DispatcherQueueHandler", inspectable = false)
             .addInterface(
                 Abi.IID_DispatcherQueueHandler,
@@ -74,7 +74,7 @@ internal object Dispatcher {
         val timerRef = AtomicReference<ComPtr?>(null)
         runOnDispatchThread {
             if (done.get()) return@runOnDispatchThread
-            val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (only usable inside WinUiToolkit.launch)" }
+            val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (start WinUI via WinUiUtilities before using this)" }
             val timer = q.getPtr(Abi.IDispatcherQueue_CreateTimer)
             // TimeSpan is an int64 in 100ns units, passed by value
             timer.call(Abi.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)

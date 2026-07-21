@@ -1,6 +1,6 @@
 package jp.hisano.winui4k.coroutines
 
-import jp.hisano.winui4k.winui.WinUiToolkit
+import jp.hisano.winui4k.swing.WinUiUtilities
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Delay
 import kotlinx.coroutines.Dispatchers
@@ -28,11 +28,11 @@ public val Dispatchers.WinUi: WinUiDispatcher
 @OptIn(InternalCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 public sealed class WinUiDispatcher : MainCoroutineDispatcher(), Delay {
     /** @suppress */
-    override fun dispatch(context: CoroutineContext, block: Runnable): Unit = WinUiToolkit.invokeLater(block::run)
+    override fun dispatch(context: CoroutineContext, block: Runnable): Unit = WinUiUtilities.invokeLater(block::run)
 
     /** @suppress */
     override fun scheduleResumeAfterDelay(timeMillis: Long, continuation: CancellableContinuation<Unit>) {
-        val timer = WinUiToolkit.schedule(timeMillis) {
+        val timer = WinUiUtilities.schedule(timeMillis) {
             with(continuation) { resumeUndispatched(Unit) }
         }
         continuation.invokeOnCancellation { timer.close() }
@@ -40,7 +40,7 @@ public sealed class WinUiDispatcher : MainCoroutineDispatcher(), Delay {
 
     /** @suppress */
     override fun invokeOnTimeout(timeMillis: Long, block: Runnable, context: CoroutineContext): DisposableHandle {
-        val timer = WinUiToolkit.schedule(timeMillis) {
+        val timer = WinUiUtilities.schedule(timeMillis) {
             block.run()
         }
         return DisposableHandle { timer.close() }
@@ -60,7 +60,7 @@ private object ImmediateWinUiDispatcher : WinUiDispatcher() {
     override val immediate: MainCoroutineDispatcher
         get() = this
 
-    override fun isDispatchNeeded(context: CoroutineContext): Boolean = !WinUiToolkit.isDispatchThread
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = !WinUiUtilities.isDispatchThread
 
     override fun toString() = "Dispatchers.WinUi.immediate"
 }
