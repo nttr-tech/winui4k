@@ -112,6 +112,7 @@ object WinUiToolkit {
                     // Application.Resources cannot be touched until core initialization
                     // completes (= from OnLaunched onward); it's E_UNEXPECTED during the
                     // init callback
+                    Dispatcher.capture() // capture the UI thread's DispatcherQueue here
                     installControlStyles()
                     onLaunched()
                     KComObject.S_OK
