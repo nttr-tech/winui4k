@@ -26,6 +26,15 @@ class WFrame(title: String = "") {
 
     fun add(component: WComponent) = contentPane.add(component)
 
+    /**
+     * Equivalent to JFrame.setContentPane: replaces the root with [component] instead of the
+     * default [contentPane] (Window.Content). Useful when you want a full-bleed layout with,
+     * say, a Grid instead of StackPanel's unconstrained height measurement.
+     */
+    fun setContentPane(component: WComponent) {
+        window.call(Abi.IWindow_put_Content, component.uiElement.ptr)
+    }
+
     /** Setting this to true shows (activates) the window. */
     var isVisible: Boolean = false
         set(value) {

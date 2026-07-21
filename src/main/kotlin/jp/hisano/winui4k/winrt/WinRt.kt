@@ -8,6 +8,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout.ADDRESS
+import java.lang.foreign.ValueLayout.JAVA_BYTE
 import java.lang.foreign.ValueLayout.JAVA_INT
 import java.security.MessageDigest
 
@@ -18,7 +19,9 @@ object WinRt {
 
     /** Windows.Foundation.IPropertyValue (the retrieval side of a boxed value). From Windows.Foundation.winmd. */
     private const val IID_IPROPERTY_VALUE = "4bd682dd-7554-40e9-9a9b-82654ede7e62"
+    private const val IPropertyValue_GetBoolean = 18 // GetBoolean(out boolean)
     private const val IPropertyValue_GetString = 19 // GetString(out HSTRING)
+    private const val IPropertyValueStatics_CreateBoolean = 17 // CreateBoolean(boolean, out IInspectable)
 
     private val roGetActivationFactory by lazy {
         Native.downcall(
@@ -79,6 +82,43 @@ object WinRt {
         val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
         return try {
             pv.getString(IPropertyValue_GetString)
+        } finally {
+            pv.release()
+        }
+    }
+
+    /**
+     * Boxes a Kotlin Boolean into an IInspectable
+     * (Windows.Foundation.PropertyValue.CreateBoolean).
+     * Used to pass it to an IReference<Boolean>-typed property (ToggleButton.IsChecked).
+     * WinRT's boolean is 1 byte, so the descriptor is given explicitly.
+     */
+    fun boxBool(value: Boolean): ComPtr {
+        val statics = factory("Windows.Foundation.PropertyValue", IID_IPROPERTY_VALUE_STATICS)
+        return try {
+            Arena.ofConfined().use { a ->
+                val out = a.allocate(ADDRESS)
+                statics.callWith(
+                    IPropertyValueStatics_CreateBoolean,
+                    FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_BYTE, ADDRESS),
+                    if (value) 1.toByte() else 0.toByte(),
+                    out,
+                )
+                ComPtr(out.get(ADDRESS, 0))
+            }
+        } finally {
+            statics.release()
+        }
+    }
+
+    /**
+     * The reverse of [boxBool]: extracts the boolean if the IInspectable is a boxed boolean.
+     * Returns null if it isn't a boxed boolean (PropertyValue).
+     */
+    fun unboxBool(boxed: ComPtr): Boolean? {
+        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        return try {
+            pv.getBool(IPropertyValue_GetBoolean)
         } finally {
             pv.release()
         }

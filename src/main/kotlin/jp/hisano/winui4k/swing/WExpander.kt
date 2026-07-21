@@ -1,15 +1,9 @@
 package jp.hisano.winui4k.swing
 
 import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.KComObject
 import jp.hisano.winui4k.winrt.WinRt
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_INT
-import java.lang.foreign.ValueLayout.JAVA_LONG
 
 /**
  * Microsoft.UI.Xaml.Controls.ExpandDirection (the direction the content expands toward).
@@ -40,8 +34,8 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     }
 
     /** Listener → event token (used by the remove functions). */
-    private val expandTokens = ArrayDeque<Pair<() -> Unit, Long>>()
-    private val collapseTokens = ArrayDeque<Pair<() -> Unit, Long>>()
+    private val expandTokens = ListenerTokens<() -> Unit>()
+    private val collapseTokens = ListenerTokens<() -> Unit>()
 
     /** The header text (Expander.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
@@ -79,54 +73,29 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
 
     /** Registers a listener called when it expands (Expander.Expanding). */
     fun addExpandListener(listener: () -> Unit) {
-        expandTokens.addLast(
-            listener to subscribe(Abi.IExpander_add_Expanding, Abi.IID_ExpanderExpandingHandler, listener),
-        )
+        val token = inspectable.addEventHandler(
+            "WinUI4K.ExpanderHandler", Abi.IID_ExpanderExpandingHandler, Abi.IExpander_add_Expanding,
+        ) { _, _ -> listener() }
+        expandTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addExpandListener]. */
     fun removeExpandListener(listener: () -> Unit) {
-        unsubscribe(expandTokens, Abi.IExpander_remove_Expanding, listener)
+        val token = expandTokens.remove(listener) ?: return
+        inspectable.removeEventHandler(Abi.IExpander_remove_Expanding, token)
     }
 
     /** Registers a listener called when it collapses (Expander.Collapsed). */
     fun addCollapseListener(listener: () -> Unit) {
-        collapseTokens.addLast(
-            listener to subscribe(Abi.IExpander_add_Collapsed, Abi.IID_ExpanderCollapsedHandler, listener),
-        )
+        val token = inspectable.addEventHandler(
+            "WinUI4K.ExpanderHandler", Abi.IID_ExpanderCollapsedHandler, Abi.IExpander_add_Collapsed,
+        ) { _, _ -> listener() }
+        collapseTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCollapseListener]. */
     fun removeCollapseListener(listener: () -> Unit) {
-        unsubscribe(collapseTokens, Abi.IExpander_remove_Collapsed, listener)
-    }
-
-    /** Implements TypedEventHandler<Expander, TArgs> with KComObject and passes it to add_XXX. */
-    private fun subscribe(addSlot: Int, handlerIid: String, listener: () -> Unit): Long {
-        val handler = KComObject("WinUI4K.ExpanderHandler", inspectable = false)
-            .addInterface(
-                handlerIid,
-                listOf(
-                    // Invoke(this, Expander sender, TArgs e) — vtbl[3]
-                    KComObject.Method(
-                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS),
-                    ) {
-                        listener()
-                        KComObject.S_OK
-                    },
-                ),
-            )
-        return Arena.ofConfined().use { a ->
-            val out = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
-            inspectable.call(addSlot, handler.primary, out)
-            out.get(JAVA_LONG, 0)
-        }
-    }
-
-    private fun unsubscribe(tokens: ArrayDeque<Pair<() -> Unit, Long>>, removeSlot: Int, listener: () -> Unit) {
-        val index = tokens.indexOfLast { it.first === listener }
-        if (index < 0) return
-        val (_, token) = tokens.removeAt(index)
-        inspectable.call(removeSlot, token)
+        val token = collapseTokens.remove(listener) ?: return
+        inspectable.removeEventHandler(Abi.IExpander_remove_Collapsed, token)
     }
 }

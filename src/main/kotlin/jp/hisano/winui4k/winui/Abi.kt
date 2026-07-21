@@ -268,6 +268,187 @@ object Abi {
     const val IID_IItemClickEventArgs = "1cf87a70-6348-57ec-9eac-fa0565adc60f"
     const val IItemClickEventArgs_get_ClickedItem = 6  // get_ClickedItem(out IInspectable)
 
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.ToggleButton ----
+    const val CLS_ToggleButton = "Microsoft.UI.Xaml.Controls.Primitives.ToggleButton"
+    const val IID_IToggleButtonFactory = "519511bb-d35b-5e2d-966c-8369405a4408"
+    const val IID_IToggleButton = "686fbaa4-c866-568b-8f75-481d8d545291"
+    const val IToggleButton_get_IsChecked = 6          // get_IsChecked(out IReference<boolean>) — can be null
+    const val IToggleButton_put_IsChecked = 7          // put_IsChecked(IReference<boolean>)
+    const val IToggleButton_get_IsThreeState = 8       // get_IsThreeState(out boolean)
+    const val IToggleButton_put_IsThreeState = 9       // put_IsThreeState(boolean)
+    const val IToggleButton_add_Checked = 10           // add_Checked(RoutedEventHandler, out token)
+    const val IToggleButton_remove_Checked = 11
+    const val IToggleButton_add_Unchecked = 12         // add_Unchecked(RoutedEventHandler, out token)
+    const val IToggleButton_remove_Unchecked = 13
+    const val IToggleButton_add_Indeterminate = 14     // add_Indeterminate(RoutedEventHandler, out token)
+    const val IToggleButton_remove_Indeterminate = 15
+
+    // ---- Microsoft.UI.Xaml.Controls.CheckBox ----
+    const val CLS_CheckBox = "Microsoft.UI.Xaml.Controls.CheckBox"
+    const val IID_ICheckBoxFactory = "f43ff58d-31d5-5835-af7b-375bc6a9bcf3"
+    // ICheckBox (c5830000-4c9d-5fdd-9346-674c71cd80c5) has no members. All functionality comes from ToggleButton
+
+    // ---- Microsoft.UI.Xaml.Controls.RadioButton ----
+    const val CLS_RadioButton = "Microsoft.UI.Xaml.Controls.RadioButton"
+    const val IID_IRadioButtonFactory = "5772c79a-b3eb-5719-8005-2a513429495a"
+    const val IID_IRadioButton = "38f30cee-e75a-5ba1-ae64-4474a3abeac7"
+    const val IRadioButton_get_GroupName = 6           // get_GroupName(out HSTRING)
+    const val IRadioButton_put_GroupName = 7           // put_GroupName(HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.RepeatButton ----
+    const val CLS_RepeatButton = "Microsoft.UI.Xaml.Controls.Primitives.RepeatButton"
+    const val IID_IRepeatButton = "97f4c728-4a94-56b5-91e4-e7c6f6a1251a" // activatable (default factory)
+    const val IRepeatButton_get_Delay = 6              // get_Delay(out INT32) — milliseconds
+    const val IRepeatButton_put_Delay = 7              // put_Delay(INT32)
+    const val IRepeatButton_get_Interval = 8           // get_Interval(out INT32) — milliseconds
+    const val IRepeatButton_put_Interval = 9           // put_Interval(INT32)
+
+    // ---- Microsoft.UI.Xaml.Controls.HyperlinkButton ----
+    const val CLS_HyperlinkButton = "Microsoft.UI.Xaml.Controls.HyperlinkButton"
+    const val IID_IHyperlinkButtonFactory = "01f775ea-c5ed-514a-a23d-89c494a8f09d"
+    const val IID_IHyperlinkButton = "6dbee605-8df0-50cc-9a42-250eb138f0c6"
+    const val IHyperlinkButton_get_NavigateUri = 6     // get_NavigateUri(out Windows.Foundation.Uri)
+    const val IHyperlinkButton_put_NavigateUri = 7     // put_NavigateUri(Windows.Foundation.Uri)
+
+    // ---- Windows.Foundation.Uri (OS side, FoundationContract.winmd) ----
+    const val CLS_Uri = "Windows.Foundation.Uri"
+    const val IID_IUriRuntimeClassFactory = "44a9796f-723e-4fdf-a218-033e75b0c084"
+    const val IUriRuntimeClassFactory_CreateUri = 6    // CreateUri(HSTRING, out Uri)
+    const val IUriRuntimeClass_get_AbsoluteUri = 6     // get_AbsoluteUri(out HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.DropDownButton ----
+    const val CLS_DropDownButton = "Microsoft.UI.Xaml.Controls.DropDownButton"
+    const val IID_IDropDownButtonFactory = "7cf3e13b-668d-57e7-b5d6-f5ca3dbc80bd"
+    // IDropDownButton (c1e9fa91-4f95-5796-8a7b-3b7594a12c69) has no members. Flyout comes from IButton
+
+    // ---- Microsoft.UI.Xaml.Controls.SplitButton ----
+    const val CLS_SplitButton = "Microsoft.UI.Xaml.Controls.SplitButton"
+    const val IID_ISplitButtonFactory = "07510092-2612-55e7-981c-a536ddd4570e"
+    const val IID_ISplitButton = "f627202d-d2d7-5ff6-bb05-8c48eb6b1fc6"
+    const val ISplitButton_get_Flyout = 6              // get_Flyout(out FlyoutBase)
+    const val ISplitButton_put_Flyout = 7              // put_Flyout(FlyoutBase)
+    const val ISplitButton_add_Click = 12              // add_Click(TypedEventHandler, out token)
+    const val ISplitButton_remove_Click = 13           // remove_Click(token)
+    const val IID_ISplitButtonClickEventArgs = "6af896c2-e65a-5998-9c82-2af8f3e0741f"
+
+    // ---- Microsoft.UI.Xaml.Controls.ToggleSplitButton ----
+    const val CLS_ToggleSplitButton = "Microsoft.UI.Xaml.Controls.ToggleSplitButton"
+    const val IID_IToggleSplitButtonFactory = "25459d02-0ffc-5c7c-af56-f55aad6db5e7"
+    const val IID_IToggleSplitButton = "5c0f247b-bd00-5509-88a8-b09007ae22b0"
+    const val IToggleSplitButton_get_IsChecked = 6     // get_IsChecked(out boolean) — plain boolean
+    const val IToggleSplitButton_put_IsChecked = 7     // put_IsChecked(boolean)
+    const val IToggleSplitButton_add_IsCheckedChanged = 8 // add_IsCheckedChanged(TypedEventHandler, out token)
+    const val IToggleSplitButton_remove_IsCheckedChanged = 9
+    const val IID_IToggleSplitButtonIsCheckedChangedEventArgs = "6cab1e15-c017-5760-828b-dafc21d54eb2"
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.RangeBase (Slider's base) ----
+    const val IID_IRangeBase = "540d6d61-8fac-5d5c-b5b0-e172a7dde103"
+    const val IRangeBase_get_Minimum = 6               // get_Minimum(out DOUBLE)
+    const val IRangeBase_put_Minimum = 7               // put_Minimum(DOUBLE)
+    const val IRangeBase_get_Maximum = 8               // get_Maximum(out DOUBLE)
+    const val IRangeBase_put_Maximum = 9               // put_Maximum(DOUBLE)
+    const val IRangeBase_get_SmallChange = 10          // get_SmallChange(out DOUBLE)
+    const val IRangeBase_put_SmallChange = 11          // put_SmallChange(DOUBLE)
+    const val IRangeBase_get_LargeChange = 12          // get_LargeChange(out DOUBLE)
+    const val IRangeBase_put_LargeChange = 13          // put_LargeChange(DOUBLE)
+    const val IRangeBase_get_Value = 14                // get_Value(out DOUBLE)
+    const val IRangeBase_put_Value = 15                // put_Value(DOUBLE)
+    const val IRangeBase_add_ValueChanged = 16         // add_ValueChanged(RangeBaseValueChangedEventHandler, out token)
+    const val IRangeBase_remove_ValueChanged = 17
+
+    /** delegate Primitives.RangeBaseValueChangedEventHandler(sender, RangeBaseValueChangedEventArgs) — Invoke is vtbl[3] */
+    const val IID_RangeBaseValueChangedEventHandler = "23f0e209-9455-54cb-b8bc-0b49553c7dcc"
+    const val IID_IRangeBaseValueChangedEventArgs = "b0181692-9578-51c7-9d1c-adfcf8945aa9"
+    const val IRangeBaseValueChangedEventArgs_get_OldValue = 6 // get_OldValue(out DOUBLE)
+    const val IRangeBaseValueChangedEventArgs_get_NewValue = 7 // get_NewValue(out DOUBLE)
+
+    // ---- Microsoft.UI.Xaml.Controls.Slider ----
+    const val CLS_Slider = "Microsoft.UI.Xaml.Controls.Slider"
+    const val IID_ISliderFactory = "06604d71-34ca-5f39-9656-29d81d3c110c"
+    const val IID_ISlider = "f7418ecf-7c35-5216-8bf1-d82d47cce5df"
+    const val ISlider_get_StepFrequency = 8            // get_StepFrequency(out DOUBLE)
+    const val ISlider_put_StepFrequency = 9            // put_StepFrequency(DOUBLE)
+    const val ISlider_get_SnapsTo = 10                 // get_SnapsTo(out SliderSnapsTo)
+    const val ISlider_put_SnapsTo = 11                 // put_SnapsTo(SliderSnapsTo)
+    const val ISlider_get_TickFrequency = 12           // get_TickFrequency(out DOUBLE)
+    const val ISlider_put_TickFrequency = 13           // put_TickFrequency(DOUBLE)
+    const val ISlider_get_TickPlacement = 14           // get_TickPlacement(out TickPlacement)
+    const val ISlider_put_TickPlacement = 15           // put_TickPlacement(TickPlacement)
+    const val ISlider_get_Orientation = 16             // get_Orientation(out Orientation)
+    const val ISlider_put_Orientation = 17             // put_Orientation(Orientation)
+    const val ISlider_get_IsDirectionReversed = 18     // get_IsDirectionReversed(out boolean)
+    const val ISlider_put_IsDirectionReversed = 19     // put_IsDirectionReversed(boolean)
+    const val ISlider_put_Header = 25                  // put_Header(IInspectable)
+
+    // ---- Microsoft.UI.Xaml.Controls.ToggleSwitch ----
+    const val CLS_ToggleSwitch = "Microsoft.UI.Xaml.Controls.ToggleSwitch"
+    const val IID_IToggleSwitch = "1b17eeb1-74bf-5a83-8161-a86f0fdcdf24" // activatable (default factory)
+    const val IToggleSwitch_get_IsOn = 6               // get_IsOn(out boolean)
+    const val IToggleSwitch_put_IsOn = 7               // put_IsOn(boolean)
+    const val IToggleSwitch_put_Header = 9             // put_Header(IInspectable)
+    const val IToggleSwitch_put_OnContent = 13         // put_OnContent(IInspectable)
+    const val IToggleSwitch_put_OffContent = 17        // put_OffContent(IInspectable)
+    const val IToggleSwitch_add_Toggled = 21           // add_Toggled(RoutedEventHandler, out token)
+    const val IToggleSwitch_remove_Toggled = 22
+
+    // ---- Microsoft.UI.Xaml.Controls.ComboBox ----
+    const val CLS_ComboBox = "Microsoft.UI.Xaml.Controls.ComboBox"
+    const val IID_IComboBoxFactory = "71c1014b-acdf-5c03-b5ed-02871caaeb6b"
+    const val IID_IComboBox = "c77da58b-4fd7-51e0-a431-f84658a83e9e"
+    const val IComboBox_get_IsDropDownOpen = 6         // get_IsDropDownOpen(out boolean)
+    const val IComboBox_put_IsDropDownOpen = 7         // put_IsDropDownOpen(boolean)
+    const val IComboBox_get_IsEditable = 8             // get_IsEditable(out boolean)
+    const val IComboBox_put_IsEditable = 9             // put_IsEditable(boolean)
+    const val IComboBox_put_Header = 17                // put_Header(IInspectable)
+    const val IComboBox_get_PlaceholderText = 20       // get_PlaceholderText(out HSTRING)
+    const val IComboBox_put_PlaceholderText = 21       // put_PlaceholderText(HSTRING)
+    const val IComboBox_get_Text = 30                  // get_Text(out HSTRING)
+    const val IComboBox_put_Text = 31                  // put_Text(HSTRING)
+    const val IComboBox_add_TextSubmitted = 40         // add_TextSubmitted(TypedEventHandler, out token)
+    const val IComboBox_remove_TextSubmitted = 41
+    const val IID_IComboBoxTextSubmittedEventArgs = "0d7a9794-73b5-585e-bfbb-de6df7eb9fcf"
+    const val IComboBoxTextSubmittedEventArgs_get_Text = 6 // get_Text(out HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.RatingControl ----
+    const val CLS_RatingControl = "Microsoft.UI.Xaml.Controls.RatingControl"
+    const val IID_IRatingControlFactory = "a53b9b73-bff9-548d-a294-ac63d819f78a"
+    const val IID_IRatingControl = "5488193b-ea4b-52c6-8544-c063219bcd90"
+    const val IRatingControl_get_Caption = 6           // get_Caption(out HSTRING)
+    const val IRatingControl_put_Caption = 7           // put_Caption(HSTRING)
+    const val IRatingControl_get_IsClearEnabled = 10   // get_IsClearEnabled(out boolean)
+    const val IRatingControl_put_IsClearEnabled = 11   // put_IsClearEnabled(boolean)
+    const val IRatingControl_get_IsReadOnly = 12       // get_IsReadOnly(out boolean)
+    const val IRatingControl_put_IsReadOnly = 13       // put_IsReadOnly(boolean)
+    const val IRatingControl_get_MaxRating = 14        // get_MaxRating(out INT32)
+    const val IRatingControl_put_MaxRating = 15        // put_MaxRating(INT32)
+    const val IRatingControl_get_PlaceholderValue = 16 // get_PlaceholderValue(out DOUBLE)
+    const val IRatingControl_put_PlaceholderValue = 17 // put_PlaceholderValue(DOUBLE)
+    const val IRatingControl_get_Value = 20            // get_Value(out DOUBLE) — unset is -1
+    const val IRatingControl_put_Value = 21            // put_Value(DOUBLE)
+    const val IRatingControl_add_ValueChanged = 22     // add_ValueChanged(TypedEventHandler<RatingControl, Object>, out token)
+    const val IRatingControl_remove_ValueChanged = 23
+
+    // ---- Microsoft.UI.Xaml.Controls.ColorPicker ----
+    const val CLS_ColorPicker = "Microsoft.UI.Xaml.Controls.ColorPicker"
+    const val IID_IColorPickerFactory = "72c350e2-0a20-5b9b-ac54-633b97d7ffde"
+    const val IID_IColorPicker = "ae72b24b-f93f-5a19-8ce4-a18b73c3356d"
+    const val IColorPicker_get_Color = 6               // get_Color(out Windows.UI.Color) — struct
+    const val IColorPicker_put_Color = 7               // put_Color(Windows.UI.Color) — struct passed by value
+    const val IColorPicker_get_IsAlphaEnabled = 10     // get_IsAlphaEnabled(out boolean)
+    const val IColorPicker_put_IsAlphaEnabled = 11     // put_IsAlphaEnabled(boolean)
+    const val IColorPicker_put_IsMoreButtonVisible = 21 // put_IsMoreButtonVisible(boolean)
+    const val IColorPicker_put_IsHexInputVisible = 27  // put_IsHexInputVisible(boolean)
+    const val IColorPicker_get_ColorSpectrumShape = 40 // get_ColorSpectrumShape(out ColorSpectrumShape)
+    const val IColorPicker_put_ColorSpectrumShape = 41 // put_ColorSpectrumShape(ColorSpectrumShape)
+    const val IColorPicker_add_ColorChanged = 44       // add_ColorChanged(TypedEventHandler, out token)
+    const val IColorPicker_remove_ColorChanged = 45
+    const val IID_IColorChangedEventArgs = "148d57a2-b1cb-5f5d-b6b5-512805d71761"
+    const val IColorChangedEventArgs_get_NewColor = 7  // get_NewColor(out Windows.UI.Color) — struct
+
+    // ---- Microsoft.UI.Xaml.Controls.ScrollViewer ----
+    const val CLS_ScrollViewer = "Microsoft.UI.Xaml.Controls.ScrollViewer"
+    const val IID_IScrollViewer = "1dc28c2e-996c-5394-89c3-4dc656b4ad46" // activatable (default factory)
+
     // ---- Default control styles / metadata provider ----
     const val CLS_XamlControlsResources = "Microsoft.UI.Xaml.Controls.XamlControlsResources"
     const val IID_IResourceDictionary = "1b690975-a710-5783-a6e1-15836f6186c2"
@@ -324,6 +505,69 @@ object Abi {
                 "rc(Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs;" +
                 "{$IID_IExpanderCollapsedEventArgs}))",
         )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<SplitButton, SplitButtonClickEventArgs>. */
+    val IID_SplitButtonClickHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.SplitButton;{$IID_ISplitButton});" +
+                "rc(Microsoft.UI.Xaml.Controls.SplitButtonClickEventArgs;" +
+                "{$IID_ISplitButtonClickEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<ToggleSplitButton, ToggleSplitButtonIsCheckedChangedEventArgs>. */
+    val IID_ToggleSplitButtonIsCheckedChangedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ToggleSplitButton;{$IID_IToggleSplitButton});" +
+                "rc(Microsoft.UI.Xaml.Controls.ToggleSplitButtonIsCheckedChangedEventArgs;" +
+                "{$IID_IToggleSplitButtonIsCheckedChangedEventArgs}))",
+        )
+    }
+
+    /**
+     * The actual IID (computed at runtime) of TypedEventHandler<RatingControl, Object>.
+     * The second type argument is Object, so its signature is cinterface(IInspectable).
+     */
+    val IID_RatingControlValueChangedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.RatingControl;{$IID_IRatingControl});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<ColorPicker, ColorChangedEventArgs>. */
+    val IID_ColorPickerColorChangedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ColorPicker;{$IID_IColorPicker});" +
+                "rc(Microsoft.UI.Xaml.Controls.ColorChangedEventArgs;" +
+                "{$IID_IColorChangedEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<ComboBox, ComboBoxTextSubmittedEventArgs>. */
+    val IID_ComboBoxTextSubmittedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ComboBox;{$IID_IComboBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.ComboBoxTextSubmittedEventArgs;" +
+                "{$IID_IComboBoxTextSubmittedEventArgs}))",
+        )
+    }
+
+    /** Base IID of Windows.Foundation.IReference`1 (from FoundationContract.winmd). */
+    private const val IID_IReference_OPEN = "61c17706-2d65-11e0-9ae8-d48564015472"
+
+    /**
+     * The actual IID (computed at runtime) of IReference<Boolean>. The signature for boolean is b1.
+     * Used to box/unbox ToggleButton.IsChecked (null = indeterminate).
+     */
+    val IID_IReference_Boolean: String by lazy {
+        WinRt.pinterfaceIid("pinterface({$IID_IReference_OPEN};b1)")
     }
 
     // ---- Windows.Foundation.Collections.IVector<T> (OS side, FoundationContract.winmd) ----

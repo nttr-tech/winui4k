@@ -1,15 +1,8 @@
 package jp.hisano.winui4k.swing
 
 import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.KComObject
 import jp.hisano.winui4k.winrt.WinRt
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_INT
-import java.lang.foreign.ValueLayout.JAVA_LONG
 
 /**
  * Microsoft.UI.Xaml.Controls.ListViewSelectionMode (how many items can be selected).
@@ -61,10 +54,10 @@ class WList(items: List<String> = emptyList()) : WControl(
     }
 
     /** SelectionChanged event tokens registered via addListSelectionListener. */
-    private val selectionTokens = ArrayDeque<Pair<() -> Unit, Long>>()
+    private val selectionTokens = ListenerTokens<() -> Unit>()
 
     /** ItemClick event tokens registered via addItemClickListener. */
-    private val itemClickTokens = ArrayDeque<Pair<(String) -> Unit, Long>>()
+    private val itemClickTokens = ListenerTokens<(String) -> Unit>()
 
     /** Item count (Items.Size). */
     val itemCount: Int
@@ -140,33 +133,18 @@ class WList(items: List<String> = emptyList()) : WControl(
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
     fun addListSelectionListener(listener: () -> Unit) {
-        val handler = KComObject("WinUI4K.SelectionChangedHandler", inspectable = false)
-            .addInterface(
-                Abi.IID_SelectionChangedEventHandler,
-                listOf(
-                    // Invoke(this, IInspectable sender, SelectionChangedEventArgs e) — vtbl[3]
-                    KComObject.Method(
-                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS),
-                    ) {
-                        listener()
-                        KComObject.S_OK
-                    },
-                ),
-            )
-        val token = Arena.ofConfined().use { a ->
-            val out = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
-            selector.call(Abi.ISelector_add_SelectionChanged, handler.primary, out)
-            out.get(JAVA_LONG, 0)
-        }
-        selectionTokens.addLast(listener to token)
+        val token = selector.addEventHandler(
+            "WinUI4K.SelectionChangedHandler",
+            Abi.IID_SelectionChangedEventHandler,
+            Abi.ISelector_add_SelectionChanged,
+        ) { _, _ -> listener() }
+        selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
     fun removeListSelectionListener(listener: () -> Unit) {
-        val index = selectionTokens.indexOfLast { it.first === listener }
-        if (index < 0) return
-        val (_, token) = selectionTokens.removeAt(index)
-        selector.call(Abi.ISelector_remove_SelectionChanged, token)
+        val token = selectionTokens.remove(listener) ?: return
+        selector.removeEventHandler(Abi.ISelector_remove_SelectionChanged, token)
     }
 
     /**
@@ -175,40 +153,27 @@ class WList(items: List<String> = emptyList()) : WControl(
      * Only fires while [isItemClickEnabled] is true.
      */
     fun addItemClickListener(listener: (String) -> Unit) {
-        val handler = KComObject("WinUI4K.ItemClickHandler", inspectable = false)
-            .addInterface(
-                Abi.IID_ItemClickEventHandler,
-                listOf(
-                    // Invoke(this, IInspectable sender, ItemClickEventArgs e) — vtbl[3]
-                    KComObject.Method(
-                        FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS),
-                    ) { args ->
-                        // e is ItemClickEventArgs's default interface, so it can be called directly
-                        val e = ComPtr(args[2] as MemorySegment)
-                        val boxed = e.getPtr(Abi.IItemClickEventArgs_get_ClickedItem)
-                        val item = try {
-                            WinRt.unboxString(boxed) ?: ""
-                        } finally {
-                            boxed.release()
-                        }
-                        listener(item)
-                        KComObject.S_OK
-                    },
-                ),
-            )
-        val token = Arena.ofConfined().use { a ->
-            val out = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
-            listViewBase.call(Abi.IListViewBase_add_ItemClick, handler.primary, out)
-            out.get(JAVA_LONG, 0)
+        val token = listViewBase.addEventHandler(
+            "WinUI4K.ItemClickHandler",
+            Abi.IID_ItemClickEventHandler,
+            Abi.IListViewBase_add_ItemClick,
+        ) { _, args ->
+            // args is ItemClickEventArgs's default interface, so it can be called directly
+            val e = ComPtr(args)
+            val boxed = e.getPtr(Abi.IItemClickEventArgs_get_ClickedItem)
+            val item = try {
+                WinRt.unboxString(boxed) ?: ""
+            } finally {
+                boxed.release()
+            }
+            listener(item)
         }
-        itemClickTokens.addLast(listener to token)
+        itemClickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemClickListener]. */
     fun removeItemClickListener(listener: (String) -> Unit) {
-        val index = itemClickTokens.indexOfLast { it.first === listener }
-        if (index < 0) return
-        val (_, token) = itemClickTokens.removeAt(index)
-        listViewBase.call(Abi.IListViewBase_remove_ItemClick, token)
+        val token = itemClickTokens.remove(listener) ?: return
+        listViewBase.removeEventHandler(Abi.IListViewBase_remove_ItemClick, token)
     }
 }

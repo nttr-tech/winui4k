@@ -76,6 +76,13 @@ internal object XamlStructs {
         }
     }
 
+    /** Gets a Windows.UI.Color (u8×4) via an out argument (e.g. ColorPicker.Color). */
+    fun getColor(target: ComPtr, slot: Int): IntArray = Arena.ofConfined().use { a ->
+        val c = a.allocate(COLOR)
+        target.callWith(slot, FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS), c)
+        IntArray(4) { c.get(JAVA_BYTE, it.toLong()).toInt() and 0xFF } // A, R, G, B
+    }
+
     /** Puts a Windows.UI.Color (u8×4) by value (SolidColorBrush.Color). */
     fun putColor(target: ComPtr, slot: Int, alpha: Int, red: Int, green: Int, blue: Int) {
         Arena.ofConfined().use { a ->

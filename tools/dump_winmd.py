@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """Dump WinRT interface IIDs, vtable method order and class activation info from a .winmd.
 
+Interfaces also show decoded method signatures and event handler types
+(TypedEventHandler<T1, T2> etc.), and structs (System.ValueType) show field order/types.
+
 Usage: dump_winmd.py <file.winmd> <FullTypeName> [<FullTypeName> ...]
 """
 import sys, struct, uuid
 import dnfile
+
+# ECMA-335 ELEMENT_TYPE (signature type codes)
+ELEMENT_TYPES = {
+    0x01: 'void', 0x02: 'boolean', 0x03: 'char16', 0x04: 'i1', 0x05: 'u1',
+    0x06: 'i2', 0x07: 'u2', 0x08: 'i4', 0x09: 'u4', 0x0a: 'i8', 0x0b: 'u8',
+    0x0c: 'r4', 0x0d: 'r8', 0x0e: 'string', 0x1c: 'object',
+}
 
 def read_compressed_uint(b, pos):
     v = b[pos]
@@ -30,10 +40,89 @@ class Winmd:
         self.interfaceimpls = list(md.InterfaceImpl) if md.InterfaceImpl else []
         self.fields = list(md.Field) if md.Field else []
         self.constants = list(md.Constant) if md.Constant else []
+        self.typerefs = list(md.TypeRef) if md.TypeRef else []
+        self.eventmaps = list(md.EventMap) if md.EventMap else []
         self.field_rid = {id(f): i + 1 for i, f in enumerate(self.fields)}
         self.by_name = {}
         for i, td in enumerate(self.typedefs):
             self.by_name[f"{td.TypeNamespace}.{td.TypeName}"] = (i, td)
+
+    def _coded_type_name(self, coded):
+        """Resolves a TypeDefOrRef coded index (table 0=TypeDef, 1=TypeRef) to a type name."""
+        table, index = coded & 0x3, coded >> 2
+        if table == 0 and 0 < index <= len(self.typedefs):
+            t = self.typedefs[index - 1]
+            return f"{t.TypeNamespace}.{t.TypeName}"
+        if table == 1 and 0 < index <= len(self.typerefs):
+            t = self.typerefs[index - 1]
+            return f"{t.TypeNamespace}.{t.TypeName}"
+        return f"<typedeforref {table}:{index}>"
+
+    def decode_type(self, b, pos):
+        """Reads a single type from a signature blob, returning (display string, next position)."""
+        et = b[pos]; pos += 1
+        if et in ELEMENT_TYPES:
+            return ELEMENT_TYPES[et], pos
+        if et in (0x11, 0x12):  # VALUETYPE / CLASS
+            coded, pos = read_compressed_uint(b, pos)
+            return self._coded_type_name(coded), pos
+        if et == 0x15:  # GENERICINST
+            inner, pos = self.decode_type(b, pos)
+            n, pos = read_compressed_uint(b, pos)
+            args = []
+            for _ in range(n):
+                a, pos = self.decode_type(b, pos)
+                args.append(a)
+            return f"{inner}<{', '.join(args)}>", pos
+        if et == 0x13:  # VAR (generic type parameter)
+            n, pos = read_compressed_uint(b, pos)
+            return f"T{n}", pos
+        if et == 0x1d:  # SZARRAY
+            inner, pos = self.decode_type(b, pos)
+            return f"{inner}[]", pos
+        if et == 0x10:  # BYREF
+            inner, pos = self.decode_type(b, pos)
+            return f"ref {inner}", pos
+        return f"<et 0x{et:02x}>", pos
+
+    def method_signature(self, method_row):
+        """Formats a MethodDef's signature as 'name(params) -> ret'."""
+        b = method_row.Signature.value_bytes()
+        pos = 1  # skip the calling convention byte (0x20 = HASTHIS)
+        count, pos = read_compressed_uint(b, pos)
+        ret, pos = self.decode_type(b, pos)
+        params = []
+        for _ in range(count):
+            p, pos = self.decode_type(b, pos)
+            params.append(p)
+        return f"({', '.join(params)}) -> {ret}"
+
+    def events_of(self, td):
+        """List of (event name, handler type name) pairs. Also decodes TypeSpec (generic) handler types."""
+        out = []
+        for em in self.eventmaps:
+            try:
+                if em.Parent.row is not td:
+                    continue
+            except Exception:
+                continue
+            for ev in em.EventList:
+                row = ev.row.EventType.row
+                if hasattr(row, 'TypeNamespace'):
+                    name = f"{row.TypeNamespace}.{row.TypeName}"
+                else:  # TypeSpec
+                    name, _ = self.decode_type(row.Signature.value_bytes(), 0)
+                out.append((ev.row.Name, name))
+        return out
+
+    def fields_of(self, td):
+        """List of (field name, type name) pairs (for checking a struct's field order)."""
+        out = []
+        for f in td.FieldList:
+            b = f.row.Signature.value_bytes()  # FieldSig = 0x06 type
+            name, _ = self.decode_type(b, 1)
+            out.append((f.row.Name, name))
+        return out
 
     def _attr_type_name(self, ca):
         # ca.Type is a coded index -> MemberRef (ctor); its Class -> TypeRef
@@ -151,8 +240,10 @@ def main():
         if g:
             print(f"    guid: {g}")
         if is_interface:
-            for i, m in enumerate(w.methods_of(idx)):
-                print(f"    vtbl[{6+i}]: {m}")
+            for i, m in enumerate(td.MethodList):
+                print(f"    vtbl[{6+i}]: {m.row.Name}{w.method_signature(m.row)}")
+            for name, handler in w.events_of(td):
+                print(f"    event {name}: {handler}")
         else:
             ext = td.Extends
             try:
@@ -164,6 +255,9 @@ def main():
             elif base == 'System.Enum':
                 for n, v in w.enum_values(idx):
                     print(f"    {n} = {v}")
+            elif base == 'System.ValueType':
+                for n, t in w.fields_of(td):
+                    print(f"    field {n}: {t}")
             else:
                 ci = w.class_info(idx)
                 print(f"    base: {base}")
