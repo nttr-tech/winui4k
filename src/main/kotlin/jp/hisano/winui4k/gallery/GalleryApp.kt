@@ -5,10 +5,13 @@ import jp.hisano.winui4k.swing.ExpandDirection
 import jp.hisano.winui4k.swing.GridLength
 import jp.hisano.winui4k.swing.HorizontalAlignment
 import jp.hisano.winui4k.swing.ListViewSelectionMode
+import jp.hisano.winui4k.swing.NavigationViewBackButtonVisible
+import jp.hisano.winui4k.swing.NavigationViewPaneDisplayMode
 import jp.hisano.winui4k.swing.Orientation
 import jp.hisano.winui4k.swing.SliderSnapsTo
 import jp.hisano.winui4k.swing.SplitViewDisplayMode
 import jp.hisano.winui4k.swing.SplitViewPanePlacement
+import jp.hisano.winui4k.swing.Symbol
 import jp.hisano.winui4k.swing.TextWrapping
 import jp.hisano.winui4k.swing.TickPlacement
 import jp.hisano.winui4k.swing.WBorder
@@ -28,6 +31,8 @@ import jp.hisano.winui4k.swing.WGrid
 import jp.hisano.winui4k.swing.WHyperlinkButton
 import jp.hisano.winui4k.swing.WLabel
 import jp.hisano.winui4k.swing.WList
+import jp.hisano.winui4k.swing.WNavigationView
+import jp.hisano.winui4k.swing.WNavigationViewItem
 import jp.hisano.winui4k.swing.WPanel
 import jp.hisano.winui4k.swing.WRadioButton
 import jp.hisano.winui4k.swing.WRatingControl
@@ -57,26 +62,17 @@ fun main() {
         val pageArea = WPanel()
         pageArea.margin = 24.0
 
-        // StackPanel's contentPane measures children's height as unconstrained, so
-        // scrolling doesn't work. Constrain the height with a Grid star row instead,
-        // making both the navigation and each page scrollable.
-        val root = WGrid()
-        root.addRow(GridLength.star())
-        root.addColumn(GridLength.AUTO)
-        root.addColumn(GridLength.star())
-        root.add(
-            buildNavigationPane { buildPage ->
-                pageArea.removeAll()
-                pageArea.add(buildPage())
-            },
-            row = 0, column = 0,
-        )
-        root.add(WScrollPane(pageArea), row = 0, column = 1)
+        // Paint the content area a light gray (Mica-like), matching the WinUI Gallery's look
+        val pageBackground = WBorder(WScrollPane(pageArea))
+        pageBackground.background = PAGE_BACKGROUND
 
-        // Paint the whole window a light gray (Mica-like), matching the WinUI Gallery's look
-        val background = WBorder(root)
-        background.background = PAGE_BACKGROUND
-        frame.setContentPane(background)
+        val navigationView = buildGalleryNavigationView { buildPage ->
+            pageArea.removeAll()
+            pageArea.add(buildPage())
+        }
+        navigationView.content = pageBackground
+
+        frame.setContentPane(navigationView)
         frame.isVisible = true
     }
 }
@@ -107,6 +103,7 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "Grid" to ::buildGridPage,
     "HyperlinkButton" to ::buildHyperlinkButtonPage,
     "ListView" to ::buildListViewPage,
+    "NavigationView" to ::buildNavigationViewPage,
     "RadioButton" to ::buildRadioButtonPage,
     "RatingControl" to ::buildRatingControlPage,
     "RelativePanel" to ::buildRelativePanelPage,
@@ -152,49 +149,50 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "StackPanel",
         "VariableSizedWrapGrid",
     ),
+    "Navigation" to listOf(
+        "NavigationView",
+    ),
+)
+
+/** Category name -> the icon shown to the left of the category name in the navigation. */
+private val categoryIcons: Map<String, Symbol> = mapOf(
+    "Basic input" to Symbol.KEYBOARD,
+    "Collections" to Symbol.LIST,
+    "Layout" to Symbol.VIEW_ALL,
+    "Navigation" to Symbol.GLOBAL_NAVIGATION_BUTTON,
 )
 
 /**
- * The left-hand navigation. Toggles a per-category Expander open/closed, and
- * selecting a list item passes the selected page's builder to [onSelect].
+ * The left-hand navigation. Lines up page items under each category's parent item
+ * (with an icon), and selecting one passes the selected page's builder to [onSelect].
  */
-private fun buildNavigationPane(onSelect: (() -> WComponent) -> Unit): WComponent {
-    val lists = mutableListOf<WList>()
+private fun buildGalleryNavigationView(onSelect: (() -> WComponent) -> Unit): WNavigationView {
+    val navigationView = WNavigationView()
+    navigationView.paneTitle = "WinUI4K Gallery"
+    navigationView.isSettingsVisible = false
+    navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
+    navigationView.openPaneLength = 260.0
 
-    val menu = WPanel(spacing = 4.0)
-    menu.width = 224.0
+    var firstPageItem: WNavigationViewItem? = null
     for ((category, names) in categories) {
-        val list = WList(names)
-        list.addListSelectionListener {
-            val item = list.selectedItem ?: return@addListSelectionListener
-            // Only one selection across all categories (the one being cleared gets
-            // selectedItem = null, which is ignored above)
-            for (other in lists) {
-                if (other !== list) other.selectedIndex = -1
-            }
-            pages[item]?.let(onSelect)
+        // Categories aren't selectable (SelectsOnInvoked=false); they only toggle their children open/closed
+        val categoryItem = WNavigationViewItem(category, categoryIcons[category])
+        categoryItem.selectsOnInvoked = false
+        categoryItem.isExpanded = true
+        for (name in names) {
+            val pageItem = WNavigationViewItem(name)
+            categoryItem.addItem(pageItem)
+            if (firstPageItem == null) firstPageItem = pageItem
         }
-        lists += list
-
-        menu.add(WExpander(category, list).also { it.isExpanded = true })
+        navigationView.addItem(categoryItem)
     }
-    lists.first().selectedIndex = 0 // show the first category's first page initially
 
-    val title = WLabel("WinUI4K Gallery")
-    title.fontSize = 14.0
-    title.fontWeight = 600
-    title.margin = 12.0 // aligns with the list items' indent
-
-    // Two rows: title (auto) + category list (star). The category list fits the
-    // remaining height and scrolls.
-    val pane = WGrid(rowSpacing = 4.0)
-    pane.margin = 8.0
-    pane.addRow(GridLength.AUTO)
-    pane.addRow(GridLength.star())
-    pane.addColumn(GridLength.AUTO)
-    pane.add(title, row = 0, column = 0)
-    pane.add(WScrollPane(menu), row = 1, column = 0)
-    return pane
+    navigationView.addSelectionListener { item ->
+        val name = item?.text ?: return@addSelectionListener
+        pages[name]?.let(onSelect)
+    }
+    navigationView.selectedItem = firstPageItem // show the first category's first page initially
+    return navigationView
 }
 
 /** A page's skeleton (large heading + description). Each page adds its demos onto this return value. */
@@ -1468,6 +1466,120 @@ private fun buildSimpleColorPickerExample(): WComponent {
     row.add(colorPicker)
     row.add(tile)
     return buildExample("A simple color picker (Color / ColorChanged)", row)
+}
+
+/** The NavigationView page: lines up demos for trying out WNavigationView's various features. */
+private fun buildNavigationViewPage(): WComponent {
+    val page = buildPage("NavigationView", "A control that provides an app's top-level navigation. Try out WNavigationView's various features.")
+
+    page.add(buildSimpleNavigationViewExample())
+    page.add(buildNavigationViewPaneExample())
+    page.add(buildHierarchicalNavigationViewExample())
+    return page
+}
+
+/** Basic navigation: items with icons, and responding to selection changes (SelectionChanged). */
+private fun buildSimpleNavigationViewExample(): WComponent {
+    val contentLabel = WLabel("Showing Home")
+    contentLabel.margin = 16.0
+
+    val navigationView = WNavigationView()
+    navigationView.width = 480.0
+    navigationView.height = 280.0
+    navigationView.openPaneLength = 160.0
+    // The demo is narrower than the Auto mode threshold, so always show the left pane
+    navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
+    navigationView.isSettingsVisible = false
+    navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
+    navigationView.content = contentLabel
+
+    val home = WNavigationViewItem("Home", Symbol.HOME)
+    navigationView.addItem(home)
+    navigationView.addItem(WNavigationViewItem("Mail", Symbol.MAIL))
+    navigationView.addItem(WNavigationViewItem("Calendar", Symbol.CALENDAR))
+    navigationView.addFooterItem(WNavigationViewItem("Help", Symbol.HELP))
+
+    navigationView.addSelectionListener { item ->
+        if (item != null) contentLabel.text = "Showing ${item.text}"
+    }
+    navigationView.selectedItem = home
+
+    return buildExample("Simple navigation (MenuItems / Icon / SelectionChanged)", navigationView)
+}
+
+/** Controlling the pane: open/close, title, placement, and showing the settings item. */
+private fun buildNavigationViewPaneExample(): WComponent {
+    val navigationView = WNavigationView()
+    navigationView.width = 480.0
+    navigationView.height = 280.0
+    navigationView.openPaneLength = 180.0
+    navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
+    navigationView.paneTitle = "Menu"
+    navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
+    navigationView.content = WLabel("Content area").also { it.margin = 16.0 }
+
+    navigationView.addItem(WNavigationViewItem("Documents", Symbol.DOCUMENT))
+    navigationView.addItem(WNavigationViewItem("Pictures", Symbol.PICTURES))
+    navigationView.addItem(WNavigationViewItem("Music", Symbol.AUDIO))
+
+    val toggleButton = WButton("Toggle pane")
+    toggleButton.addActionListener { navigationView.isPaneOpen = !navigationView.isPaneOpen }
+
+    val settingsButton = WButton("Toggle settings item")
+    settingsButton.addActionListener { navigationView.isSettingsVisible = !navigationView.isSettingsVisible }
+
+    val modeButtons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    modeButtons.add(WLabel("PaneDisplayMode:"))
+    for (mode in NavigationViewPaneDisplayMode.entries) {
+        modeButtons.add(
+            WButton(mode.name).also { button ->
+                button.addActionListener { navigationView.paneDisplayMode = mode }
+            },
+        )
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(toggleButton)
+    buttons.add(settingsButton)
+
+    val body = WPanel(spacing = 8.0)
+    body.add(navigationView)
+    body.add(buttons)
+    body.add(modeButtons)
+    return buildExample("Controlling the pane (IsPaneOpen / PaneTitle / PaneDisplayMode / IsSettingsVisible)", body)
+}
+
+/** A hierarchical menu: nests child items under a parent item, and also responds to clicks (ItemInvoked). */
+private fun buildHierarchicalNavigationViewExample(): WComponent {
+    val result = WLabel("Clicked: none")
+
+    val navigationView = WNavigationView()
+    navigationView.width = 480.0
+    navigationView.height = 280.0
+    navigationView.openPaneLength = 180.0
+    navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
+    navigationView.isSettingsVisible = false
+    navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
+    navigationView.content = WLabel("Content area").also { it.margin = 16.0 }
+
+    navigationView.addItem(WNavigationViewItem("Home", Symbol.HOME))
+
+    // The parent item isn't selectable (SelectsOnInvoked=false); it only toggles its children open/closed
+    val documents = WNavigationViewItem("Documents", Symbol.FOLDER)
+    documents.selectsOnInvoked = false
+    documents.isExpanded = true
+    documents.addItem(WNavigationViewItem("Specs"))
+    documents.addItem(WNavigationViewItem("Meeting notes"))
+    navigationView.addItem(documents)
+
+    navigationView.addItemInvokedListener { name ->
+        result.text = "Clicked: $name"
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(navigationView)
+    body.add(result)
+    return buildExample("A hierarchical menu and clicks (nested MenuItems / IsExpanded / ItemInvoked)", body)
 }
 
 /** Display options: isAlphaEnabled / spectrumShape / isMoreButtonVisible. */

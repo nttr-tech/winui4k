@@ -1,0 +1,99 @@
+package jp.hisano.winui4k.swing
+
+import jp.hisano.winui4k.ffi.ComPtr
+import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winui.Abi
+import java.lang.foreign.MemorySegment
+
+/**
+ * JMenuItem-like: WinUI 3's NavigationViewItem.
+ *
+ * An item placed in a [WNavigationView]'s menu. Has a label ([text]) and an icon
+ * ([icon]); adding child items via [addItem] turns it into a hierarchical menu.
+ */
+class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
+    WinRt.composeDefault(Abi.CLS_NavigationViewItem, Abi.IID_INavigationViewItemFactory), // default interface = INavigationViewItem
+) {
+    private val contentControl: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_IContentControl)
+    }
+    private val item2: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_INavigationViewItem2)
+    }
+
+    /** The IVector<Object> view of NavigationViewItem.MenuItems (child items). */
+    private val childVector: ComPtr by lazy {
+        item2.getPtr(Abi.INavigationViewItem2_get_MenuItems)
+            .queryInterface(Abi.IID_IVector_Object)
+    }
+
+    /** Child items added via [addItem] (used to resolve the selected item back). */
+    internal val childItems = mutableListOf<WNavigationViewItem>()
+
+    /**
+     * The item's label string (ContentControl.Content).
+     * Content is Object-typed, so the setter passes a boxed string and the getter unboxes it.
+     */
+    var text: String
+        get() {
+            val boxed = contentControl.getPtrOrNull(Abi.IContentControl_get_Content) ?: return ""
+            return try {
+                WinRt.unboxString(boxed) ?: ""
+            } finally {
+                boxed.release()
+            }
+        }
+        set(value) {
+            val boxed = WinRt.boxString(value)
+            contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
+            boxed.release()
+        }
+
+    /** The icon shown to the left of the label (NavigationViewItem.Icon). Builds a SymbolIcon and passes it. */
+    var icon: Symbol? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                inspectable.call(Abi.INavigationViewItem_put_Icon, MemorySegment.NULL)
+            } else {
+                // Build a SymbolIcon via ISymbolIconFactory.CreateInstanceWithSymbol, then QI it
+                // to IconElement, put_Icon's declared type, before passing it along
+                val symbolIcon = WinRt.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
+                    .getPtr(Abi.ISymbolIconFactory_CreateInstanceWithSymbol, value.native)
+                val iconElement = symbolIcon.queryInterface(Abi.IID_IIconElement)
+                inspectable.call(Abi.INavigationViewItem_put_Icon, iconElement.ptr)
+                iconElement.release()
+                symbolIcon.release()
+            }
+        }
+
+    /**
+     * Whether clicking selects this item (NavigationViewItem.SelectsOnInvoked).
+     * Set to false for a heading item that only toggles its children open/closed.
+     */
+    var selectsOnInvoked: Boolean
+        get() = item2.getBool(Abi.INavigationViewItem2_get_SelectsOnInvoked)
+        set(value) = item2.putBool(Abi.INavigationViewItem2_put_SelectsOnInvoked, value)
+
+    /** Whether the child items are expanded (NavigationViewItem.IsExpanded). */
+    var isExpanded: Boolean
+        get() = item2.getBool(Abi.INavigationViewItem2_get_IsExpanded)
+        set(value) = item2.putBool(Abi.INavigationViewItem2_put_IsExpanded, value)
+
+    init {
+        if (text.isNotEmpty()) this.text = text
+        if (icon != null) this.icon = icon
+    }
+
+    /** Appends a child item to the end (MenuItems.Append). */
+    fun addItem(item: WNavigationViewItem) {
+        childVector.call(Abi.IVector_Append, item.inspectable.ptr)
+        childItems += item
+    }
+
+    /** This item and all its descendants (used to resolve the selected item back). */
+    internal fun selfAndDescendants(): Sequence<WNavigationViewItem> = sequence {
+        yield(this@WNavigationViewItem)
+        for (child in childItems) yieldAll(child.selfAndDescendants())
+    }
+}

@@ -457,6 +457,65 @@ object Abi {
     const val CLS_ScrollViewer = "Microsoft.UI.Xaml.Controls.ScrollViewer"
     const val IID_IScrollViewer = "1dc28c2e-996c-5394-89c3-4dc656b4ad46" // activatable (default factory)
 
+    // ---- Microsoft.UI.Xaml.Controls.IconElement / SymbolIcon ----
+    const val IID_IIconElement = "18f69350-279e-50ea-8d23-138e717ed939"
+    const val CLS_SymbolIcon = "Microsoft.UI.Xaml.Controls.SymbolIcon"
+    const val IID_ISymbolIconFactory = "d4430447-567c-5aad-996a-a547774e2c3c"
+    const val ISymbolIconFactory_CreateInstanceWithSymbol = 6 // CreateInstanceWithSymbol(Symbol, out SymbolIcon)
+    const val IID_ISymbolIcon = "a4322906-0dbe-5eb7-8b64-3e832246eb7f"
+    const val ISymbolIcon_get_Symbol = 6               // get_Symbol(out Symbol)
+    const val ISymbolIcon_put_Symbol = 7               // put_Symbol(Symbol)
+
+    // ---- Microsoft.UI.Xaml.Controls.NavigationView ----
+    const val CLS_NavigationView = "Microsoft.UI.Xaml.Controls.NavigationView"
+    const val IID_INavigationViewFactory = "ffea1ada-9232-5507-a320-ed2fadbe6127"
+    const val IID_INavigationView = "e77a4b36-3dd1-53d9-9f97-65dccaa74a5c"
+    const val INavigationView_get_IsPaneOpen = 6       // get_IsPaneOpen(out boolean)
+    const val INavigationView_put_IsPaneOpen = 7       // put_IsPaneOpen(boolean)
+    const val INavigationView_get_FooterMenuItems = 12 // get_FooterMenuItems(out IVector<Object>)
+    const val INavigationView_put_Header = 18          // put_Header(IInspectable)
+    const val INavigationView_get_DisplayMode = 21     // get_DisplayMode(out NavigationViewDisplayMode)
+    const val INavigationView_get_IsSettingsVisible = 22 // get_IsSettingsVisible(out boolean)
+    const val INavigationView_put_IsSettingsVisible = 23 // put_IsSettingsVisible(boolean)
+    const val INavigationView_get_IsPaneToggleButtonVisible = 24 // get_IsPaneToggleButtonVisible(out boolean)
+    const val INavigationView_put_IsPaneToggleButtonVisible = 25 // put_IsPaneToggleButtonVisible(boolean)
+    const val INavigationView_get_CompactPaneLength = 28 // get_CompactPaneLength(out DOUBLE)
+    const val INavigationView_put_CompactPaneLength = 29 // put_CompactPaneLength(DOUBLE)
+    const val INavigationView_get_OpenPaneLength = 30  // get_OpenPaneLength(out DOUBLE)
+    const val INavigationView_put_OpenPaneLength = 31  // put_OpenPaneLength(DOUBLE)
+    const val INavigationView_get_SelectedItem = 34    // get_SelectedItem(out IInspectable)
+    const val INavigationView_put_SelectedItem = 35    // put_SelectedItem(IInspectable)
+    const val INavigationView_get_MenuItems = 36       // get_MenuItems(out IVector<Object>)
+    const val INavigationView_add_SelectionChanged = 52 // add_SelectionChanged(TypedEventHandler, out token)
+    const val INavigationView_remove_SelectionChanged = 53
+    const val INavigationView_add_ItemInvoked = 54     // add_ItemInvoked(TypedEventHandler, out token)
+    const val INavigationView_remove_ItemInvoked = 55
+    const val IID_INavigationView2 = "05b428cf-014c-56dd-896a-a3e7089d73b5"
+    const val INavigationView2_get_IsBackButtonVisible = 6 // get_IsBackButtonVisible(out NavigationViewBackButtonVisible)
+    const val INavigationView2_put_IsBackButtonVisible = 7 // put_IsBackButtonVisible(NavigationViewBackButtonVisible)
+    const val INavigationView2_get_IsBackEnabled = 8   // get_IsBackEnabled(out boolean)
+    const val INavigationView2_put_IsBackEnabled = 9   // put_IsBackEnabled(boolean)
+    const val INavigationView2_get_PaneTitle = 10      // get_PaneTitle(out HSTRING)
+    const val INavigationView2_put_PaneTitle = 11      // put_PaneTitle(HSTRING)
+    const val INavigationView2_get_PaneDisplayMode = 22 // get_PaneDisplayMode(out NavigationViewPaneDisplayMode)
+    const val INavigationView2_put_PaneDisplayMode = 23 // put_PaneDisplayMode(NavigationViewPaneDisplayMode)
+    const val IID_INavigationViewSelectionChangedEventArgs = "14a064a5-c79d-5f63-ac6e-1c313fe63566"
+    const val INavigationViewSelectionChangedEventArgs_get_SelectedItem = 6 // get_SelectedItem(out IInspectable)
+    const val IID_INavigationViewItemInvokedEventArgs = "074cebaa-5d05-547b-8cd6-d19ac2d9bb3b"
+    const val INavigationViewItemInvokedEventArgs_get_InvokedItem = 6 // get_InvokedItem(out IInspectable)
+
+    // ---- Microsoft.UI.Xaml.Controls.NavigationViewItem ----
+    const val CLS_NavigationViewItem = "Microsoft.UI.Xaml.Controls.NavigationViewItem"
+    const val IID_INavigationViewItemFactory = "de60a001-9385-5535-80e1-2b68f4bfde26"
+    const val IID_INavigationViewItem = "3ab3d503-a37c-5836-8adb-2882062e73a1"
+    const val INavigationViewItem_put_Icon = 7         // put_Icon(IconElement)
+    const val IID_INavigationViewItem2 = "2d5bd889-9dac-5675-b254-68226f077a61"
+    const val INavigationViewItem2_get_SelectsOnInvoked = 6 // get_SelectsOnInvoked(out boolean)
+    const val INavigationViewItem2_put_SelectsOnInvoked = 7 // put_SelectsOnInvoked(boolean)
+    const val INavigationViewItem2_get_IsExpanded = 8  // get_IsExpanded(out boolean)
+    const val INavigationViewItem2_put_IsExpanded = 9  // put_IsExpanded(boolean)
+    const val INavigationViewItem2_get_MenuItems = 14  // get_MenuItems(out IVector<Object>)
+
     // ---- Default control styles / metadata provider ----
     const val CLS_XamlControlsResources = "Microsoft.UI.Xaml.Controls.XamlControlsResources"
     const val IID_IResourceDictionary = "1b690975-a710-5783-a6e1-15836f6186c2"
@@ -564,6 +623,26 @@ object Abi {
                 "rc(Microsoft.UI.Xaml.Controls.ComboBox;{$IID_IComboBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.ComboBoxTextSubmittedEventArgs;" +
                 "{$IID_IComboBoxTextSubmittedEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<NavigationView, NavigationViewSelectionChangedEventArgs>. */
+    val IID_NavigationViewSelectionChangedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.NavigationView;{$IID_INavigationView});" +
+                "rc(Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;" +
+                "{$IID_INavigationViewSelectionChangedEventArgs}))",
+        )
+    }
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<NavigationView, NavigationViewItemInvokedEventArgs>. */
+    val IID_NavigationViewItemInvokedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.NavigationView;{$IID_INavigationView});" +
+                "rc(Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;" +
+                "{$IID_INavigationViewItemInvokedEventArgs}))",
         )
     }
 
