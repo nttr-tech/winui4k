@@ -1,6 +1,7 @@
 package jp.hisano.winui4k
 
 import jp.hisano.winui4k.swing.WButton
+import jp.hisano.winui4k.swing.WFlyout
 import jp.hisano.winui4k.swing.WFrame
 import jp.hisano.winui4k.swing.WTextField
 import jp.hisano.winui4k.winui.WinUiToolkit

@@ -20,7 +20,8 @@ abstract class WComponent internal constructor(
     /** IUIElement view used for XAML tree operations. */
     internal val uiElement: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IUIElement) }
 
-    private val frameworkElement: ComPtr by lazy {
+    /** FrameworkElement view (also used as an argument to things like Flyout.ShowAt). */
+    internal val frameworkElement: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IFrameworkElement)
     }
 

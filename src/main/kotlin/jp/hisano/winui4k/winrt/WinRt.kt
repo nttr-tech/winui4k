@@ -16,6 +16,10 @@ object WinRt {
     private const val IID_IACTIVATION_FACTORY = "00000035-0000-0000-c000-000000000046"
     private const val IID_IPROPERTY_VALUE_STATICS = "629bdbc8-d932-4ff4-96b9-8d96c5c1e858"
 
+    /** Windows.Foundation.IPropertyValue (the retrieval side of a boxed value). From Windows.Foundation.winmd. */
+    private const val IID_IPROPERTY_VALUE = "4bd682dd-7554-40e9-9a9b-82654ede7e62"
+    private const val IPropertyValue_GetString = 19 // GetString(out HSTRING)
+
     private val roGetActivationFactory by lazy {
         Native.downcall(
             Native.combase, "RoGetActivationFactory",
@@ -64,6 +68,19 @@ object WinRt {
             val boxed = statics.getPtr(18, h) // vtbl[18] = CreateString (from the FoundationContract winmd)
             statics.release()
             boxed
+        }
+    }
+
+    /**
+     * The reverse of [boxString]: extracts the string if the IInspectable is a boxed string.
+     * Returns null if it isn't a boxed string (PropertyValue), e.g. when it holds a UIElement.
+     */
+    fun unboxString(boxed: ComPtr): String? {
+        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        return try {
+            pv.getString(IPropertyValue_GetString)
+        } finally {
+            pv.release()
         }
     }
 

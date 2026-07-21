@@ -5,7 +5,7 @@ import jp.hisano.winui4k.winrt.WinRt
 import jp.hisano.winui4k.winui.Abi
 
 /** JTextField-like: WinUI 3's TextBox. */
-class WTextField(placeholder: String = "") : WComponent(
+class WTextField(placeholder: String = "") : WControl(
     WinRt.composeDefault(Abi.CLS_TextBox, Abi.IID_ITextBoxFactory)
         .queryInterface(Abi.IID_ITextBox),
 ) {

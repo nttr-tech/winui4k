@@ -4,6 +4,7 @@ import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout.ADDRESS
+import java.lang.foreign.ValueLayout.JAVA_BYTE
 import java.lang.foreign.ValueLayout.JAVA_DOUBLE
 import java.lang.foreign.ValueLayout.JAVA_INT
 import java.lang.foreign.ValueLayout.JAVA_LONG
@@ -63,6 +64,37 @@ class ComPtr(val ptr: MemorySegment) {
         ComPtr(out.get(ADDRESS, 0))
     }
 
+    /** Null-tolerant version of [getPtr], for properties whose output can be a null pointer (e.g. Content). */
+    fun getPtrOrNull(slot: Int, vararg args: Any?): ComPtr? = Arena.ofConfined().use { a ->
+        val out = a.allocate(ADDRESS)
+        call(slot, *args, out)
+        val p = out.get(ADDRESS, 0)
+        if (p.address() == 0L) null else ComPtr(p)
+    }
+
+    /** `HRESULT f(boolean* out)` pattern. WinRT's boolean is 1 byte. */
+    fun getBool(slot: Int): Boolean = Arena.ofConfined().use { a ->
+        val out = a.allocate(JAVA_BYTE)
+        call(slot, out)
+        out.get(JAVA_BYTE, 0).toInt() != 0
+    }
+
+    /** `HRESULT f(boolean value)` pattern. */
+    fun putBool(slot: Int, value: Boolean) {
+        callWith(
+            slot,
+            FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_BYTE),
+            if (value) 1.toByte() else 0.toByte(),
+        )
+    }
+
+    /** `HRESULT f(INT32* out)` pattern (e.g. an enum getter). */
+    fun getInt(slot: Int): Int = Arena.ofConfined().use { a ->
+        val out = a.allocate(JAVA_INT)
+        call(slot, out)
+        out.get(JAVA_INT, 0)
+    }
+
     /** `HRESULT f(HSTRING* out)` pattern. */
     fun getString(slot: Int): String = Arena.ofConfined().use { a ->
         val out = a.allocate(ADDRESS)
@@ -77,6 +109,13 @@ class ComPtr(val ptr: MemorySegment) {
 
     fun queryInterface(iid: String): ComPtr = getPtr(0, Guid.of(iid)) // IUnknown::QueryInterface
 
+    /** Null-tolerant version of [queryInterface]. Returns null if the interface isn't implemented. */
+    fun queryInterfaceOrNull(iid: String): ComPtr? = Arena.ofConfined().use { a ->
+        val out = a.allocate(ADDRESS)
+        val hr = rawCall(0, QI_DESC, Guid.of(iid), out)
+        if (hr != 0) null else ComPtr(out.get(ADDRESS, 0))
+    }
+
     fun addRef() {
         rawCall(1, UNKNOWN_DESC) // IUnknown::AddRef (return value is the reference count)
     }
@@ -87,6 +126,9 @@ class ComPtr(val ptr: MemorySegment) {
 
     companion object {
         val UNKNOWN_DESC: FunctionDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS)
+
+        /** HRESULT QueryInterface(this, riid, ppv) */
+        private val QI_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS)
 
         private val handleCache = ConcurrentHashMap<FunctionDescriptor, MethodHandle>()
 
