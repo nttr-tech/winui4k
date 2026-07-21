@@ -91,6 +91,25 @@ object WinUiToolkit {
         }
     }
 
+    /** True if the current thread is WinUI's UI thread (SwingUtilities.isEventDispatchThread-like). */
+    val isDispatchThread: Boolean
+        get() = Dispatcher.isDispatchThread
+
+    /**
+     * Posts [block] to the UI thread's message loop (SwingUtilities.invokeLater-like).
+     * Can be called from any thread. Only usable while the UI thread is running via [launch].
+     */
+    fun invokeLater(block: () -> Unit) {
+        Dispatcher.invokeLater(block)
+    }
+
+    /**
+     * Runs [block] once on the UI thread after [delayMillis] milliseconds (a one-shot
+     * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
+     * fired yet. Can be called from any thread.
+     */
+    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable = Dispatcher.schedule(delayMillis, block)
+
     /**
      * Does at the ABI level what C#'s `class App : Application { override OnLaunched(...) }`
      * does: passes the Kotlin-implemented outer (IApplicationOverrides +

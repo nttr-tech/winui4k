@@ -1,5 +1,6 @@
 package jp.hisano.winui4k.gallery
 
+import jp.hisano.winui4k.coroutines.WinUi
 import jp.hisano.winui4k.swing.BadgeGlyph
 import jp.hisano.winui4k.swing.ColorSpectrumShape
 import jp.hisano.winui4k.swing.ContentDialogButton
@@ -67,6 +68,14 @@ import jp.hisano.winui4k.swing.WToggleSplitButton
 import jp.hisano.winui4k.swing.WToggleSwitch
 import jp.hisano.winui4k.swing.WVariableSizedWrapGrid
 import jp.hisano.winui4k.winui.WinUiToolkit
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * A WinUI 3 Gallery-style component gallery.
@@ -259,6 +268,7 @@ private fun buildButtonPage(): WComponent {
     page.add(buildSimpleButtonExample())
     page.add(buildFlyoutButtonExample())
     page.add(buildCommandButtonExample())
+    page.add(buildCoroutineButtonExample())
     return page
 }
 
@@ -344,6 +354,51 @@ private fun buildCommandButtonExample(): WComponent {
     row.add(toggleButton)
     row.add(result)
     return buildExample("Button with a command", row)
+}
+
+/** The UI-thread coroutine scope used across the gallery (launches on Dispatchers.WinUi). */
+private val uiScope = CoroutineScope(SupervisorJob() + Dispatchers.WinUi)
+
+/** Coroutine integration: launch / delay / withContext / cancellation on Dispatchers.WinUi. */
+private fun buildCoroutineButtonExample(): WComponent {
+    val result = WLabel("Not run yet")
+    var job: Job? = null
+
+    val startButton = WButton("Start a 3-second task")
+    val cancelButton = WButton("Cancel")
+    cancelButton.isEnabled = false
+
+    startButton.addActionListener {
+        startButton.isEnabled = false
+        cancelButton.isEnabled = true
+        job = uiScope.launch {
+            try {
+                // delay doesn't block the UI thread; it waits via a DispatcherQueueTimer
+                for (remaining in 3 downTo 1) {
+                    result.text = "Working... $remaining seconds left"
+                    delay(1_000)
+                }
+                // Move the heavy computation to a worker thread, only bringing the result back to the UI thread
+                val sum = withContext(Dispatchers.Default) {
+                    (1L..1_000_000_000L).sum()
+                }
+                result.text = "Done (sum of 1 to 1 billion = $sum)"
+            } catch (e: CancellationException) {
+                result.text = "Cancelled"
+                throw e
+            } finally {
+                startButton.isEnabled = true
+                cancelButton.isEnabled = false
+            }
+        }
+    }
+    cancelButton.addActionListener { job?.cancel() }
+
+    val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    row.add(startButton)
+    row.add(cancelButton)
+    row.add(result)
+    return buildExample("Coroutine integration (Dispatchers.WinUi / delay / withContext / cancel)", row)
 }
 
 /** The ListView page: lines up demos for trying out WList's various features. */

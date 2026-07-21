@@ -836,10 +836,28 @@ object Abi {
     const val IID_IDispatcherQueueStatics = "cd3382ea-a455-5124-b63a-ca40d34ca23c"
     const val IDispatcherQueueStatics_GetForCurrentThread = 6 // GetForCurrentThread(out DispatcherQueue)
     const val IID_IDispatcherQueue = "f6ebf8fa-be1c-5bf6-a467-73da28738ae8"
+    const val IDispatcherQueue_CreateTimer = 6         // CreateTimer(out DispatcherQueueTimer)
     const val IDispatcherQueue_TryEnqueue = 7          // TryEnqueue(DispatcherQueueHandler, out boolean)
 
     /** delegate Microsoft.UI.Dispatching.DispatcherQueueHandler — Invoke() is vtbl[3], no arguments */
     const val IID_DispatcherQueueHandler = "2e0872a9-4e29-5f14-b688-fb96d5f9d5f8"
+
+    // ---- Microsoft.UI.Dispatching.DispatcherQueueTimer (Microsoft.UI.winmd) ----
+    const val IID_IDispatcherQueueTimer = "ad4d63fd-88fe-541f-ac11-bf2dc1ed2ce5"
+    const val IDispatcherQueueTimer_put_Interval = 7   // put_Interval(TimeSpan) — an int64 in 100ns units, passed by value
+    const val IDispatcherQueueTimer_put_IsRepeating = 10 // put_IsRepeating(boolean)
+    const val IDispatcherQueueTimer_Start = 11         // Start()
+    const val IDispatcherQueueTimer_Stop = 12          // Stop()
+    const val IDispatcherQueueTimer_add_Tick = 13      // add_Tick(TypedEventHandler<DispatcherQueueTimer, Object>, out token)
+
+    /** The actual IID (computed at runtime) of TypedEventHandler<DispatcherQueueTimer, Object>. */
+    val IID_DispatcherQueueTimerTickHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Dispatching.DispatcherQueueTimer;{$IID_IDispatcherQueueTimer});" +
+                "cinterface(IInspectable))",
+        )
+    }
 
     // ---- Windows.Foundation async (IAsyncAction / IAsyncOperation<T>) ----
     const val IID_IAsyncInfo = "00000036-0000-0000-c000-000000000046"

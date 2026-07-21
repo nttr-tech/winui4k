@@ -12,6 +12,7 @@ kotlin {
 
 dependencies {
     implementation(project(":winui4k"))
+    implementation(project(":winui4k-coroutines"))
 }
 
 application {
