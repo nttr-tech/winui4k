@@ -45,6 +45,10 @@ object Abi {
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_put_Width = 16
     const val IFrameworkElement_put_Height = 18
+    const val IFrameworkElement_get_HorizontalAlignment = 27 // get_HorizontalAlignment(out HorizontalAlignment)
+    const val IFrameworkElement_put_HorizontalAlignment = 28 // put_HorizontalAlignment(HorizontalAlignment)
+    const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
+    const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
 
     // ---- Microsoft.UI.Xaml.Controls.StackPanel ----
@@ -180,6 +184,10 @@ object Abi {
     const val IID_ITextBlock = "1ac8d84f-392c-5c7e-83f5-a53e3bf0abb0"
     const val ITextBlock_get_FontSize = 6
     const val ITextBlock_put_FontSize = 7
+    const val ITextBlock_put_FontWeight = 11           // put_FontWeight(FontWeight { u2 Weight } passed by value)
+    const val ITextBlock_put_Foreground = 19           // put_Foreground(Brush)
+    const val ITextBlock_get_TextWrapping = 20         // get_TextWrapping(out TextWrapping)
+    const val ITextBlock_put_TextWrapping = 21         // put_TextWrapping(TextWrapping)
     const val ITextBlock_get_Text = 26
     const val ITextBlock_put_Text = 27
 

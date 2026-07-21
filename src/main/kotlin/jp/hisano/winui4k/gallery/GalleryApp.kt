@@ -3,11 +3,13 @@ package jp.hisano.winui4k.gallery
 import jp.hisano.winui4k.swing.ColorSpectrumShape
 import jp.hisano.winui4k.swing.ExpandDirection
 import jp.hisano.winui4k.swing.GridLength
+import jp.hisano.winui4k.swing.HorizontalAlignment
 import jp.hisano.winui4k.swing.ListViewSelectionMode
 import jp.hisano.winui4k.swing.Orientation
 import jp.hisano.winui4k.swing.SliderSnapsTo
 import jp.hisano.winui4k.swing.SplitViewDisplayMode
 import jp.hisano.winui4k.swing.SplitViewPanePlacement
+import jp.hisano.winui4k.swing.TextWrapping
 import jp.hisano.winui4k.swing.TickPlacement
 import jp.hisano.winui4k.swing.WBorder
 import jp.hisano.winui4k.swing.WButton
@@ -51,15 +53,14 @@ fun main() {
     WinUiToolkit.launch {
         val frame = WFrame(title = "WinUI4K Gallery")
 
+        // Content gets set by the initial selection when the navigation is built
         val pageArea = WPanel()
-        pageArea.margin = 8.0
-        pageArea.add(pages.values.first()())
+        pageArea.margin = 24.0
 
         // StackPanel's contentPane measures children's height as unconstrained, so
         // scrolling doesn't work. Constrain the height with a Grid star row instead,
         // making both the navigation and each page scrollable.
-        val root = WGrid(columnSpacing = 24.0)
-        root.margin = 24.0
+        val root = WGrid()
         root.addRow(GridLength.star())
         root.addColumn(GridLength.AUTO)
         root.addColumn(GridLength.star())
@@ -72,10 +73,26 @@ fun main() {
         )
         root.add(WScrollPane(pageArea), row = 0, column = 1)
 
-        frame.setContentPane(root)
+        // Paint the whole window a light gray (Mica-like), matching the WinUI Gallery's look
+        val background = WBorder(root)
+        background.background = PAGE_BACKGROUND
+        frame.setContentPane(background)
         frame.isVisible = true
     }
 }
+
+// Colors matching the WinUI 3 Gallery's light theme
+/** The whole window's background (a Mica-like light gray). */
+private val PAGE_BACKGROUND = WColor(243, 243, 243)
+
+/** The background of cards that host demos (slightly brighter than the page background). */
+private val CARD_BACKGROUND = WColor(251, 251, 251)
+
+/** A card's border. */
+private val CARD_BORDER = WColor(229, 229, 229)
+
+/** A subdued text color for things like page descriptions. */
+private val TEXT_SECONDARY = WColor(97, 97, 97)
 
 /** Page name (WinUI control name) -> the function that builds its demo page. */
 private val pages: Map<String, () -> WComponent> = linkedMapOf(
@@ -104,30 +121,101 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "VariableSizedWrapGrid" to ::buildVariableSizedWrapGridPage,
 )
 
-/** The left-hand navigation. Selecting a list item passes the selected page's builder to [onSelect]. */
-private fun buildNavigationPane(onSelect: (() -> WComponent) -> Unit): WComponent {
-    val list = WList(pages.keys.toList())
-    list.width = 200.0
-    list.selectedIndex = 0
-    list.addListSelectionListener {
-        pages[list.selectedItem]?.let(onSelect)
-    }
+/** Navigation categories (matching the real WinUI 3 Gallery's grouping) -> the page names in each. */
+private val categories: Map<String, List<String>> = linkedMapOf(
+    "Basic input" to listOf(
+        "Button",
+        "CheckBox",
+        "ColorPicker",
+        "ComboBox",
+        "DropDownButton",
+        "HyperlinkButton",
+        "RadioButton",
+        "RatingControl",
+        "RepeatButton",
+        "Slider",
+        "SplitButton",
+        "ToggleButton",
+        "ToggleSplitButton",
+        "ToggleSwitch",
+    ),
+    "Collections" to listOf(
+        "ListView",
+    ),
+    "Layout" to listOf(
+        "Border",
+        "Canvas",
+        "Expander",
+        "Grid",
+        "RelativePanel",
+        "SplitView",
+        "StackPanel",
+        "VariableSizedWrapGrid",
+    ),
+)
 
-    // Two rows: title (auto) + list (star). The list fits the remaining height and scrolls.
-    val pane = WGrid(rowSpacing = 8.0)
+/**
+ * The left-hand navigation. Toggles a per-category Expander open/closed, and
+ * selecting a list item passes the selected page's builder to [onSelect].
+ */
+private fun buildNavigationPane(onSelect: (() -> WComponent) -> Unit): WComponent {
+    val lists = mutableListOf<WList>()
+
+    val menu = WPanel(spacing = 4.0)
+    menu.width = 224.0
+    for ((category, names) in categories) {
+        val list = WList(names)
+        list.addListSelectionListener {
+            val item = list.selectedItem ?: return@addListSelectionListener
+            // Only one selection across all categories (the one being cleared gets
+            // selectedItem = null, which is ignored above)
+            for (other in lists) {
+                if (other !== list) other.selectedIndex = -1
+            }
+            pages[item]?.let(onSelect)
+        }
+        lists += list
+
+        menu.add(WExpander(category, list).also { it.isExpanded = true })
+    }
+    lists.first().selectedIndex = 0 // show the first category's first page initially
+
+    val title = WLabel("WinUI4K Gallery")
+    title.fontSize = 14.0
+    title.fontWeight = 600
+    title.margin = 12.0 // aligns with the list items' indent
+
+    // Two rows: title (auto) + category list (star). The category list fits the
+    // remaining height and scrolls.
+    val pane = WGrid(rowSpacing = 4.0)
+    pane.margin = 8.0
     pane.addRow(GridLength.AUTO)
     pane.addRow(GridLength.star())
     pane.addColumn(GridLength.AUTO)
-    pane.add(WLabel("WinUI4K Gallery").also { it.fontSize = 20.0 }, row = 0, column = 0)
-    pane.add(list, row = 1, column = 0)
+    pane.add(title, row = 0, column = 0)
+    pane.add(WScrollPane(menu), row = 1, column = 0)
     return pane
+}
+
+/** A page's skeleton (large heading + description). Each page adds its demos onto this return value. */
+private fun buildPage(title: String, description: String): WPanel {
+    val header = WPanel(spacing = 4.0)
+    header.add(WLabel(title).also { it.fontSize = 28.0; it.fontWeight = 600 })
+    header.add(
+        WLabel(description).also {
+            it.foreground = TEXT_SECONDARY
+            it.textWrapping = TextWrapping.WRAP
+        },
+    )
+
+    val page = WPanel(spacing = 24.0)
+    page.add(header)
+    return page
 }
 
 /** The Button page: lines up demos for trying out WButton's various features. */
 private fun buildButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Button").also { it.fontSize = 28.0 })
-    page.add(WLabel("A button that responds to clicks. Try out WButton's various features."))
+    val page = buildPage("Button", "A button that responds to clicks. Try out WButton's various features.")
 
     page.add(buildSimpleButtonExample())
     page.add(buildFlyoutButtonExample())
@@ -135,11 +223,22 @@ private fun buildButtonPage(): WComponent {
     return page
 }
 
-/** One demo section (heading + body). */
+/** One demo section (heading + body placed on a card). */
 private fun buildExample(title: String, body: WComponent): WComponent {
+    // Like the real Gallery, keep the demo body from stretching to the card's
+    // full width; left-align it instead
+    body.horizontalAlignment = HorizontalAlignment.LEFT
+
+    val card = WBorder(body)
+    card.background = CARD_BACKGROUND
+    card.borderColor = CARD_BORDER
+    card.borderThickness = 1.0
+    card.cornerRadius = 8.0
+    card.padding = 16.0
+
     val section = WPanel(spacing = 8.0)
-    section.add(WLabel(title).also { it.fontSize = 16.0 })
-    section.add(body)
+    section.add(WLabel(title).also { it.fontWeight = 600; it.textWrapping = TextWrapping.WRAP })
+    section.add(card)
     return section
 }
 
@@ -210,9 +309,7 @@ private fun buildCommandButtonExample(): WComponent {
 
 /** The ListView page: lines up demos for trying out WList's various features. */
 private fun buildListViewPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ListView").also { it.fontSize = 28.0 })
-    page.add(WLabel("A list that lines items up vertically for selection. Try out WList's various features."))
+    val page = buildPage("ListView", "A list that lines items up vertically for selection. Try out WList's various features.")
 
     page.add(buildSimpleListExample())
     page.add(buildListItemOperationsExample())
@@ -330,9 +427,7 @@ private fun buildTile(color: WColor, width: Double = Double.NaN, height: Double 
 
 /** The Border page: lines up demos for trying out WBorder's various features. */
 private fun buildBorderPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Border").also { it.fontSize = 28.0 })
-    page.add(WLabel("A container that draws a border, background, and rounded corners around a single child. Try out WBorder's various features."))
+    val page = buildPage("Border", "A container that draws a border, background, and rounded corners around a single child. Try out WBorder's various features.")
 
     page.add(buildBorderStyleExample())
     page.add(buildBorderBackgroundExample())
@@ -395,9 +490,7 @@ private fun buildBorderBackgroundExample(): WComponent {
 
 /** The Canvas page: lines up demos for trying out WCanvas's various features. */
 private fun buildCanvasPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Canvas").also { it.fontSize = 28.0 })
-    page.add(WLabel("A panel that positions children with absolute coordinates. Try out WCanvas's various features."))
+    val page = buildPage("Canvas", "A panel that positions children with absolute coordinates. Try out WCanvas's various features.")
 
     page.add(buildCanvasPositionExample())
     page.add(buildCanvasZIndexExample())
@@ -456,9 +549,7 @@ private fun buildCanvasZIndexExample(): WComponent {
 
 /** The Expander page: lines up demos for trying out WExpander's various features. */
 private fun buildExpanderPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Expander").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control that expands/collapses its content when the header is clicked. Try out WExpander's various features."))
+    val page = buildPage("Expander", "A control that expands/collapses its content when the header is clicked. Try out WExpander's various features.")
 
     page.add(buildExpanderBasicExample())
     page.add(buildExpanderDirectionExample())
@@ -510,9 +601,7 @@ private fun buildExpanderDirectionExample(): WComponent {
 
 /** The Grid page: lines up demos for trying out WGrid's various features. */
 private fun buildGridPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Grid").also { it.fontSize = 28.0 })
-    page.add(WLabel("A panel that defines rows and columns and places children into cells. Try out WGrid's various features."))
+    val page = buildPage("Grid", "A panel that defines rows and columns and places children into cells. Try out WGrid's various features.")
 
     page.add(buildGridCellExample())
     page.add(buildGridSpanExample())
@@ -565,9 +654,7 @@ private fun buildGridSpanExample(): WComponent {
 
 /** The RelativePanel page: lines up demos for trying out WRelativePanel's various features. */
 private fun buildRelativePanelPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("RelativePanel").also { it.fontSize = 28.0 })
-    page.add(WLabel("A panel that positions children relative to each other or to the panel. Try out WRelativePanel's various features."))
+    val page = buildPage("RelativePanel", "A panel that positions children relative to each other or to the panel. Try out WRelativePanel's various features.")
 
     page.add(buildRelativePanelSiblingExample())
     page.add(buildRelativePanelAlignExample())
@@ -626,9 +713,7 @@ private fun buildRelativePanelAlignExample(): WComponent {
 
 /** The SplitView page: lines up demos for trying out WSplitView's various features. */
 private fun buildSplitViewPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("SplitView").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control that lines up a collapsible pane alongside content. Try out WSplitView's various features."))
+    val page = buildPage("SplitView", "A control that lines up a collapsible pane alongside content. Try out WSplitView's various features.")
 
     page.add(buildSplitViewExample())
     return page
@@ -685,9 +770,7 @@ private fun buildSplitViewExample(): WComponent {
 
 /** The StackPanel page: lines up demos for trying out WPanel's various features. */
 private fun buildStackPanelPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("StackPanel").also { it.fontSize = 28.0 })
-    page.add(WLabel("A panel that lines up children in one direction. Try out WPanel's various features."))
+    val page = buildPage("StackPanel", "A panel that lines up children in one direction. Try out WPanel's various features.")
 
     page.add(buildStackPanelExample())
     return page
@@ -725,9 +808,7 @@ private fun buildStackPanelExample(): WComponent {
 
 /** The VariableSizedWrapGrid page: lines up demos for trying out WVariableSizedWrapGrid's various features. */
 private fun buildVariableSizedWrapGridPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("VariableSizedWrapGrid").also { it.fontSize = 28.0 })
-    page.add(WLabel("A panel that wraps children by cell. Try out WVariableSizedWrapGrid's various features."))
+    val page = buildPage("VariableSizedWrapGrid", "A panel that wraps children by cell. Try out WVariableSizedWrapGrid's various features.")
 
     page.add(buildWrapGridSpanExample())
     return page
@@ -788,9 +869,7 @@ private fun buildListItemClickExample(): WComponent {
 
 /** The CheckBox page: lines up demos for trying out WCheckBox's various features. */
 private fun buildCheckBoxPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("CheckBox").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for toggling checked/unchecked (and indeterminate). Try out WCheckBox's various features."))
+    val page = buildPage("CheckBox", "A control for toggling checked/unchecked (and indeterminate). Try out WCheckBox's various features.")
 
     page.add(buildSimpleCheckBoxExample())
     page.add(buildThreeStateCheckBoxExample())
@@ -873,9 +952,7 @@ private fun buildSelectAllCheckBoxExample(): WComponent {
 
 /** The RadioButton page: lines up demos for trying out WRadioButton's various features. */
 private fun buildRadioButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("RadioButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for picking exactly one option within a group. Try out WRadioButton's various features."))
+    val page = buildPage("RadioButton", "A control for picking exactly one option within a group. Try out WRadioButton's various features.")
 
     page.add(buildSimpleRadioButtonExample())
     page.add(buildRadioButtonGroupExample())
@@ -935,9 +1012,7 @@ private fun buildRadioButtonGroupExample(): WComponent {
 
 /** The ToggleButton page: lines up demos for trying out WToggleButton's various features. */
 private fun buildToggleButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ToggleButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A button that toggles on/off each time it's pressed. Try out WToggleButton's various features."))
+    val page = buildPage("ToggleButton", "A button that toggles on/off each time it's pressed. Try out WToggleButton's various features.")
 
     page.add(buildSimpleToggleButtonExample())
     return page
@@ -966,9 +1041,7 @@ private fun buildSimpleToggleButtonExample(): WComponent {
 
 /** The RepeatButton page: lines up demos for trying out WRepeatButton's various features. */
 private fun buildRepeatButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("RepeatButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A button that fires Click repeatedly while held down. Try out WRepeatButton's various features."))
+    val page = buildPage("RepeatButton", "A button that fires Click repeatedly while held down. Try out WRepeatButton's various features.")
 
     page.add(buildSimpleRepeatButtonExample())
     page.add(buildRepeatButtonSpeedExample())
@@ -1019,9 +1092,7 @@ private fun buildRepeatButtonSpeedExample(): WComponent {
 
 /** The HyperlinkButton page: lines up demos for trying out WHyperlinkButton's various features. */
 private fun buildHyperlinkButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("HyperlinkButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A button displayed as a hyperlink. Try out WHyperlinkButton's various features."))
+    val page = buildPage("HyperlinkButton", "A button displayed as a hyperlink. Try out WHyperlinkButton's various features.")
 
     page.add(buildNavigateUriHyperlinkExample())
     page.add(buildClickHyperlinkExample())
@@ -1056,9 +1127,7 @@ private fun buildClickHyperlinkExample(): WComponent {
 
 /** The DropDownButton page: lines up demos for trying out WDropDownButton's various features. */
 private fun buildDropDownButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("DropDownButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A button that opens a flyout of choices when clicked. Try out WDropDownButton's various features."))
+    val page = buildPage("DropDownButton", "A button that opens a flyout of choices when clicked. Try out WDropDownButton's various features.")
 
     page.add(buildSimpleDropDownButtonExample())
     return page
@@ -1093,9 +1162,7 @@ private fun buildSimpleDropDownButtonExample(): WComponent {
 
 /** The SplitButton page: lines up demos for trying out WSplitButton's various features. */
 private fun buildSplitButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("SplitButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A two-part button split between clicking the body and expanding choices. Try out WSplitButton's various features."))
+    val page = buildPage("SplitButton", "A two-part button split between clicking the body and expanding choices. Try out WSplitButton's various features.")
 
     page.add(buildSimpleSplitButtonExample())
     return page
@@ -1133,9 +1200,7 @@ private fun buildSimpleSplitButtonExample(): WComponent {
 
 /** The ToggleSplitButton page: lines up demos for trying out WToggleSplitButton's various features. */
 private fun buildToggleSplitButtonPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ToggleSplitButton").also { it.fontSize = 28.0 })
-    page.add(WLabel("A split button whose body toggles on/off when clicked. Try out WToggleSplitButton's various features."))
+    val page = buildPage("ToggleSplitButton", "A split button whose body toggles on/off when clicked. Try out WToggleSplitButton's various features.")
 
     page.add(buildSimpleToggleSplitButtonExample())
     return page
@@ -1180,9 +1245,7 @@ private fun buildSimpleToggleSplitButtonExample(): WComponent {
 
 /** The Slider page: lines up demos for trying out WSlider's various features. */
 private fun buildSliderPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("Slider").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for picking a value in a range by moving a thumb along a track. Try out WSlider's various features."))
+    val page = buildPage("Slider", "A control for picking a value in a range by moving a thumb along a track. Try out WSlider's various features.")
 
     page.add(buildSimpleSliderExample())
     page.add(buildRangeSliderExample())
@@ -1237,9 +1300,7 @@ private fun buildVerticalSliderExample(): WComponent {
 
 /** The ToggleSwitch page: lines up demos for trying out WToggleSwitch's various features. */
 private fun buildToggleSwitchPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ToggleSwitch").also { it.fontSize = 28.0 })
-    page.add(WLabel("A switch for toggling between two on/off states. Try out WToggleSwitch's various features."))
+    val page = buildPage("ToggleSwitch", "A switch for toggling between two on/off states. Try out WToggleSwitch's various features.")
 
     page.add(buildSimpleToggleSwitchExample())
     page.add(buildCustomContentToggleSwitchExample())
@@ -1277,9 +1338,7 @@ private fun buildCustomContentToggleSwitchExample(): WComponent {
 
 /** The ComboBox page: lines up demos for trying out WComboBox's various features. */
 private fun buildComboBoxPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ComboBox").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for picking one item from a drop-down. Try out WComboBox's various features."))
+    val page = buildPage("ComboBox", "A control for picking one item from a drop-down. Try out WComboBox's various features.")
 
     page.add(buildSimpleComboBoxExample())
     page.add(buildHeaderComboBoxExample())
@@ -1335,9 +1394,7 @@ private fun buildEditableComboBoxExample(): WComponent {
 
 /** The RatingControl page: lines up demos for trying out WRatingControl's various features. */
 private fun buildRatingControlPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("RatingControl").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for entering a star rating. Try out WRatingControl's various features."))
+    val page = buildPage("RatingControl", "A control for entering a star rating. Try out WRatingControl's various features.")
 
     page.add(buildSimpleRatingExample())
     page.add(buildPlaceholderRatingExample())
@@ -1390,9 +1447,7 @@ private fun buildReadOnlyRatingExample(): WComponent {
 
 /** The ColorPicker page: lines up demos for trying out WColorPicker's various features. */
 private fun buildColorPickerPage(): WComponent {
-    val page = WPanel(spacing = 24.0)
-    page.add(WLabel("ColorPicker").also { it.fontSize = 28.0 })
-    page.add(WLabel("A control for picking a color from a spectrum. Try out WColorPicker's various features."))
+    val page = buildPage("ColorPicker", "A control for picking a color from a spectrum. Try out WColorPicker's various features.")
 
     page.add(buildSimpleColorPickerExample())
     page.add(buildColorPickerOptionsExample())

@@ -8,6 +8,7 @@ import java.lang.foreign.ValueLayout.ADDRESS
 import java.lang.foreign.ValueLayout.JAVA_BYTE
 import java.lang.foreign.ValueLayout.JAVA_DOUBLE
 import java.lang.foreign.ValueLayout.JAVA_INT
+import java.lang.foreign.ValueLayout.JAVA_SHORT
 
 /**
  * Layouts and put helpers for XAML structs (passed by value).
@@ -35,6 +36,11 @@ internal object XamlStructs {
         JAVA_DOUBLE.withName("Value"),
         JAVA_INT.withName("GridUnitType"),
         MemoryLayout.paddingLayout(4),
+    )
+
+    /** Windows.UI.Text.FontWeight { UINT16 Weight } */
+    val FONT_WEIGHT: MemoryLayout = MemoryLayout.structLayout(
+        JAVA_SHORT.withName("Weight"),
     )
 
     /** Windows.UI.Color { UINT8 A, R, G, B } */
@@ -73,6 +79,15 @@ internal object XamlStructs {
             g.set(JAVA_DOUBLE, 0, value)
             g.set(JAVA_INT, 8, unitType)
             target.callWith(slot, FunctionDescriptor.of(JAVA_INT, ADDRESS, GRID_LENGTH), g)
+        }
+    }
+
+    /** Puts a FontWeight (u2) by value (TextBlock.FontWeight). */
+    fun putFontWeight(target: ComPtr, slot: Int, weight: Int) {
+        Arena.ofConfined().use { a ->
+            val w = a.allocate(FONT_WEIGHT)
+            w.set(JAVA_SHORT, 0, weight.toShort())
+            target.callWith(slot, FunctionDescriptor.of(JAVA_INT, ADDRESS, FONT_WEIGHT), w)
         }
     }
 

@@ -3,6 +3,27 @@ package jp.hisano.winui4k.swing
 import jp.hisano.winui4k.ffi.Hstring
 import jp.hisano.winui4k.winrt.WinRt
 import jp.hisano.winui4k.winui.Abi
+import java.lang.foreign.MemorySegment
+
+/**
+ * Microsoft.UI.Xaml.TextWrapping (how text wraps).
+ * Values extracted from the winmd (NoWrap=1, Wrap=2, WrapWholeWords=3).
+ */
+enum class TextWrapping(internal val native: Int) {
+    /** Don't wrap (default). */
+    NO_WRAP(1),
+
+    /** Wrap to fit the available width. */
+    WRAP(2),
+
+    /** Don't break in the middle of a word. */
+    WRAP_WHOLE_WORDS(3),
+    ;
+
+    internal companion object {
+        fun of(native: Int): TextWrapping = entries.first { it.native == native }
+    }
+}
 
 /**
  * JLabel-like: WinUI 3's TextBlock.
@@ -19,6 +40,31 @@ class WLabel(text: String = "") : WComponent(
     var fontSize: Double
         get() = inspectable.getDouble(Abi.ITextBlock_get_FontSize)
         set(value) = inspectable.call(Abi.ITextBlock_put_FontSize, value)
+
+    /** Font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. */
+    var fontWeight: Int = 400
+        set(value) {
+            field = value
+            XamlStructs.putFontWeight(inspectable, Abi.ITextBlock_put_FontWeight, value)
+        }
+
+    /** Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null restores the default color. */
+    var foreground: WColor? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                inspectable.call(Abi.ITextBlock_put_Foreground, MemorySegment.NULL)
+            } else {
+                val brush = value.createBrush()
+                inspectable.call(Abi.ITextBlock_put_Foreground, brush.ptr)
+                brush.release()
+            }
+        }
+
+    /** How text wraps (TextBlock.TextWrapping). */
+    var textWrapping: TextWrapping
+        get() = TextWrapping.of(inspectable.getInt(Abi.ITextBlock_get_TextWrapping))
+        set(value) = inspectable.call(Abi.ITextBlock_put_TextWrapping, value.native)
 
     init {
         if (text.isNotEmpty()) this.text = text
