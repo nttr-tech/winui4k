@@ -1,9 +1,8 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.
@@ -64,12 +63,12 @@ abstract class WFlyoutBase internal constructor(
 
 /** JPopupMenu-like: WinUI 3's Flyout. Set on WButton.flyout to open it on click. */
 class WFlyout(content: WComponent? = null) : WFlyoutBase(
-    WinRt.composeDefault(Abi.CLS_Flyout, Abi.IID_IFlyoutFactory),
+    Activation.composeDefault(Abi.CLS_Flyout, Abi.IID_IFlyoutFactory),
 ) {
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IFlyout_put_Content, value?.uiElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.IFlyout_put_Content, value?.uiElement?.ptr)
         }
 
     init {

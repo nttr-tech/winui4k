@@ -1,10 +1,13 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.TeachingTipPlacementMode ([WTeachingTip.preferredPlacement]).
@@ -59,7 +62,7 @@ enum class TeachingTipCloseReason(internal val native: Int) {
  * (it renders nothing while closed). Opening it outside the tree shows no content.
  */
 class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
-    WinRt.composeDefault(Abi.CLS_TeachingTip, Abi.IID_ITeachingTipFactory), // default interface = ITeachingTip
+    Activation.composeDefault(Abi.CLS_TeachingTip, Abi.IID_ITeachingTipFactory), // default interface = ITeachingTip
 ) {
     /** Listener -> event token (used to remove). */
     private val actionTokens = ListenerTokens<() -> Unit>()
@@ -79,7 +82,7 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     var target: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ITeachingTip_put_Target, value?.frameworkElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.ITeachingTip_put_Target, value?.frameworkElement?.ptr)
         }
 
     /** The preferred display position relative to [target] (TeachingTip.PreferredPlacement). Adjusted automatically if it doesn't fit. */
@@ -96,7 +99,7 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     var actionButtonText: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.ITeachingTip_put_ActionButtonContent, boxed.ptr)
             boxed.release()
         }
@@ -105,7 +108,7 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     var closeButtonText: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.ITeachingTip_put_CloseButtonContent, boxed.ptr)
             boxed.release()
         }

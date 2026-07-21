@@ -1,19 +1,18 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.ArgKind
+import jp.hisano.winui4k.ffi.api.CallDescriptor
+import jp.hisano.winui4k.ffi.api.ValueKind
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_BYTE
-import java.lang.foreign.ValueLayout.JAVA_INT
 
 /**
  * SpringLayout-like JPanel: WinUI 3's RelativePanel.
  * Places children relative to each other (e.g. [placeRightOf]) or relative to the panel itself (e.g. [alignRightWithPanel]).
  */
 class WRelativePanel : WContainer(
-    WinRt.composeDefault(Abi.CLS_RelativePanel, Abi.IID_IRelativePanelFactory),
+    Activation.composeDefault(Abi.CLS_RelativePanel, Abi.IID_IRelativePanelFactory),
 ) {
     /** Places [component] to the left of [anchor] (RelativePanel.LeftOf). */
     fun placeLeftOf(component: WComponent, anchor: WComponent) =
@@ -88,7 +87,7 @@ class WRelativePanel : WContainer(
     private fun putBool(slot: Int, component: WComponent, value: Boolean) {
         statics.callWith(
             slot,
-            FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, JAVA_BYTE),
+            CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.U8),
             component.uiElement.ptr,
             if (value) 1.toByte() else 0.toByte(),
         )
@@ -96,6 +95,6 @@ class WRelativePanel : WContainer(
 
     private companion object {
         /** Attached-property operations for RelativePanel (IRelativePanelStatics). */
-        val statics: ComPtr by lazy { WinRt.factory(Abi.CLS_RelativePanel, Abi.IID_IRelativePanelStatics) }
+        val statics: ComPtr by lazy { Activation.factory(Abi.CLS_RelativePanel, Abi.IID_IRelativePanelStatics) }
     }
 }

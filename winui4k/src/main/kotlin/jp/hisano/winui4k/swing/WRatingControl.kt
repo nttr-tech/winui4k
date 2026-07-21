@@ -1,7 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -11,7 +14,7 @@ import jp.hisano.winui4k.winui.Abi
  * [placeholderValue] / [caption], and [addChangeListener] (ValueChanged).
  */
 class WRatingControl : WControl(
-    WinRt.composeDefault(Abi.CLS_RatingControl, Abi.IID_IRatingControlFactory),
+    Activation.composeDefault(Abi.CLS_RatingControl, Abi.IID_IRatingControlFactory),
 ) {
     /** ValueChanged event tokens registered via addChangeListener. */
     private val changeTokens = ListenerTokens<(Double) -> Unit>()

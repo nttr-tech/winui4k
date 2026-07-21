@@ -1,9 +1,11 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JToggleButton-like: WinUI 3's Primitives.ToggleButton.
@@ -14,7 +16,7 @@ import java.lang.foreign.MemorySegment
  */
 open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
     constructor(text: String = "") : this(
-        WinRt.composeDefault(Abi.CLS_ToggleButton, Abi.IID_IToggleButtonFactory),
+        Activation.composeDefault(Abi.CLS_ToggleButton, Abi.IID_IToggleButtonFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
     }
@@ -48,17 +50,17 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         get() {
             val boxed = toggleButton.getPtrOrNull(Abi.IToggleButton_get_IsChecked) ?: return null
             return try {
-                WinRt.unboxBool(boxed)
+                PropertyValues.unboxBool(boxed)
             } finally {
                 boxed.release()
             }
         }
         set(value) {
             if (value == null) {
-                toggleButton.call(Abi.IToggleButton_put_IsChecked, MemorySegment.NULL)
+                toggleButton.call(Abi.IToggleButton_put_IsChecked, null)
                 return
             }
-            val boxed = WinRt.boxBool(value)
+            val boxed = PropertyValues.boxBool(value)
             val reference = boxed.queryInterface(Abi.IID_IReference_Boolean)
             toggleButton.call(Abi.IToggleButton_put_IsChecked, reference.ptr)
             reference.release()

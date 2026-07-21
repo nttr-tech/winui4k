@@ -1,9 +1,11 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.ExpandDirection (the direction the content expands toward).
@@ -27,7 +29,7 @@ enum class ExpandDirection(internal val native: Int) {
  * Clicking the [header] expands/collapses the [content].
  */
 class WExpander(header: String = "", content: WComponent? = null) : WControl(
-    WinRt.composeDefault(Abi.CLS_Expander, Abi.IID_IExpanderFactory), // default interface = IExpander
+    Activation.composeDefault(Abi.CLS_Expander, Abi.IID_IExpanderFactory), // default interface = IExpander
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -41,7 +43,7 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     var header: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IExpander_put_Header, boxed.ptr)
             boxed.release()
         }
@@ -52,7 +54,7 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
             field = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 

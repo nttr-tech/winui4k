@@ -1,10 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.CommandBarLabelPosition (per-button label position).
@@ -29,7 +29,7 @@ enum class CommandBarLabelPosition(internal val native: Int) {
  * Flyout work the same way they do on Button.
  */
 class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
-    WinRt.composeDefault(Abi.CLS_AppBarButton, Abi.IID_IAppBarButtonFactory),
+    Activation.composeDefault(Abi.CLS_AppBarButton, Abi.IID_IAppBarButtonFactory),
 ) {
     /** The IButton view that holds Flyout (AppBarButton is a Button subclass). */
     private val button: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IButton) }
@@ -49,7 +49,7 @@ class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IAppBarButton_put_Icon, MemorySegment.NULL)
+                inspectable.call(Abi.IAppBarButton_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
@@ -76,7 +76,7 @@ class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            button.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)
+            button.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /** Whether it's shown in the compact form with the label hidden (ICommandBarElement.IsCompact). */

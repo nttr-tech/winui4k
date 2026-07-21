@@ -1,7 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -37,7 +40,7 @@ enum class ListViewSelectionMode(internal val native: Int) {
  * [isItemClickEnabled] / [addItemClickListener] / [removeItemClickListener] (ItemClick).
  */
 class WList(items: List<String> = emptyList()) : WControl(
-    WinRt.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
+    Activation.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_ISelector)
@@ -76,7 +79,7 @@ class WList(items: List<String> = emptyList()) : WControl(
         get() {
             val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
             return try {
-                WinRt.unboxString(boxed)
+                PropertyValues.unboxString(boxed)
             } finally {
                 boxed.release()
             }
@@ -101,7 +104,7 @@ class WList(items: List<String> = emptyList()) : WControl(
 
     /** Appends an item at the end (Items.Append). The string is boxed before being passed. */
     fun addItem(item: String) {
-        val boxed = WinRt.boxString(item)
+        val boxed = PropertyValues.boxString(item)
         itemVector.call(Abi.IVector_Append, boxed.ptr)
         boxed.release()
     }
@@ -110,7 +113,7 @@ class WList(items: List<String> = emptyList()) : WControl(
     fun getItem(index: Int): String {
         val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
         return try {
-            WinRt.unboxString(boxed) ?: ""
+            PropertyValues.unboxString(boxed) ?: ""
         } finally {
             boxed.release()
         }
@@ -162,7 +165,7 @@ class WList(items: List<String> = emptyList()) : WControl(
             val e = ComPtr(args)
             val boxed = e.getPtr(Abi.IItemClickEventArgs_get_ClickedItem)
             val item = try {
-                WinRt.unboxString(boxed) ?: ""
+                PropertyValues.unboxString(boxed) ?: ""
             } finally {
                 boxed.release()
             }

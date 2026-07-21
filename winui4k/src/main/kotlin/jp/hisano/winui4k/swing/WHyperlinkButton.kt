@@ -1,9 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JButton-like hyperlink display: WinUI 3's HyperlinkButton.
@@ -11,7 +11,7 @@ import java.lang.foreign.MemorySegment
  * If left unset, it behaves like a normal button and can handle Click via [addActionListener].
  */
 class WHyperlinkButton(text: String = "", navigateUri: String = "") : WButtonBase(
-    WinRt.composeDefault(Abi.CLS_HyperlinkButton, Abi.IID_IHyperlinkButtonFactory),
+    Activation.composeDefault(Abi.CLS_HyperlinkButton, Abi.IID_IHyperlinkButtonFactory),
 ) {
     /**
      * The URI opened on click (HyperlinkButton.NavigateUri). Set to "" to clear it.
@@ -28,10 +28,10 @@ class WHyperlinkButton(text: String = "", navigateUri: String = "") : WButtonBas
         }
         set(value) {
             if (value.isEmpty()) {
-                inspectable.call(Abi.IHyperlinkButton_put_NavigateUri, MemorySegment.NULL)
+                inspectable.call(Abi.IHyperlinkButton_put_NavigateUri, null)
                 return
             }
-            val factory = WinRt.factory(Abi.CLS_Uri, Abi.IID_IUriRuntimeClassFactory)
+            val factory = Activation.factory(Abi.CLS_Uri, Abi.IID_IUriRuntimeClassFactory)
             val uri = Hstring.use(value) { h ->
                 factory.getPtr(Abi.IUriRuntimeClassFactory_CreateUri, h)
             }

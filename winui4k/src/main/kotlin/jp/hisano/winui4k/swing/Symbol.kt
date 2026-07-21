@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -9,7 +9,7 @@ import jp.hisano.winui4k.winui.Abi
  * Release it after use.
  */
 internal fun Symbol.createIconElement(): ComPtr {
-    val symbolIcon = WinRt.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
+    val symbolIcon = Activation.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
         .getPtr(Abi.ISymbolIconFactory_CreateInstanceWithSymbol, native)
     return try {
         symbolIcon.queryInterface(Abi.IID_IIconElement)
@@ -23,7 +23,7 @@ internal fun Symbol.createIconElement(): ComPtr {
  * Release it after use.
  */
 internal fun Symbol.createIconSource(): ComPtr {
-    val source = WinRt.composeDefault(Abi.CLS_SymbolIconSource, Abi.IID_ISymbolIconSourceFactory)
+    val source = Activation.composeDefault(Abi.CLS_SymbolIconSource, Abi.IID_ISymbolIconSourceFactory)
     source.call(Abi.ISymbolIconSource_put_Symbol, native)
     return try {
         source.queryInterface(Abi.IID_IIconSource)

@@ -1,8 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.SplitViewDisplayMode (how the pane is displayed).
@@ -49,20 +48,20 @@ enum class SplitViewPanePlacement(internal val native: Int) {
  * Displays a collapsible [pane] alongside the main [content].
  */
 class WSplitView(pane: WComponent? = null, content: WComponent? = null) : WControl(
-    WinRt.composeDefault(Abi.CLS_SplitView, Abi.IID_ISplitViewFactory), // default interface = ISplitView
+    Activation.composeDefault(Abi.CLS_SplitView, Abi.IID_ISplitViewFactory), // default interface = ISplitView
 ) {
     /** The main content (SplitView.Content). */
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISplitView_put_Content, value?.uiElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.ISplitView_put_Content, value?.uiElement?.ptr)
         }
 
     /** The collapsible pane (SplitView.Pane). */
     var pane: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISplitView_put_Pane, value?.uiElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.ISplitView_put_Pane, value?.uiElement?.ptr)
         }
 
     /** Whether the pane is open (SplitView.IsPaneOpen). */

@@ -1,8 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JButton-like: WinUI 3's Button.
@@ -12,13 +11,13 @@ import java.lang.foreign.MemorySegment
  * [addActionListener] / [removeActionListener] (Click), [command] / [commandParameter], [flyout].
  */
 class WButton(text: String = "") : WButtonBase(
-    WinRt.composeDefault(Abi.CLS_Button, Abi.IID_IButtonFactory), // default interface = IButton
+    Activation.composeDefault(Abi.CLS_Button, Abi.IID_IButtonFactory), // default interface = IButton
 ) {
     /** The flyout opened by clicking the button (Button.Flyout). */
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     init {

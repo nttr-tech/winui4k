@@ -1,7 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -55,7 +58,7 @@ enum class TickPlacement(internal val native: Int) {
  * and [addChangeListener] / [removeChangeListener] (ValueChanged).
  */
 class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
-    WinRt.composeDefault(Abi.CLS_Slider, Abi.IID_ISliderFactory), // default interface = ISlider
+    Activation.composeDefault(Abi.CLS_Slider, Abi.IID_ISliderFactory), // default interface = ISlider
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum / ValueChanged. */
     private val rangeBase: ComPtr by lazy {
@@ -114,7 +117,7 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
     var header: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.ISlider_put_Header, boxed.ptr)
             boxed.release()
         }

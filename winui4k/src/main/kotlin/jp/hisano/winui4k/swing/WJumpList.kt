@@ -1,13 +1,13 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.Ffi
+import jp.hisano.winui4k.ffi.api.withScope
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Async
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
-import jp.hisano.winui4k.winui.Async
-import java.lang.foreign.Arena
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_INT
 
 /**
  * The taskbar's right-click menu: Windows.UI.StartScreen's JumpList.
@@ -21,7 +21,7 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
         /** Whether jump lists are usable in this environment (JumpList.IsSupported). */
         val isSupported: Boolean
             get() {
-                val statics = WinRt.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
+                val statics = Activation.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
                 return try {
                     statics.getBool(Abi.IJumpListStatics_IsSupported)
                 } finally {
@@ -31,7 +31,7 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
 
         /** Loads the current jump list (awaits JumpList.LoadCurrentAsync's completion). */
         fun load(): WJumpList {
-            val statics = WinRt.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
+            val statics = Activation.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
             val operation = statics.getPtr(Abi.IJumpListStatics_LoadCurrentAsync)
             statics.release()
             val result = Async.awaitResult(
@@ -52,13 +52,13 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
         get() {
             val vector = jumpList.getPtr(Abi.IJumpList_get_Items)
             try {
-                return Arena.ofConfined().use { a ->
-                    val size = a.allocate(JAVA_INT)
+                return Ffi.backend.withScope { scope ->
+                    val size = scope.allocate(4)
                     vector.call(Abi.IVector_get_Size, size)
-                    (0 until size.get(JAVA_INT, 0)).map { i ->
-                        val out = a.allocate(ADDRESS)
+                    (0 until Ffi.backend.memory.getInt(size, 0)).map { i ->
+                        val out = scope.allocate(8)
                         vector.call(Abi.IVector_GetAt, i, out)
-                        WJumpListItem(ComPtr(out.get(ADDRESS, 0)))
+                        WJumpListItem(ComPtr(Ffi.backend.memory.getPtr(out, 0)))
                     }
                 }
             } finally {
@@ -96,7 +96,7 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
     companion object {
         /** Creates an item with launch arguments (JumpListItem.CreateWithArguments). */
         fun of(arguments: String, displayName: String): WJumpListItem {
-            val statics = WinRt.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
+            val statics = Activation.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
             val item = Hstring.use(arguments) { a ->
                 Hstring.use(displayName) { d ->
                     statics.getPtr(Abi.IJumpListItemStatics_CreateWithArguments, a, d)
@@ -108,7 +108,7 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
 
         /** Creates a separator item (JumpListItem.CreateSeparator). */
         fun separator(): WJumpListItem {
-            val statics = WinRt.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
+            val statics = Activation.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
             val item = statics.getPtr(Abi.IJumpListItemStatics_CreateSeparator)
             statics.release()
             return WJumpListItem(item)

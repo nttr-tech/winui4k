@@ -1,23 +1,26 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.ffi.KComObject
-import jp.hisano.winui4k.ffi.Native
-import jp.hisano.winui4k.winrt.WinRt
-import jp.hisano.winui4k.winui.Abi
-import jp.hisano.winui4k.winui.Dispatcher
 import java.io.File
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.MemoryLayout
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_CHAR
-import java.lang.foreign.ValueLayout.JAVA_INT
-import java.lang.foreign.ValueLayout.JAVA_LONG
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.ArgKind
+import jp.hisano.winui4k.ffi.api.CallDescriptor
+import jp.hisano.winui4k.ffi.api.Ffi
+import jp.hisano.winui4k.ffi.api.FfiBackend
+import jp.hisano.winui4k.ffi.api.Ptr
+import jp.hisano.winui4k.ffi.api.StructValue
+import jp.hisano.winui4k.ffi.api.ValueKind
+import jp.hisano.winui4k.ffi.api.withScope
+import jp.hisano.winui4k.win32.Win32
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.KComObject
+import jp.hisano.winui4k.winrt.WinRtRuntime
+import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.Dispatcher
+import jp.hisano.winui4k.winui.WinAppSdkBootstrap
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * WinUI 3's equivalent of SwingUtilities. Handles lazily starting the UI thread and
@@ -39,34 +42,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 object WinUiUtilities {
 
-    /**
-     * Windows App SDK 2.x (majorMinorVersion = 0x00020000 for MddBootstrapInitialize2).
-     * Since release 2.0, the minor part is ignored and resolution is based on major
-     * only, so the desired version is specified via [WINAPPSDK_MIN_VERSION] (minVersion).
-     */
-    private const val WINAPPSDK_MAJOR_MINOR = 0x0002_0000
-
-    /** Minimum runtime version 2.2.0.0 (PACKAGE_VERSION: Major<<48 | Minor<<32 | Build<<16 | Revision). */
-    private const val WINAPPSDK_MIN_VERSION = 0x0002_0002_0000_0000L
-
-    /** MddBootstrapInitializeOptions_OnNoMatch_ShowUI: prompts the user to install the runtime if it's missing. */
-    private const val BOOTSTRAP_ON_NO_MATCH_SHOW_UI = 0x08
-
-    private val DESC_THIS_PTR = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS)
-
-    /** Windows.UI.Xaml.Interop.TypeName { HSTRING Name; TypeKind Kind; } — passed by value. */
-    private val TYPE_NAME_LAYOUT: MemoryLayout = MemoryLayout.structLayout(
-        ADDRESS.withName("Name"),
-        JAVA_INT.withName("Kind"),
-        MemoryLayout.paddingLayout(4),
-    )
+    private val DESC_THIS_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)
 
     /** GetXamlType(this, TypeName byval, out IXamlType) */
-    private val DESC_GET_XAML_TYPE =
-        FunctionDescriptor.of(JAVA_INT, ADDRESS, TYPE_NAME_LAYOUT, ADDRESS)
+    private val DESC_GET_XAML_TYPE = CallDescriptor(
+        ValueKind.I32, ArgKind.PTR, ArgKind.Struct(XamlStructs.TYPE_NAME), ArgKind.PTR,
+    )
 
     /** GetXmlnsDefinitions(this, out UINT32, out XmlnsDefinition*) / GetXamlType(this, HSTRING, out) */
-    private val DESC_THIS_PTR_PTR = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS)
+    private val DESC_THIS_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
 
     private var currentApp: ComPtr? = null
 
@@ -78,6 +62,15 @@ object WinUiUtilities {
 
     @Volatile
     private var exited = false
+
+    /**
+     * Explicitly selects the FFI backend to use (defaults to Panama).
+     * Only callable before the first FFI use (= WinUI startup).
+     * Can also be selected via the system property -Dwinui4k.ffi=panama|jna.
+     */
+    fun setFfiBackend(backend: FfiBackend) {
+        Ffi.setBackend(backend)
+    }
 
     /**
      * Starts WinUI on a dedicated thread if it hasn't been started yet, and waits until
@@ -108,10 +101,10 @@ object WinUiUtilities {
      * Blocks until the application exits (the last window closes).
      */
     private fun runMessageLoop(onReady: () -> Unit) {
-        Native.enablePerMonitorDpiAwareness()
-        bootstrapInitialize()
+        Win32.enablePerMonitorDpiAwareness()
+        WinAppSdkBootstrap.initialize()
         try {
-            Native.roInitializeSta()
+            WinRtRuntime.initializeSta()
 
             // Application.Start(callback) — the callback is invoked in the UI thread context set up by XAML
             val initCallback = KComObject("WinUI4K.InitCallback", inspectable = false)
@@ -125,12 +118,12 @@ object WinUiUtilities {
                     ),
                 )
 
-            val statics = WinRt.factory(Abi.CLS_Application, Abi.IID_IApplicationStatics)
+            val statics = Activation.factory(Abi.CLS_Application, Abi.IID_IApplicationStatics)
             statics.call(Abi.IApplicationStatics_Start, initCallback.primary) // the message loop runs here
             statics.release()
         } finally {
-            Native.roUninitialize()
-            bootstrapShutdown()
+            WinRtRuntime.uninitialize()
+            WinAppSdkBootstrap.shutdown()
         }
     }
 
@@ -168,7 +161,7 @@ object WinUiUtilities {
     private fun createApplication(onReady: () -> Unit) {
         // Forwards all methods to the real provider (created lazily) that resolves XAML types for WinUI controls
         val realProvider: ComPtr by lazy {
-            WinRt.activate(Abi.CLS_XamlControlsXamlMetaDataProvider)
+            Activation.activate(Abi.CLS_XamlControlsXamlMetaDataProvider)
                 .queryInterface(Abi.IID_IXamlMetadataProvider)
         }
 
@@ -193,19 +186,19 @@ object WinUiUtilities {
                 KComObject.Method(DESC_GET_XAML_TYPE) { args ->
                     realProvider.rawCall(
                         Abi.IXamlMetadataProvider_GetXamlType, DESC_GET_XAML_TYPE,
-                        args[1] as MemorySegment, args[2] as MemorySegment,
+                        args[1] as StructValue, args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
                         Abi.IXamlMetadataProvider_GetXamlTypeByFullName, DESC_THIS_PTR_PTR,
-                        args[1] as MemorySegment, args[2] as MemorySegment,
+                        args[1] as Ptr, args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
                         Abi.IXamlMetadataProvider_GetXmlnsDefinitions, DESC_THIS_PTR_PTR,
-                        args[1] as MemorySegment, args[2] as MemorySegment,
+                        args[1] as Ptr, args[2] as Ptr,
                     )
                 },
             ),
@@ -213,13 +206,13 @@ object WinUiUtilities {
 
         // Aggregation composition of Application: passing outer returns inner (the base
         // implementation); from then on XAML calls OnLaunched and friends via outer
-        val factory = WinRt.factory(Abi.CLS_Application, Abi.IID_IApplicationFactory)
-        val app = Arena.ofConfined().use { a ->
-            val inner = a.allocate(ADDRESS)
-            val instance = a.allocate(ADDRESS)
+        val factory = Activation.factory(Abi.CLS_Application, Abi.IID_IApplicationFactory)
+        val app = Ffi.backend.withScope { scope ->
+            val inner = scope.allocate(8)
+            val instance = scope.allocate(8)
             factory.call(Abi.IApplicationFactory_CreateInstance, outer.primary, inner, instance)
-            outer.innerUnknown = ComPtr(inner.get(ADDRESS, 0))
-            ComPtr(instance.get(ADDRESS, 0)) // IApplication
+            outer.innerUnknown = ComPtr(Ffi.backend.memory.getPtr(inner, 0))
+            ComPtr(Ffi.backend.memory.getPtr(instance, 0)) // IApplication
         }
         factory.release()
         currentApp = app
@@ -239,11 +232,11 @@ object WinUiUtilities {
      */
     private fun installControlStyles() {
         val app = checkNotNull(currentApp) { "Application has not been created yet" }
-        val xcr = WinRt.activate(Abi.CLS_XamlControlsResources)
+        val xcr = Activation.activate(Abi.CLS_XamlControlsResources)
         val xcrDict = xcr.queryInterface(Abi.IID_IResourceDictionary)
         val appResources = app.getPtr(Abi.IApplication_get_Resources)
         val merged = appResources.getPtr(Abi.IResourceDictionary_get_MergedDictionaries)
-        merged.call(Abi.IVector_Append, xcrDict.ptr)
+        merged.call(Abi.IVector_Append, xcrDict)
         merged.release()
         appResources.release()
         xcrDict.release()
@@ -261,11 +254,11 @@ object WinUiUtilities {
                 Abi.IID_ResourceManagerRequestedHandler,
                 listOf(
                     KComObject.Method(DESC_THIS_PTR_PTR) { args -> // Invoke(this, sender, args)
-                        val eventArgs = ComPtr(args[2] as MemorySegment)
+                        val eventArgs = ComPtr(args[2] as Ptr)
                             .queryInterface(Abi.IID_IResourceManagerRequestedEventArgs)
                         val rm = createFrameworkResourceManager()
                         eventArgs.call(
-                            Abi.IResourceManagerRequestedEventArgs_put_CustomResourceManager, rm.ptr,
+                            Abi.IResourceManagerRequestedEventArgs_put_CustomResourceManager, rm,
                         )
                         eventArgs.release()
                         KComObject.S_OK
@@ -274,8 +267,8 @@ object WinUiUtilities {
             )
 
         val app2 = app.queryInterface(Abi.IID_IApplication2)
-        Arena.ofConfined().use { a ->
-            val token = a.allocate(JAVA_LONG)
+        Ffi.backend.withScope { scope ->
+            val token = scope.allocate(8)
             app2.call(Abi.IApplication2_add_ResourceManagerRequested, handler.primary, token)
         }
         app2.release()
@@ -283,51 +276,14 @@ object WinUiUtilities {
 
     /** A ResourceManager reading resources.pri from the runtime package's location (where Microsoft.ui.xaml.dll lives). */
     private fun createFrameworkResourceManager(): ComPtr {
-        val xamlDll = Native.moduleFilePath("Microsoft.ui.xaml.dll")
+        val xamlDll = Win32.moduleFilePath("Microsoft.ui.xaml.dll")
             ?: error("Microsoft.ui.xaml.dll is not loaded")
         val pri = File(xamlDll).resolveSibling("resources.pri")
         check(pri.isFile) { "could not find the runtime package's resources.pri: $pri" }
 
-        val factory = WinRt.factory(Abi.CLS_ResourceManager, Abi.IID_IResourceManagerFactory)
+        val factory = Activation.factory(Abi.CLS_ResourceManager, Abi.IID_IResourceManagerFactory)
         val rm = Hstring.use(pri.absolutePath) { h -> factory.getPtr(6, h) } // CreateInstance(fileName)
         factory.release()
         return rm
-    }
-
-    // ------------------------------------------------------------------
-    // Windows App SDK bootstrapper (Microsoft.WindowsAppRuntime.Bootstrap.dll)
-    // ------------------------------------------------------------------
-
-    private val bootstrapLookup by lazy {
-        val explicit = System.getProperty("winui4k.bootstrap.dll")
-        if (explicit != null) {
-            Native.lookup(explicit)
-        } else {
-            // resolved from PATH / the current directory
-            Native.lookup("Microsoft.WindowsAppRuntime.Bootstrap.dll")
-        }
-    }
-
-    private fun bootstrapInitialize() {
-        // HRESULT MddBootstrapInitialize2(UINT32 majorMinor, PCWSTR versionTag,
-        //                                 PACKAGE_VERSION minVersion, MddBootstrapInitializeOptions options)
-        val init = Native.downcall(
-            bootstrapLookup, "MddBootstrapInitialize2",
-            FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG, JAVA_INT),
-        )
-        Arena.ofConfined().use { a ->
-            val emptyTag = a.allocate(JAVA_CHAR) // L"" (the stable channel)
-            val hr = init.invokeWithArguments(
-                WINAPPSDK_MAJOR_MINOR, emptyTag, WINAPPSDK_MIN_VERSION, BOOTSTRAP_ON_NO_MATCH_SHOW_UI,
-            ) as Int
-            Native.checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.2 runtime installed?)")
-        }
-    }
-
-    private fun bootstrapShutdown() {
-        runCatching {
-            Native.downcall(bootstrapLookup, "MddBootstrapShutdown", FunctionDescriptor.ofVoid())
-                .invokeWithArguments()
-        }
     }
 }

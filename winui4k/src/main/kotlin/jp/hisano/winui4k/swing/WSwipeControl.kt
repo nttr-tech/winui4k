@@ -1,10 +1,13 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.Ptr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.SwipeMode (behavior when swiped).
@@ -49,7 +52,7 @@ enum class SwipeBehaviorOnInvoked(internal val native: Int) {
  * (Swiping is touch/pen only; it doesn't open on a mouse drag.)
  */
 class WSwipeControl(content: WComponent? = null) : WControl(
-    WinRt.composeDefault(Abi.CLS_SwipeControl, Abi.IID_ISwipeControlFactory),
+    Activation.composeDefault(Abi.CLS_SwipeControl, Abi.IID_ISwipeControlFactory),
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -61,7 +64,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
             field = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 
@@ -102,8 +105,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
         inspectable.call(Abi.ISwipeControl_Close)
     }
 
-    private fun WSwipeItems?.ptrOrNull(): MemorySegment =
-        this?.inspectable?.ptr ?: MemorySegment.NULL
+    private fun WSwipeItems?.ptrOrNull(): Ptr? = this?.inspectable?.ptr
 }
 
 /**
@@ -113,7 +115,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
 class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
     /** The default interface (ISwipeItems). */
     internal val inspectable: ComPtr =
-        WinRt.composeDefault(Abi.CLS_SwipeItems, Abi.IID_ISwipeItemsFactory)
+        Activation.composeDefault(Abi.CLS_SwipeItems, Abi.IID_ISwipeItemsFactory)
 
     /** The IVector<SwipeItem> view that has Append (SwipeItems implements IVector). */
     private val vector: ComPtr by lazy {
@@ -142,7 +144,7 @@ class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
 class WSwipeItem(text: String = "", icon: Symbol? = null) {
     /** The default interface (ISwipeItem). */
     internal val inspectable: ComPtr =
-        WinRt.composeDefault(Abi.CLS_SwipeItem, Abi.IID_ISwipeItemFactory)
+        Activation.composeDefault(Abi.CLS_SwipeItem, Abi.IID_ISwipeItemFactory)
 
     /** Invoked event tokens registered via addActionListener. */
     private val invokedTokens = ListenerTokens<() -> Unit>()
@@ -157,7 +159,7 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ISwipeItem_put_IconSource, MemorySegment.NULL)
+                inspectable.call(Abi.ISwipeItem_put_IconSource, null)
                 return
             }
             val iconSource = value.createIconSource()
@@ -170,7 +172,7 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ISwipeItem_put_Background, MemorySegment.NULL)
+                inspectable.call(Abi.ISwipeItem_put_Background, null)
                 return
             }
             val brush = value.createBrush()
@@ -187,7 +189,7 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
     var command: WCommandBase? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeItem_put_Command, value?.commandPtr ?: MemorySegment.NULL)
+            inspectable.call(Abi.ISwipeItem_put_Command, value?.commandPtr)
         }
 
     init {

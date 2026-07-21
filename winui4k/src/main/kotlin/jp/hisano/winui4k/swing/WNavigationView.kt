@@ -1,11 +1,14 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.ffi.KComObject
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.KComObject
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode (the pane's current display state).
@@ -82,7 +85,7 @@ enum class NavigationViewBackButtonVisible(internal val native: Int) {
  * [addItemInvokedListener].
  */
 class WNavigationView : WControl(
-    WinRt.composeDefault(Abi.CLS_NavigationView, Abi.IID_INavigationViewFactory), // default interface = INavigationView
+    Activation.composeDefault(Abi.CLS_NavigationView, Abi.IID_INavigationViewFactory), // default interface = INavigationView
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -117,7 +120,7 @@ class WNavigationView : WControl(
     var header: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.INavigationView_put_Header, boxed.ptr)
             boxed.release()
         }
@@ -163,7 +166,7 @@ class WNavigationView : WControl(
         set(value) {
             inspectable.call(
                 Abi.INavigationView_put_SelectedItem,
-                value?.inspectable?.ptr ?: MemorySegment.NULL,
+                value?.inspectable?.ptr,
             )
         }
 
@@ -173,7 +176,7 @@ class WNavigationView : WControl(
             field = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 
@@ -252,7 +255,7 @@ class WNavigationView : WControl(
             val e = ComPtr(args)
             val boxed = e.getPtrOrNull(Abi.INavigationViewItemInvokedEventArgs_get_InvokedItem)
             val item = try {
-                boxed?.let(WinRt::unboxString) ?: ""
+                boxed?.let(PropertyValues::unboxString) ?: ""
             } finally {
                 boxed?.release()
             }
@@ -277,7 +280,7 @@ class WNavigationView : WControl(
             for (item in items) {
                 for (candidate in item.selfAndDescendants()) {
                     val mine = candidate.inspectable.queryInterface(KComObject.IID_IUNKNOWN)
-                    val matched = mine.ptr.address() == target.ptr.address()
+                    val matched = mine.ptr.address == target.ptr.address
                     mine.release()
                     if (matched) return candidate
                 }

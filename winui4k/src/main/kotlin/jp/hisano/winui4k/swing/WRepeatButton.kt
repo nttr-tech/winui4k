@@ -1,6 +1,6 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -8,7 +8,7 @@ import jp.hisano.winui4k.winui.Abi
  * [delay] (wait before the first fire) and [interval] (time between fires) control the repeat speed.
  */
 class WRepeatButton(text: String = "") : WButtonBase(
-    WinRt.activate(Abi.CLS_RepeatButton).queryInterface(Abi.IID_IRepeatButton), // created via the default factory
+    Activation.activate(Abi.CLS_RepeatButton).queryInterface(Abi.IID_IRepeatButton), // created via the default factory
 ) {
     /** Milliseconds to wait after pressing before Click starts firing repeatedly (RepeatButton.Delay). */
     var delay: Int

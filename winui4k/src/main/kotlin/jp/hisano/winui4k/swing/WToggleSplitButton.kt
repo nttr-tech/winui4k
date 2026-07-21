@@ -1,7 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -9,7 +11,7 @@ import jp.hisano.winui4k.winui.Abi
  * Clicking the body flips [isChecked]; the right-side arrow opens the flyout.
  */
 class WToggleSplitButton(text: String = "") : WSplitButton(
-    WinRt.composeDefault(Abi.CLS_ToggleSplitButton, Abi.IID_IToggleSplitButtonFactory),
+    Activation.composeDefault(Abi.CLS_ToggleSplitButton, Abi.IID_IToggleSplitButtonFactory),
 ) {
     /** The IToggleSplitButton view holding IsChecked / IsCheckedChanged. */
     private val toggleSplitButton: ComPtr by lazy {

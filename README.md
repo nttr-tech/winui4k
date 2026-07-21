@@ -74,15 +74,21 @@ Visual Studio・C++ ビルドツール・.NET SDK は**不要**です。
 
 ## 仕組み(レイヤ構成)
 
-| レイヤ | ファイル | 役割 |
+技術スタック 1 層 = 1 パッケージで、`swing → winui → winrt → com → ffi.api` の
+一方向に依存します (公開 API は `swing` のみ、他は internal)。
+
+| レイヤ | パッケージ | 役割 |
 |---|---|---|
-| FFM 基盤 | `ffi/Native.kt` | Linker、combase.dll ダウンコール、HSTRING、GUID |
-| COM 消費 | `ffi/ComPtr.kt` | `ptr → vtable → vtable[slot]` の関数ポインタ呼び出し |
-| COM 実装 | `ffi/KComObject.kt` | upcall スタブで vtable をネイティブメモリに構築。デリゲート・overrides・集約 outer になる |
-| WinRT | `winrt/WinRt.kt` | アクティベーション、`PropertyValue` による box 化、`IVector<T>` 実体 IID の SHA-1 計算 |
-| ABI 定数 | `winui/Abi.kt` | IID と vtable スロット番号。**すべて winmd から機械抽出**(下記) |
-| 起動 | `winui/Toolkit.kt` | Bootstrap → `RoInitialize(STA)` → `Application.Start` → COM 集約で App サブクラス合成 → `XamlControlsResources` 適用 |
-| API | `swing/Components.kt` | `WFrame` / `WPanel` / `WTextField` / `WButton` |
+| FFI SPI | `ffi/api` | バックエンド非依存の FFI 語彙 (`Ptr` / `CallDescriptor` / `StructType` / `FfiBackend`)。将来の JNA バックエンドはこの SPI を実装する |
+| FFI 実装 | `ffi/panama` | Panama (`java.lang.foreign`) バックエンド。**java.lang.foreign への参照はここだけ** |
+| Win32 | `win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
+| COM | `com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
+| WinRT | `winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate・overrides・集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
+| WinUI | `winui/` | `Abi` (IID / vtable スロット。**すべて winmd から機械抽出**)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
+| API | `swing/` | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
+
+FFI バックエンドはシステムプロパティ `-Dwinui4k.ffi=panama` または
+`WinUiUtilities.setFfiBackend(...)` で選択できます (既定は Panama)。
 
 起動シーケンスの要点:
 

@@ -1,7 +1,8 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -10,7 +11,7 @@ import jp.hisano.winui4k.winui.Abi
  * (RadioButtons in the same parent are already in the same group even without a groupName).
  */
 class WRadioButton(text: String = "") : WToggleButton(
-    WinRt.composeDefault(Abi.CLS_RadioButton, Abi.IID_IRadioButtonFactory), // default interface = IRadioButton
+    Activation.composeDefault(Abi.CLS_RadioButton, Abi.IID_IRadioButtonFactory), // default interface = IRadioButton
 ) {
     /** The name of the exclusive group (RadioButton.GroupName). */
     var groupName: String

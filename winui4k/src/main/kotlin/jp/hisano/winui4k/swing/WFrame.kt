@@ -1,14 +1,14 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
 import jp.hisano.winui4k.winui.Abi
 
 /** JFrame-like: WinUI 3's Window. */
 class WFrame(title: String = "") {
     private val window: ComPtr =
-        WinRt.composeDefault(Abi.CLS_Window, Abi.IID_IWindowFactory) // IWindow
+        Activation.composeDefault(Abi.CLS_Window, Abi.IID_IWindowFactory) // IWindow
 
     /** The root panel corresponding to JFrame's contentPane. */
     val contentPane: WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }

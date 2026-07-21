@@ -1,9 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * Microsoft.UI.Xaml.TextWrapping (how text wraps).
@@ -30,7 +31,7 @@ enum class TextWrapping(internal val native: Int) {
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  */
 class WLabel(text: String = "") : WComponent(
-    WinRt.activate(Abi.CLS_TextBlock).queryInterface(Abi.IID_ITextBlock),
+    Activation.activate(Abi.CLS_TextBlock).queryInterface(Abi.IID_ITextBlock),
 ) {
     var text: String
         get() = inspectable.getString(Abi.ITextBlock_get_Text)
@@ -53,7 +54,7 @@ class WLabel(text: String = "") : WComponent(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ITextBlock_put_Foreground, MemorySegment.NULL)
+                inspectable.call(Abi.ITextBlock_put_Foreground, null)
             } else {
                 val brush = value.createBrush()
                 inspectable.call(Abi.ITextBlock_put_Foreground, brush.ptr)

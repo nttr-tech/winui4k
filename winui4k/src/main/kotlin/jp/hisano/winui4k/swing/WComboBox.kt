@@ -1,8 +1,12 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -15,7 +19,7 @@ import jp.hisano.winui4k.winui.Abi
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged).
  */
 class WComboBox(items: List<String> = emptyList()) : WControl(
-    WinRt.composeDefault(Abi.CLS_ComboBox, Abi.IID_IComboBoxFactory), // default interface = IComboBox
+    Activation.composeDefault(Abi.CLS_ComboBox, Abi.IID_IComboBoxFactory), // default interface = IComboBox
 ) {
     private val selector: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_ISelector)
@@ -48,7 +52,7 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
         get() {
             val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
             return try {
-                WinRt.unboxString(boxed)
+                PropertyValues.unboxString(boxed)
             } finally {
                 boxed.release()
             }
@@ -63,7 +67,7 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     var header: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IComboBox_put_Header, boxed.ptr)
             boxed.release()
         }
@@ -89,7 +93,7 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
 
     /** Appends an item at the end (Items.Append). The string is boxed before passing. */
     fun addItem(item: String) {
-        val boxed = WinRt.boxString(item)
+        val boxed = PropertyValues.boxString(item)
         itemVector.call(Abi.IVector_Append, boxed.ptr)
         boxed.release()
     }
@@ -98,7 +102,7 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     fun getItem(index: Int): String {
         val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
         return try {
-            WinRt.unboxString(boxed) ?: ""
+            PropertyValues.unboxString(boxed) ?: ""
         } finally {
             boxed.release()
         }

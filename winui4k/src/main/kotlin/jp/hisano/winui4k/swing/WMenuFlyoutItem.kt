@@ -1,10 +1,13 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Common base for menu items (MenuFlyoutItem / MenuFlyoutSubItem / MenuFlyoutSeparator):
@@ -27,7 +30,7 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
 open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     WMenuFlyoutItemBase(inspectable) {
     constructor(text: String = "", icon: Symbol? = null) : this(
-        WinRt.composeDefault(Abi.CLS_MenuFlyoutItem, Abi.IID_IMenuFlyoutItemFactory),
+        Activation.composeDefault(Abi.CLS_MenuFlyoutItem, Abi.IID_IMenuFlyoutItemFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
         if (icon != null) this.icon = icon
@@ -51,7 +54,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         set(value) {
             field = value
             if (value == null) {
-                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_Icon, MemorySegment.NULL)
+                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
@@ -65,7 +68,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
             field = value
             menuFlyoutItem.call(
                 Abi.IMenuFlyoutItem_put_Command,
-                value?.commandPtr ?: MemorySegment.NULL,
+                value?.commandPtr,
             )
         }
 
@@ -74,9 +77,9 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         set(value) {
             field = value
             if (value == null) {
-                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_CommandParameter, MemorySegment.NULL)
+                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_CommandParameter, null)
             } else {
-                val boxed = WinRt.boxString(value)
+                val boxed = PropertyValues.boxString(value)
                 menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_CommandParameter, boxed.ptr)
                 boxed.release()
             }
@@ -112,7 +115,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
  * [isChecked] toggles on every click, and a checkmark is shown accordingly.
  */
 class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItem(
-    WinRt.composeDefault(Abi.CLS_ToggleMenuFlyoutItem, Abi.IID_IToggleMenuFlyoutItemFactory),
+    Activation.composeDefault(Abi.CLS_ToggleMenuFlyoutItem, Abi.IID_IToggleMenuFlyoutItemFactory),
 ) {
     /** The checked state (ToggleMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
@@ -130,7 +133,7 @@ class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyo
  * Only one item within the same [groupName] can be checked at a time (mutually exclusive).
  */
 class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFlyoutItem(
-    WinRt.composeDefault(Abi.CLS_RadioMenuFlyoutItem, Abi.IID_IRadioMenuFlyoutItemFactory),
+    Activation.composeDefault(Abi.CLS_RadioMenuFlyoutItem, Abi.IID_IRadioMenuFlyoutItemFactory),
 ) {
     /** The checked state (RadioMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
@@ -156,7 +159,7 @@ class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFly
  */
 class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItemBase(
     // activatable (default factory), so activate then QI to the default interface
-    WinRt.activate(Abi.CLS_MenuFlyoutSubItem).queryInterface(Abi.IID_IMenuFlyoutSubItem),
+    Activation.activate(Abi.CLS_MenuFlyoutSubItem).queryInterface(Abi.IID_IMenuFlyoutSubItem),
 ) {
     private val items: ComPtr by lazy {
         inspectable.getPtr(Abi.IMenuFlyoutSubItem_get_Items) // IVector<MenuFlyoutItemBase>
@@ -174,7 +177,7 @@ class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutI
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IMenuFlyoutSubItem_put_Icon, MemorySegment.NULL)
+                inspectable.call(Abi.IMenuFlyoutSubItem_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
@@ -195,5 +198,5 @@ class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutI
 
 /** JSeparator-like: WinUI 3's MenuFlyoutSeparator (a menu divider line). */
 class WMenuFlyoutSeparator : WMenuFlyoutItemBase(
-    WinRt.composeDefault(Abi.CLS_MenuFlyoutSeparator, Abi.IID_IMenuFlyoutSeparatorFactory),
+    Activation.composeDefault(Abi.CLS_MenuFlyoutSeparator, Abi.IID_IMenuFlyoutSeparatorFactory),
 )

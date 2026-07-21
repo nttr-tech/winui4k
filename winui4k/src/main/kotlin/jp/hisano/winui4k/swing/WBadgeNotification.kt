@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -11,7 +11,7 @@ import jp.hisano.winui4k.winui.Abi
 object WBadgeNotification {
     /** BadgeNotificationManager.Current (the default interface's pointer). */
     private val manager: ComPtr by lazy {
-        val statics = WinRt.factory(
+        val statics = Activation.factory(
             Abi.CLS_BadgeNotificationManager, Abi.IID_IBadgeNotificationManagerStatics,
         )
         val m = statics.getPtr(Abi.IBadgeNotificationManagerStatics_get_Current)

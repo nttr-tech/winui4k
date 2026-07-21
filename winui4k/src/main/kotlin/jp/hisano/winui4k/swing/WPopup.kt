@@ -1,8 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * javax.swing.Popup-like: WinUI 3's Primitives.Popup. A lightweight container that shows
@@ -11,7 +12,7 @@ import java.lang.foreign.MemorySegment
  * something like WBorder.
  */
 class WPopup(child: WComponent? = null) : WComponent(
-    WinRt.activate(Abi.CLS_Popup).queryInterface(Abi.IID_IPopup), // created via the default factory
+    Activation.activate(Abi.CLS_Popup).queryInterface(Abi.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */
     private val closeTokens = ListenerTokens<() -> Unit>()
@@ -20,7 +21,7 @@ class WPopup(child: WComponent? = null) : WComponent(
     var child: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IPopup_put_Child, value?.uiElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.IPopup_put_Child, value?.uiElement?.ptr)
         }
 
     /** The horizontal offset from the origin (the window's top-left) (Popup.HorizontalOffset). */

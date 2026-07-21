@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -9,7 +9,7 @@ import jp.hisano.winui4k.winui.Abi
  * Positions children with absolute coordinates (Canvas.Left / Canvas.Top). Overlap order is controlled with [setZIndex].
  */
 class WCanvas : WContainer(
-    WinRt.composeDefault(Abi.CLS_Canvas, Abi.IID_ICanvasFactory),
+    Activation.composeDefault(Abi.CLS_Canvas, Abi.IID_ICanvasFactory),
 ) {
     /** Adds a child positioned at ([x], [y]). */
     fun add(component: WComponent, x: Double, y: Double) {
@@ -30,6 +30,6 @@ class WCanvas : WContainer(
 
     private companion object {
         /** Attached-property operations for Canvas (ICanvasStatics). */
-        val statics: ComPtr by lazy { WinRt.factory(Abi.CLS_Canvas, Abi.IID_ICanvasStatics) }
+        val statics: ComPtr by lazy { Activation.factory(Abi.CLS_Canvas, Abi.IID_ICanvasStatics) }
     }
 }

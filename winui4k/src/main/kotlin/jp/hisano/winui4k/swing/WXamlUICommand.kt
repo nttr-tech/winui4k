@@ -1,12 +1,16 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.Ffi
+import jp.hisano.winui4k.ffi.api.Ptr
+import jp.hisano.winui4k.ffi.api.withScope
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.ADDRESS
 
 /**
  * Equivalent to Swing's Action (implemented on the WinUI side): Microsoft.UI.Xaml.Input.XamlUICommand.
@@ -21,7 +25,7 @@ open class WXamlUICommand internal constructor(
     internal val inspectable: ComPtr,
 ) : WCommandBase() {
     constructor(label: String = "") : this(
-        WinRt.composeDefault(Abi.CLS_XamlUICommand, Abi.IID_IXamlUICommandFactory),
+        Activation.composeDefault(Abi.CLS_XamlUICommand, Abi.IID_IXamlUICommandFactory),
     ) {
         if (label.isNotEmpty()) this.label = label
     }
@@ -34,7 +38,7 @@ open class WXamlUICommand internal constructor(
     /** The ICommand view required by put_Command (XamlUICommand implements ICommand). */
     private val icommand: ComPtr by lazy { inspectable.queryInterface(Abi.IID_ICommand) }
 
-    override val commandPtr: MemorySegment
+    override val commandPtr: Ptr
         get() = icommand.ptr
 
     /** ExecuteRequested event tokens registered via addExecuteListener. */
@@ -50,7 +54,7 @@ open class WXamlUICommand internal constructor(
         set(value) {
             field = value
             if (value == null) {
-                xamlUICommand.call(Abi.IXamlUICommand_put_IconSource, MemorySegment.NULL)
+                xamlUICommand.call(Abi.IXamlUICommand_put_IconSource, null)
                 return
             }
             val iconSource = value.createIconSource()
@@ -97,7 +101,7 @@ open class WXamlUICommand internal constructor(
             val boxed = ComPtr(args).getPtrOrNull(Abi.IExecuteRequestedEventArgs_get_Parameter)
             val parameter = boxed?.let {
                 try {
-                    WinRt.unboxString(it)
+                    PropertyValues.unboxString(it)
                 } finally {
                     it.release()
                 }
@@ -154,17 +158,17 @@ class WStandardUICommand(kind: StandardUICommandKind) : WXamlUICommand(createWit
 
     private companion object {
         /** IStandardUICommandFactory.CreateInstanceWithKind(kind, outer, out inner, out instance). */
-        fun createWithKind(kind: StandardUICommandKind): ComPtr = Arena.ofConfined().use { a ->
+        fun createWithKind(kind: StandardUICommandKind): ComPtr = Ffi.backend.withScope { scope ->
             val factory =
-                WinRt.factory(Abi.CLS_StandardUICommand, Abi.IID_IStandardUICommandFactory)
-            val inner = a.allocate(ADDRESS)
-            val instance = a.allocate(ADDRESS)
+                Activation.factory(Abi.CLS_StandardUICommand, Abi.IID_IStandardUICommandFactory)
+            val inner = scope.allocate(8)
+            val instance = scope.allocate(8)
             factory.call(
                 Abi.IStandardUICommandFactory_CreateInstanceWithKind,
-                kind.native, MemorySegment.NULL, inner, instance,
+                kind.native, null, inner, instance,
             )
             factory.release()
-            ComPtr(instance.get(ADDRESS, 0))
+            ComPtr(Ffi.backend.memory.getPtr(instance, 0))
         }
     }
 }

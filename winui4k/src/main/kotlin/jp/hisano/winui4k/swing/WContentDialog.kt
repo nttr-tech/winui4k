@@ -1,10 +1,13 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.ContentDialogResult (which button it closed with).
@@ -54,7 +57,7 @@ enum class ContentDialogButton(internal val native: Int) {
  * [show] opens it, and the button it closed with ([ContentDialogResult]) is delivered via a callback.
  */
 class WContentDialog(title: String = "", content: WComponent? = null) : WControl(
-    WinRt.composeDefault(Abi.CLS_ContentDialog, Abi.IID_IContentDialogFactory), // default interface = IContentDialog
+    Activation.composeDefault(Abi.CLS_ContentDialog, Abi.IID_IContentDialogFactory), // default interface = IContentDialog
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -64,7 +67,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
     var title: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IContentDialog_put_Title, boxed.ptr)
             boxed.release()
         }
@@ -75,7 +78,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
             field = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 

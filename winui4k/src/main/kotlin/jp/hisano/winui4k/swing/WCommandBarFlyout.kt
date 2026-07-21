@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -10,7 +10,7 @@ import jp.hisano.winui4k.winui.Abi
  * [addSecondaryCommand] show in the menu below them. Set it on WComponent.contextFlyout to use it.
  */
 class WCommandBarFlyout : WFlyoutBase(
-    WinRt.composeDefault(Abi.CLS_CommandBarFlyout, Abi.IID_ICommandBarFlyoutFactory),
+    Activation.composeDefault(Abi.CLS_CommandBarFlyout, Abi.IID_ICommandBarFlyoutFactory),
 ) {
     private val primaryCommands: ComPtr by lazy {
         queryVector(Abi.ICommandBarFlyout_get_PrimaryCommands)

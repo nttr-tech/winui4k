@@ -1,6 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -9,7 +12,7 @@ import jp.hisano.winui4k.winui.Abi
  * Customize the displayed text with [header] / [onContent] / [offContent].
  */
 class WToggleSwitch(header: String = "") : WControl(
-    WinRt.activate(Abi.CLS_ToggleSwitch).queryInterface(Abi.IID_IToggleSwitch), // created via the default factory
+    Activation.activate(Abi.CLS_ToggleSwitch).queryInterface(Abi.IID_IToggleSwitch), // created via the default factory
 ) {
     /** Toggled event tokens registered via addItemListener. */
     private val itemTokens = ListenerTokens<(Boolean) -> Unit>()
@@ -23,7 +26,7 @@ class WToggleSwitch(header: String = "") : WControl(
     var header: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IToggleSwitch_put_Header, boxed.ptr)
             boxed.release()
         }
@@ -32,7 +35,7 @@ class WToggleSwitch(header: String = "") : WControl(
     var onContent: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IToggleSwitch_put_OnContent, boxed.ptr)
             boxed.release()
         }
@@ -41,7 +44,7 @@ class WToggleSwitch(header: String = "") : WControl(
     var offContent: String = ""
         set(value) {
             field = value
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             inspectable.call(Abi.IToggleSwitch_put_OffContent, boxed.ptr)
             boxed.release()
         }

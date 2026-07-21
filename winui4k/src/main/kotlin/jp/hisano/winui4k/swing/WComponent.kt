@@ -1,9 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * Microsoft.UI.Xaml.HorizontalAlignment (horizontal position within the space the parent allots).
@@ -104,7 +104,7 @@ abstract class WComponent internal constructor(
             field = value
             uiElement.call(
                 Abi.IUIElement_put_ContextFlyout,
-                value?.flyoutBase?.ptr ?: MemorySegment.NULL,
+                value?.flyoutBase?.ptr,
             )
         }
 
@@ -145,7 +145,7 @@ internal fun createKeyboardAccelerator(
     modifiers: Array<out VirtualKeyModifier>,
 ): ComPtr {
     val accelerator =
-        WinRt.composeDefault(Abi.CLS_KeyboardAccelerator, Abi.IID_IKeyboardAcceleratorFactory)
+        Activation.composeDefault(Abi.CLS_KeyboardAccelerator, Abi.IID_IKeyboardAcceleratorFactory)
     accelerator.call(Abi.IKeyboardAccelerator_put_Key, key.native)
     val combined = modifiers.fold(0) { acc, modifier -> acc or modifier.native }
     if (combined != 0) accelerator.call(Abi.IKeyboardAccelerator_put_Modifiers, combined)

@@ -1,10 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JToggleButton-like for toolbars: WinUI 3's AppBarToggleButton (a Primitives.ToggleButton subclass).
@@ -12,7 +12,7 @@ import java.lang.foreign.MemorySegment
  * [label] and [icon] for use on a WCommandBar.
  */
 class WAppBarToggleButton(label: String = "", icon: Symbol? = null) : WToggleButton(
-    WinRt.composeDefault(Abi.CLS_AppBarToggleButton, Abi.IID_IAppBarToggleButtonFactory),
+    Activation.composeDefault(Abi.CLS_AppBarToggleButton, Abi.IID_IAppBarToggleButtonFactory),
 ) {
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */
     private val commandBarElement: ComPtr by lazy {
@@ -31,7 +31,7 @@ class WAppBarToggleButton(label: String = "", icon: Symbol? = null) : WToggleBut
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IAppBarToggleButton_put_Icon, MemorySegment.NULL)
+                inspectable.call(Abi.IAppBarToggleButton_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
@@ -59,5 +59,5 @@ class WAppBarToggleButton(label: String = "", icon: Symbol? = null) : WToggleBut
 
 /** JToolBar.Separator-like: WinUI 3's AppBarSeparator (a toolbar divider line). */
 class WAppBarSeparator : WControl(
-    WinRt.composeDefault(Abi.CLS_AppBarSeparator, Abi.IID_IAppBarSeparatorFactory),
+    Activation.composeDefault(Abi.CLS_AppBarSeparator, Abi.IID_IAppBarSeparatorFactory),
 )

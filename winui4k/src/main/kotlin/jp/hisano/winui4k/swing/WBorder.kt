@@ -1,8 +1,8 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * JPanel-like with a BorderFactory: WinUI 3's Border.
@@ -10,13 +10,13 @@ import java.lang.foreign.MemorySegment
  * a background ([background]), and padding ([padding]) around a single [child].
  */
 class WBorder(child: WComponent? = null) : WComponent(
-    WinRt.activate(Abi.CLS_Border).queryInterface(Abi.IID_IBorder),
+    Activation.activate(Abi.CLS_Border).queryInterface(Abi.IID_IBorder),
 ) {
     /** The single child shown inside the border (Border.Child). */
     var child: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IBorder_put_Child, value?.uiElement?.ptr ?: MemorySegment.NULL)
+            inspectable.call(Abi.IBorder_put_Child, value?.uiElement?.ptr)
         }
 
     /** The border color (Border.BorderBrush). Converted to a SolidColorBrush before being passed. */
@@ -60,7 +60,7 @@ class WBorder(child: WComponent? = null) : WComponent(
 
     private fun putBrush(slot: Int, color: WColor?) {
         if (color == null) {
-            inspectable.call(slot, MemorySegment.NULL)
+            inspectable.call(slot, null)
         } else {
             val brush = color.createBrush()
             inspectable.call(slot, brush.ptr)

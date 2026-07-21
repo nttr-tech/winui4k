@@ -1,6 +1,6 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -25,7 +25,7 @@ class WPanel(
     spacing: Double = 0.0,
     orientation: Orientation = Orientation.VERTICAL,
 ) : WContainer(
-    WinRt.composeDefault(Abi.CLS_StackPanel, Abi.IID_IStackPanelFactory)
+    Activation.composeDefault(Abi.CLS_StackPanel, Abi.IID_IStackPanelFactory)
         .queryInterface(Abi.IID_IStackPanel),
 ) {
     /** The direction children are lined up in (StackPanel.Orientation). */

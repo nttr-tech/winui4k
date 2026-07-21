@@ -1,16 +1,15 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JScrollPane-like: WinUI 3's ScrollViewer (a ContentControl subclass).
  * Shows scrollbars when [content] is larger than the viewport.
  */
 class WScrollPane(content: WComponent? = null) : WControl(
-    WinRt.activate(Abi.CLS_ScrollViewer).queryInterface(Abi.IID_IScrollViewer), // created via the default factory
+    Activation.activate(Abi.CLS_ScrollViewer).queryInterface(Abi.IID_IScrollViewer), // created via the default factory
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -22,7 +21,7 @@ class WScrollPane(content: WComponent? = null) : WControl(
             field = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 

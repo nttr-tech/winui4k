@@ -1,6 +1,6 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
+import jp.hisano.winui4k.com.ComPtr
 import jp.hisano.winui4k.winui.Abi
 
 /**

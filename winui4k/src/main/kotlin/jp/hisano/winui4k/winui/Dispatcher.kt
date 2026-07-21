@@ -1,51 +1,51 @@
 package jp.hisano.winui4k.winui
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.KComObject
-import jp.hisano.winui4k.winrt.WinRt
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_BYTE
-import java.lang.foreign.ValueLayout.JAVA_INT
-import java.lang.foreign.ValueLayout.JAVA_LONG
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.ArgKind
+import jp.hisano.winui4k.ffi.api.CallDescriptor
+import jp.hisano.winui4k.ffi.api.Ffi
+import jp.hisano.winui4k.ffi.api.ValueKind
+import jp.hisano.winui4k.ffi.api.withScope
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.KComObject
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * WinUI's UI thread DispatcherQueue.
- * [invokeLater] moves a callback arriving off the UI thread (e.g. a notification click)
- * onto the UI thread so W* APIs can be used safely (SwingUtilities.invokeLater-like).
+ * The WinUI UI thread's DispatcherQueue (Microsoft.UI.Dispatching).
+ * Lets callbacks that arrive from outside the UI thread (e.g. notification clicks) move
+ * onto the UI thread via [invokeLater] so W* APIs can be used safely there
+ * (in the spirit of SwingUtilities.invokeLater).
  */
 internal object Dispatcher {
-    /** The delegate DispatcherQueueHandler's Invoke(this) — vtbl[3], no arguments */
-    private val DESC_HANDLER = FunctionDescriptor.of(JAVA_INT, ADDRESS)
+    /** delegate DispatcherQueueHandler's Invoke(this) — vtbl[3], no arguments */
+    private val DESC_HANDLER = CallDescriptor(ValueKind.I32, ArgKind.PTR)
 
-    /** The TypedEventHandler's Invoke(this, sender, args) — vtbl[3] */
-    private val DESC_TICK_HANDLER = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS)
+    /** TypedEventHandler's Invoke(this, sender, args) — vtbl[3] */
+    private val DESC_TICK_HANDLER = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
 
     private var queue: ComPtr? = null
     private var uiThread: Thread? = null
 
     /**
      * Captures the current thread's (= the UI thread's) DispatcherQueue.
-     * Called by WinUiUtilities in OnLaunched.
+     * WinUiUtilities calls this from OnLaunched.
      */
     fun capture() {
         if (queue != null) return
-        val statics = WinRt.factory(Abi.CLS_DispatcherQueue, Abi.IID_IDispatcherQueueStatics)
+        val statics = Activation.factory(Abi.CLS_DispatcherQueue, Abi.IID_IDispatcherQueueStatics)
         queue = statics.getPtr(Abi.IDispatcherQueueStatics_GetForCurrentThread)
         statics.release()
         uiThread = Thread.currentThread()
     }
 
-    /** True if the current thread is the UI thread (SwingUtilities.isEventDispatchThread-like). */
+    /** True if the current thread is the UI thread (in the spirit of SwingUtilities.isEventDispatchThread). */
     val isDispatchThread: Boolean
         get() = Thread.currentThread() === uiThread
 
-    /** Posts [block] to the UI thread's message loop. Can be called from any thread. */
+    /** Posts [block] onto the UI thread's message loop. Callable from any thread. */
     fun invokeLater(block: () -> Unit) {
-        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (start WinUI via WinUiUtilities before using this)" }
+        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
         val handler = KComObject("WinUI4K.DispatcherQueueHandler", inspectable = false)
             .addInterface(
                 Abi.IID_DispatcherQueueHandler,
@@ -56,25 +56,26 @@ internal object Dispatcher {
                     },
                 ),
             )
-        Arena.ofConfined().use { a ->
-            val out = a.allocate(JAVA_BYTE) // TryEnqueue(handler, out boolean)
+        Ffi.backend.withScope { scope ->
+            val out = scope.allocate(1, 1) // TryEnqueue(handler, out boolean)
             q.call(Abi.IDispatcherQueue_TryEnqueue, handler.primary, out)
         }
     }
 
     /**
      * Starts a DispatcherQueueTimer that runs [block] once on the UI thread after
-     * [delayMillis] milliseconds (a one-shot javax.swing.Timer-like). Calling close() on the
-     * return value cancels it if it hasn't fired yet. Can be called from any thread.
+     * [delayMillis] milliseconds (in the spirit of javax.swing.Timer's one-shot mode).
+     * Calling close() on the returned value cancels it if it hasn't fired yet.
+     * Callable from any thread.
      */
     fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable {
-        // True once fired or cancelled. Whichever of Tick and close() gets there first transitions this exactly once
+        // true once fired or cancelled. Whichever of Tick / close() gets there first wins the one-time transition
         val done = AtomicBoolean(false)
-        // The timer is created/started/stopped on the UI thread (the queue belongs to the thread that created it)
+        // Creating, starting, and stopping the timer all happen on the UI thread (the queue belongs to its creating thread)
         val timerRef = AtomicReference<ComPtr?>(null)
         runOnDispatchThread {
             if (done.get()) return@runOnDispatchThread
-            val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (start WinUI via WinUiUtilities before using this)" }
+            val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
             val timer = q.getPtr(Abi.IDispatcherQueue_CreateTimer)
             // TimeSpan is an int64 in 100ns units, passed by value
             timer.call(Abi.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)
@@ -92,8 +93,8 @@ internal object Dispatcher {
                         },
                     ),
                 )
-            Arena.ofConfined().use { a ->
-                val token = a.allocate(JAVA_LONG) // EventRegistrationToken (int64)
+            Ffi.backend.withScope { scope ->
+                val token = scope.allocate(8) // EventRegistrationToken (int64)
                 timer.call(Abi.IDispatcherQueueTimer_add_Tick, tickHandler.primary, token)
             }
             timerRef.set(timer)
@@ -101,7 +102,7 @@ internal object Dispatcher {
         }
         return AutoCloseable {
             if (done.compareAndSet(false, true)) {
-                // If not created yet (creation is queued), the creation side's done check aborts it
+                // If not yet created (creation is still queued), the creating side's done check aborts it
                 runOnDispatchThread { stopAndRelease(timerRef) }
             }
         }

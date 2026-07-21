@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -10,7 +10,7 @@ import jp.hisano.winui4k.winui.Abi
  * menu items added with [add].
  */
 class WMenuFlyout : WFlyoutBase(
-    WinRt.composeDefault(Abi.CLS_MenuFlyout, Abi.IID_IMenuFlyoutFactory),
+    Activation.composeDefault(Abi.CLS_MenuFlyout, Abi.IID_IMenuFlyoutFactory),
 ) {
     private val items: ComPtr by lazy {
         inspectable.getPtr(Abi.IMenuFlyout_get_Items) // IVector<MenuFlyoutItemBase>

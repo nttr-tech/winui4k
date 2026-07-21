@@ -1,9 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * JMenuItem-like: WinUI 3's NavigationViewItem.
@@ -12,7 +12,7 @@ import java.lang.foreign.MemorySegment
  * ([icon]); adding child items via [addItem] turns it into a hierarchical menu.
  */
 class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
-    WinRt.composeDefault(Abi.CLS_NavigationViewItem, Abi.IID_INavigationViewItemFactory), // default interface = INavigationViewItem
+    Activation.composeDefault(Abi.CLS_NavigationViewItem, Abi.IID_INavigationViewItemFactory), // default interface = INavigationViewItem
 ) {
     private val contentControl: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IContentControl)
@@ -38,13 +38,13 @@ class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
         get() {
             val boxed = contentControl.getPtrOrNull(Abi.IContentControl_get_Content) ?: return ""
             return try {
-                WinRt.unboxString(boxed) ?: ""
+                PropertyValues.unboxString(boxed) ?: ""
             } finally {
                 boxed.release()
             }
         }
         set(value) {
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
             boxed.release()
         }
@@ -54,11 +54,11 @@ class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.INavigationViewItem_put_Icon, MemorySegment.NULL)
+                inspectable.call(Abi.INavigationViewItem_put_Icon, null)
             } else {
                 // Build a SymbolIcon via ISymbolIconFactory.CreateInstanceWithSymbol, then QI it
                 // to IconElement, put_Icon's declared type, before passing it along
-                val symbolIcon = WinRt.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
+                val symbolIcon = Activation.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
                     .getPtr(Abi.ISymbolIconFactory_CreateInstanceWithSymbol, value.native)
                 val iconElement = symbolIcon.queryInterface(Abi.IID_IIconElement)
                 inspectable.call(Abi.INavigationViewItem_put_Icon, iconElement.ptr)

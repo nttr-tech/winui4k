@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -71,7 +71,7 @@ enum class CommandBarOverflowButtonVisibility(internal val native: Int) {
  * [addSecondaryCommand] go into the […] overflow menu.
  */
 class WCommandBar : WControl(
-    WinRt.composeDefault(Abi.CLS_CommandBar, Abi.IID_ICommandBarFactory),
+    Activation.composeDefault(Abi.CLS_CommandBar, Abi.IID_ICommandBarFactory),
 ) {
     /** The IAppBar view that holds IsOpen / IsSticky / ClosedDisplayMode (CommandBar is an AppBar subclass). */
     private val appBar: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IAppBar) }

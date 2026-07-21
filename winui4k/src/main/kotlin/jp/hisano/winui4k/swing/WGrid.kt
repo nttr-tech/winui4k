@@ -1,8 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * Row/column sizing (Microsoft.UI.Xaml.GridLength).
@@ -32,7 +33,7 @@ class WGrid(
     rowSpacing: Double = 0.0,
     columnSpacing: Double = 0.0,
 ) : WContainer(
-    WinRt.composeDefault(Abi.CLS_Grid, Abi.IID_IGridFactory),
+    Activation.composeDefault(Abi.CLS_Grid, Abi.IID_IGridFactory),
 ) {
     private val rowDefinitions: ComPtr by lazy {
         inspectable.getPtr(Abi.IGrid_get_RowDefinitions) // IVector<RowDefinition>
@@ -58,7 +59,7 @@ class WGrid(
 
     /** Adds a row (appends a RowDefinition to Grid.RowDefinitions). */
     fun addRow(height: GridLength = GridLength.AUTO) {
-        val definition = WinRt.activate(Abi.CLS_RowDefinition).queryInterface(Abi.IID_IRowDefinition)
+        val definition = Activation.activate(Abi.CLS_RowDefinition).queryInterface(Abi.IID_IRowDefinition)
         XamlStructs.putGridLength(definition, Abi.IRowDefinition_put_Height, height.value, height.unitType)
         rowDefinitions.call(Abi.IVector_Append, definition.ptr)
         definition.release()
@@ -66,7 +67,7 @@ class WGrid(
 
     /** Adds a column (appends a ColumnDefinition to Grid.ColumnDefinitions). */
     fun addColumn(width: GridLength = GridLength.AUTO) {
-        val definition = WinRt.activate(Abi.CLS_ColumnDefinition).queryInterface(Abi.IID_IColumnDefinition)
+        val definition = Activation.activate(Abi.CLS_ColumnDefinition).queryInterface(Abi.IID_IColumnDefinition)
         XamlStructs.putGridLength(definition, Abi.IColumnDefinition_put_Width, width.value, width.unitType)
         columnDefinitions.call(Abi.IVector_Append, definition.ptr)
         definition.release()
@@ -83,6 +84,6 @@ class WGrid(
 
     private companion object {
         /** Attached-property operations for Grid (IGridStatics). */
-        val statics: ComPtr by lazy { WinRt.factory(Abi.CLS_Grid, Abi.IID_IGridStatics) }
+        val statics: ComPtr by lazy { Activation.factory(Abi.CLS_Grid, Abi.IID_IGridStatics) }
     }
 }

@@ -1,8 +1,11 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * Microsoft.UI.Xaml.Controls.ColorSpectrumShape (the spectrum's shape).
@@ -28,7 +31,7 @@ enum class ColorSpectrumShape(internal val native: Int) {
  * and [addChangeListener] / [removeChangeListener] (ColorChanged).
  */
 class WColorPicker : WControl(
-    WinRt.composeDefault(Abi.CLS_ColorPicker, Abi.IID_IColorPickerFactory),
+    Activation.composeDefault(Abi.CLS_ColorPicker, Abi.IID_IColorPickerFactory),
 ) {
     /** ColorChanged event tokens registered via addChangeListener. */
     private val changeTokens = ListenerTokens<(WColor) -> Unit>()

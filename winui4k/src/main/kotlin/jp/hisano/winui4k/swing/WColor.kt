@@ -1,8 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * java.awt.Color-like: a Windows.UI.Color value (each component 0..255).
@@ -16,7 +17,7 @@ class WColor(
 ) {
     /** Creates a new SolidColorBrush for this color. The caller must release it. */
     internal fun createBrush(): ComPtr {
-        val brush = WinRt.activate(Abi.CLS_SolidColorBrush).queryInterface(Abi.IID_ISolidColorBrush)
+        val brush = Activation.activate(Abi.CLS_SolidColorBrush).queryInterface(Abi.IID_ISolidColorBrush)
         XamlStructs.putColor(brush, Abi.ISolidColorBrush_put_Color, alpha, red, green, blue)
         return brush
     }

@@ -1,9 +1,12 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
+import jp.hisano.winui4k.winui.XamlStructs
 
 /**
  * A column's sort direction (equivalent to WinUI.TableView's SortDirection).
@@ -56,7 +59,7 @@ private val DARK_GRID_LINE = WColor(255, 255, 255, 18)         // ControlStrokeC
  * [sortBy] / [clearSort] / [canSortColumns] (a header click cycles through ascending -> descending -> cleared).
  */
 class WTable(private val columns: List<WTableColumn>) : WControl(
-    WinRt.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
+    Activation.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_ISelector)
@@ -297,7 +300,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
      * A Style object can't be built from code, so this is generated via XamlReader.
      */
     private fun putItemContainerStyle() {
-        val statics = WinRt.factory(Abi.CLS_XamlReader, Abi.IID_IXamlReaderStatics)
+        val statics = Activation.factory(Abi.CLS_XamlReader, Abi.IID_IXamlReaderStatics)
         val loaded = Hstring.use(ITEM_CONTAINER_STYLE_XAML) { h ->
             statics.getPtr(Abi.IXamlReaderStatics_Load, h)
         }

@@ -1,9 +1,11 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * A two-part button split between clicking the body and expanding choices: WinUI 3's
@@ -12,7 +14,7 @@ import java.lang.foreign.MemorySegment
  */
 open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(inspectable) {
     constructor(text: String = "") : this(
-        WinRt.composeDefault(Abi.CLS_SplitButton, Abi.IID_ISplitButtonFactory),
+        Activation.composeDefault(Abi.CLS_SplitButton, Abi.IID_ISplitButtonFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
     }
@@ -34,13 +36,13 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         get() {
             val boxed = contentControl.getPtrOrNull(Abi.IContentControl_get_Content) ?: return ""
             return try {
-                WinRt.unboxString(boxed) ?: ""
+                PropertyValues.unboxString(boxed) ?: ""
             } finally {
                 boxed.release()
             }
         }
         set(value) {
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
             boxed.release()
         }
@@ -49,7 +51,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            splitButton.call(Abi.ISplitButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)
+            splitButton.call(Abi.ISplitButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /**

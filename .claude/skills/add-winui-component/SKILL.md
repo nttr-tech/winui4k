@@ -82,10 +82,13 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
   `WContainer` (Children の add / removeAll を継承)、
   それ以外の FrameworkElement 直系なら `WComponent`
 - インスタンス生成 (手順 2 のクラス情報で分岐):
-  - `composable factory` あり → `WinRt.composeDefault(Abi.CLS_X, Abi.IID_IXFactory)`
+  - `composable factory` あり → `Activation.composeDefault(Abi.CLS_X, Abi.IID_IXFactory)`
     (戻り値は既定インターフェースのポインタ)
   - `activatable factory: <default IActivationFactory>` →
-    `WinRt.activate(Abi.CLS_X).queryInterface(Abi.IID_IX)`
+    `Activation.activate(Abi.CLS_X).queryInterface(Abi.IID_IX)`
+- **swing / winui パッケージで `java.lang.foreign` を import しない** (FFI バックエンド
+  非依存を保つ規約)。ネイティブメモリ操作が必要なら `ffi.api` の
+  `Ffi.backend.withScope { ... }` / `Ffi.backend.memory` / `Ptr` を使う
 - プロパティ・イベント・enum・構造体・ICommand などの実装パターンは
   [references/patterns.md](references/patterns.md) を必ず読んで踏襲する
 

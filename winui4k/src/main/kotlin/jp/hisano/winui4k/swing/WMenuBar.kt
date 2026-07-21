@@ -1,8 +1,9 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -10,7 +11,7 @@ import jp.hisano.winui4k.winui.Abi
  * [WMenuBarItem]s added with [add] line up horizontally as top-level menus.
  */
 class WMenuBar : WControl(
-    WinRt.composeDefault(Abi.CLS_MenuBar, Abi.IID_IMenuBarFactory),
+    Activation.composeDefault(Abi.CLS_MenuBar, Abi.IID_IMenuBarFactory),
 ) {
     private val items: ComPtr by lazy {
         inspectable.getPtr(Abi.IMenuBar_get_Items) // IVector<MenuBarItem>
@@ -27,7 +28,7 @@ class WMenuBar : WControl(
  * [title] becomes the label on the menu bar, and clicking it opens the items added with [add].
  */
 class WMenuBarItem(title: String = "") : WControl(
-    WinRt.composeDefault(Abi.CLS_MenuBarItem, Abi.IID_IMenuBarItemFactory),
+    Activation.composeDefault(Abi.CLS_MenuBarItem, Abi.IID_IMenuBarItemFactory),
 ) {
     private val items: ComPtr by lazy {
         inspectable.getPtr(Abi.IMenuBarItem_get_Items) // IVector<MenuFlyoutItemBase>

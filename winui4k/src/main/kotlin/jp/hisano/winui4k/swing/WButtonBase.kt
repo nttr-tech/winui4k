@@ -1,9 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.PropertyValues
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.removeEventHandler
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.Controls.ClickMode (when Click fires).
@@ -55,14 +56,14 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         get() {
             val boxed = contentControl.getPtrOrNull(Abi.IContentControl_get_Content) ?: return ""
             return try {
-                WinRt.unboxString(boxed) ?: ""
+                PropertyValues.unboxString(boxed) ?: ""
             } finally {
                 boxed.release()
             }
         }
         set(value) {
             contentComponent = null
-            val boxed = WinRt.boxString(value)
+            val boxed = PropertyValues.boxString(value)
             contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
             boxed.release()
         }
@@ -74,7 +75,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             contentComponent = value
             contentControl.call(
                 Abi.IContentControl_put_Content,
-                value?.uiElement?.ptr ?: MemorySegment.NULL,
+                value?.uiElement?.ptr,
             )
         }
 
@@ -100,7 +101,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             field = value
             buttonBase.call(
                 Abi.IButtonBase_put_Command,
-                value?.commandPtr ?: MemorySegment.NULL,
+                value?.commandPtr,
             )
         }
 
@@ -109,9 +110,9 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         set(value) {
             field = value
             if (value == null) {
-                buttonBase.call(Abi.IButtonBase_put_CommandParameter, MemorySegment.NULL)
+                buttonBase.call(Abi.IButtonBase_put_CommandParameter, null)
             } else {
-                val boxed = WinRt.boxString(value)
+                val boxed = PropertyValues.boxString(value)
                 buttonBase.call(Abi.IButtonBase_put_CommandParameter, boxed.ptr)
                 boxed.release()
             }

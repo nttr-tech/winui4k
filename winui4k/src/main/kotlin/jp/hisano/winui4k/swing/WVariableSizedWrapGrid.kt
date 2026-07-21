@@ -1,7 +1,7 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
 import jp.hisano.winui4k.winui.Abi
 
 /**
@@ -13,7 +13,7 @@ class WVariableSizedWrapGrid(
     itemWidth: Double = Double.NaN,
     itemHeight: Double = Double.NaN,
 ) : WContainer(
-    WinRt.activate(Abi.CLS_VariableSizedWrapGrid).queryInterface(Abi.IID_IVariableSizedWrapGrid),
+    Activation.activate(Abi.CLS_VariableSizedWrapGrid).queryInterface(Abi.IID_IVariableSizedWrapGrid),
 ) {
     /** The width of a single cell (VariableSizedWrapGrid.ItemWidth). */
     var itemWidth: Double = Double.NaN
@@ -54,7 +54,7 @@ class WVariableSizedWrapGrid(
     private companion object {
         /** Attached-property operations for VariableSizedWrapGrid (IVariableSizedWrapGridStatics). */
         val statics: ComPtr by lazy {
-            WinRt.factory(Abi.CLS_VariableSizedWrapGrid, Abi.IID_IVariableSizedWrapGridStatics)
+            Activation.factory(Abi.CLS_VariableSizedWrapGrid, Abi.IID_IVariableSizedWrapGridStatics)
         }
     }
 }

@@ -1,8 +1,10 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.Hstring
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.winrt.Activation
+import jp.hisano.winui4k.winrt.Hstring
+import jp.hisano.winui4k.winrt.addEventHandler
+import jp.hisano.winui4k.winrt.getString
 import jp.hisano.winui4k.winui.Abi
 import jp.hisano.winui4k.winui.Dispatcher
 
@@ -22,7 +24,7 @@ import jp.hisano.winui4k.winui.Dispatcher
  */
 class WAppNotification(text: String = "") {
     private val builder: ComPtr =
-        WinRt.activate(Abi.CLS_AppNotificationBuilder)
+        Activation.activate(Abi.CLS_AppNotificationBuilder)
             .queryInterface(Abi.IID_IAppNotificationBuilder)
 
     init {
@@ -57,7 +59,7 @@ class WAppNotification(text: String = "") {
 
     /** Adds a button to the notification. On click, [arguments] is passed to NotificationInvoked. */
     fun addButton(content: String, vararg arguments: Pair<String, String>): WAppNotification {
-        val factory = WinRt.factory(Abi.CLS_AppNotificationButton, Abi.IID_IAppNotificationButtonFactory)
+        val factory = Activation.factory(Abi.CLS_AppNotificationButton, Abi.IID_IAppNotificationButtonFactory)
         val button = Hstring.use(content) { h ->
             factory.getPtr(Abi.IAppNotificationButtonFactory_CreateInstance, h)
         }
@@ -173,7 +175,7 @@ enum class NotificationSetting(internal val native: Int) {
 object WAppNotificationManager {
     /** AppNotificationManager.Default (the default interface's pointer). */
     private val manager: ComPtr by lazy {
-        val statics = WinRt.factory(Abi.CLS_AppNotificationManager, Abi.IID_IAppNotificationManagerStatics)
+        val statics = Activation.factory(Abi.CLS_AppNotificationManager, Abi.IID_IAppNotificationManagerStatics)
         val m = statics.getPtr(Abi.IAppNotificationManagerStatics_get_Default)
         statics.release()
         m
@@ -192,7 +194,7 @@ object WAppNotificationManager {
     /** Whether AppNotification is usable in this environment (AppNotificationManager.IsSupported). */
     val isSupported: Boolean
         get() {
-            val statics2 = WinRt.factory(
+            val statics2 = Activation.factory(
                 Abi.CLS_AppNotificationManager, Abi.IID_IAppNotificationManagerStatics2,
             )
             return try {

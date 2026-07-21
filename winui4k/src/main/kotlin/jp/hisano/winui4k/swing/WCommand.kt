@@ -1,15 +1,14 @@
 package jp.hisano.winui4k.swing
 
-import jp.hisano.winui4k.ffi.ComPtr
-import jp.hisano.winui4k.ffi.KComObject
-import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.com.ComPtr
+import jp.hisano.winui4k.ffi.api.ArgKind
+import jp.hisano.winui4k.ffi.api.CallDescriptor
+import jp.hisano.winui4k.ffi.api.Ffi
+import jp.hisano.winui4k.ffi.api.Ptr
+import jp.hisano.winui4k.ffi.api.ValueKind
+import jp.hisano.winui4k.winrt.KComObject
+import jp.hisano.winui4k.winrt.PropertyValues
 import jp.hisano.winui4k.winui.Abi
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout.ADDRESS
-import java.lang.foreign.ValueLayout.JAVA_BYTE
-import java.lang.foreign.ValueLayout.JAVA_INT
-import java.lang.foreign.ValueLayout.JAVA_LONG
 
 /**
  * Common base for commands that can be set on ButtonBase.Command / MenuFlyoutItem.Command
@@ -18,7 +17,7 @@ import java.lang.foreign.ValueLayout.JAVA_LONG
  */
 abstract class WCommandBase internal constructor() {
     /** The ICommand pointer passed to put_Command. */
-    internal abstract val commandPtr: MemorySegment
+    internal abstract val commandPtr: Ptr
 }
 
 /**
@@ -32,7 +31,7 @@ class WCommand(
     isEnabled: Boolean = true,
     private val execute: (parameter: String?) -> Unit,
 ) : WCommandBase() {
-    override val commandPtr: MemorySegment
+    override val commandPtr: Ptr
         get() = comObject.primary
 
     /** Subscribers to CanExecuteChanged (token -> EventHandler<Object>). */
@@ -45,7 +44,7 @@ class WCommand(
             field = value
             // CanExecuteChanged(this, null) — XAML responds to this by re-evaluating CanExecute
             for (handler in canExecuteChangedHandlers.values) {
-                handler.rawCall(3, INVOKE_DESC, comObject.primary, MemorySegment.NULL)
+                handler.rawCall(3, INVOKE_DESC, comObject.primary, null)
             }
         }
 
@@ -60,29 +59,28 @@ class WCommand(
             listOf(
                 // vtbl[6] add_CanExecuteChanged(this, EventHandler<Object>, out token)
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
-                    val handler = ComPtr(args[1] as MemorySegment)
+                    val handler = ComPtr(args[1] as Ptr)
                     handler.addRef()
                     val token = nextToken++
                     canExecuteChangedHandlers[token] = handler
-                    (args[2] as MemorySegment).reinterpret(8).set(JAVA_LONG, 0, token)
+                    Ffi.backend.memory.putLong(args[2] as Ptr, 0, token)
                     KComObject.S_OK
                 },
                 // vtbl[7] remove_CanExecuteChanged(this, token)
-                KComObject.Method(FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_LONG)) { args ->
+                KComObject.Method(DESC_THIS_I64) { args ->
                     canExecuteChangedHandlers.remove(args[1] as Long)?.release()
                     KComObject.S_OK
                 },
                 // vtbl[8] CanExecute(this, parameter, out boolean)
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
-                    (args[2] as MemorySegment).reinterpret(1)
-                        .set(JAVA_BYTE, 0, if (this.isEnabled) 1 else 0)
+                    Ffi.backend.memory.putByte(args[2] as Ptr, 0, if (this.isEnabled) 1 else 0)
                     KComObject.S_OK
                 },
                 // vtbl[9] Execute(this, parameter)
                 KComObject.Method(DESC_THIS_PTR) { args ->
-                    val param = args[1] as MemorySegment
+                    val param = args[1] as Ptr
                     execute(
-                        if (param.address() == 0L) null else WinRt.unboxString(ComPtr(param)),
+                        if (param.isNull) null else PropertyValues.unboxString(ComPtr(param)),
                     )
                     KComObject.S_OK
                 },
@@ -90,10 +88,11 @@ class WCommand(
         )
 
     private companion object {
-        val DESC_THIS_PTR = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS)
-        val DESC_THIS_PTR_PTR = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS)
+        val DESC_THIS_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)
+        val DESC_THIS_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
+        val DESC_THIS_I64 = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.I64)
 
         /** delegate EventHandler<Object>.Invoke(this, sender, args) — vtbl[3] */
-        val INVOKE_DESC = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS)
+        val INVOKE_DESC = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
     }
 }
