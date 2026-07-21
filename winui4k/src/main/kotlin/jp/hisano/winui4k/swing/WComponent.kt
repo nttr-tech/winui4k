@@ -1,7 +1,9 @@
 package jp.hisano.winui4k.swing
 
 import jp.hisano.winui4k.ffi.ComPtr
+import jp.hisano.winui4k.winrt.WinRt
 import jp.hisano.winui4k.winui.Abi
+import java.lang.foreign.MemorySegment
 
 /**
  * Microsoft.UI.Xaml.HorizontalAlignment (horizontal position within the space the parent allots).
@@ -95,4 +97,57 @@ abstract class WComponent internal constructor(
                 frameworkElement, Abi.IFrameworkElement_put_Margin, value, value, value, value,
             )
         }
+
+    /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */
+    var contextFlyout: WFlyoutBase? = null
+        set(value) {
+            field = value
+            uiElement.call(
+                Abi.IUIElement_put_ContextFlyout,
+                value?.flyoutBase?.ptr ?: MemorySegment.NULL,
+            )
+        }
+
+    /**
+     * Adds a keyboard shortcut (UIElement.KeyboardAccelerators).
+     * While this element is visible, pressing [key] + [modifiers] triggers the equivalent of a click.
+     */
+    fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier) {
+        val accelerator = createKeyboardAccelerator(key, modifiers)
+        val accelerators = uiElement.getPtr(Abi.IUIElement_get_KeyboardAccelerators)
+        accelerators.call(Abi.IVector_Append, accelerator.ptr)
+        accelerators.release()
+        accelerator.release()
+    }
+}
+
+/**
+ * Windows.System.VirtualKeyModifiers (the accelerator's modifier keys, a bit flag).
+ * Values extracted from Windows.Foundation.UniversalApiContract.winmd.
+ */
+enum class VirtualKeyModifier(internal val native: Int) {
+    /** The Ctrl key. */
+    CONTROL(1),
+
+    /** The Alt key (called Menu in WinRT). */
+    MENU(2),
+
+    /** The Shift key. */
+    SHIFT(4),
+
+    /** The Windows key. */
+    WINDOWS(8),
+}
+
+/** Creates a KeyboardAccelerator and returns its default interface pointer. Caller must release it. */
+internal fun createKeyboardAccelerator(
+    key: VirtualKey,
+    modifiers: Array<out VirtualKeyModifier>,
+): ComPtr {
+    val accelerator =
+        WinRt.composeDefault(Abi.CLS_KeyboardAccelerator, Abi.IID_IKeyboardAcceleratorFactory)
+    accelerator.call(Abi.IKeyboardAccelerator_put_Key, key.native)
+    val combined = modifiers.fold(0) { acc, modifier -> acc or modifier.native }
+    if (combined != 0) accelerator.call(Abi.IKeyboardAccelerator_put_Modifiers, combined)
+    return accelerator
 }

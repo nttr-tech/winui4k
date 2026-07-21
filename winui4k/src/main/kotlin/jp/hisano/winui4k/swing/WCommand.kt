@@ -12,6 +12,16 @@ import java.lang.foreign.ValueLayout.JAVA_INT
 import java.lang.foreign.ValueLayout.JAVA_LONG
 
 /**
+ * Common base for commands that can be set on ButtonBase.Command / MenuFlyoutItem.Command
+ * and the like (the Kotlin-implemented [WCommand], and the WinUI-side WXamlUICommand /
+ * WStandardUICommand).
+ */
+abstract class WCommandBase internal constructor() {
+    /** The ICommand pointer passed to put_Command. */
+    internal abstract val commandPtr: MemorySegment
+}
+
+/**
  * Equivalent to Swing's Action: a Kotlin implementation of Microsoft.UI.Xaml.Input.ICommand.
  *
  * When set on WButton.command, [execute] is called on click.
@@ -21,7 +31,10 @@ import java.lang.foreign.ValueLayout.JAVA_LONG
 class WCommand(
     isEnabled: Boolean = true,
     private val execute: (parameter: String?) -> Unit,
-) {
+) : WCommandBase() {
+    override val commandPtr: MemorySegment
+        get() = comObject.primary
+
     /** Subscribers to CanExecuteChanged (token -> EventHandler<Object>). */
     private val canExecuteChangedHandlers = LinkedHashMap<Long, ComPtr>()
     private var nextToken = 1L

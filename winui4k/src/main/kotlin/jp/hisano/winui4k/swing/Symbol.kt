@@ -1,5 +1,37 @@
 package jp.hisano.winui4k.swing
 
+import jp.hisano.winui4k.ffi.ComPtr
+import jp.hisano.winui4k.winrt.WinRt
+import jp.hisano.winui4k.winui.Abi
+
+/**
+ * Creates a SymbolIcon and returns it as an IconElement view (for put_Icon-style properties).
+ * Release it after use.
+ */
+internal fun Symbol.createIconElement(): ComPtr {
+    val symbolIcon = WinRt.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
+        .getPtr(Abi.ISymbolIconFactory_CreateInstanceWithSymbol, native)
+    return try {
+        symbolIcon.queryInterface(Abi.IID_IIconElement)
+    } finally {
+        symbolIcon.release()
+    }
+}
+
+/**
+ * Creates a SymbolIconSource and returns it as an IconSource view (for put_IconSource-style properties).
+ * Release it after use.
+ */
+internal fun Symbol.createIconSource(): ComPtr {
+    val source = WinRt.composeDefault(Abi.CLS_SymbolIconSource, Abi.IID_ISymbolIconSourceFactory)
+    source.call(Abi.ISymbolIconSource_put_Symbol, native)
+    return try {
+        source.queryInterface(Abi.IID_IIconSource)
+    } finally {
+        source.release()
+    }
+}
+
 /**
  * Microsoft.UI.Xaml.Controls.Symbol (a predefined icon that maps to a Segoe Fluent Icons glyph).
  * Values extracted from the winmd (all 197 values; each value is the glyph's code point).

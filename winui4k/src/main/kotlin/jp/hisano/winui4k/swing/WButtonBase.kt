@@ -95,12 +95,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * Equivalent to Swing's Action (ButtonBase.Command). On click, [WCommand.execute] is
      * invoked with [commandParameter], and the button is disabled whenever WCommand.isEnabled = false.
      */
-    var command: WCommand? = null
+    var command: WCommandBase? = null
         set(value) {
             field = value
             buttonBase.call(
                 Abi.IButtonBase_put_Command,
-                value?.comObject?.primary ?: MemorySegment.NULL,
+                value?.commandPtr ?: MemorySegment.NULL,
             )
         }
 

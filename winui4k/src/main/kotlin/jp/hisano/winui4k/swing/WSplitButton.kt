@@ -46,7 +46,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         }
 
     /** The flyout opened by clicking the right-side arrow (SplitButton.Flyout). */
-    var flyout: WFlyout? = null
+    var flyout: WFlyoutBase? = null
         set(value) {
             field = value
             splitButton.call(Abi.ISplitButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)

@@ -33,22 +33,16 @@ enum class FlyoutPlacement(internal val native: Int) {
 }
 
 /**
- * JPopupMenu-like: WinUI 3's Flyout. Set on WButton.flyout to open it on click.
+ * Common base for FlyoutBase-derived types (Flyout / MenuFlyout / CommandBarFlyout).
  * FlyoutBase is not a UIElement, so this is not a subclass of WComponent.
+ * Provides [placement] / [isOpen] / [showAt] / [hide].
  */
-class WFlyout(content: WComponent? = null) {
-    /** The default interface (IFlyout). */
-    private val flyout: ComPtr =
-        WinRt.composeDefault(Abi.CLS_Flyout, Abi.IID_IFlyoutFactory)
-
+abstract class WFlyoutBase internal constructor(
+    /** The flyout's default interface pointer (IFlyout, IMenuFlyout, ...). */
+    internal val inspectable: ComPtr,
+) {
     /** The FlyoutBase view required by Button.put_Flyout / ShowAt and the like. */
-    internal val flyoutBase: ComPtr by lazy { flyout.queryInterface(Abi.IID_IFlyoutBase) }
-
-    var content: WComponent? = null
-        set(value) {
-            field = value
-            flyout.call(Abi.IFlyout_put_Content, value?.uiElement?.ptr ?: MemorySegment.NULL)
-        }
+    internal val flyoutBase: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IFlyoutBase) }
 
     /** Where it opens (FlyoutBase.Placement). */
     var placement: FlyoutPlacement
@@ -58,10 +52,6 @@ class WFlyout(content: WComponent? = null) {
     val isOpen: Boolean
         get() = flyoutBase.getBool(Abi.IFlyoutBase_get_IsOpen)
 
-    init {
-        if (content != null) this.content = content
-    }
-
     /** Opens relative to [anchor] (FlyoutBase.ShowAt). Only usable on an already-visible element. */
     fun showAt(anchor: WComponent) {
         flyoutBase.call(Abi.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr)
@@ -69,5 +59,20 @@ class WFlyout(content: WComponent? = null) {
 
     fun hide() {
         flyoutBase.call(Abi.IFlyoutBase_Hide)
+    }
+}
+
+/** JPopupMenu-like: WinUI 3's Flyout. Set on WButton.flyout to open it on click. */
+class WFlyout(content: WComponent? = null) : WFlyoutBase(
+    WinRt.composeDefault(Abi.CLS_Flyout, Abi.IID_IFlyoutFactory),
+) {
+    var content: WComponent? = null
+        set(value) {
+            field = value
+            inspectable.call(Abi.IFlyout_put_Content, value?.uiElement?.ptr ?: MemorySegment.NULL)
+        }
+
+    init {
+        if (content != null) this.content = content
     }
 }

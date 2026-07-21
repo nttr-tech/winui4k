@@ -15,7 +15,7 @@ class WButton(text: String = "") : WButtonBase(
     WinRt.composeDefault(Abi.CLS_Button, Abi.IID_IButtonFactory), // default interface = IButton
 ) {
     /** The flyout opened by clicking the button (Button.Flyout). */
-    var flyout: WFlyout? = null
+    var flyout: WFlyoutBase? = null
         set(value) {
             field = value
             inspectable.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)

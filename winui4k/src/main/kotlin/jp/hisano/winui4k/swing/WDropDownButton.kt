@@ -18,7 +18,7 @@ class WDropDownButton(text: String = "") : WButtonBase(
     }
 
     /** The flyout opened by clicking the button (Button.Flyout). */
-    var flyout: WFlyout? = null
+    var flyout: WFlyoutBase? = null
         set(value) {
             field = value
             button.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr ?: MemorySegment.NULL)

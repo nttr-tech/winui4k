@@ -44,6 +44,9 @@ object Abi {
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
     const val IUIElement_get_XamlRoot = 109            // get_XamlRoot(out XamlRoot)
     const val IUIElement_put_XamlRoot = 110            // put_XamlRoot(XamlRoot)
+    const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
+    const val IUIElement_put_ContextFlyout = 46        // put_ContextFlyout(FlyoutBase)
+    const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_put_Width = 16
     const val IFrameworkElement_put_Height = 18
@@ -982,6 +985,255 @@ object Abi {
         WinRt.pinterfaceIid(
             "pinterface({$IID_AsyncOperationCompletedHandler_OPEN};" +
                 "rc(Windows.UI.StartScreen.JumpList;{$IID_IJumpList}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuBar / MenuBarItem ----
+    const val CLS_MenuBar = "Microsoft.UI.Xaml.Controls.MenuBar"
+    const val IID_IMenuBarFactory = "76aa8759-04ee-5a4c-b98c-d03742d47cdb"
+    const val IID_IMenuBar = "ba97f337-8f1e-5141-b53f-e77a8ba3ebbd"
+    const val IMenuBar_get_Items = 6                   // get_Items(out IVector<MenuBarItem>)
+    const val CLS_MenuBarItem = "Microsoft.UI.Xaml.Controls.MenuBarItem"
+    const val IID_IMenuBarItemFactory = "87d02172-83cb-5459-940f-173f7501b300"
+    const val IID_IMenuBarItem = "a7900980-51cc-531d-97c5-356b13573398"
+    const val IMenuBarItem_get_Title = 6               // get_Title(out HSTRING)
+    const val IMenuBarItem_put_Title = 7               // put_Title(HSTRING)
+    const val IMenuBarItem_get_Items = 8               // get_Items(out IVector<MenuFlyoutItemBase>)
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuFlyout ----
+    const val CLS_MenuFlyout = "Microsoft.UI.Xaml.Controls.MenuFlyout"
+    const val IID_IMenuFlyoutFactory = "a3d225de-6b35-5442-b6c9-06fd24139a63"
+    const val IID_IMenuFlyout = "f4c77c6c-1fa5-5d85-8559-5d02b7d4e5e7"
+    const val IMenuFlyout_get_Items = 6                // get_Items(out IVector<MenuFlyoutItemBase>)
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuFlyoutItemBase (common base for menu items) ----
+    const val IID_IMenuFlyoutItemBase = "4bee2715-44a1-5f94-86e8-02ddbe3dc6b9"
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuFlyoutItem ----
+    const val CLS_MenuFlyoutItem = "Microsoft.UI.Xaml.Controls.MenuFlyoutItem"
+    const val IID_IMenuFlyoutItemFactory = "9c3c9a1f-89af-521a-81a5-8a01db7a79af"
+    const val IID_IMenuFlyoutItem = "4252df5a-44f9-5ee8-b1cc-53de9aaa4095"
+    const val IMenuFlyoutItem_get_Text = 6             // get_Text(out HSTRING)
+    const val IMenuFlyoutItem_put_Text = 7             // put_Text(HSTRING)
+    const val IMenuFlyoutItem_put_Command = 9          // put_Command(ICommand)
+    const val IMenuFlyoutItem_put_CommandParameter = 11 // put_CommandParameter(IInspectable)
+    const val IMenuFlyoutItem_put_Icon = 13            // put_Icon(IconElement)
+    const val IMenuFlyoutItem_get_KeyboardAcceleratorTextOverride = 14 // (out HSTRING)
+    const val IMenuFlyoutItem_put_KeyboardAcceleratorTextOverride = 15 // (HSTRING)
+    const val IMenuFlyoutItem_add_Click = 17           // add_Click(RoutedEventHandler, out token)
+    const val IMenuFlyoutItem_remove_Click = 18        // remove_Click(token)
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuFlyoutSubItem (activatable) ----
+    const val CLS_MenuFlyoutSubItem = "Microsoft.UI.Xaml.Controls.MenuFlyoutSubItem"
+    const val IID_IMenuFlyoutSubItem = "6b0688c1-47b0-53b5-b6f9-5ec5d6623b84"
+    const val IMenuFlyoutSubItem_get_Items = 6         // get_Items(out IVector<MenuFlyoutItemBase>)
+    const val IMenuFlyoutSubItem_get_Text = 7          // get_Text(out HSTRING)
+    const val IMenuFlyoutSubItem_put_Text = 8          // put_Text(HSTRING)
+    const val IMenuFlyoutSubItem_put_Icon = 10         // put_Icon(IconElement)
+
+    // ---- Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator ----
+    const val CLS_MenuFlyoutSeparator = "Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator"
+    const val IID_IMenuFlyoutSeparatorFactory = "26156c9c-95ef-5e55-8342-773fc43baac3"
+
+    // ---- Microsoft.UI.Xaml.Controls.ToggleMenuFlyoutItem ----
+    const val CLS_ToggleMenuFlyoutItem = "Microsoft.UI.Xaml.Controls.ToggleMenuFlyoutItem"
+    const val IID_IToggleMenuFlyoutItemFactory = "426dfd57-6cc9-570f-950d-37437235dc89"
+    const val IID_IToggleMenuFlyoutItem = "1803f260-67e4-5bc1-a63a-123510167bb8"
+    const val IToggleMenuFlyoutItem_get_IsChecked = 6  // get_IsChecked(out boolean)
+    const val IToggleMenuFlyoutItem_put_IsChecked = 7  // put_IsChecked(boolean)
+
+    // ---- Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem ----
+    const val CLS_RadioMenuFlyoutItem = "Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem"
+    const val IID_IRadioMenuFlyoutItemFactory = "113822d2-35a3-5b0d-9d0d-c3830ec1973b"
+    const val IID_IRadioMenuFlyoutItem = "9d6f45f5-5532-5669-8f02-05735953026a"
+    const val IRadioMenuFlyoutItem_get_IsChecked = 6   // get_IsChecked(out boolean)
+    const val IRadioMenuFlyoutItem_put_IsChecked = 7   // put_IsChecked(boolean)
+    const val IRadioMenuFlyoutItem_get_GroupName = 8   // get_GroupName(out HSTRING)
+    const val IRadioMenuFlyoutItem_put_GroupName = 9   // put_GroupName(HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.AppBar (the base of CommandBar) ----
+    const val IID_IAppBar = "3d8c2927-5ac5-51bb-8bec-13ff4c1bd6c8"
+    const val IAppBar_get_IsOpen = 6                   // get_IsOpen(out boolean)
+    const val IAppBar_put_IsOpen = 7                   // put_IsOpen(boolean)
+    const val IAppBar_get_IsSticky = 8                 // get_IsSticky(out boolean)
+    const val IAppBar_put_IsSticky = 9                 // put_IsSticky(boolean)
+    const val IAppBar_get_ClosedDisplayMode = 10       // get_ClosedDisplayMode(out AppBarClosedDisplayMode)
+    const val IAppBar_put_ClosedDisplayMode = 11       // put_ClosedDisplayMode(AppBarClosedDisplayMode)
+    const val IAppBar_add_Opened = 17                  // add_Opened(EventHandler<Object>, out token)
+    const val IAppBar_remove_Opened = 18               // remove_Opened(token)
+    const val IAppBar_add_Closed = 21                  // add_Closed(EventHandler<Object>, out token)
+    const val IAppBar_remove_Closed = 22               // remove_Closed(token)
+
+    // ---- Microsoft.UI.Xaml.Controls.CommandBar ----
+    const val CLS_CommandBar = "Microsoft.UI.Xaml.Controls.CommandBar"
+    const val IID_ICommandBarFactory = "8d4079c3-fa0a-5bb1-b45d-499c378761b4"
+    const val IID_ICommandBar = "b7ca8ee3-a07a-5f69-8ab8-be4e3e4cf0c8"
+    const val ICommandBar_get_PrimaryCommands = 6      // get_PrimaryCommands(out IObservableVector<ICommandBarElement>)
+    const val ICommandBar_get_SecondaryCommands = 7    // get_SecondaryCommands(out IObservableVector<ICommandBarElement>)
+    const val ICommandBar_get_DefaultLabelPosition = 11 // get_DefaultLabelPosition(out CommandBarDefaultLabelPosition)
+    const val ICommandBar_put_DefaultLabelPosition = 12 // put_DefaultLabelPosition(CommandBarDefaultLabelPosition)
+    const val ICommandBar_get_OverflowButtonVisibility = 13 // (out CommandBarOverflowButtonVisibility)
+    const val ICommandBar_put_OverflowButtonVisibility = 14 // (CommandBarOverflowButtonVisibility)
+    const val ICommandBar_get_IsDynamicOverflowEnabled = 15 // get_IsDynamicOverflowEnabled(out boolean)
+    const val ICommandBar_put_IsDynamicOverflowEnabled = 16 // put_IsDynamicOverflowEnabled(boolean)
+
+    // ---- Microsoft.UI.Xaml.Controls.ICommandBarElement (implemented by AppBarButton and others) ----
+    const val IID_ICommandBarElement = "f8eb20b4-373e-5327-9942-66a1ea21f5f9"
+    const val ICommandBarElement_get_IsCompact = 6     // get_IsCompact(out boolean)
+    const val ICommandBarElement_put_IsCompact = 7     // put_IsCompact(boolean)
+    const val ICommandBarElement_get_IsInOverflow = 8  // get_IsInOverflow(out boolean)
+    const val ICommandBarElement_get_DynamicOverflowOrder = 9 // get_DynamicOverflowOrder(out INT32)
+    const val ICommandBarElement_put_DynamicOverflowOrder = 10 // put_DynamicOverflowOrder(INT32)
+
+    // ---- Microsoft.UI.Xaml.Controls.AppBarButton ----
+    const val CLS_AppBarButton = "Microsoft.UI.Xaml.Controls.AppBarButton"
+    const val IID_IAppBarButtonFactory = "4168a40a-d11f-5aeb-974e-bb43a6e7f9b2"
+    const val IID_IAppBarButton = "8ab0e278-b6ae-569e-8dcd-d293552fe4d5"
+    const val IAppBarButton_get_Label = 6              // get_Label(out HSTRING)
+    const val IAppBarButton_put_Label = 7              // put_Label(HSTRING)
+    const val IAppBarButton_put_Icon = 9               // put_Icon(IconElement)
+    const val IAppBarButton_get_LabelPosition = 10     // get_LabelPosition(out CommandBarLabelPosition)
+    const val IAppBarButton_put_LabelPosition = 11     // put_LabelPosition(CommandBarLabelPosition)
+    const val IAppBarButton_get_KeyboardAcceleratorTextOverride = 12 // (out HSTRING)
+    const val IAppBarButton_put_KeyboardAcceleratorTextOverride = 13 // (HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.AppBarToggleButton ----
+    const val CLS_AppBarToggleButton = "Microsoft.UI.Xaml.Controls.AppBarToggleButton"
+    const val IID_IAppBarToggleButtonFactory = "07bfb2d6-23b9-57a2-9122-006294bfa92f"
+    const val IID_IAppBarToggleButton = "9687c0b1-c390-59be-acdc-4fc48f552823"
+    const val IAppBarToggleButton_get_Label = 6        // get_Label(out HSTRING)
+    const val IAppBarToggleButton_put_Label = 7        // put_Label(HSTRING)
+    const val IAppBarToggleButton_put_Icon = 9         // put_Icon(IconElement)
+    const val IAppBarToggleButton_get_LabelPosition = 10 // get_LabelPosition(out CommandBarLabelPosition)
+    const val IAppBarToggleButton_put_LabelPosition = 11 // put_LabelPosition(CommandBarLabelPosition)
+    const val IAppBarToggleButton_get_KeyboardAcceleratorTextOverride = 12 // (out HSTRING)
+    const val IAppBarToggleButton_put_KeyboardAcceleratorTextOverride = 13 // (HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.AppBarSeparator ----
+    const val CLS_AppBarSeparator = "Microsoft.UI.Xaml.Controls.AppBarSeparator"
+    const val IID_IAppBarSeparatorFactory = "6497d326-fb55-5cf5-8cc4-c556b1a958fb"
+
+    // ---- Microsoft.UI.Xaml.Controls.CommandBarFlyout ----
+    const val CLS_CommandBarFlyout = "Microsoft.UI.Xaml.Controls.CommandBarFlyout"
+    const val IID_ICommandBarFlyoutFactory = "a194dbe6-4311-5bd2-a8eb-b49c4733a33c"
+    const val IID_ICommandBarFlyout = "18e2cc40-09cb-5f20-a715-f0b2039c5e18"
+    const val ICommandBarFlyout_get_PrimaryCommands = 6 // get_PrimaryCommands(out IObservableVector<ICommandBarElement>)
+    const val ICommandBarFlyout_get_SecondaryCommands = 7 // get_SecondaryCommands(out IObservableVector<ICommandBarElement>)
+
+    // ---- Microsoft.UI.Xaml.Controls.SymbolIconSource (an IconSource subclass) ----
+    const val IID_IIconSource = "39e6b320-a2af-5ee3-b7e9-4ba4aa80541a"
+    const val CLS_SymbolIconSource = "Microsoft.UI.Xaml.Controls.SymbolIconSource"
+    const val IID_ISymbolIconSourceFactory = "afbf55fa-ff79-552a-a3a1-48e2ef17152a"
+    const val IID_ISymbolIconSource = "45120d6b-e868-59f2-a30a-b1915ce374bd"
+    const val ISymbolIconSource_put_Symbol = 7         // put_Symbol(Symbol)
+
+    // ---- Microsoft.UI.Xaml.Controls.SwipeControl / SwipeItems / SwipeItem ----
+    const val CLS_SwipeControl = "Microsoft.UI.Xaml.Controls.SwipeControl"
+    const val IID_ISwipeControlFactory = "6e9213f4-30c1-56ca-9905-46aa1a83dfc1"
+    const val IID_ISwipeControl = "337800fe-f51d-5f6b-9d35-e7f5de10a97c"
+    const val ISwipeControl_put_LeftItems = 7          // put_LeftItems(SwipeItems)
+    const val ISwipeControl_put_RightItems = 9         // put_RightItems(SwipeItems)
+    const val ISwipeControl_put_TopItems = 11          // put_TopItems(SwipeItems)
+    const val ISwipeControl_put_BottomItems = 13       // put_BottomItems(SwipeItems)
+    const val ISwipeControl_Close = 14                 // Close()
+    const val CLS_SwipeItems = "Microsoft.UI.Xaml.Controls.SwipeItems"
+    const val IID_ISwipeItemsFactory = "9a5d7d77-39bd-5b81-ab4e-f44aca6ede3f"
+    const val IID_ISwipeItems = "40d3022b-c82b-5565-a4e4-ad9d7a66b1a9"
+    const val ISwipeItems_get_Mode = 6                 // get_Mode(out SwipeMode)
+    const val ISwipeItems_put_Mode = 7                 // put_Mode(SwipeMode)
+    const val CLS_SwipeItem = "Microsoft.UI.Xaml.Controls.SwipeItem"
+    const val IID_ISwipeItemFactory = "011513e1-1adc-5a69-a74f-623fcc18a51c"
+    const val IID_ISwipeItem = "5e8d4950-b826-510a-b309-77afcdc65b1f"
+    const val ISwipeItem_get_Text = 6                  // get_Text(out HSTRING)
+    const val ISwipeItem_put_Text = 7                  // put_Text(HSTRING)
+    const val ISwipeItem_put_IconSource = 9            // put_IconSource(IconSource)
+    const val ISwipeItem_put_Background = 11           // put_Background(Brush)
+    const val ISwipeItem_put_Foreground = 13           // put_Foreground(Brush)
+    const val ISwipeItem_put_Command = 15              // put_Command(ICommand)
+    const val ISwipeItem_get_BehaviorOnInvoked = 18    // get_BehaviorOnInvoked(out SwipeBehaviorOnInvoked)
+    const val ISwipeItem_put_BehaviorOnInvoked = 19    // put_BehaviorOnInvoked(SwipeBehaviorOnInvoked)
+    const val ISwipeItem_add_Invoked = 20              // add_Invoked(TypedEventHandler<SwipeItem, SwipeItemInvokedEventArgs>, out token)
+    const val ISwipeItem_remove_Invoked = 21           // remove_Invoked(token)
+    const val IID_ISwipeItemInvokedEventArgs = "7bf51c95-53a2-5a0d-bb32-2b4b1f7d2f20"
+
+    /** The actual IID of TypedEventHandler<SwipeItem, SwipeItemInvokedEventArgs> (computed at runtime). */
+    val IID_SwipeItemInvokedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.SwipeItem;{$IID_ISwipeItem});" +
+                "rc(Microsoft.UI.Xaml.Controls.SwipeItemInvokedEventArgs;" +
+                "{$IID_ISwipeItemInvokedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Input.XamlUICommand / StandardUICommand ----
+    const val CLS_XamlUICommand = "Microsoft.UI.Xaml.Input.XamlUICommand"
+    const val IID_IXamlUICommandFactory = "f1f80a20-0e31-5505-8bc3-cdd1f0947f1d"
+    const val IID_IXamlUICommand = "a457f2cb-51e0-541c-9c42-dd1dcbdf58fb"
+    const val IXamlUICommand_get_Label = 6             // get_Label(out HSTRING)
+    const val IXamlUICommand_put_Label = 7             // put_Label(HSTRING)
+    const val IXamlUICommand_put_IconSource = 9        // put_IconSource(IconSource)
+    const val IXamlUICommand_get_KeyboardAccelerators = 10 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
+    const val IXamlUICommand_get_AccessKey = 11        // get_AccessKey(out HSTRING)
+    const val IXamlUICommand_put_AccessKey = 12        // put_AccessKey(HSTRING)
+    const val IXamlUICommand_get_Description = 13      // get_Description(out HSTRING)
+    const val IXamlUICommand_put_Description = 14      // put_Description(HSTRING)
+    const val IXamlUICommand_add_ExecuteRequested = 17 // add_ExecuteRequested(TypedEventHandler<XamlUICommand, ExecuteRequestedEventArgs>, out token)
+    const val IXamlUICommand_remove_ExecuteRequested = 18 // remove_ExecuteRequested(token)
+    const val IXamlUICommand_add_CanExecuteRequested = 19 // add_CanExecuteRequested(TypedEventHandler<XamlUICommand, CanExecuteRequestedEventArgs>, out token)
+    const val IXamlUICommand_remove_CanExecuteRequested = 20 // remove_CanExecuteRequested(token)
+    const val IXamlUICommand_NotifyCanExecuteChanged = 21 // NotifyCanExecuteChanged()
+    const val IID_IExecuteRequestedEventArgs = "e1a9fd0c-34d0-5ae2-8f5d-377e7a8a2708"
+    const val IExecuteRequestedEventArgs_get_Parameter = 6 // get_Parameter(out IInspectable)
+    const val IID_ICanExecuteRequestedEventArgs = "e4bf6d7d-f6eb-53ca-a2d4-c741ec871e38"
+    const val ICanExecuteRequestedEventArgs_put_CanExecute = 8 // put_CanExecute(boolean)
+
+    const val CLS_StandardUICommand = "Microsoft.UI.Xaml.Input.StandardUICommand"
+    const val IID_IStandardUICommandFactory = "5800f099-3746-5bcf-b1ce-af3d6bf8e83f"
+    const val IStandardUICommandFactory_CreateInstanceWithKind = 7 // (StandardUICommandKind, outer, out inner, out instance)
+    const val IID_IStandardUICommand = "5f395d50-5449-59ab-9cb2-4e3700033f03"
+    const val IStandardUICommand_get_Kind = 6          // get_Kind(out StandardUICommandKind)
+    const val IStandardUICommand_put_Kind = 7          // put_Kind(StandardUICommandKind)
+
+    /** The actual IID of TypedEventHandler<XamlUICommand, ExecuteRequestedEventArgs> (computed at runtime). */
+    val IID_XamlUICommandExecuteRequestedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Input.XamlUICommand;{$IID_IXamlUICommand});" +
+                "rc(Microsoft.UI.Xaml.Input.ExecuteRequestedEventArgs;" +
+                "{$IID_IExecuteRequestedEventArgs}))",
+        )
+    }
+
+    /** The actual IID of TypedEventHandler<XamlUICommand, CanExecuteRequestedEventArgs> (computed at runtime). */
+    val IID_XamlUICommandCanExecuteRequestedHandler: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Input.XamlUICommand;{$IID_IXamlUICommand});" +
+                "rc(Microsoft.UI.Xaml.Input.CanExecuteRequestedEventArgs;" +
+                "{$IID_ICanExecuteRequestedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Input.KeyboardAccelerator ----
+    const val CLS_KeyboardAccelerator = "Microsoft.UI.Xaml.Input.KeyboardAccelerator"
+    const val IID_IKeyboardAcceleratorFactory = "ca1d410a-af2a-51b9-a1de-6c0af9f3b598"
+    const val IID_IKeyboardAccelerator = "6f8bf1e2-4e91-5cf9-a6be-4770caf3d770"
+    const val IKeyboardAccelerator_put_Key = 7         // put_Key(VirtualKey)
+    const val IKeyboardAccelerator_put_Modifiers = 9   // put_Modifiers(VirtualKeyModifiers)
+
+    /** The actual IID of IVector<Microsoft.UI.Xaml.Controls.ICommandBarElement> (for PrimaryCommands' QI). */
+    val IID_IVector_ICommandBarElement: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_IVector_OPEN};{$IID_ICommandBarElement})",
+        )
+    }
+
+    /** The actual IID of IVector<Microsoft.UI.Xaml.Controls.SwipeItem> (for SwipeItems' QI). */
+    val IID_IVector_SwipeItem: String by lazy {
+        WinRt.pinterfaceIid(
+            "pinterface({$IID_IVector_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.SwipeItem;{$IID_ISwipeItem}))",
         )
     }
 }
