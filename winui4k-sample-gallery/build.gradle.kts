@@ -19,11 +19,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(project(":winui4k"))
-    implementation(project(":winui4k-extension-coroutines"))
-    runtimeOnly(project(":winui4k-panama"))
-    runtimeOnly(project(":winui4k-jna"))
-    runtimeOnly(project(":winui4k-jnr"))
+    implementation(project(":winui4k-all"))
 }
 
 // gallery targets Java 8, but its runtime classpath should still include winui4k-panama
