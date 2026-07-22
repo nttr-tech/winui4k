@@ -8,9 +8,9 @@ import java.util.ServiceLoader
  *
  * Selection priority:
  *  1. Explicit choice via [setBackend] (only possible before the first FFI use)
- *  2. The system property -Dwinui4k.ffi=panama|jna
+ *  2. The system property -Dwinui4k.ffi=panama|jna|jnr
  *  3. The highest-priority available [FfiBackendProvider] discovered via ServiceLoader
- *     (registered by winui4k-panama / winui4k-jna via META-INF/services)
+ *     (registered by winui4k-panama / winui4k-jna / winui4k-jnr via META-INF/services)
  *
  * Once selected, the backend is fixed for the rest of the process (GUIDs / HSTRINGs /
  * upcall stubs are cached in globalScope, so switching backends mid-process isn't possible).
@@ -62,5 +62,6 @@ object Ffi {
     }
 
     private const val HINT =
-        "Add winui4k-panama (Java 22+) or winui4k-jna (Windows x64, Java 8+) as a runtime dependency"
+        "Add one of winui4k-panama (Java 22+), winui4k-jna (Windows x64, Java 8+), " +
+            "or winui4k-jnr (Windows, Java 8+) as a runtime dependency"
 }

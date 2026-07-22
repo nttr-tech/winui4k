@@ -15,5 +15,6 @@ rootProject.name = "winui4k"
 include(":winui4k")
 include(":winui4k-panama")
 include(":winui4k-jna")
+include(":winui4k-jnr")
 include(":winui4k-coroutines")
 include(":winui4k-gallery")

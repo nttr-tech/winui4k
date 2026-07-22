@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":winui4k-coroutines"))
     runtimeOnly(project(":winui4k-panama"))
     runtimeOnly(project(":winui4k-jna"))
+    runtimeOnly(project(":winui4k-jnr"))
 }
 
 // gallery targets Java 8, but its runtime classpath should still include winui4k-panama
@@ -99,8 +100,11 @@ tasks.named<JavaExec>("run") {
     // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
+    // Referencing a script property directly inside doFirst captures the whole script object,
+    // which then can't be stored in the configuration cache, so copy it to a local first
+    val dll = dllPath
     doFirst {
-        systemProperty("winui4k.bootstrap.dll", dllPath.get())
+        systemProperty("winui4k.bootstrap.dll", dll.get())
     }
 }
 
@@ -117,7 +121,27 @@ tasks.register<JavaExec>("runJna") {
     classpath = sourceSets.main.get().runtimeClasspath
 
     systemProperty("winui4k.ffi", "jna")
+    val dll = dllPath
     doFirst {
-        systemProperty("winui4k.bootstrap.dll", dllPath.get())
+        systemProperty("winui4k.bootstrap.dll", dll.get())
+    }
+}
+
+// Launches the gallery on Java 8 with the JNR backend, to verify Java 8 support on real hardware (the JNR counterpart to runJna)
+tasks.register<JavaExec>("runJnr") {
+    description = "Launches the gallery with Java 8 + the JNR backend"
+    group = "application"
+    dependsOn(fetchBootstrap)
+
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+    mainClass = application.mainClass
+    classpath = sourceSets.main.get().runtimeClasspath
+
+    systemProperty("winui4k.ffi", "jnr")
+    val dll = dllPath
+    doFirst {
+        systemProperty("winui4k.bootstrap.dll", dll.get())
     }
 }

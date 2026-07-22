@@ -32,7 +32,7 @@ WinUiUtilities.invokeLater {
 
 - **ブリッジ DLL なし**：`RoGetActivationFactory`、HSTRING、vtable 呼び出し、upcall による COM オブジェクト実装、COM 集約まで、WinRT の COM ABI を JVM の FFI だけで扱います
 - **60 超のコントロール**：Button / TextBox から NavigationView、TeachingTip、AppNotification、AppWindow まで `W*` クラスとしてラップ済み。Gallery で全部試せます
-- **Java 8 でも動く**：FFI バックエンドは差し替え式。Panama (Java 22 以降、既定) と JNA (Java 8 以降) の 2 実装を同梱します
+- **Java 8 でも動く**：FFI バックエンドは差し替え式。Panama (Java 22 以降、既定)、JNA (Java 8 以降)、JNR (Java 8 以降) の 3 実装を同梱します
 - **コルーチン対応**：`Dispatchers.WinUi` (winui4k-coroutines) で UI スレッドへディスパッチし、`delay` は DispatcherQueueTimer にネイティブ対応します
 - **推測値ゼロの ABI**：IID と vtable スロットはすべて winmd から機械抽出した値です ([doc/architecture.md](doc/architecture.md))
 
@@ -50,7 +50,7 @@ WinUiUtilities.invokeLater {
 
 これで Gallery が起動します。
 初回は Gradle と NuGet パッケージ (ブートストラップ DLL、約 6 MB) を自動取得します。
-Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna` で確認できます。
+Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna`、Java 8 + JNR での起動は `.\gradlew :winui4k-gallery:runJnr` で確認できます。
 
 動作環境は Windows 11 x64 です (Windows 10 1809 以降でも動く想定)。
 
@@ -61,6 +61,7 @@ Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna` で確認でき
 | `winui4k` | 本体。公開 API (`W*` クラス) と COM / WinRT / WinUI の内部レイヤ |
 | `winui4k-panama` | Panama (`java.lang.foreign`) FFI バックエンド。Java 22 以降 |
 | `winui4k-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
+| `winui4k-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 |
 | `winui4k-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
 | `winui4k-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
 

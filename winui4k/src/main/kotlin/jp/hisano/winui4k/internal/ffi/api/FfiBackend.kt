@@ -68,7 +68,7 @@ interface FfiBackendProvider {
     /** Whether this backend is available in the current environment (e.g. whether java.lang.foreign exists). */
     fun isAvailable(): Boolean
 
-    /** When multiple candidates exist, the higher value wins (Panama = 100, JNA = 50 by convention). */
+    /** When multiple candidates exist, the higher value wins (Panama = 100, JNA = 50, JNR = 40 by convention). */
     val priority: Int
 
     fun create(): FfiBackend
