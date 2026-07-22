@@ -2,7 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -18,22 +19,22 @@ class WLinearGradientPaint(
     internal fun createBrush(): ComPtr {
         // Fill a GradientStopCollection (whose default interface is IVector<GradientStop>) with the
         // stops, then create the angled brush via ILinearGradientBrushFactory
-        val collection = Activation.activate(Abi.CLS_GradientStopCollection)
-            .queryInterface(Abi.IID_IVector_GradientStop)
+        val collection = Activation.activate(XamlInterop.CLS_GradientStopCollection)
+            .queryInterface(FoundationInterop.IID_IVector_GradientStop)
         try {
             for ((offset, color) in stops) {
-                val stop = Activation.activate(Abi.CLS_GradientStop, Abi.IID_IGradientStop)
+                val stop = Activation.activate(XamlInterop.CLS_GradientStop, XamlInterop.IID_IGradientStop)
                 try {
-                    XamlStructs.putColor(stop, Abi.IGradientStop_put_Color, color.alpha, color.red, color.green, color.blue)
-                    stop.call(Abi.IGradientStop_put_Offset, offset)
-                    collection.call(Abi.IVector_Append, stop)
+                    XamlStructs.putColor(stop, XamlInterop.IGradientStop_put_Color, color.alpha, color.red, color.green, color.blue)
+                    stop.call(XamlInterop.IGradientStop_put_Offset, offset)
+                    collection.call(FoundationInterop.IVector_Append, stop)
                 } finally {
                     stop.release()
                 }
             }
-            return Activation.factory(Abi.CLS_LinearGradientBrush, Abi.IID_ILinearGradientBrushFactory)
+            return Activation.factory(XamlInterop.CLS_LinearGradientBrush, XamlInterop.IID_ILinearGradientBrushFactory)
                 .getPtr(
-                    Abi.ILinearGradientBrushFactory_CreateInstanceWithGradientStopCollectionAndAngle,
+                    XamlInterop.ILinearGradientBrushFactory_CreateInstanceWithGradientStopCollectionAndAngle,
                     collection,
                     angle,
                 )

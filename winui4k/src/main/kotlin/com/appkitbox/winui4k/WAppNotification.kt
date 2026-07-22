@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.NotificationInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 
 /**
@@ -24,8 +24,8 @@ import com.appkitbox.winui4k.internal.winui.Dispatcher
  */
 class WAppNotification(text: String = "") {
     private val builder: ComPtr =
-        Activation.activate(Abi.CLS_AppNotificationBuilder)
-            .queryInterface(Abi.IID_IAppNotificationBuilder)
+        Activation.activate(NotificationInterop.CLS_AppNotificationBuilder)
+            .queryInterface(NotificationInterop.IID_IAppNotificationBuilder)
 
     init {
         if (text.isNotEmpty()) addText(text)
@@ -34,7 +34,7 @@ class WAppNotification(text: String = "") {
     /** Adds one line of body text (the first line is treated as the title; up to 3 lines). */
     fun addText(text: String): WAppNotification {
         Hstring.use(text) { h ->
-            builder.getPtr(Abi.IAppNotificationBuilder_AddText, h).release() // the return value is the builder itself
+            builder.getPtr(NotificationInterop.IAppNotificationBuilder_AddText, h).release() // the return value is the builder itself
         }
         return this
     }
@@ -42,7 +42,7 @@ class WAppNotification(text: String = "") {
     /** Sets the attribution text at the bottom (e.g. a description of the sender). */
     fun setAttributionText(text: String): WAppNotification {
         Hstring.use(text) { h ->
-            builder.getPtr(Abi.IAppNotificationBuilder_SetAttributionText, h).release()
+            builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetAttributionText, h).release()
         }
         return this
     }
@@ -51,7 +51,7 @@ class WAppNotification(text: String = "") {
     fun addArgument(key: String, value: String): WAppNotification {
         Hstring.use(key) { k ->
             Hstring.use(value) { v ->
-                builder.getPtr(Abi.IAppNotificationBuilder_AddArgument, k, v).release()
+                builder.getPtr(NotificationInterop.IAppNotificationBuilder_AddArgument, k, v).release()
             }
         }
         return this
@@ -59,39 +59,39 @@ class WAppNotification(text: String = "") {
 
     /** Adds a button to the notification. On click, [arguments] is passed to NotificationInvoked. */
     fun addButton(content: String, vararg arguments: Pair<String, String>): WAppNotification {
-        val factory = Activation.factory(Abi.CLS_AppNotificationButton, Abi.IID_IAppNotificationButtonFactory)
+        val factory = Activation.factory(NotificationInterop.CLS_AppNotificationButton, NotificationInterop.IID_IAppNotificationButtonFactory)
         val button = Hstring.use(content) { h ->
-            factory.getPtr(Abi.IAppNotificationButtonFactory_CreateInstance, h)
+            factory.getPtr(NotificationInterop.IAppNotificationButtonFactory_CreateInstance, h)
         }
         factory.release()
         for ((key, value) in arguments) {
             Hstring.use(key) { k ->
                 Hstring.use(value) { v ->
-                    button.getPtr(Abi.IAppNotificationButton_AddArgument, k, v).release()
+                    button.getPtr(NotificationInterop.IAppNotificationButton_AddArgument, k, v).release()
                 }
             }
         }
-        builder.getPtr(Abi.IAppNotificationBuilder_AddButton, button.ptr).release()
+        builder.getPtr(NotificationInterop.IAppNotificationBuilder_AddButton, button.ptr).release()
         button.release()
         return this
     }
 
     /** Sets the notification's purpose (reminder / alarm / urgent, etc.). */
     fun setScenario(scenario: NotificationScenario): WAppNotification {
-        builder.getPtr(Abi.IAppNotificationBuilder_SetScenario, scenario.native).release()
+        builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetScenario, scenario.native).release()
         return this
     }
 
     /** Sets the display duration (default / long). */
     fun setDuration(duration: NotificationDuration): WAppNotification {
-        builder.getPtr(Abi.IAppNotificationBuilder_SetDuration, duration.native).release()
+        builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetDuration, duration.native).release()
         return this
     }
 
     /** Sets a tag used to identify this notification later, e.g. with RemoveByTagAsync. */
     fun setTag(tag: String): WAppNotification {
         Hstring.use(tag) { h ->
-            builder.getPtr(Abi.IAppNotificationBuilder_SetTag, h).release()
+            builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetTag, h).release()
         }
         return this
     }
@@ -99,13 +99,13 @@ class WAppNotification(text: String = "") {
     /** Sets a group name used together with the tag. */
     fun setGroup(group: String): WAppNotification {
         Hstring.use(group) { h ->
-            builder.getPtr(Abi.IAppNotificationBuilder_SetGroup, h).release()
+            builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetGroup, h).release()
         }
         return this
     }
 
     /** Builds the AppNotification (default interface) via BuildNotification. */
-    internal fun build(): ComPtr = builder.getPtr(Abi.IAppNotificationBuilder_BuildNotification)
+    internal fun build(): ComPtr = builder.getPtr(NotificationInterop.IAppNotificationBuilder_BuildNotification)
 }
 
 /**
@@ -175,8 +175,8 @@ enum class NotificationSetting(internal val native: Int) {
 object WAppNotificationManager {
     /** AppNotificationManager.Default (the default interface's pointer). */
     private val manager: ComPtr by lazy {
-        val statics = Activation.factory(Abi.CLS_AppNotificationManager, Abi.IID_IAppNotificationManagerStatics)
-        val m = statics.getPtr(Abi.IAppNotificationManagerStatics_get_Default)
+        val statics = Activation.factory(NotificationInterop.CLS_AppNotificationManager, NotificationInterop.IID_IAppNotificationManagerStatics)
+        val m = statics.getPtr(NotificationInterop.IAppNotificationManagerStatics_get_Default)
         statics.release()
         m
     }
@@ -195,10 +195,10 @@ object WAppNotificationManager {
     val isSupported: Boolean
         get() {
             val statics2 = Activation.factory(
-                Abi.CLS_AppNotificationManager, Abi.IID_IAppNotificationManagerStatics2,
+                NotificationInterop.CLS_AppNotificationManager, NotificationInterop.IID_IAppNotificationManagerStatics2,
             )
             return try {
-                statics2.getBool(Abi.IAppNotificationManagerStatics2_IsSupported)
+                statics2.getBool(NotificationInterop.IAppNotificationManagerStatics2_IsSupported)
             } finally {
                 statics2.release()
             }
@@ -206,7 +206,7 @@ object WAppNotificationManager {
 
     /** Whether notifications are currently enabled (AppNotificationManager.Setting). */
     val setting: NotificationSetting
-        get() = NotificationSetting.of(manager.getInt(Abi.IAppNotificationManager_get_Setting))
+        get() = NotificationSetting.of(manager.getInt(NotificationInterop.IAppNotificationManager_get_Setting))
 
     /**
      * Registers this process as a notification sender (AppNotificationManager.Register).
@@ -214,18 +214,18 @@ object WAppNotificationManager {
      * name and icon.
      */
     fun register() {
-        manager.call(Abi.IAppNotificationManager_Register)
+        manager.call(NotificationInterop.IAppNotificationManager_Register)
     }
 
     /** Unregisters the receiver for notification clicks (AppNotificationManager.Unregister). */
     fun unregister() {
-        manager.call(Abi.IAppNotificationManager_Unregister)
+        manager.call(NotificationInterop.IAppNotificationManager_Unregister)
     }
 
     /** Sends a notification (AppNotificationManager.Show). */
     fun show(notification: WAppNotification) {
         val built = notification.build()
-        manager.call(Abi.IAppNotificationManager_Show, built.ptr)
+        manager.call(NotificationInterop.IAppNotificationManager_Show, built.ptr)
         built.release()
     }
 
@@ -242,12 +242,12 @@ object WAppNotificationManager {
         if (!invokedHandlerAdded) {
             manager.addEventHandler(
                 "WinUI4K.NotificationInvokedHandler",
-                Abi.IID_NotificationInvokedHandler,
-                Abi.IAppNotificationManager_add_NotificationInvoked,
+                NotificationInterop.IID_NotificationInvokedHandler,
+                NotificationInterop.IAppNotificationManager_add_NotificationInvoked,
             ) { _, args ->
                 // This callback arrives off the UI thread, so read the argument first and move it over
-                val eventArgs = ComPtr(args).queryInterface(Abi.IID_IAppNotificationActivatedEventArgs)
-                val argument = eventArgs.getString(Abi.IAppNotificationActivatedEventArgs_get_Argument)
+                val eventArgs = ComPtr(args).queryInterface(NotificationInterop.IID_IAppNotificationActivatedEventArgs)
+                val argument = eventArgs.getString(NotificationInterop.IAppNotificationActivatedEventArgs_get_Argument)
                 eventArgs.release()
                 Dispatcher.invokeLater { invokedListeners.toList().forEach { it(argument) } }
             }

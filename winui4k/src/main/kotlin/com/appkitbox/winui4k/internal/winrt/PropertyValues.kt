@@ -6,7 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.withScope
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 
 /**
  * Conversion between Kotlin values and IInspectable (boxing via Windows.Foundation.PropertyValue).
@@ -122,7 +122,7 @@ internal object PropertyValues {
      * Reads the by-value DateTime (i8) via IReference<T>.get_Value (vtbl[6]).
      */
     fun unboxDateTime(boxed: ComPtr): Long? {
-        val reference = boxed.queryInterfaceOrNull(Abi.IID_IReference_DateTime) ?: return null
+        val reference = boxed.queryInterfaceOrNull(FoundationInterop.IID_IReference_DateTime) ?: return null
         return try {
             Ffi.backend.withScope { scope ->
                 val out = scope.allocate(8)
@@ -144,7 +144,7 @@ internal object PropertyValues {
      * The reverse of [boxTimeSpan]: extracts the 100ns ticks from an IReference<TimeSpan>.
      */
     fun unboxTimeSpan(boxed: ComPtr): Long? {
-        val reference = boxed.queryInterfaceOrNull(Abi.IID_IReference_TimeSpan) ?: return null
+        val reference = boxed.queryInterfaceOrNull(FoundationInterop.IID_IReference_TimeSpan) ?: return null
         return try {
             Ffi.backend.withScope { scope ->
                 val out = scope.allocate(8)

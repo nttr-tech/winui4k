@@ -5,7 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.SelectionMode (the ListBox's selection mode).
@@ -38,17 +39,17 @@ enum class SelectionMode(internal val native: Int) {
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged).
  */
 class WListBox(items: List<String> = emptyList()) : WControl(
-    Activation.composeDefault(Abi.CLS_ListBox, Abi.IID_IListBoxFactory), // default interface = IListBox
+    Activation.composeDefault(XamlInterop.CLS_ListBox, XamlInterop.IID_IListBoxFactory), // default interface = IListBox
 ) {
     private val selector: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ISelector))
+        own(inspectable.queryInterface(XamlInterop.IID_ISelector))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        val itemsControl = own(inspectable.queryInterface(Abi.IID_IItemsControl))
-        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
-        own(items.queryInterface(Abi.IID_IVector_Object))
+        val itemsControl = own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))
+        val items = own(itemsControl.getPtr(XamlInterop.IItemsControl_get_Items))
+        own(items.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
     /** Event tokens for SelectionChanged registered via addListSelectionListener. */
@@ -56,20 +57,20 @@ class WListBox(items: List<String> = emptyList()) : WControl(
 
     /** Item count (Items.Size). */
     val itemCount: Int
-        get() = itemVector.getInt(Abi.IVector_get_Size)
+        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
 
     /**
      * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
      * In multi-select mode, this is the first selected position.
      */
     var selectedIndex: Int
-        get() = selector.getInt(Abi.ISelector_get_SelectedIndex)
-        set(value) = selector.call(Abi.ISelector_put_SelectedIndex, value)
+        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
     /** The selected item string, or null if nothing is selected (Selector.SelectedItem). */
     val selectedItem: String?
         get() {
-            val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
+            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
             return try {
                 PropertyValues.unboxString(boxed)
             } finally {
@@ -81,10 +82,10 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     val selectedItems: List<String>
         get() {
             // get_SelectedItems already returns a typed IVector<Object> pointer, so no QI is needed
-            val vector = inspectable.getPtr(Abi.IListBox_get_SelectedItems)
+            val vector = inspectable.getPtr(XamlInterop.IListBox_get_SelectedItems)
             return try {
-                (0 until vector.getInt(Abi.IVector_get_Size)).map { index ->
-                    val boxed = vector.getPtr(Abi.IVector_GetAt, index)
+                (0 until vector.getInt(FoundationInterop.IVector_get_Size)).map { index ->
+                    val boxed = vector.getPtr(FoundationInterop.IVector_GetAt, index)
                     try {
                         PropertyValues.unboxString(boxed) ?: ""
                     } finally {
@@ -98,8 +99,8 @@ class WListBox(items: List<String> = emptyList()) : WControl(
 
     /** Selection mode (ListBox.SelectionMode). */
     var selectionMode: SelectionMode
-        get() = SelectionMode.of(inspectable.getInt(Abi.IListBox_get_SelectionMode))
-        set(value) = inspectable.call(Abi.IListBox_put_SelectionMode, value.native)
+        get() = SelectionMode.of(inspectable.getInt(XamlInterop.IListBox_get_SelectionMode))
+        set(value) = inspectable.call(XamlInterop.IListBox_put_SelectionMode, value.native)
 
     init {
         for (item in items) addItem(item)
@@ -108,13 +109,13 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     /** Appends an item (Items.Append). The string is boxed before being passed. */
     fun addItem(item: String) {
         val boxed = PropertyValues.boxString(item)
-        itemVector.call(Abi.IVector_Append, boxed.ptr)
+        itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
         boxed.release()
     }
 
     /** Returns the item string at [index] (Items.GetAt). */
     fun getItem(index: Int): String {
-        val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
+        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
         return try {
             PropertyValues.unboxString(boxed) ?: ""
         } finally {
@@ -124,17 +125,17 @@ class WListBox(items: List<String> = emptyList()) : WControl(
 
     /** Removes the item at [index] (Items.RemoveAt). */
     fun removeItem(index: Int) {
-        itemVector.call(Abi.IVector_RemoveAt, index)
+        itemVector.call(FoundationInterop.IVector_RemoveAt, index)
     }
 
     /** Removes all items (Items.Clear). */
     fun removeAllItems() {
-        itemVector.call(Abi.IVector_Clear)
+        itemVector.call(FoundationInterop.IVector_Clear)
     }
 
     /** Selects all items (ListBox.SelectAll). Effective in Multiple / Extended mode. */
     fun selectAll() {
-        inspectable.call(Abi.IListBox_SelectAll)
+        inspectable.call(XamlInterop.IListBox_SelectAll)
     }
 
     /**
@@ -142,9 +143,9 @@ class WListBox(items: List<String> = emptyList()) : WControl(
      * Items requires the actual object it holds, so it's fetched via GetAt before being passed.
      */
     fun scrollIntoView(index: Int) {
-        val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
+        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
         try {
-            inspectable.call(Abi.IListBox_ScrollIntoView, boxed.ptr)
+            inspectable.call(XamlInterop.IListBox_ScrollIntoView, boxed.ptr)
         } finally {
             boxed.release()
         }
@@ -154,8 +155,8 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     fun addListSelectionListener(listener: () -> Unit) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
-            Abi.IID_SelectionChangedEventHandler,
-            Abi.ISelector_add_SelectionChanged,
+            XamlInterop.IID_SelectionChangedEventHandler,
+            XamlInterop.ISelector_add_SelectionChanged,
         ) { _, _ -> listener() }
         selectionTokens.add(listener, token)
     }
@@ -163,6 +164,6 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
     fun removeListSelectionListener(listener: () -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
-        selector.removeEventHandler(Abi.ISelector_remove_SelectionChanged, token)
+        selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
 }

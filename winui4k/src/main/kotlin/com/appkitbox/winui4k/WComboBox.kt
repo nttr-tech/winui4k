@@ -7,7 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JComboBox-like: WinUI 3's ComboBox (a Selector subclass).
@@ -19,17 +20,17 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged).
  */
 class WComboBox(items: List<String> = emptyList()) : WControl(
-    Activation.composeDefault(Abi.CLS_ComboBox, Abi.IID_IComboBoxFactory), // default interface = IComboBox
+    Activation.composeDefault(XamlInterop.CLS_ComboBox, XamlInterop.IID_IComboBoxFactory), // default interface = IComboBox
 ) {
     private val selector: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ISelector))
+        own(inspectable.queryInterface(XamlInterop.IID_ISelector))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        val itemsControl = own(inspectable.queryInterface(Abi.IID_IItemsControl))
-        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
-        own(items.queryInterface(Abi.IID_IVector_Object))
+        val itemsControl = own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))
+        val items = own(itemsControl.getPtr(XamlInterop.IItemsControl_get_Items))
+        own(items.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
     /** SelectionChanged event tokens registered via addListSelectionListener. */
@@ -40,17 +41,17 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
 
     /** The number of items (Items.Size). */
     val itemCount: Int
-        get() = itemVector.getInt(Abi.IVector_get_Size)
+        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
 
     /** The selected index, or -1 if nothing is selected (Selector.SelectedIndex). */
     var selectedIndex: Int
-        get() = selector.getInt(Abi.ISelector_get_SelectedIndex)
-        set(value) = selector.call(Abi.ISelector_put_SelectedIndex, value)
+        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
     /** The selected item string, or null if nothing is selected (Selector.SelectedItem). */
     val selectedItem: String?
         get() {
-            val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
+            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
             return try {
                 PropertyValues.unboxString(boxed)
             } finally {
@@ -60,32 +61,32 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
 
     /** The placeholder text shown when nothing is selected (ComboBox.PlaceholderText). */
     var placeholderText: String
-        get() = inspectable.getString(Abi.IComboBox_get_PlaceholderText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IComboBox_put_PlaceholderText, h) }
+        get() = inspectable.getString(XamlInterop.IComboBox_get_PlaceholderText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IComboBox_put_PlaceholderText, h) }
 
     /** The heading above the combo box (ComboBox.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IComboBox_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.IComboBox_put_Header, boxed.ptr)
             boxed.release()
         }
 
     /** Whether a string outside the list of choices can be typed in (ComboBox.IsEditable). */
     var isEditable: Boolean
-        get() = inspectable.getBool(Abi.IComboBox_get_IsEditable)
-        set(value) = inspectable.putBool(Abi.IComboBox_put_IsEditable, value)
+        get() = inspectable.getBool(XamlInterop.IComboBox_get_IsEditable)
+        set(value) = inspectable.putBool(XamlInterop.IComboBox_put_IsEditable, value)
 
     /** The typed-in text for an editable combo (ComboBox.Text). */
     var text: String
-        get() = inspectable.getString(Abi.IComboBox_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IComboBox_put_Text, h) }
+        get() = inspectable.getString(XamlInterop.IComboBox_get_Text)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IComboBox_put_Text, h) }
 
     /** Whether the drop-down is open (ComboBox.IsDropDownOpen). */
     var isDropDownOpen: Boolean
-        get() = inspectable.getBool(Abi.IComboBox_get_IsDropDownOpen)
-        set(value) = inspectable.putBool(Abi.IComboBox_put_IsDropDownOpen, value)
+        get() = inspectable.getBool(XamlInterop.IComboBox_get_IsDropDownOpen)
+        set(value) = inspectable.putBool(XamlInterop.IComboBox_put_IsDropDownOpen, value)
 
     init {
         for (item in items) addItem(item)
@@ -94,13 +95,13 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     /** Appends an item at the end (Items.Append). The string is boxed before passing. */
     fun addItem(item: String) {
         val boxed = PropertyValues.boxString(item)
-        itemVector.call(Abi.IVector_Append, boxed.ptr)
+        itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
         boxed.release()
     }
 
     /** Returns the item string at [index] (Items.GetAt). */
     fun getItem(index: Int): String {
-        val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
+        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
         return try {
             PropertyValues.unboxString(boxed) ?: ""
         } finally {
@@ -110,20 +111,20 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
 
     /** Removes the item at [index] (Items.RemoveAt). */
     fun removeItem(index: Int) {
-        itemVector.call(Abi.IVector_RemoveAt, index)
+        itemVector.call(FoundationInterop.IVector_RemoveAt, index)
     }
 
     /** Removes all items (Items.Clear). */
     fun removeAllItems() {
-        itemVector.call(Abi.IVector_Clear)
+        itemVector.call(FoundationInterop.IVector_Clear)
     }
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
     fun addListSelectionListener(listener: () -> Unit) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
-            Abi.IID_SelectionChangedEventHandler,
-            Abi.ISelector_add_SelectionChanged,
+            XamlInterop.IID_SelectionChangedEventHandler,
+            XamlInterop.ISelector_add_SelectionChanged,
         ) { _, _ -> listener() }
         selectionTokens.add(listener, token)
     }
@@ -131,7 +132,7 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
     fun removeListSelectionListener(listener: () -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
-        selector.removeEventHandler(Abi.ISelector_remove_SelectionChanged, token)
+        selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
 
     /**
@@ -141,11 +142,11 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     fun addTextSubmitListener(listener: (String) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TextSubmittedHandler",
-            Abi.IID_ComboBoxTextSubmittedHandler,
-            Abi.IComboBox_add_TextSubmitted,
+            XamlInterop.IID_ComboBoxTextSubmittedHandler,
+            XamlInterop.IComboBox_add_TextSubmitted,
         ) { _, args ->
             // args is a ComboBoxTextSubmittedEventArgs; read the committed Text and pass it along
-            listener(ComPtr(args).getString(Abi.IComboBoxTextSubmittedEventArgs_get_Text))
+            listener(ComPtr(args).getString(XamlInterop.IComboBoxTextSubmittedEventArgs_get_Text))
         }
         textSubmitTokens.add(listener, token)
     }
@@ -153,6 +154,6 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     /** Unsubscribes a listener registered via [addTextSubmitListener]. */
     fun removeTextSubmitListener(listener: (String) -> Unit) {
         val token = textSubmitTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IComboBox_remove_TextSubmitted, token)
+        inspectable.removeEventHandler(XamlInterop.IComboBox_remove_TextSubmitted, token)
     }
 }

@@ -7,7 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Common base for menu items (MenuFlyoutItem / MenuFlyoutSubItem / MenuFlyoutSeparator):
@@ -17,7 +18,7 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
     WControl(inspectable) {
     /** The MenuFlyoutItemBase view required by IVector<MenuFlyoutItemBase>.Append. */
     internal val menuFlyoutItemBase: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IMenuFlyoutItemBase))
+        own(inspectable.queryInterface(XamlInterop.IID_IMenuFlyoutItemBase))
     }
 }
 
@@ -30,7 +31,7 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
 open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     WMenuFlyoutItemBase(inspectable) {
     constructor(text: String = "", icon: Symbol? = null) : this(
-        Activation.composeDefault(Abi.CLS_MenuFlyoutItem, Abi.IID_IMenuFlyoutItemFactory),
+        Activation.composeDefault(XamlInterop.CLS_MenuFlyoutItem, XamlInterop.IID_IMenuFlyoutItemFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
         if (icon != null) this.icon = icon
@@ -38,7 +39,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
 
     /** The IMenuFlyoutItem view holding text / Click, etc. (also used by the Toggle / Radio subclasses). */
     private val menuFlyoutItem: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IMenuFlyoutItem))
+        own(inspectable.queryInterface(XamlInterop.IID_IMenuFlyoutItem))
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
@@ -46,19 +47,19 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
 
     /** The menu item's label (MenuFlyoutItem.Text). */
     var text: String
-        get() = menuFlyoutItem.getString(Abi.IMenuFlyoutItem_get_Text)
-        set(value) = Hstring.use(value) { h -> menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_Text, h) }
+        get() = menuFlyoutItem.getString(XamlInterop.IMenuFlyoutItem_get_Text)
+        set(value) = Hstring.use(value) { h -> menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_Text, h) }
 
     /** The icon shown to the left of the label (MenuFlyoutItem.Icon). Creates and passes a SymbolIcon. */
     var icon: Symbol? = null
         set(value) {
             field = value
             if (value == null) {
-                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_Icon, null)
+                menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
-            menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_Icon, iconElement.ptr)
+            menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_Icon, iconElement.ptr)
             iconElement.release()
         }
 
@@ -67,7 +68,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         set(value) {
             field = value
             menuFlyoutItem.call(
-                Abi.IMenuFlyoutItem_put_Command,
+                XamlInterop.IMenuFlyoutItem_put_Command,
                 value?.commandPtr,
             )
         }
@@ -77,10 +78,10 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         set(value) {
             field = value
             if (value == null) {
-                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_CommandParameter, null)
+                menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_CommandParameter, null)
             } else {
                 val boxed = PropertyValues.boxString(value)
-                menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_CommandParameter, boxed.ptr)
+                menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_CommandParameter, boxed.ptr)
                 boxed.release()
             }
         }
@@ -90,15 +91,15 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
      * (MenuFlyoutItem.KeyboardAcceleratorTextOverride). Display only; it doesn't respond to input.
      */
     var keyboardAcceleratorText: String
-        get() = menuFlyoutItem.getString(Abi.IMenuFlyoutItem_get_KeyboardAcceleratorTextOverride)
+        get() = menuFlyoutItem.getString(XamlInterop.IMenuFlyoutItem_get_KeyboardAcceleratorTextOverride)
         set(value) = Hstring.use(value) { h ->
-            menuFlyoutItem.call(Abi.IMenuFlyoutItem_put_KeyboardAcceleratorTextOverride, h)
+            menuFlyoutItem.call(XamlInterop.IMenuFlyoutItem_put_KeyboardAcceleratorTextOverride, h)
         }
 
     /** ActionListener-like. Subscribes to MenuFlyoutItem.Click (RoutedEventHandler) under the hood. */
     fun addActionListener(listener: () -> Unit) {
         val token = menuFlyoutItem.addEventHandler(
-            "WinUI4K.MenuClickHandler", Abi.IID_RoutedEventHandler, Abi.IMenuFlyoutItem_add_Click,
+            "WinUI4K.MenuClickHandler", XamlInterop.IID_RoutedEventHandler, XamlInterop.IMenuFlyoutItem_add_Click,
         ) { _, _ -> listener() }
         clickTokens.add(listener, token)
     }
@@ -106,7 +107,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     /** Unsubscribes a listener registered via [addActionListener]. */
     fun removeActionListener(listener: () -> Unit) {
         val token = clickTokens.remove(listener) ?: return
-        menuFlyoutItem.removeEventHandler(Abi.IMenuFlyoutItem_remove_Click, token)
+        menuFlyoutItem.removeEventHandler(XamlInterop.IMenuFlyoutItem_remove_Click, token)
     }
 }
 
@@ -115,12 +116,12 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
  * [isChecked] toggles on every click, and a checkmark is shown accordingly.
  */
 class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItem(
-    Activation.composeDefault(Abi.CLS_ToggleMenuFlyoutItem, Abi.IID_IToggleMenuFlyoutItemFactory),
+    Activation.composeDefault(XamlInterop.CLS_ToggleMenuFlyoutItem, XamlInterop.IID_IToggleMenuFlyoutItemFactory),
 ) {
     /** The checked state (ToggleMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
-        get() = inspectable.getBool(Abi.IToggleMenuFlyoutItem_get_IsChecked)
-        set(value) = inspectable.putBool(Abi.IToggleMenuFlyoutItem_put_IsChecked, value)
+        get() = inspectable.getBool(XamlInterop.IToggleMenuFlyoutItem_get_IsChecked)
+        set(value) = inspectable.putBool(XamlInterop.IToggleMenuFlyoutItem_put_IsChecked, value)
 
     init {
         if (text.isNotEmpty()) this.text = text
@@ -133,18 +134,18 @@ class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyo
  * Only one item within the same [groupName] can be checked at a time (mutually exclusive).
  */
 class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFlyoutItem(
-    Activation.composeDefault(Abi.CLS_RadioMenuFlyoutItem, Abi.IID_IRadioMenuFlyoutItemFactory),
+    Activation.composeDefault(XamlInterop.CLS_RadioMenuFlyoutItem, XamlInterop.IID_IRadioMenuFlyoutItemFactory),
 ) {
     /** The checked state (RadioMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
-        get() = inspectable.getBool(Abi.IRadioMenuFlyoutItem_get_IsChecked)
-        set(value) = inspectable.putBool(Abi.IRadioMenuFlyoutItem_put_IsChecked, value)
+        get() = inspectable.getBool(XamlInterop.IRadioMenuFlyoutItem_get_IsChecked)
+        set(value) = inspectable.putBool(XamlInterop.IRadioMenuFlyoutItem_put_IsChecked, value)
 
     /** The mutually-exclusive group name (RadioMenuFlyoutItem.GroupName). */
     var groupName: String
-        get() = inspectable.getString(Abi.IRadioMenuFlyoutItem_get_GroupName)
+        get() = inspectable.getString(XamlInterop.IRadioMenuFlyoutItem_get_GroupName)
         set(value) = Hstring.use(value) { h ->
-            inspectable.call(Abi.IRadioMenuFlyoutItem_put_GroupName, h)
+            inspectable.call(XamlInterop.IRadioMenuFlyoutItem_put_GroupName, h)
         }
 
     init {
@@ -159,17 +160,17 @@ class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFly
  */
 class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItemBase(
     // activatable (default factory), so activate then QI to the default interface
-    Activation.activate(Abi.CLS_MenuFlyoutSubItem, Abi.IID_IMenuFlyoutSubItem),
+    Activation.activate(XamlInterop.CLS_MenuFlyoutSubItem, XamlInterop.IID_IMenuFlyoutSubItem),
 ) {
     private val items: ComPtr by lazy {
-        own(inspectable.getPtr(Abi.IMenuFlyoutSubItem_get_Items)) // IVector<MenuFlyoutItemBase>
+        own(inspectable.getPtr(XamlInterop.IMenuFlyoutSubItem_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
     /** The submenu's label (MenuFlyoutSubItem.Text). */
     var text: String
-        get() = inspectable.getString(Abi.IMenuFlyoutSubItem_get_Text)
+        get() = inspectable.getString(XamlInterop.IMenuFlyoutSubItem_get_Text)
         set(value) = Hstring.use(value) { h ->
-            inspectable.call(Abi.IMenuFlyoutSubItem_put_Text, h)
+            inspectable.call(XamlInterop.IMenuFlyoutSubItem_put_Text, h)
         }
 
     /** The icon shown to the left of the label (MenuFlyoutSubItem.Icon). Creates and passes a SymbolIcon. */
@@ -177,11 +178,11 @@ class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutI
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IMenuFlyoutSubItem_put_Icon, null)
+                inspectable.call(XamlInterop.IMenuFlyoutSubItem_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
-            inspectable.call(Abi.IMenuFlyoutSubItem_put_Icon, iconElement.ptr)
+            inspectable.call(XamlInterop.IMenuFlyoutSubItem_put_Icon, iconElement.ptr)
             iconElement.release()
         }
 
@@ -192,11 +193,11 @@ class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutI
 
     /** Appends a child item (Append onto MenuFlyoutSubItem.Items). */
     fun add(item: WMenuFlyoutItemBase) {
-        items.call(Abi.IVector_Append, item.menuFlyoutItemBase.ptr)
+        items.call(FoundationInterop.IVector_Append, item.menuFlyoutItemBase.ptr)
     }
 }
 
 /** JSeparator-like: WinUI 3's MenuFlyoutSeparator (a menu divider line). */
 class WMenuFlyoutSeparator : WMenuFlyoutItemBase(
-    Activation.composeDefault(Abi.CLS_MenuFlyoutSeparator, Abi.IID_IMenuFlyoutSeparatorFactory),
+    Activation.composeDefault(XamlInterop.CLS_MenuFlyoutSeparator, XamlInterop.IID_IMenuFlyoutSeparatorFactory),
 )

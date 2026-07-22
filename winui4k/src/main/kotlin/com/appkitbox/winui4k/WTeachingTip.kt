@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.TeachingTipPlacementMode ([WTeachingTip.preferredPlacement]).
@@ -62,7 +62,7 @@ enum class TeachingTipCloseReason(internal val native: Int) {
  * (it renders nothing while closed). Opening it outside the tree shows no content.
  */
 class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
-    Activation.composeDefault(Abi.CLS_TeachingTip, Abi.IID_ITeachingTipFactory), // default interface = ITeachingTip
+    Activation.composeDefault(XamlInterop.CLS_TeachingTip, XamlInterop.IID_ITeachingTipFactory), // default interface = ITeachingTip
 ) {
     /** Listener -> event token (used to remove). */
     private val actionTokens = ListenerTokens<() -> Unit>()
@@ -70,37 +70,37 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
 
     /** The callout's heading (TeachingTip.Title). */
     var title: String
-        get() = inspectable.getString(Abi.ITeachingTip_get_Title)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.ITeachingTip_put_Title, h) }
+        get() = inspectable.getString(XamlInterop.ITeachingTip_get_Title)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITeachingTip_put_Title, h) }
 
     /** The description below the heading (TeachingTip.Subtitle). */
     var subtitle: String
-        get() = inspectable.getString(Abi.ITeachingTip_get_Subtitle)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.ITeachingTip_put_Subtitle, h) }
+        get() = inspectable.getString(XamlInterop.ITeachingTip_get_Subtitle)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITeachingTip_put_Subtitle, h) }
 
     /** The element the callout's tail points at (TeachingTip.Target). Null shows it in a screen corner. */
     var target: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ITeachingTip_put_Target, value?.frameworkElement?.ptr)
+            inspectable.call(XamlInterop.ITeachingTip_put_Target, value?.frameworkElement?.ptr)
         }
 
     /** The preferred display position relative to [target] (TeachingTip.PreferredPlacement). Adjusted automatically if it doesn't fit. */
     var preferredPlacement: TeachingTipPlacement
-        get() = TeachingTipPlacement.of(inspectable.getInt(Abi.ITeachingTip_get_PreferredPlacement))
-        set(value) = inspectable.call(Abi.ITeachingTip_put_PreferredPlacement, value.native)
+        get() = TeachingTipPlacement.of(inspectable.getInt(XamlInterop.ITeachingTip_get_PreferredPlacement))
+        set(value) = inspectable.call(XamlInterop.ITeachingTip_put_PreferredPlacement, value.native)
 
     /** Whether it closes automatically on an outside click (TeachingTip.IsLightDismissEnabled). */
     var isLightDismissEnabled: Boolean
-        get() = inspectable.getBool(Abi.ITeachingTip_get_IsLightDismissEnabled)
-        set(value) = inspectable.putBool(Abi.ITeachingTip_put_IsLightDismissEnabled, value)
+        get() = inspectable.getBool(XamlInterop.ITeachingTip_get_IsLightDismissEnabled)
+        set(value) = inspectable.putBool(XamlInterop.ITeachingTip_put_IsLightDismissEnabled, value)
 
     /** The action button's label. Object-typed, so a boxed string is passed. Left empty, it isn't shown. */
     var actionButtonText: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.ITeachingTip_put_ActionButtonContent, boxed.ptr)
+            inspectable.call(XamlInterop.ITeachingTip_put_ActionButtonContent, boxed.ptr)
             boxed.release()
         }
 
@@ -109,12 +109,12 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.ITeachingTip_put_CloseButtonContent, boxed.ptr)
+            inspectable.call(XamlInterop.ITeachingTip_put_CloseButtonContent, boxed.ptr)
             boxed.release()
         }
 
     val isOpen: Boolean
-        get() = inspectable.getBool(Abi.ITeachingTip_get_IsOpen)
+        get() = inspectable.getBool(XamlInterop.ITeachingTip_get_IsOpen)
 
     init {
         if (title.isNotEmpty()) this.title = title
@@ -123,17 +123,17 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
 
     /** Opens the callout (TeachingTip.IsOpen = true). */
     fun show() {
-        inspectable.putBool(Abi.ITeachingTip_put_IsOpen, true)
+        inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, true)
     }
 
     fun hide() {
-        inspectable.putBool(Abi.ITeachingTip_put_IsOpen, false)
+        inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, false)
     }
 
     /** Registers a listener called when the action button is pressed (TeachingTip.ActionButtonClick). */
     fun addActionListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.TeachingTipHandler", Abi.IID_TeachingTipObjectHandler, Abi.ITeachingTip_add_ActionButtonClick,
+            "WinUI4K.TeachingTipHandler", XamlInterop.IID_TeachingTipObjectHandler, XamlInterop.ITeachingTip_add_ActionButtonClick,
         ) { _, _ -> listener() }
         actionTokens.add(listener, token)
     }
@@ -141,15 +141,15 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     /** Unsubscribes a listener registered via [addActionListener]. */
     fun removeActionListener(listener: () -> Unit) {
         val token = actionTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.ITeachingTip_remove_ActionButtonClick, token)
+        inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_ActionButtonClick, token)
     }
 
     /** Registers a listener called when it closes (TeachingTip.Closed). Passed the reason it closed. */
     fun addCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.TeachingTipHandler", Abi.IID_TeachingTipClosedHandler, Abi.ITeachingTip_add_Closed,
+            "WinUI4K.TeachingTipHandler", XamlInterop.IID_TeachingTipClosedHandler, XamlInterop.ITeachingTip_add_Closed,
         ) { _, args ->
-            listener(TeachingTipCloseReason.of(ComPtr(args).getInt(Abi.ITeachingTipClosedEventArgs_get_Reason)))
+            listener(TeachingTipCloseReason.of(ComPtr(args).getInt(XamlInterop.ITeachingTipClosedEventArgs_get_Reason)))
         }
         closeTokens.add(listener, token)
     }
@@ -157,6 +157,6 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     /** Unsubscribes a listener registered via [addCloseListener]. */
     fun removeCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
         val token = closeTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.ITeachingTip_remove_Closed, token)
+        inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_Closed, token)
     }
 }

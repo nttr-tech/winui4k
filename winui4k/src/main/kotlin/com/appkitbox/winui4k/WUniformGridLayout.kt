@@ -3,7 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.UniformGridLayoutItemsJustification
@@ -63,51 +63,51 @@ enum class UniformGridLayoutItemsStretch(internal val native: Int) {
 class WUniformGridLayout {
     /** UniformGridLayout's default interface (IUniformGridLayout). */
     internal val inspectable: ComPtr =
-        Activation.composeDefault(Abi.CLS_UniformGridLayout, Abi.IID_IUniformGridLayoutFactory)
+        Activation.composeDefault(XamlInterop.CLS_UniformGridLayout, XamlInterop.IID_IUniformGridLayoutFactory)
 
     /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
     private val lifetime = ComLifetime.adopt(this, inspectable)
 
     /** The ILayout view passed to ItemsView.Layout. */
-    internal val layout: ComPtr by lazy { lifetime.own(inspectable.queryInterface(Abi.IID_ILayout)) }
+    internal val layout: ComPtr by lazy { lifetime.own(inspectable.queryInterface(XamlInterop.IID_ILayout)) }
 
     /** The direction items are laid out in (UniformGridLayout.Orientation). Defaults to horizontal (rows wrap). */
     var orientation: Orientation
-        get() = Orientation.of(inspectable.getInt(Abi.IUniformGridLayout_get_Orientation))
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_Orientation, value.native)
+        get() = Orientation.of(inspectable.getInt(XamlInterop.IUniformGridLayout_get_Orientation))
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_Orientation, value.native)
 
     /** The minimum width of a single item (UniformGridLayout.MinItemWidth). */
     var minItemWidth: Double
-        get() = inspectable.getDouble(Abi.IUniformGridLayout_get_MinItemWidth)
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_MinItemWidth, value)
+        get() = inspectable.getDouble(XamlInterop.IUniformGridLayout_get_MinItemWidth)
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_MinItemWidth, value)
 
     /** The minimum height of a single item (UniformGridLayout.MinItemHeight). */
     var minItemHeight: Double
-        get() = inspectable.getDouble(Abi.IUniformGridLayout_get_MinItemHeight)
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_MinItemHeight, value)
+        get() = inspectable.getDouble(XamlInterop.IUniformGridLayout_get_MinItemHeight)
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_MinItemHeight, value)
 
     /** The minimum spacing between rows (UniformGridLayout.MinRowSpacing). */
     var minRowSpacing: Double
-        get() = inspectable.getDouble(Abi.IUniformGridLayout_get_MinRowSpacing)
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_MinRowSpacing, value)
+        get() = inspectable.getDouble(XamlInterop.IUniformGridLayout_get_MinRowSpacing)
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_MinRowSpacing, value)
 
     /** The minimum spacing between columns (UniformGridLayout.MinColumnSpacing). */
     var minColumnSpacing: Double
-        get() = inspectable.getDouble(Abi.IUniformGridLayout_get_MinColumnSpacing)
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_MinColumnSpacing, value)
+        get() = inspectable.getDouble(XamlInterop.IUniformGridLayout_get_MinColumnSpacing)
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_MinColumnSpacing, value)
 
     /** How items are aligned when there's leftover space (UniformGridLayout.ItemsJustification). */
     var itemsJustification: UniformGridLayoutItemsJustification
-        get() = UniformGridLayoutItemsJustification.of(inspectable.getInt(Abi.IUniformGridLayout_get_ItemsJustification))
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_ItemsJustification, value.native)
+        get() = UniformGridLayoutItemsJustification.of(inspectable.getInt(XamlInterop.IUniformGridLayout_get_ItemsJustification))
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_ItemsJustification, value.native)
 
     /** How items grow into leftover width (UniformGridLayout.ItemsStretch). */
     var itemsStretch: UniformGridLayoutItemsStretch
-        get() = UniformGridLayoutItemsStretch.of(inspectable.getInt(Abi.IUniformGridLayout_get_ItemsStretch))
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_ItemsStretch, value.native)
+        get() = UniformGridLayoutItemsStretch.of(inspectable.getInt(XamlInterop.IUniformGridLayout_get_ItemsStretch))
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_ItemsStretch, value.native)
 
     /** The number of rows or columns before wrapping (UniformGridLayout.MaximumRowsOrColumns). -1 means unlimited (default). */
     var maximumRowsOrColumns: Int
-        get() = inspectable.getInt(Abi.IUniformGridLayout_get_MaximumRowsOrColumns)
-        set(value) = inspectable.call(Abi.IUniformGridLayout_put_MaximumRowsOrColumns, value)
+        get() = inspectable.getInt(XamlInterop.IUniformGridLayout_get_MaximumRowsOrColumns)
+        set(value) = inspectable.call(XamlInterop.IUniformGridLayout_put_MaximumRowsOrColumns, value)
 }

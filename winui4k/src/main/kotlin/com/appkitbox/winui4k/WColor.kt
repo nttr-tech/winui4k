@@ -2,7 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -17,8 +17,8 @@ class WColor(
 ) {
     /** Creates a new SolidColorBrush for this color. The caller must release it. */
     internal fun createBrush(): ComPtr {
-        val brush = Activation.activate(Abi.CLS_SolidColorBrush, Abi.IID_ISolidColorBrush)
-        XamlStructs.putColor(brush, Abi.ISolidColorBrush_put_Color, alpha, red, green, blue)
+        val brush = Activation.activate(XamlInterop.CLS_SolidColorBrush, XamlInterop.IID_ISolidColorBrush)
+        XamlStructs.putColor(brush, XamlInterop.ISolidColorBrush_put_Color, alpha, red, green, blue)
         return brush
     }
 

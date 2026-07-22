@@ -3,7 +3,8 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JButton-like hyperlink display: WinUI 3's HyperlinkButton.
@@ -11,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * If left unset, it behaves like a normal button and can handle Click via [addActionListener].
  */
 class WHyperlinkButton(text: String = "", navigateUri: String = "") : WButtonBase(
-    Activation.composeDefault(Abi.CLS_HyperlinkButton, Abi.IID_IHyperlinkButtonFactory),
+    Activation.composeDefault(XamlInterop.CLS_HyperlinkButton, XamlInterop.IID_IHyperlinkButtonFactory),
 ) {
     /**
      * The URI opened on click (HyperlinkButton.NavigateUri). Set to "" to clear it.
@@ -19,24 +20,24 @@ class WHyperlinkButton(text: String = "", navigateUri: String = "") : WButtonBas
      */
     var navigateUri: String
         get() {
-            val uri = inspectable.getPtrOrNull(Abi.IHyperlinkButton_get_NavigateUri) ?: return ""
+            val uri = inspectable.getPtrOrNull(XamlInterop.IHyperlinkButton_get_NavigateUri) ?: return ""
             return try {
-                uri.getString(Abi.IUriRuntimeClass_get_AbsoluteUri)
+                uri.getString(FoundationInterop.IUriRuntimeClass_get_AbsoluteUri)
             } finally {
                 uri.release()
             }
         }
         set(value) {
             if (value.isEmpty()) {
-                inspectable.call(Abi.IHyperlinkButton_put_NavigateUri, null)
+                inspectable.call(XamlInterop.IHyperlinkButton_put_NavigateUri, null)
                 return
             }
-            val factory = Activation.factory(Abi.CLS_Uri, Abi.IID_IUriRuntimeClassFactory)
+            val factory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
             val uri = Hstring.use(value) { h ->
-                factory.getPtr(Abi.IUriRuntimeClassFactory_CreateUri, h)
+                factory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h)
             }
             factory.release()
-            inspectable.call(Abi.IHyperlinkButton_put_NavigateUri, uri.ptr)
+            inspectable.call(XamlInterop.IHyperlinkButton_put_NavigateUri, uri.ptr)
             uri.release()
         }
 

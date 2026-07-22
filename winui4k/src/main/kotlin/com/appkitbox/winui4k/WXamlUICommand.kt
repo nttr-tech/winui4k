@@ -11,7 +11,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Equivalent to Swing's Action (implemented on the WinUI side): Microsoft.UI.Xaml.Input.XamlUICommand.
@@ -26,7 +27,7 @@ open class WXamlUICommand internal constructor(
     internal val inspectable: ComPtr,
 ) : WCommandBase() {
     constructor(label: String = "") : this(
-        Activation.composeDefault(Abi.CLS_XamlUICommand, Abi.IID_IXamlUICommandFactory),
+        Activation.composeDefault(XamlInterop.CLS_XamlUICommand, XamlInterop.IID_IXamlUICommandFactory),
     ) {
         if (label.isNotEmpty()) this.label = label
     }
@@ -39,11 +40,11 @@ open class WXamlUICommand internal constructor(
 
     /** The IXamlUICommand view holding Label / ExecuteRequested, etc. (also used by StandardUICommand). */
     private val xamlUICommand: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IXamlUICommand))
+        own(inspectable.queryInterface(XamlInterop.IID_IXamlUICommand))
     }
 
     /** The ICommand view required by put_Command (XamlUICommand implements ICommand). */
-    private val icommand: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_ICommand)) }
+    private val icommand: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_ICommand)) }
 
     override val commandPtr: Ptr
         get() = icommand.ptr
@@ -53,34 +54,34 @@ open class WXamlUICommand internal constructor(
 
     /** The label shown on the control (XamlUICommand.Label). */
     var label: String
-        get() = xamlUICommand.getString(Abi.IXamlUICommand_get_Label)
-        set(value) = Hstring.use(value) { h -> xamlUICommand.call(Abi.IXamlUICommand_put_Label, h) }
+        get() = xamlUICommand.getString(XamlInterop.IXamlUICommand_get_Label)
+        set(value) = Hstring.use(value) { h -> xamlUICommand.call(XamlInterop.IXamlUICommand_put_Label, h) }
 
     /** The icon shown on the control (XamlUICommand.IconSource). Creates and passes a SymbolIconSource. */
     var icon: Symbol? = null
         set(value) {
             field = value
             if (value == null) {
-                xamlUICommand.call(Abi.IXamlUICommand_put_IconSource, null)
+                xamlUICommand.call(XamlInterop.IXamlUICommand_put_IconSource, null)
                 return
             }
             val iconSource = value.createIconSource()
-            xamlUICommand.call(Abi.IXamlUICommand_put_IconSource, iconSource.ptr)
+            xamlUICommand.call(XamlInterop.IXamlUICommand_put_IconSource, iconSource.ptr)
             iconSource.release()
         }
 
     /** The description shown in the tooltip (XamlUICommand.Description). */
     var description: String
-        get() = xamlUICommand.getString(Abi.IXamlUICommand_get_Description)
+        get() = xamlUICommand.getString(XamlInterop.IXamlUICommand_get_Description)
         set(value) = Hstring.use(value) { h ->
-            xamlUICommand.call(Abi.IXamlUICommand_put_Description, h)
+            xamlUICommand.call(XamlInterop.IXamlUICommand_put_Description, h)
         }
 
     /** The access key (XamlUICommand.AccessKey). */
     var accessKey: String
-        get() = xamlUICommand.getString(Abi.IXamlUICommand_get_AccessKey)
+        get() = xamlUICommand.getString(XamlInterop.IXamlUICommand_get_AccessKey)
         set(value) = Hstring.use(value) { h ->
-            xamlUICommand.call(Abi.IXamlUICommand_put_AccessKey, h)
+            xamlUICommand.call(XamlInterop.IXamlUICommand_put_AccessKey, h)
         }
 
     /**
@@ -89,8 +90,8 @@ open class WXamlUICommand internal constructor(
      */
     fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier) {
         val accelerator = createKeyboardAccelerator(key, modifiers)
-        val accelerators = xamlUICommand.getPtr(Abi.IXamlUICommand_get_KeyboardAccelerators)
-        accelerators.call(Abi.IVector_Append, accelerator.ptr)
+        val accelerators = xamlUICommand.getPtr(XamlInterop.IXamlUICommand_get_KeyboardAccelerators)
+        accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
         accelerators.release()
         accelerator.release()
     }
@@ -102,10 +103,10 @@ open class WXamlUICommand internal constructor(
     fun addExecuteListener(listener: (parameter: String?) -> Unit) {
         val token = xamlUICommand.addEventHandler(
             "WinUI4K.ExecuteRequestedHandler",
-            Abi.IID_XamlUICommandExecuteRequestedHandler,
-            Abi.IXamlUICommand_add_ExecuteRequested,
+            XamlInterop.IID_XamlUICommandExecuteRequestedHandler,
+            XamlInterop.IXamlUICommand_add_ExecuteRequested,
         ) { _, args ->
-            val boxed = ComPtr(args).getPtrOrNull(Abi.IExecuteRequestedEventArgs_get_Parameter)
+            val boxed = ComPtr(args).getPtrOrNull(XamlInterop.IExecuteRequestedEventArgs_get_Parameter)
             val parameter = boxed?.let {
                 try {
                     PropertyValues.unboxString(it)
@@ -121,7 +122,7 @@ open class WXamlUICommand internal constructor(
     /** Unsubscribes a listener registered via [addExecuteListener]. */
     fun removeExecuteListener(listener: (parameter: String?) -> Unit) {
         val token = executeTokens.remove(listener) ?: return
-        xamlUICommand.removeEventHandler(Abi.IXamlUICommand_remove_ExecuteRequested, token)
+        xamlUICommand.removeEventHandler(XamlInterop.IXamlUICommand_remove_ExecuteRequested, token)
     }
 }
 
@@ -161,17 +162,17 @@ enum class StandardUICommandKind(internal val native: Int) {
 class WStandardUICommand(kind: StandardUICommandKind) : WXamlUICommand(createWithKind(kind)) {
     /** The predefined command's kind (StandardUICommand.Kind). */
     val kind: StandardUICommandKind
-        get() = StandardUICommandKind.of(inspectable.getInt(Abi.IStandardUICommand_get_Kind))
+        get() = StandardUICommandKind.of(inspectable.getInt(XamlInterop.IStandardUICommand_get_Kind))
 
     private companion object {
         /** IStandardUICommandFactory.CreateInstanceWithKind(kind, outer, out inner, out instance). */
         fun createWithKind(kind: StandardUICommandKind): ComPtr = Ffi.backend.withScope { scope ->
             val factory =
-                Activation.factory(Abi.CLS_StandardUICommand, Abi.IID_IStandardUICommandFactory)
+                Activation.factory(XamlInterop.CLS_StandardUICommand, XamlInterop.IID_IStandardUICommandFactory)
             val inner = scope.allocate(8)
             val instance = scope.allocate(8)
             factory.call(
-                Abi.IStandardUICommandFactory_CreateInstanceWithKind,
+                XamlInterop.IStandardUICommandFactory_CreateInstanceWithKind,
                 kind.native, null, inner, instance,
             )
             factory.release()

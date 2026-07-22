@@ -4,7 +4,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * A two-state on/off switch: WinUI 3's ToggleSwitch.
@@ -12,22 +12,22 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * Customize the displayed text with [header] / [onContent] / [offContent].
  */
 class WToggleSwitch(header: String = "") : WControl(
-    Activation.activate(Abi.CLS_ToggleSwitch, Abi.IID_IToggleSwitch), // created via the default factory
+    Activation.activate(XamlInterop.CLS_ToggleSwitch, XamlInterop.IID_IToggleSwitch), // created via the default factory
 ) {
     /** Toggled event tokens registered via addItemListener. */
     private val itemTokens = ListenerTokens<(Boolean) -> Unit>()
 
     /** Whether the switch is on (ToggleSwitch.IsOn). */
     var isOn: Boolean
-        get() = inspectable.getBool(Abi.IToggleSwitch_get_IsOn)
-        set(value) = inspectable.putBool(Abi.IToggleSwitch_put_IsOn, value)
+        get() = inspectable.getBool(XamlInterop.IToggleSwitch_get_IsOn)
+        set(value) = inspectable.putBool(XamlInterop.IToggleSwitch_put_IsOn, value)
 
     /** The heading above the switch (ToggleSwitch.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IToggleSwitch_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.IToggleSwitch_put_Header, boxed.ptr)
             boxed.release()
         }
 
@@ -36,7 +36,7 @@ class WToggleSwitch(header: String = "") : WControl(
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IToggleSwitch_put_OnContent, boxed.ptr)
+            inspectable.call(XamlInterop.IToggleSwitch_put_OnContent, boxed.ptr)
             boxed.release()
         }
 
@@ -45,7 +45,7 @@ class WToggleSwitch(header: String = "") : WControl(
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IToggleSwitch_put_OffContent, boxed.ptr)
+            inspectable.call(XamlInterop.IToggleSwitch_put_OffContent, boxed.ptr)
             boxed.release()
         }
 
@@ -59,7 +59,7 @@ class WToggleSwitch(header: String = "") : WControl(
      */
     fun addItemListener(listener: (Boolean) -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.ToggledHandler", Abi.IID_RoutedEventHandler, Abi.IToggleSwitch_add_Toggled,
+            "WinUI4K.ToggledHandler", XamlInterop.IID_RoutedEventHandler, XamlInterop.IToggleSwitch_add_Toggled,
         ) { _, _ -> listener(isOn) }
         itemTokens.add(listener, token)
     }
@@ -67,6 +67,6 @@ class WToggleSwitch(header: String = "") : WControl(
     /** Unsubscribes a listener registered via [addItemListener]. */
     fun removeItemListener(listener: (Boolean) -> Unit) {
         val token = itemTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IToggleSwitch_remove_Toggled, token)
+        inspectable.removeEventHandler(XamlInterop.IToggleSwitch_remove_Toggled, token)
     }
 }

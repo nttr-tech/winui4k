@@ -3,12 +3,12 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /** JFrame-like: WinUI 3's Window. */
 class WFrame(title: String = "") {
     private val window: ComPtr =
-        Activation.composeDefault(Abi.CLS_Window, Abi.IID_IWindowFactory) // IWindow
+        Activation.composeDefault(XamlInterop.CLS_Window, XamlInterop.IID_IWindowFactory) // IWindow
 
     /** The root panel corresponding to JFrame's contentPane. */
     val contentPane: WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }
@@ -16,11 +16,11 @@ class WFrame(title: String = "") {
     var title: String = ""
         set(value) {
             field = value
-            Hstring.use(value) { h -> window.call(Abi.IWindow_put_Title, h) }
+            Hstring.use(value) { h -> window.call(XamlInterop.IWindow_put_Title, h) }
         }
 
     init {
-        window.call(Abi.IWindow_put_Content, contentPane.uiElement.ptr)
+        window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
         if (title.isNotEmpty()) this.title = title
     }
 
@@ -32,21 +32,21 @@ class WFrame(title: String = "") {
      * say, a Grid instead of StackPanel's unconstrained height measurement.
      */
     fun setContentPane(component: WComponent) {
-        window.call(Abi.IWindow_put_Content, component.uiElement.ptr)
+        window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
     }
 
     /** Setting this to true shows (activates) the window. */
     var isVisible: Boolean = false
         set(value) {
             field = value
-            if (value) window.call(Abi.IWindow_Activate) else window.call(Abi.IWindow_Close)
+            if (value) window.call(XamlInterop.IWindow_Activate) else window.call(XamlInterop.IWindow_Close)
         }
 
-    private val window2: ComPtr by lazy { window.queryInterface(Abi.IID_IWindow2) }
+    private val window2: ComPtr by lazy { window.queryInterface(XamlInterop.IID_IWindow2) }
 
     /** An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.). */
     val appWindow: WAppWindow by lazy {
-        WAppWindow(window2.getPtr(Abi.IWindow2_get_AppWindow))
+        WAppWindow(window2.getPtr(XamlInterop.IWindow2_get_AppWindow))
     }
 
     /**
@@ -62,14 +62,14 @@ class WFrame(title: String = "") {
             val backdrop = when (value) {
                 SystemBackdropType.NONE -> null
                 SystemBackdropType.MICA ->
-                    Activation.composeDefault(Abi.CLS_MicaBackdrop, Abi.IID_IMicaBackdropFactory)
+                    Activation.composeDefault(XamlInterop.CLS_MicaBackdrop, XamlInterop.IID_IMicaBackdropFactory)
                 SystemBackdropType.MICA_ALT ->
-                    Activation.composeDefault(Abi.CLS_MicaBackdrop, Abi.IID_IMicaBackdropFactory)
-                        .also { it.call(Abi.IMicaBackdrop_put_Kind, MICA_KIND_BASE_ALT) }
+                    Activation.composeDefault(XamlInterop.CLS_MicaBackdrop, XamlInterop.IID_IMicaBackdropFactory)
+                        .also { it.call(XamlInterop.IMicaBackdrop_put_Kind, MICA_KIND_BASE_ALT) }
                 SystemBackdropType.ACRYLIC ->
-                    Activation.composeDefault(Abi.CLS_DesktopAcrylicBackdrop, Abi.IID_IDesktopAcrylicBackdropFactory)
+                    Activation.composeDefault(XamlInterop.CLS_DesktopAcrylicBackdrop, XamlInterop.IID_IDesktopAcrylicBackdropFactory)
             }
-            window2.call(Abi.IWindow2_put_SystemBackdrop, backdrop)
+            window2.call(XamlInterop.IWindow2_put_SystemBackdrop, backdrop)
             backdrop?.release() // the put side keeps its own reference, so release the one we created
         }
 
@@ -78,15 +78,15 @@ class WFrame(title: String = "") {
      * Set to true together with [setTitleBar] to build a custom title bar (like WTitleBar).
      */
     var extendsContentIntoTitleBar: Boolean
-        get() = window.getBool(Abi.IWindow_get_ExtendsContentIntoTitleBar)
-        set(value) = window.putBool(Abi.IWindow_put_ExtendsContentIntoTitleBar, value)
+        get() = window.getBool(XamlInterop.IWindow_get_ExtendsContentIntoTitleBar)
+        set(value) = window.putBool(XamlInterop.IWindow_put_ExtendsContentIntoTitleBar, value)
 
     /**
      * When [extendsContentIntoTitleBar] = true, specifies the component to treat as the draggable
      * region (Window.SetTitleBar). Pass null to clear it.
      */
     fun setTitleBar(component: WComponent?) {
-        window.call(Abi.IWindow_SetTitleBar, component?.uiElement?.ptr)
+        window.call(XamlInterop.IWindow_SetTitleBar, component?.uiElement?.ptr)
     }
 
     private companion object {

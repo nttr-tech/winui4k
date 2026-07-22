@@ -6,7 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -100,16 +101,16 @@ abstract class WComponent internal constructor(
     internal fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
 
     /** IUIElement view used for XAML tree operations. */
-    internal val uiElement: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IUIElement)) }
+    internal val uiElement: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IUIElement)) }
 
     /** FrameworkElement view (also used as an argument to things like Flyout.ShowAt). */
     internal val frameworkElement: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IFrameworkElement))
+        own(inspectable.queryInterface(XamlInterop.IID_IFrameworkElement))
     }
 
     /** DependencyObject view (passed as the target of attached properties like ToolTipService). */
     internal val dependencyObject: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IDependencyObject))
+        own(inspectable.queryInterface(XamlInterop.IID_IDependencyObject))
     }
 
     var width: Double = Double.NaN
@@ -135,22 +136,22 @@ abstract class WComponent internal constructor(
     internal fun applyWidth(value: Double) {
         if (value.toRawBits() == appliedWidthBits) return
         appliedWidthBits = value.toRawBits()
-        frameworkElement.call(Abi.IFrameworkElement_put_Width, value)
+        frameworkElement.call(XamlInterop.IFrameworkElement_put_Width, value)
     }
 
     internal fun applyHeight(value: Double) {
         if (value.toRawBits() == appliedHeightBits) return
         appliedHeightBits = value.toRawBits()
-        frameworkElement.call(Abi.IFrameworkElement_put_Height, value)
+        frameworkElement.call(XamlInterop.IFrameworkElement_put_Height, value)
     }
 
     /** The actual width after layout (FrameworkElement.ActualWidth). 0 before layout. */
     val actualWidth: Double
-        get() = frameworkElement.getDouble(Abi.IFrameworkElement_get_ActualWidth)
+        get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth)
 
     /** The actual height after layout (FrameworkElement.ActualHeight). 0 before layout. */
     val actualHeight: Double
-        get() = frameworkElement.getDouble(Abi.IFrameworkElement_get_ActualHeight)
+        get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight)
 
     /**
      * Sets the size a layout manager assigns. Does not change [width] / [height] (the record of the
@@ -180,7 +181,7 @@ abstract class WComponent internal constructor(
 
     /** The preferred size computed by the most recent Measure pass (UIElement.DesiredSize). */
     internal fun readDesiredSize(): WSize {
-        val size = XamlStructs.getSizeFloat(uiElement, Abi.IUIElement_get_DesiredSize)
+        val size = XamlStructs.getSizeFloat(uiElement, XamlInterop.IUIElement_get_DesiredSize)
         return WSize(size[0], size[1])
     }
 
@@ -213,18 +214,18 @@ abstract class WComponent internal constructor(
     var maxWidth: Double = Double.POSITIVE_INFINITY
         set(value) {
             field = value
-            frameworkElement.call(Abi.IFrameworkElement_put_MaxWidth, value)
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value)
         }
 
     /** Horizontal position within the space the parent allots (FrameworkElement.HorizontalAlignment). */
     var horizontalAlignment: HorizontalAlignment
-        get() = HorizontalAlignment.of(frameworkElement.getInt(Abi.IFrameworkElement_get_HorizontalAlignment))
-        set(value) = frameworkElement.call(Abi.IFrameworkElement_put_HorizontalAlignment, value.native)
+        get() = HorizontalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_HorizontalAlignment))
+        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_HorizontalAlignment, value.native)
 
     /** Vertical position within the space the parent allots (FrameworkElement.VerticalAlignment). */
     var verticalAlignment: VerticalAlignment
-        get() = VerticalAlignment.of(frameworkElement.getInt(Abi.IFrameworkElement_get_VerticalAlignment))
-        set(value) = frameworkElement.call(Abi.IFrameworkElement_put_VerticalAlignment, value.native)
+        get() = VerticalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_VerticalAlignment))
+        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_VerticalAlignment, value.native)
 
     /** A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. Use [setMargin] to set each side individually. */
     var margin: Double = 0.0
@@ -235,33 +236,33 @@ abstract class WComponent internal constructor(
 
     /** Sets the margin on each side individually (FrameworkElement.Margin). */
     fun setMargin(left: Double, top: Double, right: Double, bottom: Double) {
-        XamlStructs.putThickness(frameworkElement, Abi.IFrameworkElement_put_Margin, left, top, right, bottom)
+        XamlStructs.putThickness(frameworkElement, XamlInterop.IFrameworkElement_put_Margin, left, top, right, bottom)
     }
 
     /** Opacity, from 0.0 (transparent) to 1.0 (opaque, the default) (UIElement.Opacity). */
     var opacity: Double
-        get() = uiElement.getDouble(Abi.IUIElement_get_Opacity)
-        set(value) = uiElement.call(Abi.IUIElement_put_Opacity, value)
+        get() = uiElement.getDouble(XamlInterop.IUIElement_get_Opacity)
+        set(value) = uiElement.call(XamlInterop.IUIElement_put_Opacity, value)
 
     /** Whether this is shown (UIElement.Visibility). false is Collapsed (doesn't reserve layout space either). */
     var isVisible: Boolean
-        get() = uiElement.getInt(Abi.IUIElement_get_Visibility) == 0 // Visibility.Visible
-        set(value) = uiElement.call(Abi.IUIElement_put_Visibility, if (value) 0 else 1)
+        get() = uiElement.getInt(XamlInterop.IUIElement_get_Visibility) == 0 // Visibility.Visible
+        set(value) = uiElement.call(XamlInterop.IUIElement_put_Visibility, if (value) 0 else 1)
 
     /**
      * The theme applied to this element and everything below it (FrameworkElement.RequestedTheme).
      * Setting it on the root element makes it the whole app's theme. [ElementTheme.DEFAULT] follows the OS setting.
      */
     var requestedTheme: ElementTheme
-        get() = ElementTheme.of(frameworkElement.getInt(Abi.IFrameworkElement_get_RequestedTheme))
-        set(value) = frameworkElement.call(Abi.IFrameworkElement_put_RequestedTheme, value.native)
+        get() = ElementTheme.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_RequestedTheme))
+        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_RequestedTheme, value.native)
 
     /**
      * The theme actually in effect (FrameworkElement.ActualTheme).
      * Returns the resolved LIGHT / DARK even when [requestedTheme] is [ElementTheme.DEFAULT].
      */
     val actualTheme: ElementTheme
-        get() = ElementTheme.of(frameworkElement.getInt(Abi.IFrameworkElement_get_ActualTheme))
+        get() = ElementTheme.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_ActualTheme))
 
     /** Event tokens registered via addActualThemeChangedListener. */
     private val actualThemeChangedTokens = ListenerTokens<() -> Unit>()
@@ -270,8 +271,8 @@ abstract class WComponent internal constructor(
     fun addActualThemeChangedListener(listener: () -> Unit) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.ActualThemeChangedHandler",
-            Abi.IID_ActualThemeChangedHandler,
-            Abi.IFrameworkElement_add_ActualThemeChanged,
+            XamlInterop.IID_ActualThemeChangedHandler,
+            XamlInterop.IFrameworkElement_add_ActualThemeChanged,
         ) { _, _ -> listener() }
         actualThemeChangedTokens.add(listener, token)
     }
@@ -279,7 +280,7 @@ abstract class WComponent internal constructor(
     /** Unsubscribes a listener registered via [addActualThemeChangedListener]. */
     fun removeActualThemeChangedListener(listener: () -> Unit) {
         val token = actualThemeChangedTokens.remove(listener) ?: return
-        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_ActualThemeChanged, token)
+        frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_ActualThemeChanged, token)
     }
 
     /** Event tokens registered via addSizeChangedListener. */
@@ -289,8 +290,8 @@ abstract class WComponent internal constructor(
     fun addSizeChangedListener(listener: () -> Unit) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.SizeChangedHandler",
-            Abi.IID_SizeChangedEventHandler,
-            Abi.IFrameworkElement_add_SizeChanged,
+            XamlInterop.IID_SizeChangedEventHandler,
+            XamlInterop.IFrameworkElement_add_SizeChanged,
         ) { _, _ -> listener() }
         sizeChangedTokens.add(listener, token)
     }
@@ -298,7 +299,7 @@ abstract class WComponent internal constructor(
     /** Unsubscribes a listener registered via [addSizeChangedListener]. */
     fun removeSizeChangedListener(listener: () -> Unit) {
         val token = sizeChangedTokens.remove(listener) ?: return
-        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_SizeChanged, token)
+        frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_SizeChanged, token)
     }
 
     /** Event tokens registered via addLoadedListener. */
@@ -312,8 +313,8 @@ abstract class WComponent internal constructor(
     fun addLoadedListener(listener: () -> Unit) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.LoadedHandler",
-            Abi.IID_RoutedEventHandler,
-            Abi.IFrameworkElement_add_Loaded,
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
         ) { _, _ -> listener() }
         loadedTokens.add(listener, token)
     }
@@ -321,7 +322,7 @@ abstract class WComponent internal constructor(
     /** Unsubscribes a listener registered via [addLoadedListener]. */
     fun removeLoadedListener(listener: () -> Unit) {
         val token = loadedTokens.remove(listener) ?: return
-        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_Loaded, token)
+        frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_Loaded, token)
     }
 
     /**
@@ -332,11 +333,11 @@ abstract class WComponent internal constructor(
         set(value) {
             field = value
             if (value == null) {
-                toolTipServiceStatics.call(Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, null)
+                toolTipServiceStatics.call(XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, null)
             } else {
                 val boxed = PropertyValues.boxString(value)
                 toolTipServiceStatics.call(
-                    Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, boxed.ptr,
+                    XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, boxed.ptr,
                 )
                 boxed.release()
             }
@@ -349,7 +350,7 @@ abstract class WComponent internal constructor(
     fun setToolTip(toolTip: WToolTip) {
         this.toolTip = null
         toolTipServiceStatics.call(
-            Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, toolTip.inspectable.ptr,
+            XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, toolTip.inspectable.ptr,
         )
     }
 
@@ -358,7 +359,7 @@ abstract class WComponent internal constructor(
         set(value) {
             field = value
             uiElement.call(
-                Abi.IUIElement_put_ContextFlyout,
+                XamlInterop.IUIElement_put_ContextFlyout,
                 value?.flyoutBase?.ptr,
             )
         }
@@ -369,8 +370,8 @@ abstract class WComponent internal constructor(
      */
     fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier) {
         val accelerator = createKeyboardAccelerator(key, modifiers)
-        val accelerators = uiElement.getPtr(Abi.IUIElement_get_KeyboardAccelerators)
-        accelerators.call(Abi.IVector_Append, accelerator.ptr)
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
         accelerators.release()
         accelerator.release()
     }
@@ -400,9 +401,9 @@ internal fun createKeyboardAccelerator(
     modifiers: Array<out VirtualKeyModifier>,
 ): ComPtr {
     val accelerator =
-        Activation.composeDefault(Abi.CLS_KeyboardAccelerator, Abi.IID_IKeyboardAcceleratorFactory)
-    accelerator.call(Abi.IKeyboardAccelerator_put_Key, key.native)
+        Activation.composeDefault(XamlInterop.CLS_KeyboardAccelerator, XamlInterop.IID_IKeyboardAcceleratorFactory)
+    accelerator.call(XamlInterop.IKeyboardAccelerator_put_Key, key.native)
     val combined = modifiers.fold(0) { acc, modifier -> acc or modifier.native }
-    if (combined != 0) accelerator.call(Abi.IKeyboardAccelerator_put_Modifiers, combined)
+    if (combined != 0) accelerator.call(XamlInterop.IKeyboardAccelerator_put_Modifiers, combined)
     return accelerator
 }

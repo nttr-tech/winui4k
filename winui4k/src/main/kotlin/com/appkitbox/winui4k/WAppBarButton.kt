@@ -4,7 +4,7 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.CommandBarLabelPosition (per-button label position).
@@ -29,60 +29,60 @@ enum class CommandBarLabelPosition(internal val native: Int) {
  * Flyout work the same way they do on Button.
  */
 class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
-    Activation.composeDefault(Abi.CLS_AppBarButton, Abi.IID_IAppBarButtonFactory),
+    Activation.composeDefault(XamlInterop.CLS_AppBarButton, XamlInterop.IID_IAppBarButtonFactory),
 ) {
     /** The IButton view that holds Flyout (AppBarButton is a Button subclass). */
-    private val button: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IButton)) }
+    private val button: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IButton)) }
 
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */
     private val commandBarElement: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ICommandBarElement))
+        own(inspectable.queryInterface(XamlInterop.IID_ICommandBarElement))
     }
 
     /** The label shown below (or to the right of) the icon (AppBarButton.Label). */
     var label: String
-        get() = inspectable.getString(Abi.IAppBarButton_get_Label)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IAppBarButton_put_Label, h) }
+        get() = inspectable.getString(XamlInterop.IAppBarButton_get_Label)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IAppBarButton_put_Label, h) }
 
     /** The button's icon (AppBarButton.Icon). Creates and passes a SymbolIcon. */
     var icon: Symbol? = null
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IAppBarButton_put_Icon, null)
+                inspectable.call(XamlInterop.IAppBarButton_put_Icon, null)
                 return
             }
             val iconElement = value.createIconElement()
-            inspectable.call(Abi.IAppBarButton_put_Icon, iconElement.ptr)
+            inspectable.call(XamlInterop.IAppBarButton_put_Icon, iconElement.ptr)
             iconElement.release()
         }
 
     /** The label position for just this button (AppBarButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition
-        get() = CommandBarLabelPosition.of(inspectable.getInt(Abi.IAppBarButton_get_LabelPosition))
-        set(value) = inspectable.call(Abi.IAppBarButton_put_LabelPosition, value.native)
+        get() = CommandBarLabelPosition.of(inspectable.getInt(XamlInterop.IAppBarButton_get_LabelPosition))
+        set(value) = inspectable.call(XamlInterop.IAppBarButton_put_LabelPosition, value.native)
 
     /**
      * A shortcut string shown in the tooltip instead of the label
      * (AppBarButton.KeyboardAcceleratorTextOverride). Display only; it doesn't respond to input.
      */
     var keyboardAcceleratorText: String
-        get() = inspectable.getString(Abi.IAppBarButton_get_KeyboardAcceleratorTextOverride)
+        get() = inspectable.getString(XamlInterop.IAppBarButton_get_KeyboardAcceleratorTextOverride)
         set(value) = Hstring.use(value) { h ->
-            inspectable.call(Abi.IAppBarButton_put_KeyboardAcceleratorTextOverride, h)
+            inspectable.call(XamlInterop.IAppBarButton_put_KeyboardAcceleratorTextOverride, h)
         }
 
     /** The flyout opened by clicking the button (Button.Flyout). Pass a WMenuFlyout to get a dropdown menu. */
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            button.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr)
+            button.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /** Whether it's shown in the compact form with the label hidden (ICommandBarElement.IsCompact). */
     var isCompact: Boolean
-        get() = commandBarElement.getBool(Abi.ICommandBarElement_get_IsCompact)
-        set(value) = commandBarElement.putBool(Abi.ICommandBarElement_put_IsCompact, value)
+        get() = commandBarElement.getBool(XamlInterop.ICommandBarElement_get_IsCompact)
+        set(value) = commandBarElement.putBool(XamlInterop.ICommandBarElement_put_IsCompact, value)
 
     init {
         if (label.isNotEmpty()) this.label = label

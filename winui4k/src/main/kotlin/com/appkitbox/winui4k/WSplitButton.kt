@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * A two-part button split between clicking the body and expanding choices: WinUI 3's
@@ -14,18 +14,18 @@ import com.appkitbox.winui4k.internal.winui.Abi
  */
 open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(inspectable) {
     constructor(text: String = "") : this(
-        Activation.composeDefault(Abi.CLS_SplitButton, Abi.IID_ISplitButtonFactory),
+        Activation.composeDefault(XamlInterop.CLS_SplitButton, XamlInterop.IID_ISplitButtonFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
     }
 
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     /** The ISplitButton view holding Flyout / Click (also used by ToggleSplitButton). */
     private val splitButton: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ISplitButton))
+        own(inspectable.queryInterface(XamlInterop.IID_ISplitButton))
     }
 
     /** Click event tokens registered via addActionListener. */
@@ -34,7 +34,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     /** The button's label string (ContentControl.Content). Object-typed, so it's boxed when passed. */
     var text: String
         get() {
-            val boxed = contentControl.getPtrOrNull(Abi.IContentControl_get_Content) ?: return ""
+            val boxed = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return ""
             return try {
                 PropertyValues.unboxString(boxed) ?: ""
             } finally {
@@ -43,7 +43,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         }
         set(value) {
             val boxed = PropertyValues.boxString(value)
-            contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
+            contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
             boxed.release()
         }
 
@@ -51,7 +51,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            splitButton.call(Abi.ISplitButton_put_Flyout, value?.flyoutBase?.ptr)
+            splitButton.call(XamlInterop.ISplitButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /**
@@ -61,8 +61,8 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     fun addActionListener(listener: () -> Unit) {
         val token = splitButton.addEventHandler(
             "WinUI4K.SplitButtonClickHandler",
-            Abi.IID_SplitButtonClickHandler,
-            Abi.ISplitButton_add_Click,
+            XamlInterop.IID_SplitButtonClickHandler,
+            XamlInterop.ISplitButton_add_Click,
         ) { _, _ -> listener() }
         clickTokens.add(listener, token)
     }
@@ -70,6 +70,6 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     /** Unsubscribes a listener registered via [addActionListener]. */
     fun removeActionListener(listener: () -> Unit) {
         val token = clickTokens.remove(listener) ?: return
-        splitButton.removeEventHandler(Abi.ISplitButton_remove_Click, token)
+        splitButton.removeEventHandler(XamlInterop.ISplitButton_remove_Click, token)
     }
 }

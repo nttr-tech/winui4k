@@ -131,7 +131,7 @@ abstract class WComponent internal constructor(internal val inspectable: ComPtr)
 
     internal fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
 
-    internal val uiElement: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IUIElement)) }
+    internal val uiElement: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IUIElement)) }
     // ...
 }
 ```

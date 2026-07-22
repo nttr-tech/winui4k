@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.SliderSnapsTo (where the thumb snaps to).
@@ -58,11 +58,11 @@ enum class TickPlacement(internal val native: Int) {
  * and [addChangeListener] / [removeChangeListener] (ValueChanged).
  */
 class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
-    Activation.composeDefault(Abi.CLS_Slider, Abi.IID_ISliderFactory), // default interface = ISlider
+    Activation.composeDefault(XamlInterop.CLS_Slider, XamlInterop.IID_ISliderFactory), // default interface = ISlider
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum / ValueChanged. */
     private val rangeBase: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IRangeBase))
+        own(inspectable.queryInterface(XamlInterop.IID_IRangeBase))
     }
 
     /** ValueChanged event tokens registered via addChangeListener. */
@@ -70,55 +70,55 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
 
     /** The current value (RangeBase.Value). */
     var value: Double
-        get() = rangeBase.getDouble(Abi.IRangeBase_get_Value)
-        set(value) = rangeBase.call(Abi.IRangeBase_put_Value, value)
+        get() = rangeBase.getDouble(XamlInterop.IRangeBase_get_Value)
+        set(value) = rangeBase.call(XamlInterop.IRangeBase_put_Value, value)
 
     /** The minimum value (RangeBase.Minimum). */
     var minimum: Double
-        get() = rangeBase.getDouble(Abi.IRangeBase_get_Minimum)
-        set(value) = rangeBase.call(Abi.IRangeBase_put_Minimum, value)
+        get() = rangeBase.getDouble(XamlInterop.IRangeBase_get_Minimum)
+        set(value) = rangeBase.call(XamlInterop.IRangeBase_put_Minimum, value)
 
     /** The maximum value (RangeBase.Maximum). */
     var maximum: Double
-        get() = rangeBase.getDouble(Abi.IRangeBase_get_Maximum)
-        set(value) = rangeBase.call(Abi.IRangeBase_put_Maximum, value)
+        get() = rangeBase.getDouble(XamlInterop.IRangeBase_get_Maximum)
+        set(value) = rangeBase.call(XamlInterop.IRangeBase_put_Maximum, value)
 
     /** The step the value moves by while dragging (Slider.StepFrequency). */
     var stepFrequency: Double
-        get() = inspectable.getDouble(Abi.ISlider_get_StepFrequency)
-        set(value) = inspectable.call(Abi.ISlider_put_StepFrequency, value)
+        get() = inspectable.getDouble(XamlInterop.ISlider_get_StepFrequency)
+        set(value) = inspectable.call(XamlInterop.ISlider_put_StepFrequency, value)
 
     /** Where the thumb snaps to (Slider.SnapsTo). */
     var snapsTo: SliderSnapsTo
-        get() = SliderSnapsTo.of(inspectable.getInt(Abi.ISlider_get_SnapsTo))
-        set(value) = inspectable.call(Abi.ISlider_put_SnapsTo, value.native)
+        get() = SliderSnapsTo.of(inspectable.getInt(XamlInterop.ISlider_get_SnapsTo))
+        set(value) = inspectable.call(XamlInterop.ISlider_put_SnapsTo, value.native)
 
     /** The spacing between tick marks (Slider.TickFrequency). */
     var tickFrequency: Double
-        get() = inspectable.getDouble(Abi.ISlider_get_TickFrequency)
-        set(value) = inspectable.call(Abi.ISlider_put_TickFrequency, value)
+        get() = inspectable.getDouble(XamlInterop.ISlider_get_TickFrequency)
+        set(value) = inspectable.call(XamlInterop.ISlider_put_TickFrequency, value)
 
     /** Where tick marks are drawn (Slider.TickPlacement). */
     var tickPlacement: TickPlacement
-        get() = TickPlacement.of(inspectable.getInt(Abi.ISlider_get_TickPlacement))
-        set(value) = inspectable.call(Abi.ISlider_put_TickPlacement, value.native)
+        get() = TickPlacement.of(inspectable.getInt(XamlInterop.ISlider_get_TickPlacement))
+        set(value) = inspectable.call(XamlInterop.ISlider_put_TickPlacement, value.native)
 
     /** The slider's orientation (Slider.Orientation). */
     var orientation: Orientation
-        get() = Orientation.of(inspectable.getInt(Abi.ISlider_get_Orientation))
-        set(value) = inspectable.call(Abi.ISlider_put_Orientation, value.native)
+        get() = Orientation.of(inspectable.getInt(XamlInterop.ISlider_get_Orientation))
+        set(value) = inspectable.call(XamlInterop.ISlider_put_Orientation, value.native)
 
     /** Whether the increasing direction is reversed (Slider.IsDirectionReversed). */
     var isDirectionReversed: Boolean
-        get() = inspectable.getBool(Abi.ISlider_get_IsDirectionReversed)
-        set(value) = inspectable.putBool(Abi.ISlider_put_IsDirectionReversed, value)
+        get() = inspectable.getBool(XamlInterop.ISlider_get_IsDirectionReversed)
+        set(value) = inspectable.putBool(XamlInterop.ISlider_put_IsDirectionReversed, value)
 
     /** The heading above the slider (Slider.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.ISlider_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.ISlider_put_Header, boxed.ptr)
             boxed.release()
         }
 
@@ -135,11 +135,11 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
     fun addChangeListener(listener: (Double) -> Unit) {
         val token = rangeBase.addEventHandler(
             "WinUI4K.ValueChangedHandler",
-            Abi.IID_RangeBaseValueChangedEventHandler,
-            Abi.IRangeBase_add_ValueChanged,
+            XamlInterop.IID_RangeBaseValueChangedEventHandler,
+            XamlInterop.IRangeBase_add_ValueChanged,
         ) { _, args ->
             // args is a RangeBaseValueChangedEventArgs; read NewValue and pass it along
-            listener(ComPtr(args).getDouble(Abi.IRangeBaseValueChangedEventArgs_get_NewValue))
+            listener(ComPtr(args).getDouble(XamlInterop.IRangeBaseValueChangedEventArgs_get_NewValue))
         }
         changeTokens.add(listener, token)
     }
@@ -147,6 +147,6 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
     /** Unsubscribes a listener registered via [addChangeListener]. */
     fun removeChangeListener(listener: (Double) -> Unit) {
         val token = changeTokens.remove(listener) ?: return
-        rangeBase.removeEventHandler(Abi.IRangeBase_remove_ValueChanged, token)
+        rangeBase.removeEventHandler(XamlInterop.IRangeBase_remove_ValueChanged, token)
     }
 }

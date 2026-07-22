@@ -3,7 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.
@@ -48,34 +48,34 @@ abstract class WFlyoutBase internal constructor(
     internal fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
 
     /** The FlyoutBase view required by Button.put_Flyout / ShowAt and the like. */
-    internal val flyoutBase: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IFlyoutBase)) }
+    internal val flyoutBase: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IFlyoutBase)) }
 
     /** Where it opens (FlyoutBase.Placement). */
     var placement: FlyoutPlacement
-        get() = FlyoutPlacement.of(flyoutBase.getInt(Abi.IFlyoutBase_get_Placement))
-        set(value) = flyoutBase.call(Abi.IFlyoutBase_put_Placement, value.native)
+        get() = FlyoutPlacement.of(flyoutBase.getInt(XamlInterop.IFlyoutBase_get_Placement))
+        set(value) = flyoutBase.call(XamlInterop.IFlyoutBase_put_Placement, value.native)
 
     val isOpen: Boolean
-        get() = flyoutBase.getBool(Abi.IFlyoutBase_get_IsOpen)
+        get() = flyoutBase.getBool(XamlInterop.IFlyoutBase_get_IsOpen)
 
     /** Opens relative to [anchor] (FlyoutBase.ShowAt). Only usable on an already-visible element. */
     fun showAt(anchor: WComponent) {
-        flyoutBase.call(Abi.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr)
+        flyoutBase.call(XamlInterop.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr)
     }
 
     fun hide() {
-        flyoutBase.call(Abi.IFlyoutBase_Hide)
+        flyoutBase.call(XamlInterop.IFlyoutBase_Hide)
     }
 }
 
 /** JPopupMenu-like: WinUI 3's Flyout. Set on WButton.flyout to open it on click. */
 class WFlyout(content: WComponent? = null) : WFlyoutBase(
-    Activation.composeDefault(Abi.CLS_Flyout, Abi.IID_IFlyoutFactory),
+    Activation.composeDefault(XamlInterop.CLS_Flyout, XamlInterop.IID_IFlyoutFactory),
 ) {
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IFlyout_put_Content, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.IFlyout_put_Content, value?.uiElement?.ptr)
         }
 
     init {

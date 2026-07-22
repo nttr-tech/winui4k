@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.ContentDialogResult (which button it closed with).
@@ -57,10 +57,10 @@ enum class ContentDialogButton(internal val native: Int) {
  * [show] opens it, and the button it closed with ([ContentDialogResult]) is delivered via a callback.
  */
 class WContentDialog(title: String = "", content: WComponent? = null) : WControl(
-    Activation.composeDefault(Abi.CLS_ContentDialog, Abi.IID_IContentDialogFactory), // default interface = IContentDialog
+    Activation.composeDefault(XamlInterop.CLS_ContentDialog, XamlInterop.IID_IContentDialogFactory), // default interface = IContentDialog
 ) {
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     /** The heading at the top of the dialog (ContentDialog.Title). Object-typed, so a boxed string is passed. */
@@ -68,7 +68,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IContentDialog_put_Title, boxed.ptr)
+            inspectable.call(XamlInterop.IContentDialog_put_Title, boxed.ptr)
             boxed.release()
         }
 
@@ -77,40 +77,40 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
         set(value) {
             field = value
             contentControl.call(
-                Abi.IContentControl_put_Content,
+                XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
 
     /** The primary button's label. Left empty, the button itself isn't shown. */
     var primaryButtonText: String
-        get() = inspectable.getString(Abi.IContentDialog_get_PrimaryButtonText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IContentDialog_put_PrimaryButtonText, h) }
+        get() = inspectable.getString(XamlInterop.IContentDialog_get_PrimaryButtonText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IContentDialog_put_PrimaryButtonText, h) }
 
     /** The secondary button's label. Left empty, the button itself isn't shown. */
     var secondaryButtonText: String
-        get() = inspectable.getString(Abi.IContentDialog_get_SecondaryButtonText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IContentDialog_put_SecondaryButtonText, h) }
+        get() = inspectable.getString(XamlInterop.IContentDialog_get_SecondaryButtonText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IContentDialog_put_SecondaryButtonText, h) }
 
     /** The close button's label. Left empty, the button itself isn't shown. */
     var closeButtonText: String
-        get() = inspectable.getString(Abi.IContentDialog_get_CloseButtonText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IContentDialog_put_CloseButtonText, h) }
+        get() = inspectable.getString(XamlInterop.IContentDialog_get_CloseButtonText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IContentDialog_put_CloseButtonText, h) }
 
     /** Whether the primary button is pressable (ContentDialog.IsPrimaryButtonEnabled). */
     var isPrimaryButtonEnabled: Boolean
-        get() = inspectable.getBool(Abi.IContentDialog_get_IsPrimaryButtonEnabled)
-        set(value) = inspectable.putBool(Abi.IContentDialog_put_IsPrimaryButtonEnabled, value)
+        get() = inspectable.getBool(XamlInterop.IContentDialog_get_IsPrimaryButtonEnabled)
+        set(value) = inspectable.putBool(XamlInterop.IContentDialog_put_IsPrimaryButtonEnabled, value)
 
     /** Whether the secondary button is pressable (ContentDialog.IsSecondaryButtonEnabled). */
     var isSecondaryButtonEnabled: Boolean
-        get() = inspectable.getBool(Abi.IContentDialog_get_IsSecondaryButtonEnabled)
-        set(value) = inspectable.putBool(Abi.IContentDialog_put_IsSecondaryButtonEnabled, value)
+        get() = inspectable.getBool(XamlInterop.IContentDialog_get_IsSecondaryButtonEnabled)
+        set(value) = inspectable.putBool(XamlInterop.IContentDialog_put_IsSecondaryButtonEnabled, value)
 
     /** The default button pressed by the Enter key (ContentDialog.DefaultButton). Also gets emphasized styling. */
     var defaultButton: ContentDialogButton
-        get() = ContentDialogButton.of(inspectable.getInt(Abi.IContentDialog_get_DefaultButton))
-        set(value) = inspectable.call(Abi.IContentDialog_put_DefaultButton, value.native)
+        get() = ContentDialogButton.of(inspectable.getInt(XamlInterop.IContentDialog_get_DefaultButton))
+        set(value) = inspectable.call(XamlInterop.IContentDialog_put_DefaultButton, value.native)
 
     init {
         if (title.isNotEmpty()) this.title = title
@@ -123,8 +123,8 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
      */
     fun show(owner: WComponent, onClosed: ((ContentDialogResult) -> Unit)? = null) {
         // WinUI 3's ContentDialog requires the XamlRoot to show in
-        val root = owner.uiElement.getPtr(Abi.IUIElement_get_XamlRoot)
-        uiElement.call(Abi.IUIElement_put_XamlRoot, root.ptr)
+        val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
+        uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
         root.release()
 
         if (onClosed != null) {
@@ -132,20 +132,20 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
             var token = 0L
             token = inspectable.addEventHandler(
                 "WinUI4K.ContentDialogClosedHandler",
-                Abi.IID_ContentDialogClosedHandler,
-                Abi.IContentDialog_add_Closed,
+                XamlInterop.IID_ContentDialogClosedHandler,
+                XamlInterop.IContentDialog_add_Closed,
             ) { _, args ->
-                inspectable.removeEventHandler(Abi.IContentDialog_remove_Closed, token)
-                onClosed(ContentDialogResult.of(ComPtr(args).getInt(Abi.IContentDialogClosedEventArgs_get_Result)))
+                inspectable.removeEventHandler(XamlInterop.IContentDialog_remove_Closed, token)
+                onClosed(ContentDialogResult.of(ComPtr(args).getInt(XamlInterop.IContentDialogClosedEventArgs_get_Result)))
             }
         }
 
         // Completion (= the dialog closing) is received via the Closed event, so the async object isn't used
-        inspectable.getPtr(Abi.IContentDialog_ShowAsync).release()
+        inspectable.getPtr(XamlInterop.IContentDialog_ShowAsync).release()
     }
 
     /** Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE]. */
     fun hide() {
-        inspectable.call(Abi.IContentDialog_Hide)
+        inspectable.call(XamlInterop.IContentDialog_Hide)
     }
 }

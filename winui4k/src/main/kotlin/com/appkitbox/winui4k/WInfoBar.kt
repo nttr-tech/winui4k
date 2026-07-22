@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.InfoBarSeverity (the color scheme and icon for a message's severity).
@@ -40,7 +40,7 @@ enum class InfoBarSeverity(internal val native: Int) {
  * [isClosable] close (x) button and an [actionButton] action button.
  */
 class WInfoBar : WControl(
-    Activation.composeDefault(Abi.CLS_InfoBar, Abi.IID_IInfoBarFactory), // default interface = IInfoBar
+    Activation.composeDefault(XamlInterop.CLS_InfoBar, XamlInterop.IID_IInfoBarFactory), // default interface = IInfoBar
 ) {
     /** CloseButtonClick event tokens registered via addCloseButtonListener. */
     private val closeButtonTokens = ListenerTokens<() -> Unit>()
@@ -52,33 +52,33 @@ class WInfoBar : WControl(
      * Reverts to false when the close (x) button is clicked or it's closed from code.
      */
     var isOpen: Boolean
-        get() = inspectable.getBool(Abi.IInfoBar_get_IsOpen)
-        set(value) = inspectable.putBool(Abi.IInfoBar_put_IsOpen, value)
+        get() = inspectable.getBool(XamlInterop.IInfoBar_get_IsOpen)
+        set(value) = inspectable.putBool(XamlInterop.IInfoBar_put_IsOpen, value)
 
     /** The heading (InfoBar.Title). Shown in bold at the start. */
     var title: String
-        get() = inspectable.getString(Abi.IInfoBar_get_Title)
-        set(value) = Hstring.use(value) { hstring -> inspectable.call(Abi.IInfoBar_put_Title, hstring) }
+        get() = inspectable.getString(XamlInterop.IInfoBar_get_Title)
+        set(value) = Hstring.use(value) { hstring -> inspectable.call(XamlInterop.IInfoBar_put_Title, hstring) }
 
     /** The body text (InfoBar.Message). */
     var message: String
-        get() = inspectable.getString(Abi.IInfoBar_get_Message)
-        set(value) = Hstring.use(value) { hstring -> inspectable.call(Abi.IInfoBar_put_Message, hstring) }
+        get() = inspectable.getString(XamlInterop.IInfoBar_get_Message)
+        set(value) = Hstring.use(value) { hstring -> inspectable.call(XamlInterop.IInfoBar_put_Message, hstring) }
 
     /** The severity (InfoBar.Severity). Changes the color scheme and default icon. */
     var severity: InfoBarSeverity
-        get() = InfoBarSeverity.of(inspectable.getInt(Abi.IInfoBar_get_Severity))
-        set(value) = inspectable.call(Abi.IInfoBar_put_Severity, value.native)
+        get() = InfoBarSeverity.of(inspectable.getInt(XamlInterop.IInfoBar_get_Severity))
+        set(value) = inspectable.call(XamlInterop.IInfoBar_put_Severity, value.native)
 
     /** Whether the default icon for the severity is shown (InfoBar.IsIconVisible). */
     var isIconVisible: Boolean
-        get() = inspectable.getBool(Abi.IInfoBar_get_IsIconVisible)
-        set(value) = inspectable.putBool(Abi.IInfoBar_put_IsIconVisible, value)
+        get() = inspectable.getBool(XamlInterop.IInfoBar_get_IsIconVisible)
+        set(value) = inspectable.putBool(XamlInterop.IInfoBar_put_IsIconVisible, value)
 
     /** Whether the close (x) button is shown (InfoBar.IsClosable, default true). */
     var isClosable: Boolean
-        get() = inspectable.getBool(Abi.IInfoBar_get_IsClosable)
-        set(value) = inspectable.putBool(Abi.IInfoBar_put_IsClosable, value)
+        get() = inspectable.getBool(XamlInterop.IInfoBar_get_IsClosable)
+        set(value) = inspectable.putBool(XamlInterop.IInfoBar_put_IsClosable, value)
 
     /**
      * An action button placed to the right of the body text (InfoBar.ActionButton).
@@ -89,11 +89,11 @@ class WInfoBar : WControl(
         set(value) {
             actionButtonComponent = value
             if (value == null) {
-                inspectable.call(Abi.IInfoBar_put_ActionButton, null)
+                inspectable.call(XamlInterop.IInfoBar_put_ActionButton, null)
             } else {
-                val buttonBase = value.inspectable.queryInterface(Abi.IID_IButtonBase)
+                val buttonBase = value.inspectable.queryInterface(XamlInterop.IID_IButtonBase)
                 try {
-                    inspectable.call(Abi.IInfoBar_put_ActionButton, buttonBase.ptr)
+                    inspectable.call(XamlInterop.IInfoBar_put_ActionButton, buttonBase.ptr)
                 } finally {
                     buttonBase.release()
                 }
@@ -104,15 +104,15 @@ class WInfoBar : WControl(
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IInfoBar_put_Content, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.IInfoBar_put_Content, value?.uiElement?.ptr)
         }
 
     /** Subscribes to clicks on the close (x) button (InfoBar.CloseButtonClick). */
     fun addCloseButtonListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarCloseButtonClickHandler",
-            Abi.IID_InfoBarCloseButtonClickHandler,
-            Abi.IInfoBar_add_CloseButtonClick,
+            XamlInterop.IID_InfoBarCloseButtonClickHandler,
+            XamlInterop.IInfoBar_add_CloseButtonClick,
         ) { _, _ -> listener() }
         closeButtonTokens.add(listener, token)
     }
@@ -120,6 +120,6 @@ class WInfoBar : WControl(
     /** Unsubscribes a listener registered via [addCloseButtonListener]. */
     fun removeCloseButtonListener(listener: () -> Unit) {
         val token = closeButtonTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IInfoBar_remove_CloseButtonClick, token)
+        inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_CloseButtonClick, token)
     }
 }

@@ -5,7 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JToggleButton-like: WinUI 3's Primitives.ToggleButton.
@@ -16,14 +17,14 @@ import com.appkitbox.winui4k.internal.winui.Abi
  */
 open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
     constructor(text: String = "") : this(
-        Activation.composeDefault(Abi.CLS_ToggleButton, Abi.IID_IToggleButtonFactory),
+        Activation.composeDefault(XamlInterop.CLS_ToggleButton, XamlInterop.IID_IToggleButtonFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
     }
 
     /** The IToggleButton view holding IsChecked / IsThreeState / the Checked-family events. */
     private val toggleButton: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IToggleButton))
+        own(inspectable.queryInterface(XamlInterop.IID_IToggleButton))
     }
 
     /** Event tokens registered via addItemListener (3 per listener: Checked / Unchecked / Indeterminate). */
@@ -31,14 +32,14 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
 
     private companion object {
         val ADD_SLOTS = intArrayOf(
-            Abi.IToggleButton_add_Checked,
-            Abi.IToggleButton_add_Unchecked,
-            Abi.IToggleButton_add_Indeterminate,
+            XamlInterop.IToggleButton_add_Checked,
+            XamlInterop.IToggleButton_add_Unchecked,
+            XamlInterop.IToggleButton_add_Indeterminate,
         )
         val REMOVE_SLOTS = intArrayOf(
-            Abi.IToggleButton_remove_Checked,
-            Abi.IToggleButton_remove_Unchecked,
-            Abi.IToggleButton_remove_Indeterminate,
+            XamlInterop.IToggleButton_remove_Checked,
+            XamlInterop.IToggleButton_remove_Unchecked,
+            XamlInterop.IToggleButton_remove_Indeterminate,
         )
     }
 
@@ -48,7 +49,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      */
     var isChecked: Boolean?
         get() {
-            val boxed = toggleButton.getPtrOrNull(Abi.IToggleButton_get_IsChecked) ?: return null
+            val boxed = toggleButton.getPtrOrNull(XamlInterop.IToggleButton_get_IsChecked) ?: return null
             return try {
                 PropertyValues.unboxBool(boxed)
             } finally {
@@ -57,20 +58,20 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         }
         set(value) {
             if (value == null) {
-                toggleButton.call(Abi.IToggleButton_put_IsChecked, null)
+                toggleButton.call(XamlInterop.IToggleButton_put_IsChecked, null)
                 return
             }
             val boxed = PropertyValues.boxBool(value)
-            val reference = boxed.queryInterface(Abi.IID_IReference_Boolean)
-            toggleButton.call(Abi.IToggleButton_put_IsChecked, reference.ptr)
+            val reference = boxed.queryInterface(FoundationInterop.IID_IReference_Boolean)
+            toggleButton.call(XamlInterop.IToggleButton_put_IsChecked, reference.ptr)
             reference.release()
             boxed.release()
         }
 
     /** Whether clicking cycles through true → null (indeterminate) → false (ToggleButton.IsThreeState). */
     var isThreeState: Boolean
-        get() = toggleButton.getBool(Abi.IToggleButton_get_IsThreeState)
-        set(value) = toggleButton.putBool(Abi.IToggleButton_put_IsThreeState, value)
+        get() = toggleButton.getBool(XamlInterop.IToggleButton_get_IsThreeState)
+        set(value) = toggleButton.putBool(XamlInterop.IToggleButton_put_IsThreeState, value)
 
     /**
      * ItemListener-like: subscribes to changes in the checked state. The listener receives
@@ -80,7 +81,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     fun addItemListener(listener: (Boolean?) -> Unit) {
         val tokens = LongArray(ADD_SLOTS.size) { i ->
             toggleButton.addEventHandler(
-                "WinUI4K.ToggleHandler", Abi.IID_RoutedEventHandler, ADD_SLOTS[i],
+                "WinUI4K.ToggleHandler", XamlInterop.IID_RoutedEventHandler, ADD_SLOTS[i],
             ) { _, _ -> listener(isChecked) }
         }
         itemTokens.addLast(listener to tokens)

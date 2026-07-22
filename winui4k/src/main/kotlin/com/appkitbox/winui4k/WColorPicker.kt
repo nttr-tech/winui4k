@@ -4,7 +4,7 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -31,7 +31,7 @@ enum class ColorSpectrumShape(internal val native: Int) {
  * and [addChangeListener] / [removeChangeListener] (ColorChanged).
  */
 class WColorPicker : WControl(
-    Activation.composeDefault(Abi.CLS_ColorPicker, Abi.IID_IColorPickerFactory),
+    Activation.composeDefault(XamlInterop.CLS_ColorPicker, XamlInterop.IID_IColorPickerFactory),
 ) {
     /** ColorChanged event tokens registered via addChangeListener. */
     private val changeTokens = ListenerTokens<(WColor) -> Unit>()
@@ -39,36 +39,36 @@ class WColorPicker : WControl(
     /** The selected color (ColorPicker.Color). A Windows.UI.Color struct is passed by value. */
     var color: WColor
         get() {
-            val (a, r, g, b) = XamlStructs.getColor(inspectable, Abi.IColorPicker_get_Color)
+            val (a, r, g, b) = XamlStructs.getColor(inspectable, XamlInterop.IColorPicker_get_Color)
             return WColor(r, g, b, a)
         }
         set(value) = XamlStructs.putColor(
-            inspectable, Abi.IColorPicker_put_Color, value.alpha, value.red, value.green, value.blue,
+            inspectable, XamlInterop.IColorPicker_put_Color, value.alpha, value.red, value.green, value.blue,
         )
 
     /** Whether alpha (opacity) can be adjusted (ColorPicker.IsAlphaEnabled). */
     var isAlphaEnabled: Boolean
-        get() = inspectable.getBool(Abi.IColorPicker_get_IsAlphaEnabled)
-        set(value) = inspectable.putBool(Abi.IColorPicker_put_IsAlphaEnabled, value)
+        get() = inspectable.getBool(XamlInterop.IColorPicker_get_IsAlphaEnabled)
+        set(value) = inspectable.putBool(XamlInterop.IColorPicker_put_IsAlphaEnabled, value)
 
     /** Whether to show the "more" button that expands the text input fields (ColorPicker.IsMoreButtonVisible). */
     var isMoreButtonVisible: Boolean = false
         set(value) {
             field = value
-            inspectable.putBool(Abi.IColorPicker_put_IsMoreButtonVisible, value)
+            inspectable.putBool(XamlInterop.IColorPicker_put_IsMoreButtonVisible, value)
         }
 
     /** Whether to show the hex input field (ColorPicker.IsHexInputVisible). */
     var isHexInputVisible: Boolean = true
         set(value) {
             field = value
-            inspectable.putBool(Abi.IColorPicker_put_IsHexInputVisible, value)
+            inspectable.putBool(XamlInterop.IColorPicker_put_IsHexInputVisible, value)
         }
 
     /** The spectrum's shape (ColorPicker.ColorSpectrumShape). */
     var spectrumShape: ColorSpectrumShape
-        get() = ColorSpectrumShape.of(inspectable.getInt(Abi.IColorPicker_get_ColorSpectrumShape))
-        set(value) = inspectable.call(Abi.IColorPicker_put_ColorSpectrumShape, value.native)
+        get() = ColorSpectrumShape.of(inspectable.getInt(XamlInterop.IColorPicker_get_ColorSpectrumShape))
+        set(value) = inspectable.call(XamlInterop.IColorPicker_put_ColorSpectrumShape, value.native)
 
     /**
      * ChangeListener-like: subscribes to color changes. The listener receives the new color.
@@ -77,11 +77,11 @@ class WColorPicker : WControl(
     fun addChangeListener(listener: (WColor) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ColorChangedHandler",
-            Abi.IID_ColorPickerColorChangedHandler,
-            Abi.IColorPicker_add_ColorChanged,
+            XamlInterop.IID_ColorPickerColorChangedHandler,
+            XamlInterop.IColorPicker_add_ColorChanged,
         ) { _, args ->
             // args is a ColorChangedEventArgs; read NewColor (an out struct) and pass it along
-            val (a, r, g, b) = XamlStructs.getColor(ComPtr(args), Abi.IColorChangedEventArgs_get_NewColor)
+            val (a, r, g, b) = XamlStructs.getColor(ComPtr(args), XamlInterop.IColorChangedEventArgs_get_NewColor)
             listener(WColor(r, g, b, a))
         }
         changeTokens.add(listener, token)
@@ -90,6 +90,6 @@ class WColorPicker : WControl(
     /** Unsubscribes a listener registered via [addChangeListener]. */
     fun removeChangeListener(listener: (WColor) -> Unit) {
         val token = changeTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IColorPicker_remove_ColorChanged, token)
+        inspectable.removeEventHandler(XamlInterop.IColorPicker_remove_ColorChanged, token)
     }
 }

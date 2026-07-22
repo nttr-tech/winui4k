@@ -39,9 +39,9 @@ internal object Dispatcher {
      */
     fun capture() {
         if (queue != null) return
-        val statics = Activation.factory(Abi.CLS_DispatcherQueue, Abi.IID_IDispatcherQueueStatics)
+        val statics = Activation.factory(WindowingInterop.CLS_DispatcherQueue, WindowingInterop.IID_IDispatcherQueueStatics)
         try {
-            queue = statics.getPtr(Abi.IDispatcherQueueStatics_GetForCurrentThread)
+            queue = statics.getPtr(WindowingInterop.IDispatcherQueueStatics_GetForCurrentThread)
         } finally {
             statics.release()
         }
@@ -72,7 +72,7 @@ internal object Dispatcher {
     private val enqueueHandler by lazy {
         KComObject("WinUI4K.DispatcherQueueHandler", inspectable = false)
             .addInterface(
-                Abi.IID_DispatcherQueueHandler,
+                WindowingInterop.IID_DispatcherQueueHandler,
                 listOf(
                     KComObject.Method(DESC_HANDLER) {
                         pending.poll()?.invoke()
@@ -88,7 +88,7 @@ internal object Dispatcher {
         pending.add(block)
         val enqueued = Ffi.backend.withScope { scope ->
             val out = scope.allocate(1, 1) // TryEnqueue(handler, out boolean)
-            queue.call(Abi.IDispatcherQueue_TryEnqueue, enqueueHandler.primary, out)
+            queue.call(WindowingInterop.IDispatcherQueue_TryEnqueue, enqueueHandler.primary, out)
             Ffi.backend.memory.getByte(out, 0).toInt() != 0
         }
         if (!enqueued) {
@@ -112,13 +112,13 @@ internal object Dispatcher {
         runOnDispatchThread {
             if (done.get()) return@runOnDispatchThread
             val queue = checkNotNull(this.queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
-            val timer = queue.getPtr(Abi.IDispatcherQueue_CreateTimer)
+            val timer = queue.getPtr(WindowingInterop.IDispatcherQueue_CreateTimer)
             // TimeSpan is an int64 in 100ns units, passed by value
-            timer.call(Abi.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)
-            timer.putBool(Abi.IDispatcherQueueTimer_put_IsRepeating, false)
+            timer.call(WindowingInterop.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)
+            timer.putBool(WindowingInterop.IDispatcherQueueTimer_put_IsRepeating, false)
             val tickHandler = KComObject("WinUI4K.DispatcherQueueTimerTickHandler", inspectable = false)
                 .addInterface(
-                    Abi.IID_DispatcherQueueTimerTickHandler,
+                    WindowingInterop.IID_DispatcherQueueTimerTickHandler,
                     listOf(
                         KComObject.Method(DESC_TICK_HANDLER) {
                             if (done.compareAndSet(false, true)) {
@@ -132,13 +132,13 @@ internal object Dispatcher {
             try {
                 Ffi.backend.withScope { scope ->
                     val token = scope.allocate(8) // EventRegistrationToken (int64)
-                    timer.call(Abi.IDispatcherQueueTimer_add_Tick, tickHandler.primary, token)
+                    timer.call(WindowingInterop.IDispatcherQueueTimer_add_Tick, tickHandler.primary, token)
                 }
             } finally {
                 tickHandler.release() // add_Tick holds a reference to it; it's reclaimed by Release when the timer is disposed
             }
             timerRef.set(timer)
-            timer.call(Abi.IDispatcherQueueTimer_Start)
+            timer.call(WindowingInterop.IDispatcherQueueTimer_Start)
         }
         return AutoCloseable {
             if (done.compareAndSet(false, true)) {
@@ -150,7 +150,7 @@ internal object Dispatcher {
 
     private fun stopAndRelease(timerRef: AtomicReference<ComPtr?>) {
         val timer = timerRef.getAndSet(null) ?: return
-        timer.call(Abi.IDispatcherQueueTimer_Stop)
+        timer.call(WindowingInterop.IDispatcherQueueTimer_Stop)
         timer.release()
     }
 

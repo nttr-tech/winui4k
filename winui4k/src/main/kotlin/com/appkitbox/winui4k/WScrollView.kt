@@ -6,7 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.ScrollingScrollBarVisibility (how ScrollView shows its scrollbars).
@@ -79,7 +79,7 @@ enum class ScrollingZoomMode(internal val native: Int) {
  * [scrollTo] / [scrollBy] methods.
  */
 class WScrollView(content: WComponent? = null) : WControl(
-    Activation.composeDefault(Abi.CLS_ScrollView, Abi.IID_IScrollViewFactory), // default interface = IScrollView
+    Activation.composeDefault(XamlInterop.CLS_ScrollView, XamlInterop.IID_IScrollViewFactory), // default interface = IScrollView
 ) {
     /** ViewChanged event tokens registered via addViewChangedListener. */
     private val viewChangedTokens = ListenerTokens<() -> Unit>()
@@ -90,69 +90,69 @@ class WScrollView(content: WComponent? = null) : WControl(
      * (only touch this after Loaded).
      */
     internal val scrollPresenter: ComPtr?
-        get() = inspectable.getPtrOrNull(Abi.IScrollView_get_ScrollPresenter)
+        get() = inspectable.getPtrOrNull(XamlInterop.IScrollView_get_ScrollPresenter)
 
     /** The content to scroll (ScrollView.Content). */
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IScrollView_put_Content, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.IScrollView_put_Content, value?.uiElement?.ptr)
         }
 
     /** How the horizontal scrollbar is shown (ScrollView.HorizontalScrollBarVisibility, default AUTO). */
     var horizontalScrollBarVisibility: ScrollingScrollBarVisibility
-        get() = ScrollingScrollBarVisibility.of(inspectable.getInt(Abi.IScrollView_get_HorizontalScrollBarVisibility))
-        set(value) = inspectable.call(Abi.IScrollView_put_HorizontalScrollBarVisibility, value.native)
+        get() = ScrollingScrollBarVisibility.of(inspectable.getInt(XamlInterop.IScrollView_get_HorizontalScrollBarVisibility))
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_HorizontalScrollBarVisibility, value.native)
 
     /** How the vertical scrollbar is shown (ScrollView.VerticalScrollBarVisibility, default AUTO). */
     var verticalScrollBarVisibility: ScrollingScrollBarVisibility
-        get() = ScrollingScrollBarVisibility.of(inspectable.getInt(Abi.IScrollView_get_VerticalScrollBarVisibility))
-        set(value) = inspectable.call(Abi.IScrollView_put_VerticalScrollBarVisibility, value.native)
+        get() = ScrollingScrollBarVisibility.of(inspectable.getInt(XamlInterop.IScrollView_get_VerticalScrollBarVisibility))
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_VerticalScrollBarVisibility, value.native)
 
     /**
      * Which direction the content is allowed to expand in (ScrollView.ContentOrientation,
      * default VERTICAL = vertical scrolling).
      */
     var contentOrientation: ScrollingContentOrientation
-        get() = ScrollingContentOrientation.of(inspectable.getInt(Abi.IScrollView_get_ContentOrientation))
-        set(value) = inspectable.call(Abi.IScrollView_put_ContentOrientation, value.native)
+        get() = ScrollingContentOrientation.of(inspectable.getInt(XamlInterop.IScrollView_get_ContentOrientation))
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_ContentOrientation, value.native)
 
     /** Whether zooming is allowed (ScrollView.ZoomMode, default DISABLED). */
     var zoomMode: ScrollingZoomMode
-        get() = ScrollingZoomMode.of(inspectable.getInt(Abi.IScrollView_get_ZoomMode))
-        set(value) = inspectable.call(Abi.IScrollView_put_ZoomMode, value.native)
+        get() = ScrollingZoomMode.of(inspectable.getInt(XamlInterop.IScrollView_get_ZoomMode))
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_ZoomMode, value.native)
 
     /** The minimum zoom factor (ScrollView.MinZoomFactor, default 0.1). */
     var minZoomFactor: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_MinZoomFactor)
-        set(value) = inspectable.call(Abi.IScrollView_put_MinZoomFactor, value)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_MinZoomFactor)
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_MinZoomFactor, value)
 
     /** The maximum zoom factor (ScrollView.MaxZoomFactor, default 10.0). */
     var maxZoomFactor: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_MaxZoomFactor)
-        set(value) = inspectable.call(Abi.IScrollView_put_MaxZoomFactor, value)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_MaxZoomFactor)
+        set(value) = inspectable.call(XamlInterop.IScrollView_put_MaxZoomFactor, value)
 
     /** The current horizontal scroll position (ScrollView.HorizontalOffset). */
     val horizontalOffset: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_HorizontalOffset)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_HorizontalOffset)
 
     /** The current vertical scroll position (ScrollView.VerticalOffset). */
     val verticalOffset: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_VerticalOffset)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_VerticalOffset)
 
     /** The scrollable width = content width - viewport width (ScrollView.ScrollableWidth). */
     val scrollableWidth: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_ScrollableWidth)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ScrollableWidth)
 
     /** The scrollable height = content height - viewport height (ScrollView.ScrollableHeight). */
     val scrollableHeight: Double
-        get() = inspectable.getDouble(Abi.IScrollView_get_ScrollableHeight)
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ScrollableHeight)
 
     /** Animates the scroll position to an absolute position (ScrollView.ScrollTo). */
     fun scrollTo(horizontalOffset: Double, verticalOffset: Double) {
         Ffi.backend.withScope { scope ->
             val correlationId = scope.allocate(4) // out int correlationId (unused)
-            inspectable.call(Abi.IScrollView_ScrollTo, horizontalOffset, verticalOffset, correlationId)
+            inspectable.call(XamlInterop.IScrollView_ScrollTo, horizontalOffset, verticalOffset, correlationId)
         }
     }
 
@@ -160,7 +160,7 @@ class WScrollView(content: WComponent? = null) : WControl(
     fun scrollBy(horizontalDelta: Double, verticalDelta: Double) {
         Ffi.backend.withScope { scope ->
             val correlationId = scope.allocate(4) // out int correlationId (unused)
-            inspectable.call(Abi.IScrollView_ScrollBy, horizontalDelta, verticalDelta, correlationId)
+            inspectable.call(XamlInterop.IScrollView_ScrollBy, horizontalDelta, verticalDelta, correlationId)
         }
     }
 
@@ -171,8 +171,8 @@ class WScrollView(content: WComponent? = null) : WControl(
     fun addViewChangedListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewViewChangedHandler",
-            Abi.IID_ScrollViewViewChangedHandler,
-            Abi.IScrollView_add_ViewChanged,
+            XamlInterop.IID_ScrollViewViewChangedHandler,
+            XamlInterop.IScrollView_add_ViewChanged,
         ) { _, _ -> listener() }
         viewChangedTokens.add(listener, token)
     }
@@ -180,7 +180,7 @@ class WScrollView(content: WComponent? = null) : WControl(
     /** Unsubscribes a listener registered via [addViewChangedListener]. */
     fun removeViewChangedListener(listener: () -> Unit) {
         val token = viewChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IScrollView_remove_ViewChanged, token)
+        inspectable.removeEventHandler(XamlInterop.IScrollView_remove_ViewChanged, token)
     }
 
     init {

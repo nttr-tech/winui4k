@@ -13,7 +13,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.AutoSuggestionBoxTextChangeReason (why the text changed).
@@ -44,11 +45,11 @@ enum class TextChangeReason(internal val native: Int) {
  * [addSuggestionChosenListener] (a suggestion getting highlighted).
  */
 class WAutoSuggestBox(placeholder: String = "") : WControl(
-    Activation.activate(Abi.CLS_AutoSuggestBox, Abi.IID_IAutoSuggestBox),
+    Activation.activate(XamlInterop.CLS_AutoSuggestBox, XamlInterop.IID_IAutoSuggestBox),
 ) {
     /** The IItemsControl view used to set ItemsSource. */
     private val itemsControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IItemsControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))
     }
 
     /** TextChanged event tokens registered via addTextChangedListener. */
@@ -62,20 +63,20 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
 
     /** The text currently being entered (AutoSuggestBox.Text). */
     var text: String
-        get() = inspectable.getString(Abi.IAutoSuggestBox_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IAutoSuggestBox_put_Text, h) }
+        get() = inspectable.getString(XamlInterop.IAutoSuggestBox_get_Text)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IAutoSuggestBox_put_Text, h) }
 
     /** The placeholder shown when empty (AutoSuggestBox.PlaceholderText). */
     var placeholderText: String
-        get() = inspectable.getString(Abi.IAutoSuggestBox_get_PlaceholderText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IAutoSuggestBox_put_PlaceholderText, h) }
+        get() = inspectable.getString(XamlInterop.IAutoSuggestBox_get_PlaceholderText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IAutoSuggestBox_put_PlaceholderText, h) }
 
     /** The header shown above the box (AutoSuggestBox.Header). It's an Object, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IAutoSuggestBox_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.IAutoSuggestBox_put_Header, boxed.ptr)
             boxed.release()
         }
 
@@ -84,18 +85,18 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IAutoSuggestBox_put_QueryIcon, null)
+                inspectable.call(XamlInterop.IAutoSuggestBox_put_QueryIcon, null)
             } else {
                 val icon = value.createIconElement()
-                inspectable.call(Abi.IAutoSuggestBox_put_QueryIcon, icon)
+                inspectable.call(XamlInterop.IAutoSuggestBox_put_QueryIcon, icon)
                 icon.release()
             }
         }
 
     /** Whether the suggestion list is open (AutoSuggestBox.IsSuggestionListOpen). */
     var isSuggestionListOpen: Boolean
-        get() = inspectable.getBool(Abi.IAutoSuggestBox_get_IsSuggestionListOpen)
-        set(value) = inspectable.putBool(Abi.IAutoSuggestBox_put_IsSuggestionListOpen, value)
+        get() = inspectable.getBool(XamlInterop.IAutoSuggestBox_get_IsSuggestionListOpen)
+        set(value) = inspectable.putBool(XamlInterop.IAutoSuggestBox_put_IsSuggestionListOpen, value)
 
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
@@ -108,7 +109,7 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
      */
     fun setSuggestions(suggestions: List<String>) {
         val iterable = StringIterable(suggestions)
-        itemsControl.call(Abi.IItemsControl_put_ItemsSource, iterable.comObject.primary)
+        itemsControl.call(XamlInterop.IItemsControl_put_ItemsSource, iterable.comObject.primary)
     }
 
     /**
@@ -119,12 +120,12 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     fun addTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxTextChangedHandler",
-            Abi.IID_AutoSuggestBoxTextChangedHandler,
-            Abi.IAutoSuggestBox_add_TextChanged,
+            XamlInterop.IID_AutoSuggestBoxTextChangedHandler,
+            XamlInterop.IAutoSuggestBox_add_TextChanged,
         ) { _, args ->
             // args is AutoSuggestBoxTextChangedEventArgs; read Reason and pass it along
             val reason = TextChangeReason.of(
-                ComPtr(args).getInt(Abi.IAutoSuggestBoxTextChangedEventArgs_get_Reason),
+                ComPtr(args).getInt(XamlInterop.IAutoSuggestBoxTextChangedEventArgs_get_Reason),
             )
             listener(text, reason)
         }
@@ -134,7 +135,7 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
     fun removeTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
         val token = textChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IAutoSuggestBox_remove_TextChanged, token)
+        inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_TextChanged, token)
     }
 
     /**
@@ -144,13 +145,13 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     fun addQuerySubmittedListener(listener: (queryText: String, chosenSuggestion: String?) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxQuerySubmittedHandler",
-            Abi.IID_AutoSuggestBoxQuerySubmittedHandler,
-            Abi.IAutoSuggestBox_add_QuerySubmitted,
+            XamlInterop.IID_AutoSuggestBoxQuerySubmittedHandler,
+            XamlInterop.IAutoSuggestBox_add_QuerySubmitted,
         ) { _, args ->
             // args is AutoSuggestBoxQuerySubmittedEventArgs; read QueryText and ChosenSuggestion and pass them along
             val argsPtr = ComPtr(args)
-            val queryText = argsPtr.getString(Abi.IAutoSuggestBoxQuerySubmittedEventArgs_get_QueryText)
-            val boxed = argsPtr.getPtrOrNull(Abi.IAutoSuggestBoxQuerySubmittedEventArgs_get_ChosenSuggestion)
+            val queryText = argsPtr.getString(XamlInterop.IAutoSuggestBoxQuerySubmittedEventArgs_get_QueryText)
+            val boxed = argsPtr.getPtrOrNull(XamlInterop.IAutoSuggestBoxQuerySubmittedEventArgs_get_ChosenSuggestion)
             val chosen = boxed?.let {
                 try {
                     PropertyValues.unboxString(it)
@@ -166,18 +167,18 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     /** Unsubscribes a listener registered via [addQuerySubmittedListener]. */
     fun removeQuerySubmittedListener(listener: (String, String?) -> Unit) {
         val token = querySubmittedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IAutoSuggestBox_remove_QuerySubmitted, token)
+        inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_QuerySubmitted, token)
     }
 
     /** Subscribes to suggestion highlight changes (AutoSuggestBox.SuggestionChosen). The listener receives the suggestion string. */
     fun addSuggestionChosenListener(listener: (String) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxSuggestionChosenHandler",
-            Abi.IID_AutoSuggestBoxSuggestionChosenHandler,
-            Abi.IAutoSuggestBox_add_SuggestionChosen,
+            XamlInterop.IID_AutoSuggestBoxSuggestionChosenHandler,
+            XamlInterop.IAutoSuggestBox_add_SuggestionChosen,
         ) { _, args ->
             // args is AutoSuggestBoxSuggestionChosenEventArgs; read SelectedItem and pass it along
-            val boxed = ComPtr(args).getPtr(Abi.IAutoSuggestBoxSuggestionChosenEventArgs_get_SelectedItem)
+            val boxed = ComPtr(args).getPtr(XamlInterop.IAutoSuggestBoxSuggestionChosenEventArgs_get_SelectedItem)
             val selected = try {
                 PropertyValues.unboxString(boxed) ?: ""
             } finally {
@@ -191,7 +192,7 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     /** Unsubscribes a listener registered via [addSuggestionChosenListener]. */
     fun removeSuggestionChosenListener(listener: (String) -> Unit) {
         val token = suggestionChosenTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IAutoSuggestBox_remove_SuggestionChosen, token)
+        inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_SuggestionChosen, token)
     }
 }
 
@@ -203,7 +204,7 @@ private class StringIterable(private val items: List<String>) {
     /** The COM object passed to the XAML side as an IIterable<Object>. */
     val comObject: KComObject = KComObject("WinUI4K.StringIterable")
         .addInterface(
-            Abi.IID_IIterable_Object,
+            FoundationInterop.IID_IIterable_Object,
             listOf(
                 // vtbl[6] First(this, out IIterator<Object>)
                 KComObject.Method(DESC_THIS_PTR) { args ->
@@ -219,7 +220,7 @@ private class StringIterable(private val items: List<String>) {
     private fun createIterator(): KComObject {
         var index = 0
         return KComObject("WinUI4K.StringIterator").addInterface(
-            Abi.IID_IIterator_Object,
+            FoundationInterop.IID_IIterator_Object,
             listOf(
                 // vtbl[6] get_Current(this, out IInspectable) — hands the caller a reference it must release
                 KComObject.Method(DESC_THIS_PTR) { args ->

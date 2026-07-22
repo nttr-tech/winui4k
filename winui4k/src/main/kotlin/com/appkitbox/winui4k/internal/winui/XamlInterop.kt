@@ -3,25 +3,23 @@ package com.appkitbox.winui4k.internal.winui
 import com.appkitbox.winui4k.internal.winrt.Pinterface
 
 /**
- * WinRT ABI constants (IIDs / vtable slot numbers) used by winui4k.
- * Most of these are WinUI 3 (Microsoft.UI.Xaml), but this also includes constants from
- * WinAppSDK / Windows.Foundation such as AppNotifications and JumpList (the package name
- * `winui` means "the layer for running WinUI 3").
+ * WinRT ABI constants (IIDs / vtable slot numbers) for Microsoft.UI.Xaml (WinUI 3).
+ * Also includes constants from Microsoft.UI.Text (Microsoft.UI.Text.winmd), used by RichEditBox.
  *
  * All values were mechanically extracted with tools/dump_winmd.py from
  * metadata/Microsoft.UI.Xaml.winmd in Microsoft.WindowsAppSDK.WinUI 2.2.1 (a dependency
- * of Microsoft.WindowsAppSDK 2.2.0), Microsoft.Windows.ApplicationModel.Resources.winmd
- * from the WinAppSDK runtime, and Windows.Foundation.FoundationContract.winmd from the
- * Windows SDK. None of these values are hand-written or guessed.
+ * of Microsoft.WindowsAppSDK 2.2.0), and Microsoft.Windows.ApplicationModel.Resources.winmd
+ * from the WinAppSDK runtime. None of these values are hand-written or guessed.
  * (Cross-checked against the 1.7.260224002 winmd — all existing IIDs / slots match.)
  *
  * Slot numbering convention: IUnknown = 0..2, IInspectable = 3..5, and the interface
  * body starts at 6, following the winmd's method declaration order.
  *
- * Splitting policy: once this file passes 3000 lines, split it by winmd source
- * (AbiXaml / AbiFoundation / AbiNotifications).
+ * Splitting policy: split by winmd source (XamlInterop / WindowingInterop / FoundationInterop /
+ * NotificationInterop / WebView2Interop). If this file passes 3000 lines, split it further by
+ * namespace within Microsoft.UI.Xaml (Controls / Media / Documents / ...).
  */
-internal object Abi {
+internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Application ----
     const val CLS_Application = "Microsoft.UI.Xaml.Application"
     const val IID_IApplicationStatics = "4e0d09f5-4358-512c-a987-503b52848e95"
@@ -685,12 +683,6 @@ internal object Abi {
     const val IHyperlinkButton_get_NavigateUri = 6     // get_NavigateUri(out Windows.Foundation.Uri)
     const val IHyperlinkButton_put_NavigateUri = 7     // put_NavigateUri(Windows.Foundation.Uri)
 
-    // ---- Windows.Foundation.Uri (OS side, FoundationContract.winmd) ----
-    const val CLS_Uri = "Windows.Foundation.Uri"
-    const val IID_IUriRuntimeClassFactory = "44a9796f-723e-4fdf-a218-033e75b0c084"
-    const val IUriRuntimeClassFactory_CreateUri = 6    // CreateUri(HSTRING, out Uri)
-    const val IUriRuntimeClass_get_AbsoluteUri = 6     // get_AbsoluteUri(out HSTRING)
-
     // ---- Microsoft.UI.Xaml.Controls.DropDownButton ----
     const val CLS_DropDownButton = "Microsoft.UI.Xaml.Controls.DropDownButton"
     const val IID_IDropDownButtonFactory = "7cf3e13b-668d-57e7-b5d6-f5ca3dbc80bd"
@@ -866,7 +858,7 @@ internal object Abi {
     /** The actual IID of EventHandler<ScrollViewerViewChangedEventArgs> (computed at runtime). */
     val IID_ScrollViewerViewChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_EventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_EventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ScrollViewerViewChangedEventArgs;" +
                 "{$IID_IScrollViewerViewChangedEventArgs}))",
         )
@@ -905,7 +897,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<ScrollView, object> (computed at runtime). TArgs is Object, so cinterface(IInspectable). */
     val IID_ScrollViewViewChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ScrollView;{$IID_IScrollView});" +
                 "cinterface(IInspectable))",
         )
@@ -934,7 +926,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<PipsPager, PipsPagerSelectedIndexChangedEventArgs> (computed at runtime). */
     val IID_PipsPagerSelectedIndexChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.PipsPager;{$IID_IPipsPager});" +
                 "rc(Microsoft.UI.Xaml.Controls.PipsPagerSelectedIndexChangedEventArgs;" +
                 "{$IID_IPipsPagerSelectedIndexChangedEventArgs}))",
@@ -970,7 +962,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<AnnotatedScrollBar, AnnotatedScrollBarDetailLabelRequestedEventArgs> (computed at runtime). */
     val IID_AnnotatedScrollBarDetailLabelRequestedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.AnnotatedScrollBar;{$IID_IAnnotatedScrollBar});" +
                 "rc(Microsoft.UI.Xaml.Controls.AnnotatedScrollBarDetailLabelRequestedEventArgs;" +
                 "{$IID_IAnnotatedScrollBarDetailLabelRequestedEventArgs}))",
@@ -1013,7 +1005,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<CalendarDatePicker, CalendarDatePickerDateChangedEventArgs> (computed at runtime). */
     val IID_CalendarDatePickerDateChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.CalendarDatePicker;{$IID_ICalendarDatePicker});" +
                 "rc(Microsoft.UI.Xaml.Controls.CalendarDatePickerDateChangedEventArgs;" +
                 "{$IID_ICalendarDatePickerDateChangedEventArgs}))",
@@ -1052,7 +1044,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<CalendarView, CalendarViewSelectedDatesChangedEventArgs> (computed at runtime). */
     val IID_CalendarViewSelectedDatesChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.CalendarView;{$IID_ICalendarView});" +
                 "rc(Microsoft.UI.Xaml.Controls.CalendarViewSelectedDatesChangedEventArgs;" +
                 "{$IID_ICalendarViewSelectedDatesChangedEventArgs}))",
@@ -1091,7 +1083,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<DatePicker, DatePickerSelectedValueChangedEventArgs> (computed at runtime). */
     val IID_DatePickerSelectedDateChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.DatePicker;{$IID_IDatePicker});" +
                 "rc(Microsoft.UI.Xaml.Controls.DatePickerSelectedValueChangedEventArgs;" +
                 "{$IID_IDatePickerSelectedValueChangedEventArgs}))",
@@ -1120,7 +1112,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<TimePicker, TimePickerSelectedValueChangedEventArgs> (computed at runtime). */
     val IID_TimePickerSelectedTimeChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TimePicker;{$IID_ITimePicker});" +
                 "rc(Microsoft.UI.Xaml.Controls.TimePickerSelectedValueChangedEventArgs;" +
                 "{$IID_ITimePickerSelectedValueChangedEventArgs}))",
@@ -1223,9 +1215,6 @@ internal object Abi {
     const val IID_IResourceManagerFactory = "d6acf18f-458a-535b-a5c4-ac2dc4e49099"
     // IResourceManagerFactory: vtbl[6] CreateInstance(HSTRING fileName, out ResourceManager)
 
-    /** Base IID of Windows.Foundation.TypedEventHandler`2. */
-    private const val IID_TypedEventHandler_OPEN = "9de1c534-6ae1-11e0-84e1-18a905bcc53f"
-
     /**
      * The actual IID (computed at runtime) of
      * TypedEventHandler<Object, ResourceManagerRequestedEventArgs>. The first type
@@ -1234,7 +1223,7 @@ internal object Abi {
      */
     val IID_ResourceManagerRequestedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "cinterface(IInspectable);" +
                 "rc(Microsoft.UI.Xaml.ResourceManagerRequestedEventArgs;" +
                 "{$IID_IResourceManagerRequestedEventArgs}))",
@@ -1244,7 +1233,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<Expander, ExpanderExpandingEventArgs>. */
     val IID_ExpanderExpandingHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.Expander;{$IID_IExpander});" +
                 "rc(Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs;" +
                 "{$IID_IExpanderExpandingEventArgs}))",
@@ -1254,7 +1243,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<Expander, ExpanderCollapsedEventArgs>. */
     val IID_ExpanderCollapsedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.Expander;{$IID_IExpander});" +
                 "rc(Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs;" +
                 "{$IID_IExpanderCollapsedEventArgs}))",
@@ -1264,7 +1253,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<SplitButton, SplitButtonClickEventArgs>. */
     val IID_SplitButtonClickHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.SplitButton;{$IID_ISplitButton});" +
                 "rc(Microsoft.UI.Xaml.Controls.SplitButtonClickEventArgs;" +
                 "{$IID_ISplitButtonClickEventArgs}))",
@@ -1274,7 +1263,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<ToggleSplitButton, ToggleSplitButtonIsCheckedChangedEventArgs>. */
     val IID_ToggleSplitButtonIsCheckedChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ToggleSplitButton;{$IID_IToggleSplitButton});" +
                 "rc(Microsoft.UI.Xaml.Controls.ToggleSplitButtonIsCheckedChangedEventArgs;" +
                 "{$IID_IToggleSplitButtonIsCheckedChangedEventArgs}))",
@@ -1287,7 +1276,7 @@ internal object Abi {
      */
     val IID_RatingControlValueChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.RatingControl;{$IID_IRatingControl});" +
                 "cinterface(IInspectable))",
         )
@@ -1296,7 +1285,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<FrameworkElement, Object>. Used for ActualThemeChanged. */
     val IID_ActualThemeChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.FrameworkElement;{$IID_IFrameworkElement});" +
                 "cinterface(IInspectable))",
         )
@@ -1305,7 +1294,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewItemInvokedEventArgs>. */
     val IID_TreeViewItemInvokedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs;" +
                 "{$IID_ITreeViewItemInvokedEventArgs}))",
@@ -1315,7 +1304,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewExpandingEventArgs>. */
     val IID_TreeViewExpandingHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeViewExpandingEventArgs;" +
                 "{$IID_ITreeViewExpandingEventArgs}))",
@@ -1325,7 +1314,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewCollapsedEventArgs>. */
     val IID_TreeViewCollapsedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeViewCollapsedEventArgs;" +
                 "{$IID_ITreeViewCollapsedEventArgs}))",
@@ -1335,7 +1324,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<ContentDialog, ContentDialogClosedEventArgs>. */
     val IID_ContentDialogClosedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
                 "rc(Microsoft.UI.Xaml.Controls.ContentDialogClosedEventArgs;" +
                 "{$IID_IContentDialogClosedEventArgs}))",
@@ -1348,7 +1337,7 @@ internal object Abi {
      */
     val IID_TeachingTipObjectHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TeachingTip;{$IID_ITeachingTip});" +
                 "cinterface(IInspectable))",
         )
@@ -1357,7 +1346,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<TeachingTip, TeachingTipClosedEventArgs>. */
     val IID_TeachingTipClosedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TeachingTip;{$IID_ITeachingTip});" +
                 "rc(Microsoft.UI.Xaml.Controls.TeachingTipClosedEventArgs;" +
                 "{$IID_ITeachingTipClosedEventArgs}))",
@@ -1367,7 +1356,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<NumberBox, NumberBoxValueChangedEventArgs>. */
     val IID_NumberBoxValueChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.NumberBox;{$IID_INumberBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.NumberBoxValueChangedEventArgs;" +
                 "{$IID_INumberBoxValueChangedEventArgs}))",
@@ -1377,7 +1366,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxTextChangedEventArgs>. */
     val IID_AutoSuggestBoxTextChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxTextChangedEventArgs;" +
                 "{$IID_IAutoSuggestBoxTextChangedEventArgs}))",
@@ -1387,7 +1376,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs>. */
     val IID_AutoSuggestBoxQuerySubmittedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxQuerySubmittedEventArgs;" +
                 "{$IID_IAutoSuggestBoxQuerySubmittedEventArgs}))",
@@ -1397,27 +1386,17 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxSuggestionChosenEventArgs>. */
     val IID_AutoSuggestBoxSuggestionChosenHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxSuggestionChosenEventArgs;" +
                 "{$IID_IAutoSuggestBoxSuggestionChosenEventArgs}))",
         )
     }
 
-    /** Base IID of Windows.Foundation.EventHandler`1. */
-    private const val IID_EventHandler_OPEN = "9de1c535-6ae1-11e0-84e1-18a905bcc53f"
-
-    /** Runtime-computed actual IID of EventHandler<Object>. Used for Popup.Opened / Closed. */
-    val IID_EventHandler_Object: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_EventHandler_OPEN};cinterface(IInspectable))",
-        )
-    }
-
     /** Runtime-computed actual IID of TypedEventHandler<ColorPicker, ColorChangedEventArgs>. */
     val IID_ColorPickerColorChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ColorPicker;{$IID_IColorPicker});" +
                 "rc(Microsoft.UI.Xaml.Controls.ColorChangedEventArgs;" +
                 "{$IID_IColorChangedEventArgs}))",
@@ -1427,7 +1406,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<ComboBox, ComboBoxTextSubmittedEventArgs>. */
     val IID_ComboBoxTextSubmittedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ComboBox;{$IID_IComboBox});" +
                 "rc(Microsoft.UI.Xaml.Controls.ComboBoxTextSubmittedEventArgs;" +
                 "{$IID_IComboBoxTextSubmittedEventArgs}))",
@@ -1437,7 +1416,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<NavigationView, NavigationViewSelectionChangedEventArgs>. */
     val IID_NavigationViewSelectionChangedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.NavigationView;{$IID_INavigationView});" +
                 "rc(Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;" +
                 "{$IID_INavigationViewSelectionChangedEventArgs}))",
@@ -1447,258 +1426,10 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<NavigationView, NavigationViewItemInvokedEventArgs>. */
     val IID_NavigationViewItemInvokedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.NavigationView;{$IID_INavigationView});" +
                 "rc(Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;" +
                 "{$IID_INavigationViewItemInvokedEventArgs}))",
-        )
-    }
-
-    /** Base IID of Windows.Foundation.IReference`1 (from FoundationContract.winmd). */
-    private const val IID_IReference_OPEN = "61c17706-2d65-11e0-9ae8-d48564015472"
-
-    /**
-     * Runtime-computed actual IID of IReference<Boolean>. The signature for boolean is b1.
-     * Used to box/unbox ToggleButton.IsChecked (null = indeterminate).
-     */
-    val IID_IReference_Boolean: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};b1)")
-    }
-
-    /**
-     * Runtime-computed actual IID of IReference<DateTime>. DateTime's signature is
-     * struct(Windows.Foundation.DateTime;i8).
-     */
-    val IID_IReference_DateTime: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.DateTime;i8))")
-    }
-
-    /**
-     * Runtime-computed actual IID of IReference<TimeSpan>. TimeSpan's signature is
-     * struct(Windows.Foundation.TimeSpan;i8).
-     */
-    val IID_IReference_TimeSpan: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.TimeSpan;i8))")
-    }
-
-    // ---- Windows.Foundation.Collections.IVector<T> (OS side, FoundationContract.winmd) ----
-    // GetAt=6 get_Size=7 GetView=8 IndexOf=9 SetAt=10 InsertAt=11 RemoveAt=12 Append=13
-    // RemoveAtEnd=14 Clear=15 GetMany=16 ReplaceAll=17
-    const val IVector_GetAt = 6                        // GetAt(UINT32, out T)
-    const val IVector_get_Size = 7                     // get_Size(out UINT32)
-    const val IVector_IndexOf = 9                      // IndexOf(T, out UINT32 index, out boolean found)
-    const val IVector_RemoveAt = 12                    // RemoveAt(UINT32)
-    const val IVector_Append = 13                      // Append(T)
-    const val IVector_Clear = 15                       // Clear()
-    private const val IID_IVector_OPEN = "913337e9-11a1-4345-a3a2-4e7f956e222d" // base IID of IVector`1
-
-    /**
-     * The actual IID of IVector<Microsoft.UI.Xaml.UIElement>.
-     * Computed at runtime via SHA-1 from the WinRT specification signature
-     * (= ea4a1af0-4286-5f11-8142-6b0169f4e9de).
-     */
-    val IID_IVector_UIElement: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.UIElement;{$IID_IUIElement}))",
-        )
-    }
-
-    /** The actual IID of IVector<Microsoft.UI.Xaml.Media.GradientStop> (GradientStopCollection's default interface). */
-    val IID_IVector_GradientStop: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Media.GradientStop;{$IID_IGradientStop}))",
-        )
-    }
-
-    /** The actual IID of IVector<Microsoft.UI.Xaml.ResourceDictionary> (used for MergedDictionaries). */
-    val IID_IVector_ResourceDictionary: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};" +
-                "rc(Microsoft.UI.Xaml.ResourceDictionary;{$IID_IResourceDictionary}))",
-        )
-    }
-
-    /** The actual IID of IVector<Object> (ItemsControl.Items). Object's signature is cinterface(IInspectable). */
-    val IID_IVector_Object: String by lazy {
-        Pinterface.iid("pinterface({$IID_IVector_OPEN};cinterface(IInspectable))")
-    }
-
-    /** The actual IID of IVector<Microsoft.UI.Xaml.Documents.Block> (RichTextBlock.Blocks). */
-    val IID_IVector_Block: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Documents.Block;{$IID_IBlock}))",
-        )
-    }
-
-    /** The actual IID of IVector<Microsoft.UI.Xaml.Documents.Inline> (Paragraph.Inlines / Span.Inlines). */
-    val IID_IVector_Inline: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Documents.Inline;{$IID_IInline}))",
-        )
-    }
-
-    // ---- Windows.Foundation.Collections.IMap<K, V> (OS side, FoundationContract.winmd) ----
-    // Lookup=6 get_Size=7 HasKey=8 GetView=9 Insert=10 Remove=11 Clear=12
-    const val IMap_Lookup = 6                          // Lookup(K, out V)
-    const val IMap_Insert = 10                         // Insert(K, V, out boolean replaced)
-    private const val IID_IMap_OPEN = "3c2925fe-8519-45c1-aa79-197b6718c1c1" // base IID of IMap`2
-
-    /** The actual IID of IMap<Object, Object> (the key -> resource dictionary implemented by ResourceDictionary). */
-    val IID_IMap_Object_Object: String by lazy {
-        Pinterface.iid("pinterface({$IID_IMap_OPEN};cinterface(IInspectable);cinterface(IInspectable))")
-    }
-
-    // ---- Windows.Foundation.Collections.IIterable<T> / IIterator<T> (OS side, FoundationContract.winmd) ----
-    // IIterable: First=6. IIterator: get_Current=6 get_HasCurrent=7 MoveNext=8 GetMany=9
-    private const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // base IID of IIterable`1
-    private const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // base IID of IIterator`1
-
-    /** The actual IID of IIterable<Object> (passed to ItemsControl.ItemsSource). */
-    val IID_IIterable_Object: String by lazy {
-        Pinterface.iid("pinterface({$IID_IIterable_OPEN};cinterface(IInspectable))")
-    }
-
-    /** The actual IID of IIterator<Object>. */
-    val IID_IIterator_Object: String by lazy {
-        Pinterface.iid("pinterface({$IID_IIterator_OPEN};cinterface(IInspectable))")
-    }
-
-    // ---- Microsoft.UI.Dispatching.DispatcherQueue (Microsoft.UI.winmd) ----
-    const val CLS_DispatcherQueue = "Microsoft.UI.Dispatching.DispatcherQueue"
-    const val IID_IDispatcherQueueStatics = "cd3382ea-a455-5124-b63a-ca40d34ca23c"
-    const val IDispatcherQueueStatics_GetForCurrentThread = 6 // GetForCurrentThread(out DispatcherQueue)
-    const val IID_IDispatcherQueue = "f6ebf8fa-be1c-5bf6-a467-73da28738ae8"
-    const val IDispatcherQueue_CreateTimer = 6         // CreateTimer(out DispatcherQueueTimer)
-    const val IDispatcherQueue_TryEnqueue = 7          // TryEnqueue(DispatcherQueueHandler, out boolean)
-
-    /** delegate Microsoft.UI.Dispatching.DispatcherQueueHandler — Invoke() is vtbl[3], no arguments */
-    const val IID_DispatcherQueueHandler = "2e0872a9-4e29-5f14-b688-fb96d5f9d5f8"
-
-    // ---- Microsoft.UI.Dispatching.DispatcherQueueTimer (Microsoft.UI.winmd) ----
-    const val IID_IDispatcherQueueTimer = "ad4d63fd-88fe-541f-ac11-bf2dc1ed2ce5"
-    const val IDispatcherQueueTimer_put_Interval = 7   // put_Interval(TimeSpan) — int64 in 100ns units, passed by value
-    const val IDispatcherQueueTimer_put_IsRepeating = 10 // put_IsRepeating(boolean)
-    const val IDispatcherQueueTimer_Start = 11         // Start()
-    const val IDispatcherQueueTimer_Stop = 12          // Stop()
-    const val IDispatcherQueueTimer_add_Tick = 13      // add_Tick(TypedEventHandler<DispatcherQueueTimer, Object>, out token)
-
-    /** Runtime-computed actual IID of TypedEventHandler<DispatcherQueueTimer, Object>. */
-    val IID_DispatcherQueueTimerTickHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.UI.Dispatching.DispatcherQueueTimer;{$IID_IDispatcherQueueTimer});" +
-                "cinterface(IInspectable))",
-        )
-    }
-
-    // ---- Windows.Foundation async ----
-    // (constants shared by IAsyncAction / IAsyncOperation<T> are kept private inside winrt.Async)
-    private const val IID_AsyncOperationCompletedHandler_OPEN = "fcdcf02c-e5d8-4478-915a-4d90b74b83a5"
-
-    // ---- Microsoft.Windows.AppNotifications.AppNotificationManager ----
-    // (Microsoft.Windows.AppNotifications.winmd — WinAppSDK Foundation 2.1.0)
-    const val CLS_AppNotificationManager = "Microsoft.Windows.AppNotifications.AppNotificationManager"
-    const val IID_IAppNotificationManagerStatics = "6cfc0d8d-84a3-5592-b4c6-e3e7e7c680e4"
-    const val IAppNotificationManagerStatics_get_Default = 6 // get_Default(out AppNotificationManager)
-    const val IID_IAppNotificationManagerStatics2 = "6eb42a35-e82f-5732-98f1-129705602f2e"
-    const val IAppNotificationManagerStatics2_IsSupported = 6 // IsSupported(out boolean)
-    const val IID_IAppNotificationManager = "55129688-b4bd-550b-ae6b-c24061954d91"
-    const val IAppNotificationManager_Register = 6
-    const val IAppNotificationManager_Unregister = 7
-    const val IAppNotificationManager_UnregisterAll = 8
-    const val IAppNotificationManager_add_NotificationInvoked = 9 // add(TypedEventHandler<Manager, ActivatedEventArgs>, out token)
-    const val IAppNotificationManager_remove_NotificationInvoked = 10
-    const val IAppNotificationManager_Show = 11        // Show(AppNotification)
-    const val IAppNotificationManager_get_Setting = 14 // get_Setting(out AppNotificationSetting)
-
-    // ---- Microsoft.Windows.AppNotifications.AppNotification ----
-    const val CLS_AppNotification = "Microsoft.Windows.AppNotifications.AppNotification"
-    const val IID_IAppNotification = "373a6917-4116-5657-936a-15f99afdd667"
-    const val IAppNotification_get_Tag = 6
-    const val IAppNotification_put_Tag = 7
-    const val IAppNotification_get_Group = 8
-    const val IAppNotification_put_Group = 9
-    const val IAppNotification_get_Id = 10             // get_Id(out UINT32)
-    const val IAppNotification_get_Payload = 11        // get_Payload(out HSTRING)
-
-    const val IID_IAppNotificationActivatedEventArgs = "7a8afaf9-31cb-51d5-82be-db6bd5878b77"
-    const val IAppNotificationActivatedEventArgs_get_Argument = 6 // get_Argument(out HSTRING)
-
-    /** Actual IID of TypedEventHandler<AppNotificationManager, AppNotificationActivatedEventArgs>. */
-    val IID_NotificationInvokedHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.Windows.AppNotifications.AppNotificationManager;" +
-                "{$IID_IAppNotificationManager});" +
-                "rc(Microsoft.Windows.AppNotifications.AppNotificationActivatedEventArgs;" +
-                "{$IID_IAppNotificationActivatedEventArgs}))",
-        )
-    }
-
-    // ---- Microsoft.Windows.AppNotifications.Builder.AppNotificationBuilder ----
-    // (Microsoft.Windows.AppNotifications.Builder.winmd)
-    const val CLS_AppNotificationBuilder =
-        "Microsoft.Windows.AppNotifications.Builder.AppNotificationBuilder"
-    const val IID_IAppNotificationBuilder = "e801d31f-ce03-505c-adec-8a02724ec9de"
-    const val IAppNotificationBuilder_AddArgument = 6  // AddArgument(HSTRING, HSTRING, out this)
-    const val IAppNotificationBuilder_SetDuration = 8  // SetDuration(AppNotificationDuration, out this)
-    const val IAppNotificationBuilder_SetScenario = 9  // SetScenario(AppNotificationScenario, out this)
-    const val IAppNotificationBuilder_AddText = 10     // AddText(HSTRING, out this)
-    const val IAppNotificationBuilder_SetAttributionText = 12 // SetAttributionText(HSTRING, out this)
-    const val IAppNotificationBuilder_AddButton = 29   // AddButton(AppNotificationButton, out this)
-    const val IAppNotificationBuilder_BuildNotification = 32 // BuildNotification(out AppNotification)
-    const val IAppNotificationBuilder_SetTag = 33      // SetTag(HSTRING, out this)
-    const val IAppNotificationBuilder_SetGroup = 34    // SetGroup(HSTRING, out this)
-
-    const val CLS_AppNotificationButton =
-        "Microsoft.Windows.AppNotifications.Builder.AppNotificationButton"
-    const val IID_IAppNotificationButtonFactory = "4f109286-0a6d-5a5e-9e8f-9fe31669fbb8"
-    const val IAppNotificationButtonFactory_CreateInstance = 6 // CreateInstance(HSTRING content, out AppNotificationButton)
-    const val IID_IAppNotificationButton = "a7c03031-5634-5098-aec9-47ecb60c3499"
-    const val IAppNotificationButton_AddArgument = 24  // AddArgument(HSTRING, HSTRING, out this)
-
-    // ---- Microsoft.Windows.BadgeNotifications.BadgeNotificationManager ----
-    // (Microsoft.Windows.BadgeNotifications.winmd)
-    const val CLS_BadgeNotificationManager =
-        "Microsoft.Windows.BadgeNotifications.BadgeNotificationManager"
-    const val IID_IBadgeNotificationManagerStatics = "a6e71616-7c9f-5d22-ad1c-f4ab874087b5"
-    const val IBadgeNotificationManagerStatics_get_Current = 6 // get_Current(out BadgeNotificationManager)
-    const val IID_IBadgeNotificationManager = "11cb6e8f-11ca-53f8-80f6-5330d44ba908"
-    const val IBadgeNotificationManager_SetBadgeAsCount = 6 // SetBadgeAsCount(UINT32)
-    const val IBadgeNotificationManager_SetBadgeAsGlyph = 7 // SetBadgeAsGlyph(BadgeNotificationGlyph)
-    const val IBadgeNotificationManager_ClearBadge = 8
-
-    // ---- Windows.UI.StartScreen.JumpList (UniversalApiContract.winmd — OS side) ----
-    const val CLS_JumpList = "Windows.UI.StartScreen.JumpList"
-    const val IID_IJumpListStatics = "a7e0c681-e67e-4b74-8250-3f322c4d92c3"
-    const val IJumpListStatics_LoadCurrentAsync = 6    // LoadCurrentAsync(out IAsyncOperation<JumpList>)
-    const val IJumpListStatics_IsSupported = 7         // IsSupported(out boolean)
-    const val IID_IJumpList = "b0234c3e-cd6f-4cb6-a611-61fd505f3ed1"
-    const val IJumpList_get_Items = 6                  // get_Items(out IVector<JumpListItem>)
-    const val IJumpList_get_SystemGroupKind = 7        // get_SystemGroupKind(out JumpListSystemGroupKind)
-    const val IJumpList_put_SystemGroupKind = 8
-    const val IJumpList_SaveAsync = 9                  // SaveAsync(out IAsyncAction)
-
-    const val CLS_JumpListItem = "Windows.UI.StartScreen.JumpListItem"
-    const val IID_IJumpListItemStatics = "f1bfc4e8-c7aa-49cb-8dde-ecfccd7ad7e4"
-    const val IJumpListItemStatics_CreateWithArguments = 6 // CreateWithArguments(HSTRING args, HSTRING displayName, out JumpListItem)
-    const val IJumpListItemStatics_CreateSeparator = 7 // CreateSeparator(out JumpListItem)
-    const val IID_IJumpListItem = "7adb6717-8b5d-4820-995b-9b418dbe48b0"
-    const val IJumpListItem_get_Kind = 6               // get_Kind(out JumpListItemKind)
-    const val IJumpListItem_get_Arguments = 7
-    const val IJumpListItem_get_RemovedByUser = 8
-    const val IJumpListItem_get_Description = 9
-    const val IJumpListItem_put_Description = 10
-    const val IJumpListItem_get_DisplayName = 11
-    const val IJumpListItem_put_DisplayName = 12
-    const val IJumpListItem_get_GroupName = 13
-    const val IJumpListItem_put_GroupName = 14
-
-    /** Actual IID of AsyncOperationCompletedHandler<JumpList> (completion notification for LoadCurrentAsync). */
-    val IID_AsyncOperationCompletedHandler_JumpList: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_AsyncOperationCompletedHandler_OPEN};" +
-                "rc(Windows.UI.StartScreen.JumpList;{$IID_IJumpList}))",
         )
     }
 
@@ -1878,7 +1609,7 @@ internal object Abi {
     /** Actual IID of TypedEventHandler<InfoBar, Object> (shared by CloseButtonClick / Closed). */
     val IID_InfoBarCloseButtonClickHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.InfoBar;{$IID_IInfoBar});" +
                 "cinterface(IInspectable))",
         )
@@ -1927,7 +1658,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<SwipeItem, SwipeItemInvokedEventArgs>. */
     val IID_SwipeItemInvokedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.SwipeItem;{$IID_ISwipeItem});" +
                 "rc(Microsoft.UI.Xaml.Controls.SwipeItemInvokedEventArgs;" +
                 "{$IID_ISwipeItemInvokedEventArgs}))",
@@ -1966,7 +1697,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<XamlUICommand, ExecuteRequestedEventArgs>. */
     val IID_XamlUICommandExecuteRequestedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Input.XamlUICommand;{$IID_IXamlUICommand});" +
                 "rc(Microsoft.UI.Xaml.Input.ExecuteRequestedEventArgs;" +
                 "{$IID_IExecuteRequestedEventArgs}))",
@@ -1976,7 +1707,7 @@ internal object Abi {
     /** Runtime-computed actual IID of TypedEventHandler<XamlUICommand, CanExecuteRequestedEventArgs>. */
     val IID_XamlUICommandCanExecuteRequestedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Input.XamlUICommand;{$IID_IXamlUICommand});" +
                 "rc(Microsoft.UI.Xaml.Input.CanExecuteRequestedEventArgs;" +
                 "{$IID_ICanExecuteRequestedEventArgs}))",
@@ -1993,14 +1724,14 @@ internal object Abi {
     /** The actual IID of IVector<Microsoft.UI.Xaml.Controls.ICommandBarElement> (used to QI PrimaryCommands). */
     val IID_IVector_ICommandBarElement: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};{$IID_ICommandBarElement})",
+            "pinterface({${FoundationInterop.IID_IVector_OPEN}};{$IID_ICommandBarElement})",
         )
     }
 
     /** The actual IID of IVector<Microsoft.UI.Xaml.Controls.SwipeItem> (used to QI SwipeItems). */
     val IID_IVector_SwipeItem: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_IVector_OPEN};" +
+            "pinterface({${FoundationInterop.IID_IVector_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.SwipeItem;{$IID_ISwipeItem}))",
         )
     }
@@ -2008,7 +1739,7 @@ internal object Abi {
     // ==================== Windowing (AppWindow / AppWindowTitleBar / TitleBar) ====================
     // Only the AppWindow family comes from Microsoft.UI.winmd (build/winmd/metadata/10.0.18362.0/Microsoft.UI.winmd).
     // Everything else (IWindow2 / Controls.TitleBar) is Microsoft.UI.Xaml.winmd, same as other sections.
-    // Verified to fully match the extraction command's output (see the Abi.kt addition section of the implementation plan).
+    // Verified to fully match the extraction command's output (see the ABI constants addition section of the implementation plan).
 
     // ---- Microsoft.UI.Xaml.IWindow additions / IWindow2 ----
     const val IWindow_get_ExtendsContentIntoTitleBar = 16 // get_ExtendsContentIntoTitleBar(out boolean)
@@ -2027,150 +1758,6 @@ internal object Abi {
 
     const val CLS_DesktopAcrylicBackdrop = "Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop"
     const val IID_IDesktopAcrylicBackdropFactory = "00922e6d-ae51-564a-bce2-1973d5e463dd"
-
-    // ---- Microsoft.UI.Windowing.AppWindow (Microsoft.UI.winmd) ----
-    // Not activated directly; obtained via IAppWindowStatics.Create (WFrame.appWindow / WAppWindow.create).
-    const val CLS_AppWindow = "Microsoft.UI.Windowing.AppWindow"
-    const val IID_IAppWindow = "cfa788b3-643b-5c5e-ad4e-321d48a82acd"
-    const val IAppWindow_get_Id = 6                     // get_Id(out WindowId) — an out struct (u8)
-    const val IAppWindow_get_IsShownInSwitchers = 7
-    const val IAppWindow_put_IsShownInSwitchers = 8
-    const val IAppWindow_get_IsVisible = 9
-    const val IAppWindow_get_OwnerWindowId = 10         // get_OwnerWindowId(out WindowId)
-    const val IAppWindow_get_Position = 11              // get_Position(out PointInt32) — an out struct
-    const val IAppWindow_get_Presenter = 12             // get_Presenter(out AppWindowPresenter)
-    const val IAppWindow_get_Size = 13                  // get_Size(out SizeInt32) — an out struct
-    const val IAppWindow_get_Title = 14
-    const val IAppWindow_put_Title = 15
-    const val IAppWindow_get_TitleBar = 16              // get_TitleBar(out AppWindowTitleBar)
-    const val IAppWindow_Destroy = 17
-    const val IAppWindow_Hide = 18
-    const val IAppWindow_Move = 19                      // Move(PointInt32) — struct passed by value
-    const val IAppWindow_MoveAndResize = 20             // MoveAndResize(RectInt32)
-    const val IAppWindow_Resize = 22                    // Resize(SizeInt32) — struct passed by value
-    const val IAppWindow_SetIcon = 23                   // SetIcon(string) — an .ico file path
-    const val IAppWindow_SetPresenter = 25              // SetPresenter(AppWindowPresenter)
-    const val IAppWindow_SetPresenterKind = 26          // SetPresenter(AppWindowPresenterKind)
-    const val IAppWindow_Show = 27                      // Show()
-
-    const val IID_IAppWindow2 = "6cd41292-794c-5cac-8961-210d012c6ebc"
-    const val IAppWindow2_get_ClientSize = 6            // get_ClientSize(out SizeInt32) — an out struct
-    const val IAppWindow2_ResizeClient = 10             // ResizeClient(SizeInt32) — struct passed by value
-
-    const val IID_IAppWindowStatics = "3c315c24-d540-5d72-b518-b226b83627cb"
-    const val IAppWindowStatics_Create = 8              // Create(AppWindowPresenter, WindowId) -> AppWindow (for modal windows)
-
-    // ---- Microsoft.UI.Windowing.AppWindowPresenter (common base of the 3 presenter kinds) ----
-    const val IID_IAppWindowPresenter = "bc3042c2-c6c6-5632-8989-ff0ec6d3b40d"
-    const val IAppWindowPresenter_get_Kind = 6          // get_Kind(out AppWindowPresenterKind)
-
-    // ---- Microsoft.UI.Windowing.OverlappedPresenter ----
-    const val CLS_OverlappedPresenter = "Microsoft.UI.Windowing.OverlappedPresenter"
-    const val IID_IOverlappedPresenter = "21693970-4f4c-5172-9e9d-682a2d174884"
-    const val IOverlappedPresenter_get_HasBorder = 6
-    const val IOverlappedPresenter_get_HasTitleBar = 7
-    const val IOverlappedPresenter_get_IsAlwaysOnTop = 8
-    const val IOverlappedPresenter_put_IsAlwaysOnTop = 9
-    const val IOverlappedPresenter_get_IsMaximizable = 10
-    const val IOverlappedPresenter_put_IsMaximizable = 11
-    const val IOverlappedPresenter_get_IsMinimizable = 12
-    const val IOverlappedPresenter_put_IsMinimizable = 13
-    const val IOverlappedPresenter_get_IsModal = 14
-    const val IOverlappedPresenter_put_IsModal = 15
-    const val IOverlappedPresenter_get_IsResizable = 16
-    const val IOverlappedPresenter_put_IsResizable = 17
-    const val IOverlappedPresenter_get_State = 18       // get_State(out OverlappedPresenterState)
-    const val IOverlappedPresenter_Maximize = 19
-    const val IOverlappedPresenter_Minimize = 20
-    const val IOverlappedPresenter_Restore = 21
-    const val IOverlappedPresenter_SetBorderAndTitleBar = 22 // SetBorderAndTitleBar(boolean, boolean)
-
-    const val IID_IOverlappedPresenter3 = "55d26138-4c38-57e7-a0c1-d467b774db8c"
-    const val IOverlappedPresenter3_get_PreferredMinimumHeight = 6  // -> IReference<i4>; null clears it
-    const val IOverlappedPresenter3_put_PreferredMinimumHeight = 7
-    const val IOverlappedPresenter3_get_PreferredMinimumWidth = 8
-    const val IOverlappedPresenter3_put_PreferredMinimumWidth = 9
-    const val IOverlappedPresenter3_get_PreferredMaximumWidth = 10
-    const val IOverlappedPresenter3_put_PreferredMaximumWidth = 11
-    const val IOverlappedPresenter3_get_PreferredMaximumHeight = 12
-    const val IOverlappedPresenter3_put_PreferredMaximumHeight = 13
-
-    const val IID_IOverlappedPresenterStatics = "997225e4-7b00-5aee-a4be-d4068d1999e2"
-    const val IOverlappedPresenterStatics_Create = 6
-    const val IOverlappedPresenterStatics_CreateForDialog = 8
-
-    // ---- Microsoft.UI.Windowing.FullScreenPresenter ----
-    const val CLS_FullScreenPresenter = "Microsoft.UI.Windowing.FullScreenPresenter"
-    const val IID_IFullScreenPresenterStatics = "2ec0d2c1-e086-55bb-a3b2-44942e231c67"
-    const val IFullScreenPresenterStatics_Create = 6
-    // IFullScreenPresenter (fa9141fd-b8dd-5da1-8b2b-7cdadb76f593) has no members
-
-    // ---- Microsoft.UI.Windowing.CompactOverlayPresenter ----
-    const val CLS_CompactOverlayPresenter = "Microsoft.UI.Windowing.CompactOverlayPresenter"
-    const val IID_ICompactOverlayPresenter = "efeb0812-6fc7-5b7d-bd92-cc8f9a6454c9"
-    const val ICompactOverlayPresenter_get_InitialSize = 6 // -> CompactOverlaySize
-    const val ICompactOverlayPresenter_put_InitialSize = 7
-    const val IID_ICompactOverlayPresenterStatics = "eab93186-4f6a-52f9-8c03-da57a1522f6e"
-    const val ICompactOverlayPresenterStatics_Create = 6
-
-    // ---- Microsoft.UI.Windowing.AppWindowTitleBar (obtained from AppWindow.TitleBar; cannot be created directly) ----
-    const val IID_IAppWindowTitleBar = "5574efa2-c91c-5700-a363-539c71a7aaf4"
-    // All 12 color properties are IReference<Windows.UI.Color> (nullable)
-    const val IAppWindowTitleBar_get_BackgroundColor = 6
-    const val IAppWindowTitleBar_put_BackgroundColor = 7
-    const val IAppWindowTitleBar_get_ButtonBackgroundColor = 8
-    const val IAppWindowTitleBar_put_ButtonBackgroundColor = 9
-    const val IAppWindowTitleBar_get_ButtonForegroundColor = 10
-    const val IAppWindowTitleBar_put_ButtonForegroundColor = 11
-    const val IAppWindowTitleBar_get_ButtonHoverBackgroundColor = 12
-    const val IAppWindowTitleBar_put_ButtonHoverBackgroundColor = 13
-    const val IAppWindowTitleBar_get_ButtonHoverForegroundColor = 14
-    const val IAppWindowTitleBar_put_ButtonHoverForegroundColor = 15
-    const val IAppWindowTitleBar_get_ButtonInactiveBackgroundColor = 16
-    const val IAppWindowTitleBar_put_ButtonInactiveBackgroundColor = 17
-    const val IAppWindowTitleBar_get_ButtonInactiveForegroundColor = 18
-    const val IAppWindowTitleBar_put_ButtonInactiveForegroundColor = 19
-    const val IAppWindowTitleBar_get_ButtonPressedBackgroundColor = 20
-    const val IAppWindowTitleBar_put_ButtonPressedBackgroundColor = 21
-    const val IAppWindowTitleBar_get_ButtonPressedForegroundColor = 22
-    const val IAppWindowTitleBar_put_ButtonPressedForegroundColor = 23
-    const val IAppWindowTitleBar_get_ExtendsContentIntoTitleBar = 24
-    const val IAppWindowTitleBar_put_ExtendsContentIntoTitleBar = 25
-    const val IAppWindowTitleBar_get_ForegroundColor = 26
-    const val IAppWindowTitleBar_put_ForegroundColor = 27
-    const val IAppWindowTitleBar_get_Height = 28        // -> INT32 (px, read-only)
-    const val IAppWindowTitleBar_get_InactiveBackgroundColor = 31
-    const val IAppWindowTitleBar_put_InactiveBackgroundColor = 32
-    const val IAppWindowTitleBar_get_InactiveForegroundColor = 33
-    const val IAppWindowTitleBar_put_InactiveForegroundColor = 34
-    const val IAppWindowTitleBar_get_LeftInset = 35     // -> INT32 (px, read-only)
-    const val IAppWindowTitleBar_get_RightInset = 36    // -> INT32 (px, read-only)
-    const val IAppWindowTitleBar_ResetToDefault = 37
-
-    const val IID_IAppWindowTitleBar2 = "86faed38-748a-5b4b-9ccf-3ba0496c9041"
-    const val IAppWindowTitleBar2_get_PreferredHeightOption = 6 // -> TitleBarHeightOption
-    const val IAppWindowTitleBar2_put_PreferredHeightOption = 7
-
-    const val IID_IAppWindowTitleBar3 = "07146e74-0410-5597-aba7-1af276d2ae07"
-    const val IAppWindowTitleBar3_get_PreferredTheme = 6 // -> TitleBarTheme
-    const val IAppWindowTitleBar3_put_PreferredTheme = 7
-
-    // enum Microsoft.UI.Windowing.TitleBarHeightOption: Standard=0, Tall=1, Collapsed=2
-    // enum Microsoft.UI.Windowing.TitleBarTheme: Legacy=0, UseDefaultAppMode=1, Light=2, Dark=3
-    // enum Microsoft.UI.Windowing.OverlappedPresenterState: Maximized=0, Minimized=1, Restored=2
-    // enum Microsoft.UI.Windowing.CompactOverlaySize: Small=0, Medium=1, Large=2
-    // enum Microsoft.UI.Windowing.AppWindowPresenterKind: Default=0, CompactOverlay=1, FullScreen=2, Overlapped=3
-
-    // ---- Microsoft.UI.Windowing.DisplayArea ----
-    const val CLS_DisplayArea = "Microsoft.UI.Windowing.DisplayArea"
-    const val IID_IDisplayArea = "5c7e0537-b621-5579-bcae-a84aa8746167"
-    const val IDisplayArea_get_IsPrimary = 7
-    const val IDisplayArea_get_OuterBounds = 8          // -> RectInt32 (an out struct)
-    const val IDisplayArea_get_WorkArea = 9             // -> RectInt32 (an out struct)
-    const val IID_IDisplayAreaStatics = "02ab4926-211e-5d49-8e4b-2af193daed09"
-    const val IDisplayAreaStatics_get_Primary = 6
-    const val IDisplayAreaStatics_GetFromWindowId = 9   // GetFromWindowId(WindowId, DisplayAreaFallback) -> DisplayArea
-    const val DisplayAreaFallback_Nearest = 2           // enum Microsoft.UI.Windowing.DisplayAreaFallback.Nearest
 
     // ---- Microsoft.UI.Xaml.Controls.TitleBar (derives from Controls.Control) ----
     const val CLS_TitleBar = "Microsoft.UI.Xaml.Controls.TitleBar"
@@ -2224,32 +1811,11 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<TitleBar, Object> (computed at runtime). Shared by BackRequested / PaneToggleRequested. */
     val IID_TitleBarEventHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.TitleBar;{$IID_ITitleBar});" +
                 "cinterface(IInspectable))",
         )
     }
-
-    // ---- Windows.Foundation.IReference<Int32> (boxed/unboxed via PropertyValue.CreateInt32/GetInt32) ----
-    /** Used by OverlappedPresenter's PreferredMinimum/MaximumWidth/Height (null clears it). */
-    val IID_IReference_Int32: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};i4)")
-    }
-
-    // ---- Windows.Foundation.IReference<Double> (boxed via PropertyValue.CreateDouble) ----
-    /** Used by ScrollViewer.ChangeView's offset argument (null = no change). */
-    val IID_IReference_Double: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};f8)")
-    }
-
-    // ---- Windows.Foundation.IReference<Windows.UI.Color> (hand-rolled since PropertyValue has no CreateColor) ----
-    /** Used by AppWindowTitleBar's 12 color properties. Implemented in internal.winui.ColorReference. */
-    val IID_IReference_Color: String by lazy {
-        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.UI.Color;u1;u1;u1;u1))")
-    }
-
-    /** Common to IReference<T> (both Color and Int32): get_Value is always vtbl[6]. */
-    const val IReference_Color_get_Value = 6
 
     // ---- Microsoft.UI.Xaml.Controls.FontIconSource (an IconSource subclass) ----
     const val CLS_FontIconSource = "Microsoft.UI.Xaml.Controls.FontIconSource"
@@ -2276,7 +1842,7 @@ internal object Abi {
     /** The actual IID of TypedEventHandler<ItemsView, ItemsViewItemInvokedEventArgs> (computed at runtime). */
     val IID_ItemsViewItemInvokedHandler: String by lazy {
         Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.Controls.ItemsView;{$IID_IItemsView});" +
                 "rc(Microsoft.UI.Xaml.Controls.ItemsViewItemInvokedEventArgs;" +
                 "{$IID_IItemsViewItemInvokedEventArgs}))",
@@ -2313,94 +1879,4 @@ internal object Abi {
     const val IUniformGridLayout_put_ItemsStretch = 19
     const val IUniformGridLayout_get_MaximumRowsOrColumns = 20
     const val IUniformGridLayout_put_MaximumRowsOrColumns = 21
-
-    // ---- Microsoft.UI.Xaml.Controls.WebView2 ----
-    const val CLS_WebView2 = "Microsoft.UI.Xaml.Controls.WebView2"
-    const val IID_IWebView2Factory = "fb4ec2ce-3074-5c42-b655-64fb81fbd040" // composable factory
-    const val IID_IWebView2 = "2b2c76c2-997c-5069-a8f0-9b84cd7e624b"
-    const val IWebView2_get_CoreWebView2 = 6            // get_CoreWebView2(out CoreWebView2)
-    const val IWebView2_EnsureCoreWebView2Async = 7     // EnsureCoreWebView2Async(out IAsyncAction)
-    const val IWebView2_ExecuteScriptAsync = 8          // ExecuteScriptAsync(string, out IAsyncOperation<string>)
-    const val IWebView2_get_Source = 9                  // get_Source(out Uri)
-    const val IWebView2_put_Source = 10                 // put_Source(Uri)
-    const val IWebView2_get_CanGoForward = 11           // get_CanGoForward(out boolean)
-    const val IWebView2_get_CanGoBack = 13              // get_CanGoBack(out boolean)
-    const val IWebView2_get_DefaultBackgroundColor = 15 // get_DefaultBackgroundColor(out Color)
-    const val IWebView2_put_DefaultBackgroundColor = 16 // put_DefaultBackgroundColor(Color)
-    const val IWebView2_Reload = 17                     // Reload()
-    const val IWebView2_GoForward = 18                  // GoForward()
-    const val IWebView2_GoBack = 19                     // GoBack()
-    const val IWebView2_NavigateToString = 20           // NavigateToString(string)
-    const val IWebView2_Close = 21                      // Close()
-    const val IWebView2_add_NavigationCompleted = 22    // add_NavigationCompleted(TypedEventHandler, out token)
-    const val IWebView2_remove_NavigationCompleted = 23 // remove_NavigationCompleted(token)
-    const val IWebView2_add_WebMessageReceived = 24     // add_WebMessageReceived(TypedEventHandler, out token)
-    const val IWebView2_remove_WebMessageReceived = 25  // remove_WebMessageReceived(token)
-    const val IWebView2_add_NavigationStarting = 26     // add_NavigationStarting(TypedEventHandler, out token)
-    const val IWebView2_remove_NavigationStarting = 27  // remove_NavigationStarting(token)
-    const val IWebView2_add_CoreWebView2Initialized = 30    // add_CoreWebView2Initialized(TypedEventHandler, out token)
-    const val IWebView2_remove_CoreWebView2Initialized = 31 // remove_CoreWebView2Initialized(token)
-    const val IID_ICoreWebView2InitializedEventArgs = "ee59d277-8b2e-57ab-8631-91d27b12ebd9"
-    const val ICoreWebView2InitializedEventArgs_get_Exception = 6 // get_Exception(out Windows.Foundation.HResult = i4)
-
-    // ---- Microsoft.Web.WebView2.Core (from Microsoft.Web.WebView2.Core.winmd in Microsoft.Web.WebView2 1.0.3719.77) ----
-    const val IID_ICoreWebView2 = "3a3f559a-e5e9-5338-bb67-4eb0504a4f14"
-    const val ICoreWebView2_get_DocumentTitle = 11      // get_DocumentTitle(out string)
-    const val ICoreWebView2_PostWebMessageAsJson = 52   // PostWebMessageAsJson(string)
-    const val ICoreWebView2_PostWebMessageAsString = 53 // PostWebMessageAsString(string)
-    const val ICoreWebView2_OpenDevToolsWindow = 61     // OpenDevToolsWindow()
-    const val IID_ICoreWebView2NavigationCompletedEventArgs = "4865e238-036a-5664-95a3-447ec44cf498"
-    const val ICoreWebView2NavigationCompletedEventArgs_get_IsSuccess = 6      // get_IsSuccess(out boolean)
-    const val ICoreWebView2NavigationCompletedEventArgs_get_WebErrorStatus = 7 // get_WebErrorStatus(out CoreWebView2WebErrorStatus)
-    const val IID_ICoreWebView2NavigationStartingEventArgs = "548d23d3-fea3-5616-bd05-ae08066c86d3"
-    const val ICoreWebView2NavigationStartingEventArgs_get_Uri = 6     // get_Uri(out string)
-    const val ICoreWebView2NavigationStartingEventArgs_put_Cancel = 11 // put_Cancel(boolean)
-    const val IID_ICoreWebView2WebMessageReceivedEventArgs = "eb066159-b725-5d5b-adc8-f5d7b9290304"
-    const val ICoreWebView2WebMessageReceivedEventArgs_get_Source = 6           // get_Source(out string)
-    const val ICoreWebView2WebMessageReceivedEventArgs_get_WebMessageAsJson = 7 // get_WebMessageAsJson(out string)
-
-    /** The actual IID of TypedEventHandler<WebView2, CoreWebView2NavigationStartingEventArgs> (computed at runtime). */
-    val IID_WebView2NavigationStartingHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.UI.Xaml.Controls.WebView2;{$IID_IWebView2});" +
-                "rc(Microsoft.Web.WebView2.Core.CoreWebView2NavigationStartingEventArgs;" +
-                "{$IID_ICoreWebView2NavigationStartingEventArgs}))",
-        )
-    }
-
-    /** The actual IID of TypedEventHandler<WebView2, CoreWebView2NavigationCompletedEventArgs> (computed at runtime). */
-    val IID_WebView2NavigationCompletedHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.UI.Xaml.Controls.WebView2;{$IID_IWebView2});" +
-                "rc(Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs;" +
-                "{$IID_ICoreWebView2NavigationCompletedEventArgs}))",
-        )
-    }
-
-    /** The actual IID of TypedEventHandler<WebView2, CoreWebView2WebMessageReceivedEventArgs> (computed at runtime). */
-    val IID_WebView2WebMessageReceivedHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.UI.Xaml.Controls.WebView2;{$IID_IWebView2});" +
-                "rc(Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs;" +
-                "{$IID_ICoreWebView2WebMessageReceivedEventArgs}))",
-        )
-    }
-
-    /** The actual IID of TypedEventHandler<WebView2, CoreWebView2InitializedEventArgs> (computed at runtime). */
-    val IID_WebView2CoreWebView2InitializedHandler: String by lazy {
-        Pinterface.iid(
-            "pinterface({$IID_TypedEventHandler_OPEN};" +
-                "rc(Microsoft.UI.Xaml.Controls.WebView2;{$IID_IWebView2});" +
-                "rc(Microsoft.UI.Xaml.Controls.CoreWebView2InitializedEventArgs;" +
-                "{$IID_ICoreWebView2InitializedEventArgs}))",
-        )
-    }
-
-    /** The actual IID of AsyncOperationCompletedHandler<String> (computed at runtime). Used for ExecuteScriptAsync. */
-    val IID_AsyncOperationCompletedHandler_String: String by lazy {
-        Pinterface.iid("pinterface({$IID_AsyncOperationCompletedHandler_OPEN};string)")
-    }
 }

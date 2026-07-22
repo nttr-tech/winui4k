@@ -12,7 +12,8 @@ import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -25,24 +26,24 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * (i.e. after Loaded).
  */
 class WAnnotatedScrollBar : WControl(
-    Activation.composeDefault(Abi.CLS_AnnotatedScrollBar, Abi.IID_IAnnotatedScrollBarFactory), // default interface = IAnnotatedScrollBar
+    Activation.composeDefault(XamlInterop.CLS_AnnotatedScrollBar, XamlInterop.IID_IAnnotatedScrollBarFactory), // default interface = IAnnotatedScrollBar
 ) {
     /** DetailLabelRequested event tokens registered via addDetailLabelRequestedListener. */
     private val detailLabelRequestedTokens = ListenerTokens<(Double) -> String>()
 
     /** The IScrollController view (AnnotatedScrollBar.ScrollController). Passed to a ScrollView. */
     private val scrollController: ComPtr by lazy {
-        own(inspectable.getPtr(Abi.IAnnotatedScrollBar_get_ScrollController))
+        own(inspectable.getPtr(XamlInterop.IAnnotatedScrollBar_get_ScrollController))
     }
 
     /** The label collection (AnnotatedScrollBar.Labels, an IVector<AnnotatedScrollBarLabel>). */
     private val labels: ComPtr by lazy {
-        own(inspectable.getPtr(Abi.IAnnotatedScrollBar_get_Labels))
+        own(inspectable.getPtr(XamlInterop.IAnnotatedScrollBar_get_Labels))
     }
 
     /** The activatable factory that creates AnnotatedScrollBarLabel instances. */
     private val labelFactory: ComPtr by lazy {
-        own(Activation.factory(Abi.CLS_AnnotatedScrollBarLabel, Abi.IID_IAnnotatedScrollBarLabelFactory))
+        own(Activation.factory(XamlInterop.CLS_AnnotatedScrollBarLabel, XamlInterop.IID_IAnnotatedScrollBarLabelFactory))
     }
 
     /**
@@ -53,7 +54,7 @@ class WAnnotatedScrollBar : WControl(
      */
     fun connectTo(scrollView: WScrollView): Boolean {
         val presenter = scrollView.scrollPresenter ?: return false
-        presenter.call(Abi.IScrollPresenter_put_VerticalScrollController, scrollController.ptr)
+        presenter.call(XamlInterop.IScrollPresenter_put_VerticalScrollController, scrollController.ptr)
         return true
     }
 
@@ -64,14 +65,14 @@ class WAnnotatedScrollBar : WControl(
      */
     fun addLabel(content: String, offset: Double) {
         val boxed = PropertyValues.boxString(content)
-        val label = labelFactory.getPtr(Abi.IAnnotatedScrollBarLabelFactory_CreateInstance, boxed.ptr, offset)
+        val label = labelFactory.getPtr(XamlInterop.IAnnotatedScrollBarLabelFactory_CreateInstance, boxed.ptr, offset)
         boxed.release()
-        labels.call(Abi.IVector_Append, label.ptr)
+        labels.call(FoundationInterop.IVector_Append, label.ptr)
     }
 
     /** Removes all added labels (AnnotatedScrollBar.Labels.Clear). */
     fun clearLabels() {
-        labels.call(Abi.IVector_Clear)
+        labels.call(FoundationInterop.IVector_Clear)
     }
 
     /**
@@ -82,13 +83,13 @@ class WAnnotatedScrollBar : WControl(
     fun addDetailLabelRequestedListener(listener: (Double) -> String) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AnnotatedScrollBarDetailLabelRequestedHandler",
-            Abi.IID_AnnotatedScrollBarDetailLabelRequestedHandler,
-            Abi.IAnnotatedScrollBar_add_DetailLabelRequested,
+            XamlInterop.IID_AnnotatedScrollBarDetailLabelRequestedHandler,
+            XamlInterop.IAnnotatedScrollBar_add_DetailLabelRequested,
         ) { _, args ->
             val eventArgs = ComPtr(args)
-            val offset = eventArgs.getDouble(Abi.IAnnotatedScrollBarDetailLabelRequestedEventArgs_get_ScrollOffset)
+            val offset = eventArgs.getDouble(XamlInterop.IAnnotatedScrollBarDetailLabelRequestedEventArgs_get_ScrollOffset)
             val boxed = PropertyValues.boxString(listener(offset))
-            eventArgs.call(Abi.IAnnotatedScrollBarDetailLabelRequestedEventArgs_put_Content, boxed.ptr)
+            eventArgs.call(XamlInterop.IAnnotatedScrollBarDetailLabelRequestedEventArgs_put_Content, boxed.ptr)
             boxed.release()
         }
         detailLabelRequestedTokens.add(listener, token)
@@ -97,7 +98,7 @@ class WAnnotatedScrollBar : WControl(
     /** Unsubscribes a listener registered via [addDetailLabelRequestedListener]. */
     fun removeDetailLabelRequestedListener(listener: (Double) -> String) {
         val token = detailLabelRequestedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IAnnotatedScrollBar_remove_DetailLabelRequested, token)
+        inspectable.removeEventHandler(XamlInterop.IAnnotatedScrollBar_remove_DetailLabelRequested, token)
     }
 
     /**
@@ -112,14 +113,14 @@ class WAnnotatedScrollBar : WControl(
      */
     private fun applyLabelTemplate() {
         registerLabelContentConverter()
-        val statics = Activation.factory(Abi.CLS_XamlReader, Abi.IID_IXamlReaderStatics)
+        val statics = Activation.factory(XamlInterop.CLS_XamlReader, XamlInterop.IID_IXamlReaderStatics)
         val template = Hstring.use(LABEL_TEMPLATE_XAML) { h ->
-            statics.getPtr(Abi.IXamlReaderStatics_Load, h)
+            statics.getPtr(XamlInterop.IXamlReaderStatics_Load, h)
         }
         statics.release()
-        val elementFactory = template.queryInterface(Abi.IID_IElementFactory)
+        val elementFactory = template.queryInterface(XamlInterop.IID_IElementFactory)
         template.release()
-        inspectable.call(Abi.IAnnotatedScrollBar_put_LabelTemplate, elementFactory.ptr)
+        inspectable.call(XamlInterop.IAnnotatedScrollBar_put_LabelTemplate, elementFactory.ptr)
         elementFactory.release()
     }
 
@@ -153,7 +154,7 @@ class WAnnotatedScrollBar : WControl(
         val labelContentConverter: KComObject by lazy {
             KComObject("WinUI4K.AnnotatedScrollBarLabelContentConverter")
                 .addInterface(
-                    Abi.IID_IValueConverter,
+                    XamlInterop.IID_IValueConverter,
                     listOf(
                         // vtbl[6] Convert(this, value, targetType, parameter, language, out result)
                         KComObject.Method(DESC_CONVERT) { args ->
@@ -162,10 +163,10 @@ class WAnnotatedScrollBar : WControl(
                             var content = Ptr.NULL
                             if (!value.isNull) {
                                 val label = ComPtr(value)
-                                    .queryInterfaceOrNull(Abi.IID_IAnnotatedScrollBarLabel)
+                                    .queryInterfaceOrNull(XamlInterop.IID_IAnnotatedScrollBarLabel)
                                 if (label != null) {
                                     // Transfer ownership into out (an out object is released by the caller)
-                                    content = label.getPtrOrNull(Abi.IAnnotatedScrollBarLabel_get_Content)
+                                    content = label.getPtrOrNull(XamlInterop.IAnnotatedScrollBarLabel_get_Content)
                                         ?.ptr ?: Ptr.NULL
                                     label.release()
                                 }

@@ -3,7 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * The values of Microsoft.UI.Xaml.Controls.Primitives.PlacementMode that ToolTip uses.
@@ -37,10 +37,10 @@ enum class ToolTipPlacement(internal val native: Int) {
  * than a string, and attach it to a target via [WComponent.setToolTip].
  */
 class WToolTip : WControl(
-    Activation.composeDefault(Abi.CLS_ToolTip, Abi.IID_IToolTipFactory), // default interface = IToolTip
+    Activation.composeDefault(XamlInterop.CLS_ToolTip, XamlInterop.IID_IToolTipFactory), // default interface = IToolTip
 ) {
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     private var contentComponent: WComponent? = null
@@ -51,7 +51,7 @@ class WToolTip : WControl(
             field = value
             contentComponent = null
             val boxed = PropertyValues.boxString(value)
-            contentControl.call(Abi.IContentControl_put_Content, boxed.ptr)
+            contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
             boxed.release()
         }
 
@@ -60,16 +60,16 @@ class WToolTip : WControl(
         get() = contentComponent
         set(value) {
             contentComponent = value
-            contentControl.call(Abi.IContentControl_put_Content, value?.uiElement?.ptr)
+            contentControl.call(XamlInterop.IContentControl_put_Content, value?.uiElement?.ptr)
         }
 
     /** Where the hint is shown (ToolTip.Placement). */
     var placement: ToolTipPlacement
-        get() = ToolTipPlacement.of(inspectable.getInt(Abi.IToolTip_get_Placement))
-        set(value) = inspectable.call(Abi.IToolTip_put_Placement, value.native)
+        get() = ToolTipPlacement.of(inspectable.getInt(XamlInterop.IToolTip_get_Placement))
+        set(value) = inspectable.call(XamlInterop.IToolTip_put_Placement, value.native)
 }
 
 /** The ToolTipService statics (SetToolTip / SetPlacement). It's agile, so it's reused. */
 internal val toolTipServiceStatics: ComPtr by lazy {
-    Activation.factory(Abi.CLS_ToolTipService, Abi.IID_IToolTipServiceStatics)
+    Activation.factory(XamlInterop.CLS_ToolTipService, XamlInterop.IID_IToolTipServiceStatics)
 }

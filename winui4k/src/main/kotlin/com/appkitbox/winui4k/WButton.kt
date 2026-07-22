@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JButton-like: WinUI 3's Button.
@@ -11,13 +11,13 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * [addActionListener] / [removeActionListener] (Click), [command] / [commandParameter], [flyout].
  */
 class WButton(text: String = "") : WButtonBase(
-    Activation.composeDefault(Abi.CLS_Button, Abi.IID_IButtonFactory), // default interface = IButton
+    Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
 ) {
     /** The flyout opened by clicking the button (Button.Flyout). */
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr)
+            inspectable.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /**
@@ -29,10 +29,10 @@ class WButton(text: String = "") : WButtonBase(
             field = value
             if (value) {
                 val style = WinUiUtilities.lookupApplicationResource("AccentButtonStyle")
-                frameworkElement.call(Abi.IFrameworkElement_put_Style, style.ptr)
+                frameworkElement.call(XamlInterop.IFrameworkElement_put_Style, style.ptr)
                 style.release()
             } else {
-                frameworkElement.call(Abi.IFrameworkElement_put_Style, null)
+                frameworkElement.call(XamlInterop.IFrameworkElement_put_Style, null)
             }
         }
 

@@ -2,7 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * A context menu with a mini toolbar attached: WinUI 3's CommandBarFlyout.
@@ -10,20 +10,20 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * [addSecondaryCommand] show in the menu below them. Set it on WComponent.contextFlyout to use it.
  */
 class WCommandBarFlyout : WFlyoutBase(
-    Activation.composeDefault(Abi.CLS_CommandBarFlyout, Abi.IID_ICommandBarFlyoutFactory),
+    Activation.composeDefault(XamlInterop.CLS_CommandBarFlyout, XamlInterop.IID_ICommandBarFlyoutFactory),
 ) {
     private val primaryCommands: ComPtr by lazy {
-        queryVector(Abi.ICommandBarFlyout_get_PrimaryCommands)
+        queryVector(XamlInterop.ICommandBarFlyout_get_PrimaryCommands)
     }
     private val secondaryCommands: ComPtr by lazy {
-        queryVector(Abi.ICommandBarFlyout_get_SecondaryCommands)
+        queryVector(XamlInterop.ICommandBarFlyout_get_SecondaryCommands)
     }
 
     /** QIs an IObservableVector<ICommandBarElement> to an IVector view that has Append. */
     private fun queryVector(getSlot: Int): ComPtr {
         val observable = inspectable.getPtr(getSlot)
         return try {
-            own(observable.queryInterface(Abi.IID_IVector_ICommandBarElement))
+            own(observable.queryInterface(XamlInterop.IID_IVector_ICommandBarElement))
         } finally {
             observable.release()
         }

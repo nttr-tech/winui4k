@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -10,41 +10,41 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * a background ([background]), and padding ([padding]) around a single [child].
  */
 class WBorder(child: WComponent? = null) : WComponent(
-    Activation.activate(Abi.CLS_Border, Abi.IID_IBorder),
+    Activation.activate(XamlInterop.CLS_Border, XamlInterop.IID_IBorder),
 ) {
     /** The single child shown inside the border (Border.Child). */
     var child: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IBorder_put_Child, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.IBorder_put_Child, value?.uiElement?.ptr)
         }
 
     /** The border color (Border.BorderBrush). Converted to a SolidColorBrush before being passed. */
     var borderColor: WColor? = null
         set(value) {
             field = value
-            putBrush(Abi.IBorder_put_BorderBrush, value)
+            putBrush(XamlInterop.IBorder_put_BorderBrush, value)
         }
 
     /** The border thickness, the same on all four sides (Border.BorderThickness). */
     var borderThickness: Double = 0.0
         set(value) {
             field = value
-            XamlStructs.putThickness(inspectable, Abi.IBorder_put_BorderThickness, value, value, value, value)
+            XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_BorderThickness, value, value, value, value)
         }
 
     /** The corner radius, the same on all four corners (Border.CornerRadius). */
     var cornerRadius: Double = 0.0
         set(value) {
             field = value
-            XamlStructs.putCornerRadius(inspectable, Abi.IBorder_put_CornerRadius, value)
+            XamlStructs.putCornerRadius(inspectable, XamlInterop.IBorder_put_CornerRadius, value)
         }
 
     /** The background color (Border.Background). Converted to a SolidColorBrush before being passed. */
     var background: WColor? = null
         set(value) {
             field = value
-            putBrush(Abi.IBorder_put_Background, value)
+            putBrush(XamlInterop.IBorder_put_Background, value)
         }
 
     /**
@@ -55,10 +55,10 @@ class WBorder(child: WComponent? = null) : WComponent(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IBorder_put_Background, null)
+                inspectable.call(XamlInterop.IBorder_put_Background, null)
             } else {
                 val brush = value.createBrush()
-                inspectable.call(Abi.IBorder_put_Background, brush)
+                inspectable.call(XamlInterop.IBorder_put_Background, brush)
                 brush.release()
             }
         }
@@ -67,12 +67,12 @@ class WBorder(child: WComponent? = null) : WComponent(
     var padding: Double = 0.0
         set(value) {
             field = value
-            XamlStructs.putThickness(inspectable, Abi.IBorder_put_Padding, value, value, value, value)
+            XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_Padding, value, value, value, value)
         }
 
     /** Sets the padding on each side individually (Border.Padding). */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
-        XamlStructs.putThickness(inspectable, Abi.IBorder_put_Padding, left, top, right, bottom)
+        XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_Padding, left, top, right, bottom)
     }
 
     init {

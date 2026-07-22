@@ -6,7 +6,8 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.WindowingInterop
 
 /**
  * Microsoft.UI.Windowing.AppWindowPresenterKind (an OS default behavior set).
@@ -67,79 +68,79 @@ enum class OverlappedPresenterState(internal val native: Int) {
  */
 class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresenter(ptr) {
     /** An IOverlappedPresenter3 view for PreferredMinimum/MaximumWidth/Height. */
-    private val presenter3: ComPtr by lazy { presenterPtr.queryInterface(Abi.IID_IOverlappedPresenter3) }
+    private val presenter3: ComPtr by lazy { presenterPtr.queryInterface(WindowingInterop.IID_IOverlappedPresenter3) }
 
     /** Whether the border (including the caption) is shown (read-only; change it with [setBorderAndTitleBar]). */
-    val hasBorder: Boolean get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_HasBorder)
+    val hasBorder: Boolean get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_HasBorder)
 
     /** Whether the title bar is shown (read-only; change it with [setBorderAndTitleBar]). */
-    val hasTitleBar: Boolean get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_HasTitleBar)
+    val hasTitleBar: Boolean get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_HasTitleBar)
 
     /** Whether it's always shown on top. */
     var isAlwaysOnTop: Boolean
-        get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_IsAlwaysOnTop)
-        set(value) = presenterPtr.putBool(Abi.IOverlappedPresenter_put_IsAlwaysOnTop, value)
+        get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsAlwaysOnTop)
+        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, value)
 
     /** Whether the maximize button/action is enabled. */
     var isMaximizable: Boolean
-        get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_IsMaximizable)
-        set(value) = presenterPtr.putBool(Abi.IOverlappedPresenter_put_IsMaximizable, value)
+        get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsMaximizable)
+        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsMaximizable, value)
 
     /** Whether the minimize button/action is enabled. */
     var isMinimizable: Boolean
-        get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_IsMinimizable)
-        set(value) = presenterPtr.putBool(Abi.IOverlappedPresenter_put_IsMinimizable, value)
+        get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsMinimizable)
+        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsMinimizable, value)
 
     /**
      * Whether it's modal. Requires an owner window (use this on an AppWindow created via
      * [WAppWindow.create] with an owner specified).
      */
     var isModal: Boolean
-        get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_IsModal)
-        set(value) = presenterPtr.putBool(Abi.IOverlappedPresenter_put_IsModal, value)
+        get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsModal)
+        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsModal, value)
 
     /** Whether resizing is enabled. */
     var isResizable: Boolean
-        get() = presenterPtr.getBool(Abi.IOverlappedPresenter_get_IsResizable)
-        set(value) = presenterPtr.putBool(Abi.IOverlappedPresenter_put_IsResizable, value)
+        get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsResizable)
+        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsResizable, value)
 
     /** The current display state (maximized/minimized/normal, read-only). */
     val state: OverlappedPresenterState
-        get() = OverlappedPresenterState.of(presenterPtr.getInt(Abi.IOverlappedPresenter_get_State))
+        get() = OverlappedPresenterState.of(presenterPtr.getInt(WindowingInterop.IOverlappedPresenter_get_State))
 
     /** The minimum height (px). Setting it to null clears the constraint (IReference<Int32>). */
     var preferredMinimumHeight: Int?
-        get() = getPreferredInt(Abi.IOverlappedPresenter3_get_PreferredMinimumHeight)
-        set(value) = putPreferredInt(Abi.IOverlappedPresenter3_put_PreferredMinimumHeight, value)
+        get() = getPreferredInt(WindowingInterop.IOverlappedPresenter3_get_PreferredMinimumHeight)
+        set(value) = putPreferredInt(WindowingInterop.IOverlappedPresenter3_put_PreferredMinimumHeight, value)
 
     /** The minimum width (px). Setting it to null clears the constraint (IReference<Int32>). */
     var preferredMinimumWidth: Int?
-        get() = getPreferredInt(Abi.IOverlappedPresenter3_get_PreferredMinimumWidth)
-        set(value) = putPreferredInt(Abi.IOverlappedPresenter3_put_PreferredMinimumWidth, value)
+        get() = getPreferredInt(WindowingInterop.IOverlappedPresenter3_get_PreferredMinimumWidth)
+        set(value) = putPreferredInt(WindowingInterop.IOverlappedPresenter3_put_PreferredMinimumWidth, value)
 
     /** The maximum width (px). Setting it to null clears the constraint (IReference<Int32>). */
     var preferredMaximumWidth: Int?
-        get() = getPreferredInt(Abi.IOverlappedPresenter3_get_PreferredMaximumWidth)
-        set(value) = putPreferredInt(Abi.IOverlappedPresenter3_put_PreferredMaximumWidth, value)
+        get() = getPreferredInt(WindowingInterop.IOverlappedPresenter3_get_PreferredMaximumWidth)
+        set(value) = putPreferredInt(WindowingInterop.IOverlappedPresenter3_put_PreferredMaximumWidth, value)
 
     /** The maximum height (px). Setting it to null clears the constraint (IReference<Int32>). */
     var preferredMaximumHeight: Int?
-        get() = getPreferredInt(Abi.IOverlappedPresenter3_get_PreferredMaximumHeight)
-        set(value) = putPreferredInt(Abi.IOverlappedPresenter3_put_PreferredMaximumHeight, value)
+        get() = getPreferredInt(WindowingInterop.IOverlappedPresenter3_get_PreferredMaximumHeight)
+        set(value) = putPreferredInt(WindowingInterop.IOverlappedPresenter3_put_PreferredMaximumHeight, value)
 
     /** Maximizes the window (OverlappedPresenter.Maximize). */
-    fun maximize() = presenterPtr.call(Abi.IOverlappedPresenter_Maximize)
+    fun maximize() = presenterPtr.call(WindowingInterop.IOverlappedPresenter_Maximize)
 
     /** Minimizes the window (OverlappedPresenter.Minimize). */
-    fun minimize() = presenterPtr.call(Abi.IOverlappedPresenter_Minimize)
+    fun minimize() = presenterPtr.call(WindowingInterop.IOverlappedPresenter_Minimize)
 
     /** Restores the window to normal display (OverlappedPresenter.Restore). */
-    fun restore() = presenterPtr.call(Abi.IOverlappedPresenter_Restore)
+    fun restore() = presenterPtr.call(WindowingInterop.IOverlappedPresenter_Restore)
 
     /** Toggles the border and title bar's visibility together (OverlappedPresenter.SetBorderAndTitleBar). */
     fun setBorderAndTitleBar(hasBorder: Boolean, hasTitleBar: Boolean) {
         presenterPtr.callWith(
-            Abi.IOverlappedPresenter_SetBorderAndTitleBar,
+            WindowingInterop.IOverlappedPresenter_SetBorderAndTitleBar,
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.U8, ArgKind.U8),
             if (hasBorder) 1.toByte() else 0.toByte(),
             if (hasTitleBar) 1.toByte() else 0.toByte(),
@@ -161,7 +162,7 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
             return
         }
         val boxed = PropertyValues.boxInt(value)
-        val reference = boxed.queryInterface(Abi.IID_IReference_Int32)
+        val reference = boxed.queryInterface(FoundationInterop.IID_IReference_Int32)
         presenter3.call(slot, reference.ptr)
         reference.release()
         boxed.release()
@@ -170,9 +171,9 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
     companion object {
         /** Creates a new OverlappedPresenter for a normal window (OverlappedPresenterStatics.Create). */
         fun create(): WOverlappedPresenter {
-            val statics = Activation.factory(Abi.CLS_OverlappedPresenter, Abi.IID_IOverlappedPresenterStatics)
+            val statics = Activation.factory(WindowingInterop.CLS_OverlappedPresenter, WindowingInterop.IID_IOverlappedPresenterStatics)
             return try {
-                WOverlappedPresenter(statics.getPtr(Abi.IOverlappedPresenterStatics_Create))
+                WOverlappedPresenter(statics.getPtr(WindowingInterop.IOverlappedPresenterStatics_Create))
             } finally {
                 statics.release()
             }
@@ -183,9 +184,9 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
          * (OverlappedPresenterStatics.CreateForDialog). Also set [isModal] to true to make it modal.
          */
         fun createForDialog(): WOverlappedPresenter {
-            val statics = Activation.factory(Abi.CLS_OverlappedPresenter, Abi.IID_IOverlappedPresenterStatics)
+            val statics = Activation.factory(WindowingInterop.CLS_OverlappedPresenter, WindowingInterop.IID_IOverlappedPresenterStatics)
             return try {
-                WOverlappedPresenter(statics.getPtr(Abi.IOverlappedPresenterStatics_CreateForDialog))
+                WOverlappedPresenter(statics.getPtr(WindowingInterop.IOverlappedPresenterStatics_CreateForDialog))
             } finally {
                 statics.release()
             }
@@ -203,9 +204,9 @@ class WFullScreenPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
     companion object {
         /** Creates a new FullScreenPresenter (FullScreenPresenterStatics.Create). */
         fun create(): WFullScreenPresenter {
-            val statics = Activation.factory(Abi.CLS_FullScreenPresenter, Abi.IID_IFullScreenPresenterStatics)
+            val statics = Activation.factory(WindowingInterop.CLS_FullScreenPresenter, WindowingInterop.IID_IFullScreenPresenterStatics)
             return try {
-                WFullScreenPresenter(statics.getPtr(Abi.IFullScreenPresenterStatics_Create))
+                WFullScreenPresenter(statics.getPtr(WindowingInterop.IFullScreenPresenterStatics_Create))
             } finally {
                 statics.release()
             }
@@ -240,15 +241,15 @@ enum class CompactOverlaySize(internal val native: Int) {
 class WCompactOverlayPresenter internal constructor(ptr: ComPtr) : WAppWindowPresenter(ptr) {
     /** The initial size (CompactOverlayPresenter.InitialSize). */
     var initialSize: CompactOverlaySize
-        get() = CompactOverlaySize.of(presenterPtr.getInt(Abi.ICompactOverlayPresenter_get_InitialSize))
-        set(value) = presenterPtr.call(Abi.ICompactOverlayPresenter_put_InitialSize, value.native)
+        get() = CompactOverlaySize.of(presenterPtr.getInt(WindowingInterop.ICompactOverlayPresenter_get_InitialSize))
+        set(value) = presenterPtr.call(WindowingInterop.ICompactOverlayPresenter_put_InitialSize, value.native)
 
     companion object {
         /** Creates a new CompactOverlayPresenter (CompactOverlayPresenterStatics.Create). */
         fun create(): WCompactOverlayPresenter {
-            val statics = Activation.factory(Abi.CLS_CompactOverlayPresenter, Abi.IID_ICompactOverlayPresenterStatics)
+            val statics = Activation.factory(WindowingInterop.CLS_CompactOverlayPresenter, WindowingInterop.IID_ICompactOverlayPresenterStatics)
             return try {
-                WCompactOverlayPresenter(statics.getPtr(Abi.ICompactOverlayPresenterStatics_Create))
+                WCompactOverlayPresenter(statics.getPtr(WindowingInterop.ICompactOverlayPresenterStatics_Create))
             } finally {
                 statics.release()
             }

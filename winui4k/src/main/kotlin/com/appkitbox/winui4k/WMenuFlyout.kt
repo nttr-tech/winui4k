@@ -2,7 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JPopupMenu-like: WinUI 3's MenuFlyout.
@@ -10,19 +11,19 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * menu items added with [add].
  */
 class WMenuFlyout : WFlyoutBase(
-    Activation.composeDefault(Abi.CLS_MenuFlyout, Abi.IID_IMenuFlyoutFactory),
+    Activation.composeDefault(XamlInterop.CLS_MenuFlyout, XamlInterop.IID_IMenuFlyoutFactory),
 ) {
     private val items: ComPtr by lazy {
-        own(inspectable.getPtr(Abi.IMenuFlyout_get_Items)) // IVector<MenuFlyoutItemBase>
+        own(inspectable.getPtr(XamlInterop.IMenuFlyout_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
     /** Appends a menu item (Append onto MenuFlyout.Items). */
     fun add(item: WMenuFlyoutItemBase) {
-        items.call(Abi.IVector_Append, item.menuFlyoutItemBase.ptr)
+        items.call(FoundationInterop.IVector_Append, item.menuFlyoutItemBase.ptr)
     }
 
     /** Removes all menu items (IVector.Clear). */
     fun removeAll() {
-        items.call(Abi.IVector_Clear)
+        items.call(FoundationInterop.IVector_Clear)
     }
 }

@@ -11,7 +11,7 @@
 | `internal.win32` | Win32 フラット API (Win32: DPI 宣言、moduleFilePath) |
 | `internal.com` | COM の基盤 (ComPtr, Guid, checkHr / WindowsRuntimeException) |
 | `internal.winrt` | WinRT ランタイム (Hstring, KComObject, WinRtRuntime, Activation, PropertyValues, Pinterface, Async, addEventHandler) |
-| `internal.winui` | WinUI 3 / WinAppSDK 固有 (Abi 定数, Dispatcher, WinAppSdkBootstrap, XamlStructs) |
+| `internal.winui` | WinUI 3 / WinAppSDK 固有 (ABI 定数の *Interop オブジェクト, Dispatcher, WinAppSdkBootstrap, XamlStructs) |
 | `com.appkitbox.winui4k` (ルート) | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ (他は internal) |
 
 依存方向: `com.appkitbox.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` (`internal.win32 → internal.ffi.api`)。
@@ -31,7 +31,7 @@
 | DOUBLE | `ptr.getDouble(slot)` | `ptr.call(slot, value)` | WLabel.fontSize |
 | オブジェクト参照 | `ptr.getPtr(slot)` / null になりうるなら `getPtrOrNull` | `ptr.call(slot, obj.ptr)`。null 許容はそのまま null を渡す | WButton.flyout |
 | Object (box された値) | `PropertyValues.unboxString(boxed)` → 使用後 `boxed.release()` | `PropertyValues.boxString(value)` → put 後 `release()` | WButtonBase.text |
-| IReference\<Boolean\> (null あり) | `getPtrOrNull` → `PropertyValues.unboxBool(boxed)` → `release()` | `PropertyValues.boxBool(value)` を `queryInterface(Abi.IID_IReference_Boolean)` してから put。null は `null` | WToggleButton.isChecked |
+| IReference\<Boolean\> (null あり) | `getPtrOrNull` → `PropertyValues.unboxBool(boxed)` → `release()` | `PropertyValues.boxBool(value)` を `queryInterface(FoundationInterop.IID_IReference_Boolean)` してから put。null は `null` | WToggleButton.isChecked |
 | 構造体の値渡し | `XamlStructs.getColor` (out 引数にポインタ渡し) | `XamlStructs.putThickness / putCornerRadius / putGridLength / putColor` (新しい構造体はここに追加) | WColorPicker.color, WComponent.margin |
 | Brush (色) | — | `WColor.createBrush()` で SolidColorBrush を作り put 後 `release()` | WBorder.borderColor |
 | Windows.Foundation.Uri | `getPtrOrNull(slot)` → `getString(IUriRuntimeClass_get_AbsoluteUri)` | `Activation.factory(CLS_Uri, IID_IUriRuntimeClassFactory).getPtr(CreateUri, hstring)` で生成して put | WHyperlinkButton.navigateUri |
@@ -48,7 +48,7 @@
 レイアウトパネルの添付プロパティは `IXxxStatics` の Set メソッドを呼ぶ。規範実装:
 **WCanvas / WGrid / WRelativePanel** の `private companion object { val statics }`。要点:
 
-- `Activation.factory(Abi.CLS_Xxx, Abi.IID_IXxxStatics)` を companion の `by lazy` で保持する
+- `Activation.factory(XamlInterop.CLS_Xxx, XamlInterop.IID_IXxxStatics)` を companion の `by lazy` で保持する
 - 第 1 引数は winmd の宣言どおり UIElement か FrameworkElement (Grid は FrameworkElement)
 - boolean 引数 (RelativePanel.AlignXxxWithPanel) は 1 バイトなので
   `callWith` で `ArgKind.U8` を含む `CallDescriptor` を明示する (WRelativePanel.putBool 参照)
@@ -68,10 +68,10 @@
 - 1 リスナーで複数イベントを購読する場合は token の配列を保持する
   (規範実装: WToggleButton.addItemListener — Checked / Unchecked / Indeterminate の 3 本)
 - イベントの型が `TypedEventHandler<TSender, TArgs>` の場合、IID は winmd に無いので
-  `Pinterface.iid` で実行時計算する (規範実装: Abi.IID_SplitButtonClickHandler)。署名は
+  `Pinterface.iid` で実行時計算する (規範実装: XamlInterop.IID_SplitButtonClickHandler)。署名は
   `pinterface({TypedEventHandler ベース IID};rc(TSender 完全名;{既定 IID});rc(TArgs 完全名;{既定 IID}))`。
   **TArgs が Object のときは `rc(...)` の代わりに `cinterface(IInspectable)`**
-  (規範実装: Abi.IID_RatingControlValueChangedHandler)
+  (規範実装: XamlInterop.IID_RatingControlValueChangedHandler)
 
 ## Kotlin 側で WinRT インターフェースを実装する
 
@@ -85,7 +85,7 @@ ICommand のように XAML へ渡すオブジェクトを Kotlin で実装する
 ## ジェネリックインターフェース (IVector<T> など)
 
 実体 IID は winmd に無いので `Pinterface.iid(署名)` で実行時に SHA-1 計算する。
-規範実装: Abi.IID_IVector_UIElement、Abi.IID_ResourceManagerRequestedHandler
+規範実装: FoundationInterop.IID_IVector_UIElement、XamlInterop.IID_ResourceManagerRequestedHandler
 (TypedEventHandler<T1, T2>)。既に型付きポインタを持っている場合は QI せず
 スロットを直接呼んでよい (WPanel.add のコメント参照)。
 

@@ -10,7 +10,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.ItemsViewSelectionMode (ItemsView's selection mode).
@@ -42,7 +43,7 @@ enum class ItemsViewSelectionMode(internal val native: Int) {
  * To subscribe to clicks, set [isItemInvokedEnabled] = true and use [addItemInvokedListener].
  */
 class WItemsView : WControl(
-    Activation.composeDefault(Abi.CLS_ItemsView, Abi.IID_IItemsViewFactory),
+    Activation.composeDefault(XamlInterop.CLS_ItemsView, XamlInterop.IID_IItemsViewFactory),
 ) {
     /** ItemInvoked event tokens registered via addItemInvokedListener. */
     private val itemInvokedTokens = ListenerTokens<(Int) -> Unit>()
@@ -52,22 +53,22 @@ class WItemsView : WControl(
 
     /** The selection mode (ItemsView.SelectionMode). */
     var selectionMode: ItemsViewSelectionMode
-        get() = ItemsViewSelectionMode.of(inspectable.getInt(Abi.IItemsView_get_SelectionMode))
-        set(value) = inspectable.call(Abi.IItemsView_put_SelectionMode, value.native)
+        get() = ItemsViewSelectionMode.of(inspectable.getInt(XamlInterop.IItemsView_get_SelectionMode))
+        set(value) = inspectable.call(XamlInterop.IItemsView_put_SelectionMode, value.native)
 
     /**
      * Whether clicking an item fires ItemInvoked (ItemsView.IsItemInvokedEnabled).
      * Set this to true when using [addItemInvokedListener].
      */
     var isItemInvokedEnabled: Boolean
-        get() = inspectable.getBool(Abi.IItemsView_get_IsItemInvokedEnabled)
-        set(value) = inspectable.putBool(Abi.IItemsView_put_IsItemInvokedEnabled, value)
+        get() = inspectable.getBool(XamlInterop.IItemsView_get_IsItemInvokedEnabled)
+        set(value) = inspectable.putBool(XamlInterop.IItemsView_put_IsItemInvokedEnabled, value)
 
     /** How items are laid out (ItemsView.Layout). null restores the default (a single vertical StackLayout). */
     var layout: WUniformGridLayout? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IItemsView_put_Layout, value?.layout)
+            inspectable.call(XamlInterop.IItemsView_put_Layout, value?.layout)
         }
 
     /**
@@ -78,7 +79,7 @@ class WItemsView : WControl(
     fun setItems(items: List<WItemContainer>) {
         this.items = items
         val iterable = UIElementIterable(items.map { it.uiElement })
-        inspectable.call(Abi.IItemsView_put_ItemsSource, iterable.comObject.primary)
+        inspectable.call(XamlInterop.IItemsView_put_ItemsSource, iterable.comObject.primary)
     }
 
     /**
@@ -88,11 +89,11 @@ class WItemsView : WControl(
     fun addItemInvokedListener(listener: (Int) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ItemsViewItemInvokedHandler",
-            Abi.IID_ItemsViewItemInvokedHandler,
-            Abi.IItemsView_add_ItemInvoked,
+            XamlInterop.IID_ItemsViewItemInvokedHandler,
+            XamlInterop.IItemsView_add_ItemInvoked,
         ) { _, args ->
             // args is an ItemsViewItemInvokedEventArgs; read InvokedItem (= the WItemContainer passed in)
-            val invoked = ComPtr(args).getPtr(Abi.IItemsViewItemInvokedEventArgs_get_InvokedItem)
+            val invoked = ComPtr(args).getPtr(XamlInterop.IItemsViewItemInvokedEventArgs_get_InvokedItem)
             val index = try {
                 indexOfItem(invoked)
             } finally {
@@ -106,7 +107,7 @@ class WItemsView : WControl(
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
     fun removeItemInvokedListener(listener: (Int) -> Unit) {
         val token = itemInvokedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IItemsView_remove_ItemInvoked, token)
+        inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
     }
 
     /**
@@ -135,7 +136,7 @@ private class UIElementIterable(private val elements: List<ComPtr>) {
     /** The COM object passed to the XAML side as an IIterable<Object>. */
     val comObject: KComObject = KComObject("WinUI4K.UIElementIterable")
         .addInterface(
-            Abi.IID_IIterable_Object,
+            FoundationInterop.IID_IIterable_Object,
             listOf(
                 // vtbl[6] First(this, out IIterator<Object>)
                 KComObject.Method(DESC_THIS_PTR) { args ->
@@ -157,7 +158,7 @@ private class UIElementIterable(private val elements: List<ComPtr>) {
     private fun createIterator(): KComObject {
         var index = 0
         return KComObject("WinUI4K.UIElementIterator").addInterface(
-            Abi.IID_IIterator_Object,
+            FoundationInterop.IID_IIterator_Object,
             listOf(
                 // vtbl[6] get_Current(this, out IInspectable)
                 KComObject.Method(DESC_THIS_PTR) { args ->

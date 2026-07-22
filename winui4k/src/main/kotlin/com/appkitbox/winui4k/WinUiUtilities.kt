@@ -19,7 +19,8 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.WinAppSdkBootstrap
 import com.appkitbox.winui4k.internal.winui.XamlStructs
@@ -111,7 +112,7 @@ object WinUiUtilities {
             // Application.Start(callback) — the callback is invoked in the UI thread context set up by XAML
             val initCallback = KComObject("WinUI4K.InitCallback", inspectable = false)
                 .addInterface(
-                    Abi.IID_ApplicationInitializationCallback,
+                    XamlInterop.IID_ApplicationInitializationCallback,
                     listOf(
                         KComObject.Method(DESC_THIS_PTR) { // Invoke(this, params)
                             createApplication(onReady)
@@ -120,8 +121,8 @@ object WinUiUtilities {
                     ),
                 )
 
-            val statics = Activation.factory(Abi.CLS_Application, Abi.IID_IApplicationStatics)
-            statics.call(Abi.IApplicationStatics_Start, initCallback.primary) // the message loop runs here
+            val statics = Activation.factory(XamlInterop.CLS_Application, XamlInterop.IID_IApplicationStatics)
+            statics.call(XamlInterop.IApplicationStatics_Start, initCallback.primary) // the message loop runs here
             statics.release()
         } finally {
             // Stop GC-driven releases from here on (a Release after RoUninitialize would crash)
@@ -166,13 +167,13 @@ object WinUiUtilities {
     private fun createApplication(onReady: () -> Unit) {
         // Forwards all methods to the real provider (created lazily) that resolves XAML types for WinUI controls
         val realProvider: ComPtr by lazy {
-            Activation.activate(Abi.CLS_XamlControlsXamlMetaDataProvider)
-                .queryInterface(Abi.IID_IXamlMetadataProvider)
+            Activation.activate(XamlInterop.CLS_XamlControlsXamlMetaDataProvider)
+                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
         }
 
         val outer = KComObject("WinUI4K.App")
         outer.addInterface(
-            Abi.IID_IApplicationOverrides,
+            XamlInterop.IID_IApplicationOverrides,
             listOf(
                 KComObject.Method(DESC_THIS_PTR) { // OnLaunched(this, LaunchActivatedEventArgs)
                     // Application.Resources cannot be touched until core initialization
@@ -186,23 +187,23 @@ object WinUiUtilities {
             ),
         )
         outer.addInterface(
-            Abi.IID_IXamlMetadataProvider,
+            XamlInterop.IID_IXamlMetadataProvider,
             listOf(
                 KComObject.Method(DESC_GET_XAML_TYPE) { args ->
                     realProvider.rawCall(
-                        Abi.IXamlMetadataProvider_GetXamlType, DESC_GET_XAML_TYPE,
+                        XamlInterop.IXamlMetadataProvider_GetXamlType, DESC_GET_XAML_TYPE,
                         args[1] as StructValue, args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
-                        Abi.IXamlMetadataProvider_GetXamlTypeByFullName, DESC_THIS_PTR_PTR,
+                        XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName, DESC_THIS_PTR_PTR,
                         args[1] as Ptr, args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
-                        Abi.IXamlMetadataProvider_GetXmlnsDefinitions, DESC_THIS_PTR_PTR,
+                        XamlInterop.IXamlMetadataProvider_GetXmlnsDefinitions, DESC_THIS_PTR_PTR,
                         args[1] as Ptr, args[2] as Ptr,
                     )
                 },
@@ -211,11 +212,11 @@ object WinUiUtilities {
 
         // Aggregation composition of Application: passing outer returns inner (the base
         // implementation); from then on XAML calls OnLaunched and friends via outer
-        val factory = Activation.factory(Abi.CLS_Application, Abi.IID_IApplicationFactory)
+        val factory = Activation.factory(XamlInterop.CLS_Application, XamlInterop.IID_IApplicationFactory)
         val app = Ffi.backend.withScope { scope ->
             val inner = scope.allocate(8)
             val instance = scope.allocate(8)
-            factory.call(Abi.IApplicationFactory_CreateInstance, outer.primary, inner, instance)
+            factory.call(XamlInterop.IApplicationFactory_CreateInstance, outer.primary, inner, instance)
             outer.innerUnknown = ComPtr(Ffi.backend.memory.getPtr(inner, 0))
             ComPtr(Ffi.backend.memory.getPtr(instance, 0)) // IApplication
         }
@@ -237,11 +238,11 @@ object WinUiUtilities {
      */
     private fun installControlStyles() {
         val app = checkNotNull(currentApp) { "Application has not been created yet" }
-        val xcr = Activation.activate(Abi.CLS_XamlControlsResources)
-        val xcrDict = xcr.queryInterface(Abi.IID_IResourceDictionary)
-        val appResources = app.getPtr(Abi.IApplication_get_Resources)
-        val merged = appResources.getPtr(Abi.IResourceDictionary_get_MergedDictionaries)
-        merged.call(Abi.IVector_Append, xcrDict)
+        val xcr = Activation.activate(XamlInterop.CLS_XamlControlsResources)
+        val xcrDict = xcr.queryInterface(XamlInterop.IID_IResourceDictionary)
+        val appResources = app.getPtr(XamlInterop.IApplication_get_Resources)
+        val merged = appResources.getPtr(XamlInterop.IResourceDictionary_get_MergedDictionaries)
+        merged.call(FoundationInterop.IVector_Append, xcrDict)
         merged.release()
         appResources.release()
         xcrDict.release()
@@ -255,13 +256,13 @@ object WinUiUtilities {
      */
     internal fun insertApplicationResource(key: String, value: Ptr) {
         val app = checkNotNull(currentApp) { "Application has not been created yet" }
-        val appResources = app.getPtr(Abi.IApplication_get_Resources)
-        val map = appResources.queryInterface(Abi.IID_IMap_Object_Object)
+        val appResources = app.getPtr(XamlInterop.IApplication_get_Resources)
+        val map = appResources.queryInterface(FoundationInterop.IID_IMap_Object_Object)
         appResources.release()
         val boxedKey = PropertyValues.boxString(key)
         Ffi.backend.withScope { scope ->
             val replaced = scope.allocate(1, 1)
-            map.call(Abi.IMap_Insert, boxedKey.ptr, value, replaced)
+            map.call(FoundationInterop.IMap_Insert, boxedKey.ptr, value, replaced)
         }
         boxedKey.release()
         map.release()
@@ -274,12 +275,12 @@ object WinUiUtilities {
      */
     internal fun lookupApplicationResource(key: String): ComPtr {
         val app = checkNotNull(currentApp) { "The Application has not been created yet" }
-        val appResources = app.getPtr(Abi.IApplication_get_Resources)
-        val map = appResources.queryInterface(Abi.IID_IMap_Object_Object)
+        val appResources = app.getPtr(XamlInterop.IApplication_get_Resources)
+        val map = appResources.queryInterface(FoundationInterop.IID_IMap_Object_Object)
         appResources.release()
         val boxedKey = PropertyValues.boxString(key)
         return try {
-            map.getPtr(Abi.IMap_Lookup, boxedKey.ptr)
+            map.getPtr(FoundationInterop.IMap_Lookup, boxedKey.ptr)
         } finally {
             boxedKey.release()
             map.release()
@@ -294,14 +295,14 @@ object WinUiUtilities {
     private fun installFrameworkResourceManager(app: ComPtr) {
         val handler = KComObject("WinUI4K.ResourceManagerRequestedHandler", inspectable = false)
             .addInterface(
-                Abi.IID_ResourceManagerRequestedHandler,
+                XamlInterop.IID_ResourceManagerRequestedHandler,
                 listOf(
                     KComObject.Method(DESC_THIS_PTR_PTR) { args -> // Invoke(this, sender, args)
                         val eventArgs = ComPtr(args[2] as Ptr)
-                            .queryInterface(Abi.IID_IResourceManagerRequestedEventArgs)
+                            .queryInterface(XamlInterop.IID_IResourceManagerRequestedEventArgs)
                         val rm = createFrameworkResourceManager()
                         eventArgs.call(
-                            Abi.IResourceManagerRequestedEventArgs_put_CustomResourceManager, rm,
+                            XamlInterop.IResourceManagerRequestedEventArgs_put_CustomResourceManager, rm,
                         )
                         eventArgs.release()
                         KComObject.S_OK
@@ -309,10 +310,10 @@ object WinUiUtilities {
                 ),
             )
 
-        val app2 = app.queryInterface(Abi.IID_IApplication2)
+        val app2 = app.queryInterface(XamlInterop.IID_IApplication2)
         Ffi.backend.withScope { scope ->
             val token = scope.allocate(8)
-            app2.call(Abi.IApplication2_add_ResourceManagerRequested, handler.primary, token)
+            app2.call(XamlInterop.IApplication2_add_ResourceManagerRequested, handler.primary, token)
         }
         app2.release()
     }
@@ -324,7 +325,7 @@ object WinUiUtilities {
         val pri = File(xamlDll).resolveSibling("resources.pri")
         check(pri.isFile) { "could not find the runtime package's resources.pri: $pri" }
 
-        val factory = Activation.factory(Abi.CLS_ResourceManager, Abi.IID_IResourceManagerFactory)
+        val factory = Activation.factory(XamlInterop.CLS_ResourceManager, XamlInterop.IID_IResourceManagerFactory)
         val rm = Hstring.use(pri.absolutePath) { h -> factory.getPtr(6, h) } // CreateInstance(fileName)
         factory.release()
         return rm

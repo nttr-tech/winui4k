@@ -21,7 +21,7 @@ import com.appkitbox.winui4k.internal.win32.Win32
  * complete quickly (e.g. reading/writing the JumpList).
  */
 internal object Async {
-    // ---- Windows.Foundation async ABI constants (from FoundationContract.winmd, same policy as Abi.kt) ----
+    // ---- Windows.Foundation async ABI constants (from FoundationContract.winmd, same policy as XamlInterop.kt) ----
     private const val IID_IAsyncInfo = "00000036-0000-0000-c000-000000000046"
     private const val IAsyncInfo_get_Status = 7        // get_Status(out AsyncStatus)
     private const val IAsyncInfo_get_ErrorCode = 8     // get_ErrorCode(out HRESULT)

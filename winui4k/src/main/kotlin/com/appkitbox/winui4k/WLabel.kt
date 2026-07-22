@@ -6,7 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -85,30 +85,30 @@ enum class TextTrimming(internal val native: Int) {
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  */
 class WLabel(text: String = "") : WComponent(
-    Activation.activate(Abi.CLS_TextBlock, Abi.IID_ITextBlock),
+    Activation.activate(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlock),
 ) {
     var text: String
-        get() = inspectable.getString(Abi.ITextBlock_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.ITextBlock_put_Text, h) }
+        get() = inspectable.getString(XamlInterop.ITextBlock_get_Text)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBlock_put_Text, h) }
 
     /** Font size (TextBlock.FontSize). Used to emphasize headings and the like. */
     var fontSize: Double
-        get() = inspectable.getDouble(Abi.ITextBlock_get_FontSize)
-        set(value) = inspectable.call(Abi.ITextBlock_put_FontSize, value)
+        get() = inspectable.getDouble(XamlInterop.ITextBlock_get_FontSize)
+        set(value) = inspectable.call(XamlInterop.ITextBlock_put_FontSize, value)
 
     /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
     var fontFamily: String
         get() {
-            val family = inspectable.getPtrOrNull(Abi.ITextBlock_get_FontFamily) ?: return ""
+            val family = inspectable.getPtrOrNull(XamlInterop.ITextBlock_get_FontFamily) ?: return ""
             return try {
-                family.getString(Abi.IFontFamily_get_Source)
+                family.getString(XamlInterop.IFontFamily_get_Source)
             } finally {
                 family.release()
             }
         }
         set(value) {
             val family = createFontFamily(value)
-            inspectable.call(Abi.ITextBlock_put_FontFamily, family.ptr)
+            inspectable.call(XamlInterop.ITextBlock_put_FontFamily, family.ptr)
             family.release()
         }
 
@@ -116,7 +116,7 @@ class WLabel(text: String = "") : WComponent(
     var fontWeight: Int = 400
         set(value) {
             field = value
-            XamlStructs.putFontWeight(inspectable, Abi.ITextBlock_put_FontWeight, value)
+            XamlStructs.putFontWeight(inspectable, XamlInterop.ITextBlock_put_FontWeight, value)
         }
 
     /** Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null restores the default color. */
@@ -124,33 +124,33 @@ class WLabel(text: String = "") : WComponent(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ITextBlock_put_Foreground, null)
+                inspectable.call(XamlInterop.ITextBlock_put_Foreground, null)
             } else {
                 val brush = value.createBrush()
-                inspectable.call(Abi.ITextBlock_put_Foreground, brush.ptr)
+                inspectable.call(XamlInterop.ITextBlock_put_Foreground, brush.ptr)
                 brush.release()
             }
         }
 
     /** How text wraps (TextBlock.TextWrapping). */
     var textWrapping: TextWrapping
-        get() = TextWrapping.of(inspectable.getInt(Abi.ITextBlock_get_TextWrapping))
-        set(value) = inspectable.call(Abi.ITextBlock_put_TextWrapping, value.native)
+        get() = TextWrapping.of(inspectable.getInt(XamlInterop.ITextBlock_get_TextWrapping))
+        set(value) = inspectable.call(XamlInterop.ITextBlock_put_TextWrapping, value.native)
 
     /** How text that doesn't fit is trimmed (TextBlock.TextTrimming). */
     var textTrimming: TextTrimming
-        get() = TextTrimming.of(inspectable.getInt(Abi.ITextBlock_get_TextTrimming))
-        set(value) = inspectable.call(Abi.ITextBlock_put_TextTrimming, value.native)
+        get() = TextTrimming.of(inspectable.getInt(XamlInterop.ITextBlock_get_TextTrimming))
+        set(value) = inspectable.call(XamlInterop.ITextBlock_put_TextTrimming, value.native)
 
     /** Text alignment (TextBlock.TextAlignment). */
     var textAlignment: TextAlignment
-        get() = TextAlignment.of(inspectable.getInt(Abi.ITextBlock_get_TextAlignment))
-        set(value) = inspectable.call(Abi.ITextBlock_put_TextAlignment, value.native)
+        get() = TextAlignment.of(inspectable.getInt(XamlInterop.ITextBlock_get_TextAlignment))
+        set(value) = inspectable.call(XamlInterop.ITextBlock_put_TextAlignment, value.native)
 
     /** Whether text can be selected with the mouse (TextBlock.IsTextSelectionEnabled). */
     var isTextSelectionEnabled: Boolean
-        get() = inspectable.getBool(Abi.ITextBlock_get_IsTextSelectionEnabled)
-        set(value) = inspectable.putBool(Abi.ITextBlock_put_IsTextSelectionEnabled, value)
+        get() = inspectable.getBool(XamlInterop.ITextBlock_get_IsTextSelectionEnabled)
+        set(value) = inspectable.putBool(XamlInterop.ITextBlock_put_IsTextSelectionEnabled, value)
 
     init {
         if (text.isNotEmpty()) this.text = text
@@ -163,11 +163,11 @@ class WLabel(text: String = "") : WComponent(
  * with outer = NULL (same convention as [Activation.composeDefault]).
  */
 private fun createFontFamily(name: String): ComPtr = Ffi.backend.withScope { scope ->
-    val factory = Activation.factory(Abi.CLS_FontFamily, Abi.IID_IFontFamilyFactory)
+    val factory = Activation.factory(XamlInterop.CLS_FontFamily, XamlInterop.IID_IFontFamilyFactory)
     val inner = scope.allocate(8)
     val instance = scope.allocate(8)
     Hstring.use(name) { h ->
-        factory.call(Abi.IFontFamilyFactory_CreateInstanceWithName, h, null, inner, instance)
+        factory.call(XamlInterop.IFontFamilyFactory_CreateInstanceWithName, h, null, inner, instance)
     }
     factory.release()
     ComPtr(Ffi.backend.memory.getPtr(instance, 0))

@@ -7,7 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.ScrollBarVisibility (how a scrollbar is shown).
@@ -38,10 +39,10 @@ enum class ScrollBarVisibility(internal val native: Int) {
  * Horizontal scrolling is disabled by default; enable it by setting [horizontalScrollBarVisibility] to e.g. AUTO.
  */
 class WScrollPane(content: WComponent? = null) : WControl(
-    Activation.activate(Abi.CLS_ScrollViewer, Abi.IID_IScrollViewer), // created via the default factory
+    Activation.activate(XamlInterop.CLS_ScrollViewer, XamlInterop.IID_IScrollViewer), // created via the default factory
 ) {
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     /**
@@ -49,47 +50,47 @@ class WScrollPane(content: WComponent? = null) : WControl(
      * Setting anything other than DISABLED also enables scrolling (HorizontalScrollMode = Enabled).
      */
     var horizontalScrollBarVisibility: ScrollBarVisibility
-        get() = ScrollBarVisibility.of(inspectable.getInt(Abi.IScrollViewer_get_HorizontalScrollBarVisibility))
+        get() = ScrollBarVisibility.of(inspectable.getInt(XamlInterop.IScrollViewer_get_HorizontalScrollBarVisibility))
         set(value) {
-            inspectable.call(Abi.IScrollViewer_put_HorizontalScrollBarVisibility, value.native)
+            inspectable.call(XamlInterop.IScrollViewer_put_HorizontalScrollBarVisibility, value.native)
             inspectable.call(
-                Abi.IScrollViewer_put_HorizontalScrollMode,
+                XamlInterop.IScrollViewer_put_HorizontalScrollMode,
                 if (value == ScrollBarVisibility.DISABLED) 0 else 1, // ScrollMode.Disabled / Enabled
             )
         }
 
     /** How the vertical scrollbar is shown (ScrollViewer.VerticalScrollBarVisibility, default VISIBLE). */
     var verticalScrollBarVisibility: ScrollBarVisibility
-        get() = ScrollBarVisibility.of(inspectable.getInt(Abi.IScrollViewer_get_VerticalScrollBarVisibility))
+        get() = ScrollBarVisibility.of(inspectable.getInt(XamlInterop.IScrollViewer_get_VerticalScrollBarVisibility))
         set(value) {
-            inspectable.call(Abi.IScrollViewer_put_VerticalScrollBarVisibility, value.native)
+            inspectable.call(XamlInterop.IScrollViewer_put_VerticalScrollBarVisibility, value.native)
             inspectable.call(
-                Abi.IScrollViewer_put_VerticalScrollMode,
+                XamlInterop.IScrollViewer_put_VerticalScrollMode,
                 if (value == ScrollBarVisibility.DISABLED) 0 else 1, // ScrollMode.Disabled / Enabled
             )
         }
 
     /** The current horizontal scroll position (ScrollViewer.HorizontalOffset). */
     val horizontalOffset: Double
-        get() = inspectable.getDouble(Abi.IScrollViewer_get_HorizontalOffset)
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_HorizontalOffset)
 
     /** The viewport's width (ScrollViewer.ViewportWidth). */
     val viewportWidth: Double
-        get() = inspectable.getDouble(Abi.IScrollViewer_get_ViewportWidth)
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ViewportWidth)
 
     /** The scrollable width = content width - viewport width (ScrollViewer.ScrollableWidth). 0 means no overflow. */
     val scrollableWidth: Double
-        get() = inspectable.getDouble(Abi.IScrollViewer_get_ScrollableWidth)
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ScrollableWidth)
 
     /** Animates the horizontal scroll position to [offset] (ScrollViewer.ChangeView). */
     fun scrollToHorizontalOffset(offset: Double) {
         // Box it as an IReference<Double> to pass (vertical position and zoom are null = no change)
         val boxed = PropertyValues.boxDouble(offset)
-        val reference = boxed.queryInterface(Abi.IID_IReference_Double)
+        val reference = boxed.queryInterface(FoundationInterop.IID_IReference_Double)
         boxed.release()
         Ffi.backend.withScope { scope ->
             val handled = scope.allocate(8) // out boolean (unused)
-            inspectable.call(Abi.IScrollViewer_ChangeView, reference.ptr, null, null, handled)
+            inspectable.call(XamlInterop.IScrollViewer_ChangeView, reference.ptr, null, null, handled)
         }
         reference.release()
     }
@@ -101,8 +102,8 @@ class WScrollPane(content: WComponent? = null) : WControl(
     fun addViewChangedListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewerViewChangedHandler",
-            Abi.IID_ScrollViewerViewChangedHandler,
-            Abi.IScrollViewer_add_ViewChanged,
+            XamlInterop.IID_ScrollViewerViewChangedHandler,
+            XamlInterop.IScrollViewer_add_ViewChanged,
         ) { _, _ -> listener() }
         viewChangedTokens.add(listener, token)
     }
@@ -110,7 +111,7 @@ class WScrollPane(content: WComponent? = null) : WControl(
     /** Unsubscribes a listener registered via [addViewChangedListener]. */
     fun removeViewChangedListener(listener: () -> Unit) {
         val token = viewChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IScrollViewer_remove_ViewChanged, token)
+        inspectable.removeEventHandler(XamlInterop.IScrollViewer_remove_ViewChanged, token)
     }
 
     /** The content to scroll (ContentControl.Content). */
@@ -118,7 +119,7 @@ class WScrollPane(content: WComponent? = null) : WControl(
         set(value) {
             field = value
             contentControl.call(
-                Abi.IContentControl_put_Content,
+                XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }

@@ -2,7 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.AppBarClosedDisplayMode (what's shown while closed).
@@ -71,26 +72,26 @@ enum class CommandBarOverflowButtonVisibility(internal val native: Int) {
  * [addSecondaryCommand] go into the […] overflow menu.
  */
 class WCommandBar : WControl(
-    Activation.composeDefault(Abi.CLS_CommandBar, Abi.IID_ICommandBarFactory),
+    Activation.composeDefault(XamlInterop.CLS_CommandBar, XamlInterop.IID_ICommandBarFactory),
 ) {
     /** The IAppBar view that holds IsOpen / IsSticky / ClosedDisplayMode (CommandBar is an AppBar subclass). */
-    private val appBar: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IAppBar)) }
+    private val appBar: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IAppBar)) }
 
     /**
      * PrimaryCommands / SecondaryCommands are IObservableVector<ICommandBarElement>, so we
      * QI to and hold an IVector<ICommandBarElement> view that has Append.
      */
     private val primaryCommands: ComPtr by lazy {
-        queryVector(Abi.ICommandBar_get_PrimaryCommands)
+        queryVector(XamlInterop.ICommandBar_get_PrimaryCommands)
     }
     private val secondaryCommands: ComPtr by lazy {
-        queryVector(Abi.ICommandBar_get_SecondaryCommands)
+        queryVector(XamlInterop.ICommandBar_get_SecondaryCommands)
     }
 
     private fun queryVector(getSlot: Int): ComPtr {
         val observable = inspectable.getPtr(getSlot)
         return try {
-            own(observable.queryInterface(Abi.IID_IVector_ICommandBarElement))
+            own(observable.queryInterface(XamlInterop.IID_IVector_ICommandBarElement))
         } finally {
             observable.release()
         }
@@ -103,47 +104,47 @@ class WCommandBar : WControl(
     var content: WComponent? = null
         set(value) {
             field = value
-            contentControl.call(Abi.IContentControl_put_Content, value?.uiElement?.ptr)
+            contentControl.call(XamlInterop.IContentControl_put_Content, value?.uiElement?.ptr)
         }
 
     /** The IContentControl view that holds Content. */
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     /** Whether the overflow menu is open (AppBar.IsOpen). */
     var isOpen: Boolean
-        get() = appBar.getBool(Abi.IAppBar_get_IsOpen)
-        set(value) = appBar.putBool(Abi.IAppBar_put_IsOpen, value)
+        get() = appBar.getBool(XamlInterop.IAppBar_get_IsOpen)
+        set(value) = appBar.putBool(XamlInterop.IAppBar_put_IsOpen, value)
 
     /** Whether the open state stays open when clicking outside it (AppBar.IsSticky). */
     var isSticky: Boolean
-        get() = appBar.getBool(Abi.IAppBar_get_IsSticky)
-        set(value) = appBar.putBool(Abi.IAppBar_put_IsSticky, value)
+        get() = appBar.getBool(XamlInterop.IAppBar_get_IsSticky)
+        set(value) = appBar.putBool(XamlInterop.IAppBar_put_IsSticky, value)
 
     /** What's shown while closed (AppBar.ClosedDisplayMode). */
     var closedDisplayMode: AppBarClosedDisplayMode
-        get() = AppBarClosedDisplayMode.of(appBar.getInt(Abi.IAppBar_get_ClosedDisplayMode))
-        set(value) = appBar.call(Abi.IAppBar_put_ClosedDisplayMode, value.native)
+        get() = AppBarClosedDisplayMode.of(appBar.getInt(XamlInterop.IAppBar_get_ClosedDisplayMode))
+        set(value) = appBar.call(XamlInterop.IAppBar_put_ClosedDisplayMode, value.native)
 
     /** The default position for button labels (CommandBar.DefaultLabelPosition). */
     var defaultLabelPosition: CommandBarDefaultLabelPosition
         get() = CommandBarDefaultLabelPosition.of(
-            inspectable.getInt(Abi.ICommandBar_get_DefaultLabelPosition),
+            inspectable.getInt(XamlInterop.ICommandBar_get_DefaultLabelPosition),
         )
-        set(value) = inspectable.call(Abi.ICommandBar_put_DefaultLabelPosition, value.native)
+        set(value) = inspectable.call(XamlInterop.ICommandBar_put_DefaultLabelPosition, value.native)
 
     /** Whether the […] overflow button is shown (CommandBar.OverflowButtonVisibility). */
     var overflowButtonVisibility: CommandBarOverflowButtonVisibility
         get() = CommandBarOverflowButtonVisibility.of(
-            inspectable.getInt(Abi.ICommandBar_get_OverflowButtonVisibility),
+            inspectable.getInt(XamlInterop.ICommandBar_get_OverflowButtonVisibility),
         )
-        set(value) = inspectable.call(Abi.ICommandBar_put_OverflowButtonVisibility, value.native)
+        set(value) = inspectable.call(XamlInterop.ICommandBar_put_OverflowButtonVisibility, value.native)
 
     /** Whether Primary commands are moved to overflow automatically when width runs short (CommandBar.IsDynamicOverflowEnabled). */
     var isDynamicOverflowEnabled: Boolean
-        get() = inspectable.getBool(Abi.ICommandBar_get_IsDynamicOverflowEnabled)
-        set(value) = inspectable.putBool(Abi.ICommandBar_put_IsDynamicOverflowEnabled, value)
+        get() = inspectable.getBool(XamlInterop.ICommandBar_get_IsDynamicOverflowEnabled)
+        set(value) = inspectable.putBool(XamlInterop.ICommandBar_put_IsDynamicOverflowEnabled, value)
 
     /**
      * Appends a command shown on the bar (CommandBar.PrimaryCommands).
@@ -162,9 +163,9 @@ class WCommandBar : WControl(
 
 /** QIs [element] to ICommandBarElement and appends it to the IVector<ICommandBarElement>. */
 internal fun appendCommandBarElement(vector: ComPtr, element: WControl) {
-    val commandBarElement = element.inspectable.queryInterface(Abi.IID_ICommandBarElement)
+    val commandBarElement = element.inspectable.queryInterface(XamlInterop.IID_ICommandBarElement)
     try {
-        vector.call(Abi.IVector_Append, commandBarElement.ptr)
+        vector.call(FoundationInterop.IVector_Append, commandBarElement.ptr)
     } finally {
         commandBarElement.release()
     }

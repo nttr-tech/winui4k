@@ -8,7 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.WebView2Interop
 import com.appkitbox.winui4k.internal.winui.WebView2Runtime
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
@@ -91,7 +92,7 @@ enum class WebErrorStatus(internal val native: Int) {
  * such as [documentTitle] and [postWebMessageAsJson] are only usable once initialization completes.
  */
 class WWebView(source: String = "") : WComponent(
-    Activation.composeDefault(Abi.CLS_WebView2, Abi.IID_IWebView2Factory),
+    Activation.composeDefault(WebView2Interop.CLS_WebView2, WebView2Interop.IID_IWebView2Factory),
 ) {
     private companion object {
         init {
@@ -129,21 +130,21 @@ class WWebView(source: String = "") : WComponent(
      */
     var source: String
         get() {
-            val uri = inspectable.getPtrOrNull(Abi.IWebView2_get_Source) ?: return ""
+            val uri = inspectable.getPtrOrNull(WebView2Interop.IWebView2_get_Source) ?: return ""
             return try {
-                uri.getString(Abi.IUriRuntimeClass_get_AbsoluteUri)
+                uri.getString(FoundationInterop.IUriRuntimeClass_get_AbsoluteUri)
             } finally {
                 uri.release()
             }
         }
         set(value) {
             if (value.isEmpty()) return
-            val factory = Activation.factory(Abi.CLS_Uri, Abi.IID_IUriRuntimeClassFactory)
+            val factory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
             val uri = Hstring.use(value) { h ->
-                factory.getPtr(Abi.IUriRuntimeClassFactory_CreateUri, h)
+                factory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h)
             }
             factory.release()
-            inspectable.call(Abi.IWebView2_put_Source, uri.ptr)
+            inspectable.call(WebView2Interop.IWebView2_put_Source, uri.ptr)
             uri.release()
         }
 
@@ -154,18 +155,18 @@ class WWebView(source: String = "") : WComponent(
      */
     val isCoreWebView2Initialized: Boolean
         get() {
-            val core = inspectable.getPtrOrNull(Abi.IWebView2_get_CoreWebView2) ?: return false
+            val core = inspectable.getPtrOrNull(WebView2Interop.IWebView2_get_CoreWebView2) ?: return false
             core.release()
             return true
         }
 
     /** Whether there's back history (WebView2.CanGoBack). */
     val canGoBack: Boolean
-        get() = inspectable.getBool(Abi.IWebView2_get_CanGoBack)
+        get() = inspectable.getBool(WebView2Interop.IWebView2_get_CanGoBack)
 
     /** Whether there's forward history (WebView2.CanGoForward). */
     val canGoForward: Boolean
-        get() = inspectable.getBool(Abi.IWebView2_get_CanGoForward)
+        get() = inspectable.getBool(WebView2Interop.IWebView2_get_CanGoForward)
 
     /**
      * The background color shown before a page loads or through transparent areas
@@ -173,11 +174,11 @@ class WWebView(source: String = "") : WComponent(
      */
     var defaultBackgroundColor: WColor
         get() {
-            val (a, r, g, b) = XamlStructs.getColor(inspectable, Abi.IWebView2_get_DefaultBackgroundColor)
+            val (a, r, g, b) = XamlStructs.getColor(inspectable, WebView2Interop.IWebView2_get_DefaultBackgroundColor)
             return WColor(r, g, b, a)
         }
         set(value) = XamlStructs.putColor(
-            inspectable, Abi.IWebView2_put_DefaultBackgroundColor,
+            inspectable, WebView2Interop.IWebView2_put_DefaultBackgroundColor,
             value.alpha, value.red, value.green, value.blue,
         )
 
@@ -187,7 +188,7 @@ class WWebView(source: String = "") : WComponent(
      */
     val documentTitle: String
         get() = withCoreWebView2 { core ->
-            core.getString(Abi.ICoreWebView2_get_DocumentTitle)
+            core.getString(WebView2Interop.ICoreWebView2_get_DocumentTitle)
         } ?: ""
 
     /**
@@ -196,7 +197,7 @@ class WWebView(source: String = "") : WComponent(
      */
     fun reload() {
         if (!isCoreWebView2Initialized) return
-        inspectable.call(Abi.IWebView2_Reload)
+        inspectable.call(WebView2Interop.IWebView2_Reload)
     }
 
     /**
@@ -205,7 +206,7 @@ class WWebView(source: String = "") : WComponent(
      */
     fun goBack() {
         if (!isCoreWebView2Initialized) return
-        inspectable.call(Abi.IWebView2_GoBack)
+        inspectable.call(WebView2Interop.IWebView2_GoBack)
     }
 
     /**
@@ -214,7 +215,7 @@ class WWebView(source: String = "") : WComponent(
      */
     fun goForward() {
         if (!isCoreWebView2Initialized) return
-        inspectable.call(Abi.IWebView2_GoForward)
+        inspectable.call(WebView2Interop.IWebView2_GoForward)
     }
 
     /**
@@ -224,14 +225,14 @@ class WWebView(source: String = "") : WComponent(
      * starts initialization and runs the navigation automatically once it completes.
      */
     fun navigateToString(html: String) {
-        val core = inspectable.getPtrOrNull(Abi.IWebView2_get_CoreWebView2)
+        val core = inspectable.getPtrOrNull(WebView2Interop.IWebView2_get_CoreWebView2)
         if (core == null) {
             lateinit var navigateOnce: (Int) -> Unit
             navigateOnce = { exceptionHresult ->
                 removeCoreWebView2InitializedListener(navigateOnce)
                 if (exceptionHresult == 0) {
                     Hstring.use(html) { h ->
-                        inspectable.call(Abi.IWebView2_NavigateToString, h)
+                        inspectable.call(WebView2Interop.IWebView2_NavigateToString, h)
                     }
                 }
             }
@@ -241,7 +242,7 @@ class WWebView(source: String = "") : WComponent(
         }
         core.release()
         Hstring.use(html) { h ->
-            inspectable.call(Abi.IWebView2_NavigateToString, h)
+            inspectable.call(WebView2Interop.IWebView2_NavigateToString, h)
         }
     }
 
@@ -250,7 +251,7 @@ class WWebView(source: String = "") : WComponent(
      * This control can't be used afterward (create a new WWebView to display content again).
      */
     fun close() {
-        inspectable.call(Abi.IWebView2_Close)
+        inspectable.call(WebView2Interop.IWebView2_Close)
     }
 
     /**
@@ -260,7 +261,7 @@ class WWebView(source: String = "") : WComponent(
      * so only call this if you want to use e.g. [postWebMessageAsJson] before navigating.)
      */
     fun ensureCoreWebView2() {
-        inspectable.getPtr(Abi.IWebView2_EnsureCoreWebView2Async).release()
+        inspectable.getPtr(WebView2Interop.IWebView2_EnsureCoreWebView2Async).release()
     }
 
     /**
@@ -274,14 +275,14 @@ class WWebView(source: String = "") : WComponent(
     fun executeScript(script: String, resultHandler: ((String) -> Unit)? = null) {
         if (!isCoreWebView2Initialized) return
         val operation = Hstring.use(script) { h ->
-            inspectable.getPtr(Abi.IWebView2_ExecuteScriptAsync, h)
+            inspectable.getPtr(WebView2Interop.IWebView2_ExecuteScriptAsync, h)
         }
         if (resultHandler == null) {
             operation.release()
             return
         }
         Async.onStringResult(
-            operation, Abi.IID_AsyncOperationCompletedHandler_String, "WebView2.ExecuteScriptAsync",
+            operation, WebView2Interop.IID_AsyncOperationCompletedHandler_String, "WebView2.ExecuteScriptAsync",
         ) { result ->
             // Dispatch from the completion-notification thread over to the UI thread before delivering it
             WinUiUtilities.invokeLater { resultHandler(result) }
@@ -296,7 +297,7 @@ class WWebView(source: String = "") : WComponent(
     fun postWebMessageAsJson(json: String) {
         withCoreWebView2 { core ->
             Hstring.use(json) { h ->
-                core.call(Abi.ICoreWebView2_PostWebMessageAsJson, h)
+                core.call(WebView2Interop.ICoreWebView2_PostWebMessageAsJson, h)
             }
         }
     }
@@ -308,7 +309,7 @@ class WWebView(source: String = "") : WComponent(
     fun postWebMessageAsString(message: String) {
         withCoreWebView2 { core ->
             Hstring.use(message) { h ->
-                core.call(Abi.ICoreWebView2_PostWebMessageAsString, h)
+                core.call(WebView2Interop.ICoreWebView2_PostWebMessageAsString, h)
             }
         }
     }
@@ -319,7 +320,7 @@ class WWebView(source: String = "") : WComponent(
      */
     fun openDevToolsWindow() {
         withCoreWebView2 { core ->
-            core.call(Abi.ICoreWebView2_OpenDevToolsWindow)
+            core.call(WebView2Interop.ICoreWebView2_OpenDevToolsWindow)
         }
     }
 
@@ -331,14 +332,14 @@ class WWebView(source: String = "") : WComponent(
     fun addNavigationStartingListener(listener: (uri: String) -> Boolean) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationStartingHandler",
-            Abi.IID_WebView2NavigationStartingHandler,
-            Abi.IWebView2_add_NavigationStarting,
+            WebView2Interop.IID_WebView2NavigationStartingHandler,
+            WebView2Interop.IWebView2_add_NavigationStarting,
         ) { _, args ->
             // args is CoreWebView2NavigationStartingEventArgs. Read Uri, and set Cancel if false is returned
             val argsPtr = ComPtr(args)
-            val uri = argsPtr.getString(Abi.ICoreWebView2NavigationStartingEventArgs_get_Uri)
+            val uri = argsPtr.getString(WebView2Interop.ICoreWebView2NavigationStartingEventArgs_get_Uri)
             if (!listener(uri)) {
-                argsPtr.putBool(Abi.ICoreWebView2NavigationStartingEventArgs_put_Cancel, true)
+                argsPtr.putBool(WebView2Interop.ICoreWebView2NavigationStartingEventArgs_put_Cancel, true)
             }
         }
         navigationStartingTokens.add(listener, token)
@@ -347,7 +348,7 @@ class WWebView(source: String = "") : WComponent(
     /** Unsubscribes a listener registered via [addNavigationStartingListener]. */
     fun removeNavigationStartingListener(listener: (String) -> Boolean) {
         val token = navigationStartingTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IWebView2_remove_NavigationStarting, token)
+        inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationStarting, token)
     }
 
     /**
@@ -358,15 +359,15 @@ class WWebView(source: String = "") : WComponent(
     fun addNavigationCompletedListener(listener: (isSuccess: Boolean, status: WebErrorStatus) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationCompletedHandler",
-            Abi.IID_WebView2NavigationCompletedHandler,
-            Abi.IWebView2_add_NavigationCompleted,
+            WebView2Interop.IID_WebView2NavigationCompletedHandler,
+            WebView2Interop.IWebView2_add_NavigationCompleted,
         ) { _, args ->
             // args is CoreWebView2NavigationCompletedEventArgs. Read IsSuccess and WebErrorStatus and deliver them
             val argsPtr = ComPtr(args)
             listener(
-                argsPtr.getBool(Abi.ICoreWebView2NavigationCompletedEventArgs_get_IsSuccess),
+                argsPtr.getBool(WebView2Interop.ICoreWebView2NavigationCompletedEventArgs_get_IsSuccess),
                 WebErrorStatus.of(
-                    argsPtr.getInt(Abi.ICoreWebView2NavigationCompletedEventArgs_get_WebErrorStatus),
+                    argsPtr.getInt(WebView2Interop.ICoreWebView2NavigationCompletedEventArgs_get_WebErrorStatus),
                 ),
             )
         }
@@ -376,7 +377,7 @@ class WWebView(source: String = "") : WComponent(
     /** Unsubscribes a listener registered via [addNavigationCompletedListener]. */
     fun removeNavigationCompletedListener(listener: (Boolean, WebErrorStatus) -> Unit) {
         val token = navigationCompletedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IWebView2_remove_NavigationCompleted, token)
+        inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationCompleted, token)
     }
 
     /**
@@ -387,12 +388,12 @@ class WWebView(source: String = "") : WComponent(
     fun addWebMessageReceivedListener(listener: (messageAsJson: String) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2WebMessageReceivedHandler",
-            Abi.IID_WebView2WebMessageReceivedHandler,
-            Abi.IWebView2_add_WebMessageReceived,
+            WebView2Interop.IID_WebView2WebMessageReceivedHandler,
+            WebView2Interop.IWebView2_add_WebMessageReceived,
         ) { _, args ->
             // args is CoreWebView2WebMessageReceivedEventArgs. Read WebMessageAsJson and deliver it
             listener(
-                ComPtr(args).getString(Abi.ICoreWebView2WebMessageReceivedEventArgs_get_WebMessageAsJson),
+                ComPtr(args).getString(WebView2Interop.ICoreWebView2WebMessageReceivedEventArgs_get_WebMessageAsJson),
             )
         }
         webMessageReceivedTokens.add(listener, token)
@@ -401,7 +402,7 @@ class WWebView(source: String = "") : WComponent(
     /** Unsubscribes a listener registered via [addWebMessageReceivedListener]. */
     fun removeWebMessageReceivedListener(listener: (String) -> Unit) {
         val token = webMessageReceivedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IWebView2_remove_WebMessageReceived, token)
+        inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_WebMessageReceived, token)
     }
 
     /**
@@ -413,11 +414,11 @@ class WWebView(source: String = "") : WComponent(
     fun addCoreWebView2InitializedListener(listener: (exceptionHresult: Int) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2CoreWebView2InitializedHandler",
-            Abi.IID_WebView2CoreWebView2InitializedHandler,
-            Abi.IWebView2_add_CoreWebView2Initialized,
+            WebView2Interop.IID_WebView2CoreWebView2InitializedHandler,
+            WebView2Interop.IWebView2_add_CoreWebView2Initialized,
         ) { _, args ->
             // args is CoreWebView2InitializedEventArgs. Read Exception (Windows.Foundation.HResult) and deliver it
-            listener(ComPtr(args).getInt(Abi.ICoreWebView2InitializedEventArgs_get_Exception))
+            listener(ComPtr(args).getInt(WebView2Interop.ICoreWebView2InitializedEventArgs_get_Exception))
         }
         coreWebView2InitializedTokens.add(listener, token)
     }
@@ -425,7 +426,7 @@ class WWebView(source: String = "") : WComponent(
     /** Unsubscribes a listener registered via [addCoreWebView2InitializedListener]. */
     fun removeCoreWebView2InitializedListener(listener: (Int) -> Unit) {
         val token = coreWebView2InitializedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IWebView2_remove_CoreWebView2Initialized, token)
+        inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_CoreWebView2Initialized, token)
     }
 
     /**
@@ -434,7 +435,7 @@ class WWebView(source: String = "") : WComponent(
      */
     private fun <T> withCoreWebView2(block: (ComPtr) -> T): T? {
         // get_CoreWebView2's return value is CoreWebView2's default interface (ICoreWebView2), so it can be called directly
-        val core = inspectable.getPtrOrNull(Abi.IWebView2_get_CoreWebView2) ?: return null
+        val core = inspectable.getPtrOrNull(WebView2Interop.IWebView2_get_CoreWebView2) ?: return null
         return try {
             block(core)
         } finally {

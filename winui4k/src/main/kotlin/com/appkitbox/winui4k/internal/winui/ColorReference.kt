@@ -14,7 +14,7 @@ import com.appkitbox.winui4k.internal.winrt.KComObject
  * to call vtbl[6] get_Value directly on the IReference<Color> WinUI returns, so no box is needed there).
  *
  * The IID is computed at runtime as pinterface({IReference's base IID};struct(Windows.UI.Color;u1;u1;u1;u1))
- * ([Abi.IID_IReference_Color]). Its only member is get_Value (vtbl[6]).
+ * ([FoundationInterop.IID_IReference_Color]). Its only member is get_Value (vtbl[6]).
  *
  * Putting into AppWindowTitleBar has been verified on real hardware (2026-07-12). No QueryInterface
  * to IPropertyValue is required — writing the A,R,G,B values in vtbl[6] get_Value alone is enough
@@ -24,7 +24,7 @@ internal object ColorReference {
     /** Creates an IReference<Color> COM object from ARGB components (each 0..255). */
     fun create(alpha: Int, red: Int, green: Int, blue: Int): KComObject =
         KComObject("WinUI4K.ColorReference").addInterface(
-            Abi.IID_IReference_Color,
+            FoundationInterop.IID_IReference_Color,
             listOf(
                 // vtbl[6] get_Value(this, out Windows.UI.Color)
                 KComObject.Method(DESC_THIS_PTR) { args ->

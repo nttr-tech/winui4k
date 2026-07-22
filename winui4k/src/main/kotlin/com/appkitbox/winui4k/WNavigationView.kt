@@ -8,7 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode (the pane's current display state).
@@ -85,23 +86,23 @@ enum class NavigationViewBackButtonVisible(internal val native: Int) {
  * [addItemInvokedListener].
  */
 class WNavigationView : WControl(
-    Activation.composeDefault(Abi.CLS_NavigationView, Abi.IID_INavigationViewFactory), // default interface = INavigationView
+    Activation.composeDefault(XamlInterop.CLS_NavigationView, XamlInterop.IID_INavigationViewFactory), // default interface = INavigationView
 ) {
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
     private val navigationView2: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_INavigationView2))
+        own(inspectable.queryInterface(XamlInterop.IID_INavigationView2))
     }
 
     /** The IVector<Object> view of NavigationView.MenuItems / FooterMenuItems. */
     private val menuItemVector: ComPtr by lazy {
-        val menuItems = own(inspectable.getPtr(Abi.INavigationView_get_MenuItems))
-        own(menuItems.queryInterface(Abi.IID_IVector_Object))
+        val menuItems = own(inspectable.getPtr(XamlInterop.INavigationView_get_MenuItems))
+        own(menuItems.queryInterface(FoundationInterop.IID_IVector_Object))
     }
     private val footerItemVector: ComPtr by lazy {
-        val footerItems = own(inspectable.getPtr(Abi.INavigationView_get_FooterMenuItems))
-        own(footerItems.queryInterface(Abi.IID_IVector_Object))
+        val footerItems = own(inspectable.getPtr(XamlInterop.INavigationView_get_FooterMenuItems))
+        own(footerItems.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
     /** Items added via [addItem] / [addFooterItem] (used to resolve the selected item back). */
@@ -113,41 +114,41 @@ class WNavigationView : WControl(
 
     /** Whether the pane is open (NavigationView.IsPaneOpen). */
     var isPaneOpen: Boolean
-        get() = inspectable.getBool(Abi.INavigationView_get_IsPaneOpen)
-        set(value) = inspectable.putBool(Abi.INavigationView_put_IsPaneOpen, value)
+        get() = inspectable.getBool(XamlInterop.INavigationView_get_IsPaneOpen)
+        set(value) = inspectable.putBool(XamlInterop.INavigationView_put_IsPaneOpen, value)
 
     /** The heading above the content (NavigationView.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.INavigationView_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.INavigationView_put_Header, boxed.ptr)
             boxed.release()
         }
 
     /** The pane's current display state (NavigationView.DisplayMode). Read-only; changes automatically based on width. */
     val displayMode: NavigationViewDisplayMode
-        get() = NavigationViewDisplayMode.of(inspectable.getInt(Abi.INavigationView_get_DisplayMode))
+        get() = NavigationViewDisplayMode.of(inspectable.getInt(XamlInterop.INavigationView_get_DisplayMode))
 
     /** Whether to show the settings item at the bottom of the pane (NavigationView.IsSettingsVisible). */
     var isSettingsVisible: Boolean
-        get() = inspectable.getBool(Abi.INavigationView_get_IsSettingsVisible)
-        set(value) = inspectable.putBool(Abi.INavigationView_put_IsSettingsVisible, value)
+        get() = inspectable.getBool(XamlInterop.INavigationView_get_IsSettingsVisible)
+        set(value) = inspectable.putBool(XamlInterop.INavigationView_put_IsSettingsVisible, value)
 
     /** Whether to show the hamburger button for opening/closing the pane (NavigationView.IsPaneToggleButtonVisible). */
     var isPaneToggleButtonVisible: Boolean
-        get() = inspectable.getBool(Abi.INavigationView_get_IsPaneToggleButtonVisible)
-        set(value) = inspectable.putBool(Abi.INavigationView_put_IsPaneToggleButtonVisible, value)
+        get() = inspectable.getBool(XamlInterop.INavigationView_get_IsPaneToggleButtonVisible)
+        set(value) = inspectable.putBool(XamlInterop.INavigationView_put_IsPaneToggleButtonVisible, value)
 
     /** The pane's width when closed (NavigationView.CompactPaneLength). */
     var compactPaneLength: Double
-        get() = inspectable.getDouble(Abi.INavigationView_get_CompactPaneLength)
-        set(value) = inspectable.call(Abi.INavigationView_put_CompactPaneLength, value)
+        get() = inspectable.getDouble(XamlInterop.INavigationView_get_CompactPaneLength)
+        set(value) = inspectable.call(XamlInterop.INavigationView_put_CompactPaneLength, value)
 
     /** The pane's width when open (NavigationView.OpenPaneLength). */
     var openPaneLength: Double
-        get() = inspectable.getDouble(Abi.INavigationView_get_OpenPaneLength)
-        set(value) = inspectable.call(Abi.INavigationView_put_OpenPaneLength, value)
+        get() = inspectable.getDouble(XamlInterop.INavigationView_get_OpenPaneLength)
+        set(value) = inspectable.call(XamlInterop.INavigationView_put_OpenPaneLength, value)
 
     /**
      * The currently selected item, or null if none is selected (NavigationView.SelectedItem).
@@ -156,7 +157,7 @@ class WNavigationView : WControl(
      */
     var selectedItem: WNavigationViewItem?
         get() {
-            val selected = inspectable.getPtrOrNull(Abi.INavigationView_get_SelectedItem) ?: return null
+            val selected = inspectable.getPtrOrNull(XamlInterop.INavigationView_get_SelectedItem) ?: return null
             return try {
                 resolveItem(selected)
             } finally {
@@ -165,7 +166,7 @@ class WNavigationView : WControl(
         }
         set(value) {
             inspectable.call(
-                Abi.INavigationView_put_SelectedItem,
+                XamlInterop.INavigationView_put_SelectedItem,
                 value?.inspectable?.ptr,
             )
         }
@@ -175,40 +176,40 @@ class WNavigationView : WControl(
         set(value) {
             field = value
             contentControl.call(
-                Abi.IContentControl_put_Content,
+                XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
 
     /** The title string at the top of the pane (NavigationView.PaneTitle). */
     var paneTitle: String
-        get() = navigationView2.getString(Abi.INavigationView2_get_PaneTitle)
-        set(value) = Hstring.use(value) { h -> navigationView2.call(Abi.INavigationView2_put_PaneTitle, h) }
+        get() = navigationView2.getString(XamlInterop.INavigationView2_get_PaneTitle)
+        set(value) = Hstring.use(value) { h -> navigationView2.call(XamlInterop.INavigationView2_put_PaneTitle, h) }
 
     /** How the pane is placed (NavigationView.PaneDisplayMode). */
     var paneDisplayMode: NavigationViewPaneDisplayMode
-        get() = NavigationViewPaneDisplayMode.of(navigationView2.getInt(Abi.INavigationView2_get_PaneDisplayMode))
-        set(value) = navigationView2.call(Abi.INavigationView2_put_PaneDisplayMode, value.native)
+        get() = NavigationViewPaneDisplayMode.of(navigationView2.getInt(XamlInterop.INavigationView2_get_PaneDisplayMode))
+        set(value) = navigationView2.call(XamlInterop.INavigationView2_put_PaneDisplayMode, value.native)
 
     /** Whether the back button is shown (NavigationView.IsBackButtonVisible). */
     var isBackButtonVisible: NavigationViewBackButtonVisible
-        get() = NavigationViewBackButtonVisible.of(navigationView2.getInt(Abi.INavigationView2_get_IsBackButtonVisible))
-        set(value) = navigationView2.call(Abi.INavigationView2_put_IsBackButtonVisible, value.native)
+        get() = NavigationViewBackButtonVisible.of(navigationView2.getInt(XamlInterop.INavigationView2_get_IsBackButtonVisible))
+        set(value) = navigationView2.call(XamlInterop.INavigationView2_put_IsBackButtonVisible, value.native)
 
     /** Whether the back button is pressable (NavigationView.IsBackEnabled). */
     var isBackEnabled: Boolean
-        get() = navigationView2.getBool(Abi.INavigationView2_get_IsBackEnabled)
-        set(value) = navigationView2.putBool(Abi.INavigationView2_put_IsBackEnabled, value)
+        get() = navigationView2.getBool(XamlInterop.INavigationView2_get_IsBackEnabled)
+        set(value) = navigationView2.putBool(XamlInterop.INavigationView2_put_IsBackEnabled, value)
 
     /** Appends a menu item to the end (MenuItems.Append). */
     fun addItem(item: WNavigationViewItem) {
-        menuItemVector.call(Abi.IVector_Append, item.inspectable.ptr)
+        menuItemVector.call(FoundationInterop.IVector_Append, item.inspectable.ptr)
         items += item
     }
 
     /** Adds an item to the footer menu at the bottom of the pane (FooterMenuItems.Append). */
     fun addFooterItem(item: WNavigationViewItem) {
-        footerItemVector.call(Abi.IVector_Append, item.inspectable.ptr)
+        footerItemVector.call(FoundationInterop.IVector_Append, item.inspectable.ptr)
         items += item
     }
 
@@ -220,11 +221,11 @@ class WNavigationView : WControl(
     fun addSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
-            Abi.IID_NavigationViewSelectionChangedHandler,
-            Abi.INavigationView_add_SelectionChanged,
+            XamlInterop.IID_NavigationViewSelectionChangedHandler,
+            XamlInterop.INavigationView_add_SelectionChanged,
         ) { _, args ->
             val e = ComPtr(args)
-            val selected = e.getPtrOrNull(Abi.INavigationViewSelectionChangedEventArgs_get_SelectedItem)
+            val selected = e.getPtrOrNull(XamlInterop.INavigationViewSelectionChangedEventArgs_get_SelectedItem)
             val item = try {
                 selected?.let(::resolveItem)
             } finally {
@@ -238,7 +239,7 @@ class WNavigationView : WControl(
     /** Unsubscribes a listener registered via [addSelectionListener]. */
     fun removeSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.INavigationView_remove_SelectionChanged, token)
+        inspectable.removeEventHandler(XamlInterop.INavigationView_remove_SelectionChanged, token)
     }
 
     /**
@@ -249,11 +250,11 @@ class WNavigationView : WControl(
     fun addItemInvokedListener(listener: (String) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
-            Abi.IID_NavigationViewItemInvokedHandler,
-            Abi.INavigationView_add_ItemInvoked,
+            XamlInterop.IID_NavigationViewItemInvokedHandler,
+            XamlInterop.INavigationView_add_ItemInvoked,
         ) { _, args ->
             val e = ComPtr(args)
-            val boxed = e.getPtrOrNull(Abi.INavigationViewItemInvokedEventArgs_get_InvokedItem)
+            val boxed = e.getPtrOrNull(XamlInterop.INavigationViewItemInvokedEventArgs_get_InvokedItem)
             val item = try {
                 boxed?.let(PropertyValues::unboxString) ?: ""
             } finally {
@@ -267,7 +268,7 @@ class WNavigationView : WControl(
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
     fun removeItemInvokedListener(listener: (String) -> Unit) {
         val token = itemInvokedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.INavigationView_remove_ItemInvoked, token)
+        inspectable.removeEventHandler(XamlInterop.INavigationView_remove_ItemInvoked, token)
     }
 
     /**

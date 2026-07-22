@@ -2,17 +2,17 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Creates a SymbolIcon and returns it as an IconElement view (for put_Icon-style properties).
  * Release it after use.
  */
 internal fun Symbol.createIconElement(): ComPtr {
-    val symbolIcon = Activation.factory(Abi.CLS_SymbolIcon, Abi.IID_ISymbolIconFactory)
-        .getPtr(Abi.ISymbolIconFactory_CreateInstanceWithSymbol, native)
+    val symbolIcon = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
+        .getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, native)
     return try {
-        symbolIcon.queryInterface(Abi.IID_IIconElement)
+        symbolIcon.queryInterface(XamlInterop.IID_IIconElement)
     } finally {
         symbolIcon.release()
     }
@@ -23,10 +23,10 @@ internal fun Symbol.createIconElement(): ComPtr {
  * Release it after use.
  */
 internal fun Symbol.createIconSource(): ComPtr {
-    val source = Activation.composeDefault(Abi.CLS_SymbolIconSource, Abi.IID_ISymbolIconSourceFactory)
-    source.call(Abi.ISymbolIconSource_put_Symbol, native)
+    val source = Activation.composeDefault(XamlInterop.CLS_SymbolIconSource, XamlInterop.IID_ISymbolIconSourceFactory)
+    source.call(XamlInterop.ISymbolIconSource_put_Symbol, native)
     return try {
-        source.queryInterface(Abi.IID_IIconSource)
+        source.queryInterface(XamlInterop.IID_IIconSource)
     } finally {
         source.release()
     }

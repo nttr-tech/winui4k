@@ -8,7 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.SwipeMode (behavior when swiped).
@@ -53,10 +54,10 @@ enum class SwipeBehaviorOnInvoked(internal val native: Int) {
  * (Swiping is touch/pen only; it doesn't open on a mouse drag.)
  */
 class WSwipeControl(content: WComponent? = null) : WControl(
-    Activation.composeDefault(Abi.CLS_SwipeControl, Abi.IID_ISwipeControlFactory),
+    Activation.composeDefault(XamlInterop.CLS_SwipeControl, XamlInterop.IID_ISwipeControlFactory),
 ) {
     private val contentControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IContentControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
     /** The content shown on the front, before swiping (ContentControl.Content). */
@@ -64,7 +65,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
         set(value) {
             field = value
             contentControl.call(
-                Abi.IContentControl_put_Content,
+                XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
@@ -73,28 +74,28 @@ class WSwipeControl(content: WComponent? = null) : WControl(
     var leftItems: WSwipeItems? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeControl_put_LeftItems, value.ptrOrNull())
+            inspectable.call(XamlInterop.ISwipeControl_put_LeftItems, value.ptrOrNull())
         }
 
     /** Items revealed from the right edge on a leftward swipe (SwipeControl.RightItems). */
     var rightItems: WSwipeItems? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeControl_put_RightItems, value.ptrOrNull())
+            inspectable.call(XamlInterop.ISwipeControl_put_RightItems, value.ptrOrNull())
         }
 
     /** Items revealed from the top edge on a downward swipe (SwipeControl.TopItems). */
     var topItems: WSwipeItems? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeControl_put_TopItems, value.ptrOrNull())
+            inspectable.call(XamlInterop.ISwipeControl_put_TopItems, value.ptrOrNull())
         }
 
     /** Items revealed from the bottom edge on an upward swipe (SwipeControl.BottomItems). */
     var bottomItems: WSwipeItems? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeControl_put_BottomItems, value.ptrOrNull())
+            inspectable.call(XamlInterop.ISwipeControl_put_BottomItems, value.ptrOrNull())
         }
 
     init {
@@ -103,7 +104,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
 
     /** Closes any open swipe item (SwipeControl.Close). */
     fun close() {
-        inspectable.call(Abi.ISwipeControl_Close)
+        inspectable.call(XamlInterop.ISwipeControl_Close)
     }
 
     private fun WSwipeItems?.ptrOrNull(): Ptr? = this?.inspectable?.ptr
@@ -116,20 +117,20 @@ class WSwipeControl(content: WComponent? = null) : WControl(
 class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
     /** The default interface (ISwipeItems). */
     internal val inspectable: ComPtr =
-        Activation.composeDefault(Abi.CLS_SwipeItems, Abi.IID_ISwipeItemsFactory)
+        Activation.composeDefault(XamlInterop.CLS_SwipeItems, XamlInterop.IID_ISwipeItemsFactory)
 
     /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
     private val lifetime = ComLifetime.adopt(this, inspectable)
 
     /** The IVector<SwipeItem> view that has Append (SwipeItems implements IVector). */
     private val vector: ComPtr by lazy {
-        lifetime.own(inspectable.queryInterface(Abi.IID_IVector_SwipeItem))
+        lifetime.own(inspectable.queryInterface(XamlInterop.IID_IVector_SwipeItem))
     }
 
     /** The swipe behavior (SwipeItems.Mode). In EXECUTE mode, only a single item is allowed. */
     var mode: SwipeMode
-        get() = SwipeMode.of(inspectable.getInt(Abi.ISwipeItems_get_Mode))
-        set(value) = inspectable.call(Abi.ISwipeItems_put_Mode, value.native)
+        get() = SwipeMode.of(inspectable.getInt(XamlInterop.ISwipeItems_get_Mode))
+        set(value) = inspectable.call(XamlInterop.ISwipeItems_put_Mode, value.native)
 
     init {
         if (mode != SwipeMode.REVEAL) this.mode = mode
@@ -137,7 +138,7 @@ class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
 
     /** Appends an item (IVector<SwipeItem>.Append). */
     fun add(item: WSwipeItem) {
-        vector.call(Abi.IVector_Append, item.inspectable.ptr)
+        vector.call(FoundationInterop.IVector_Append, item.inspectable.ptr)
     }
 }
 
@@ -148,7 +149,7 @@ class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
 class WSwipeItem(text: String = "", icon: Symbol? = null) {
     /** The default interface (ISwipeItem). */
     internal val inspectable: ComPtr =
-        Activation.composeDefault(Abi.CLS_SwipeItem, Abi.IID_ISwipeItemFactory)
+        Activation.composeDefault(XamlInterop.CLS_SwipeItem, XamlInterop.IID_ISwipeItemFactory)
 
     /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
     @Suppress("unused")
@@ -159,19 +160,19 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
 
     /** The button's label (SwipeItem.Text). */
     var text: String
-        get() = inspectable.getString(Abi.ISwipeItem_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.ISwipeItem_put_Text, h) }
+        get() = inspectable.getString(XamlInterop.ISwipeItem_get_Text)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ISwipeItem_put_Text, h) }
 
     /** The button's icon (SwipeItem.IconSource). Creates and passes a SymbolIconSource. */
     var icon: Symbol? = null
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ISwipeItem_put_IconSource, null)
+                inspectable.call(XamlInterop.ISwipeItem_put_IconSource, null)
                 return
             }
             val iconSource = value.createIconSource()
-            inspectable.call(Abi.ISwipeItem_put_IconSource, iconSource.ptr)
+            inspectable.call(XamlInterop.ISwipeItem_put_IconSource, iconSource.ptr)
             iconSource.release()
         }
 
@@ -180,24 +181,24 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.ISwipeItem_put_Background, null)
+                inspectable.call(XamlInterop.ISwipeItem_put_Background, null)
                 return
             }
             val brush = value.createBrush()
-            inspectable.call(Abi.ISwipeItem_put_Background, brush.ptr)
+            inspectable.call(XamlInterop.ISwipeItem_put_Background, brush.ptr)
             brush.release()
         }
 
     /** Whether the swipe closes after this item runs (SwipeItem.BehaviorOnInvoked). */
     var behaviorOnInvoked: SwipeBehaviorOnInvoked
-        get() = SwipeBehaviorOnInvoked.of(inspectable.getInt(Abi.ISwipeItem_get_BehaviorOnInvoked))
-        set(value) = inspectable.call(Abi.ISwipeItem_put_BehaviorOnInvoked, value.native)
+        get() = SwipeBehaviorOnInvoked.of(inspectable.getInt(XamlInterop.ISwipeItem_get_BehaviorOnInvoked))
+        set(value) = inspectable.call(XamlInterop.ISwipeItem_put_BehaviorOnInvoked, value.native)
 
     /** The command run on tap (SwipeItem.Command). */
     var command: WCommandBase? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISwipeItem_put_Command, value?.commandPtr)
+            inspectable.call(XamlInterop.ISwipeItem_put_Command, value?.commandPtr)
         }
 
     init {
@@ -212,8 +213,8 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
     fun addActionListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SwipeItemInvokedHandler",
-            Abi.IID_SwipeItemInvokedHandler,
-            Abi.ISwipeItem_add_Invoked,
+            XamlInterop.IID_SwipeItemInvokedHandler,
+            XamlInterop.ISwipeItem_add_Invoked,
         ) { _, _ -> listener() }
         invokedTokens.add(listener, token)
     }
@@ -221,6 +222,6 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
     /** Unsubscribes a listener registered via [addActionListener]. */
     fun removeActionListener(listener: () -> Unit) {
         val token = invokedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.ISwipeItem_remove_Invoked, token)
+        inspectable.removeEventHandler(XamlInterop.ISwipeItem_remove_Invoked, token)
     }
 }

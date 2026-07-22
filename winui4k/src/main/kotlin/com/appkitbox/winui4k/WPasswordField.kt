@@ -6,7 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.PasswordRevealMode (how the password is displayed).
@@ -30,44 +30,44 @@ enum class PasswordRevealMode(internal val native: Int) {
 
 /** JPasswordField-like: WinUI 3's PasswordBox. */
 class WPasswordField(placeholder: String = "") : WControl(
-    Activation.activate(Abi.CLS_PasswordBox, Abi.IID_IPasswordBox),
+    Activation.activate(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBox),
 ) {
     /** PasswordChanged event tokens registered via addPasswordChangedListener. */
     private val passwordChangedTokens = ListenerTokens<(String) -> Unit>()
 
     /** The entered password (PasswordBox.Password). */
     var password: String
-        get() = inspectable.getString(Abi.IPasswordBox_get_Password)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IPasswordBox_put_Password, h) }
+        get() = inspectable.getString(XamlInterop.IPasswordBox_get_Password)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_Password, h) }
 
     /** The character used for masking (PasswordBox.PasswordChar). Defaults to "●". */
     var passwordChar: String
-        get() = inspectable.getString(Abi.IPasswordBox_get_PasswordChar)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IPasswordBox_put_PasswordChar, h) }
+        get() = inspectable.getString(XamlInterop.IPasswordBox_get_PasswordChar)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_PasswordChar, h) }
 
     /** The placeholder shown when empty (PasswordBox.PlaceholderText). */
     var placeholderText: String
-        get() = inspectable.getString(Abi.IPasswordBox_get_PlaceholderText)
-        set(value) = Hstring.use(value) { h -> inspectable.call(Abi.IPasswordBox_put_PlaceholderText, h) }
+        get() = inspectable.getString(XamlInterop.IPasswordBox_get_PlaceholderText)
+        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_PlaceholderText, h) }
 
     /** The header shown above the password box (PasswordBox.Header). It's an Object, so a boxed string is passed. */
     var header: String = ""
         set(value) {
             field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(Abi.IPasswordBox_put_Header, boxed.ptr)
+            inspectable.call(XamlInterop.IPasswordBox_put_Header, boxed.ptr)
             boxed.release()
         }
 
     /** The maximum number of characters that can be entered. 0 means unlimited (PasswordBox.MaxLength). */
     var maxLength: Int
-        get() = inspectable.getInt(Abi.IPasswordBox_get_MaxLength)
-        set(value) = inspectable.call(Abi.IPasswordBox_put_MaxLength, value)
+        get() = inspectable.getInt(XamlInterop.IPasswordBox_get_MaxLength)
+        set(value) = inspectable.call(XamlInterop.IPasswordBox_put_MaxLength, value)
 
     /** How the password is displayed (PasswordBox.PasswordRevealMode). */
     var passwordRevealMode: PasswordRevealMode
-        get() = PasswordRevealMode.of(inspectable.getInt(Abi.IPasswordBox_get_PasswordRevealMode))
-        set(value) = inspectable.call(Abi.IPasswordBox_put_PasswordRevealMode, value.native)
+        get() = PasswordRevealMode.of(inspectable.getInt(XamlInterop.IPasswordBox_get_PasswordRevealMode))
+        set(value) = inspectable.call(XamlInterop.IPasswordBox_put_PasswordRevealMode, value.native)
 
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
@@ -75,15 +75,15 @@ class WPasswordField(placeholder: String = "") : WControl(
 
     /** Selects all text (PasswordBox.SelectAll). */
     fun selectAll() {
-        inspectable.call(Abi.IPasswordBox_SelectAll)
+        inspectable.call(XamlInterop.IPasswordBox_SelectAll)
     }
 
     /** Subscribes to password changes (PasswordBox.PasswordChanged). The listener receives the password after the change. */
     fun addPasswordChangedListener(listener: (String) -> Unit) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PasswordChangedHandler",
-            Abi.IID_RoutedEventHandler,
-            Abi.IPasswordBox_add_PasswordChanged,
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IPasswordBox_add_PasswordChanged,
         ) { _, _ -> listener(password) }
         passwordChangedTokens.add(listener, token)
     }
@@ -91,6 +91,6 @@ class WPasswordField(placeholder: String = "") : WControl(
     /** Unsubscribes a listener registered via [addPasswordChangedListener]. */
     fun removePasswordChangedListener(listener: (String) -> Unit) {
         val token = passwordChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IPasswordBox_remove_PasswordChanged, token)
+        inspectable.removeEventHandler(XamlInterop.IPasswordBox_remove_PasswordChanged, token)
     }
 }

@@ -7,7 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Async
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.NotificationInterop
 
 /**
  * The taskbar's right-click menu: Windows.UI.StartScreen's JumpList.
@@ -21,9 +22,9 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
         /** Whether jump lists are usable in this environment (JumpList.IsSupported). */
         val isSupported: Boolean
             get() {
-                val statics = Activation.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
+                val statics = Activation.factory(NotificationInterop.CLS_JumpList, NotificationInterop.IID_IJumpListStatics)
                 return try {
-                    statics.getBool(Abi.IJumpListStatics_IsSupported)
+                    statics.getBool(NotificationInterop.IJumpListStatics_IsSupported)
                 } finally {
                     statics.release()
                 }
@@ -31,11 +32,11 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
 
         /** Loads the current jump list (awaits JumpList.LoadCurrentAsync's completion). */
         fun load(): WJumpList {
-            val statics = Activation.factory(Abi.CLS_JumpList, Abi.IID_IJumpListStatics)
-            val operation = statics.getPtr(Abi.IJumpListStatics_LoadCurrentAsync)
+            val statics = Activation.factory(NotificationInterop.CLS_JumpList, NotificationInterop.IID_IJumpListStatics)
+            val operation = statics.getPtr(NotificationInterop.IJumpListStatics_LoadCurrentAsync)
             statics.release()
             val result = Async.awaitResult(
-                operation, Abi.IID_AsyncOperationCompletedHandler_JumpList, "JumpList.LoadCurrentAsync",
+                operation, NotificationInterop.IID_AsyncOperationCompletedHandler_JumpList, "JumpList.LoadCurrentAsync",
             )
             operation.release()
             return WJumpList(result)
@@ -44,20 +45,20 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
 
     /** The display kind of the system-managed groups ("Frequent" / "Recent"). */
     var systemGroupKind: JumpListSystemGroupKind
-        get() = JumpListSystemGroupKind.of(jumpList.getInt(Abi.IJumpList_get_SystemGroupKind))
-        set(value) = jumpList.call(Abi.IJumpList_put_SystemGroupKind, value.native)
+        get() = JumpListSystemGroupKind.of(jumpList.getInt(NotificationInterop.IJumpList_get_SystemGroupKind))
+        set(value) = jumpList.call(NotificationInterop.IJumpList_put_SystemGroupKind, value.native)
 
     /** The list of custom items (a snapshot of JumpList.Items). */
     val items: List<WJumpListItem>
         get() {
-            val vector = jumpList.getPtr(Abi.IJumpList_get_Items)
+            val vector = jumpList.getPtr(NotificationInterop.IJumpList_get_Items)
             try {
                 return Ffi.backend.withScope { scope ->
                     val size = scope.allocate(4)
-                    vector.call(Abi.IVector_get_Size, size)
+                    vector.call(FoundationInterop.IVector_get_Size, size)
                     (0 until Ffi.backend.memory.getInt(size, 0)).map { i ->
                         val out = scope.allocate(8)
-                        vector.call(Abi.IVector_GetAt, i, out)
+                        vector.call(FoundationInterop.IVector_GetAt, i, out)
                         WJumpListItem(ComPtr(Ffi.backend.memory.getPtr(out, 0)))
                     }
                 }
@@ -68,21 +69,21 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
 
     /** Appends a custom item to the end. */
     fun add(item: WJumpListItem) {
-        val vector = jumpList.getPtr(Abi.IJumpList_get_Items)
-        vector.call(Abi.IVector_Append, item.item.ptr)
+        val vector = jumpList.getPtr(NotificationInterop.IJumpList_get_Items)
+        vector.call(FoundationInterop.IVector_Append, item.item.ptr)
         vector.release()
     }
 
     /** Removes all custom items. */
     fun removeAll() {
-        val vector = jumpList.getPtr(Abi.IJumpList_get_Items)
-        vector.call(Abi.IVector_Clear)
+        val vector = jumpList.getPtr(NotificationInterop.IJumpList_get_Items)
+        vector.call(FoundationInterop.IVector_Clear)
         vector.release()
     }
 
     /** Applies the changes to the taskbar (awaits JumpList.SaveAsync's completion). */
     fun save() {
-        val action = jumpList.getPtr(Abi.IJumpList_SaveAsync)
+        val action = jumpList.getPtr(NotificationInterop.IJumpList_SaveAsync)
         Async.await(action, "JumpList.SaveAsync")
         action.release()
     }
@@ -96,10 +97,10 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
     companion object {
         /** Creates an item with launch arguments (JumpListItem.CreateWithArguments). */
         fun of(arguments: String, displayName: String): WJumpListItem {
-            val statics = Activation.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
+            val statics = Activation.factory(NotificationInterop.CLS_JumpListItem, NotificationInterop.IID_IJumpListItemStatics)
             val item = Hstring.use(arguments) { a ->
                 Hstring.use(displayName) { d ->
-                    statics.getPtr(Abi.IJumpListItemStatics_CreateWithArguments, a, d)
+                    statics.getPtr(NotificationInterop.IJumpListItemStatics_CreateWithArguments, a, d)
                 }
             }
             statics.release()
@@ -108,8 +109,8 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
 
         /** Creates a separator item (JumpListItem.CreateSeparator). */
         fun separator(): WJumpListItem {
-            val statics = Activation.factory(Abi.CLS_JumpListItem, Abi.IID_IJumpListItemStatics)
-            val item = statics.getPtr(Abi.IJumpListItemStatics_CreateSeparator)
+            val statics = Activation.factory(NotificationInterop.CLS_JumpListItem, NotificationInterop.IID_IJumpListItemStatics)
+            val item = statics.getPtr(NotificationInterop.IJumpListItemStatics_CreateSeparator)
             statics.release()
             return WJumpListItem(item)
         }
@@ -117,26 +118,26 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
 
     /** Whether this is a separator (JumpListItem.Kind == Separator). */
     val isSeparator: Boolean
-        get() = item.getInt(Abi.IJumpListItem_get_Kind) == 1 // JumpListItemKind.Separator
+        get() = item.getInt(NotificationInterop.IJumpListItem_get_Kind) == 1 // JumpListItemKind.Separator
 
     /** The launch arguments passed to the app when clicked (fixed at creation time). */
     val arguments: String
-        get() = item.getString(Abi.IJumpListItem_get_Arguments)
+        get() = item.getString(NotificationInterop.IJumpListItem_get_Arguments)
 
     /** The name shown in the menu. */
     var displayName: String
-        get() = item.getString(Abi.IJumpListItem_get_DisplayName)
-        set(value) = Hstring.use(value) { h -> item.call(Abi.IJumpListItem_put_DisplayName, h) }
+        get() = item.getString(NotificationInterop.IJumpListItem_get_DisplayName)
+        set(value) = Hstring.use(value) { h -> item.call(NotificationInterop.IJumpListItem_put_DisplayName, h) }
 
     /** The description shown in the tooltip. */
     var description: String
-        get() = item.getString(Abi.IJumpListItem_get_Description)
-        set(value) = Hstring.use(value) { h -> item.call(Abi.IJumpListItem_put_Description, h) }
+        get() = item.getString(NotificationInterop.IJumpListItem_get_Description)
+        set(value) = Hstring.use(value) { h -> item.call(NotificationInterop.IJumpListItem_put_Description, h) }
 
     /** The heading of the group this item belongs to (the system's "Tasks" group if empty). */
     var groupName: String
-        get() = item.getString(Abi.IJumpListItem_get_GroupName)
-        set(value) = Hstring.use(value) { h -> item.call(Abi.IJumpListItem_put_GroupName, h) }
+        get() = item.getString(NotificationInterop.IJumpListItem_get_GroupName)
+        set(value) = Hstring.use(value) { h -> item.call(NotificationInterop.IJumpListItem_put_GroupName, h) }
 }
 
 /** The display kind of the system-managed groups (JumpListSystemGroupKind). Values extracted from the winmd. */

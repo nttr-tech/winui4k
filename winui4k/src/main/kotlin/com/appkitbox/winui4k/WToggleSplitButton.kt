@@ -4,18 +4,18 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * A [WSplitButton] that toggles on/off: WinUI 3's ToggleSplitButton.
  * Clicking the body flips [isChecked]; the right-side arrow opens the flyout.
  */
 class WToggleSplitButton(text: String = "") : WSplitButton(
-    Activation.composeDefault(Abi.CLS_ToggleSplitButton, Abi.IID_IToggleSplitButtonFactory),
+    Activation.composeDefault(XamlInterop.CLS_ToggleSplitButton, XamlInterop.IID_IToggleSplitButtonFactory),
 ) {
     /** The IToggleSplitButton view holding IsChecked / IsCheckedChanged. */
     private val toggleSplitButton: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IToggleSplitButton))
+        own(inspectable.queryInterface(XamlInterop.IID_IToggleSplitButton))
     }
 
     /** IsCheckedChanged event tokens registered via addItemListener. */
@@ -23,8 +23,8 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
 
     /** The checked state (ToggleSplitButton.IsChecked). Unlike ToggleButton, a plain boolean. */
     var isChecked: Boolean
-        get() = toggleSplitButton.getBool(Abi.IToggleSplitButton_get_IsChecked)
-        set(value) = toggleSplitButton.putBool(Abi.IToggleSplitButton_put_IsChecked, value)
+        get() = toggleSplitButton.getBool(XamlInterop.IToggleSplitButton_get_IsChecked)
+        set(value) = toggleSplitButton.putBool(XamlInterop.IToggleSplitButton_put_IsChecked, value)
 
     /**
      * ItemListener-like: subscribes to changes in the checked state. The listener receives
@@ -33,8 +33,8 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
     fun addItemListener(listener: (Boolean) -> Unit) {
         val token = toggleSplitButton.addEventHandler(
             "WinUI4K.ToggleSplitButtonHandler",
-            Abi.IID_ToggleSplitButtonIsCheckedChangedHandler,
-            Abi.IToggleSplitButton_add_IsCheckedChanged,
+            XamlInterop.IID_ToggleSplitButtonIsCheckedChangedHandler,
+            XamlInterop.IToggleSplitButton_add_IsCheckedChanged,
         ) { _, _ -> listener(isChecked) }
         itemTokens.add(listener, token)
     }
@@ -42,7 +42,7 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
     /** Unsubscribes a listener registered via [addItemListener]. */
     fun removeItemListener(listener: (Boolean) -> Unit) {
         val token = itemTokens.remove(listener) ?: return
-        toggleSplitButton.removeEventHandler(Abi.IToggleSplitButton_remove_IsCheckedChanged, token)
+        toggleSplitButton.removeEventHandler(XamlInterop.IToggleSplitButton_remove_IsCheckedChanged, token)
     }
 
     init {

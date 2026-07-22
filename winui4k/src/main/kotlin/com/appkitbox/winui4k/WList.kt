@@ -5,7 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.ListViewSelectionMode (how many items can be selected).
@@ -40,20 +41,20 @@ enum class ListViewSelectionMode(internal val native: Int) {
  * [isItemClickEnabled] / [addItemClickListener] / [removeItemClickListener] (ItemClick).
  */
 class WList(items: List<String> = emptyList()) : WControl(
-    Activation.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
+    Activation.composeDefault(XamlInterop.CLS_ListView, XamlInterop.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ISelector))
+        own(inspectable.queryInterface(XamlInterop.IID_ISelector))
     }
     private val listViewBase: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IListViewBase))
+        own(inspectable.queryInterface(XamlInterop.IID_IListViewBase))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        val itemsControl = own(inspectable.queryInterface(Abi.IID_IItemsControl))
-        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
-        own(items.queryInterface(Abi.IID_IVector_Object))
+        val itemsControl = own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))
+        val items = own(itemsControl.getPtr(XamlInterop.IItemsControl_get_Items))
+        own(items.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
     /** SelectionChanged event tokens registered via addListSelectionListener. */
@@ -64,20 +65,20 @@ class WList(items: List<String> = emptyList()) : WControl(
 
     /** Item count (Items.Size). */
     val itemCount: Int
-        get() = itemVector.getInt(Abi.IVector_get_Size)
+        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
 
     /**
      * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
      * With multiple selection, this is the first selected position.
      */
     var selectedIndex: Int
-        get() = selector.getInt(Abi.ISelector_get_SelectedIndex)
-        set(value) = selector.call(Abi.ISelector_put_SelectedIndex, value)
+        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
     /** The selected item string, or null if nothing is selected (Selector.SelectedItem). */
     val selectedItem: String?
         get() {
-            val boxed = selector.getPtrOrNull(Abi.ISelector_get_SelectedItem) ?: return null
+            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
             return try {
                 PropertyValues.unboxString(boxed)
             } finally {
@@ -87,16 +88,16 @@ class WList(items: List<String> = emptyList()) : WControl(
 
     /** The selection mode (ListViewBase.SelectionMode). */
     var selectionMode: ListViewSelectionMode
-        get() = ListViewSelectionMode.of(listViewBase.getInt(Abi.IListViewBase_get_SelectionMode))
-        set(value) = listViewBase.call(Abi.IListViewBase_put_SelectionMode, value.native)
+        get() = ListViewSelectionMode.of(listViewBase.getInt(XamlInterop.IListViewBase_get_SelectionMode))
+        set(value) = listViewBase.call(XamlInterop.IListViewBase_put_SelectionMode, value.native)
 
     /**
      * Whether clicking an item fires ItemClick (ListViewBase.IsItemClickEnabled).
      * Set this to true if you use [addItemClickListener].
      */
     var isItemClickEnabled: Boolean
-        get() = listViewBase.getBool(Abi.IListViewBase_get_IsItemClickEnabled)
-        set(value) = listViewBase.putBool(Abi.IListViewBase_put_IsItemClickEnabled, value)
+        get() = listViewBase.getBool(XamlInterop.IListViewBase_get_IsItemClickEnabled)
+        set(value) = listViewBase.putBool(XamlInterop.IListViewBase_put_IsItemClickEnabled, value)
 
     init {
         for (item in items) addItem(item)
@@ -105,13 +106,13 @@ class WList(items: List<String> = emptyList()) : WControl(
     /** Appends an item at the end (Items.Append). The string is boxed before being passed. */
     fun addItem(item: String) {
         val boxed = PropertyValues.boxString(item)
-        itemVector.call(Abi.IVector_Append, boxed.ptr)
+        itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
         boxed.release()
     }
 
     /** Returns the item string at [index] (Items.GetAt). */
     fun getItem(index: Int): String {
-        val boxed = itemVector.getPtr(Abi.IVector_GetAt, index)
+        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
         return try {
             PropertyValues.unboxString(boxed) ?: ""
         } finally {
@@ -121,25 +122,25 @@ class WList(items: List<String> = emptyList()) : WControl(
 
     /** Removes the item at [index] (Items.RemoveAt). */
     fun removeItem(index: Int) {
-        itemVector.call(Abi.IVector_RemoveAt, index)
+        itemVector.call(FoundationInterop.IVector_RemoveAt, index)
     }
 
     /** Removes all items (Items.Clear). */
     fun removeAllItems() {
-        itemVector.call(Abi.IVector_Clear)
+        itemVector.call(FoundationInterop.IVector_Clear)
     }
 
     /** Selects all items (ListViewBase.SelectAll). Only effective in Multiple / Extended mode. */
     fun selectAll() {
-        listViewBase.call(Abi.IListViewBase_SelectAll)
+        listViewBase.call(XamlInterop.IListViewBase_SelectAll)
     }
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
     fun addListSelectionListener(listener: () -> Unit) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
-            Abi.IID_SelectionChangedEventHandler,
-            Abi.ISelector_add_SelectionChanged,
+            XamlInterop.IID_SelectionChangedEventHandler,
+            XamlInterop.ISelector_add_SelectionChanged,
         ) { _, _ -> listener() }
         selectionTokens.add(listener, token)
     }
@@ -147,7 +148,7 @@ class WList(items: List<String> = emptyList()) : WControl(
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
     fun removeListSelectionListener(listener: () -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
-        selector.removeEventHandler(Abi.ISelector_remove_SelectionChanged, token)
+        selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
 
     /**
@@ -158,12 +159,12 @@ class WList(items: List<String> = emptyList()) : WControl(
     fun addItemClickListener(listener: (String) -> Unit) {
         val token = listViewBase.addEventHandler(
             "WinUI4K.ItemClickHandler",
-            Abi.IID_ItemClickEventHandler,
-            Abi.IListViewBase_add_ItemClick,
+            XamlInterop.IID_ItemClickEventHandler,
+            XamlInterop.IListViewBase_add_ItemClick,
         ) { _, args ->
             // args is ItemClickEventArgs's default interface, so it can be called directly
             val e = ComPtr(args)
-            val boxed = e.getPtr(Abi.IItemClickEventArgs_get_ClickedItem)
+            val boxed = e.getPtr(XamlInterop.IItemClickEventArgs_get_ClickedItem)
             val item = try {
                 PropertyValues.unboxString(boxed) ?: ""
             } finally {
@@ -177,6 +178,6 @@ class WList(items: List<String> = emptyList()) : WControl(
     /** Unsubscribes a listener registered via [addItemClickListener]. */
     fun removeItemClickListener(listener: (String) -> Unit) {
         val token = itemClickTokens.remove(listener) ?: return
-        listViewBase.removeEventHandler(Abi.IListViewBase_remove_ItemClick, token)
+        listViewBase.removeEventHandler(XamlInterop.IListViewBase_remove_ItemClick, token)
     }
 }

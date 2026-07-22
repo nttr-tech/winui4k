@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * WinUI 3's InfoBadge (a notification dot / count badge). No Swing equivalent, so we keep
@@ -12,21 +12,21 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * badge instead. Use [setSymbolIcon] to show an icon (takes priority over value).
  */
 class WInfoBadge : WControl(
-    Activation.composeDefault(Abi.CLS_InfoBadge, Abi.IID_IInfoBadgeFactory), // default interface = IInfoBadge
+    Activation.composeDefault(XamlInterop.CLS_InfoBadge, XamlInterop.IID_IInfoBadgeFactory), // default interface = IInfoBadge
 ) {
     /**
      * The number shown on the badge (InfoBadge.Value). 0 or greater is a numeric badge, -1 is a
      * dot badge. Ignored once an icon badge ([setSymbolIcon]) has been set.
      */
     var value: Int
-        get() = inspectable.getInt(Abi.IInfoBadge_get_Value)
-        set(value) = inspectable.call(Abi.IInfoBadge_put_Value, value)
+        get() = inspectable.getInt(XamlInterop.IInfoBadge_get_Value)
+        set(value) = inspectable.call(XamlInterop.IInfoBadge_put_Value, value)
 
     /** Turns this into an icon badge (InfoBadge.IconSource). Creates and passes a SymbolIconSource. */
     fun setSymbolIcon(symbol: Symbol) {
         val iconSource = symbol.createIconSource()
         try {
-            inspectable.call(Abi.IInfoBadge_put_IconSource, iconSource.ptr)
+            inspectable.call(XamlInterop.IInfoBadge_put_IconSource, iconSource.ptr)
         } finally {
             iconSource.release()
         }

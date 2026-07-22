@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * WinUI 3's ProgressRing (a circular spinner). JProgressBar has no circular visual, so there's
@@ -15,36 +15,36 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * itself (confirmed against the winmd), so they're called directly.
  */
 class WProgressRing : WControl(
-    Activation.composeDefault(Abi.CLS_ProgressRing, Abi.IID_IProgressRingFactory), // default interface = IProgressRing
+    Activation.composeDefault(XamlInterop.CLS_ProgressRing, XamlInterop.IID_IProgressRingFactory), // default interface = IProgressRing
 ) {
     /**
      * Whether the ring is shown and animating (ProgressRing.IsActive).
      * Setting this to false makes the ring itself disappear.
      */
     var isActive: Boolean
-        get() = inspectable.getBool(Abi.IProgressRing_get_IsActive)
-        set(value) = inspectable.putBool(Abi.IProgressRing_put_IsActive, value)
+        get() = inspectable.getBool(XamlInterop.IProgressRing_get_IsActive)
+        set(value) = inspectable.putBool(XamlInterop.IProgressRing_put_IsActive, value)
 
     /**
      * Whether progress is indeterminate (ProgressRing.IsIndeterminate). true (the default) keeps
      * spinning to indicate "working"; false draws determinate progress based on [value].
      */
     var isIndeterminate: Boolean
-        get() = inspectable.getBool(Abi.IProgressRing_get_IsIndeterminate)
-        set(value) = inspectable.putBool(Abi.IProgressRing_put_IsIndeterminate, value)
+        get() = inspectable.getBool(XamlInterop.IProgressRing_get_IsIndeterminate)
+        set(value) = inspectable.putBool(XamlInterop.IProgressRing_put_IsIndeterminate, value)
 
     /** The current value (ProgressRing.Value). Reflected when [isIndeterminate] = false. */
     var value: Double
-        get() = inspectable.getDouble(Abi.IProgressRing_get_Value)
-        set(value) = inspectable.call(Abi.IProgressRing_put_Value, value)
+        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Value)
+        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Value, value)
 
     /** The minimum value (ProgressRing.Minimum). */
     var minimum: Double
-        get() = inspectable.getDouble(Abi.IProgressRing_get_Minimum)
-        set(value) = inspectable.call(Abi.IProgressRing_put_Minimum, value)
+        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Minimum)
+        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Minimum, value)
 
     /** The maximum value (ProgressRing.Maximum). */
     var maximum: Double
-        get() = inspectable.getDouble(Abi.IProgressRing_get_Maximum)
-        set(value) = inspectable.call(Abi.IProgressRing_put_Maximum, value)
+        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Maximum)
+        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Maximum, value)
 }

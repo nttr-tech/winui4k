@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Controls.SplitViewDisplayMode (how the pane is displayed).
@@ -48,41 +48,41 @@ enum class SplitViewPanePlacement(internal val native: Int) {
  * Displays a collapsible [pane] alongside the main [content].
  */
 class WSplitView(pane: WComponent? = null, content: WComponent? = null) : WControl(
-    Activation.composeDefault(Abi.CLS_SplitView, Abi.IID_ISplitViewFactory), // default interface = ISplitView
+    Activation.composeDefault(XamlInterop.CLS_SplitView, XamlInterop.IID_ISplitViewFactory), // default interface = ISplitView
 ) {
     /** The main content (SplitView.Content). */
     var content: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISplitView_put_Content, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.ISplitView_put_Content, value?.uiElement?.ptr)
         }
 
     /** The collapsible pane (SplitView.Pane). */
     var pane: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.ISplitView_put_Pane, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.ISplitView_put_Pane, value?.uiElement?.ptr)
         }
 
     /** Whether the pane is open (SplitView.IsPaneOpen). */
     var isPaneOpen: Boolean
-        get() = inspectable.getBool(Abi.ISplitView_get_IsPaneOpen)
-        set(value) = inspectable.putBool(Abi.ISplitView_put_IsPaneOpen, value)
+        get() = inspectable.getBool(XamlInterop.ISplitView_get_IsPaneOpen)
+        set(value) = inspectable.putBool(XamlInterop.ISplitView_put_IsPaneOpen, value)
 
     /** The pane's width while open (SplitView.OpenPaneLength). */
     var openPaneLength: Double
-        get() = inspectable.getDouble(Abi.ISplitView_get_OpenPaneLength)
-        set(value) = inspectable.call(Abi.ISplitView_put_OpenPaneLength, value)
+        get() = inspectable.getDouble(XamlInterop.ISplitView_get_OpenPaneLength)
+        set(value) = inspectable.call(XamlInterop.ISplitView_put_OpenPaneLength, value)
 
     /** The pane's position (SplitView.PanePlacement). */
     var panePlacement: SplitViewPanePlacement
-        get() = SplitViewPanePlacement.of(inspectable.getInt(Abi.ISplitView_get_PanePlacement))
-        set(value) = inspectable.call(Abi.ISplitView_put_PanePlacement, value.native)
+        get() = SplitViewPanePlacement.of(inspectable.getInt(XamlInterop.ISplitView_get_PanePlacement))
+        set(value) = inspectable.call(XamlInterop.ISplitView_put_PanePlacement, value.native)
 
     /** How the pane is displayed (SplitView.DisplayMode). */
     var displayMode: SplitViewDisplayMode
-        get() = SplitViewDisplayMode.of(inspectable.getInt(Abi.ISplitView_get_DisplayMode))
-        set(value) = inspectable.call(Abi.ISplitView_put_DisplayMode, value.native)
+        get() = SplitViewDisplayMode.of(inspectable.getInt(XamlInterop.ISplitView_get_DisplayMode))
+        set(value) = inspectable.call(XamlInterop.ISplitView_put_DisplayMode, value.native)
 
     init {
         if (pane != null) this.pane = pane

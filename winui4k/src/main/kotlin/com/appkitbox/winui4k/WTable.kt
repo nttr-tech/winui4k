@@ -5,7 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
@@ -59,25 +60,25 @@ private val DARK_GRID_LINE = WColor(255, 255, 255, 18)         // ControlStrokeC
  * [sortBy] / [clearSort] / [canSortColumns] (a header click cycles through ascending -> descending -> cleared).
  */
 class WTable(private val columns: List<WTableColumn>) : WControl(
-    Activation.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
+    Activation.composeDefault(XamlInterop.CLS_ListView, XamlInterop.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_ISelector))
+        own(inspectable.queryInterface(XamlInterop.IID_ISelector))
     }
     private val listViewBase: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IListViewBase))
+        own(inspectable.queryInterface(XamlInterop.IID_IListViewBase))
     }
     private val itemsControl: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IItemsControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))
     }
     private val control: ComPtr by lazy {
-        own(inspectable.queryInterface(Abi.IID_IControl))
+        own(inspectable.queryInterface(XamlInterop.IID_IControl))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
-        own(items.queryInterface(Abi.IID_IVector_Object))
+        val items = own(itemsControl.getPtr(XamlInterop.IItemsControl_get_Items))
+        own(items.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
     /**
@@ -138,22 +139,22 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
      */
     var selectedRow: Int
         get() {
-            val displayIndex = selector.getInt(Abi.ISelector_get_SelectedIndex)
+            val displayIndex = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
             return if (displayIndex < 0) -1 else displayToModel[displayIndex]
         }
-        set(value) = selector.call(Abi.ISelector_put_SelectedIndex, displayToModel.indexOf(value))
+        set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, displayToModel.indexOf(value))
 
     /** The selection mode (ListViewBase.SelectionMode). */
     var selectionMode: ListViewSelectionMode
-        get() = ListViewSelectionMode.of(listViewBase.getInt(Abi.IListViewBase_get_SelectionMode))
-        set(value) = listViewBase.call(Abi.IListViewBase_put_SelectionMode, value.native)
+        get() = ListViewSelectionMode.of(listViewBase.getInt(XamlInterop.IListViewBase_get_SelectionMode))
+        set(value) = listViewBase.call(XamlInterop.IListViewBase_put_SelectionMode, value.native)
 
     init {
         require(columns.isNotEmpty()) { "columns must not be empty" }
 
         // The outer border (equivalent to the real TableView style's BorderBrush / BorderThickness=1).
         // The color is painted in applyTheme
-        XamlStructs.putThickness(control, Abi.IControl_put_BorderThickness, 1.0, 1.0, 1.0, 1.0)
+        XamlStructs.putThickness(control, XamlInterop.IControl_put_BorderThickness, 1.0, 1.0, 1.0, 1.0)
 
         // Remove ListViewItem's default left/right padding so the grid lines reach the edges
         putItemContainerStyle()
@@ -176,16 +177,16 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         headerCellBorders = cellBorders
 
         headerRowBorder = WBorder(header)
-        XamlStructs.putThickness(headerRowBorder.inspectable, Abi.IBorder_put_BorderThickness, 0.0, 0.0, 0.0, 1.0)
-        listViewBase.call(Abi.IListViewBase_put_Header, headerRowBorder.uiElement.ptr)
+        XamlStructs.putThickness(headerRowBorder.inspectable, XamlInterop.IBorder_put_BorderThickness, 0.0, 0.0, 0.0, 1.0)
+        listViewBase.call(XamlInterop.IListViewBase_put_Header, headerRowBorder.uiElement.ptr)
 
         applyTheme()
 
         // Repaint whenever the theme (light / dark) changes
         frameworkElement.addEventHandler(
             "WinUI4K.ActualThemeChangedHandler",
-            Abi.IID_ActualThemeChangedHandler,
-            Abi.IFrameworkElement_add_ActualThemeChanged,
+            XamlInterop.IID_ActualThemeChangedHandler,
+            XamlInterop.IFrameworkElement_add_ActualThemeChanged,
         ) { _, _ -> applyTheme() }
     }
 
@@ -207,7 +208,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
             grid.addColumn(GridLength.pixel(column.width))
             val cell = WLabel(cellValues[index])
             cell.verticalAlignment = VerticalAlignment.CENTER
-            XamlStructs.putThickness(cell.frameworkElement, Abi.IFrameworkElement_put_Margin, 12.0, 8.0, 12.0, 8.0)
+            XamlStructs.putThickness(cell.frameworkElement, XamlInterop.IFrameworkElement_put_Margin, 12.0, 8.0, 12.0, 8.0)
             val cellBorder = buildCellBorder(cell, isLast = index == columns.lastIndex)
             cellBorders += cellBorder
             grid.add(cellBorder, 0, index)
@@ -216,7 +217,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
 
         // Add the row wrapped in a Border that draws the horizontal grid line along its bottom edge
         val element = WBorder(grid)
-        XamlStructs.putThickness(element.inspectable, Abi.IBorder_put_BorderThickness, 0.0, 0.0, 0.0, 1.0)
+        XamlStructs.putThickness(element.inspectable, XamlInterop.IBorder_put_BorderThickness, 0.0, 0.0, 0.0, 1.0)
         element.borderColor = gridLineColor()
 
         val row = Row(cellValues, element, cellBorders, cells)
@@ -224,7 +225,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
 
         if (sortDirection == null) {
             // If unsorted, just append to the end (avoids a full rebuild)
-            itemVector.call(Abi.IVector_Append, element.uiElement.ptr)
+            itemVector.call(FoundationInterop.IVector_Append, element.uiElement.ptr)
             displayToModel = displayToModel + (rows.size - 1)
         } else {
             rebuildItems(selectedRow)
@@ -283,8 +284,8 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     fun addRowSelectionListener(listener: () -> Unit) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
-            Abi.IID_SelectionChangedEventHandler,
-            Abi.ISelector_add_SelectionChanged,
+            XamlInterop.IID_SelectionChangedEventHandler,
+            XamlInterop.ISelector_add_SelectionChanged,
         ) { _, _ -> if (!isRebuilding) listener() }
         selectionTokens.add(listener, token)
     }
@@ -292,7 +293,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     /** Unsubscribes a listener registered via [addRowSelectionListener]. */
     fun removeRowSelectionListener(listener: () -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
-        selector.removeEventHandler(Abi.ISelector_remove_SelectionChanged, token)
+        selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
 
     /**
@@ -300,14 +301,14 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
      * A Style object can't be built from code, so this is generated via XamlReader.
      */
     private fun putItemContainerStyle() {
-        val statics = Activation.factory(Abi.CLS_XamlReader, Abi.IID_IXamlReaderStatics)
+        val statics = Activation.factory(XamlInterop.CLS_XamlReader, XamlInterop.IID_IXamlReaderStatics)
         val loaded = Hstring.use(ITEM_CONTAINER_STYLE_XAML) { h ->
-            statics.getPtr(Abi.IXamlReaderStatics_Load, h)
+            statics.getPtr(XamlInterop.IXamlReaderStatics_Load, h)
         }
         statics.release()
-        val style = loaded.queryInterface(Abi.IID_IStyle)
+        val style = loaded.queryInterface(XamlInterop.IID_IStyle)
         loaded.release()
-        itemsControl.call(Abi.IItemsControl_put_ItemContainerStyle, style.ptr)
+        itemsControl.call(XamlInterop.IItemsControl_put_ItemContainerStyle, style.ptr)
         style.release()
     }
 
@@ -319,15 +320,15 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     private fun styleHeaderButton(button: WButton) {
         button.horizontalAlignment = HorizontalAlignment.STRETCH
         button.verticalAlignment = VerticalAlignment.STRETCH
-        val buttonControl = button.inspectable.queryInterface(Abi.IID_IControl)
+        val buttonControl = button.inspectable.queryInterface(XamlInterop.IID_IControl)
         val transparent = WColor(0, 0, 0, 0).createBrush()
-        buttonControl.call(Abi.IControl_put_Background, transparent.ptr)
+        buttonControl.call(XamlInterop.IControl_put_Background, transparent.ptr)
         transparent.release()
-        XamlStructs.putThickness(buttonControl, Abi.IControl_put_BorderThickness, 0.0, 0.0, 0.0, 0.0)
-        XamlStructs.putThickness(buttonControl, Abi.IControl_put_Padding, 12.0, 8.0, 12.0, 8.0)
-        XamlStructs.putCornerRadius(buttonControl, Abi.IControl_put_CornerRadius, 0.0)
-        buttonControl.call(Abi.IControl_put_HorizontalContentAlignment, HorizontalAlignment.LEFT.native)
-        XamlStructs.putFontWeight(buttonControl, Abi.IControl_put_FontWeight, 600)
+        XamlStructs.putThickness(buttonControl, XamlInterop.IControl_put_BorderThickness, 0.0, 0.0, 0.0, 0.0)
+        XamlStructs.putThickness(buttonControl, XamlInterop.IControl_put_Padding, 12.0, 8.0, 12.0, 8.0)
+        XamlStructs.putCornerRadius(buttonControl, XamlInterop.IControl_put_CornerRadius, 0.0)
+        buttonControl.call(XamlInterop.IControl_put_HorizontalContentAlignment, HorizontalAlignment.LEFT.native)
+        XamlStructs.putFontWeight(buttonControl, XamlInterop.IControl_put_FontWeight, 600)
         buttonControl.release()
     }
 
@@ -335,14 +336,14 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     private fun buildCellBorder(child: WComponent, isLast: Boolean): WBorder {
         val border = WBorder(child)
         if (!isLast) {
-            XamlStructs.putThickness(border.inspectable, Abi.IBorder_put_BorderThickness, 0.0, 0.0, 1.0, 0.0)
+            XamlStructs.putThickness(border.inspectable, XamlInterop.IBorder_put_BorderThickness, 0.0, 0.0, 1.0, 0.0)
         }
         return border
     }
 
     /** Whether the current theme (FrameworkElement.ActualTheme) is dark. */
     private fun isDarkTheme(): Boolean =
-        frameworkElement.getInt(Abi.IFrameworkElement_get_ActualTheme) == 2 // ElementTheme.Dark
+        frameworkElement.getInt(XamlInterop.IFrameworkElement_get_ActualTheme) == 2 // ElementTheme.Dark
 
     /** The current theme's grid-line / outer-border color. */
     private fun gridLineColor(): WColor = if (isDarkTheme()) DARK_GRID_LINE else LIGHT_GRID_LINE
@@ -353,7 +354,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         val headerBackground = if (isDarkTheme()) DARK_HEADER_BACKGROUND else LIGHT_HEADER_BACKGROUND
 
         val outerBrush = gridLine.createBrush()
-        control.call(Abi.IControl_put_BorderBrush, outerBrush.ptr)
+        control.call(XamlInterop.IControl_put_BorderBrush, outerBrush.ptr)
         outerBrush.release()
 
         headerRowBorder.background = headerBackground
@@ -399,11 +400,11 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         isRebuilding = true
         try {
             displayToModel = computeDisplayOrder()
-            itemVector.call(Abi.IVector_Clear)
+            itemVector.call(FoundationInterop.IVector_Clear)
             for (modelIndex in displayToModel) {
-                itemVector.call(Abi.IVector_Append, rows[modelIndex].element.uiElement.ptr)
+                itemVector.call(FoundationInterop.IVector_Append, rows[modelIndex].element.uiElement.ptr)
             }
-            selector.call(Abi.ISelector_put_SelectedIndex, displayToModel.indexOf(selectedModel))
+            selector.call(XamlInterop.ISelector_put_SelectedIndex, displayToModel.indexOf(selectedModel))
         } finally {
             isRebuilding = false
         }

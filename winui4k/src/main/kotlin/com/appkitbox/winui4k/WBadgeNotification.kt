@@ -2,7 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.NotificationInterop
 
 /**
  * The taskbar icon's badge: the Windows App SDK's BadgeNotificationManager.
@@ -12,9 +12,9 @@ object WBadgeNotification {
     /** BadgeNotificationManager.Current (the default interface's pointer). */
     private val manager: ComPtr by lazy {
         val statics = Activation.factory(
-            Abi.CLS_BadgeNotificationManager, Abi.IID_IBadgeNotificationManagerStatics,
+            NotificationInterop.CLS_BadgeNotificationManager, NotificationInterop.IID_IBadgeNotificationManagerStatics,
         )
-        val m = statics.getPtr(Abi.IBadgeNotificationManagerStatics_get_Current)
+        val m = statics.getPtr(NotificationInterop.IBadgeNotificationManagerStatics_get_Current)
         statics.release()
         m
     }
@@ -22,17 +22,17 @@ object WBadgeNotification {
     /** Sets the badge to a number (e.g. an unread count). 100 and above shows as "99+". */
     fun setCount(count: Int) {
         require(count >= 0) { "count must be 0 or greater: $count" }
-        manager.call(Abi.IBadgeNotificationManager_SetBadgeAsCount, count)
+        manager.call(NotificationInterop.IBadgeNotificationManager_SetBadgeAsCount, count)
     }
 
     /** Sets the badge to a status glyph (alarm / playing, etc.). */
     fun setGlyph(glyph: BadgeGlyph) {
-        manager.call(Abi.IBadgeNotificationManager_SetBadgeAsGlyph, glyph.native)
+        manager.call(NotificationInterop.IBadgeNotificationManager_SetBadgeAsGlyph, glyph.native)
     }
 
     /** Clears the badge. */
     fun clear() {
-        manager.call(Abi.IBadgeNotificationManager_ClearBadge)
+        manager.call(NotificationInterop.IBadgeNotificationManager_ClearBadge)
     }
 }
 

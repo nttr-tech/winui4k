@@ -2,7 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Microsoft.UI.Xaml.Media.Stretch (how an image is fit into its allotted area).
@@ -34,7 +35,7 @@ enum class Stretch(internal val native: Int) {
  * [stretch] controls how it's fit into its allotted area.
  */
 class WImage(sourceUri: String? = null) : WComponent(
-    Activation.activate(Abi.CLS_Image, Abi.IID_IImage), // created via the default factory
+    Activation.activate(XamlInterop.CLS_Image, XamlInterop.IID_IImage), // created via the default factory
 ) {
     /**
      * The URI of the image to display (Image.Source). Null hides it.
@@ -44,28 +45,28 @@ class WImage(sourceUri: String? = null) : WComponent(
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(Abi.IImage_put_Source, null)
+                inspectable.call(XamlInterop.IImage_put_Source, null)
                 return
             }
-            val uriFactory = Activation.factory(Abi.CLS_Uri, Abi.IID_IUriRuntimeClassFactory)
+            val uriFactory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
             val uri = Hstring.use(value) { h ->
-                uriFactory.getPtr(Abi.IUriRuntimeClassFactory_CreateUri, h)
+                uriFactory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h)
             }
             uriFactory.release()
-            val bitmapFactory = Activation.factory(Abi.CLS_BitmapImage, Abi.IID_IBitmapImageFactory)
-            val bitmap = bitmapFactory.getPtr(Abi.IBitmapImageFactory_CreateInstanceWithUriSource, uri.ptr)
+            val bitmapFactory = Activation.factory(XamlInterop.CLS_BitmapImage, XamlInterop.IID_IBitmapImageFactory)
+            val bitmap = bitmapFactory.getPtr(XamlInterop.IBitmapImageFactory_CreateInstanceWithUriSource, uri.ptr)
             bitmapFactory.release()
             uri.release()
-            val imageSource = bitmap.queryInterface(Abi.IID_IImageSource)
+            val imageSource = bitmap.queryInterface(XamlInterop.IID_IImageSource)
             bitmap.release()
-            inspectable.call(Abi.IImage_put_Source, imageSource.ptr)
+            inspectable.call(XamlInterop.IImage_put_Source, imageSource.ptr)
             imageSource.release()
         }
 
     /** How the image is fit into its allotted area (Image.Stretch). */
     var stretch: Stretch
-        get() = Stretch.of(inspectable.getInt(Abi.IImage_get_Stretch))
-        set(value) = inspectable.call(Abi.IImage_put_Stretch, value.native)
+        get() = Stretch.of(inspectable.getInt(XamlInterop.IImage_get_Stretch))
+        set(value) = inspectable.call(XamlInterop.IImage_put_Stretch, value.native)
 
     init {
         if (sourceUri != null) this.sourceUri = sourceUri

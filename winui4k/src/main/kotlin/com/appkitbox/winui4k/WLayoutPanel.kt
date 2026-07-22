@@ -2,7 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * JPanel-with-a-LayoutManager-like: a [WLayoutManager] (a Kotlin implementation) computes where
@@ -19,7 +19,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * child's [WComponent.invalidateNaturalSize] and this panel's [revalidate].
  */
 class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
-    Activation.composeDefault(Abi.CLS_Canvas, Abi.IID_ICanvasFactory),
+    Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
 ) {
     /** The layout manager that computes where children go. Replacing it triggers a re-layout. */
     var layout: WLayoutManager? = layout
@@ -125,8 +125,8 @@ class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
      */
     fun setBounds(component: WComponent, x: Double, y: Double, width: Double, height: Double) {
         if (component is WLayoutPanel) component.noteAssignedSize(width, height)
-        statics.call(Abi.ICanvasStatics_SetLeft, component.uiElement.ptr, x)
-        statics.call(Abi.ICanvasStatics_SetTop, component.uiElement.ptr, y)
+        statics.call(XamlInterop.ICanvasStatics_SetLeft, component.uiElement.ptr, x)
+        statics.call(XamlInterop.ICanvasStatics_SetTop, component.uiElement.ptr, y)
         component.setLayoutSize(width, height)
     }
 
@@ -152,7 +152,7 @@ class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
             mutableLayoutChildren.forEach { child ->
                 if (child.naturalSize == null) child.clearLayoutSizeForMeasure()
             }
-            uiElement.call(Abi.IUIElement_UpdateLayout)
+            uiElement.call(XamlInterop.IUIElement_UpdateLayout)
             mutableLayoutChildren.forEach { child ->
                 if (child.naturalSize == null) child.naturalSize = child.readDesiredSize()
             }
@@ -201,6 +201,6 @@ class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
 
     private companion object {
         /** Attached-property operations for Canvas (ICanvasStatics). */
-        val statics: ComPtr by lazy { Activation.factory(Abi.CLS_Canvas, Abi.IID_ICanvasStatics) }
+        val statics: ComPtr by lazy { Activation.factory(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasStatics) }
     }
 }

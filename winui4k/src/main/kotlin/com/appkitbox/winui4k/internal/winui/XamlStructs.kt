@@ -17,7 +17,7 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 
 /**
  * Layouts and put helpers for XAML structs (passed by value).
- * Field order is extracted from the winmd for every one of them (same policy as Abi.kt).
+ * Field order is extracted from the winmd for every one of them (same policy as XamlInterop.kt).
  * Each backend resolves the by-value ABI lowering from the StructType's size
  * (Panama = MemoryLayout, JNA = manual Windows x64 ABI lowering), so no registration is needed here.
  */

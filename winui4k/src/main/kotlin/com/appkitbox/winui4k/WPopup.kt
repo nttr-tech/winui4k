@@ -3,7 +3,8 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * javax.swing.Popup-like: WinUI 3's Primitives.Popup. A lightweight container that shows
@@ -12,7 +13,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * something like WBorder.
  */
 class WPopup(child: WComponent? = null) : WComponent(
-    Activation.activate(Abi.CLS_Popup, Abi.IID_IPopup), // created via the default factory
+    Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */
     private val closeTokens = ListenerTokens<() -> Unit>()
@@ -21,26 +22,26 @@ class WPopup(child: WComponent? = null) : WComponent(
     var child: WComponent? = null
         set(value) {
             field = value
-            inspectable.call(Abi.IPopup_put_Child, value?.uiElement?.ptr)
+            inspectable.call(XamlInterop.IPopup_put_Child, value?.uiElement?.ptr)
         }
 
     /** The horizontal offset from the origin (the window's top-left) (Popup.HorizontalOffset). */
     var horizontalOffset: Double
-        get() = inspectable.getDouble(Abi.IPopup_get_HorizontalOffset)
-        set(value) = inspectable.call(Abi.IPopup_put_HorizontalOffset, value)
+        get() = inspectable.getDouble(XamlInterop.IPopup_get_HorizontalOffset)
+        set(value) = inspectable.call(XamlInterop.IPopup_put_HorizontalOffset, value)
 
     /** The vertical offset from the origin (the window's top-left) (Popup.VerticalOffset). */
     var verticalOffset: Double
-        get() = inspectable.getDouble(Abi.IPopup_get_VerticalOffset)
-        set(value) = inspectable.call(Abi.IPopup_put_VerticalOffset, value)
+        get() = inspectable.getDouble(XamlInterop.IPopup_get_VerticalOffset)
+        set(value) = inspectable.call(XamlInterop.IPopup_put_VerticalOffset, value)
 
     /** Whether it closes automatically on an outside click (Popup.IsLightDismissEnabled). */
     var isLightDismissEnabled: Boolean
-        get() = inspectable.getBool(Abi.IPopup_get_IsLightDismissEnabled)
-        set(value) = inspectable.putBool(Abi.IPopup_put_IsLightDismissEnabled, value)
+        get() = inspectable.getBool(XamlInterop.IPopup_get_IsLightDismissEnabled)
+        set(value) = inspectable.putBool(XamlInterop.IPopup_put_IsLightDismissEnabled, value)
 
     val isOpen: Boolean
-        get() = inspectable.getBool(Abi.IPopup_get_IsOpen)
+        get() = inspectable.getBool(XamlInterop.IPopup_get_IsOpen)
 
     init {
         if (child != null) this.child = child
@@ -52,20 +53,20 @@ class WPopup(child: WComponent? = null) : WComponent(
      */
     fun show(owner: WComponent) {
         // A Popup outside the XAML tree requires the XamlRoot to show in
-        val root = owner.uiElement.getPtr(Abi.IUIElement_get_XamlRoot)
-        uiElement.call(Abi.IUIElement_put_XamlRoot, root.ptr)
+        val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
+        uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
         root.release()
-        inspectable.putBool(Abi.IPopup_put_IsOpen, true)
+        inspectable.putBool(XamlInterop.IPopup_put_IsOpen, true)
     }
 
     fun hide() {
-        inspectable.putBool(Abi.IPopup_put_IsOpen, false)
+        inspectable.putBool(XamlInterop.IPopup_put_IsOpen, false)
     }
 
     /** Registers a listener called when it closes (Popup.Closed). Also called on a light dismiss. */
     fun addCloseListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.PopupClosedHandler", Abi.IID_EventHandler_Object, Abi.IPopup_add_Closed,
+            "WinUI4K.PopupClosedHandler", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Closed,
         ) { _, _ -> listener() }
         closeTokens.add(listener, token)
     }
@@ -73,6 +74,6 @@ class WPopup(child: WComponent? = null) : WComponent(
     /** Unsubscribes a listener registered via [addCloseListener]. */
     fun removeCloseListener(listener: () -> Unit) {
         val token = closeTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(Abi.IPopup_remove_Closed, token)
+        inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
     }
 }

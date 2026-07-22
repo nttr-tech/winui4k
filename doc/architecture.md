@@ -15,7 +15,7 @@ Java の FFI (Panama または JNA) で WinRT の COM ABI (`RoGetActivationFacto
 | Win32 | `internal/win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
 | COM | `internal/com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
 | WinRT | `internal/winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate、overrides、集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
-| WinUI | `internal/winui/` | `Abi` (IID / vtable スロット。すべて winmd から機械抽出)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
+| WinUI | `internal/winui/` | ABI 定数の `*Interop` オブジェクト (`XamlInterop` / `WindowingInterop` / `FoundationInterop` / `NotificationInterop` / `WebView2Interop`。IID / vtable スロット、すべて winmd から機械抽出)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
 | API | ルート (`com/appkitbox/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
 
 ## FFI バックエンド
@@ -75,7 +75,7 @@ W* ラッパー (WComponent 派生と WFlyoutBase / WXamlUICommand / WSwipeItems
 
 ## ABI 定数の出所 (tools/dump_winmd.py)
 
-`winui/Abi.kt` の IID とスロット番号は手書きではない。
+`winui/` の `*Interop.kt` (XamlInterop など) の IID とスロット番号は手書きではない。
 Microsoft.WindowsAppSDK.WinUI 2.2.1 の `metadata/Microsoft.UI.Xaml.winmd`、WinAppSDK ランタイムの `Microsoft.Windows.ApplicationModel.Resources.winmd`、Windows SDK の `Windows.Foundation.FoundationContract.winmd` から、同梱の `tools/dump_winmd.py` で抽出した値である。
 再現するには:
 

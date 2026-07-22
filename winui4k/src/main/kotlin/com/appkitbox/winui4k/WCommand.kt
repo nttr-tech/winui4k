@@ -8,7 +8,7 @@ import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
  * Common base for commands that can be set on ButtonBase.Command / MenuFlyoutItem.Command
@@ -55,7 +55,7 @@ class WCommand(
      */
     internal val comObject: KComObject = KComObject("WinUI4K.Command")
         .addInterface(
-            Abi.IID_ICommand,
+            XamlInterop.IID_ICommand,
             listOf(
                 // vtbl[6] add_CanExecuteChanged(this, EventHandler<Object>, out token)
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->

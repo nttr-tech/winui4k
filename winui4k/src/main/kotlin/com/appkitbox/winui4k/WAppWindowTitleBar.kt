@@ -1,7 +1,8 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.ColorReference
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
@@ -58,105 +59,105 @@ enum class TitleBarTheme(internal val native: Int) {
  */
 class WAppWindowTitleBar internal constructor(private val titleBar: ComPtr) {
     /** An IAppWindowTitleBar2 view for PreferredHeightOption. */
-    private val titleBar2: ComPtr by lazy { titleBar.queryInterface(Abi.IID_IAppWindowTitleBar2) }
+    private val titleBar2: ComPtr by lazy { titleBar.queryInterface(WindowingInterop.IID_IAppWindowTitleBar2) }
 
     /** An IAppWindowTitleBar3 view for PreferredTheme. */
-    private val titleBar3: ComPtr by lazy { titleBar.queryInterface(Abi.IID_IAppWindowTitleBar3) }
+    private val titleBar3: ComPtr by lazy { titleBar.queryInterface(WindowingInterop.IID_IAppWindowTitleBar3) }
 
     /** The whole title bar's background color. */
     var backgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_BackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_BackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_BackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_BackgroundColor, value)
 
     /** The caption buttons' (minimize/maximize/close) background color. */
     var buttonBackgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonBackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonBackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonBackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonBackgroundColor, value)
 
     /** The caption buttons' icon color. */
     var buttonForegroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonForegroundColor, value)
 
     /** The caption buttons' background color while hovered. */
     var buttonHoverBackgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonHoverBackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonHoverBackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonHoverBackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonHoverBackgroundColor, value)
 
     /** The caption buttons' icon color while hovered. */
     var buttonHoverForegroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonHoverForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonHoverForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonHoverForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonHoverForegroundColor, value)
 
     /** The caption buttons' background color while the window is inactive. */
     var buttonInactiveBackgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonInactiveBackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonInactiveBackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonInactiveBackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonInactiveBackgroundColor, value)
 
     /** The caption buttons' icon color while the window is inactive. */
     var buttonInactiveForegroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonInactiveForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonInactiveForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonInactiveForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonInactiveForegroundColor, value)
 
     /** The caption buttons' background color while pressed. */
     var buttonPressedBackgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonPressedBackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonPressedBackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonPressedBackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonPressedBackgroundColor, value)
 
     /** The caption buttons' icon color while pressed. */
     var buttonPressedForegroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ButtonPressedForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ButtonPressedForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ButtonPressedForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ButtonPressedForegroundColor, value)
 
     /** The title text's color. */
     var foregroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_ForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_ForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_ForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_ForegroundColor, value)
 
     /** The background color while the window is inactive. */
     var inactiveBackgroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_InactiveBackgroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_InactiveBackgroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_InactiveBackgroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_InactiveBackgroundColor, value)
 
     /** The title text's color while the window is inactive. */
     var inactiveForegroundColor: WColor?
-        get() = getColor(Abi.IAppWindowTitleBar_get_InactiveForegroundColor)
-        set(value) = putColor(Abi.IAppWindowTitleBar_put_InactiveForegroundColor, value)
+        get() = getColor(WindowingInterop.IAppWindowTitleBar_get_InactiveForegroundColor)
+        set(value) = putColor(WindowingInterop.IAppWindowTitleBar_put_InactiveForegroundColor, value)
 
     /**
      * Whether the app's content extends into the title bar area (AppWindowTitleBar.ExtendsContentIntoTitleBar).
      * Paired with [WFrame.extendsContentIntoTitleBar] (setting either one keeps them in sync).
      */
     var extendsContentIntoTitleBar: Boolean
-        get() = titleBar.getBool(Abi.IAppWindowTitleBar_get_ExtendsContentIntoTitleBar)
-        set(value) = titleBar.putBool(Abi.IAppWindowTitleBar_put_ExtendsContentIntoTitleBar, value)
+        get() = titleBar.getBool(WindowingInterop.IAppWindowTitleBar_get_ExtendsContentIntoTitleBar)
+        set(value) = titleBar.putBool(WindowingInterop.IAppWindowTitleBar_put_ExtendsContentIntoTitleBar, value)
 
     /** The title bar's height (px, read-only). */
-    val height: Int get() = titleBar.getInt(Abi.IAppWindowTitleBar_get_Height)
+    val height: Int get() = titleBar.getInt(WindowingInterop.IAppWindowTitleBar_get_Height)
 
     /** The system-reserved width on the left (px, read-only). Used to compute the non-draggable area. */
-    val leftInset: Int get() = titleBar.getInt(Abi.IAppWindowTitleBar_get_LeftInset)
+    val leftInset: Int get() = titleBar.getInt(WindowingInterop.IAppWindowTitleBar_get_LeftInset)
 
     /** The system-reserved width on the right (px, read-only). Used to compute the caption button area. */
-    val rightInset: Int get() = titleBar.getInt(Abi.IAppWindowTitleBar_get_RightInset)
+    val rightInset: Int get() = titleBar.getInt(WindowingInterop.IAppWindowTitleBar_get_RightInset)
 
     /** The title bar's preferred height (AppWindowTitleBar2.PreferredHeightOption). */
     var preferredHeightOption: TitleBarHeightOption
-        get() = TitleBarHeightOption.of(titleBar2.getInt(Abi.IAppWindowTitleBar2_get_PreferredHeightOption))
-        set(value) = titleBar2.call(Abi.IAppWindowTitleBar2_put_PreferredHeightOption, value.native)
+        get() = TitleBarHeightOption.of(titleBar2.getInt(WindowingInterop.IAppWindowTitleBar2_get_PreferredHeightOption))
+        set(value) = titleBar2.call(WindowingInterop.IAppWindowTitleBar2_put_PreferredHeightOption, value.native)
 
     /** The title bar's color theme (AppWindowTitleBar3.PreferredTheme). */
     var preferredTheme: TitleBarTheme
-        get() = TitleBarTheme.of(titleBar3.getInt(Abi.IAppWindowTitleBar3_get_PreferredTheme))
-        set(value) = titleBar3.call(Abi.IAppWindowTitleBar3_put_PreferredTheme, value.native)
+        get() = TitleBarTheme.of(titleBar3.getInt(WindowingInterop.IAppWindowTitleBar3_get_PreferredTheme))
+        set(value) = titleBar3.call(WindowingInterop.IAppWindowTitleBar3_put_PreferredTheme, value.native)
 
     /** Resets all color settings to their defaults (AppWindowTitleBar.ResetToDefault). */
-    fun resetToDefault() = titleBar.call(Abi.IAppWindowTitleBar_ResetToDefault)
+    fun resetToDefault() = titleBar.call(WindowingInterop.IAppWindowTitleBar_ResetToDefault)
 
     private fun getColor(slot: Int): WColor? {
         val boxed = titleBar.getPtrOrNull(slot) ?: return null
         return try {
-            val (a, r, g, b) = XamlStructs.getColor(boxed, Abi.IReference_Color_get_Value)
+            val (a, r, g, b) = XamlStructs.getColor(boxed, FoundationInterop.IReference_Color_get_Value)
             WColor(r, g, b, a)
         } finally {
             boxed.release()
