@@ -972,6 +972,156 @@ internal object Abi {
         )
     }
 
+    // ---- Microsoft.UI.Xaml.Controls.CalendarDatePicker ----
+    const val CLS_CalendarDatePicker = "Microsoft.UI.Xaml.Controls.CalendarDatePicker"
+    const val IID_ICalendarDatePickerFactory = "b00c7818-955a-5524-b451-93868230892f"
+    const val IID_ICalendarDatePicker = "e3d9faa1-0fd0-5932-a6db-ff00c003ac21"
+    const val ICalendarDatePicker_get_Date = 6                // get_Date(out IReference<DateTime>)
+    const val ICalendarDatePicker_put_Date = 7                // put_Date(IReference<DateTime>)
+    const val ICalendarDatePicker_get_IsCalendarOpen = 8      // get_IsCalendarOpen(out boolean)
+    const val ICalendarDatePicker_put_IsCalendarOpen = 9      // put_IsCalendarOpen(boolean)
+    const val ICalendarDatePicker_get_PlaceholderText = 12    // get_PlaceholderText(out string)
+    const val ICalendarDatePicker_put_PlaceholderText = 13    // put_PlaceholderText(string)
+    const val ICalendarDatePicker_get_Header = 14             // get_Header(out object)
+    const val ICalendarDatePicker_put_Header = 15             // put_Header(object)
+    const val ICalendarDatePicker_get_MinDate = 24            // get_MinDate(out DateTime i8)
+    const val ICalendarDatePicker_put_MinDate = 25            // put_MinDate(DateTime i8)
+    const val ICalendarDatePicker_get_MaxDate = 26            // get_MaxDate(out DateTime i8)
+    const val ICalendarDatePicker_put_MaxDate = 27            // put_MaxDate(DateTime i8)
+    const val ICalendarDatePicker_get_IsTodayHighlighted = 28 // get_IsTodayHighlighted(out boolean)
+    const val ICalendarDatePicker_put_IsTodayHighlighted = 29 // put_IsTodayHighlighted(boolean)
+    const val ICalendarDatePicker_get_DisplayMode = 30        // get_DisplayMode(out CalendarViewDisplayMode)
+    const val ICalendarDatePicker_put_DisplayMode = 31        // put_DisplayMode(CalendarViewDisplayMode)
+    const val ICalendarDatePicker_get_FirstDayOfWeek = 32     // get_FirstDayOfWeek(out DayOfWeek)
+    const val ICalendarDatePicker_put_FirstDayOfWeek = 33     // put_FirstDayOfWeek(DayOfWeek)
+    const val ICalendarDatePicker_get_CalendarIdentifier = 36 // get_CalendarIdentifier(out string)
+    const val ICalendarDatePicker_put_CalendarIdentifier = 37 // put_CalendarIdentifier(string)
+    const val ICalendarDatePicker_get_IsOutOfScopeEnabled = 38 // get_IsOutOfScopeEnabled(out boolean)
+    const val ICalendarDatePicker_put_IsOutOfScopeEnabled = 39 // put_IsOutOfScopeEnabled(boolean)
+    const val ICalendarDatePicker_get_IsGroupLabelVisible = 40 // get_IsGroupLabelVisible(out boolean)
+    const val ICalendarDatePicker_put_IsGroupLabelVisible = 41 // put_IsGroupLabelVisible(boolean)
+    const val ICalendarDatePicker_add_DateChanged = 44        // add_DateChanged(TypedEventHandler, out token)
+    const val ICalendarDatePicker_remove_DateChanged = 45     // remove_DateChanged(token)
+    const val IID_ICalendarDatePickerDateChangedEventArgs = "57c212d7-c2f2-54a0-9d41-f263b1e5106e"
+    const val ICalendarDatePickerDateChangedEventArgs_get_NewDate = 6 // get_NewDate(out IReference<DateTime>)
+
+    /** The actual IID of TypedEventHandler<CalendarDatePicker, CalendarDatePickerDateChangedEventArgs> (computed at runtime). */
+    val IID_CalendarDatePickerDateChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.CalendarDatePicker;{$IID_ICalendarDatePicker});" +
+                "rc(Microsoft.UI.Xaml.Controls.CalendarDatePickerDateChangedEventArgs;" +
+                "{$IID_ICalendarDatePickerDateChangedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.CalendarView ----
+    const val CLS_CalendarView = "Microsoft.UI.Xaml.Controls.CalendarView"
+    const val IID_ICalendarViewFactory = "2f31d1eb-8229-517c-b3a6-5a5f28724e8f"
+    const val IID_ICalendarView = "e786081e-b680-56ab-bfbb-52d5b17c365e"
+    const val ICalendarView_get_CalendarIdentifier = 6        // get_CalendarIdentifier(out string)
+    const val ICalendarView_put_CalendarIdentifier = 7        // put_CalendarIdentifier(string)
+    const val ICalendarView_get_IsGroupLabelVisible = 10      // get_IsGroupLabelVisible(out boolean)
+    const val ICalendarView_put_IsGroupLabelVisible = 11      // put_IsGroupLabelVisible(boolean)
+    const val ICalendarView_get_DisplayMode = 12              // get_DisplayMode(out CalendarViewDisplayMode)
+    const val ICalendarView_put_DisplayMode = 13              // put_DisplayMode(CalendarViewDisplayMode)
+    const val ICalendarView_get_FirstDayOfWeek = 14           // get_FirstDayOfWeek(out DayOfWeek)
+    const val ICalendarView_put_FirstDayOfWeek = 15           // put_FirstDayOfWeek(DayOfWeek)
+    const val ICalendarView_get_IsOutOfScopeEnabled = 16      // get_IsOutOfScopeEnabled(out boolean)
+    const val ICalendarView_put_IsOutOfScopeEnabled = 17      // put_IsOutOfScopeEnabled(boolean)
+    const val ICalendarView_get_IsTodayHighlighted = 18       // get_IsTodayHighlighted(out boolean)
+    const val ICalendarView_put_IsTodayHighlighted = 19       // put_IsTodayHighlighted(boolean)
+    const val ICalendarView_get_MaxDate = 20                  // get_MaxDate(out DateTime i8)
+    const val ICalendarView_put_MaxDate = 21                  // put_MaxDate(DateTime i8)
+    const val ICalendarView_get_MinDate = 22                  // get_MinDate(out DateTime i8)
+    const val ICalendarView_put_MinDate = 23                  // put_MinDate(DateTime i8)
+    const val ICalendarView_get_NumberOfWeeksInView = 24      // get_NumberOfWeeksInView(out i4)
+    const val ICalendarView_put_NumberOfWeeksInView = 25      // put_NumberOfWeeksInView(i4)
+    const val ICalendarView_get_SelectionMode = 27            // get_SelectionMode(out CalendarViewSelectionMode)
+    const val ICalendarView_put_SelectionMode = 28            // put_SelectionMode(CalendarViewSelectionMode)
+    const val ICalendarView_add_SelectedDatesChanged = 156    // add_SelectedDatesChanged(TypedEventHandler, out token)
+    const val ICalendarView_remove_SelectedDatesChanged = 157 // remove_SelectedDatesChanged(token)
+    const val ICalendarView_SetDisplayDate = 158              // SetDisplayDate(DateTime i8)
+    const val IID_ICalendarViewSelectedDatesChangedEventArgs = "675f688f-bc30-59f6-83c4-140bd053a09a"
+
+    /** The actual IID of TypedEventHandler<CalendarView, CalendarViewSelectedDatesChangedEventArgs> (computed at runtime). */
+    val IID_CalendarViewSelectedDatesChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.CalendarView;{$IID_ICalendarView});" +
+                "rc(Microsoft.UI.Xaml.Controls.CalendarViewSelectedDatesChangedEventArgs;" +
+                "{$IID_ICalendarViewSelectedDatesChangedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.DatePicker ----
+    const val CLS_DatePicker = "Microsoft.UI.Xaml.Controls.DatePicker"
+    const val IID_IDatePickerFactory = "a16bea02-b3e0-5fdc-b5bb-25f794dc483b"
+    const val IID_IDatePicker = "ca1dc351-3ae3-5247-8263-16bd516c6e72"
+    const val IDatePicker_get_Header = 6              // get_Header(out object)
+    const val IDatePicker_put_Header = 7              // put_Header(object)
+    const val IDatePicker_get_Date = 12               // get_Date(out DateTime i8)
+    const val IDatePicker_put_Date = 13               // put_Date(DateTime i8)
+    const val IDatePicker_get_DayVisible = 14         // get_DayVisible(out boolean)
+    const val IDatePicker_put_DayVisible = 15         // put_DayVisible(boolean)
+    const val IDatePicker_get_MonthVisible = 16       // get_MonthVisible(out boolean)
+    const val IDatePicker_put_MonthVisible = 17       // put_MonthVisible(boolean)
+    const val IDatePicker_get_YearVisible = 18        // get_YearVisible(out boolean)
+    const val IDatePicker_put_YearVisible = 19        // put_YearVisible(boolean)
+    const val IDatePicker_get_DayFormat = 20          // get_DayFormat(out string)
+    const val IDatePicker_put_DayFormat = 21          // put_DayFormat(string)
+    const val IDatePicker_get_MinYear = 26            // get_MinYear(out DateTime i8)
+    const val IDatePicker_put_MinYear = 27            // put_MinYear(DateTime i8)
+    const val IDatePicker_get_MaxYear = 28            // get_MaxYear(out DateTime i8)
+    const val IDatePicker_put_MaxYear = 29            // put_MaxYear(DateTime i8)
+    const val IDatePicker_get_Orientation = 30        // get_Orientation(out Orientation)
+    const val IDatePicker_put_Orientation = 31        // put_Orientation(Orientation)
+    const val IDatePicker_get_SelectedDate = 34       // get_SelectedDate(out IReference<DateTime>)
+    const val IDatePicker_put_SelectedDate = 35       // put_SelectedDate(IReference<DateTime>)
+    const val IDatePicker_add_SelectedDateChanged = 38 // add_SelectedDateChanged(TypedEventHandler, out token)
+    const val IDatePicker_remove_SelectedDateChanged = 39 // remove_SelectedDateChanged(token)
+    const val IID_IDatePickerSelectedValueChangedEventArgs = "305ed436-370f-5e82-acf2-f1413e8f9ec4"
+    const val IDatePickerSelectedValueChangedEventArgs_get_NewDate = 7 // get_NewDate(out IReference<DateTime>)
+
+    /** The actual IID of TypedEventHandler<DatePicker, DatePickerSelectedValueChangedEventArgs> (computed at runtime). */
+    val IID_DatePickerSelectedDateChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.DatePicker;{$IID_IDatePicker});" +
+                "rc(Microsoft.UI.Xaml.Controls.DatePickerSelectedValueChangedEventArgs;" +
+                "{$IID_IDatePickerSelectedValueChangedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.TimePicker ----
+    const val CLS_TimePicker = "Microsoft.UI.Xaml.Controls.TimePicker"
+    const val IID_ITimePickerFactory = "1584429e-aafe-5c65-89e9-8c066e5690e7"
+    const val IID_ITimePicker = "ed4baa33-c240-5934-9229-82d37b26f846"
+    const val ITimePicker_get_Header = 6              // get_Header(out object)
+    const val ITimePicker_put_Header = 7              // put_Header(object)
+    const val ITimePicker_get_ClockIdentifier = 10    // get_ClockIdentifier(out string)
+    const val ITimePicker_put_ClockIdentifier = 11    // put_ClockIdentifier(string)
+    const val ITimePicker_get_MinuteIncrement = 12    // get_MinuteIncrement(out i4)
+    const val ITimePicker_put_MinuteIncrement = 13    // put_MinuteIncrement(i4)
+    const val ITimePicker_get_Time = 14               // get_Time(out TimeSpan i8)
+    const val ITimePicker_put_Time = 15               // put_Time(TimeSpan i8)
+    const val ITimePicker_get_SelectedTime = 18       // get_SelectedTime(out IReference<TimeSpan>)
+    const val ITimePicker_put_SelectedTime = 19       // put_SelectedTime(IReference<TimeSpan>)
+    const val ITimePicker_add_SelectedTimeChanged = 22 // add_SelectedTimeChanged(TypedEventHandler, out token)
+    const val ITimePicker_remove_SelectedTimeChanged = 23 // remove_SelectedTimeChanged(token)
+    const val IID_ITimePickerSelectedValueChangedEventArgs = "6ed7edf1-9b0b-5e7b-9e10-f35660a29fd2"
+    const val ITimePickerSelectedValueChangedEventArgs_get_NewTime = 7 // get_NewTime(out IReference<TimeSpan>)
+
+    /** The actual IID of TypedEventHandler<TimePicker, TimePickerSelectedValueChangedEventArgs> (computed at runtime). */
+    val IID_TimePickerSelectedTimeChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TimePicker;{$IID_ITimePicker});" +
+                "rc(Microsoft.UI.Xaml.Controls.TimePickerSelectedValueChangedEventArgs;" +
+                "{$IID_ITimePickerSelectedValueChangedEventArgs}))",
+        )
+    }
+
     // ---- Microsoft.UI.Xaml.Controls.SemanticZoom ----
     const val CLS_SemanticZoom = "Microsoft.UI.Xaml.Controls.SemanticZoom"
     const val IID_ISemanticZoom = "7e14616d-55ef-548c-a997-c923e302718f" // activatable (default factory)
@@ -1308,6 +1458,22 @@ internal object Abi {
      */
     val IID_IReference_Boolean: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};b1)")
+    }
+
+    /**
+     * Runtime-computed actual IID of IReference<DateTime>. DateTime's signature is
+     * struct(Windows.Foundation.DateTime;i8).
+     */
+    val IID_IReference_DateTime: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.DateTime;i8))")
+    }
+
+    /**
+     * Runtime-computed actual IID of IReference<TimeSpan>. TimeSpan's signature is
+     * struct(Windows.Foundation.TimeSpan;i8).
+     */
+    val IID_IReference_TimeSpan: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.TimeSpan;i8))")
     }
 
     // ---- Windows.Foundation.Collections.IVector<T> (OS side, FoundationContract.winmd) ----

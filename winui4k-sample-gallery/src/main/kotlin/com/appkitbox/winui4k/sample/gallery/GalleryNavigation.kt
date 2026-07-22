@@ -16,6 +16,8 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "BadgeNotification" to ::buildBadgeNotificationPage,
     "Border" to ::buildBorderPage,
     "Button" to ::buildButtonPage,
+    "CalendarDatePicker" to ::buildCalendarDatePickerPage,
+    "CalendarView" to ::buildCalendarViewPage,
     "Canvas" to ::buildCanvasPage,
     "CheckBox" to ::buildCheckBoxPage,
     "ColorPicker" to ::buildColorPickerPage,
@@ -23,6 +25,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "CommandBar" to ::buildCommandBarPage,
     "CommandBarFlyout" to ::buildCommandBarFlyoutPage,
     "ContentDialog" to ::buildContentDialogPage,
+    "DatePicker" to ::buildDatePickerPage,
     "DropDownButton" to ::buildDropDownButtonPage,
     "Expander" to ::buildExpanderPage,
     "Flyout" to ::buildFlyoutPage,
@@ -62,6 +65,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "TeachingTip" to ::buildTeachingTipPage,
     "TextBlock" to ::buildTextBlockPage,
     "TextBox" to ::buildTextBoxPage,
+    "TimePicker" to ::buildTimePickerPage,
     "ToggleButton" to ::buildToggleButtonPage,
     "ToolTip" to ::buildToolTipPage,
     "ToggleSplitButton" to ::buildToggleSplitButtonPage,
@@ -93,6 +97,12 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ToggleButton",
         "ToggleSplitButton",
         "ToggleSwitch",
+    ),
+    "Date & time" to listOf(
+        "CalendarDatePicker",
+        "CalendarView",
+        "DatePicker",
+        "TimePicker",
     ),
     "Collections" to listOf(
         "ListBox",
@@ -171,6 +181,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
 /** Category name -> the icon shown to the left of the category name in the navigation. */
 private val categoryIcons: Map<String, Symbol> = mapOf(
     "Basic input" to Symbol.KEYBOARD,
+    "Date & time" to Symbol.CALENDAR,
     "Collections" to Symbol.LIST,
     "Dialogs & flyouts" to Symbol.COMMENT,
     "Layout" to Symbol.VIEW_ALL,

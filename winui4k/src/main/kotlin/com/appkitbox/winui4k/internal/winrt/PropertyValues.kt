@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.withScope
+import com.appkitbox.winui4k.internal.winui.Abi
 
 /**
  * Conversion between Kotlin values and IInspectable (boxing via Windows.Foundation.PropertyValue).
@@ -23,6 +24,10 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateBoolean = 17 // CreateBoolean(boolean, out IInspectable)
     private const val IPropertyValueStatics_CreateInt32 = 10 // CreateInt32(i4, out IInspectable)
     private const val IPropertyValueStatics_CreateDouble = 15 // CreateDouble(r8, out IInspectable)
+    private const val IPropertyValueStatics_CreateDateTime = 21 // CreateDateTime(DateTime i8, out IInspectable)
+    private const val IPropertyValueStatics_CreateTimeSpan = 22 // CreateTimeSpan(TimeSpan i8, out IInspectable)
+    private const val IPropertyValue_GetDateTime = 21 // GetDateTime(out DateTime i8)
+    private const val IPropertyValue_GetTimeSpan = 22 // GetTimeSpan(out TimeSpan i8)
 
     /**
      * Process-lifetime cache of the PropertyValue statics factory. box is a hot path used by
@@ -105,4 +110,52 @@ internal object PropertyValues {
             propertyValue.release()
         }
     }
+
+    /**
+     * Boxes a Windows.Foundation.DateTime (100ns ticks since 1601-01-01 UTC) into an IInspectable.
+     * Used to pass it to an IReference<DateTime>-typed property (CalendarDatePicker.Date).
+     */
+    fun boxDateTime(ticks: Long): ComPtr = statics.getPtr(IPropertyValueStatics_CreateDateTime, ticks)
+
+    /**
+     * The reverse of [boxDateTime]: extracts the 100ns ticks from an IReference<DateTime>.
+     * Reads the by-value DateTime (i8) via IReference<T>.get_Value (vtbl[6]).
+     */
+    fun unboxDateTime(boxed: ComPtr): Long? {
+        val reference = boxed.queryInterfaceOrNull(Abi.IID_IReference_DateTime) ?: return null
+        return try {
+            Ffi.backend.withScope { scope ->
+                val out = scope.allocate(8)
+                reference.call(IREFERENCE_GET_VALUE, out)
+                Ffi.backend.memory.getLong(out, 0)
+            }
+        } finally {
+            reference.release()
+        }
+    }
+
+    /**
+     * Boxes a Windows.Foundation.TimeSpan (100ns ticks) into an IInspectable.
+     * Used to pass it to an IReference<TimeSpan>-typed property (TimePicker.SelectedTime).
+     */
+    fun boxTimeSpan(ticks: Long): ComPtr = statics.getPtr(IPropertyValueStatics_CreateTimeSpan, ticks)
+
+    /**
+     * The reverse of [boxTimeSpan]: extracts the 100ns ticks from an IReference<TimeSpan>.
+     */
+    fun unboxTimeSpan(boxed: ComPtr): Long? {
+        val reference = boxed.queryInterfaceOrNull(Abi.IID_IReference_TimeSpan) ?: return null
+        return try {
+            Ffi.backend.withScope { scope ->
+                val out = scope.allocate(8)
+                reference.call(IREFERENCE_GET_VALUE, out)
+                Ffi.backend.memory.getLong(out, 0)
+            }
+        } finally {
+            reference.release()
+        }
+    }
+
+    /** IReference<T>.get_Value — vtbl[6]. */
+    private const val IREFERENCE_GET_VALUE = 6
 }
