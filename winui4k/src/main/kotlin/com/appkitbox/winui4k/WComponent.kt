@@ -115,14 +115,96 @@ abstract class WComponent internal constructor(
     var width: Double = Double.NaN
         set(value) {
             field = value
-            frameworkElement.call(Abi.IFrameworkElement_put_Width, value)
+            applyWidth(value)
         }
 
     var height: Double = Double.NaN
         set(value) {
             field = value
-            frameworkElement.call(Abi.IFrameworkElement_put_Height, value)
+            applyHeight(value)
         }
+
+    /**
+     * The last value written to put_Width / put_Height (as its bit pattern, so NaN compares equal to
+     * NaN). Used to skip redundant puts of the same value (prevents an infinite
+     * layout -> SizeChanged -> re-layout loop).
+     */
+    private var appliedWidthBits = Double.NaN.toRawBits()
+    private var appliedHeightBits = Double.NaN.toRawBits()
+
+    internal fun applyWidth(value: Double) {
+        if (value.toRawBits() == appliedWidthBits) return
+        appliedWidthBits = value.toRawBits()
+        frameworkElement.call(Abi.IFrameworkElement_put_Width, value)
+    }
+
+    internal fun applyHeight(value: Double) {
+        if (value.toRawBits() == appliedHeightBits) return
+        appliedHeightBits = value.toRawBits()
+        frameworkElement.call(Abi.IFrameworkElement_put_Height, value)
+    }
+
+    /** The actual width after layout (FrameworkElement.ActualWidth). 0 before layout. */
+    val actualWidth: Double
+        get() = frameworkElement.getDouble(Abi.IFrameworkElement_get_ActualWidth)
+
+    /** The actual height after layout (FrameworkElement.ActualHeight). 0 before layout. */
+    val actualHeight: Double
+        get() = frameworkElement.getDouble(Abi.IFrameworkElement_get_ActualHeight)
+
+    /**
+     * Sets the size a layout manager assigns. Does not change [width] / [height] (the record of the
+     * user's intent). Called from [WLayoutPanel.setBounds].
+     */
+    internal fun setLayoutSize(width: Double, height: Double) {
+        applyWidth(width)
+        applyHeight(height)
+    }
+
+    /**
+     * A cache of the natural size (the preferred size measured from the content). null means it
+     * hasn't been measured yet, or [invalidateNaturalSize] was called since — the parent
+     * [WLayoutPanel]'s next layout pass will re-measure it.
+     */
+    internal var naturalSize: WSize? = null
+
+    /**
+     * Clears the explicit size on whichever dimension the user hasn't explicitly set, in
+     * preparation for re-measuring the natural size (in XAML, DesiredSize keeps tracking an
+     * explicitly-set Width even after it's set).
+     */
+    internal fun clearLayoutSizeForMeasure() {
+        if (width.isNaN()) applyWidth(Double.NaN)
+        if (height.isNaN()) applyHeight(Double.NaN)
+    }
+
+    /** The preferred size computed by the most recent Measure pass (UIElement.DesiredSize). */
+    internal fun readDesiredSize(): WSize {
+        val size = XamlStructs.getSizeFloat(uiElement, Abi.IUIElement_get_DesiredSize)
+        return WSize(size[0], size[1])
+    }
+
+    /**
+     * The preferred size (equivalent to JComponent.getPreferredSize). Prefers [width] / [height]
+     * wherever they've been explicitly set, and fills in the remaining dimension from the natural
+     * size (measured and cached by the parent [WLayoutPanel]'s layout pass).
+     */
+    open fun preferredSize(): WSize {
+        val natural = naturalSize ?: readDesiredSize()
+        return WSize(
+            if (width.isNaN()) natural.width else width,
+            if (height.isNaN()) natural.height else height,
+        )
+    }
+
+    /**
+     * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
+     * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
+     * change.
+     */
+    fun invalidateNaturalSize() {
+        naturalSize = null
+    }
 
     /**
      * Upper bound on the width (FrameworkElement.MaxWidth). Unlike [width], this is measured against the

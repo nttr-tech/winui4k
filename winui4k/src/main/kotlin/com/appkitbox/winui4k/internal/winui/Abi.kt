@@ -48,6 +48,7 @@ internal object Abi {
 
     // ---- Microsoft.UI.Xaml.UIElement / FrameworkElement ----
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
+    const val IUIElement_get_DesiredSize = 6           // get_DesiredSize(out Windows.Foundation.Size) — an out r4×2
     const val IUIElement_get_Opacity = 9               // get_Opacity(out double)
     const val IUIElement_put_Opacity = 10              // put_Opacity(double)
     const val IUIElement_get_Visibility = 23           // get_Visibility(out Visibility enum: Visible=0, Collapsed=1)
@@ -57,7 +58,10 @@ internal object Abi {
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
     const val IUIElement_put_ContextFlyout = 46        // put_ContextFlyout(FlyoutBase)
     const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
+    const val IUIElement_UpdateLayout = 220            // UpdateLayout() — a synchronous layout pass
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
+    const val IFrameworkElement_get_ActualWidth = 13   // get_ActualWidth(out DOUBLE)
+    const val IFrameworkElement_get_ActualHeight = 14  // get_ActualHeight(out DOUBLE)
     const val IFrameworkElement_put_Width = 16
     const val IFrameworkElement_put_Height = 18
     const val IFrameworkElement_put_MaxWidth = 22      // put_MaxWidth(DOUBLE)
@@ -1482,6 +1486,7 @@ internal object Abi {
     // RemoveAtEnd=14 Clear=15 GetMany=16 ReplaceAll=17
     const val IVector_GetAt = 6                        // GetAt(UINT32, out T)
     const val IVector_get_Size = 7                     // get_Size(out UINT32)
+    const val IVector_IndexOf = 9                      // IndexOf(T, out UINT32 index, out boolean found)
     const val IVector_RemoveAt = 12                    // RemoveAt(UINT32)
     const val IVector_Append = 13                      // Append(T)
     const val IVector_Clear = 15                       // Clear()

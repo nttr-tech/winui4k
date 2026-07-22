@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SplitViewDisplayMode
 import com.appkitbox.winui4k.SplitViewPanePlacement
 import com.appkitbox.winui4k.WBorder
+import com.appkitbox.winui4k.WBorderLayout
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WCanvas
 import com.appkitbox.winui4k.WColor
@@ -14,6 +15,7 @@ import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WExpander
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
+import com.appkitbox.winui4k.WLayoutPanel
 import com.appkitbox.winui4k.WLinearGradientPaint
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WRelativePanel
@@ -177,6 +179,102 @@ private fun buildCanvasZIndexExample(): WComponent {
     body.add(canvas)
     body.add(swapButton)
     return buildExample("Stacking order (Canvas.ZIndex)", body)
+}
+
+// endregion
+
+// region LayoutPanel
+
+/** The LayoutPanel page: lines up demos for trying out WLayoutPanel + WBorderLayout's various features. */
+internal fun buildLayoutPanelPage(): WComponent {
+    val page = buildPage(
+        "LayoutPanel",
+        "A container that positions children Swing LayoutManager-style. Try out WLayoutPanel and WBorderLayout's various features.",
+    )
+
+    page.add(buildBorderLayoutBasicExample())
+    page.add(buildBorderLayoutDynamicExample())
+    page.add(buildBorderLayoutNestedExample())
+    return page
+}
+
+/** Builds a fixed-size panel for BorderLayout (explicitly left-aligned since it sits inside a vertical WPanel). */
+private fun buildBorderLayoutPanel(hgap: Double = 4.0, vgap: Double = 4.0): WLayoutPanel {
+    val panel = WLayoutPanel(WBorderLayout(hgap = hgap, vgap = vgap))
+    panel.width = 400.0
+    panel.height = 220.0
+    panel.horizontalAlignment = HorizontalAlignment.LEFT
+    return panel
+}
+
+/** Basic placement across the 5 regions. */
+private fun buildBorderLayoutBasicExample(): WComponent {
+    val panel = buildBorderLayoutPanel()
+    panel.add(buildTile(WColor.BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
+    panel.add(buildTile(WColor.GREEN, label = "South"), WBorderLayout.Constraint.SOUTH)
+    panel.add(buildTile(WColor.ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
+    panel.add(buildTile(WColor.PURPLE, label = "East"), WBorderLayout.Constraint.EAST)
+    panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
+    return buildExample("Placement across 5 regions (BorderLayout)", panel)
+}
+
+/** Re-layout in response to visibility toggling, detaching, and content changes. */
+private fun buildBorderLayoutDynamicExample(): WComponent {
+    val panel = buildBorderLayoutPanel()
+    val northTile = buildTile(WColor.BLUE, label = "North")
+    val westTile = buildTile(WColor.ORANGE, label = "West")
+    panel.add(northTile, WBorderLayout.Constraint.NORTH)
+    panel.add(westTile, WBorderLayout.Constraint.WEST)
+    panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
+
+    val northButton = WButton("Toggle North visibility")
+    northButton.addActionListener {
+        northTile.isVisible = !northTile.isVisible
+        panel.revalidate()
+    }
+
+    val westButton = WButton("Detach / re-add West")
+    var westAttached = true
+    westButton.addActionListener {
+        if (westAttached) {
+            panel.remove(westTile)
+        } else {
+            panel.add(westTile, WBorderLayout.Constraint.WEST)
+        }
+        westAttached = !westAttached
+    }
+
+    val widenButton = WButton("Change West's content")
+    var wideWest = false
+    widenButton.addActionListener {
+        wideWest = !wideWest
+        westTile.child = WLabel(if (wideWest) "West (wider content)" else "West")
+        westTile.invalidateNaturalSize()
+        panel.revalidate()
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(northButton)
+    buttons.add(westButton)
+    buttons.add(widenButton)
+
+    val body = WPanel(spacing = 8.0)
+    body.add(panel)
+    body.add(buttons)
+    return buildExample("Dynamic changes and re-layout (revalidate / invalidateNaturalSize)", body)
+}
+
+/** Nesting another WLayoutPanel in CENTER (preferredSize is computed recursively in Kotlin). */
+private fun buildBorderLayoutNestedExample(): WComponent {
+    val innerPanel = WLayoutPanel(WBorderLayout(hgap = 4.0, vgap = 4.0))
+    innerPanel.add(buildTile(WColor.YELLOW, label = "Inner North"), WBorderLayout.Constraint.NORTH)
+    innerPanel.add(buildTile(WColor.LIGHT_GRAY, label = "Inner Center"), WBorderLayout.Constraint.CENTER)
+
+    val panel = buildBorderLayoutPanel()
+    panel.add(buildTile(WColor.BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
+    panel.add(buildTile(WColor.ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
+    panel.add(innerPanel, WBorderLayout.Constraint.CENTER)
+    return buildExample("Nested LayoutPanel (another BorderLayout in CENTER)", panel)
 }
 
 // endregion

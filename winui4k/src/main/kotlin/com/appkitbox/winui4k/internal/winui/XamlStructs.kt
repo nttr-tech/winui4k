@@ -55,6 +55,17 @@ internal object XamlStructs {
         listOf(Field("Name", PTR), Field("Kind", I32)),
     )
 
+    /**
+     * Windows.Foundation.Size { FLOAT Width, Height } (FoundationContract.winmd).
+     * There's no F32 in [ValueKind], so this is out-argument-only: its bit pattern is read as an
+     * I32 and decoded with Float.intBitsToFloat ([getSizeFloat]). Can't be passed by value (e.g. to
+     * Measure).
+     */
+    val SIZE_FLOAT = StructType(
+        "Windows.Foundation.Size",
+        listOf(Field("Width", I32), Field("Height", I32)),
+    )
+
     /** Windows.Graphics.PointInt32 { INT32 X, Y } (Windows.Graphics.winmd) */
     val POINT_INT32 = StructType(
         "Windows.Graphics.PointInt32",
@@ -158,6 +169,20 @@ internal object XamlStructs {
             Ffi.backend.memory.putInt(size.ptr, 4, height)
             target.call(slot, size)
         }
+    }
+
+    /**
+     * Gets a Windows.Foundation.Size (r4×2) via an out argument (UIElement.DesiredSize).
+     * Returned in [width, height] order (float widened to double).
+     */
+    fun getSizeFloat(target: ComPtr, slot: Int): DoubleArray = Ffi.backend.withScope { scope ->
+        val size = scope.allocate(SIZE_FLOAT)
+        target.call(slot, size.ptr) // an out argument, so it's passed as a pointer
+        val memory = Ffi.backend.memory
+        doubleArrayOf(
+            Float.fromBits(memory.getInt(size.ptr, 0)).toDouble(),
+            Float.fromBits(memory.getInt(size.ptr, 4)).toDouble(),
+        )
     }
 
     /** Gets a PointInt32 (i4×2) via an out argument (AppWindow.Position). Returned in [x, y] order. */

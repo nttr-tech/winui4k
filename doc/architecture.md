@@ -94,5 +94,6 @@ python tools/dump_winmd.py Microsoft.UI.Xaml.winmd \
 W* ラッパーの COM 参照は GC 連動で自動解放されるが (上記「COM 参照のライフタイム管理」)、
 ウィンドウ・Shell 系のラッパー (WFrame / WAppWindow / WAppNotification / WJumpList など) は対象外で従来どおり保持し続ける。
 言語境界をまたぐ循環参照 (ネイティブ → CCW → Kotlin → RCW → ネイティブ) は自動回収されない (JVM の GC に IReferenceTracker 相当の拡張点がないため)。
-エラー処理は HRESULT の例外化のみで、レイアウトマネージャは未実装である。
+エラー処理は HRESULT の例外化のみである。
+レイアウトマネージャは Swing 風の `WLayoutManager` / `WLayoutPanel` (Canvas を土台に Kotlin 側で計測・配置) を備え、実装例として `WBorderLayout` がある。
 ライブラリとして育てる際は、winmd からのバインディング自動生成 (`tools/dump_winmd.py` の発展形) が次の一歩になる。
