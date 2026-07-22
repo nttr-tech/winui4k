@@ -36,7 +36,7 @@ tasks.register<JavaExec>("runJna") {
 
 // ---- Standalone-distribution exe installer generation ----
 // Usage: gradlew.bat :winui4k-sample-gallery:packageExe
-// Output: winui4k-sample-gallery/build/jpackage/winui4k-gallery-installer.exe (bundles a JRE, runs with no Java install needed)
+// Output: winui4k-sample-gallery/build/jpackage/winui4k-gallery-installer-<version>.exe (bundles a JRE, runs with no Java install needed)
 
 // jpackage's exe generation needs the WiX Toolset. Fetch the binary release (no admin rights
 // required) from a GitHub release and unpack it into build/wix
@@ -137,7 +137,7 @@ tasks.register<Exec>("packageExe") {
     doLast {
         val dest = destDir.get().asFile
         val generated = dest.resolve("WinUI4K Gallery-$appVersion.exe")
-        val renamed = dest.resolve("winui4k-gallery-installer.exe")
+        val renamed = dest.resolve("winui4k-gallery-installer-$appVersion.exe")
         check(generated.renameTo(renamed)) { "Could not rename $generated to $renamed" }
     }
 }

@@ -1,0 +1,23 @@
+name: Delete Release
+
+# When a v*.*.* tag is deleted on GitHub, delete the corresponding release as well
+on: delete
+
+permissions:
+  contents: write
+
+jobs:
+  delete-release:
+    if: github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the release for the deleted tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.ref }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
+          else
+            echo "No release found for tag $TAG; nothing to delete"
+          fi
