@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadFactory
  * The core module is compiled with -Xjdk-release=8, so it can't hold a compile-time
  * reference to Java 9 APIs; they're resolved at runtime via MethodHandle instead (this
  * API surface isn't wide enough to warrant splitting into a separate module the way
- * winui4k-panama is).
+ * winui4k-ffi-panama is).
  */
 internal class CleanerCleanupBackend private constructor(
     private val cleaner: Any,

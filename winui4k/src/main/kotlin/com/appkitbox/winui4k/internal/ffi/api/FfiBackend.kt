@@ -19,7 +19,7 @@ class NativeFunction(private val fn: Ptr, private val handle: DowncallHandle) {
 
 /**
  * The SPI for FFI backends. Panama (ffi.panama) is the default implementation; the
- * vocabulary is deliberately closed so a future JNA implementation (a winui4k-jna
+ * vocabulary is deliberately closed so a future JNA implementation (a winui4k-ffi-jna
  * module) can be added. Layers above this (com / winrt / winui) depend only on this
  * interface and the api types.
  */

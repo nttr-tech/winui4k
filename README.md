@@ -92,9 +92,9 @@ Windows App SDK 2.2 ランタイムが必要です。未インストールの場
 | モジュール | 内容 |
 |---|---|
 | `winui4k` | 本体。公開 API (`W*` クラス) と COM / WinRT / WinUI の内部レイヤ |
-| `winui4k-panama` | Panama (`java.lang.foreign`) FFI バックエンド。Java 22 以降 |
-| `winui4k-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
-| `winui4k-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 |
+| `winui4k-ffi-panama` | Panama (`java.lang.foreign`) FFI バックエンド。Java 22 以降 |
+| `winui4k-ffi-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
+| `winui4k-ffi-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 |
 | `winui4k-extension-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
 | `winui4k-sample-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
 

@@ -21,7 +21,7 @@ dependencies {
     implementation(project(":winui4k-all"))
 }
 
-// the sample targets Java 8, but its runtime classpath should still include winui4k-panama
+// the sample targets Java 8, but its runtime classpath should still include winui4k-ffi-panama
 // (which targets Java 22) — on a Java 8 run, Ffi skips it at the ServiceLoader level
 listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).forEach {
     it.configure {

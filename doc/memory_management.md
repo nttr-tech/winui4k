@@ -236,7 +236,7 @@ PhantomReference そのものは普通の Java オブジェクトなので、誰
 winui4k のコアモジュールは `-Xjdk-release=8` でコンパイルされ、Java 9 以降の API へのコンパイル時参照を持てない。
 それでも `CleanerCleanupBackend` が Cleaner を使えるのは、`Class.forName` と `MethodHandle` でメソッドを実行時に解決しているからである。
 
-同じ制約を持つ FFI 層は、別モジュール (winui4k-panama) に分離して ServiceLoader で発見する方式をとった。
+同じ制約を持つ FFI 層は、別モジュール (winui4k-ffi-panama) に分離して ServiceLoader で発見する方式をとった。
 使い分けの基準は API 面の広さで、FFM のように型が大量に登場する API は別モジュールでの直接参照が読みやすく、Cleaner のようにメソッド 3 つで済む API は実行時解決のほうが配布物を増やさずに済む。
 
 ### クリーナースレッドと COM

@@ -6,7 +6,7 @@ package com.appkitbox.winui4k.internal.ffi.api
  *
  * This package (ffi.api) is the SPI for backend implementers: it defines the only FFI
  * vocabulary in winui4k that doesn't depend on either java.lang.foreign or com.sun.jna.
- * It stays public because backends in other modules (a future winui4k-jna) implement it.
+ * It stays public because backends in other modules (a future winui4k-ffi-jna) implement it.
  */
 @JvmInline
 value class Ptr(val address: Long) {

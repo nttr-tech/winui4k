@@ -23,12 +23,12 @@ dependencies {
     api(project(":winui4k"))
     api(project(":winui4k-extension-coroutines"))
     api(project(":winui4k-extension-miglayout"))
-    runtimeOnly(project(":winui4k-panama"))
-    runtimeOnly(project(":winui4k-jna"))
-    runtimeOnly(project(":winui4k-jnr"))
+    runtimeOnly(project(":winui4k-ffi-panama"))
+    runtimeOnly(project(":winui4k-ffi-jna"))
+    runtimeOnly(project(":winui4k-ffi-jnr"))
 }
 
-// This module targets Java 8, but its runtime classpath should still include winui4k-panama
+// This module targets Java 8, but its runtime classpath should still include winui4k-ffi-panama
 // (which targets Java 22) — on a Java 8 run, Ffi skips it at the ServiceLoader level
 listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).forEach {
     it.configure {

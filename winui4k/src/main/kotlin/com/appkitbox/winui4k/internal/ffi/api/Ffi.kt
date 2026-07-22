@@ -10,7 +10,7 @@ import java.util.ServiceLoader
  *  1. Explicit choice via [setBackend] (only possible before the first FFI use)
  *  2. The system property -Dwinui4k.ffi=panama|jna|jnr
  *  3. The highest-priority available [FfiBackendProvider] discovered via ServiceLoader
- *     (registered by winui4k-panama / winui4k-jna / winui4k-jnr via META-INF/services)
+ *     (registered by winui4k-ffi-panama / winui4k-ffi-jna / winui4k-ffi-jnr via META-INF/services)
  *
  * Once selected, the backend is fixed for the rest of the process (GUIDs / HSTRINGs /
  * upcall stubs are cached in globalScope, so switching backends mid-process isn't possible).
@@ -36,7 +36,7 @@ object Ffi {
         val iterator = ServiceLoader.load(FfiBackendProvider::class.java, loader).iterator()
         val providers = ArrayList<FfiBackendProvider>()
         while (true) {
-            // On a Java 8 runtime, winui4k-panama (Java 22 bytecode) on the classpath can't be
+            // On a Java 8 runtime, winui4k-ffi-panama (Java 22 bytecode) on the classpath can't be
             // loaded and throws UnsupportedClassVersionError, so each candidate is skipped individually
             // (Java 8's ServiceLoader doesn't wrap a LinkageError in a ServiceConfigurationError)
             try {
@@ -62,6 +62,6 @@ object Ffi {
     }
 
     private const val HINT =
-        "Add one of winui4k-panama (Java 22+), winui4k-jna (Windows x64, Java 8+), " +
-            "or winui4k-jnr (Windows, Java 8+) as a runtime dependency"
+        "Add one of winui4k-ffi-panama (Java 22+), winui4k-ffi-jna (Windows x64, Java 8+), " +
+            "or winui4k-ffi-jnr (Windows, Java 8+) as a runtime dependency"
 }

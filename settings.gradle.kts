@@ -13,9 +13,9 @@ plugins {
 rootProject.name = "winui4k"
 
 include(":winui4k")
-include(":winui4k-panama")
-include(":winui4k-jna")
-include(":winui4k-jnr")
+include(":winui4k-ffi-panama")
+include(":winui4k-ffi-jna")
+include(":winui4k-ffi-jnr")
 include(":winui4k-extension-coroutines")
 include(":winui4k-extension-miglayout")
 include(":winui4k-all")

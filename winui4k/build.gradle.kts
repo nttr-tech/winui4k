@@ -8,7 +8,7 @@ plugins {
 }
 
 // Build with JDK 25, but guarantee only Java 8 bytecode + Java 8 API
-// (the FFI implementations have been split out into winui4k-panama / winui4k-jna, so the core has no JDK-specific dependency)
+// (the FFI implementations have been split out into winui4k-ffi-panama / winui4k-ffi-jna, so the core has no JDK-specific dependency)
 kotlin {
     jvmToolchain(25)
     compilerOptions {
