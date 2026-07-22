@@ -108,6 +108,11 @@ abstract class WComponent internal constructor(
             )
         }
 
+    /** Opacity, from 0.0 (transparent) to 1.0 (opaque, the default) (UIElement.Opacity). */
+    var opacity: Double
+        get() = uiElement.getDouble(Abi.IUIElement_get_Opacity)
+        set(value) = uiElement.call(Abi.IUIElement_put_Opacity, value)
+
     /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */
     var contextFlyout: WFlyoutBase? = null
         set(value) {

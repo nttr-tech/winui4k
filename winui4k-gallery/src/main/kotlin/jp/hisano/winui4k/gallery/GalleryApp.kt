@@ -149,12 +149,21 @@ fun main() {
         // Don't show the back button until a page is selected (the real Gallery can't go back from home)
         titleBar.isBackButtonVisible = false
 
-        // The home state shown right after launch, and when going back through the whole history
+        // The home state shown when Home is selected in the navigation, and when going back through the whole history
+        lateinit var navigation: GalleryNavigation
         fun showHome() {
             currentPageName = null
-            titleBar.isBackButtonVisible = false
+            titleBar.isBackButtonVisible = history.isNotEmpty()
+            // Home shows the hero image flush to the edges, so no margin here (each page uses 24)
+            pageArea.margin = 0.0
             pageArea.removeAll()
-            pageArea.add(buildHomePage())
+            pageArea.add(
+                buildHomePage { name ->
+                    navigation.itemsByPageName[name]?.let {
+                        navigation.navigationView.selectedItem = it
+                    }
+                },
+            )
         }
 
         // Set the same icon as the real WinUI 3 Gallery on the title bar and taskbar
@@ -170,13 +179,21 @@ fun main() {
         searchBox.width = 580.0
         titleBar.content = searchBox
 
-        lateinit var navigation: GalleryNavigation
-        navigation = buildGalleryNavigationView { name, buildPage ->
+        navigation = buildGalleryNavigationView(
+            onHome = {
+                if (!isNavigatingBack && currentPageName != null) {
+                    history.addLast(currentPageName) // push onto history so a page can go back to Home
+                }
+                showHome()
+            },
+        ) { name, buildPage ->
             if (!isNavigatingBack) {
                 history.addLast(currentPageName) // transitions from home push null
             }
             currentPageName = name
+            GallerySettings.addRecentlyVisited(name) // list it under Home's Recently visited
             titleBar.isBackButtonVisible = true
+            pageArea.margin = 24.0
             pageArea.removeAll()
             pageArea.add(buildPage())
             // The TitleBar page's demo creates a separate WTitleBar for illustration. WinUI 3's
@@ -195,18 +212,13 @@ fun main() {
         titleBar.addBackRequestedListener {
             if (history.isEmpty()) return@addBackRequestedListener
             val previousName = history.removeLast()
-            if (previousName == null) {
-                // Went all the way back to home: clear the selection and return to the initial state
-                isNavigatingBack = true
-                navigationView.selectedItem = null
-                isNavigatingBack = false
-                showHome()
-            } else {
-                val previousItem = navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
-                isNavigatingBack = true
-                navigationView.selectedItem = previousItem
-                isNavigatingBack = false
-            }
+            // null means home; go through SelectionChanged to show the right page (or Home)
+            val previousItem =
+                if (previousName == null) navigation.homeItem
+                else navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
+            isNavigatingBack = true
+            navigationView.selectedItem = previousItem
+            isNavigatingBack = false
         }
         titleBar.addPaneToggleRequestedListener {
             navigationView.isPaneOpen = !navigationView.isPaneOpen
@@ -234,7 +246,8 @@ fun main() {
         rootGrid.add(titleBar, row = 0, column = 0)
         rootGrid.add(navigationView, row = 1, column = 0)
 
-        showHome()
+        // Select Home on launch (SelectionChanged -> showHome)
+        navigationView.selectedItem = navigation.homeItem
 
         frame.setContentPane(rootGrid)
         frame.extendsContentIntoTitleBar = true
@@ -272,7 +285,7 @@ private val CARD_BORDER = WColor(229, 229, 229)
 internal val TEXT_SECONDARY = WColor(97, 97, 97)
 
 /** Page name (WinUI control name) -> the function that builds its demo page. */
-private val pages: Map<String, () -> WComponent> = linkedMapOf(
+internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "AppBarButton" to ::buildAppBarButtonPage,
     "AppBarSeparator" to ::buildAppBarSeparatorPage,
     "AppBarToggleButton" to ::buildAppBarToggleButtonPage,
@@ -428,19 +441,28 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
  */
 private class GalleryNavigation(
     val navigationView: WNavigationView,
+    val homeItem: WNavigationViewItem,
     val itemsByPageName: Map<String, WNavigationViewItem>,
 )
 
 /**
- * The left-hand navigation. Lines up page items under each category's parent item
- * (with an icon), and selecting one passes the selected page's name and builder to [onSelect].
+ * The left-hand navigation. Puts Home first, then lines up page items under each category's
+ * parent item (with an icon) below it. Selecting Home passes control to [onHome]; selecting a
+ * page passes the selected page's name and builder to [onSelect].
  */
-private fun buildGalleryNavigationView(onSelect: (String, () -> WComponent) -> Unit): GalleryNavigation {
+private fun buildGalleryNavigationView(
+    onHome: () -> Unit,
+    onSelect: (String, () -> WComponent) -> Unit,
+): GalleryNavigation {
     val navigationView = WNavigationView()
     navigationView.paneTitle = "WinUI4K Gallery"
     navigationView.isSettingsVisible = false
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
     navigationView.openPaneLength = 260.0
+
+    // Put Home first, matching the real Gallery
+    val homeItem = WNavigationViewItem("Home", Symbol.HOME)
+    navigationView.addItem(homeItem)
 
     val itemsByPageName = mutableMapOf<String, WNavigationViewItem>()
     for ((category, names) in categories) {
@@ -457,25 +479,26 @@ private fun buildGalleryNavigationView(onSelect: (String, () -> WComponent) -> U
     }
 
     navigationView.addSelectionListener { item ->
-        val name = item?.text ?: return@addSelectionListener
-        pages[name]?.let { buildPage -> onSelect(name, buildPage) }
+        if (item == null) return@addSelectionListener
+        if (item == homeItem) {
+            onHome()
+        } else {
+            pages[item.text]?.let { buildPage -> onSelect(item.text, buildPage) }
+        }
     }
-    // Don't select any page on launch (show home instead)
-    return GalleryNavigation(navigationView, itemsByPageName)
+    return GalleryNavigation(navigationView, homeItem, itemsByPageName)
 }
 
-/** Home right after launch (no page selected). Going back through the whole history returns here. */
-private fun buildHomePage(): WComponent {
-    return buildPage(
-        "WinUI4K Gallery",
-        "Open a category in the navigation on the left to pick a control, or use the search box at the top to find a page.",
-    )
-}
-
-/** A page's skeleton (large heading + description). Each page adds its demos onto this return value. */
+/** A page's skeleton (large heading + favorite star + description). Each page adds its demos onto this return value. */
 internal fun buildPage(title: String, description: String): WPanel {
+    val titleRow = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
+    titleRow.add(WLabel(title).also { it.fontSize = 28.0; it.fontWeight = 600 })
+    if (title in pages) {
+        titleRow.add(buildFavoriteToggle(title).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    }
+
     val header = WPanel(spacing = 4.0)
-    header.add(WLabel(title).also { it.fontSize = 28.0; it.fontWeight = 600 })
+    header.add(titleRow)
     header.add(
         WLabel(description).also {
             it.foreground = TEXT_SECONDARY

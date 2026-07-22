@@ -48,6 +48,8 @@ internal object Abi {
 
     // ---- Microsoft.UI.Xaml.UIElement / FrameworkElement ----
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
+    const val IUIElement_get_Opacity = 9               // get_Opacity(out double)
+    const val IUIElement_put_Opacity = 10              // put_Opacity(double)
     const val IUIElement_get_XamlRoot = 109            // get_XamlRoot(out XamlRoot)
     const val IUIElement_put_XamlRoot = 110            // put_XamlRoot(XamlRoot)
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
@@ -1769,6 +1771,13 @@ internal object Abi {
     const val IID_IBitmapImageFactory = "f037e0e9-f229-522e-95c9-da2211a14b05"
     const val IBitmapImageFactory_CreateInstanceWithUriSource = 6  // CreateInstanceWithUriSource(Uri) -> BitmapImage
     const val IID_IImageSource = "6c2038f6-d6d5-55e9-9b9e-082f12dbff60"
+
+    // ---- Microsoft.UI.Xaml.Controls.Image ----
+    const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"
+    const val IID_IImage = "220d3d8d-66de-53a1-a215-ba9c165565ab"
+    const val IImage_put_Source = 7                     // put_Source(ImageSource)
+    const val IImage_get_Stretch = 8                    // get_Stretch(out Stretch)
+    const val IImage_put_Stretch = 9                    // put_Stretch(Stretch enum)
 
     /** The actual IID of TypedEventHandler<TitleBar, Object> (computed at runtime). Shared by BackRequested / PaneToggleRequested. */
     val IID_TitleBarEventHandler: String by lazy {
