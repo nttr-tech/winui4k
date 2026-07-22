@@ -1552,7 +1552,18 @@ internal object Abi {
     const val IWindow_put_ExtendsContentIntoTitleBar = 17 // put_ExtendsContentIntoTitleBar(boolean)
     const val IWindow_SetTitleBar = 28                  // SetTitleBar(UIElement)
     const val IID_IWindow2 = "42febaa5-1c32-522a-a591-57618c6f665d"
+    const val IWindow2_get_SystemBackdrop = 6           // get_SystemBackdrop(out SystemBackdrop)
+    const val IWindow2_put_SystemBackdrop = 7           // put_SystemBackdrop(SystemBackdrop)
     const val IWindow2_get_AppWindow = 8                // get_AppWindow(out AppWindow)
+
+    // ---- Microsoft.UI.Xaml.Media.MicaBackdrop / DesktopAcrylicBackdrop (SystemBackdrop subclasses) ----
+    const val CLS_MicaBackdrop = "Microsoft.UI.Xaml.Media.MicaBackdrop"
+    const val IID_IMicaBackdropFactory = "774379ce-74bd-59d4-849d-d99c4184d838"
+    const val IID_IMicaBackdrop = "c156a404-3dac-593a-b1f3-7a33c289dc83"
+    const val IMicaBackdrop_put_Kind = 7                // put_Kind(MicaKind) — Base=0 / BaseAlt=1
+
+    const val CLS_DesktopAcrylicBackdrop = "Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop"
+    const val IID_IDesktopAcrylicBackdropFactory = "00922e6d-ae51-564a-bce2-1973d5e463dd"
 
     // ---- Microsoft.UI.Windowing.AppWindow (Microsoft.UI.winmd) ----
     // Not activated directly; obtained via IAppWindowStatics.Create (WFrame.appWindow / WAppWindow.create).

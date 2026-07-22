@@ -20,6 +20,7 @@ import jp.hisano.winui4k.SliderSnapsTo
 import jp.hisano.winui4k.SplitViewDisplayMode
 import jp.hisano.winui4k.SplitViewPanePlacement
 import jp.hisano.winui4k.StandardUICommandKind
+import jp.hisano.winui4k.SystemBackdropType
 import jp.hisano.winui4k.SwipeMode
 import jp.hisano.winui4k.Symbol
 import jp.hisano.winui4k.VerticalAlignment
@@ -129,22 +130,30 @@ fun main() {
         val pageArea = WPanel()
         pageArea.margin = 24.0
 
-        // Paint the content area a light gray (Mica-like), matching the WinUI Gallery's look
+        // The content area is translucent white, matching the real Gallery's Layer; the Mica behind it shows through faintly
         val pageBackground = WBorder(WScrollPane(pageArea))
         pageBackground.background = PAGE_BACKGROUND
 
-        // History of page names to go back through via the back button. Assigning selectedItem also
-        // fires SelectionChanged, so isNavigatingBack marks "currently going back" to avoid re-pushing
-        // onto the history.
-        val history = ArrayDeque<String>()
+        // History of page names to go back through via the back button (null = the startup home state).
+        // Assigning selectedItem also fires SelectionChanged, so isNavigatingBack marks "currently going
+        // back" to avoid re-pushing onto the history.
+        val history = ArrayDeque<String?>()
         var isNavigatingBack = false
         var currentPageName: String? = null
 
         val titleBar = WTitleBar()
         titleBar.title = "WinUI4K Gallery"
         titleBar.isPaneToggleButtonVisible = true
-        titleBar.isBackButtonVisible = true
-        titleBar.isBackButtonEnabled = false
+        // Don't show the back button until a page is selected (the real Gallery can't go back from home)
+        titleBar.isBackButtonVisible = false
+
+        // The home state shown right after launch, and when going back through the whole history
+        fun showHome() {
+            currentPageName = null
+            titleBar.isBackButtonVisible = false
+            pageArea.removeAll()
+            pageArea.add(buildHomePage())
+        }
 
         // Set the same icon as the real WinUI 3 Gallery on the title bar and taskbar
         val iconFile = extractGalleryIcon()
@@ -162,10 +171,10 @@ fun main() {
         lateinit var navigation: GalleryNavigation
         navigation = buildGalleryNavigationView { name, buildPage ->
             if (!isNavigatingBack) {
-                currentPageName?.let { history.addLast(it) }
+                history.addLast(currentPageName) // transitions from home push null
             }
             currentPageName = name
-            titleBar.isBackButtonEnabled = history.isNotEmpty()
+            titleBar.isBackButtonVisible = true
             pageArea.removeAll()
             pageArea.add(buildPage())
             // The TitleBar page's demo creates a separate WTitleBar for illustration. WinUI 3's
@@ -182,12 +191,20 @@ fun main() {
         navigationView.isPaneToggleButtonVisible = false
 
         titleBar.addBackRequestedListener {
-            val previousName = history.removeLastOrNull() ?: return@addBackRequestedListener
-            val previousItem = navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
-            isNavigatingBack = true
-            navigationView.selectedItem = previousItem
-            isNavigatingBack = false
-            titleBar.isBackButtonEnabled = history.isNotEmpty()
+            if (history.isEmpty()) return@addBackRequestedListener
+            val previousName = history.removeLast()
+            if (previousName == null) {
+                // Went all the way back to home: clear the selection and return to the initial state
+                isNavigatingBack = true
+                navigationView.selectedItem = null
+                isNavigatingBack = false
+                showHome()
+            } else {
+                val previousItem = navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
+                isNavigatingBack = true
+                navigationView.selectedItem = previousItem
+                isNavigatingBack = false
+            }
         }
         titleBar.addPaneToggleRequestedListener {
             navigationView.isPaneOpen = !navigationView.isPaneOpen
@@ -215,10 +232,14 @@ fun main() {
         rootGrid.add(titleBar, row = 0, column = 0)
         rootGrid.add(navigationView, row = 1, column = 0)
 
+        showHome()
+
         frame.setContentPane(rootGrid)
         frame.extendsContentIntoTitleBar = true
         frame.setTitleBar(titleBar)
         frame.appWindow.titleBar.preferredHeightOption = TitleBarHeightOption.TALL
+        // Mica, matching the real Gallery, lets the wallpaper's color (a pale blue with the default wallpaper) show through faintly across the whole window
+        frame.systemBackdrop = SystemBackdropType.MICA
         frame.isVisible = true
     }
 }
@@ -236,11 +257,11 @@ private fun extractGalleryIcon(): File? {
 }
 
 // Colors matching the WinUI 3 Gallery's light theme
-/** The whole window's background (a Mica-like light gray). */
-private val PAGE_BACKGROUND = WColor(243, 243, 243)
+/** The content area's background (translucent white, matching LayerFillColorDefault). The Mica behind it shows through faintly. */
+private val PAGE_BACKGROUND = WColor(255, 255, 255, 128)
 
-/** The background of cards that host demos (slightly brighter than the page background). */
-private val CARD_BACKGROUND = WColor(251, 251, 251)
+/** The background of cards that host demos (translucent white, matching CardBackgroundFillColorDefault). */
+private val CARD_BACKGROUND = WColor(255, 255, 255, 179)
 
 /** A card's border. */
 private val CARD_BORDER = WColor(229, 229, 229)
@@ -303,6 +324,7 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "AppWindow" to ::buildAppWindowPage,
     "AppWindowTitleBar" to ::buildAppWindowTitleBarPage,
     "Multiple windows" to ::buildMultipleWindowsPage,
+    "SystemBackdrop" to ::buildSystemBackdropPage,
     "TitleBar" to ::buildTitleBarPage,
 )
 
@@ -378,6 +400,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "AppWindow",
         "AppWindowTitleBar",
         "Multiple windows",
+        "SystemBackdrop",
         "TitleBar",
     ),
 )
@@ -415,18 +438,16 @@ private fun buildGalleryNavigationView(onSelect: (String, () -> WComponent) -> U
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
     navigationView.openPaneLength = 260.0
 
-    var firstPageItem: WNavigationViewItem? = null
     val itemsByPageName = mutableMapOf<String, WNavigationViewItem>()
     for ((category, names) in categories) {
         // Categories aren't selectable (SelectsOnInvoked=false); they only toggle their children open/closed
         val categoryItem = WNavigationViewItem(category, categoryIcons[category])
         categoryItem.selectsOnInvoked = false
-        categoryItem.isExpanded = true
+        categoryItem.isExpanded = false // start collapsed on launch
         for (name in names) {
             val pageItem = WNavigationViewItem(name)
             categoryItem.addItem(pageItem)
             itemsByPageName[name] = pageItem
-            if (firstPageItem == null) firstPageItem = pageItem
         }
         navigationView.addItem(categoryItem)
     }
@@ -435,8 +456,16 @@ private fun buildGalleryNavigationView(onSelect: (String, () -> WComponent) -> U
         val name = item?.text ?: return@addSelectionListener
         pages[name]?.let { buildPage -> onSelect(name, buildPage) }
     }
-    navigationView.selectedItem = firstPageItem // show the first category's first page initially
+    // Don't select any page on launch (show home instead)
     return GalleryNavigation(navigationView, itemsByPageName)
+}
+
+/** Home right after launch (no page selected). Going back through the whole history returns here. */
+private fun buildHomePage(): WComponent {
+    return buildPage(
+        "WinUI4K Gallery",
+        "Open a category in the navigation on the left to pick a control, or use the search box at the top to find a page.",
+    )
 }
 
 /** A page's skeleton (large heading + description). Each page adds its demos onto this return value. */

@@ -7,6 +7,7 @@ import jp.hisano.winui4k.NavigationViewBackButtonVisible
 import jp.hisano.winui4k.Orientation
 import jp.hisano.winui4k.TextWrapping
 import jp.hisano.winui4k.TitleBarHeightOption
+import jp.hisano.winui4k.SystemBackdropType
 import jp.hisano.winui4k.TitleBarTheme
 import jp.hisano.winui4k.WAppWindow
 import jp.hisano.winui4k.WAppWindowPresenterKind
@@ -562,6 +563,58 @@ private fun buildTitleBarThemeExample(): WComponent {
     body.add(themeButtons)
     body.add(status)
     return buildExample("Color theme (PreferredTheme)", body)
+}
+
+// endregion
+
+// region SystemBackdrop page
+
+/** The SystemBackdrop page: lines up demos for trying out WFrame.systemBackdrop's various materials. */
+internal fun buildSystemBackdropPage(): WComponent {
+    val page = buildPage(
+        "SystemBackdrop",
+        "The system materials for a window's background (Mica / Mica Alt / Acrylic). " +
+            "Mica is already applied to the Gallery itself; try switching materials in the child window.",
+    )
+
+    page.add(buildSystemBackdropSwitchExample())
+    return page
+}
+
+/** Switching backdrops: applies every SystemBackdropType to a child window. */
+private fun buildSystemBackdropSwitchExample(): WComponent {
+    val status = WLabel("No child window created yet")
+    var child: WFrame? = null
+
+    val openButton = WButton("Open a child window")
+    openButton.addActionListener {
+        val frame = openChildFrame("SystemBackdrop demo (child window)")
+        frame.addCloseButton()
+        frame.add(WLabel("The buttons switch this window's backdrop."))
+        frame.appWindow.resize(480, 320)
+        frame.systemBackdrop = SystemBackdropType.MICA
+        child = frame
+        status.text = "SystemBackdrop = ${frame.systemBackdrop}"
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(openButton)
+    for (type in SystemBackdropType.entries) {
+        buttons.add(
+            WButton(type.name).also { button ->
+                button.addActionListener {
+                    val frame = child ?: return@addActionListener
+                    frame.systemBackdrop = type
+                    status.text = "SystemBackdrop = ${frame.systemBackdrop}"
+                }
+            },
+        )
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(buttons)
+    body.add(status)
+    return buildExample("Switching backdrops (MICA / MICA_ALT / ACRYLIC / NONE)", body)
 }
 
 // endregion
