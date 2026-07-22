@@ -25,7 +25,11 @@ internal object Dispatcher {
     /** TypedEventHandler's Invoke(this, sender, args) — vtbl[3] */
     private val DESC_TICK_HANDLER = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
 
+    // Volatile: written on the UI thread but read from arbitrary threads (isDispatchThread / invokeLater)
+    @Volatile
     private var queue: ComPtr? = null
+
+    @Volatile
     private var uiThread: Thread? = null
 
     /**
