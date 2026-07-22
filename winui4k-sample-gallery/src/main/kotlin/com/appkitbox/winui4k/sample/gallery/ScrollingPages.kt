@@ -59,13 +59,12 @@ private fun buildScrollingTileContent(): WComponent {
 internal fun buildAnnotatedScrollBarPage(): WComponent {
     val page = buildPage(
         "AnnotatedScrollBar",
-        "A control that extends a vertical scrollbar with position markers so you can jump " +
+        "A control that extends a vertical scrollbar with labels along the rail so you can jump " +
             "quickly through a large collection. Try it out with WAnnotatedScrollBar connected " +
-            "as a ScrollView's vertical scroll controller. Hovering over a marker on the rail " +
-            "shows the color group name at that position as a tooltip (DetailLabelRequested). " +
-            "(The real Gallery uses ItemsRepeater with label strings, but since winui4k doesn't " +
-            "yet support ItemsRepeater or x:Bind in templates, this substitutes a tile grid with " +
-            "position markers.)",
+            "as a ScrollView's vertical scroll controller. Clicking a label jumps to that " +
+            "position, and hovering over the rail shows the color group name as a tooltip " +
+            "(DetailLabelRequested). (The real Gallery uses ItemsRepeater for the content, but " +
+            "since winui4k doesn't support that yet, this substitutes a tile grid.)",
     )
 
     page.add(buildAnnotatedScrollBarExample())
@@ -114,7 +113,6 @@ private fun buildAnnotatedScrollBarExample(): WComponent {
 
     val annotatedScrollBar = WAnnotatedScrollBar()
     annotatedScrollBar.height = 500.0
-    annotatedScrollBar.width = 150.0 // leaves room to the left of the rail for drawing labels (markers)
     annotatedScrollBar.verticalAlignment = VerticalAlignment.TOP
     annotatedScrollBar.addDetailLabelRequestedListener { offset ->
         // Return the name of the group containing this offset, as the tooltip

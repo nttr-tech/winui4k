@@ -1,12 +1,19 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.ArgKind
+import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.Ptr
+import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
+import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.Abi
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
  * WinUI 3's AnnotatedScrollBar (a Control subclass). Extends a vertical scrollbar with a rail
@@ -51,14 +58,9 @@ class WAnnotatedScrollBar : WControl(
     }
 
     /**
-     * Adds a label (marker) at the given offset (AnnotatedScrollBar.Labels.Append).
-     * [content] is the label's content, and [offset] is the vertical scroll offset on the rail
-     * (in pixels).
-     *
-     * Note: markers on the rail are drawn via the template installed by
-     * [applyMarkerLabelTemplate], and the [content] string itself is not shown on the rail
-     * (see the LabelTemplate limitation described below). Consider using
-     * [addDetailLabelRequestedListener]'s hover tooltip to convey what each offset means.
+     * Adds a label at the given offset (AnnotatedScrollBar.Labels.Append). [content] is the
+     * label string shown to the left of the rail, and [offset] is the vertical scroll offset
+     * on the rail (in pixels).
      */
     fun addLabel(content: String, offset: Double) {
         val boxed = PropertyValues.boxString(content)
@@ -99,18 +101,19 @@ class WAnnotatedScrollBar : WControl(
     }
 
     /**
-     * Draws the marker on the rail (AnnotatedScrollBar.LabelTemplate) as a small fixed indicator
-     * of position.
+     * Applies a LabelTemplate that displays the label string (AnnotatedScrollBarLabel.Content).
      *
-     * Limitation: ideally the label's string (AnnotatedScrollBarLabel.Content) would be shown,
-     * but a classic Binding in a DataTemplate loaded via XamlReader can't resolve Content (the
-     * real WinUI 3 Gallery uses compiled x:Bind, and winui4k has no x:Bind equivalent). So we
-     * draw a fixed indicator instead of the string, and convey what each position means via the
-     * DetailLabelRequested hover tooltip.
+     * The real WinUI default template shows the string via `{Binding Content}`, but winui4k has
+     * no app-side XamlTypeInfo to resolve a property path, so that binding always resolves to
+     * nothing (a path-less `{Binding}` still resolves to the DataContext object itself). To work
+     * around this, we use a path-less Binding piped through the Kotlin-implemented
+     * [labelContentConverter], which pulls Content out of the label object. The visuals
+     * (right alignment, margin, minimum width) match the real default template.
      */
-    private fun applyMarkerLabelTemplate() {
+    private fun applyLabelTemplate() {
+        registerLabelContentConverter()
         val statics = Activation.factory(Abi.CLS_XamlReader, Abi.IID_IXamlReaderStatics)
-        val template = Hstring.use(MARKER_LABEL_TEMPLATE_XAML) { h ->
+        val template = Hstring.use(LABEL_TEMPLATE_XAML) { h ->
             statics.getPtr(Abi.IXamlReaderStatics_Load, h)
         }
         statics.release()
@@ -121,15 +124,72 @@ class WAnnotatedScrollBar : WControl(
     }
 
     init {
-        applyMarkerLabelTemplate()
+        applyLabelTemplate()
     }
 
     private companion object {
-        /** A position marker on the rail (a small dot). Fixed, since the string can't be obtained via Binding. */
-        const val MARKER_LABEL_TEMPLATE_XAML =
+        /** The key under which [labelContentConverter] is registered in Application.Resources. */
+        const val CONVERTER_RESOURCE_KEY = "WinUI4KAnnotatedScrollBarLabelContentConverter"
+
+        /** Equivalent to the real default LabelTemplate (MinWidth 44 = LabelsGridMinWidth; Content goes through the converter). */
+        val LABEL_TEMPLATE_XAML =
             "<DataTemplate xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\">" +
-                "<Border Width=\"10\" Height=\"10\" CornerRadius=\"5\" Background=\"#0078D4\" " +
-                "VerticalAlignment=\"Center\" />" +
+                "<Border MinWidth=\"44\">" +
+                "<TextBlock Margin=\"0,-5,0,-2\" HorizontalAlignment=\"Right\" HorizontalTextAlignment=\"Right\" " +
+                "TextWrapping=\"NoWrap\" " +
+                "Text=\"{Binding Converter={StaticResource $CONVERTER_RESOURCE_KEY}}\" />" +
+                "</Border>" +
                 "</DataTemplate>"
+
+        /** IValueConverter.Convert / ConvertBack (this, object, TypeName byval, object, HSTRING, out object). */
+        val DESC_CONVERT = CallDescriptor(
+            ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.Struct(XamlStructs.TYPE_NAME),
+            ArgKind.PTR, ArgKind.PTR, ArgKind.PTR,
+        )
+
+        const val E_NOTIMPL = -0x7FFF_BFFF // 0x80004001
+
+        /** An IValueConverter (Kotlin-implemented) that extracts Content (boxed string) out of a label object. */
+        val labelContentConverter: KComObject by lazy {
+            KComObject("WinUI4K.AnnotatedScrollBarLabelContentConverter")
+                .addInterface(
+                    Abi.IID_IValueConverter,
+                    listOf(
+                        // vtbl[6] Convert(this, value, targetType, parameter, language, out result)
+                        KComObject.Method(DESC_CONVERT) { args ->
+                            val value = args[1] as Ptr
+                            val out = args[5] as Ptr
+                            var content = Ptr.NULL
+                            if (!value.isNull) {
+                                val label = ComPtr(value)
+                                    .queryInterfaceOrNull(Abi.IID_IAnnotatedScrollBarLabel)
+                                if (label != null) {
+                                    // Transfer ownership into out (an out object is released by the caller)
+                                    content = label.getPtrOrNull(Abi.IAnnotatedScrollBarLabel_get_Content)
+                                        ?.ptr ?: Ptr.NULL
+                                    label.release()
+                                }
+                            }
+                            Ffi.backend.memory.putPtr(out, 0, content)
+                            KComObject.S_OK
+                        },
+                        // vtbl[7] ConvertBack — not used, since this binding is one-way
+                        KComObject.Method(DESC_CONVERT) { args ->
+                            Ffi.backend.memory.putPtr(args[5] as Ptr, 0, Ptr.NULL)
+                            E_NOTIMPL
+                        },
+                    ),
+                )
+        }
+
+        /** True once registered. Registered into Application.Resources exactly once per process. */
+        var converterRegistered = false
+
+        /** Registers [labelContentConverter] into Application.Resources so it can be referenced via `{StaticResource}`. */
+        fun registerLabelContentConverter() {
+            if (converterRegistered) return
+            WinUiUtilities.insertApplicationResource(CONVERTER_RESOURCE_KEY, labelContentConverter.primary)
+            converterRegistered = true
+        }
     }
 }

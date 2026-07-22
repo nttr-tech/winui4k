@@ -16,6 +16,7 @@ import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
+import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
 import com.appkitbox.winui4k.internal.winui.Abi
 import com.appkitbox.winui4k.internal.winui.Dispatcher
@@ -241,6 +242,25 @@ object WinUiUtilities {
         appResources.release()
         xcrDict.release()
         xcr.release()
+    }
+
+    /**
+     * Registers resource [value] under key [key] in Application.Resources (ResourceDictionary.Insert).
+     * XAML loaded via XamlReader can then reference it with `{StaticResource key}`.
+     * Re-registering under the same key overwrites the previous value. Call this from the UI thread.
+     */
+    internal fun insertApplicationResource(key: String, value: Ptr) {
+        val app = checkNotNull(currentApp) { "Application has not been created yet" }
+        val appResources = app.getPtr(Abi.IApplication_get_Resources)
+        val map = appResources.queryInterface(Abi.IID_IMap_Object_Object)
+        appResources.release()
+        val boxedKey = PropertyValues.boxString(key)
+        Ffi.backend.withScope { scope ->
+            val replaced = scope.allocate(1, 1)
+            map.call(Abi.IMap_Insert, boxedKey.ptr, value, replaced)
+        }
+        boxedKey.release()
+        map.release()
     }
 
     /**

@@ -580,6 +580,11 @@ internal object Abi {
     const val IID_IXamlReaderStatics = "82a4cd9e-435e-5aeb-8c4f-300cece45cae"
     const val IXamlReaderStatics_Load = 6              // Load(string, out IInspectable)
 
+    // ---- Microsoft.UI.Xaml.Data.IValueConverter ----
+    const val IID_IValueConverter = "afdd2bff-10f5-5173-b7c0-3590bd96cb35"
+    const val IValueConverter_Convert = 6              // Convert(object, TypeName, object, string, out object)
+    const val IValueConverter_ConvertBack = 7          // ConvertBack(object, TypeName, object, string, out object)
+
     /** delegate Controls.SelectionChangedEventHandler(sender, SelectionChangedEventArgs) — Invoke is vtbl[3] */
     const val IID_SelectionChangedEventHandler = "a232390d-0e34-595e-8931-fa928a9909f4"
 
@@ -954,6 +959,8 @@ internal object Abi {
     const val CLS_AnnotatedScrollBarLabel = "Microsoft.UI.Xaml.Controls.AnnotatedScrollBarLabel"
     const val IID_IAnnotatedScrollBarLabelFactory = "b6169805-c01c-54c6-80e8-c6c98f9aaa53" // activatable factory
     const val IAnnotatedScrollBarLabelFactory_CreateInstance = 6 // CreateInstance(object content, double offset, out label)
+    const val IID_IAnnotatedScrollBarLabel = "238ac07f-59fb-574f-bf5c-61c44ab386dc"
+    const val IAnnotatedScrollBarLabel_get_Content = 6           // get_Content(out object)
 
     /** The actual IID of TypedEventHandler<AnnotatedScrollBar, AnnotatedScrollBarDetailLabelRequestedEventArgs> (computed at runtime). */
     val IID_AnnotatedScrollBarDetailLabelRequestedHandler: String by lazy {
@@ -1356,6 +1363,16 @@ internal object Abi {
         Pinterface.iid(
             "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Documents.Inline;{$IID_IInline}))",
         )
+    }
+
+    // ---- Windows.Foundation.Collections.IMap<K, V> (OS side, FoundationContract.winmd) ----
+    // Lookup=6 get_Size=7 HasKey=8 GetView=9 Insert=10 Remove=11 Clear=12
+    const val IMap_Insert = 10                         // Insert(K, V, out boolean replaced)
+    private const val IID_IMap_OPEN = "3c2925fe-8519-45c1-aa79-197b6718c1c1" // base IID of IMap`2
+
+    /** The actual IID of IMap<Object, Object> (the key -> resource dictionary implemented by ResourceDictionary). */
+    val IID_IMap_Object_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IMap_OPEN};cinterface(IInspectable);cinterface(IInspectable))")
     }
 
     // ---- Windows.Foundation.Collections.IIterable<T> / IIterator<T> (OS side, FoundationContract.winmd) ----
