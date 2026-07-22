@@ -107,5 +107,9 @@ ICommand のように XAML へ渡すオブジェクトを Kotlin で実装する
 - **HSTRING の一時利用は `Hstring.use`** でスコープ解放する。
 - **Content など Object 型プロパティ**は文字列と UIElement の両方が入りうる。
   get で `unboxString` が null を返すケースを考慮する (WButton.text / content の排他を参照)。
+- **AutoSuggestBox の候補リストは ItemsSource でしか更新されない**。Items (ItemCollection) に
+  Append してもポップアップに反映されない (テンプレート内のリストが ItemsSource を参照するため)。
+  `IIterable<Object>` を Kotlin 実装して put_ItemsSource する
+  (規範実装: WAutoSuggestBox.setSuggestions の StringIterable)。
 - **UI スレッド制約**: すべての W* API は `WinUiUtilities.invokeLater` のコールバック
   (WinUI の UI スレッド) 上でのみ使用できる。初回の invokeLater で WinUI が自動起動する。

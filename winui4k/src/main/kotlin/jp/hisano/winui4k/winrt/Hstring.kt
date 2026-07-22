@@ -71,10 +71,13 @@ internal object Hstring {
     }
 }
 
-/** `HRESULT f(HSTRING* out)` pattern. HSTRING is a WinRT type, so this lives here rather than on ComPtr itself. */
-internal fun ComPtr.getString(slot: Int): String = Ffi.backend.withScope { scope ->
+/**
+ * `HRESULT f(..., HSTRING* out)` pattern. HSTRING is a WinRT type, so this lives here rather than on ComPtr itself.
+ * [args] are arguments passed before `out` (e.g. the TextGetOptions of ITextDocument.GetText).
+ */
+internal fun ComPtr.getString(slot: Int, vararg args: Any?): String = Ffi.backend.withScope { scope ->
     val out = scope.allocate(8)
-    call(slot, out)
+    call(slot, *args, out)
     val h = Ffi.backend.memory.getPtr(out, 0)
     try {
         Hstring.read(h)

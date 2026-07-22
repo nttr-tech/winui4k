@@ -27,6 +27,57 @@ enum class TextWrapping(internal val native: Int) {
 }
 
 /**
+ * Microsoft.UI.Xaml.TextAlignment (horizontal text alignment).
+ * Shared by TextBlock / TextBox / RichTextBlock.
+ * Values extracted from the winmd (Center=0, Left=1, Right=2, Justify=3, DetectFromContent=4).
+ */
+enum class TextAlignment(internal val native: Int) {
+    /** Centered. */
+    CENTER(0),
+
+    /** Left-aligned (default). */
+    LEFT(1),
+
+    /** Right-aligned. */
+    RIGHT(2),
+
+    /** Justified. */
+    JUSTIFY(3),
+
+    /** Detected automatically from the content. */
+    DETECT_FROM_CONTENT(4),
+    ;
+
+    internal companion object {
+        fun of(native: Int): TextAlignment = entries.first { it.native == native }
+    }
+}
+
+/**
+ * Microsoft.UI.Xaml.TextTrimming (how text that doesn't fit is trimmed).
+ * Shared by TextBlock / RichTextBlock.
+ * Values extracted from the winmd (None=0, CharacterEllipsis=1, WordEllipsis=2, Clip=3).
+ */
+enum class TextTrimming(internal val native: Int) {
+    /** Don't trim (default). */
+    NONE(0),
+
+    /** Trim character-by-character and append an ellipsis ("…"). */
+    CHARACTER_ELLIPSIS(1),
+
+    /** Trim word-by-word and append an ellipsis ("…"). */
+    WORD_ELLIPSIS(2),
+
+    /** Clip to the display area. */
+    CLIP(3),
+    ;
+
+    internal companion object {
+        fun of(native: Int): TextTrimming = entries.first { it.native == native }
+    }
+}
+
+/**
  * JLabel-like: WinUI 3's TextBlock.
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  */
@@ -66,6 +117,21 @@ class WLabel(text: String = "") : WComponent(
     var textWrapping: TextWrapping
         get() = TextWrapping.of(inspectable.getInt(Abi.ITextBlock_get_TextWrapping))
         set(value) = inspectable.call(Abi.ITextBlock_put_TextWrapping, value.native)
+
+    /** How text that doesn't fit is trimmed (TextBlock.TextTrimming). */
+    var textTrimming: TextTrimming
+        get() = TextTrimming.of(inspectable.getInt(Abi.ITextBlock_get_TextTrimming))
+        set(value) = inspectable.call(Abi.ITextBlock_put_TextTrimming, value.native)
+
+    /** Text alignment (TextBlock.TextAlignment). */
+    var textAlignment: TextAlignment
+        get() = TextAlignment.of(inspectable.getInt(Abi.ITextBlock_get_TextAlignment))
+        set(value) = inspectable.call(Abi.ITextBlock_put_TextAlignment, value.native)
+
+    /** Whether text can be selected with the mouse (TextBlock.IsTextSelectionEnabled). */
+    var isTextSelectionEnabled: Boolean
+        get() = inspectable.getBool(Abi.ITextBlock_get_IsTextSelectionEnabled)
+        set(value) = inspectable.putBool(Abi.ITextBlock_put_IsTextSelectionEnabled, value)
 
     init {
         if (text.isNotEmpty()) this.text = text

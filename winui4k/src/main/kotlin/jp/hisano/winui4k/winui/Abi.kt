@@ -203,8 +203,15 @@ internal object Abi {
     const val ITextBlock_put_Foreground = 19           // put_Foreground(Brush)
     const val ITextBlock_get_TextWrapping = 20         // get_TextWrapping(out TextWrapping)
     const val ITextBlock_put_TextWrapping = 21         // put_TextWrapping(TextWrapping)
+    const val ITextBlock_get_TextTrimming = 22         // get_TextTrimming(out TextTrimming)
+    const val ITextBlock_put_TextTrimming = 23         // put_TextTrimming(TextTrimming)
+    const val ITextBlock_get_TextAlignment = 24        // get_TextAlignment(out TextAlignment)
+    const val ITextBlock_put_TextAlignment = 25        // put_TextAlignment(TextAlignment)
     const val ITextBlock_get_Text = 26
     const val ITextBlock_put_Text = 27
+    const val ITextBlock_get_Inlines = 28              // get_Inlines(out InlineCollection)
+    const val ITextBlock_get_IsTextSelectionEnabled = 35 // get_IsTextSelectionEnabled(out boolean)
+    const val ITextBlock_put_IsTextSelectionEnabled = 36 // put_IsTextSelectionEnabled(boolean)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox ----
     const val CLS_TextBox = "Microsoft.UI.Xaml.Controls.TextBox"
@@ -212,7 +219,168 @@ internal object Abi {
     const val IID_ITextBox = "873af7c2-ab89-5d76-8dbe-3d6325669df5"
     const val ITextBox_get_Text = 6
     const val ITextBox_put_Text = 7
+    const val ITextBox_get_SelectedText = 8            // get_SelectedText(out HSTRING)
+    const val ITextBox_get_MaxLength = 14              // get_MaxLength(out INT32)
+    const val ITextBox_put_MaxLength = 15              // put_MaxLength(INT32)
+    const val ITextBox_get_IsReadOnly = 16             // get_IsReadOnly(out boolean)
+    const val ITextBox_put_IsReadOnly = 17             // put_IsReadOnly(boolean)
+    const val ITextBox_get_AcceptsReturn = 18          // get_AcceptsReturn(out boolean)
+    const val ITextBox_put_AcceptsReturn = 19          // put_AcceptsReturn(boolean)
+    const val ITextBox_get_TextAlignment = 20          // get_TextAlignment(out TextAlignment)
+    const val ITextBox_put_TextAlignment = 21          // put_TextAlignment(TextAlignment)
+    const val ITextBox_get_TextWrapping = 22           // get_TextWrapping(out TextWrapping)
+    const val ITextBox_put_TextWrapping = 23           // put_TextWrapping(TextWrapping)
+    const val ITextBox_put_Header = 31                 // put_Header(IInspectable)
+    const val ITextBox_get_PlaceholderText = 34
     const val ITextBox_put_PlaceholderText = 35
+    const val ITextBox_add_TextChanged = 58            // add_TextChanged(TextChangedEventHandler, out token)
+    const val ITextBox_remove_TextChanged = 59         // remove_TextChanged(token)
+    const val ITextBox_Select = 80                     // Select(INT32 start, INT32 length)
+    const val ITextBox_SelectAll = 81                  // SelectAll()
+
+    /** delegate Microsoft.UI.Xaml.Controls.TextChangedEventHandler(sender, TextChangedEventArgs) — Invoke is vtbl[3] */
+    const val IID_TextChangedEventHandler = "5d8ddcff-45d8-5e7c-9b8b-c41d2893c6a1"
+
+    // ---- Microsoft.UI.Xaml.Controls.PasswordBox ----
+    const val CLS_PasswordBox = "Microsoft.UI.Xaml.Controls.PasswordBox"
+    const val IID_IPasswordBox = "6d3ccff7-aaee-5adc-8298-33300fa119da"
+    const val IPasswordBox_get_Password = 6
+    const val IPasswordBox_put_Password = 7
+    const val IPasswordBox_get_PasswordChar = 8        // get_PasswordChar(out HSTRING)
+    const val IPasswordBox_put_PasswordChar = 9        // put_PasswordChar(HSTRING)
+    const val IPasswordBox_get_MaxLength = 12          // get_MaxLength(out INT32)
+    const val IPasswordBox_put_MaxLength = 13          // put_MaxLength(INT32)
+    const val IPasswordBox_put_Header = 15             // put_Header(IInspectable)
+    const val IPasswordBox_get_PlaceholderText = 18
+    const val IPasswordBox_put_PlaceholderText = 19
+    const val IPasswordBox_get_PasswordRevealMode = 24 // get_PasswordRevealMode(out PasswordRevealMode)
+    const val IPasswordBox_put_PasswordRevealMode = 25 // put_PasswordRevealMode(PasswordRevealMode)
+    const val IPasswordBox_add_PasswordChanged = 35    // add_PasswordChanged(RoutedEventHandler, out token)
+    const val IPasswordBox_remove_PasswordChanged = 36 // remove_PasswordChanged(token)
+    const val IPasswordBox_SelectAll = 43              // SelectAll()
+
+    // ---- Microsoft.UI.Xaml.Controls.NumberBox ----
+    const val CLS_NumberBox = "Microsoft.UI.Xaml.Controls.NumberBox"
+    const val IID_INumberBoxFactory = "6b81f3cb-45a4-5d19-9bbb-a9fe4656ac4d"
+    const val IID_INumberBox = "c18eb0e9-29fb-525d-abbc-d6b2110f542e"
+    const val INumberBox_get_Minimum = 6               // get_Minimum(out DOUBLE)
+    const val INumberBox_put_Minimum = 7               // put_Minimum(DOUBLE)
+    const val INumberBox_get_Maximum = 8               // get_Maximum(out DOUBLE)
+    const val INumberBox_put_Maximum = 9               // put_Maximum(DOUBLE)
+    const val INumberBox_get_Value = 10                // get_Value(out DOUBLE)
+    const val INumberBox_put_Value = 11                // put_Value(DOUBLE)
+    const val INumberBox_get_SmallChange = 12          // get_SmallChange(out DOUBLE)
+    const val INumberBox_put_SmallChange = 13          // put_SmallChange(DOUBLE)
+    const val INumberBox_get_LargeChange = 14          // get_LargeChange(out DOUBLE)
+    const val INumberBox_put_LargeChange = 15          // put_LargeChange(DOUBLE)
+    const val INumberBox_put_Header = 19               // put_Header(IInspectable)
+    const val INumberBox_put_PlaceholderText = 23      // put_PlaceholderText(HSTRING)
+    const val INumberBox_get_SpinButtonPlacementMode = 36 // get_SpinButtonPlacementMode(out NumberBoxSpinButtonPlacementMode)
+    const val INumberBox_put_SpinButtonPlacementMode = 37 // put_SpinButtonPlacementMode(NumberBoxSpinButtonPlacementMode)
+    const val INumberBox_get_IsWrapEnabled = 38        // get_IsWrapEnabled(out boolean)
+    const val INumberBox_put_IsWrapEnabled = 39        // put_IsWrapEnabled(boolean)
+    const val INumberBox_get_AcceptsExpression = 40    // get_AcceptsExpression(out boolean)
+    const val INumberBox_put_AcceptsExpression = 41    // put_AcceptsExpression(boolean)
+    const val INumberBox_add_ValueChanged = 44         // add_ValueChanged(TypedEventHandler, out token)
+    const val INumberBox_remove_ValueChanged = 45      // remove_ValueChanged(token)
+    const val IID_INumberBoxValueChangedEventArgs = "c66cf16e-7c8a-532e-9d23-058c1c98dd50"
+    const val INumberBoxValueChangedEventArgs_get_OldValue = 6 // get_OldValue(out DOUBLE)
+    const val INumberBoxValueChangedEventArgs_get_NewValue = 7 // get_NewValue(out DOUBLE)
+
+    // ---- Microsoft.UI.Xaml.Controls.AutoSuggestBox ----
+    const val CLS_AutoSuggestBox = "Microsoft.UI.Xaml.Controls.AutoSuggestBox"
+    const val IID_IAutoSuggestBox = "3eea809e-b2db-521d-97db-e0648fb5d798"
+    const val IAutoSuggestBox_get_IsSuggestionListOpen = 8 // get_IsSuggestionListOpen(out boolean)
+    const val IAutoSuggestBox_put_IsSuggestionListOpen = 9 // put_IsSuggestionListOpen(boolean)
+    const val IAutoSuggestBox_get_Text = 12
+    const val IAutoSuggestBox_put_Text = 13
+    const val IAutoSuggestBox_get_PlaceholderText = 16
+    const val IAutoSuggestBox_put_PlaceholderText = 17
+    const val IAutoSuggestBox_put_Header = 19          // put_Header(IInspectable)
+    const val IAutoSuggestBox_add_SuggestionChosen = 30 // add_SuggestionChosen(TypedEventHandler, out token)
+    const val IAutoSuggestBox_remove_SuggestionChosen = 31 // remove_SuggestionChosen(token)
+    const val IAutoSuggestBox_add_TextChanged = 32     // add_TextChanged(TypedEventHandler, out token)
+    const val IAutoSuggestBox_remove_TextChanged = 33  // remove_TextChanged(token)
+    const val IAutoSuggestBox_add_QuerySubmitted = 34  // add_QuerySubmitted(TypedEventHandler, out token)
+    const val IAutoSuggestBox_remove_QuerySubmitted = 35 // remove_QuerySubmitted(token)
+    const val IID_IAutoSuggestBoxTextChangedEventArgs = "d7191d84-e886-547f-a3e2-12f0e05b20fa"
+    const val IAutoSuggestBoxTextChangedEventArgs_get_Reason = 6 // get_Reason(out AutoSuggestionBoxTextChangeReason)
+    const val IID_IAutoSuggestBoxQuerySubmittedEventArgs = "26da5de4-57a6-57bf-acc9-aac599c0b22b"
+    const val IAutoSuggestBoxQuerySubmittedEventArgs_get_QueryText = 6 // get_QueryText(out HSTRING)
+    const val IAutoSuggestBoxQuerySubmittedEventArgs_get_ChosenSuggestion = 7 // get_ChosenSuggestion(out IInspectable)
+    const val IID_IAutoSuggestBoxSuggestionChosenEventArgs = "7547c7e9-7429-5045-ad98-338a96b270b1"
+    const val IAutoSuggestBoxSuggestionChosenEventArgs_get_SelectedItem = 6 // get_SelectedItem(out IInspectable)
+
+    // ---- Microsoft.UI.Xaml.Controls.RichEditBox ----
+    const val CLS_RichEditBox = "Microsoft.UI.Xaml.Controls.RichEditBox"
+    const val IID_IRichEditBoxFactory = "7c993c60-f5b6-589f-bba8-b68b9713e4ae"
+    const val IID_IRichEditBox = "699163db-723d-5514-a8c9-2c64d99e1ea6"
+    const val IRichEditBox_get_IsReadOnly = 6          // get_IsReadOnly(out boolean)
+    const val IRichEditBox_put_IsReadOnly = 7          // put_IsReadOnly(boolean)
+    const val IRichEditBox_get_AcceptsReturn = 8       // get_AcceptsReturn(out boolean)
+    const val IRichEditBox_put_AcceptsReturn = 9       // put_AcceptsReturn(boolean)
+    const val IRichEditBox_get_TextWrapping = 12       // get_TextWrapping(out TextWrapping)
+    const val IRichEditBox_put_TextWrapping = 13       // put_TextWrapping(TextWrapping)
+    const val IRichEditBox_get_Document = 18           // get_Document(out RichEditTextDocument)
+    const val IRichEditBox_put_Header = 22             // put_Header(IInspectable)
+    const val IRichEditBox_get_PlaceholderText = 25
+    const val IRichEditBox_put_PlaceholderText = 26
+    const val IRichEditBox_add_TextChanged = 49        // add_TextChanged(RoutedEventHandler, out token)
+    const val IRichEditBox_remove_TextChanged = 50     // remove_TextChanged(token)
+
+    // ---- Microsoft.UI.Text.ITextDocument (from Microsoft.UI.Text.winmd; the type of RichEditBox.Document) ----
+    const val IID_ITextDocument = "1149d57d-86a6-59dd-88d9-196f27bc5c85"
+    const val ITextDocument_get_Selection = 10         // get_Selection(out ITextSelection)
+    const val ITextDocument_CanRedo = 15               // CanRedo(out boolean)
+    const val ITextDocument_CanUndo = 16               // CanUndo(out boolean)
+    const val ITextDocument_GetText = 25               // GetText(TextGetOptions, out HSTRING)
+    const val ITextDocument_Redo = 27                  // Redo()
+    const val ITextDocument_SetText = 31               // SetText(TextSetOptions, HSTRING)
+    const val ITextDocument_Undo = 32                  // Undo()
+    const val TextOptions_None = 0                     // TextGetOptions.None / TextSetOptions.None
+    const val TextOptions_FormatRtf = 8192             // TextGetOptions.FormatRtf / TextSetOptions.FormatRtf
+
+    // ---- Microsoft.UI.Text.ITextRange / ITextCharacterFormat (formatting operations) ----
+    // ITextSelection doesn't inherit ITextRange's members, so QI Selection to ITextRange before use
+    const val IID_ITextRange = "06d4abcf-0c06-5d12-a743-85537efd09ea"
+    const val ITextRange_get_CharacterFormat = 8       // get_CharacterFormat(out ITextCharacterFormat)
+    const val IID_ITextCharacterFormat = "f5710050-98e5-5788-b1e3-32191eebf94d"
+    const val ITextCharacterFormat_get_Bold = 10       // get_Bold(out FormatEffect)
+    const val ITextCharacterFormat_put_Bold = 11       // put_Bold(FormatEffect)
+    const val ITextCharacterFormat_get_Italic = 20     // get_Italic(out FormatEffect)
+    const val ITextCharacterFormat_put_Italic = 21     // put_Italic(FormatEffect)
+    const val FormatEffect_Toggle = 2                  // Microsoft.UI.Text.FormatEffect.Toggle
+
+    // ---- Microsoft.UI.Xaml.Controls.RichTextBlock ----
+    const val CLS_RichTextBlock = "Microsoft.UI.Xaml.Controls.RichTextBlock"
+    const val IID_IRichTextBlock = "d766e4db-a684-50b7-a202-c8e91fa26ff3"
+    const val IRichTextBlock_get_TextWrapping = 18     // get_TextWrapping(out TextWrapping)
+    const val IRichTextBlock_put_TextWrapping = 19     // put_TextWrapping(TextWrapping)
+    const val IRichTextBlock_get_TextTrimming = 20     // get_TextTrimming(out TextTrimming)
+    const val IRichTextBlock_put_TextTrimming = 21     // put_TextTrimming(TextTrimming)
+    const val IRichTextBlock_get_Blocks = 24           // get_Blocks(out BlockCollection)
+    const val IRichTextBlock_get_IsTextSelectionEnabled = 35 // get_IsTextSelectionEnabled(out boolean)
+    const val IRichTextBlock_put_IsTextSelectionEnabled = 36 // put_IsTextSelectionEnabled(boolean)
+    const val IRichTextBlock_get_SelectedText = 38     // get_SelectedText(out HSTRING)
+    const val IRichTextBlock_SelectAll = 72            // SelectAll()
+
+    // ---- Microsoft.UI.Xaml.Documents (Paragraph / Run / Bold / Italic / Underline) ----
+    const val CLS_Paragraph = "Microsoft.UI.Xaml.Documents.Paragraph"
+    const val IID_IParagraph = "9ed64c77-329d-502f-a257-f58398edab51"
+    const val IParagraph_get_Inlines = 6               // get_Inlines(out InlineCollection)
+    const val CLS_Run = "Microsoft.UI.Xaml.Documents.Run"
+    const val IID_IRun = "1f905239-37cb-590b-9132-3ffb7741906e"
+    const val IRun_put_Text = 7                        // put_Text(HSTRING)
+    const val CLS_Bold = "Microsoft.UI.Xaml.Documents.Bold"
+    const val IID_IBold = "241a5f5a-c164-597f-b0db-fac7431297f2"
+    const val CLS_Italic = "Microsoft.UI.Xaml.Documents.Italic"
+    const val IID_IItalic = "ca3cbebd-7a8d-5d7a-8fdf-538e8a680f6c"
+    const val CLS_Underline = "Microsoft.UI.Xaml.Documents.Underline"
+    const val IID_IUnderline = "68aaec6e-ea71-5ed2-b83e-91684b25efb9"
+    const val IID_ISpan = "91b93d4d-4e28-57b9-bffb-3566c2a3c2a1"
+    const val ISpan_get_Inlines = 6                    // get_Inlines(out InlineCollection)
+    const val IID_IBlock = "8149d507-672f-5fd5-a10a-351389ba9659"   // used to shape IVector<Block>
+    const val IID_IInline = "813d427a-8980-5a79-a8fa-f27919cfb24f"  // used to shape IVector<Inline>
 
     // ---- Microsoft.UI.Xaml.Controls.Control ----
     const val IID_IControl = "857d6e8a-d45a-5c69-a99c-bf6a5c54fb38"
@@ -355,6 +523,7 @@ internal object Abi {
     const val ISelector_add_SelectionChanged = 16      // add_SelectionChanged(SelectionChangedEventHandler, out token)
     const val ISelector_remove_SelectionChanged = 17   // remove_SelectionChanged(token)
     const val IID_IItemsControl = "bf1ccb54-83e2-5b98-acbc-736f876c3d35"
+    const val IItemsControl_put_ItemsSource = 7        // put_ItemsSource(IInspectable)
     const val IItemsControl_get_Items = 8              // get_Items(out ItemCollection)
     const val IItemsControl_put_ItemContainerStyle = 19 // put_ItemContainerStyle(Style)
 
@@ -745,6 +914,46 @@ internal object Abi {
         )
     }
 
+    /** Runtime-computed actual IID of TypedEventHandler<NumberBox, NumberBoxValueChangedEventArgs>. */
+    val IID_NumberBoxValueChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.NumberBox;{$IID_INumberBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.NumberBoxValueChangedEventArgs;" +
+                "{$IID_INumberBoxValueChangedEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxTextChangedEventArgs>. */
+    val IID_AutoSuggestBoxTextChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxTextChangedEventArgs;" +
+                "{$IID_IAutoSuggestBoxTextChangedEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs>. */
+    val IID_AutoSuggestBoxQuerySubmittedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxQuerySubmittedEventArgs;" +
+                "{$IID_IAutoSuggestBoxQuerySubmittedEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<AutoSuggestBox, AutoSuggestBoxSuggestionChosenEventArgs>. */
+    val IID_AutoSuggestBoxSuggestionChosenHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBox;{$IID_IAutoSuggestBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.AutoSuggestBoxSuggestionChosenEventArgs;" +
+                "{$IID_IAutoSuggestBoxSuggestionChosenEventArgs}))",
+        )
+    }
+
     /** Base IID of Windows.Foundation.EventHandler`1. */
     private const val IID_EventHandler_OPEN = "9de1c535-6ae1-11e0-84e1-18a905bcc53f"
 
@@ -838,6 +1047,35 @@ internal object Abi {
     /** The actual IID of IVector<Object> (ItemsControl.Items). Object's signature is cinterface(IInspectable). */
     val IID_IVector_Object: String by lazy {
         Pinterface.iid("pinterface({$IID_IVector_OPEN};cinterface(IInspectable))")
+    }
+
+    /** The actual IID of IVector<Microsoft.UI.Xaml.Documents.Block> (RichTextBlock.Blocks). */
+    val IID_IVector_Block: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Documents.Block;{$IID_IBlock}))",
+        )
+    }
+
+    /** The actual IID of IVector<Microsoft.UI.Xaml.Documents.Inline> (Paragraph.Inlines / Span.Inlines). */
+    val IID_IVector_Inline: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Documents.Inline;{$IID_IInline}))",
+        )
+    }
+
+    // ---- Windows.Foundation.Collections.IIterable<T> / IIterator<T> (OS side, FoundationContract.winmd) ----
+    // IIterable: First=6. IIterator: get_Current=6 get_HasCurrent=7 MoveNext=8 GetMany=9
+    private const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // base IID of IIterable`1
+    private const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // base IID of IIterator`1
+
+    /** The actual IID of IIterable<Object> (passed to ItemsControl.ItemsSource). */
+    val IID_IIterable_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IIterable_OPEN};cinterface(IInspectable))")
+    }
+
+    /** The actual IID of IIterator<Object>. */
+    val IID_IIterator_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IIterator_OPEN};cinterface(IInspectable))")
     }
 
     // ---- Microsoft.UI.Dispatching.DispatcherQueue (Microsoft.UI.winmd) ----
