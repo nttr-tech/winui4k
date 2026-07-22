@@ -17,13 +17,13 @@ import kotlin.time.Duration.Companion.seconds
  * An E2E test that actually launches WinUI + WebView2 to verify WWebView's script
  * interop (ExecuteScript / PostWebMessage / postMessage from the page).
  *
- * WinUI's message loop exits once the last window closes and can't be restarted, so the
- * window and page are set up only once for the spec (beforeSpec) and shared across all tests.
+ * The window comes from [UiTestHarness]'s shared window; the page is set up only once for the
+ * spec (beforeSpec) and shared across all tests.
  */
 class WWebViewTest : FunSpec() {
     companion object {
         /** Upper bound on the wait for page load / script response (the first one includes browser-process startup). */
-        private const val TIMEOUT_SECONDS = 60L
+        private const val TIMEOUT_SECONDS = UiTestHarness.TIMEOUT_SECONDS
         private val TIMEOUT = TIMEOUT_SECONDS.seconds
 
         /**
@@ -46,7 +46,6 @@ class WWebViewTest : FunSpec() {
         """.trimIndent()
     }
 
-    private lateinit var frame: WFrame
     private lateinit var webView: WWebView
 
     /** An arrival-order queue of messages (JSON representation) received via WebMessageReceived. */
@@ -57,43 +56,35 @@ class WWebViewTest : FunSpec() {
 
     init {
         beforeSpec {
-            try {
-                val navigationCompleted = CountDownLatch(1)
-                var navigationSucceeded = false
-                onUiThread {
-                    frame = WFrame("WWebViewTest")
-                    webView = WWebView()
-                    webView.width = 640.0
-                    webView.height = 400.0
-                    webView.addWebMessageReceivedListener { messageAsJson ->
-                        receivedMessages.add(messageAsJson)
-                    }
-                    webView.addNavigationCompletedListener { isSuccess, _ ->
-                        navigationSucceeded = isSuccess
-                        navigationCompleted.countDown()
-                    }
-                    frame.add(webView)
-                    webView.navigateToString(TEST_HTML)
-                    // Window.Activate (frame.isVisible = true) brings the window to the foreground
-                    // and steals focus, so show it inactively via AppWindow.Show(false) instead
-                    // (WebView2 initialization needs a visible window, so it can't stay hidden)
-                    frame.appWindow.show(activate = false)
+            val navigationCompleted = CountDownLatch(1)
+            var navigationSucceeded = false
+            onUiThread {
+                webView = WWebView()
+                webView.width = 640.0
+                webView.height = 400.0
+                webView.addWebMessageReceivedListener { messageAsJson ->
+                    receivedMessages.add(messageAsJson)
                 }
-                withClue("The test page didn't finish loading within $TIMEOUT_SECONDS seconds") {
-                    navigationCompleted.await(TIMEOUT_SECONDS, TimeUnit.SECONDS).shouldBeTrue()
+                webView.addNavigationCompletedListener { isSuccess, _ ->
+                    navigationSucceeded = isSuccess
+                    navigationCompleted.countDown()
                 }
-                withClue("The test page failed to load") {
-                    navigationSucceeded.shouldBeTrue()
-                }
-            } catch (t: Throwable) {
-                // afterSpec isn't called if beforeSpec fails, so clean up here
-                closeWindowAndWait()
-                throw t
+            }
+            UiTestHarness.attach(webView)
+            onUiThread { webView.navigateToString(TEST_HTML) }
+            withClue("The test page didn't finish loading within $TIMEOUT_SECONDS seconds") {
+                navigationCompleted.await(TIMEOUT_SECONDS, TimeUnit.SECONDS).shouldBeTrue()
+            }
+            withClue("The test page failed to load") {
+                navigationSucceeded.shouldBeTrue()
             }
         }
 
         afterSpec {
-            closeWindowAndWait()
+            if (::webView.isInitialized) {
+                onUiThread { webView.close() } // terminate the browser process
+                UiTestHarness.detach(webView)
+            }
         }
 
         test("executeScript evaluates the page's DOM and returns the result as JSON") {
@@ -193,37 +184,8 @@ class WWebViewTest : FunSpec() {
         }
     }
 
-    /** Closes the window and waits for WinUI's message loop to finish. */
-    private fun closeWindowAndWait() {
-        if (::frame.isInitialized) {
-            onUiThread {
-                webView.close() // terminate the browser process first
-                frame.isVisible = false
-            }
-        }
-        // Gradle's test worker calls System.exit right after the test finishes, so wait for
-        // WinUI's message loop and cleanup (RoUninitialize, etc.) to finish before exiting
-        // (without waiting, a COM upcall during shutdown can crash the JVM)
-        Thread.getAllStackTraces().keys.firstOrNull { it.name == "WinUI4K-UI" }
-            ?.join(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
-    }
-
     /** Runs [block] on the UI thread and waits for it to finish. Rethrows any exception to the caller. */
-    private fun onUiThread(block: () -> Unit) {
-        val done = CountDownLatch(1)
-        var error: Throwable? = null
-        WinUiUtilities.invokeLater {
-            try {
-                block()
-            } catch (t: Throwable) {
-                error = t
-            } finally {
-                done.countDown()
-            }
-        }
-        check(done.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) { "Processing on the UI thread timed out" }
-        error?.let { throw it }
-    }
+    private fun onUiThread(block: () -> Unit) = UiTestHarness.onUiThread(block)
 
     /** Waits until the [expected] message arrives. Fails with the list of received messages so far if it never does. */
     private suspend fun awaitMessage(expected: String) {
