@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (for building; the foojay resolver auto-downloads JDK 8/9/22 for testing)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install the Windows App SDK runtime
+        run: |
+          ./gradlew :winui4k:downloadInstallers
+          $process = Start-Process -FilePath "winui4k/installer/WindowsAppRuntimeInstall-x64.exe" -ArgumentList '--quiet', '--force' -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            Write-Error "Failed to install the Windows App SDK runtime (exit code: $($process.ExitCode))"
+            exit $process.ExitCode
+          }
+
+      - name: Build (JDK 25) and test (JDK 8 / 9 / 22 / 25)
+        run: ./gradlew build testOnAllJavaVersions
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: winui4k/build/reports/tests/

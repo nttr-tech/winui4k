@@ -127,8 +127,9 @@ dependencies {
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.assertions.core)
     testRuntimeOnly(libs.junit.platform.launcher)
-    // Tests run on JDK 25, so use the Panama backend
+    // JDK 22+ selects the Panama backend; JDK 8/9, which can't load Panama, select JNA
     testRuntimeOnly(project(":winui4k-ffi-panama"))
+    testRuntimeOnly(project(":winui4k-ffi-jna"))
 }
 
 // Also include the Java 22-targeted winui4k-ffi-panama on the test runtime classpath
@@ -139,6 +140,35 @@ tasks.test {
     useJUnitPlatform()
     // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+// In addition to tasks.test (the toolchain's JDK 25), run the same tests on the minimum
+// supported JDK (8), the JDK right after the module system was introduced (9), and the JDK
+// where Panama was finalized (22). If a given JDK version isn't installed locally, the
+// foojay resolver downloads it automatically.
+val javaToolchains = extensions.getByType<JavaToolchainService>()
+val testOnJavaTasks = listOf(8, 9, 22).map { version ->
+    tasks.register<Test>("testOnJava$version") {
+        description = "Runs the tests on JDK $version"
+        group = "verification"
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(version)
+        }
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        useJUnitPlatform()
+        if (version >= 22) {
+            // --enable-native-access doesn't exist as a flag on JDK 8/9, so only pass it on Panama-capable JDKs
+            jvmArgs("--enable-native-access=ALL-UNNAMED")
+        }
+    }
+}
+
+tasks.register("testOnAllJavaVersions") {
+    description = "Runs the tests on every supported JDK version (8 / 9 / 22 / 25)"
+    group = "verification"
+    dependsOn(tasks.test)
+    dependsOn(testOnJavaTasks)
 }
 
 // ---------------------------------------------------------------------------
