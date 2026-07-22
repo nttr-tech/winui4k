@@ -5,46 +5,48 @@
 ![Kotlin](https://img.shields.io/badge/kotlin-2.4.0-7F52FF.svg?logo=kotlin)
 ![Java](https://img.shields.io/badge/java-8%2B-orange.svg)
 
-**WinUI** は、Microsoft が Windows 11 世代の標準として推進する UI フレームワークです。
-**WinUI4K** を使うと、ブリッジ DLL も C# も Visual Studio も使わずに、Kotlin や Java だけで WinUI を使った Windows ネイティブアプリを作れます。
-WinUI4K は Java の FFI (Panama / JNA / JNR) から WinRT ABI (バイナリレベルの呼び出し規約) を直接呼び出すため、言語とランタイムの間の橋渡し用ネイティブ DLL を同梱する必要がありません。
+English | [日本語](README.ja.md)
 
-[NTTレゾナントテクノロジー](https://nttr-tech.co.jp/)が提供する、インターネット経由でスマートフォン実機を借りられるサービス「[Remote TestKit](https://appkitbox.com/)」の PC クライアント向けに活かすことを一つの目的として試作したライブラリです。
-Apache License 2.0 で公開しており、商用か非商用かを問わず自由に利用できます。
+**WinUI** is the UI framework that Microsoft promotes as the standard for the Windows 11 generation.
+With **WinUI4K**, you can build native Windows apps using WinUI in pure Kotlin or Java — no bridge DLL, no C#, no Visual Studio.
+WinUI4K calls the WinRT ABI (the binary-level calling convention) directly from Java FFI (Panama / JNA / JNR), so there is no need to bundle a native DLL to bridge the language and the runtime.
 
-下のスクリーンショットは Microsoft 製の WinUI 3 Gallery に見えますが、すべて Kotlin で書かれた同梱の [Gallery アプリ](winui4k-sample-gallery) です。
+This library was prototyped by [NTT Resonant Technology](https://nttr-tech.co.jp/), partly with the goal of applying it to the PC client of "[Remote TestKit](https://appkitbox.com/)", a service that lets you rent real smartphones over the Internet.
+It is released under the Apache License 2.0 and can be used freely for both commercial and non-commercial purposes.
+
+The screenshot below may look like Microsoft's WinUI 3 Gallery, but it is the bundled [Gallery app](winui4k-sample-gallery) written entirely in Kotlin.
 
 ![winui4k Gallery](doc/images/home.png)
 
-## 目次
+## Table of Contents
 
-- [背景](#背景)
-- [使用例](#使用例)
-- [特徴](#特徴)
-- [従来のWinUI開発との比較](#従来のwinui開発との比較)
-- [向いている用途と制約](#向いている用途と制約)
-- [クイックスタート](#クイックスタート)
-- [サンプルアプリ](#サンプルアプリ)
-- [モジュール構成](#モジュール構成)
-- [アーキテクチャ](#アーキテクチャ)
-- [Windows App SDK ランタイムの自動セットアップ](#windows-app-sdk-ランタイムの自動セットアップ)
-- [システムプロパティ](#システムプロパティ)
-- [コントリビューション](#コントリビューション)
-- [ライセンス](#ライセンス)
-- [参考情報](#参考情報)
+- [Background](#background)
+- [Example](#example)
+- [Features](#features)
+- [Comparison with Conventional WinUI Development](#comparison-with-conventional-winui-development)
+- [Suitable Use Cases and Limitations](#suitable-use-cases-and-limitations)
+- [Quick Start](#quick-start)
+- [Sample Apps](#sample-apps)
+- [Modules](#modules)
+- [Architecture](#architecture)
+- [Automatic Setup of the Windows App SDK Runtime](#automatic-setup-of-the-windows-app-sdk-runtime)
+- [System Properties](#system-properties)
+- [Contributing](#contributing)
+- [License](#license)
+- [References](#references)
 
-## 背景
+## Background
 
-Microsoft は WinUI を今後の Windows アプリ UI の中心に据えており、Windows 標準アプリの一部もすでに WinUI へ移行しています。
-一方で WinUI が公式に想定する開発言語は C++ と C# であり、業務システムで広く使われている Java や Kotlin から実用的に扱う手段は、これまでほとんどありませんでした。
+Microsoft is positioning WinUI at the center of future Windows app UIs, and some of the standard Windows apps have already migrated to WinUI.
+However, the development languages officially supported by WinUI are C++ and C#, and until now there has been almost no practical way to use it from Java or Kotlin, which are widely used in business systems.
 
-このため、Java や Kotlin の資産を持つ現場が Windows のネイティブ UI を採用するには、C# への全面的な書き換えか、Web 技術でデスクトップアプリを作る Electron のような別方式への移行が必要でした。
-Compose for Desktop という選択肢もありますが、独自の描画エンジンを使う非ネイティブ方式のため、OS 標準の見た目とアクセシビリティをそのまま得ることはできません。
-winui4k は、JVM の FFI で WinUI を直接呼び出すことで、この空白を埋めるために作られました。
+As a result, teams with Java or Kotlin assets had to either rewrite everything in C# or switch to a different approach such as Electron, which builds desktop apps with web technologies, in order to adopt a native Windows UI.
+Compose for Desktop is another option, but since it is a non-native approach with its own rendering engine, it cannot provide the OS-standard look and accessibility as-is.
+winui4k was created to fill this gap by calling WinUI directly through JVM FFI.
 
-## 使用例
+## Example
 
-Java の Swing のような使い心地で WinUI アプリを実装できます。
+You can build WinUI apps with a feel similar to Java Swing.
 
 ```kotlin
 WinUiUtilities.invokeLater {
@@ -62,50 +64,50 @@ WinUiUtilities.invokeLater {
 }
 ```
 
-この短いコードで、ネイティブの Windows ウィンドウが開き、ボタンを押すとその文字が書き換わります。
+This short snippet opens a native Windows window, and pressing the button changes its label.
 
-## 特徴
+## Features
 
-- **60 超のコントロール**：Button / TextBox から NavigationView、TeachingTip、AppNotification、AppWindow まで `W*` クラスとしてラップ済みです。Gallery で全部試せます。
-- **Java 8 から動作**：FFI バックエンドは差し替え式です。Panama (Java 22 以降、既定)、JNA (Java 8 以降)、JNR (Java 8 以降) の 3 実装を同梱します。
-- **コルーチン対応**：`Dispatchers.WinUi` (winui4k-extension-coroutines) で UI スレッドへディスパッチでき、`delay` はネイティブのタイマー (DispatcherQueueTimer) で動きます。
-- **WebView2 対応**：`WWebView` で Microsoft Edge ベースのブラウザコントロールをアプリに埋め込めます。
-- **アクセシビリティ**：OS 標準のコントロールをそのまま使うため、スクリーンリーダーなどの支援技術がそのまま働きます。
-- **実機での E2E テスト**：テストは実際に WinUI ウィンドウを起動して検証し、CI では JDK 8 / 9 / 22 / 25 で実行しています。
-- **ブリッジ DLL 不要**：オブジェクト生成 (`RoGetActivationFactory`) から、WinUI の文字列型 HSTRING、関数テーブル (vtable) 経由のメソッド呼び出し、Kotlin オブジェクトを COM オブジェクトとして見せる upcall、COM 集約まで、JVM の FFI だけで実装しています ([アーキテクチャ](#アーキテクチャ))。
-- **推測値ゼロの ABI 定数**：COM 呼び出しに必要な識別子 (IID) と vtable 上の位置は、すべて Windows の型情報ファイル (winmd) から機械抽出した値で、手書きの推測値を含みません。
+- **60+ controls**: From Button / TextBox to NavigationView, TeachingTip, AppNotification, and AppWindow — all wrapped as `W*` classes. You can try them all in the Gallery.
+- **Runs on Java 8**: FFI backends are pluggable. Three implementations are bundled: Panama (Java 22+, default), JNA (Java 8+), and JNR (Java 8+).
+- **Coroutines support**: `Dispatchers.WinUi` (winui4k-extension-coroutines) dispatches to the UI thread, and `delay` runs on a native timer (DispatcherQueueTimer).
+- **WebView2 support**: `WWebView` lets you embed the Microsoft Edge-based browser control in your app.
+- **Accessibility**: Because OS-standard controls are used as-is, assistive technologies such as screen readers work out of the box.
+- **E2E tests on real windows**: Tests launch actual WinUI windows for verification, and CI runs them on JDK 8 / 9 / 22 / 25.
+- **No bridge DLL**: Everything — object creation (`RoGetActivationFactory`), WinUI's string type HSTRING, method calls through function tables (vtables), upcalls that expose Kotlin objects as COM objects, and COM aggregation — is implemented purely with JVM FFI ([Architecture](#architecture)).
+- **Zero guessed ABI constants**: The identifiers (IIDs) and vtable positions required for COM calls are all machine-extracted from Windows type-information files (winmd) and contain no hand-written guesses.
 
-## 従来のWinUI開発との比較
+## Comparison with Conventional WinUI Development
 
-| 観点 | 従来のWinUI開発 | winui4k |
+| Aspect | Conventional WinUI development | winui4k |
 |---|---|---|
-| 開発言語 | C# / C++ と画面記述言語 XAML | Kotlin / Java (画面もコードで記述) |
-| 開発環境 | Visual Studio を使うのが一般的 | 任意のエディタ + JDK |
-| 追加ランタイム/SDK | .NET SDK、Windows App SDK ランタイム | Windows App SDK ランタイムのみ (未導入なら起動時に自動インストール) |
-| 独自ブリッジDLL | 場合により必要 | 不要 |
-| 既存のJVM資産 | C#への書き換えが必要 | そのまま活用できる |
+| Language | C# / C++ plus XAML markup | Kotlin / Java (UI is also written in code) |
+| IDE | Typically Visual Studio | Any editor + JDK |
+| Additional runtime/SDK | .NET SDK, Windows App SDK runtime | Windows App SDK runtime only (auto-installed at startup if missing) |
+| Custom bridge DLL | Sometimes required | Not required |
+| Existing JVM assets | Must be rewritten in C# | Can be used as-is |
 
-上表は一般的な開発手法との比較であり、構成によっては当てはまらない場合があります。
+The table above compares against typical development approaches; it may not apply to every configuration.
 
-## 向いている用途と制約
+## Suitable Use Cases and Limitations
 
-次のような場合に向いています。
+winui4k is a good fit when you want to:
 
-- Swing や JavaFX で作った Windows 業務アプリの画面を、OS ネイティブの Fluent Design (Windows 11 標準のデザイン言語) に刷新したい
-- Java 8 で動かす必要のある環境で、Windows のネイティブ UI を使いたい
-- Electron のようなブラウザエンジン同梱方式による配布サイズとメモリ使用量の増加を避けたい
-- 独自描画方式ではなく、OS 標準コントロールの見た目とアクセシビリティが必要
+- Modernize the UI of a Windows business app built with Swing or JavaFX to the OS-native Fluent Design (the standard design language of Windows 11)
+- Use a native Windows UI in an environment that must run on Java 8
+- Avoid the larger distribution size and memory usage of approaches like Electron that bundle a browser engine
+- Get the look and accessibility of OS-standard controls rather than custom-rendered ones
 
-一方、次の制約があります。
+On the other hand, there are the following limitations:
 
-- **Windows 専用**です。WinUI 自体が Windows 専用のため、macOS や Linux を含むクロスプラットフォーム対応が必要な場合は Compose Multiplatform などを検討してください。
-- **COM 参照の解放は GC 連動**で、タイミングは非決定的です。UI 要素を高頻度に生成と破棄を繰り返しつつ、ネイティブ側の解放タイミングを厳密に制御したい用途では、この前提を踏まえた設計が必要です ([アーキテクチャ](#アーキテクチャ))。
-- **言語境界をまたぐ循環参照は自動回収されません**。不要になったイベントリスナーは remove 系メソッドで明示的に解除する運用が前提です。
+- **Windows only.** WinUI itself is Windows-only; if you need cross-platform support including macOS or Linux, consider alternatives such as Compose Multiplatform.
+- **COM references are released in sync with GC**, so the timing is non-deterministic. If your use case creates and destroys UI elements at high frequency while requiring strict control over native-side release timing, your design must take this into account ([Architecture](#architecture)).
+- **Cyclic references across the language boundary are not collected automatically.** Event listeners that are no longer needed must be removed explicitly with the corresponding remove methods.
 
-## クイックスタート
+## Quick Start
 
-必要なのは **JDK 25** (x64) だけです (Visual Studio、C++ ビルドツール、.NET SDK は不要)。
-[Eclipse Temurin](https://adoptium.net/) などから入手してパスに設定してください。
+All you need is **JDK 25** (x64) — no Visual Studio, C++ build tools, or .NET SDK.
+Get it from [Eclipse Temurin](https://adoptium.net/) or similar and add it to your PATH.
 
 ```powershell
 git clone https://github.com/nttr-tech/winui4k.git
@@ -113,139 +115,139 @@ cd winui4k
 .\gradlew run
 ```
 
-これで Gallery アプリが起動します。
-WinUI の実行基盤 (Windows App SDK ランタイム) が未導入でも、起動時に自動でセットアップされます ([詳細](#windows-app-sdk-ランタイムの自動セットアップ))。
+This launches the Gallery app.
+Even if the WinUI execution foundation (the Windows App SDK runtime) is not installed, it is set up automatically at startup ([details](#automatic-setup-of-the-windows-app-sdk-runtime)).
 
-JDK 25 が必要なのはリポジトリのビルドで、ライブラリ自体の動作要件は Java 8 以降です。
-Java 8 + JNA での起動は `.\gradlew :winui4k-sample-gallery:runJna`、Java 8 + JNR での起動は `.\gradlew :winui4k-sample-gallery:runJnr` で確認できます。
+JDK 25 is required only for building the repository; the library itself runs on Java 8 or later.
+You can verify running on Java 8 + JNA with `.\gradlew :winui4k-sample-gallery:runJna`, and on Java 8 + JNR with `.\gradlew :winui4k-sample-gallery:runJnr`.
 
-動作環境は Windows 11 x64 です (Windows 10 1809 以降でも動く想定)。
+The supported environment is Windows 11 x64 (expected to work on Windows 10 1809 or later as well).
 
-## サンプルアプリ
+## Sample Apps
 
-Gallery に加えて、実用に近いサンプルアプリを複数同梱しています。
-いずれも WinUI4K で実際のアプリが組めることを示すために用意しています。
+In addition to the Gallery, several samples closer to real-world apps are bundled.
+They all exist to demonstrate that real applications can be built with WinUI4K.
 
-| サンプル | 内容 | 起動コマンド |
+| Sample | Description | Run command |
 |---|---|---|
-| [Gallery](winui4k-sample-gallery) | 60超のコントロールをカテゴリ別に一覧できるデモアプリ (WinUI 3 Gallery 風) | `.\gradlew run` |
-| [Filer](winui4k-sample-filer) | Fluent Design のファイラー。タブ、詳細表示とアイコン表示の切り替え、ブレッドクラム、サイドバー、フィルターを備える | `.\gradlew :winui4k-sample-filer:run` |
-| [Notes](winui4k-sample-notes) | シンプルなメモ帳アプリ | `.\gradlew :winui4k-sample-notes:run` |
-| [Form with MigLayout](winui4k-sample-form-with-miglayout) | レイアウトライブラリ MigLayout を使った入力フォーム | `.\gradlew :winui4k-sample-form-with-miglayout:run` |
+| [Gallery](winui4k-sample-gallery) | Demo app showing 60+ controls by category (in the style of WinUI 3 Gallery) | `.\gradlew run` |
+| [Filer](winui4k-sample-filer) | Fluent Design file manager with tabs, details/icon view switching, breadcrumbs, sidebar, and filtering | `.\gradlew :winui4k-sample-filer:run` |
+| [Notes](winui4k-sample-notes) | Simple notepad app | `.\gradlew :winui4k-sample-notes:run` |
+| [Form with MigLayout](winui4k-sample-form-with-miglayout) | Input form using the MigLayout layout library | `.\gradlew :winui4k-sample-form-with-miglayout:run` |
 
-## モジュール構成
+## Modules
 
-| モジュール | 内容 |
+| Module | Description |
 |---|---|
-| `winui4k` | 本体。公開 API (`W*` クラス) と COM / WinRT / WinUI の内部レイヤ |
-| `winui4k-ffi-panama` | Panama (`java.lang.foreign`) FFI バックエンド。Java 22 以降 |
-| `winui4k-ffi-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
-| `winui4k-ffi-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 (x86 / x64 / arm64) |
-| `winui4k-extension-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
-| `winui4k-extension-miglayout` | レイアウトライブラリ MigLayout で `W*` コントロールを配置するためのアダプタ |
-| `winui4k-all` | 上記モジュール (サンプルを除く) を一括参照する集約モジュール |
-| `winui4k-sample-gallery` | 全コントロールのデモアプリ |
-| `winui4k-sample-filer` | Fluent Design のファイラーサンプル |
-| `winui4k-sample-notes` | メモ帳アプリのサンプル |
-| `winui4k-sample-form-with-miglayout` | MigLayout を使った入力フォームのサンプル |
+| `winui4k` | The core. Public API (`W*` classes) and the internal COM / WinRT / WinUI layers |
+| `winui4k-ffi-panama` | Panama (`java.lang.foreign`) FFI backend. Java 22+ |
+| `winui4k-ffi-jna` | JNA FFI backend. Java 8+ (x64 only) |
+| `winui4k-ffi-jnr` | JNR (jffi) FFI backend. Java 8+ (x86 / x64 / arm64) |
+| `winui4k-extension-coroutines` | `Dispatchers.WinUi` (a WinUI counterpart of kotlinx-coroutines-swing) |
+| `winui4k-extension-miglayout` | Adapter for laying out `W*` controls with the MigLayout layout library |
+| `winui4k-all` | Aggregate module that references all of the above (excluding samples) |
+| `winui4k-sample-gallery` | Demo app showcasing all controls |
+| `winui4k-sample-filer` | Fluent Design file manager sample |
+| `winui4k-sample-notes` | Notepad app sample |
+| `winui4k-sample-form-with-miglayout` | Input form sample using MigLayout |
 
-## アーキテクチャ
+## Architecture
 
-winui4k は、Java の FFI で **COM** (言語をまたいでオブジェクトを呼び出すための、Windows がバイナリレベルで定めた規約) を直接操作し、その発展形である **WinRT** (Windows のモダン API 基盤) 上の WinUI を呼び出します。
+winui4k directly manipulates **COM** (the binary-level convention defined by Windows for calling objects across languages) through Java FFI, and calls WinUI on top of **WinRT** (the modern API foundation of Windows), which is an evolution of COM.
 
-COM オブジェクトへの参照は、関数ポインタの配列 (**vtable**) へのポインタを先頭に持つ構造体へのポインタです。
-`ポインタ → vtable → vtable[スロット番号]` とたどるとメソッドの実体に到達する、C++ の仮想関数呼び出しと同じ仕組みです。
-WinUI の Button や Window はこの形でプロセス内に存在しており、winui4k は FFI でこの呼び出しを直接組み立てます。
+A reference to a COM object is a pointer to a struct whose first member is a pointer to an array of function pointers (the **vtable**).
+Following `pointer → vtable → vtable[slot]` reaches the method implementation — the same mechanism as C++ virtual function calls.
+WinUI's Button and Window exist in the process in this form, and winui4k assembles these calls directly with FFI.
 
-レイヤは一方向に依存します。
+The layers depend in one direction only.
 
-| レイヤ | パッケージ | 役割 |
+| Layer | Package | Role |
 |---|---|---|
-| 公開 API | `com.appkitbox.winui4k` | `W*` クラス (`WFrame` / `WButton` / ...) |
-| WinUI | `internal.winui` | ABI 定数の `*Interop`、Dispatcher |
-| WinRT | `internal.winrt` | HSTRING、`KComObject` (Kotlin 実装を COM オブジェクトとして見せる upcall スタブ)、Activation |
-| COM | `internal.com` | `ComPtr`、Guid、HRESULT (COM の呼び出し結果コード) の例外化 |
-| FFI SPI | `internal.ffi.api` | バックエンド非依存の FFI 語彙。実装は ServiceLoader で発見 |
+| Public API | `com.appkitbox.winui4k` | `W*` classes (`WFrame` / `WButton` / ...) |
+| WinUI | `internal.winui` | `*Interop` ABI constants, Dispatcher |
+| WinRT | `internal.winrt` | HSTRING, `KComObject` (upcall stubs that expose Kotlin implementations as COM objects), Activation |
+| COM | `internal.com` | `ComPtr`, Guid, converting HRESULT (COM call result codes) into exceptions |
+| FFI SPI | `internal.ffi.api` | Backend-independent FFI vocabulary. Implementations are discovered via ServiceLoader |
 
-FFI バックエンドは別モジュールとして分離されており、実行時に ServiceLoader で発見して選択します。
-優先度は Panama (Java 22 以降の既定) > JNA (Java 8 以降、x64 専用) > JNR (Java 8 以降、x86 / x64 / arm64) で、`-Dwinui4k.ffi` による明示指定もできます。
-コアモジュールは Java 8 ターゲットで、`java.lang.foreign` への参照は Panama モジュールだけが持ちます。
+FFI backends are separated into their own modules and are discovered and selected at runtime via ServiceLoader.
+The priority order is Panama (default on Java 22+) > JNA (Java 8+, x64 only) > JNR (Java 8+, x86 / x64 / arm64), and you can also specify one explicitly with `-Dwinui4k.ffi`.
+The core module targets Java 8, and only the Panama module references `java.lang.foreign`.
 
-### COM 参照と GC の橋渡し
+### Bridging COM References and GC
 
-COM は参照カウント (`AddRef` / `Release`) で寿命を管理しますが、JVM はトレース型 GC で到達可能性から寿命を決めます。
-winui4k はこのミスマッチを、Microsoft 公式の C# 向け相互運用ランタイム **CsWinRT** と同じ設計で橋渡しします。
-`W*` ラッパー 1 個に COM 参照カウント 1 つ分の所有権を対応付け、GC がラッパーの到達不能を検出したときに `Release` を呼びます (Java 9 以降は `java.lang.ref.Cleaner`、Java 8 は `PhantomReference` による同等の自作機構)。
+COM manages lifetimes with reference counting (`AddRef` / `Release`), while the JVM determines lifetimes by reachability with a tracing GC.
+winui4k bridges this mismatch with the same design as **CsWinRT**, Microsoft's official interop runtime for C#.
+Each `W*` wrapper owns exactly one COM reference count, and `Release` is called when the GC detects that the wrapper has become unreachable (via `java.lang.ref.Cleaner` on Java 9+, or an equivalent home-grown mechanism based on `PhantomReference` on Java 8).
 
-COM には **アパートメント** というスレッド規約があり、WinUI のオブジェクトは UI スレッドに束縛されていて、`Release` もそのスレッドから呼ぶ必要があります。
-このため GC 由来の解放は、UI スレッドのメッセージループへ集約して実行します。
+COM has a threading convention called **apartments**: WinUI objects are bound to the UI thread, and `Release` must also be called from that thread.
+Therefore, GC-triggered releases are funneled into the UI thread's message loop for execution.
 
-なお、言語境界をまたぐ循環参照 (ネイティブ → Kotlin 実装のイベントハンドラ → Kotlin オブジェクト → ネイティブへの COM 参照) は自動回収できません。
-CsWinRT は .NET GC と WinUI ランタイムの参照グラフ相互照会で解決していますが、JVM の GC には相当する拡張点がないためです。
+Note that cyclic references crossing the language boundary (native → Kotlin-implemented event handler → Kotlin object → COM reference back to native) cannot be collected automatically.
+CsWinRT solves this through mutual reference-graph queries between the .NET GC and the WinUI runtime, but the JVM's GC has no equivalent extension point.
 
-### 既知の制約
+### Known Limitations
 
-- UI スレッドは 1 本が前提で、`W*` API はこのスレッド上でのみ使う契約です。
-- ウィンドウや Shell 系のラッパー (`WFrame`、`WAppWindow` など) は自動解放の対象外で、参照を保持し続けます。
-- エラー処理は HRESULT の例外化のみです。
+- A single UI thread is assumed, and the `W*` API is contractually usable only on that thread.
+- Window and Shell wrappers (`WFrame`, `WAppWindow`, etc.) are excluded from automatic release and hold their references indefinitely.
+- Error handling is limited to converting HRESULTs into exceptions.
 
-IID (インターフェース識別子) と vtable のスロット番号は手書きの推測値ではなく、Windows の型情報ファイル (winmd) から `tools/dump_winmd.py` で機械抽出した値です。
+IIDs (interface identifiers) and vtable slot numbers are not hand-written guesses — they are machine-extracted from Windows type-information files (winmd) with `tools/dump_winmd.py`.
 
-## Windows App SDK ランタイムの自動セットアップ
+## Automatic Setup of the Windows App SDK Runtime
 
-WinUI の実行基盤である Windows App SDK ランタイムを、WinUI4K はアプリ起動時に自動でセットアップします。
+WinUI4K automatically sets up the Windows App SDK runtime — the execution foundation of WinUI — at app startup.
 
-### ブートストラップ DLL
+### Bootstrap DLL
 
-Windows App SDK の初期化に必要なブートストラップ DLL (`Microsoft.WindowsAppRuntime.Bootstrap.dll`) は winui4k の JAR に内蔵されています (x86 / x64 / arm64 の 3 アーキテクチャ対応)。
-`WinUiUtilities` の初回呼び出し時に、実行中の PC アーキテクチャに合った DLL が一時ディレクトリへ自動展開され、プロセス終了時に削除されます。
+The bootstrap DLL required to initialize the Windows App SDK (`Microsoft.WindowsAppRuntime.Bootstrap.dll`) is embedded in the winui4k JAR (covering the x86 / x64 / arm64 architectures).
+On the first call to `WinUiUtilities`, the DLL matching the running PC's architecture is automatically extracted to a temporary directory and deleted when the process exits.
 
-### ランタイムのインストール
+### Runtime Installation
 
-Windows App SDK 2.2 ランタイムが必要です。未インストールの場合は以下の順に対応します。
+The Windows App SDK 2.2 runtime is required. If it is not installed, the following steps are taken in order:
 
-1. **インストーラーの自動実行**：カレントディレクトリ (または `winui4k.installer.dir` で指定したディレクトリ) に `WindowsAppRuntimeInstall-x64.exe` 等のインストーラーがあれば、`--quiet` オプションでサイレントインストールを実行し、アプリをそのまま起動します
-2. **インストールダイアログの表示**：インストーラーが見つからない場合は、Microsoft のダイアログが表示され、ユーザーにランタイムのダウンロードを促します
+1. **Automatic installer execution**: If an installer such as `WindowsAppRuntimeInstall-x64.exe` exists in the current directory (or the directory specified by `winui4k.installer.dir`), it is run silently with the `--quiet` option and the app then starts normally
+2. **Installation dialog**: If no installer is found, Microsoft's dialog is shown, prompting the user to download the runtime
 
-インストーラーは以下のコマンドでダウンロードできます。
+The installers can be downloaded with the following command:
 
 ```powershell
 .\gradlew :winui4k:downloadInstallers
 ```
 
-`winui4k/installer/` に x86 / x64 / arm64 の 3 種類がダウンロードされます (各約 104 MB)。
-アプリ配布時にアーキテクチャに合ったインストーラーを同梱すれば、エンドユーザーの環境にランタイムが自動インストールされます。
+Three installers — x86 / x64 / arm64 — are downloaded to `winui4k/installer/` (about 104 MB each).
+If you bundle the installer matching the target architecture when distributing your app, the runtime is installed automatically on the end user's machine.
 
-手動でインストールする場合は https://aka.ms/windowsappsdk から `WindowsAppRuntimeInstall-x64.exe` を実行してください。
+To install manually, run `WindowsAppRuntimeInstall-x64.exe` from https://aka.ms/windowsappsdk.
 
-## システムプロパティ
+## System Properties
 
-| プロパティ | 値 | 説明 |
+| Property | Value | Description |
 |---|---|---|
-| `winui4k.ffi` | `panama` / `jna` / `jnr` | FFI バックエンドの明示指定。既定は利用可能なもののうち優先度最大 |
-| `winui4k.lifetime` | `cleaner` / `phantom` | COM 参照の後始末機構の明示指定。既定は Java バージョンで自動選択 |
-| `winui4k.gcThreshold` | 整数 (参照数) | 生存中のネイティブ参照数が閾値を超えるたびに `System.gc()` を要請する。既定は無効 |
-| `winui4k.bootstrap.dll` | パス | ブートストラップ DLL を JAR 内蔵版の代わりに明示指定 |
-| `winui4k.installer.dir` | ディレクトリ | ランタイムインストーラーの検索先。絶対パスと相対パスの両方に対応 (既定はカレントディレクトリ) |
+| `winui4k.ffi` | `panama` / `jna` / `jnr` | Explicitly selects the FFI backend. Defaults to the highest-priority one available |
+| `winui4k.lifetime` | `cleaner` / `phantom` | Explicitly selects the COM reference cleanup mechanism. Defaults to automatic selection based on the Java version |
+| `winui4k.gcThreshold` | Integer (reference count) | Requests `System.gc()` whenever the number of live native references exceeds the threshold. Disabled by default |
+| `winui4k.bootstrap.dll` | Path | Explicitly specifies a bootstrap DLL to use instead of the one embedded in the JAR |
+| `winui4k.installer.dir` | Directory | Search location for runtime installers. Both absolute and relative paths are supported (defaults to the current directory) |
 
-## コントリビューション
+## Contributing
 
-不具合報告や機能要望、プルリクエストは GitHub の Issue で受け付けています。
+Bug reports, feature requests, and pull requests are welcome via GitHub Issues.
 
-## ライセンス
+## License
 
-[Apache License 2.0](LICENSE.txt) です。商用か非商用かを問わず自由に利用できます。
+[Apache License 2.0](LICENSE.txt). Free to use for both commercial and non-commercial purposes.
 
-## 参考情報
+## References
 
-- [WinUI 開発ドキュメント](https://learn.microsoft.com/ja-jp/windows/apps/winui/winui3/)
+- [WinUI development documentation](https://learn.microsoft.com/en-us/windows/apps/winui/winui3/)
    - [Fluent Design System](https://fluent2.microsoft.design/)
-   - [Windows アプリの設計の概要](https://learn.microsoft.com/ja-jp/windows/apps/design/)
+   - [Design basics for Windows apps](https://learn.microsoft.com/en-us/windows/apps/design/)
 
-- [WinUI リポジトリ](https://github.com/microsoft/microsoft-ui-xaml)
-   - [WinUI Gallery リポジトリ](https://github.com/microsoft/WinUI-Gallery)
-   - [Windows App SDK リポジトリ](https://github.com/microsoft/WindowsAppSDK)
+- [WinUI repository](https://github.com/microsoft/microsoft-ui-xaml)
+   - [WinUI Gallery repository](https://github.com/microsoft/WinUI-Gallery)
+   - [Windows App SDK repository](https://github.com/microsoft/WindowsAppSDK)
    - [nuget](https://www.nuget.org/packages/Microsoft.WindowsAppSDK)
-- WinUI追加コンポーネント
-   - [TableView リポジトリ](https://github.com/w-ahmad/WinUI.TableView)
-   - [Community Controls リポジトリ](https://github.com/CommunityToolkit/Windows)
+- Additional WinUI components
+   - [TableView repository](https://github.com/w-ahmad/WinUI.TableView)
+   - [Community Controls repository](https://github.com/CommunityToolkit/Windows)
