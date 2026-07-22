@@ -1,14 +1,18 @@
-# WinUI for Kotlin (winui4k) — Kotlin/JVM 向け WinUI ライブラリ
+# WinUI for Kotlin & Java (winui4kプロジェクト)
 
 ブリッジ DLL も C# も Visual Studio も使わずに WinUI を使ったアプリを作れる Kotlin ライブラリです。
-Java の FFI (Panama / JNA) で WinRT ABI + COM + Win32 を直接呼び出すので軽量で安定しています。
+Java の FFI (Panama / JNA / JNR) で WinRT ABI + COM + Win32 を直接呼び出すので軽量で安定しています。
+
+[NTTレゾナントテクノロジー](https://nttr-tech.co.jp/)が提供しているインターネット経由でスマホを借りられるサービス「[Remote TestKit](https://appkitbox.com/)」のPCクライアント用に試作しました。
+
+Apache Licenseですので商用・非商用を問わずにご自由に利用いただけます。
 
 下のスクリーンショットは Microsoft 製の WinUI 3 Gallery ではありません。
 **すべて Kotlin で書かれた** 同梱の Gallery アプリ ([winui4k-gallery](winui4k-gallery/)) です。
 
 ![winui4k Gallery](doc/images/gallery-table.png)
 
-## Swing 風の API
+## 利用例
 
 `SwingUtilities.invokeLater` と同じ感覚で書けます。
 
@@ -40,8 +44,8 @@ WinUiUtilities.invokeLater {
 
 必要なのは次の 2 つだけです (Visual Studio、C++ ビルドツール、.NET SDK は不要)。
 
-1. **JDK 25** (x64)：[Eclipse Temurin](https://adoptium.net/) などから入手し、PATH を通す
-2. **Windows App SDK 2.2 ランタイム**：https://aka.ms/windowsappsdk から `WindowsAppRuntimeInstall-x64.exe` を実行する
+1. **JDK 25** (x64)：[Eclipse Temurin](https://adoptium.net/) などから入手してパスに設定します
+2. **Windows App SDK 2.2 ランタイム**：https://aka.ms/windowsappsdk から `WindowsAppRuntimeInstall-x64.exe` を実行します
    (未インストールでも起動時にインストールを促すダイアログが出ます)
 
 ```powershell
