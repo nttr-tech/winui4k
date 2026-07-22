@@ -105,7 +105,7 @@ object WinUiUtilities {
         }
         ready.await()
         startupError?.let { throw IllegalStateException("Failed to start WinUI", it) }
-        check(!exited) { "The WinUI application has already exited (the last window was closed)" }
+        check(!exited) { "The WinUI application has already exited (the last window was closed, or exit() was called)" }
     }
 
     /**
