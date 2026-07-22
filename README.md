@@ -74,18 +74,18 @@ Visual Studio・C++ ビルドツール・.NET SDK は**不要**です。
 
 ## 仕組み(レイヤ構成)
 
-技術スタック 1 層 = 1 パッケージで、`swing → winui → winrt → com → ffi.api` の
-一方向に依存します (公開 API は `swing` のみ、他は internal)。
+技術スタック 1 層 = 1 パッケージで、`jp.hisano.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` の
+一方向に依存します (公開 API はルートパッケージ `jp.hisano.winui4k` のみ、他は `internal` 配下)。
 
 | レイヤ | パッケージ | 役割 |
 |---|---|---|
-| FFI SPI | `ffi/api` | バックエンド非依存の FFI 語彙 (`Ptr` / `CallDescriptor` / `StructType` / `FfiBackend`)。将来の JNA バックエンドはこの SPI を実装する |
-| FFI 実装 | `ffi/panama` | Panama (`java.lang.foreign`) バックエンド。**java.lang.foreign への参照はここだけ** |
-| Win32 | `win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
-| COM | `com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
-| WinRT | `winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate・overrides・集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
-| WinUI | `winui/` | `Abi` (IID / vtable スロット。**すべて winmd から機械抽出**)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
-| API | `swing/` | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
+| FFI SPI | `internal/ffi/api` | バックエンド非依存の FFI 語彙 (`Ptr` / `CallDescriptor` / `StructType` / `FfiBackend`)。将来の JNA バックエンドはこの SPI を実装する |
+| FFI 実装 | `internal/ffi/panama` | Panama (`java.lang.foreign`) バックエンド。**java.lang.foreign への参照はここだけ** |
+| Win32 | `internal/win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
+| COM | `internal/com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
+| WinRT | `internal/winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate・overrides・集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
+| WinUI | `internal/winui/` | `Abi` (IID / vtable スロット。**すべて winmd から機械抽出**)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
+| API | ルート (`jp/hisano/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
 
 FFI バックエンドはシステムプロパティ `-Dwinui4k.ffi=panama` または
 `WinUiUtilities.setFfiBackend(...)` で選択できます (既定は Panama)。

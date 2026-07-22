@@ -6,15 +6,15 @@
 
 | パッケージ | 役割 |
 |---|---|
-| `ffi.api` | FFI バックエンド SPI (Ptr, CallDescriptor, StructType, FfiBackend, Ffi)。バックエンド非依存 |
-| `ffi.panama` | Panama (java.lang.foreign) バックエンド。**java.lang.foreign を参照してよいのはここだけ** |
-| `win32` | Win32 フラット API (Win32: DPI 宣言、moduleFilePath) |
-| `com` | COM の基盤 (ComPtr, Guid, checkHr / WindowsRuntimeException) |
-| `winrt` | WinRT ランタイム (Hstring, KComObject, WinRtRuntime, Activation, PropertyValues, Pinterface, Async, addEventHandler) |
-| `winui` | WinUI 3 / WinAppSDK 固有 (Abi 定数, Dispatcher, WinAppSdkBootstrap, XamlStructs) |
-| `swing` | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ (他は internal) |
+| `internal.ffi.api` | FFI バックエンド SPI (Ptr, CallDescriptor, StructType, FfiBackend, Ffi)。バックエンド非依存 |
+| `internal.ffi.panama` | Panama (java.lang.foreign) バックエンド。**java.lang.foreign を参照してよいのはここだけ** |
+| `internal.win32` | Win32 フラット API (Win32: DPI 宣言、moduleFilePath) |
+| `internal.com` | COM の基盤 (ComPtr, Guid, checkHr / WindowsRuntimeException) |
+| `internal.winrt` | WinRT ランタイム (Hstring, KComObject, WinRtRuntime, Activation, PropertyValues, Pinterface, Async, addEventHandler) |
+| `internal.winui` | WinUI 3 / WinAppSDK 固有 (Abi 定数, Dispatcher, WinAppSdkBootstrap, XamlStructs) |
+| `jp.hisano.winui4k` (ルート) | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ (他は internal) |
 
-依存方向: `swing → winui → winrt → com → ffi.api` (`win32 → ffi.api`)。
+依存方向: `jp.hisano.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` (`internal.win32 → internal.ffi.api`)。
 
 `inspectable` は各 W* クラスが持つ既定インターフェースのポインタ。別インターフェースの
 メンバーを使うときは `queryInterface` したものを `by lazy` で保持する (WButton の
@@ -56,8 +56,8 @@
 
 ## イベント購読 (delegate の実装)
 
-**winrt/Events.kt の `ComPtr.addEventHandler` / `removeEventHandler` と
-swing/Events.kt の `ListenerTokens` を使う**
+**internal/winrt/Events.kt の `ComPtr.addEventHandler` / `removeEventHandler` と
+ルートパッケージの Events.kt の `ListenerTokens` を使う**
 (delegate の KComObject 実装と token 管理を共通化済み)。規範実装:
 **WButtonBase.addActionListener / removeActionListener** (Click イベント)。要点:
 
@@ -103,7 +103,7 @@ ICommand のように XAML へ渡すオブジェクトを Kotlin で実装する
 - **WinRT の boolean は 1 バイト**。`getBool` / `putBool` を使う (JAVA_INT で読まない)。
 - **ComPtr.call の引数型推論**は Ptr / ComPtr / null (→NULL ポインタ) / Int / Long /
   Double / StructValue (構造体値渡し) のみ。byte 引数などは `callWith` で
-  `CallDescriptor` (ffi.api) を明示する。
+  `CallDescriptor` (internal.ffi.api) を明示する。
 - **HSTRING の一時利用は `Hstring.use`** でスコープ解放する。
 - **Content など Object 型プロパティ**は文字列と UIElement の両方が入りうる。
   get で `unboxString` が null を返すケースを考慮する (WButton.text / content の排他を参照)。

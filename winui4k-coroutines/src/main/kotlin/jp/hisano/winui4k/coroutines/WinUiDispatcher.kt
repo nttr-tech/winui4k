@@ -1,6 +1,6 @@
 package jp.hisano.winui4k.coroutines
 
-import jp.hisano.winui4k.swing.WinUiUtilities
+import jp.hisano.winui4k.WinUiUtilities
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Delay
 import kotlinx.coroutines.Dispatchers

@@ -1,9 +1,9 @@
 package jp.hisano.winui4k
 
-import jp.hisano.winui4k.swing.WButton
-import jp.hisano.winui4k.swing.WFrame
-import jp.hisano.winui4k.swing.WTextField
-import jp.hisano.winui4k.swing.WinUiUtilities
+import jp.hisano.winui4k.WButton
+import jp.hisano.winui4k.WFrame
+import jp.hisano.winui4k.WTextField
+import jp.hisano.winui4k.WinUiUtilities
 
 /**
  * Demo: a window with just a text field and a button.
