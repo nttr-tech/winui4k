@@ -15,6 +15,11 @@ application {
     mainClass = "com.appkitbox.winui4k.sample.gallery.MainForGalleryKt"
 }
 
+winui4k {
+    // The root's `gradlew run` launches only the Gallery
+    runFromRoot = true
+}
+
 // Launches the gallery on Java 8 (auto-fetched by the foojay resolver) with the JNA backend, to verify Java 8 support on real hardware
 tasks.register<JavaExec>("runJna") {
     description = "Launches the gallery with Java 8 + the JNA backend"
