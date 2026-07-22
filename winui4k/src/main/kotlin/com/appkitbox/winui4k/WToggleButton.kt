@@ -23,7 +23,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
 
     /** The IToggleButton view holding IsChecked / IsThreeState / the Checked-family events. */
     private val toggleButton: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IToggleButton)
+        own(inspectable.queryInterface(Abi.IID_IToggleButton))
     }
 
     /** Event tokens registered via addItemListener (3 per listener: Checked / Unchecked / Indeterminate). */

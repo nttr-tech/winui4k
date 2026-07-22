@@ -14,7 +14,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * [WList]. Switch views via [toggleActiveView] or Ctrl+mouse wheel.
  */
 class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
-    Activation.activate(Abi.CLS_SemanticZoom).queryInterface(Abi.IID_ISemanticZoom), // created via the default factory
+    Activation.activate(Abi.CLS_SemanticZoom, Abi.IID_ISemanticZoom), // created via the default factory
 ) {
     /** ViewChangeStarted event tokens registered via addViewChangeStartedListener. */
     private val viewChangeStartedTokens = ListenerTokens<() -> Unit>()

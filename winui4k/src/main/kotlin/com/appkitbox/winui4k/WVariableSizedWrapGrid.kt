@@ -13,7 +13,7 @@ class WVariableSizedWrapGrid(
     itemWidth: Double = Double.NaN,
     itemHeight: Double = Double.NaN,
 ) : WContainer(
-    Activation.activate(Abi.CLS_VariableSizedWrapGrid).queryInterface(Abi.IID_IVariableSizedWrapGrid),
+    Activation.activate(Abi.CLS_VariableSizedWrapGrid, Abi.IID_IVariableSizedWrapGrid),
 ) {
     /** The width of a single cell (VariableSizedWrapGrid.ItemWidth). */
     var itemWidth: Double = Double.NaN

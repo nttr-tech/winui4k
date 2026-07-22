@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
@@ -55,7 +56,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
     Activation.composeDefault(Abi.CLS_SwipeControl, Abi.IID_ISwipeControlFactory),
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /** The content shown on the front, before swiping (ContentControl.Content). */
@@ -117,9 +118,12 @@ class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
     internal val inspectable: ComPtr =
         Activation.composeDefault(Abi.CLS_SwipeItems, Abi.IID_ISwipeItemsFactory)
 
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
     /** The IVector<SwipeItem> view that has Append (SwipeItems implements IVector). */
     private val vector: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IVector_SwipeItem)
+        lifetime.own(inspectable.queryInterface(Abi.IID_IVector_SwipeItem))
     }
 
     /** The swipe behavior (SwipeItems.Mode). In EXECUTE mode, only a single item is allowed. */
@@ -145,6 +149,10 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
     /** The default interface (ISwipeItem). */
     internal val inspectable: ComPtr =
         Activation.composeDefault(Abi.CLS_SwipeItem, Abi.IID_ISwipeItemFactory)
+
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    @Suppress("unused")
+    private val lifetime = ComLifetime.adopt(this, inspectable)
 
     /** Invoked event tokens registered via addActionListener. */
     private val invokedTokens = ListenerTokens<() -> Unit>()

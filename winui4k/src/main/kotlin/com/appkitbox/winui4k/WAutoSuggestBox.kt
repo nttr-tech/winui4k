@@ -44,11 +44,11 @@ enum class TextChangeReason(internal val native: Int) {
  * [addSuggestionChosenListener] (a suggestion getting highlighted).
  */
 class WAutoSuggestBox(placeholder: String = "") : WControl(
-    Activation.activate(Abi.CLS_AutoSuggestBox).queryInterface(Abi.IID_IAutoSuggestBox),
+    Activation.activate(Abi.CLS_AutoSuggestBox, Abi.IID_IAutoSuggestBox),
 ) {
     /** The IItemsControl view used to set ItemsSource. */
     private val itemsControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IItemsControl)
+        own(inspectable.queryInterface(Abi.IID_IItemsControl))
     }
 
     /** TextChanged event tokens registered via addTextChangedListener. */

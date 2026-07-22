@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
@@ -82,17 +83,33 @@ abstract class WComponent internal constructor(
     /** The control's default interface pointer (ITextBox, IButton, ...) */
     internal val inspectable: ComPtr,
 ) {
+    /**
+     * The record of COM references this wrapper owns. When this wrapper becomes GC-unreachable,
+     * its owned references (inspectable and each QI'd view) are released on the UI thread.
+     * As long as something in the visual tree still holds a reference to the underlying control,
+     * the control stays alive.
+     */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
+    /**
+     * Ties ownership of [ptr] to this wrapper's lifetime. Any field that long-term holds a view
+     * obtained via QueryInterface/getPtr must be wrapped with this — an unwrapped count that
+     * happens to be a reference to the control itself would mean the control never gets released
+     * even after the wrapper is collected.
+     */
+    internal fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
+
     /** IUIElement view used for XAML tree operations. */
-    internal val uiElement: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IUIElement) }
+    internal val uiElement: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IUIElement)) }
 
     /** FrameworkElement view (also used as an argument to things like Flyout.ShowAt). */
     internal val frameworkElement: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IFrameworkElement)
+        own(inspectable.queryInterface(Abi.IID_IFrameworkElement))
     }
 
     /** DependencyObject view (passed as the target of attached properties like ToolTipService). */
     internal val dependencyObject: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IDependencyObject)
+        own(inspectable.queryInterface(Abi.IID_IDependencyObject))
     }
 
     var width: Double = Double.NaN

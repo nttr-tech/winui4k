@@ -13,7 +13,7 @@ class WDropDownButton(text: String = "") : WButtonBase(
 ) {
     /** The IButton view holding Flyout (DropDownButton is a Button subclass). */
     private val button: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IButton)
+        own(inspectable.queryInterface(Abi.IID_IButton))
     }
 
     /** The flyout opened by clicking the button (Button.Flyout). */

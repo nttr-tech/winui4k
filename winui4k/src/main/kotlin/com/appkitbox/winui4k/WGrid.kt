@@ -36,10 +36,10 @@ class WGrid(
     Activation.composeDefault(Abi.CLS_Grid, Abi.IID_IGridFactory),
 ) {
     private val rowDefinitions: ComPtr by lazy {
-        inspectable.getPtr(Abi.IGrid_get_RowDefinitions) // IVector<RowDefinition>
+        own(inspectable.getPtr(Abi.IGrid_get_RowDefinitions)) // IVector<RowDefinition>
     }
     private val columnDefinitions: ComPtr by lazy {
-        inspectable.getPtr(Abi.IGrid_get_ColumnDefinitions) // IVector<ColumnDefinition>
+        own(inspectable.getPtr(Abi.IGrid_get_ColumnDefinitions)) // IVector<ColumnDefinition>
     }
 
     /** The spacing between rows (Grid.RowSpacing). */
@@ -59,7 +59,7 @@ class WGrid(
 
     /** Adds a row (appends a RowDefinition to Grid.RowDefinitions). */
     fun addRow(height: GridLength = GridLength.AUTO) {
-        val definition = Activation.activate(Abi.CLS_RowDefinition).queryInterface(Abi.IID_IRowDefinition)
+        val definition = Activation.activate(Abi.CLS_RowDefinition, Abi.IID_IRowDefinition)
         XamlStructs.putGridLength(definition, Abi.IRowDefinition_put_Height, height.value, height.unitType)
         rowDefinitions.call(Abi.IVector_Append, definition.ptr)
         definition.release()
@@ -67,7 +67,7 @@ class WGrid(
 
     /** Adds a column (appends a ColumnDefinition to Grid.ColumnDefinitions). */
     fun addColumn(width: GridLength = GridLength.AUTO) {
-        val definition = Activation.activate(Abi.CLS_ColumnDefinition).queryInterface(Abi.IID_IColumnDefinition)
+        val definition = Activation.activate(Abi.CLS_ColumnDefinition, Abi.IID_IColumnDefinition)
         XamlStructs.putGridLength(definition, Abi.IColumnDefinition_put_Width, width.value, width.unitType)
         columnDefinitions.call(Abi.IVector_Append, definition.ptr)
         definition.release()

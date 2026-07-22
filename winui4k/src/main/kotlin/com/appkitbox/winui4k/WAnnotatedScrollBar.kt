@@ -32,17 +32,17 @@ class WAnnotatedScrollBar : WControl(
 
     /** The IScrollController view (AnnotatedScrollBar.ScrollController). Passed to a ScrollView. */
     private val scrollController: ComPtr by lazy {
-        inspectable.getPtr(Abi.IAnnotatedScrollBar_get_ScrollController)
+        own(inspectable.getPtr(Abi.IAnnotatedScrollBar_get_ScrollController))
     }
 
     /** The label collection (AnnotatedScrollBar.Labels, an IVector<AnnotatedScrollBarLabel>). */
     private val labels: ComPtr by lazy {
-        inspectable.getPtr(Abi.IAnnotatedScrollBar_get_Labels)
+        own(inspectable.getPtr(Abi.IAnnotatedScrollBar_get_Labels))
     }
 
     /** The activatable factory that creates AnnotatedScrollBarLabel instances. */
     private val labelFactory: ComPtr by lazy {
-        Activation.factory(Abi.CLS_AnnotatedScrollBarLabel, Abi.IID_IAnnotatedScrollBarLabelFactory)
+        own(Activation.factory(Abi.CLS_AnnotatedScrollBarLabel, Abi.IID_IAnnotatedScrollBarLabelFactory))
     }
 
     /**

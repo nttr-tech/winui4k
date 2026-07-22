@@ -13,7 +13,7 @@ class WMenuFlyout : WFlyoutBase(
     Activation.composeDefault(Abi.CLS_MenuFlyout, Abi.IID_IMenuFlyoutFactory),
 ) {
     private val items: ComPtr by lazy {
-        inspectable.getPtr(Abi.IMenuFlyout_get_Items) // IVector<MenuFlyoutItemBase>
+        own(inspectable.getPtr(Abi.IMenuFlyout_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
     /** Appends a menu item (Append onto MenuFlyout.Items). */

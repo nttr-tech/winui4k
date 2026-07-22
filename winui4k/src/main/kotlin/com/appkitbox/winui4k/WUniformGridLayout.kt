@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.Abi
 
@@ -64,8 +65,11 @@ class WUniformGridLayout {
     internal val inspectable: ComPtr =
         Activation.composeDefault(Abi.CLS_UniformGridLayout, Abi.IID_IUniformGridLayoutFactory)
 
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
     /** The ILayout view passed to ItemsView.Layout. */
-    internal val layout: ComPtr by lazy { inspectable.queryInterface(Abi.IID_ILayout) }
+    internal val layout: ComPtr by lazy { lifetime.own(inspectable.queryInterface(Abi.IID_ILayout)) }
 
     /** The direction items are laid out in (UniformGridLayout.Orientation). Defaults to horizontal (rows wrap). */
     var orientation: Orientation

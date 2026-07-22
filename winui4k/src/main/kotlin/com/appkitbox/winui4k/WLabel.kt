@@ -85,7 +85,7 @@ enum class TextTrimming(internal val native: Int) {
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  */
 class WLabel(text: String = "") : WComponent(
-    Activation.activate(Abi.CLS_TextBlock).queryInterface(Abi.IID_ITextBlock),
+    Activation.activate(Abi.CLS_TextBlock, Abi.IID_ITextBlock),
 ) {
     var text: String
         get() = inspectable.getString(Abi.ITextBlock_get_Text)

@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.KComObject
@@ -41,9 +42,12 @@ class WTreeNode(text: String = "") {
     internal val inspectable: ComPtr =
         Activation.composeDefault(Abi.CLS_TreeViewNode, Abi.IID_ITreeViewNodeFactory)
 
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
     /** IVector<TreeViewNode> view of TreeViewNode.Children (a typed pointer, so no QI needed). */
     private val childVector: ComPtr by lazy {
-        inspectable.getPtr(Abi.ITreeViewNode_get_Children)
+        lifetime.own(inspectable.getPtr(Abi.ITreeViewNode_get_Children))
     }
 
     /** Child nodes added via [add]. Used to look nodes back up from e.g. get_Parent. */
@@ -131,12 +135,12 @@ class WTree : WControl(
 ) {
     /** ITreeView2 view, which has CanDragItems / SelectedNode and the like. */
     private val treeView2: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ITreeView2)
+        own(inspectable.queryInterface(Abi.IID_ITreeView2))
     }
 
     /** IVector<TreeViewNode> view of TreeView.RootNodes (a typed pointer, so no QI needed). */
     private val rootVector: ComPtr by lazy {
-        inspectable.getPtr(Abi.ITreeView_get_RootNodes)
+        own(inspectable.getPtr(Abi.ITreeView_get_RootNodes))
     }
 
     /** Root nodes added via [addRootNode]. Used to look nodes back up from e.g. event args. */

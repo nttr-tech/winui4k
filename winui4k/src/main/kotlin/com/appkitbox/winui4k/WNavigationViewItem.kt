@@ -15,16 +15,16 @@ class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
     Activation.composeDefault(Abi.CLS_NavigationViewItem, Abi.IID_INavigationViewItemFactory), // default interface = INavigationViewItem
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
     private val item2: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_INavigationViewItem2)
+        own(inspectable.queryInterface(Abi.IID_INavigationViewItem2))
     }
 
     /** The IVector<Object> view of NavigationViewItem.MenuItems (child items). */
     private val childVector: ComPtr by lazy {
-        item2.getPtr(Abi.INavigationViewItem2_get_MenuItems)
-            .queryInterface(Abi.IID_IVector_Object)
+        val menuItems = own(item2.getPtr(Abi.INavigationViewItem2_get_MenuItems))
+        own(menuItems.queryInterface(Abi.IID_IVector_Object))
     }
 
     /** Child items added via [addItem] (used to resolve the selected item back). */

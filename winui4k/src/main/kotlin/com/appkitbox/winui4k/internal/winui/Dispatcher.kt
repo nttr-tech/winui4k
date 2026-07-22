@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.internal.winui
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ReleasePump
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
@@ -45,6 +46,15 @@ internal object Dispatcher {
             statics.release()
         }
         uiThread = Thread.currentThread()
+        // Open the release pump's submission channel (cleaner thread -> UI thread)
+        ReleasePump.install { task ->
+            try {
+                invokeLater(task)
+                true
+            } catch (_: RuntimeException) {
+                false // Queue is shutting down: discard this release (intentional leak)
+            }
+        }
     }
 
     /** True if the current thread is the UI thread (in the spirit of SwingUtilities.isEventDispatchThread). */

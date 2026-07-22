@@ -15,7 +15,7 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
 ) {
     /** The IToggleSplitButton view holding IsChecked / IsCheckedChanged. */
     private val toggleSplitButton: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IToggleSplitButton)
+        own(inspectable.queryInterface(Abi.IID_IToggleSplitButton))
     }
 
     /** IsCheckedChanged event tokens registered via addItemListener. */

@@ -88,20 +88,20 @@ class WNavigationView : WControl(
     Activation.composeDefault(Abi.CLS_NavigationView, Abi.IID_INavigationViewFactory), // default interface = INavigationView
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
     private val navigationView2: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_INavigationView2)
+        own(inspectable.queryInterface(Abi.IID_INavigationView2))
     }
 
     /** The IVector<Object> view of NavigationView.MenuItems / FooterMenuItems. */
     private val menuItemVector: ComPtr by lazy {
-        inspectable.getPtr(Abi.INavigationView_get_MenuItems)
-            .queryInterface(Abi.IID_IVector_Object)
+        val menuItems = own(inspectable.getPtr(Abi.INavigationView_get_MenuItems))
+        own(menuItems.queryInterface(Abi.IID_IVector_Object))
     }
     private val footerItemVector: ComPtr by lazy {
-        inspectable.getPtr(Abi.INavigationView_get_FooterMenuItems)
-            .queryInterface(Abi.IID_IVector_Object)
+        val footerItems = own(inspectable.getPtr(Abi.INavigationView_get_FooterMenuItems))
+        own(footerItems.queryInterface(Abi.IID_IVector_Object))
     }
 
     /** Items added via [addItem] / [addFooterItem] (used to resolve the selected item back). */

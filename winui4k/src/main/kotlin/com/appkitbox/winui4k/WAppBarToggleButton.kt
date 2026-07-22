@@ -16,7 +16,7 @@ class WAppBarToggleButton(label: String = "", icon: Symbol? = null) : WToggleBut
 ) {
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */
     private val commandBarElement: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ICommandBarElement)
+        own(inspectable.queryInterface(Abi.IID_ICommandBarElement))
     }
 
     /** The label shown below (or to the right of) the icon (AppBarToggleButton.Label). */

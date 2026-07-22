@@ -17,7 +17,7 @@ class WColor(
 ) {
     /** Creates a new SolidColorBrush for this color. The caller must release it. */
     internal fun createBrush(): ComPtr {
-        val brush = Activation.activate(Abi.CLS_SolidColorBrush).queryInterface(Abi.IID_ISolidColorBrush)
+        val brush = Activation.activate(Abi.CLS_SolidColorBrush, Abi.IID_ISolidColorBrush)
         XamlStructs.putColor(brush, Abi.ISolidColorBrush_put_Color, alpha, red, green, blue)
         return brush
     }

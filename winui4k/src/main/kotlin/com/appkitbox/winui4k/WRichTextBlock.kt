@@ -21,12 +21,12 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * ```
  */
 class WRichTextBlock : WComponent(
-    Activation.activate(Abi.CLS_RichTextBlock).queryInterface(Abi.IID_IRichTextBlock),
+    Activation.activate(Abi.CLS_RichTextBlock, Abi.IID_IRichTextBlock),
 ) {
     /** The IVector<Block> view of RichTextBlock.Blocks (BlockCollection). */
     private val blockVector: ComPtr by lazy {
-        inspectable.getPtr(Abi.IRichTextBlock_get_Blocks)
-            .queryInterface(Abi.IID_IVector_Block)
+        val blocks = own(inspectable.getPtr(Abi.IRichTextBlock_get_Blocks))
+        own(blocks.queryInterface(Abi.IID_IVector_Block))
     }
 
     /** How text wraps (RichTextBlock.TextWrapping). Wraps by default. */
@@ -56,7 +56,7 @@ class WRichTextBlock : WComponent(
     /** Appends a paragraph at the end (Blocks.Append). Content is assembled via [ParagraphBuilder]. */
     fun addParagraph(build: ParagraphBuilder.() -> Unit) {
         // Create the Paragraph, fill Inlines with inline content, then append it to Blocks
-        val paragraph = Activation.activate(Abi.CLS_Paragraph).queryInterface(Abi.IID_IParagraph)
+        val paragraph = Activation.activate(Abi.CLS_Paragraph, Abi.IID_IParagraph)
         try {
             val inlines = paragraph.getPtr(Abi.IParagraph_get_Inlines)
                 .queryInterface(Abi.IID_IVector_Inline)
@@ -110,7 +110,7 @@ class WRichTextBlock : WComponent(
 
         /** Creates a Run, sets its Text, and returns a pointer to the IRun. The caller releases it. */
         private fun createRun(text: String): ComPtr {
-            val run = Activation.activate(Abi.CLS_Run).queryInterface(Abi.IID_IRun)
+            val run = Activation.activate(Abi.CLS_Run, Abi.IID_IRun)
             Hstring.use(text) { h -> run.call(Abi.IRun_put_Text, h) }
             return run
         }

@@ -8,7 +8,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * [delay] (wait before the first fire) and [interval] (time between fires) control the repeat speed.
  */
 class WRepeatButton(text: String = "") : WButtonBase(
-    Activation.activate(Abi.CLS_RepeatButton).queryInterface(Abi.IID_IRepeatButton), // created via the default factory
+    Activation.activate(Abi.CLS_RepeatButton, Abi.IID_IRepeatButton), // created via the default factory
 ) {
     /** Milliseconds to wait after pressing before Click starts firing repeatedly (RepeatButton.Delay). */
     var delay: Int

@@ -36,10 +36,10 @@ enum class ClickMode(internal val native: Int) {
  */
 abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(inspectable) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
     private val buttonBase: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IButtonBase)
+        own(inspectable.queryInterface(Abi.IID_IButtonBase))
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */

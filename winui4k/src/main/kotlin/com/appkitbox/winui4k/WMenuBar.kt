@@ -14,7 +14,7 @@ class WMenuBar : WControl(
     Activation.composeDefault(Abi.CLS_MenuBar, Abi.IID_IMenuBarFactory),
 ) {
     private val items: ComPtr by lazy {
-        inspectable.getPtr(Abi.IMenuBar_get_Items) // IVector<MenuBarItem>
+        own(inspectable.getPtr(Abi.IMenuBar_get_Items)) // IVector<MenuBarItem>
     }
 
     /** Appends a top-level menu (Append onto MenuBar.Items). */
@@ -31,7 +31,7 @@ class WMenuBarItem(title: String = "") : WControl(
     Activation.composeDefault(Abi.CLS_MenuBarItem, Abi.IID_IMenuBarItemFactory),
 ) {
     private val items: ComPtr by lazy {
-        inspectable.getPtr(Abi.IMenuBarItem_get_Items) // IVector<MenuFlyoutItemBase>
+        own(inspectable.getPtr(Abi.IMenuBarItem_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
     /** The label shown on the menu bar (MenuBarItem.Title). */

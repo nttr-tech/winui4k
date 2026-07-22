@@ -12,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * something like WBorder.
  */
 class WPopup(child: WComponent? = null) : WComponent(
-    Activation.activate(Abi.CLS_Popup).queryInterface(Abi.IID_IPopup), // created via the default factory
+    Activation.activate(Abi.CLS_Popup, Abi.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */
     private val closeTokens = ListenerTokens<() -> Unit>()

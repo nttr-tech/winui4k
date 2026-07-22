@@ -4,6 +4,7 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ReleasePump
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
@@ -123,6 +124,8 @@ object WinUiUtilities {
             statics.call(Abi.IApplicationStatics_Start, initCallback.primary) // the message loop runs here
             statics.release()
         } finally {
+            // Stop GC-driven releases from here on (a Release after RoUninitialize would crash)
+            ReleasePump.shutdown()
             WinRtRuntime.uninitialize()
             WinAppSdkBootstrap.shutdown()
             WinAppSdkBootstrap.cleanupExtractedFiles()

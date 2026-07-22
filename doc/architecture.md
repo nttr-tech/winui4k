@@ -47,6 +47,32 @@ Java 8 での動作は `.\gradlew :winui4k-sample-gallery:runJna` / `runJnr` (JD
 8. 最後のウィンドウが閉じて `Start` が戻ったら `RoUninitialize` → `MddBootstrapShutdown` を呼ぶ。
    `RoUninitialize` を省くと、JVM シャットダウン中にネイティブスレッドからの upcall (遅延 Release) がアタッチ失敗で JVM ごと abort する
 
+## COM 参照のライフタイム管理
+
+設計の背景と CsWinRT との対応は `doc/cswinrt_vs_winui4k.md` を参照。
+
+W* ラッパー (WComponent 派生と WFlyoutBase / WXamlUICommand / WSwipeItems / WSwipeItem / WTreeNode / WUniformGridLayout) は、
+所有する COM 参照 (既定インターフェースと QI した各ビュー) を `ComLifetime` (internal/com/lifetime) に記録する。
+ラッパーが GC で到達不能になると、後始末機構が解放タスクを `ReleasePump` へ投函し、UI スレッドのメッセージループ上で `Release` が実行される
+(XAML オブジェクトは UI スレッドに束縛されるため。UI スレッドへの集約により、UI スレッド上の呼び出し中にポインタが解放される premature finalization も構造的に起きない)。
+明示解放とクリーナーの競合は 3 状態 (NOT_DISPOSED / DISPOSE_PENDING / DISPOSE_COMPLETED) の CAS で解決し、`Release` は一度しか実行されない。
+ビジュアルツリーがコントロール本体の参照を保持している限り、ラッパーを回収しても本体は生き続ける (COM の参照カウント 1 つぶんを返すだけ)。
+
+後始末機構は Java バージョンごとに使える下回りが異なるため、FFI バックエンドと同様に実行時に切り替える (`Cleanup` が選択):
+
+| 実行環境 | 後始末 | fence | FFI |
+|---|---|---|---|
+| Java 8 | `PhantomReference` + `ReferenceQueue` + 自前デーモンスレッド (phantom) | `synchronized` イディオム | JNA / JNR |
+| Java 9〜21 | `java.lang.ref.Cleaner` (cleaner、MethodHandle で実行時解決) | `Reference.reachabilityFence` | JNA / JNR |
+| Java 22 以上 | cleaner (同上) | `Reference.reachabilityFence` | Panama (FFM 正式化) |
+
+システムプロパティ `-Dwinui4k.lifetime=cleaner|phantom` で明示選択できる。
+クリーナースレッド (`WinUI4K-Cleaner`) は起動時に `RoInitialize(MTA)` で COM に参加する。
+シャットダウン時は `RoUninitialize` の前に `ReleasePump.shutdown()` で以後の解放を止め、未解放分はプロセス終了に任せる (`RoUninitialize` 後の `Release` はクラッシュを招くため。CsWinRT と同じ割り切り)。
+
+`-Dwinui4k.gcThreshold=<参照数>` (オプトイン) で、生存中のネイティブ参照数が閾値を超えるたびに `System.gc()` を要請する
+(.NET の `GC.AddMemoryPressure` の近似。`-XX:+ExplicitGCInvokesConcurrent` の併用を推奨)。
+
 ## ABI 定数の出所 (tools/dump_winmd.py)
 
 `winui/Abi.kt` の IID とスロット番号は手書きではない。
@@ -64,6 +90,9 @@ python tools/dump_winmd.py Microsoft.UI.Xaml.winmd \
 
 ## 既知の割り切り
 
-参照カウントは解放よりリークを選ぶ場面があり (vtable、upcall スタブ、キャッシュ済み HSTRING はプロセス生存期間ぶん保持)、UI スレッドは 1 本の前提である。
+共有インフラ (vtable、upcall スタブ、キャッシュ済み HSTRING、ファクトリ statics) はプロセス生存期間ぶん保持し、UI スレッドは 1 本の前提である。
+W* ラッパーの COM 参照は GC 連動で自動解放されるが (上記「COM 参照のライフタイム管理」)、
+ウィンドウ・Shell 系のラッパー (WFrame / WAppWindow / WAppNotification / WJumpList など) は対象外で従来どおり保持し続ける。
+言語境界をまたぐ循環参照 (ネイティブ → CCW → Kotlin → RCW → ネイティブ) は自動回収されない (JVM の GC に IReferenceTracker 相当の拡張点がないため)。
 エラー処理は HRESULT の例外化のみで、レイアウトマネージャは未実装である。
 ライブラリとして育てる際は、winmd からのバインディング自動生成 (`tools/dump_winmd.py` の発展形) が次の一歩になる。

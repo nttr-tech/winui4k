@@ -40,7 +40,7 @@ class WToolTip : WControl(
     Activation.composeDefault(Abi.CLS_ToolTip, Abi.IID_IToolTipFactory), // default interface = IToolTip
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     private var contentComponent: WComponent? = null

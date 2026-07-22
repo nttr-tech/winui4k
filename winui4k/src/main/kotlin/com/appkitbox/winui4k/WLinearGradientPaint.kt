@@ -22,7 +22,7 @@ class WLinearGradientPaint(
             .queryInterface(Abi.IID_IVector_GradientStop)
         try {
             for ((offset, color) in stops) {
-                val stop = Activation.activate(Abi.CLS_GradientStop).queryInterface(Abi.IID_IGradientStop)
+                val stop = Activation.activate(Abi.CLS_GradientStop, Abi.IID_IGradientStop)
                 try {
                     XamlStructs.putColor(stop, Abi.IGradientStop_put_Color, color.alpha, color.red, color.green, color.blue)
                     stop.call(Abi.IGradientStop_put_Offset, offset)

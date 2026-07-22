@@ -62,22 +62,22 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     Activation.composeDefault(Abi.CLS_ListView, Abi.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ISelector)
+        own(inspectable.queryInterface(Abi.IID_ISelector))
     }
     private val listViewBase: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IListViewBase)
+        own(inspectable.queryInterface(Abi.IID_IListViewBase))
     }
     private val itemsControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IItemsControl)
+        own(inspectable.queryInterface(Abi.IID_IItemsControl))
     }
     private val control: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IControl)
+        own(inspectable.queryInterface(Abi.IID_IControl))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        itemsControl.getPtr(Abi.IItemsControl_get_Items)
-            .queryInterface(Abi.IID_IVector_Object)
+        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
+        own(items.queryInterface(Abi.IID_IVector_Object))
     }
 
     /**

@@ -40,6 +40,19 @@ internal object Activation {
     }
 
     /**
+     * Calls [activate] then QIs to [iid]. Releases the intermediate IInspectable reference
+     * (writing activate(...).queryInterface(...) directly would leak that intermediate reference by one count).
+     */
+    fun activate(runtimeClass: String, iid: String): ComPtr {
+        val instance = activate(runtimeClass)
+        return try {
+            instance.queryInterface(iid)
+        } finally {
+            instance.release()
+        }
+    }
+
+    /**
      * Instantiates a composable (inheritable) class.
      * Passing outer = NULL creates a plain, non-derived instance (the same convention
      * as C++/WinRT). A factory's CreateInstance is always vtbl[6]:

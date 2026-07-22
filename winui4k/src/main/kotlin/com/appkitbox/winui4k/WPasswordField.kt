@@ -30,7 +30,7 @@ enum class PasswordRevealMode(internal val native: Int) {
 
 /** JPasswordField-like: WinUI 3's PasswordBox. */
 class WPasswordField(placeholder: String = "") : WControl(
-    Activation.activate(Abi.CLS_PasswordBox).queryInterface(Abi.IID_IPasswordBox),
+    Activation.activate(Abi.CLS_PasswordBox, Abi.IID_IPasswordBox),
 ) {
     /** PasswordChanged event tokens registered via addPasswordChangedListener. */
     private val passwordChangedTokens = ListenerTokens<(String) -> Unit>()

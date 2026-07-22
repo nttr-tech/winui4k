@@ -74,7 +74,7 @@ class WCommandBar : WControl(
     Activation.composeDefault(Abi.CLS_CommandBar, Abi.IID_ICommandBarFactory),
 ) {
     /** The IAppBar view that holds IsOpen / IsSticky / ClosedDisplayMode (CommandBar is an AppBar subclass). */
-    private val appBar: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IAppBar) }
+    private val appBar: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IAppBar)) }
 
     /**
      * PrimaryCommands / SecondaryCommands are IObservableVector<ICommandBarElement>, so we
@@ -90,7 +90,7 @@ class WCommandBar : WControl(
     private fun queryVector(getSlot: Int): ComPtr {
         val observable = inspectable.getPtr(getSlot)
         return try {
-            observable.queryInterface(Abi.IID_IVector_ICommandBarElement)
+            own(observable.queryInterface(Abi.IID_IVector_ICommandBarElement))
         } finally {
             observable.release()
         }
@@ -108,7 +108,7 @@ class WCommandBar : WControl(
 
     /** The IContentControl view that holds Content. */
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /** Whether the overflow menu is open (AppBar.IsOpen). */

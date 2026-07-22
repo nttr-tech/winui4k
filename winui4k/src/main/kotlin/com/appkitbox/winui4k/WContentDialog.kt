@@ -60,7 +60,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
     Activation.composeDefault(Abi.CLS_ContentDialog, Abi.IID_IContentDialogFactory), // default interface = IContentDialog
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /** The heading at the top of the dialog (ContentDialog.Title). Object-typed, so a boxed string is passed. */

@@ -34,7 +34,7 @@ enum class Stretch(internal val native: Int) {
  * [stretch] controls how it's fit into its allotted area.
  */
 class WImage(sourceUri: String? = null) : WComponent(
-    Activation.activate(Abi.CLS_Image).queryInterface(Abi.IID_IImage), // created via the default factory
+    Activation.activate(Abi.CLS_Image, Abi.IID_IImage), // created via the default factory
 ) {
     /**
      * The URI of the image to display (Image.Source). Null hides it.

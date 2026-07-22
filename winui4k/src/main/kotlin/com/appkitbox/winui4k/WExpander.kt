@@ -32,7 +32,7 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     Activation.composeDefault(Abi.CLS_Expander, Abi.IID_IExpanderFactory), // default interface = IExpander
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /** Listener → event token (used by the remove functions). */

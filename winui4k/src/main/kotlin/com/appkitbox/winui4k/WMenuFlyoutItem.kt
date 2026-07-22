@@ -17,7 +17,7 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
     WControl(inspectable) {
     /** The MenuFlyoutItemBase view required by IVector<MenuFlyoutItemBase>.Append. */
     internal val menuFlyoutItemBase: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IMenuFlyoutItemBase)
+        own(inspectable.queryInterface(Abi.IID_IMenuFlyoutItemBase))
     }
 }
 
@@ -38,7 +38,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
 
     /** The IMenuFlyoutItem view holding text / Click, etc. (also used by the Toggle / Radio subclasses). */
     private val menuFlyoutItem: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IMenuFlyoutItem)
+        own(inspectable.queryInterface(Abi.IID_IMenuFlyoutItem))
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
@@ -159,10 +159,10 @@ class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFly
  */
 class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItemBase(
     // activatable (default factory), so activate then QI to the default interface
-    Activation.activate(Abi.CLS_MenuFlyoutSubItem).queryInterface(Abi.IID_IMenuFlyoutSubItem),
+    Activation.activate(Abi.CLS_MenuFlyoutSubItem, Abi.IID_IMenuFlyoutSubItem),
 ) {
     private val items: ComPtr by lazy {
-        inspectable.getPtr(Abi.IMenuFlyoutSubItem_get_Items) // IVector<MenuFlyoutItemBase>
+        own(inspectable.getPtr(Abi.IMenuFlyoutSubItem_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
     /** The submenu's label (MenuFlyoutSubItem.Text). */

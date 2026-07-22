@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.withScope
@@ -30,13 +31,19 @@ open class WXamlUICommand internal constructor(
         if (label.isNotEmpty()) this.label = label
     }
 
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
+    /** Ties ownership of [ptr] to this wrapper's lifetime. */
+    private fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
+
     /** The IXamlUICommand view holding Label / ExecuteRequested, etc. (also used by StandardUICommand). */
     private val xamlUICommand: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IXamlUICommand)
+        own(inspectable.queryInterface(Abi.IID_IXamlUICommand))
     }
 
     /** The ICommand view required by put_Command (XamlUICommand implements ICommand). */
-    private val icommand: ComPtr by lazy { inspectable.queryInterface(Abi.IID_ICommand) }
+    private val icommand: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_ICommand)) }
 
     override val commandPtr: Ptr
         get() = icommand.ptr

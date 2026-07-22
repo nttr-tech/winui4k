@@ -62,7 +62,7 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum / ValueChanged. */
     private val rangeBase: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IRangeBase)
+        own(inspectable.queryInterface(Abi.IID_IRangeBase))
     }
 
     /** ValueChanged event tokens registered via addChangeListener. */

@@ -12,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.Abi
  * Customize the displayed text with [header] / [onContent] / [offContent].
  */
 class WToggleSwitch(header: String = "") : WControl(
-    Activation.activate(Abi.CLS_ToggleSwitch).queryInterface(Abi.IID_IToggleSwitch), // created via the default factory
+    Activation.activate(Abi.CLS_ToggleSwitch, Abi.IID_IToggleSwitch), // created via the default factory
 ) {
     /** Toggled event tokens registered via addItemListener. */
     private val itemTokens = ListenerTokens<(Boolean) -> Unit>()

@@ -32,11 +32,11 @@ class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
     Activation.composeDefault(Abi.CLS_AppBarButton, Abi.IID_IAppBarButtonFactory),
 ) {
     /** The IButton view that holds Flyout (AppBarButton is a Button subclass). */
-    private val button: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IButton) }
+    private val button: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IButton)) }
 
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */
     private val commandBarElement: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ICommandBarElement)
+        own(inspectable.queryInterface(Abi.IID_ICommandBarElement))
     }
 
     /** The label shown below (or to the right of) the icon (AppBarButton.Label). */

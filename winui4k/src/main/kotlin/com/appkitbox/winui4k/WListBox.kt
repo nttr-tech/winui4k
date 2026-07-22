@@ -41,14 +41,14 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     Activation.composeDefault(Abi.CLS_ListBox, Abi.IID_IListBoxFactory), // default interface = IListBox
 ) {
     private val selector: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ISelector)
+        own(inspectable.queryInterface(Abi.IID_ISelector))
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
     private val itemVector: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IItemsControl)
-            .getPtr(Abi.IItemsControl_get_Items)
-            .queryInterface(Abi.IID_IVector_Object)
+        val itemsControl = own(inspectable.queryInterface(Abi.IID_IItemsControl))
+        val items = own(itemsControl.getPtr(Abi.IItemsControl_get_Items))
+        own(items.queryInterface(Abi.IID_IVector_Object))
     }
 
     /** Event tokens for SelectionChanged registered via addListSelectionListener. */

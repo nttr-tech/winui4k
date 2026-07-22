@@ -9,7 +9,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * Non-Control components such as StackPanel stay as plain [WComponent].
  */
 abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(inspectable) {
-    private val control: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IControl) }
+    private val control: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IControl)) }
 
     /** setEnabled-like (Control.IsEnabled). */
     var isEnabled: Boolean

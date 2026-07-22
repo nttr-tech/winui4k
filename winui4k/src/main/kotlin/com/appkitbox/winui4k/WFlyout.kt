@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.Abi
 
@@ -40,8 +41,14 @@ abstract class WFlyoutBase internal constructor(
     /** The flyout's default interface pointer (IFlyout, IMenuFlyout, ...). */
     internal val inspectable: ComPtr,
 ) {
+    /** The record of COM references this wrapper owns (the same mechanism as WComponent). */
+    private val lifetime = ComLifetime.adopt(this, inspectable)
+
+    /** Ties ownership of [ptr] to this wrapper's lifetime. */
+    internal fun own(ptr: ComPtr): ComPtr = lifetime.own(ptr)
+
     /** The FlyoutBase view required by Button.put_Flyout / ShowAt and the like. */
-    internal val flyoutBase: ComPtr by lazy { inspectable.queryInterface(Abi.IID_IFlyoutBase) }
+    internal val flyoutBase: ComPtr by lazy { own(inspectable.queryInterface(Abi.IID_IFlyoutBase)) }
 
     /** Where it opens (FlyoutBase.Placement). */
     var placement: FlyoutPlacement

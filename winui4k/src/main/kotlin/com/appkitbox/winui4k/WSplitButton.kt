@@ -20,12 +20,12 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     }
 
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /** The ISplitButton view holding Flyout / Click (also used by ToggleSplitButton). */
     private val splitButton: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_ISplitButton)
+        own(inspectable.queryInterface(Abi.IID_ISplitButton))
     }
 
     /** Click event tokens registered via addActionListener. */

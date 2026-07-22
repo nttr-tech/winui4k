@@ -9,8 +9,8 @@ import com.appkitbox.winui4k.internal.winui.Abi
  */
 abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent(inspectable) {
     private val children: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IPanel)
-            .getPtr(Abi.IPanel_get_Children) // IVector<UIElement>
+        val panel = own(inspectable.queryInterface(Abi.IID_IPanel))
+        own(panel.getPtr(Abi.IPanel_get_Children)) // IVector<UIElement>
     }
 
     open fun add(component: WComponent) {

@@ -21,7 +21,7 @@ class WTextPane(placeholder: String = "") : WControl(
 ) {
     /** RichEditBox.Document (Microsoft.UI.Text.ITextDocument). The entry point for text and formatting operations. */
     private val document: ComPtr by lazy {
-        inspectable.getPtr(Abi.IRichEditBox_get_Document)
+        own(inspectable.getPtr(Abi.IRichEditBox_get_Document))
     }
 
     /** TextChanged event tokens registered via addTextChangedListener. */

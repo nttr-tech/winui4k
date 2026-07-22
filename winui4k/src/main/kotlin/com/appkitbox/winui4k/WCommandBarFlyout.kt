@@ -23,7 +23,7 @@ class WCommandBarFlyout : WFlyoutBase(
     private fun queryVector(getSlot: Int): ComPtr {
         val observable = inspectable.getPtr(getSlot)
         return try {
-            observable.queryInterface(Abi.IID_IVector_ICommandBarElement)
+            own(observable.queryInterface(Abi.IID_IVector_ICommandBarElement))
         } finally {
             observable.release()
         }

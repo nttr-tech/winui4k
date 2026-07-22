@@ -38,10 +38,10 @@ enum class ScrollBarVisibility(internal val native: Int) {
  * Horizontal scrolling is disabled by default; enable it by setting [horizontalScrollBarVisibility] to e.g. AUTO.
  */
 class WScrollPane(content: WComponent? = null) : WControl(
-    Activation.activate(Abi.CLS_ScrollViewer).queryInterface(Abi.IID_IScrollViewer), // created via the default factory
+    Activation.activate(Abi.CLS_ScrollViewer, Abi.IID_IScrollViewer), // created via the default factory
 ) {
     private val contentControl: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IContentControl)
+        own(inspectable.queryInterface(Abi.IID_IContentControl))
     }
 
     /**

@@ -10,7 +10,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * a background ([background]), and padding ([padding]) around a single [child].
  */
 class WBorder(child: WComponent? = null) : WComponent(
-    Activation.activate(Abi.CLS_Border).queryInterface(Abi.IID_IBorder),
+    Activation.activate(Abi.CLS_Border, Abi.IID_IBorder),
 ) {
     /** The single child shown inside the border (Border.Child). */
     var child: WComponent? = null

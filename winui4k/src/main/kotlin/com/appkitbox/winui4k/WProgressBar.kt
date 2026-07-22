@@ -17,7 +17,7 @@ class WProgressBar(minimum: Double = 0.0, maximum: Double = 100.0, value: Double
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum. */
     private val rangeBase: ComPtr by lazy {
-        inspectable.queryInterface(Abi.IID_IRangeBase)
+        own(inspectable.queryInterface(Abi.IID_IRangeBase))
     }
 
     /** The current value (RangeBase.Value). */
