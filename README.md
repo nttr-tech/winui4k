@@ -28,7 +28,8 @@ WinUiUtilities.invokeLater {
 ## 動作要件
 
 - **Windows 11 x64**(Windows 10 1809 以降でも動く想定。Arm64 は後述)
-- **JDK 25**(FFM API を使用。`java --version` で 25 以上であることを確認)
+- **JDK 25**(ビルドと既定の Panama バックエンドに使用。`java --version` で 25 以上であることを確認。
+  実行だけなら JNA バックエンド + Java 8 以降でも可 — 後述「FFI バックエンド」参照)
 - **Windows App SDK 2.2 ランタイム**(下記手順でインストール)
 - インターネット接続(初回ビルド時に Gradle と NuGet パッケージを取得)
 
@@ -79,16 +80,23 @@ Visual Studio・C++ ビルドツール・.NET SDK は**不要**です。
 
 | レイヤ | パッケージ | 役割 |
 |---|---|---|
-| FFI SPI | `internal/ffi/api` | バックエンド非依存の FFI 語彙 (`Ptr` / `CallDescriptor` / `StructType` / `FfiBackend`)。将来の JNA バックエンドはこの SPI を実装する |
-| FFI 実装 | `internal/ffi/panama` | Panama (`java.lang.foreign`) バックエンド。**java.lang.foreign への参照はここだけ** |
+| FFI SPI | `internal/ffi/api` | バックエンド非依存の FFI 語彙 (`Ptr` / `CallDescriptor` / `StructType` / `FfiBackend`)。バックエンドは ServiceLoader で発見する |
+| FFI 実装 | `internal/ffi/panama` (winui4k-panama)、`internal/ffi/jna` (winui4k-jna) | 別モジュールの FFI バックエンド。**java.lang.foreign への参照は winui4k-panama、com.sun.jna への参照は winui4k-jna だけ** |
 | Win32 | `internal/win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
 | COM | `internal/com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
 | WinRT | `internal/winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate・overrides・集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
 | WinUI | `internal/winui/` | `Abi` (IID / vtable スロット。**すべて winmd から機械抽出**)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
 | API | ルート (`jp/hisano/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
 
-FFI バックエンドはシステムプロパティ `-Dwinui4k.ffi=panama` または
-`WinUiUtilities.setFfiBackend(...)` で選択できます (既定は Panama)。
+FFI バックエンドは別モジュールとして提供され、実行時クラスパスに 1 つ以上追加します:
+
+- **winui4k-panama** — Panama (`java.lang.foreign`)。Java 22 以降。優先度 100 (既定)
+- **winui4k-jna** — JNA。**Java 8 以降**の Windows x64 で動作 (構造体の値渡しを
+  Windows x64 ABI で手動 lowering しているため Arm64 非対応。Arm64 は Panama を使う)
+
+システムプロパティ `-Dwinui4k.ffi=panama|jna` または `WinUiUtilities.setFfiBackend(...)`
+で明示選択できます (未指定なら利用可能なもののうち優先度最大 = Panama)。
+Java 8 での動作は `.\gradlew :winui4k-gallery:runJna` (JDK 8 + JNA で Gallery を起動) で確認できます。
 
 起動シーケンスの要点:
 

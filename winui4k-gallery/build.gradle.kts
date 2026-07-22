@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
 import java.util.zip.ZipFile
 
@@ -6,13 +7,34 @@ plugins {
     application
 }
 
+// Build with JDK 25, target Java 8 bytecode (so the runJna task can verify Java 8 on real hardware)
 kotlin {
     jvmToolchain(25)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+        freeCompilerArgs.add("-Xjdk-release=8")
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(8)
 }
 
 dependencies {
     implementation(project(":winui4k"))
     implementation(project(":winui4k-coroutines"))
+    runtimeOnly(project(":winui4k-panama"))
+    runtimeOnly(project(":winui4k-jna"))
+}
+
+// gallery targets Java 8, but its runtime classpath should still include winui4k-panama
+// (which targets Java 22) — on a Java 8 run, Ffi skips it at the ServiceLoader level
+listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).forEach {
+    it.configure {
+        attributes {
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+        }
+    }
 }
 
 application {
@@ -67,14 +89,34 @@ val fetchBootstrap = tasks.register("fetchBootstrap") {
     }
 }
 
+// Let WinUiUtilities load the bootstrap DLL via an absolute path
+val dllPath: Provider<String> =
+    nativeDir.map { it.file("Microsoft.WindowsAppRuntime.Bootstrap.dll").asFile.absolutePath }
+
 tasks.named<JavaExec>("run") {
     dependsOn(fetchBootstrap)
 
     // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-    // Let WinUiUtilities load the bootstrap DLL via an absolute path
-    val dllPath = nativeDir.map { it.file("Microsoft.WindowsAppRuntime.Bootstrap.dll").asFile.absolutePath }
+    doFirst {
+        systemProperty("winui4k.bootstrap.dll", dllPath.get())
+    }
+}
+
+// Launches the gallery on Java 8 (auto-fetched by the foojay resolver) with the JNA backend, to verify Java 8 support on real hardware
+tasks.register<JavaExec>("runJna") {
+    description = "Launches the gallery with Java 8 + the JNA backend"
+    group = "application"
+    dependsOn(fetchBootstrap)
+
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+    mainClass = application.mainClass
+    classpath = sourceSets.main.get().runtimeClasspath
+
+    systemProperty("winui4k.ffi", "jna")
     doFirst {
         systemProperty("winui4k.bootstrap.dll", dllPath.get())
     }

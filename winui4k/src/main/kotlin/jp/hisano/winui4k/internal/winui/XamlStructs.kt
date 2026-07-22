@@ -15,8 +15,8 @@ import jp.hisano.winui4k.internal.ffi.api.withScope
 /**
  * Layouts and put helpers for XAML structs (passed by value).
  * Field order is extracted from the winmd for every one of them (same policy as Abi.kt).
- * When adding a JNA backend, register a matching Structure.ByValue class on the backend
- * side for each StructType name here.
+ * Each backend resolves the by-value ABI lowering from the StructType's size
+ * (Panama = MemoryLayout, JNA = manual Windows x64 ABI lowering), so no registration is needed here.
  */
 internal object XamlStructs {
     /** Microsoft.UI.Xaml.Thickness { double Left, Top, Right, Bottom } */

@@ -30,8 +30,8 @@ import java.lang.invoke.MethodHandles
 import java.lang.invoke.MethodType
 import java.util.concurrent.ConcurrentHashMap
 
-/** The discovery provider for the Panama backend (referenced directly and built in to Ffi). */
-internal object PanamaBackendProvider : FfiBackendProvider {
+/** The discovery provider for the Panama backend (registered with ServiceLoader via META-INF/services). */
+class PanamaBackendProvider : FfiBackendProvider {
     override val name: String = "panama"
     override val priority: Int = 100
     override fun isAvailable(): Boolean =
@@ -42,7 +42,7 @@ internal object PanamaBackendProvider : FfiBackendProvider {
 
 /**
  * [FfiBackend] implementation backed by Panama (java.lang.foreign).
- * This is the only package in winui4k allowed to reference java.lang.foreign.
+ * This is the only module among the winui4k-related modules allowed to reference java.lang.foreign.
  */
 internal object PanamaBackend : FfiBackend {
     override val name: String = "panama"
