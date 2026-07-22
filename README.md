@@ -65,8 +65,15 @@ Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna`、Java 8 + JNR 
 | `winui4k-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
 | `winui4k-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
 
-## ドキュメント
+# 参考情報
 
-- [アーキテクチャ](doc/architecture.md)：レイヤ構成、FFI バックエンド、起動シーケンス、winmd からの ABI 抽出、既知の割り切り
-- [検証状況](doc/verification.md)：動作検証の範囲と、WinUI 3 実体との相互作用で判明した注意点
-- [トラブルシューティング](doc/troubleshooting.md)：起動しないときに見る HRESULT 別の対処
+- [WinUI 開発ドキュメント](https://learn.microsoft.com/ja-jp/windows/apps/winui/winui3/)
+   - [Fluent Design System](https://fluent2.microsoft.design/)
+   - [Windows アプリの設計の概要](https://learn.microsoft.com/ja-jp/windows/apps/design/)
+
+- [WinUI リポジトリ](https://github.com/microsoft/microsoft-ui-xaml)
+   - [WinUI Gallery リポジトリ](https://github.com/microsoft/WinUI-Gallery)
+   - [Windows App SDK リポジトリ](https://github.com/microsoft/WindowsAppSDK)
+- WinUI追加コンポーネント
+   - [TableView リポジトリ](https://github.com/w-ahmad/WinUI.TableView)
+   - [Community Controls リポジトリ](https://github.com/CommunityToolkit/Windows)
