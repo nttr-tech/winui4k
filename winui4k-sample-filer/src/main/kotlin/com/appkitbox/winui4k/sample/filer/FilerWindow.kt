@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.sample.filer
 
+import com.appkitbox.winui4k.CommandBarLabelPosition
 import com.appkitbox.winui4k.ContentDialogButton
 import com.appkitbox.winui4k.ContentDialogResult
 import com.appkitbox.winui4k.GridLength
@@ -14,7 +15,6 @@ import com.appkitbox.winui4k.SystemBackdropType
 import com.appkitbox.winui4k.TabViewWidthMode
 import com.appkitbox.winui4k.TextAlignment
 import com.appkitbox.winui4k.TextTrimming
-import com.appkitbox.winui4k.VerticalAlignment
 import com.appkitbox.winui4k.VirtualKey
 import com.appkitbox.winui4k.VirtualKeyModifier
 import com.appkitbox.winui4k.WAppBarButton
@@ -29,6 +29,7 @@ import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WItemContainer
 import com.appkitbox.winui4k.WItemsView
 import com.appkitbox.winui4k.WLabel
+import com.appkitbox.winui4k.WLayoutPanel
 import com.appkitbox.winui4k.WMenuFlyout
 import com.appkitbox.winui4k.WMenuFlyoutItem
 import com.appkitbox.winui4k.WMenuFlyoutSeparator
@@ -45,6 +46,7 @@ import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTitleBar
 import com.appkitbox.winui4k.WUniformGridLayout
 import com.appkitbox.winui4k.WinUiUtilities
+import com.appkitbox.winui4k.extension.miglayout.MigLayoutManager
 import java.io.File
 import java.io.IOException
 
@@ -63,7 +65,8 @@ internal class FilerTab(var directory: File) {
  */
 @Suppress("TooManyFunctions") // Acts as the controller for the whole window, so it naturally has one method per feature
 internal class FilerWindow {
-    private val frame = WFrame(title = "winui4k Filer")
+    // The window title matches titleBar.title ("Filer") since the latter syncs to AppWindow
+    private val frame = WFrame(title = "Filer")
     private val titleBar = WTitleBar()
     private val tabView = WTabView()
 
@@ -154,11 +157,14 @@ internal class FilerWindow {
     private fun buildTitleBar(): WComponent {
         titleBar.iconGlyph = "" // The Folder glyph in Segoe Fluent Icons
 
+        titleBar.title = "Filer"
+
         tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
         tabView.canReorderTabs = false // Tabs are managed by index, so reordering is disabled
         tabView.isAddTabButtonVisible = true
         tabView.addTab(WTabViewItem(tabLabel(activeTab.directory)))
         tabView.selectedIndex = 0
+        updateTabClosability()
         tabView.addAddTabButtonClickListener { addTab() }
         tabView.addTabCloseRequestedListener { index -> closeTab(index) }
         tabView.addSelectionListener {
@@ -185,8 +191,6 @@ internal class FilerWindow {
         navPanel.add(refreshButton)
 
         pathBox.isVisible = false
-        pathBox.verticalAlignment = VerticalAlignment.CENTER
-        breadcrumbBar.verticalAlignment = VerticalAlignment.CENTER
         val addressHost = WGrid()
         addressHost.addRow(GridLength.star())
         addressHost.addColumn(GridLength.star())
@@ -197,24 +201,22 @@ internal class FilerWindow {
         viewSelector.addItem(WSelectorBarItem("Icons"))
         viewSelector.selectedIndex = 0
         viewSelector.addSelectionListener { index -> setIconView(index == 1) }
-        viewSelector.verticalAlignment = VerticalAlignment.CENTER
 
-        filterBox.verticalAlignment = VerticalAlignment.CENTER
-
-        val toolbar = WGrid()
-        toolbar.columnSpacing = 8.0
-        toolbar.setMargin(8.0, 4.0, 8.0, 4.0)
-        toolbar.addRow(GridLength.AUTO)
-        toolbar.addColumn(GridLength.AUTO)
-        toolbar.addColumn(GridLength.star())
-        toolbar.addColumn(GridLength.AUTO)
-        toolbar.addColumn(GridLength.AUTO)
-        toolbar.addColumn(GridLength.pixel(FILTER_BOX_WIDTH))
-        toolbar.add(navPanel, row = 0, column = 0)
-        toolbar.add(addressHost, row = 0, column = 1)
-        toolbar.add(pathEditButton, row = 0, column = 2)
-        toolbar.add(viewSelector, row = 0, column = 3)
-        toolbar.add(filterBox, row = 0, column = 4)
+        // Controls of different heights are mixed together, so a [center] row constraint plus
+        // aligny center on each cell keeps them lined up on a vertical center line (WGrid's Auto
+        // rows default to Stretch, which would make this look uneven)
+        val toolbar = WLayoutPanel(
+            MigLayoutManager(
+                layoutConstraints = "insets 4 8 4 8, gapx 8, fillx",
+                columnConstraints = "[][grow][][][]",
+                rowConstraints = "[center]",
+            ),
+        )
+        toolbar.add(navPanel, "aligny center")
+        toolbar.add(addressHost, "growx, aligny center")
+        toolbar.add(pathEditButton, "aligny center")
+        toolbar.add(viewSelector, "aligny center")
+        toolbar.add(filterBox, "width ${FILTER_BOX_WIDTH.toInt()}!, aligny center")
         return toolbar
     }
 
@@ -505,6 +507,7 @@ internal class FilerWindow {
         isSyncingTabs = false
         activeTabIndex = tabs.size - 1
         tabView.selectedIndex = activeTabIndex
+        updateTabClosability()
         filterBox.text = ""
         refresh()
     }
@@ -518,8 +521,17 @@ internal class FilerWindow {
         activeTabIndex = tabView.selectedIndex.coerceIn(0, tabs.size - 1)
         if (tabView.selectedIndex != activeTabIndex) tabView.selectedIndex = activeTabIndex
         isSyncingTabs = false
+        updateTabClosability()
         filterBox.text = ""
         refresh()
+    }
+
+    /** Hides the close button (X) when there's only one tab, so the last tab can't be closed. */
+    private fun updateTabClosability() {
+        val closable = tabs.size > 1
+        for (index in 0 until tabView.tabCount) {
+            tabView.getTab(index).isClosable = closable
+        }
     }
 
     // endregion
@@ -655,7 +667,9 @@ internal class FilerWindow {
 
     private fun compactButton(toolTip: String, icon: Symbol): WAppBarButton {
         val button = WAppBarButton("", icon)
-        button.isCompact = true
+        // isCompact shrinks the button while still reserving the label area, which pushes the icon
+        // up. LabelPosition=Collapsed collapses the label area too, centering the icon in the box
+        button.labelPosition = CommandBarLabelPosition.COLLAPSED
         button.toolTip = toolTip
         return button
     }

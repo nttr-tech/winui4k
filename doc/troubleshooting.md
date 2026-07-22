@@ -18,3 +18,10 @@
 - **`--enable-native-access` の警告/エラー**
   `gradlew run` 経由なら自動付与される。
   jar を直接実行する場合は `java --enable-native-access=ALL-UNNAMED ...` を付ける。
+- **TabView: 表示後に TabItems へ Append しても画面にタブが増えない (Append は成功し Size も増える)**
+  TabView は内部 ListView の Loaded 時に TabItems プロパティの実体を ListView.Items へ差し替える
+  (microsoft-ui-xaml `TabView::OnListViewLoaded` 末尾の `TabItems(lvItems)`)。
+  そのため Loaded 前に取得した IVector をキャッシュして操作すると、差し替え前の孤立した
+  コレクションを更新するだけで表示に反映されない。get_TabItems は毎回取得し直すこと
+  (WTabView の `withTabItemVector`)。同様に実体を差し替えるコレクションプロパティは他の
+  コントロールにもありうるため、IVector のキャッシュは原則避ける。

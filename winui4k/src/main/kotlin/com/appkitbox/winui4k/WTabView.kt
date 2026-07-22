@@ -84,10 +84,27 @@ class WTabViewItem(header: String = "") : WControl(
 class WTabView : WControl(
     Activation.composeDefault(XamlInterop.CLS_TabView, XamlInterop.IID_ITabViewFactory), // default interface = ITabView
 ) {
-    /** The IVector<Object> view of TabView.TabItems. */
-    private val tabItemVector: ComPtr by lazy {
-        val items = own(inspectable.getPtr(XamlInterop.ITabView_get_TabItems))
-        own(items.queryInterface(FoundationInterop.IID_IVector_Object))
+    /**
+     * Gets the IVector<Object> view of TabView.TabItems, passes it to [block], and releases it afterward.
+     *
+     * TabView swaps out what TabItems actually points to onto ListView.Items when its internal
+     * ListView's Loaded fires (the `TabItems(lvItems)` call at the end of microsoft-ui-xaml's
+     * `TabView::OnListViewLoaded`). So caching the vector means that after Loaded, you'd be
+     * operating on the orphaned pre-swap collection instead, with no effect on the display (the
+     * Append call itself succeeds and get_Size does increase). Always re-fetch via get_TabItems.
+     */
+    private inline fun <T> withTabItemVector(block: (ComPtr) -> T): T {
+        val items = inspectable.getPtr(XamlInterop.ITabView_get_TabItems)
+        try {
+            val vector = items.queryInterface(FoundationInterop.IID_IVector_Object)
+            try {
+                return block(vector)
+            } finally {
+                vector.release()
+            }
+        } finally {
+            items.release()
+        }
     }
 
     /** The tabs added via [addTab] (used to reverse-look-up an index). */
@@ -128,13 +145,13 @@ class WTabView : WControl(
 
     /** Appends a tab to the end (TabItems.Append). */
     fun addTab(tab: WTabViewItem) {
-        tabItemVector.call(FoundationInterop.IVector_Append, tab.inspectable.ptr)
+        withTabItemVector { it.call(FoundationInterop.IVector_Append, tab.inspectable.ptr) }
         tabs += tab
     }
 
     /** Removes the tab at [index] (TabItems.RemoveAt). */
     fun removeTab(index: Int) {
-        tabItemVector.call(FoundationInterop.IVector_RemoveAt, index)
+        withTabItemVector { it.call(FoundationInterop.IVector_RemoveAt, index) }
         tabs.removeAt(index)
     }
 

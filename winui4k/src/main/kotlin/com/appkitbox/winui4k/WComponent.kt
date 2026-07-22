@@ -149,6 +149,14 @@ abstract class WComponent internal constructor(
     val actualWidth: Double
         get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth)
 
+    /**
+     * Synchronously finishes any pending layout (UIElement.UpdateLayout).
+     * Use in tests/measurements that read layout results like [actualWidth] right after a change.
+     */
+    fun updateLayout() {
+        uiElement.call(XamlInterop.IUIElement_UpdateLayout)
+    }
+
     /** The actual height after layout (FrameworkElement.ActualHeight). 0 before layout. */
     val actualHeight: Double
         get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight)

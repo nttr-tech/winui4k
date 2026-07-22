@@ -2,8 +2,10 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 
 /** Tests verifying WTabView's tab management, selection, and properties, plus WTabViewItem's header updates. */
@@ -46,6 +48,61 @@ class WTabViewTest : FunSpec() {
             }
             count shouldBe 2
             header shouldBe "Tab 2"
+        }
+
+        test("a tab added via addTab after Loaded is reflected in the display (the tab strip's width grows)") {
+            // If adding to TabItems (the model) isn't reflected in rendering, SIZE_TO_CONTENT's width won't change
+            val tabView = onUiThreadGet {
+                val tabView = WTabView()
+                // Make the width content-dependent so a change in tab count can be observed via actualWidth
+                tabView.horizontalAlignment = HorizontalAlignment.LEFT
+                tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
+                tabView.addTab(WTabViewItem("Tab 1"))
+                tabView.selectedIndex = 0
+                tabView
+            }
+            UiTestHarness.attachAndAwaitLoaded(tabView)
+            try {
+                val (before, after) = onUiThreadGet {
+                    tabView.updateLayout()
+                    val before = tabView.actualWidth
+                    tabView.addTab(WTabViewItem("Tab 2"))
+                    tabView.updateLayout()
+                    before to tabView.actualWidth
+                }
+                withClue("The tab strip's width after adding (before=$before after=$after)") {
+                    (after > before).shouldBeTrue()
+                }
+            } finally {
+                UiTestHarness.detach(tabView)
+            }
+        }
+
+        test("isClosable=false hides the close button (the tab's width shrinks)") {
+            val tabView = onUiThreadGet {
+                val tabView = WTabView()
+                // Make the width content-dependent so whether the close button is shown can be observed via actualWidth
+                tabView.horizontalAlignment = HorizontalAlignment.LEFT
+                tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
+                tabView.addTab(WTabViewItem("Tab 1"))
+                tabView.selectedIndex = 0
+                tabView
+            }
+            UiTestHarness.attachAndAwaitLoaded(tabView)
+            try {
+                val (before, after) = onUiThreadGet {
+                    tabView.updateLayout()
+                    val before = tabView.actualWidth
+                    tabView.getTab(0).isClosable = false
+                    tabView.updateLayout()
+                    before to tabView.actualWidth
+                }
+                withClue("The tab strip's width after hiding the close button (before=$before after=$after)") {
+                    (after < before).shouldBeTrue()
+                }
+            } finally {
+                UiTestHarness.detach(tabView)
+            }
         }
 
         test("the SelectionChanged listener fires on every change to selectedIndex") {
