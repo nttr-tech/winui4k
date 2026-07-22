@@ -94,11 +94,17 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 
 ### 5. Gallery にデモページを追加する
 
-`winui4k-sample-gallery/src/main/kotlin/com/appkitbox/winui4k/sample/gallery/MainForGallery.kt`:
+`winui4k-sample-gallery/src/main/kotlin/com/appkitbox/winui4k/sample/gallery/` はカテゴリごとに
+1 ファイル (`BasicInputPages.kt` / `CollectionsPages.kt` / ... / `WindowingPages.kt`) に分かれている:
 
-- `buildNavigationPane()` の `pages` にページ名 (WinUI のコントロール名) を追加する
-- `build<Name>Page()` を実装し、追加した API を一通り操作できるデモを
-  `buildExample("見出し", body)` 単位で並べる (既存の Button ページの構成に合わせる)
+- `GalleryNavigation.kt` の `pages` にページ名 (WinUI のコントロール名) → `::build<Name>Page` を、
+  `categories` に所属カテゴリへのページ名を追加する
+- 該当カテゴリの `*Pages.kt` に `internal fun build<Name>Page()` を実装し、追加した API を
+  一通り操作できるデモを `buildExample("見出し", body)` 単位で並べる
+  (`// region <Name> ページ` で囲み、そのページ専用のヘルパーは private で同じ region に置く。
+  既存の Button ページの構成に合わせる)
+- ページの骨格 (`buildPage` / `buildExample` / `optionsLabel`) は `GalleryScaffold.kt`、
+  テーマ配色 (`CARD_BACKGROUND` など) は `GalleryTheme.kt` にある
 
 ### 6. 検証する
 
