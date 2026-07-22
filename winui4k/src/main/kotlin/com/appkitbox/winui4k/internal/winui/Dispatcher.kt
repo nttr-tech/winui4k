@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.KComObject
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -46,22 +47,40 @@ internal object Dispatcher {
     val isDispatchThread: Boolean
         get() = Thread.currentThread() === uiThread
 
-    /** Posts [block] onto the UI thread's message loop. Callable from any thread. */
-    fun invokeLater(block: () -> Unit) {
-        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
-        val handler = KComObject("WinUI4K.DispatcherQueueHandler", inspectable = false)
+    /** Blocks waiting to be posted by invokeLater. Each TryEnqueue corresponds to exactly one Invoke, matched FIFO. */
+    private val pending = ConcurrentLinkedQueue<() -> Unit>()
+
+    /**
+     * The DispatcherQueueHandler shared by every invokeLater call.
+     * Creating a KComObject (a native vtable + upcall stub) on every call would leak for
+     * the lifetime of the process, so a single instance is shared and blocks are pulled from [pending].
+     */
+    private val enqueueHandler by lazy {
+        KComObject("WinUI4K.DispatcherQueueHandler", inspectable = false)
             .addInterface(
                 Abi.IID_DispatcherQueueHandler,
                 listOf(
                     KComObject.Method(DESC_HANDLER) {
-                        block()
+                        pending.poll()?.invoke()
                         KComObject.S_OK
                     },
                 ),
             )
-        Ffi.backend.withScope { scope ->
+    }
+
+    /** Posts [block] onto the UI thread's message loop. Callable from any thread. */
+    fun invokeLater(block: () -> Unit) {
+        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
+        pending.add(block)
+        val enqueued = Ffi.backend.withScope { scope ->
             val out = scope.allocate(1, 1) // TryEnqueue(handler, out boolean)
-            q.call(Abi.IDispatcherQueue_TryEnqueue, handler.primary, out)
+            q.call(Abi.IDispatcherQueue_TryEnqueue, enqueueHandler.primary, out)
+            Ffi.backend.memory.getByte(out, 0).toInt() != 0
+        }
+        if (!enqueued) {
+            // Don't silently swallow an enqueue failure (the queue shutting down) — surface it
+            pending.remove(block)
+            throw IllegalStateException("DispatcherQueue.TryEnqueue failed (the UI thread is shutting down)")
         }
     }
 
