@@ -125,6 +125,7 @@ object WinUiUtilities {
         } finally {
             WinRtRuntime.uninitialize()
             WinAppSdkBootstrap.shutdown()
+            WinAppSdkBootstrap.cleanupExtractedFiles()
         }
     }
 

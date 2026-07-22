@@ -7,6 +7,11 @@ import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.function
 import com.appkitbox.winui4k.internal.ffi.api.withScope
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.UUID
 
 /**
  * Windows App SDK bootstrap (Microsoft.WindowsAppRuntime.Bootstrap.dll).
@@ -26,9 +31,51 @@ internal object WinAppSdkBootstrap {
     /** MddBootstrapInitializeOptions_OnNoMatch_ShowUI: prompts the user to install the runtime if it's missing. */
     private const val BOOTSTRAP_ON_NO_MATCH_SHOW_UI = 0x08
 
+    private const val DLL_NAME = "Microsoft.WindowsAppRuntime.Bootstrap.dll"
+
+    @Volatile
+    private var resolvedLibrary: String? = null
+
     private val library: String
-        get() = System.getProperty("winui4k.bootstrap.dll")
-            ?: "Microsoft.WindowsAppRuntime.Bootstrap.dll" // resolved from PATH / the current directory
+        get() = resolvedLibrary ?: synchronized(this) {
+            resolvedLibrary ?: resolveLibrary().also { resolvedLibrary = it }
+        }
+
+    private fun resolveLibrary(): String {
+        System.getProperty("winui4k.bootstrap.dll")?.let { return it }
+        extractFromClasspath()?.let { return it }
+        return DLL_NAME
+    }
+
+    private var extractedDirectory: File? = null
+
+    private fun extractFromClasspath(): String? {
+        val arch = System.getProperty("os.arch").lowercase()
+        val rid = when {
+            arch == "aarch64" || arch == "arm64" -> "win-arm64"
+            arch.contains("64") -> "win-x64"
+            else -> "win-x86"
+        }
+        val resourcePath = "/native/$rid/$DLL_NAME"
+        val stream = WinAppSdkBootstrap::class.java.getResourceAsStream(resourcePath) ?: return null
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val uniqueId = UUID.randomUUID().toString().substring(0, 8)
+        val tempDirectory = File(System.getProperty("java.io.tmpdir"), "winui4k/${timestamp}_$uniqueId")
+        tempDirectory.mkdirs()
+        extractedDirectory = tempDirectory
+        Runtime.getRuntime().addShutdownHook(Thread(::cleanupExtractedFiles, "winui4k-bootstrap-cleanup"))
+        val dll = File(tempDirectory, DLL_NAME)
+        stream.use { input -> FileOutputStream(dll).use { input.copyTo(it) } }
+        return dll.absolutePath
+    }
+
+    fun cleanupExtractedFiles() {
+        extractedDirectory?.let { directory ->
+            directory.listFiles()?.forEach { it.delete() }
+            directory.delete()
+            extractedDirectory = null
+        }
+    }
 
     fun initialize() {
         // HRESULT MddBootstrapInitialize2(UINT32 majorMinor, PCWSTR versionTag,
