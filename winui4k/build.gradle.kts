@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.net.URI
 import java.util.zip.ZipFile
 
@@ -140,6 +141,14 @@ tasks.test {
     useJUnitPlatform()
     // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+// Show per-test-case results in CI logs (applies to all Test tasks, including testOnJavaXX)
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
 
 // In addition to tasks.test (the toolchain's JDK 25), run the same tests on the minimum

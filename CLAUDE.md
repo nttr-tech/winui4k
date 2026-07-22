@@ -10,7 +10,7 @@ Java の FFI (Panama / JNA / JNR) で WinRT の COM ABI (`RoGetActivationFactory
 .\gradlew run                                  # Gallery アプリを起動 (動作確認の基本手段)
 .\gradlew build                                # 全モジュールのビルド + check (テスト + detekt)
 .\gradlew :winui4k:test                        # コアの E2E テスト (実際に WinUI を起動する。Windows + WinAppSDK ランタイム必須)
-.\gradlew :winui4k:test --tests "*WButtonTest" # 単一テストクラスの実行
+.\gradlew :winui4k:test --tests "WButtonTest"  # 単一テストクラスの実行 (Kotest はワイルドカード不可。単純クラス名か完全修飾名で指定)
 .\gradlew :winui4k:testOnAllJavaVersions       # JDK 8 / 9 / 22 / 25 でテスト実行
 .\gradlew spotlessApply                        # ktlint によるフォーマット
 .\gradlew detekt                               # 静的解析 (check に含まれる)
