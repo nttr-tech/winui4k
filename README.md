@@ -107,6 +107,7 @@ Windows App SDK 2.2 ランタイムが必要です。未インストールの場
 - [WinUI リポジトリ](https://github.com/microsoft/microsoft-ui-xaml)
    - [WinUI Gallery リポジトリ](https://github.com/microsoft/WinUI-Gallery)
    - [Windows App SDK リポジトリ](https://github.com/microsoft/WindowsAppSDK)
+   - [nuget](https://www.nuget.org/packages/Microsoft.WindowsAppSDK)
 - WinUI追加コンポーネント
    - [TableView リポジトリ](https://github.com/w-ahmad/WinUI.TableView)
    - [Community Controls リポジトリ](https://github.com/CommunityToolkit/Windows)
