@@ -76,6 +76,9 @@ class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
         addSizeChangedListener { revalidate() }
         addLoadedListener {
             loaded = true
+            // A measurement taken before joining the visual tree can incorrectly return 0, and once
+            // cached it stays 0 on later passes. Force every child to be re-measured once it joins
+            mutableLayoutChildren.forEach { it.invalidateNaturalSize() }
             revalidate()
         }
     }
