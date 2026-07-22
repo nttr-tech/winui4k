@@ -30,10 +30,10 @@ internal object PropertyValues {
     /** Boxes a Kotlin String into an IInspectable (PropertyValue.CreateString). */
     fun boxString(s: String): ComPtr {
         val statics = statics()
-        return Hstring.use(s) { h ->
-            val boxed = statics.getPtr(IPropertyValueStatics_CreateString, h)
+        return try {
+            Hstring.use(s) { h -> statics.getPtr(IPropertyValueStatics_CreateString, h) }
+        } finally {
             statics.release()
-            boxed
         }
     }
 

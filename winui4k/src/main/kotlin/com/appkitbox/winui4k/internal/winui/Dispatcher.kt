@@ -34,8 +34,11 @@ internal object Dispatcher {
     fun capture() {
         if (queue != null) return
         val statics = Activation.factory(Abi.CLS_DispatcherQueue, Abi.IID_IDispatcherQueueStatics)
-        queue = statics.getPtr(Abi.IDispatcherQueueStatics_GetForCurrentThread)
-        statics.release()
+        try {
+            queue = statics.getPtr(Abi.IDispatcherQueueStatics_GetForCurrentThread)
+        } finally {
+            statics.release()
+        }
         uiThread = Thread.currentThread()
     }
 
