@@ -28,11 +28,40 @@ internal object Win32 {
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.I32),
         )
     }
+    private val createEventW by lazy {
+        Ffi.backend.function(
+            "kernel32.dll", "CreateEventW",
+            CallDescriptor(ValueKind.PTR, ArgKind.PTR, ArgKind.I32, ArgKind.I32, ArgKind.PTR),
+        )
+    }
+    private val setEvent by lazy {
+        Ffi.backend.function("kernel32.dll", "SetEvent", CallDescriptor(ValueKind.I32, ArgKind.PTR))
+    }
+    private val closeHandle by lazy {
+        Ffi.backend.function("kernel32.dll", "CloseHandle", CallDescriptor(ValueKind.I32, ArgKind.PTR))
+    }
 
     /** Enables Per-Monitor v2 DPI awareness. java.exe has no manifest, so this is done in code. */
     fun enablePerMonitorDpiAwareness() {
         // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = (HANDLE)-4
         setProcessDpiAwarenessContext(Ptr(-4L))
+    }
+
+    /** Creates an auto-reset, initially-unsignaled Win32 event (CreateEventW). */
+    fun newAutoResetEvent(): Ptr {
+        val handle = createEventW(null, 0, 0, null) as Ptr
+        check(!handle.isNull) { "CreateEventW failed" }
+        return handle
+    }
+
+    /** Signals a Win32 event (SetEvent). */
+    fun signalEvent(handle: Ptr) {
+        setEvent(handle)
+    }
+
+    /** Closes a Win32 handle (CloseHandle). */
+    fun closeEventHandle(handle: Ptr) {
+        closeHandle(handle)
     }
 
     /** Returns the full path of a loaded module, or null if it isn't loaded. */
