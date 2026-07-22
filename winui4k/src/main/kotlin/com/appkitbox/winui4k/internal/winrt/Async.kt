@@ -43,7 +43,12 @@ internal object Async {
     /** Waits for an IAsyncAction to complete. Throws an HRESULT exception on failure. */
     fun await(action: ComPtr, what: String) {
         val latch = CountDownLatch(1)
-        action.call(IAsyncAction_put_Completed, completedHandler(IID_AsyncActionCompletedHandler, latch))
+        val handler = completedHandler(IID_AsyncActionCompletedHandler, latch)
+        try {
+            action.call(IAsyncAction_put_Completed, handler.primary)
+        } finally {
+            handler.release() // put_Completed holds a reference to it; it's reclaimed by Release after completion fires
+        }
         awaitLatch(latch, what)
         checkStatus(action, what)
     }
@@ -54,14 +59,19 @@ internal object Async {
      */
     fun awaitResult(operation: ComPtr, handlerIid: String, what: String): ComPtr {
         val latch = CountDownLatch(1)
-        operation.call(IAsyncOperation_put_Completed, completedHandler(handlerIid, latch))
+        val handler = completedHandler(handlerIid, latch)
+        try {
+            operation.call(IAsyncOperation_put_Completed, handler.primary)
+        } finally {
+            handler.release() // put_Completed holds a reference to it; it's reclaimed by Release after completion fires
+        }
         awaitLatch(latch, what)
         checkStatus(operation, what)
         return operation.getPtr(IAsyncOperation_GetResults)
     }
 
     /** The delegate that releases [latch] on completion (Action and Operation<T> both have the same Invoke shape). */
-    private fun completedHandler(handlerIid: String, latch: CountDownLatch) =
+    private fun completedHandler(handlerIid: String, latch: CountDownLatch): KComObject =
         KComObject("WinUI4K.AsyncCompletedHandler", inspectable = false)
             .addInterface(
                 handlerIid,
@@ -72,7 +82,6 @@ internal object Async {
                     },
                 ),
             )
-            .primary
 
     private fun awaitLatch(latch: CountDownLatch, what: String) {
         check(latch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) { "$what timed out" }

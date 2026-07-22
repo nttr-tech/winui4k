@@ -115,9 +115,13 @@ internal object Dispatcher {
                         },
                     ),
                 )
-            Ffi.backend.withScope { scope ->
-                val token = scope.allocate(8) // EventRegistrationToken (int64)
-                timer.call(Abi.IDispatcherQueueTimer_add_Tick, tickHandler.primary, token)
+            try {
+                Ffi.backend.withScope { scope ->
+                    val token = scope.allocate(8) // EventRegistrationToken (int64)
+                    timer.call(Abi.IDispatcherQueueTimer_add_Tick, tickHandler.primary, token)
+                }
+            } finally {
+                tickHandler.release() // add_Tick holds a reference to it; it's reclaimed by Release when the timer is disposed
             }
             timerRef.set(timer)
             timer.call(Abi.IDispatcherQueueTimer_Start)

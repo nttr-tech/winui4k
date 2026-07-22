@@ -7,8 +7,10 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * A COM object implemented on the Kotlin side (lives in the winrt layer because it
@@ -23,6 +25,18 @@ import java.util.concurrent.atomic.AtomicInteger
  *   [0..2]  IUnknown  (QueryInterface / AddRef / Release)
  *   [3..5]  IInspectable (GetIids / GetRuntimeClassName / GetTrustLevel), when inspectable=true
  *   [6.. ]  the interface body's own methods (in winmd declaration order)
+ *
+ * Upcall stubs and vtables are expensive (native thunks backed by a globalScope that's
+ * never freed), so only one is built per vtable shape (its sequence of descriptors) and
+ * shared across every instance of that shape. The COM object itself is a 16-byte
+ * { vtable*, instanceKey } block; the shared stub looks up the instanceKey in [REGISTRY]
+ * to dispatch to that particular instance's method bodies.
+ *
+ * The reference count starts at 1 (the creation reference held on the Kotlin side). Once
+ * a temporary object (an event handler, etc.) has been handed off to the native side,
+ * call [release] to give up that creation reference. When the reference count reaches 0
+ * the registration is removed, the Kotlin object becomes eligible for GC, and the COM
+ * object block is returned to the pool for reuse.
  */
 internal class KComObject(
     private val runtimeClassName: String,
@@ -33,6 +47,7 @@ internal class KComObject(
 
     private val refCount = AtomicInteger(1)
     private val interfaces = LinkedHashMap<String, Ptr>() // iid(lowercase) -> COM ptr
+    private val registrationKeys = ArrayList<Long>()
 
     /**
      * The non-delegating IUnknown of the inner object from COM aggregation (WinRT
@@ -56,7 +71,7 @@ internal class KComObject(
                 queryInterface(args[1] as Ptr, args[2] as Ptr)
             })
             add(Method(ComPtr.UNKNOWN_DESC) { _ -> refCount.incrementAndGet() })
-            add(Method(ComPtr.UNKNOWN_DESC) { _ -> refCount.decrementAndGet() })
+            add(Method(ComPtr.UNKNOWN_DESC) { _ -> releaseRef() })
             // --- IInspectable ---
             if (inspectable) {
                 add(Method(GET_IIDS_DESC) { args ->
@@ -77,13 +92,39 @@ internal class KComObject(
             addAll(methods)
         }
 
-        val scope = Ffi.backend.globalScope
-        val vtbl = scope.allocate(vtblMethods.size.toLong() * 8)
-        vtblMethods.forEachIndexed { i, m -> memory.putPtr(vtbl, i.toLong() * 8, upcallStub(m)) }
-        val obj = scope.allocate(8) // struct { vtable* }
+        val vtbl = sharedVtable(vtblMethods.map { it.descriptor })
+        val obj = OBJ_POOL.poll() ?: Ffi.backend.globalScope.allocate(16) // struct { vtable*; instanceKey }
+        val key = NEXT_KEY.getAndIncrement()
         memory.putPtr(obj, 0, vtbl)
+        memory.putLong(obj, 8, key)
         interfaces[iid.lowercase()] = obj
+        registrationKeys.add(key)
+        REGISTRY[key] = vtblMethods // published here (safely visible to the stub via the CHM)
         return this
+    }
+
+    /**
+     * Gives up the creation reference (initial count 1) held on the Kotlin side. Call this
+     * on a temporary object once it has been handed off to the native side; it will then
+     * be reclaimed on the native side's final Release.
+     * Do not call this on a shared object meant to live for the process's lifetime.
+     */
+    fun release() {
+        releaseRef()
+    }
+
+    private fun releaseRef(): Int {
+        val rc = refCount.decrementAndGet()
+        if (rc == 0) reclaim()
+        return rc
+    }
+
+    /** Reference count reached 0: removes the registration so the Kotlin side becomes GC-eligible, and returns the obj block to the pool. */
+    private fun reclaim() {
+        registrationKeys.forEach { REGISTRY.remove(it) }
+        interfaces.values.forEach { OBJ_POOL.add(it) }
+        innerUnknown?.release()
+        innerUnknown = null
     }
 
     private fun queryInterface(riid: Ptr, ppv: Ptr): Int {
@@ -108,25 +149,6 @@ internal class KComObject(
         return E_NOINTERFACE
     }
 
-    /**
-     * Turns the method body into a native function pointer.
-     * If an exception escapes to the native side it crashes the whole JVM, so it must
-     * always be caught and mapped to E_FAIL.
-     */
-    private fun upcallStub(m: Method): Ptr = Ffi.backend.upcallStub(m.descriptor) { args ->
-        try {
-            m.body(args)
-        } catch (t: Throwable) {
-            System.err.println("[winui4k] exception escaped from COM upcall:")
-            t.printStackTrace()
-            E_FAIL
-        }
-    }
-
-    init {
-        LIVE.add(this) // keep the upcall stubs and their lambdas from being GC'd (never released)
-    }
-
     companion object {
         const val S_OK = 0
         val E_NOINTERFACE = 0x80004002.toInt()
@@ -145,6 +167,43 @@ internal class KComObject(
         /** HRESULT GetIids(this, ULONG* count, IID** iids) */
         val GET_IIDS_DESC: CallDescriptor = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
 
-        private val LIVE = CopyOnWriteArrayList<KComObject>()
+        /** instanceKey -> the vtable method bodies for that interface. A live registration is a GC root. */
+        private val REGISTRY = ConcurrentHashMap<Long, List<Method>>()
+        private val NEXT_KEY = AtomicLong(1)
+
+        /** Reclaimed 16-byte obj blocks (globalScope memory can't be freed, so it's reused instead). */
+        private val OBJ_POOL = ConcurrentLinkedQueue<Ptr>()
+
+        /** The vtable shared per vtable shape (its sequence of descriptors). */
+        private val VTABLES = ConcurrentHashMap<List<CallDescriptor>, Ptr>()
+
+        private fun sharedVtable(shape: List<CallDescriptor>): Ptr =
+            VTABLES.computeIfAbsent(shape) { descriptors ->
+                val memory = Ffi.backend.memory
+                val vtbl = Ffi.backend.globalScope.allocate(descriptors.size.toLong() * 8)
+                descriptors.forEachIndexed { slot, descriptor ->
+                    val stub = Ffi.backend.upcallStub(descriptor) { args -> dispatch(slot, args) }
+                    memory.putPtr(vtbl, slot.toLong() * 8, stub)
+                }
+                vtbl
+            }
+
+        /**
+         * Dispatches from a shared stub to an instance's method body, looking up the instanceKey
+         * via the this pointer. If an exception escapes to the native side it crashes the whole
+         * JVM, so it must always be caught and mapped to E_FAIL.
+         */
+        private fun dispatch(slot: Int, args: Array<Any?>): Int {
+            val self = args[0] as Ptr
+            val methods = REGISTRY[Ffi.backend.memory.getLong(self, 8)]
+                ?: return E_FAIL // a call on an already-released object (the caller violated the reference count)
+            return try {
+                methods[slot].body(args)
+            } catch (t: Throwable) {
+                System.err.println("[winui4k] exception escaped from COM upcall:")
+                t.printStackTrace()
+                E_FAIL
+            }
+        }
     }
 }

@@ -207,6 +207,8 @@ private class StringIterable(private val items: List<String>) {
             listOf(
                 // vtbl[6] First(this, out IIterator<Object>)
                 KComObject.Method(DESC_THIS_PTR) { args ->
+                    // Passes the freshly created reference (count 1) straight into the out param;
+                    // it's reclaimed by the caller's Release
                     Ffi.backend.memory.putPtr(args[1] as Ptr, 0, createIterator().primary)
                     KComObject.S_OK
                 },

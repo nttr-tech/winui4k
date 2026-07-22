@@ -169,6 +169,10 @@ class WAppWindowTitleBar internal constructor(private val titleBar: ComPtr) {
             return
         }
         val reference = ColorReference.create(value.alpha, value.red, value.green, value.blue)
-        titleBar.call(slot, reference.primary)
+        try {
+            titleBar.call(slot, reference.primary)
+        } finally {
+            reference.release() // put holds a reference to it; it's reclaimed on the next put/Reset's Release
+        }
     }
 }

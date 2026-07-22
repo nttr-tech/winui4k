@@ -35,10 +35,16 @@ internal fun ComPtr.addEventHandler(
                 },
             ),
         )
-    return Ffi.backend.withScope { scope ->
-        val out = scope.allocate(8) // EventRegistrationToken (int64)
-        call(addSlot, handler.primary, out)
-        Ffi.backend.memory.getLong(out, 0)
+    return try {
+        Ffi.backend.withScope { scope ->
+            val out = scope.allocate(8) // EventRegistrationToken (int64)
+            call(addSlot, handler.primary, out)
+            Ffi.backend.memory.getLong(out, 0)
+        }
+    } finally {
+        // add_XXX holds a reference to it in the event table, so let go of the created reference here
+        // (the handler is reclaimed by remove_XXX's Release)
+        handler.release()
     }
 }
 
