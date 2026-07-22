@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.Abi
@@ -87,6 +88,11 @@ abstract class WComponent internal constructor(
     /** FrameworkElement view (also used as an argument to things like Flyout.ShowAt). */
     internal val frameworkElement: ComPtr by lazy {
         inspectable.queryInterface(Abi.IID_IFrameworkElement)
+    }
+
+    /** DependencyObject view (passed as the target of attached properties like ToolTipService). */
+    internal val dependencyObject: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_IDependencyObject)
     }
 
     var width: Double = Double.NaN
@@ -194,6 +200,35 @@ abstract class WComponent internal constructor(
     fun removeSizeChangedListener(listener: () -> Unit) {
         val token = sizeChangedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_SizeChanged, token)
+    }
+
+    /**
+     * The string hint shown on hover (ToolTipService.ToolTip). Equivalent to JComponent.setToolTipText.
+     * null removes it. Use [setToolTip] if you need to specify placement or a non-string hint.
+     */
+    var toolTip: String? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                toolTipServiceStatics.call(Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, null)
+            } else {
+                val boxed = PropertyValues.boxString(value)
+                toolTipServiceStatics.call(
+                    Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, boxed.ptr,
+                )
+                boxed.release()
+            }
+        }
+
+    /**
+     * Attaches a hint with a specific placement or non-string content to this target
+     * (sets [WToolTip] as ToolTipService.ToolTip). Use [toolTip] for a plain string.
+     */
+    fun setToolTip(toolTip: WToolTip) {
+        this.toolTip = null
+        toolTipServiceStatics.call(
+            Abi.IToolTipServiceStatics_SetToolTip, dependencyObject, toolTip.inspectable.ptr,
+        )
     }
 
     /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */

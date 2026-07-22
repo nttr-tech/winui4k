@@ -725,6 +725,32 @@ internal object Abi {
     const val IRangeBaseValueChangedEventArgs_get_OldValue = 6 // get_OldValue(out DOUBLE)
     const val IRangeBaseValueChangedEventArgs_get_NewValue = 7 // get_NewValue(out DOUBLE)
 
+    // ---- Microsoft.UI.Xaml.Controls.ProgressBar (RangeBase-derived) ----
+    const val CLS_ProgressBar = "Microsoft.UI.Xaml.Controls.ProgressBar"
+    const val IID_IProgressBarFactory = "189826ad-f6f2-533e-9ddb-b6600e88675b"
+    const val IID_IProgressBar = "87555c8c-0aaf-52c1-8390-0db17f40438e"
+    const val IProgressBar_get_IsIndeterminate = 6     // get_IsIndeterminate(out boolean)
+    const val IProgressBar_put_IsIndeterminate = 7     // put_IsIndeterminate(boolean)
+    const val IProgressBar_get_ShowError = 8           // get_ShowError(out boolean)
+    const val IProgressBar_put_ShowError = 9           // put_ShowError(boolean)
+    const val IProgressBar_get_ShowPaused = 10         // get_ShowPaused(out boolean)
+    const val IProgressBar_put_ShowPaused = 11         // put_ShowPaused(boolean)
+
+    // ---- Microsoft.UI.Xaml.Controls.ProgressRing ----
+    const val CLS_ProgressRing = "Microsoft.UI.Xaml.Controls.ProgressRing"
+    const val IID_IProgressRingFactory = "092fa98c-62a7-5dbc-9a85-3e556ba81f79"
+    const val IID_IProgressRing = "2670d03f-e28c-5652-bee2-b5212ebdf7ff"
+    const val IProgressRing_get_IsActive = 6           // get_IsActive(out boolean)
+    const val IProgressRing_put_IsActive = 7           // put_IsActive(boolean)
+    const val IProgressRing_get_IsIndeterminate = 8    // get_IsIndeterminate(out boolean)
+    const val IProgressRing_put_IsIndeterminate = 9    // put_IsIndeterminate(boolean)
+    const val IProgressRing_get_Value = 11             // get_Value(out DOUBLE)
+    const val IProgressRing_put_Value = 12             // put_Value(DOUBLE)
+    const val IProgressRing_get_Minimum = 13           // get_Minimum(out DOUBLE)
+    const val IProgressRing_put_Minimum = 14           // put_Minimum(DOUBLE)
+    const val IProgressRing_get_Maximum = 15           // get_Maximum(out DOUBLE)
+    const val IProgressRing_put_Maximum = 16           // put_Maximum(DOUBLE)
+
     // ---- Microsoft.UI.Xaml.Controls.Slider ----
     const val CLS_Slider = "Microsoft.UI.Xaml.Controls.Slider"
     const val IID_ISliderFactory = "06604d71-34ca-5f39-9656-29d81d3c110c"
@@ -1502,6 +1528,60 @@ internal object Abi {
     const val IID_ISymbolIconSourceFactory = "afbf55fa-ff79-552a-a3a1-48e2ef17152a"
     const val IID_ISymbolIconSource = "45120d6b-e868-59f2-a30a-b1915ce374bd"
     const val ISymbolIconSource_put_Symbol = 7         // put_Symbol(Symbol)
+
+    // ---- Microsoft.UI.Xaml.IDependencyObject (target of attached properties) ----
+    const val IID_IDependencyObject = "e7beaee7-160e-50f7-8789-d63463f979fa"
+
+    // ---- Microsoft.UI.Xaml.Controls.InfoBadge ----
+    const val CLS_InfoBadge = "Microsoft.UI.Xaml.Controls.InfoBadge"
+    const val IID_IInfoBadgeFactory = "fb498205-2de0-5986-8aec-2c46ac235087"
+    const val IID_IInfoBadge = "82104d7f-03d4-5ea4-872e-f9ecab758601"
+    const val IInfoBadge_get_Value = 6                 // get_Value(out INT32)
+    const val IInfoBadge_put_Value = 7                 // put_Value(INT32) — -1 for a dot badge, >= 0 for a numeric one
+    const val IInfoBadge_put_IconSource = 9            // put_IconSource(IconSource)
+
+    // ---- Microsoft.UI.Xaml.Controls.InfoBar ----
+    const val CLS_InfoBar = "Microsoft.UI.Xaml.Controls.InfoBar"
+    const val IID_IInfoBarFactory = "60618a60-9be7-5df5-be0d-933d34ddb44c"
+    const val IID_IInfoBar = "c1c3a438-dd79-5d22-9e42-5a3cdf8113a9"
+    const val IInfoBar_get_IsOpen = 6                  // get_IsOpen(out boolean)
+    const val IInfoBar_put_IsOpen = 7                  // put_IsOpen(boolean)
+    const val IInfoBar_get_Title = 8                   // get_Title(out HSTRING)
+    const val IInfoBar_put_Title = 9                   // put_Title(HSTRING)
+    const val IInfoBar_get_Message = 10                // get_Message(out HSTRING)
+    const val IInfoBar_put_Message = 11                // put_Message(HSTRING)
+    const val IInfoBar_get_Severity = 12               // get_Severity(out InfoBarSeverity)
+    const val IInfoBar_put_Severity = 13               // put_Severity(InfoBarSeverity)
+    const val IInfoBar_get_IsIconVisible = 16          // get_IsIconVisible(out boolean)
+    const val IInfoBar_put_IsIconVisible = 17          // put_IsIconVisible(boolean)
+    const val IInfoBar_get_IsClosable = 18             // get_IsClosable(out boolean)
+    const val IInfoBar_put_IsClosable = 19             // put_IsClosable(boolean)
+    const val IInfoBar_put_ActionButton = 27           // put_ActionButton(ButtonBase)
+    const val IInfoBar_put_Content = 29                // put_Content(object)
+    const val IInfoBar_add_CloseButtonClick = 33       // add_CloseButtonClick(TypedEventHandler<InfoBar, object>, out token)
+    const val IInfoBar_remove_CloseButtonClick = 34
+    const val IInfoBar_add_Closed = 37                 // add_Closed(TypedEventHandler<InfoBar, InfoBarClosedEventArgs>, out token)
+    const val IInfoBar_remove_Closed = 38
+
+    /** Actual IID of TypedEventHandler<InfoBar, Object> (shared by CloseButtonClick / Closed). */
+    val IID_InfoBarCloseButtonClickHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.InfoBar;{$IID_IInfoBar});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.ToolTip / ToolTipService ----
+    const val CLS_ToolTip = "Microsoft.UI.Xaml.Controls.ToolTip"
+    const val IID_IToolTipFactory = "bcbb3720-2db8-54e1-8806-fcbed38949a9"
+    const val IID_IToolTip = "67e93d74-5e93-59a1-91bf-413efbeb904c"
+    const val IToolTip_get_Placement = 10              // get_Placement(out PlacementMode)
+    const val IToolTip_put_Placement = 11              // put_Placement(PlacementMode)
+    const val CLS_ToolTipService = "Microsoft.UI.Xaml.Controls.ToolTipService"
+    const val IID_IToolTipServiceStatics = "5aa38adc-9874-5e0a-8d8e-1574efc0b88f"
+    const val IToolTipServiceStatics_SetPlacement = 8  // SetPlacement(DependencyObject, PlacementMode)
+    const val IToolTipServiceStatics_SetToolTip = 14   // SetToolTip(DependencyObject, object)
 
     // ---- Microsoft.UI.Xaml.Controls.SwipeControl / SwipeItems / SwipeItem ----
     const val CLS_SwipeControl = "Microsoft.UI.Xaml.Controls.SwipeControl"
