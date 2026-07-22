@@ -202,6 +202,29 @@ abstract class WComponent internal constructor(
         frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_SizeChanged, token)
     }
 
+    /** Event tokens registered via addLoadedListener. */
+    private val loadedTokens = ListenerTokens<() -> Unit>()
+
+    /**
+     * Subscribes to the moment the element is added to the visual tree and ready to render
+     * (FrameworkElement.Loaded). Useful for initializing parts that are only reachable after the
+     * template is applied (e.g. ScrollView.ScrollPresenter).
+     */
+    fun addLoadedListener(listener: () -> Unit) {
+        val token = frameworkElement.addEventHandler(
+            "WinUI4K.LoadedHandler",
+            Abi.IID_RoutedEventHandler,
+            Abi.IFrameworkElement_add_Loaded,
+        ) { _, _ -> listener() }
+        loadedTokens.add(listener, token)
+    }
+
+    /** Unsubscribes a listener registered via [addLoadedListener]. */
+    fun removeLoadedListener(listener: () -> Unit) {
+        val token = loadedTokens.remove(listener) ?: return
+        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_Loaded, token)
+    }
+
     /**
      * The string hint shown on hover (ToolTipService.ToolTip). Equivalent to JComponent.setToolTipText.
      * null removes it. Use [setToolTip] if you need to specify placement or a non-string hint.

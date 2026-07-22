@@ -136,6 +136,11 @@ internal val pageDescriptions: Map<String, String> = mapOf(
     "RatingControl" to "A control for entering and displaying a rating as a number of stars.",
     "RelativePanel" to "A panel that lays children out relative to one another.",
     "RepeatButton" to "A button that repeatedly fires its click event while held down.",
+    "AnnotatedScrollBar" to "A control that adds annotations to a vertical scrollbar to make large collections easier to navigate.",
+    "PipsPager" to "Lets you page through content without displaying explicit page numbers.",
+    "ScrollView" to "A container control that lets you pan and zoom its content.",
+    "ScrollViewer" to "A container control that lets you pan and zoom its content.",
+    "SemanticZoom" to "Switches between two zoomed views of a collection to make large numbers of items easier to navigate.",
     "RichEditBox" to "An input field for editing formatted text.",
     "RichTextBlock" to "A control that displays formatted text.",
     "Slider" to "Lets you drag a thumb to choose a value within a range.",
@@ -169,7 +174,7 @@ private val extractedImageUris = mutableMapOf<String, String?>()
  * Extracts a resource image (/images/[fileName]) to a temp file and returns its file URI.
  * WinUI's BitmapImage only accepts a URI (returns null if not found).
  */
-private fun galleryImageUri(fileName: String): String? = extractedImageUris.getOrPut(fileName) {
+internal fun galleryImageUri(fileName: String): String? = extractedImageUris.getOrPut(fileName) {
     val resource = object {}.javaClass.getResourceAsStream("/images/$fileName")
         ?: return@getOrPut null
     val file = File.createTempFile("winui4k-sample-gallery-", "-$fileName")
@@ -237,7 +242,11 @@ private fun buildHorizontalScroller(content: WComponent): WComponent {
 }
 
 /** Gets a page name's card-icon image file name ("Multiple windows" -> "MultipleWindows.png"). */
-private fun controlImageFileName(pageName: String): String = pageName.replace(" ", "") + ".png"
+// Capitalizes each space-separated word before joining. A plain replace(" ", "") would produce
+// "Multiplewindows", which can't be resolved to "MultipleWindows.png" inside a JAR (case-sensitive),
+// so we capitalize each word individually.
+private fun controlImageFileName(pageName: String): String =
+    pageName.split(" ").joinToString("") { word -> word.replaceFirstChar { it.uppercase() } } + ".png"
 
 /** Opens a URL in the default browser. */
 private fun openUrl(url: String) {

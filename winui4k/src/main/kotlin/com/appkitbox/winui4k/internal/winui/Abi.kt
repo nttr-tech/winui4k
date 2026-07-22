@@ -69,6 +69,8 @@ internal object Abi {
     const val IFrameworkElement_get_RequestedTheme = 57 // get_RequestedTheme(out ElementTheme)
     const val IFrameworkElement_put_RequestedTheme = 58 // put_RequestedTheme(ElementTheme)
     const val IFrameworkElement_get_ActualTheme = 60   // get_ActualTheme(out ElementTheme)
+    const val IFrameworkElement_add_Loaded = 61        // add_Loaded(RoutedEventHandler, out token)
+    const val IFrameworkElement_remove_Loaded = 62     // remove_Loaded(token)
     const val IFrameworkElement_add_SizeChanged = 67   // add_SizeChanged(SizeChangedEventHandler, out token)
     const val IFrameworkElement_remove_SizeChanged = 68 // remove_SizeChanged(token)
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
@@ -859,6 +861,126 @@ internal object Abi {
                 "{$IID_IScrollViewerViewChangedEventArgs}))",
         )
     }
+
+    // ---- Microsoft.UI.Xaml.Controls.ScrollView ----
+    const val CLS_ScrollView = "Microsoft.UI.Xaml.Controls.ScrollView"
+    const val IID_IScrollViewFactory = "f3547344-22e4-5e6c-9ece-66504ef733ed" // composable factory
+    const val IID_IScrollView = "8c98c86d-378a-5102-a1e3-3352280fa010"
+    const val IScrollView_get_Content = 6                       // get_Content(out UIElement)
+    const val IScrollView_put_Content = 7                       // put_Content(UIElement)
+    const val IScrollView_get_ScrollPresenter = 9               // get_ScrollPresenter(out Primitives.ScrollPresenter)
+    const val IScrollView_get_HorizontalOffset = 11             // get_HorizontalOffset(out double)
+    const val IScrollView_get_VerticalOffset = 12               // get_VerticalOffset(out double)
+    const val IScrollView_get_ViewportWidth = 16                // get_ViewportWidth(out double)
+    const val IScrollView_get_ViewportHeight = 17                // get_ViewportHeight(out double)
+    const val IScrollView_get_ScrollableWidth = 18              // get_ScrollableWidth(out double)
+    const val IScrollView_get_ScrollableHeight = 19             // get_ScrollableHeight(out double)
+    const val IScrollView_get_HorizontalScrollBarVisibility = 21 // get_HorizontalScrollBarVisibility(out ScrollingScrollBarVisibility enum)
+    const val IScrollView_put_HorizontalScrollBarVisibility = 22 // put_HorizontalScrollBarVisibility(ScrollingScrollBarVisibility enum)
+    const val IScrollView_get_VerticalScrollBarVisibility = 23  // get_VerticalScrollBarVisibility(out ScrollingScrollBarVisibility enum)
+    const val IScrollView_put_VerticalScrollBarVisibility = 24  // put_VerticalScrollBarVisibility(ScrollingScrollBarVisibility enum)
+    const val IScrollView_get_ContentOrientation = 25           // get_ContentOrientation(out ScrollingContentOrientation enum)
+    const val IScrollView_put_ContentOrientation = 26           // put_ContentOrientation(ScrollingContentOrientation enum)
+    const val IScrollView_get_ZoomMode = 45                     // get_ZoomMode(out ScrollingZoomMode enum)
+    const val IScrollView_put_ZoomMode = 46                     // put_ZoomMode(ScrollingZoomMode enum)
+    const val IScrollView_get_MinZoomFactor = 49                // get_MinZoomFactor(out double)
+    const val IScrollView_put_MinZoomFactor = 50                // put_MinZoomFactor(double)
+    const val IScrollView_get_MaxZoomFactor = 51                // get_MaxZoomFactor(out double)
+    const val IScrollView_put_MaxZoomFactor = 52                // put_MaxZoomFactor(double)
+    const val IScrollView_ScrollTo = 59                         // ScrollTo(double h, double v, out int correlationId)
+    const val IScrollView_ScrollBy = 61                         // ScrollBy(double dh, double dv, out int correlationId)
+    const val IScrollView_add_ViewChanged = 73                  // add_ViewChanged(TypedEventHandler<ScrollView, object>, out token)
+    const val IScrollView_remove_ViewChanged = 74               // remove_ViewChanged(token)
+
+    /** The actual IID of TypedEventHandler<ScrollView, object> (computed at runtime). TArgs is Object, so cinterface(IInspectable). */
+    val IID_ScrollViewViewChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ScrollView;{$IID_IScrollView});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.PipsPager ----
+    const val CLS_PipsPager = "Microsoft.UI.Xaml.Controls.PipsPager"
+    const val IID_IPipsPagerFactory = "020722cd-813a-5165-a899-3df9adcd805e" // composable factory
+    const val IID_IPipsPager = "de7fc5d5-9446-5693-bbf3-fd7f943a567c"
+    const val IPipsPager_get_NumberOfPages = 6            // get_NumberOfPages(out int)
+    const val IPipsPager_put_NumberOfPages = 7            // put_NumberOfPages(int)
+    const val IPipsPager_get_SelectedPageIndex = 8        // get_SelectedPageIndex(out int)
+    const val IPipsPager_put_SelectedPageIndex = 9        // put_SelectedPageIndex(int)
+    const val IPipsPager_get_MaxVisiblePips = 10          // get_MaxVisiblePips(out int)
+    const val IPipsPager_put_MaxVisiblePips = 11          // put_MaxVisiblePips(int)
+    const val IPipsPager_get_Orientation = 12             // get_Orientation(out Orientation enum)
+    const val IPipsPager_put_Orientation = 13             // put_Orientation(Orientation enum)
+    const val IPipsPager_get_PreviousButtonVisibility = 14 // get_PreviousButtonVisibility(out PipsPagerButtonVisibility enum)
+    const val IPipsPager_put_PreviousButtonVisibility = 15 // put_PreviousButtonVisibility(PipsPagerButtonVisibility enum)
+    const val IPipsPager_get_NextButtonVisibility = 16    // get_NextButtonVisibility(out PipsPagerButtonVisibility enum)
+    const val IPipsPager_put_NextButtonVisibility = 17    // put_NextButtonVisibility(PipsPagerButtonVisibility enum)
+    const val IPipsPager_add_SelectedIndexChanged = 26    // add_SelectedIndexChanged(TypedEventHandler<PipsPager, PipsPagerSelectedIndexChangedEventArgs>, out token)
+    const val IPipsPager_remove_SelectedIndexChanged = 27 // remove_SelectedIndexChanged(token)
+    const val IID_IPipsPagerSelectedIndexChangedEventArgs = "6c2ce4fc-bf52-5ca6-9da4-b0bd5b928d97"
+
+    /** The actual IID of TypedEventHandler<PipsPager, PipsPagerSelectedIndexChangedEventArgs> (computed at runtime). */
+    val IID_PipsPagerSelectedIndexChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.PipsPager;{$IID_IPipsPager});" +
+                "rc(Microsoft.UI.Xaml.Controls.PipsPagerSelectedIndexChangedEventArgs;" +
+                "{$IID_IPipsPagerSelectedIndexChangedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.ScrollPresenter / IScrollController ----
+    const val IID_IScrollPresenter = "424b8afd-f7aa-5e5b-9d0b-5f0ea4e1a56e"
+    const val IScrollPresenter_put_VerticalScrollController = 50 // put_VerticalScrollController(IScrollController)
+    const val IID_IScrollController = "54396786-1726-53d6-97a3-40af0838314c"
+
+    // ---- Microsoft.UI.Xaml.Controls.AnnotatedScrollBar ----
+    const val CLS_AnnotatedScrollBar = "Microsoft.UI.Xaml.Controls.AnnotatedScrollBar"
+    const val IID_IAnnotatedScrollBarFactory = "3f64c40f-b879-5020-b67c-b789e173c798" // composable factory
+    const val IID_IAnnotatedScrollBar = "0f4904a9-b6f9-5834-8d5d-59bc3b7b7ee2"
+    const val IAnnotatedScrollBar_get_ScrollController = 6       // get_ScrollController(out IScrollController)
+    const val IAnnotatedScrollBar_get_Labels = 7                 // get_Labels(out IVector<AnnotatedScrollBarLabel>)
+    const val IAnnotatedScrollBar_put_LabelTemplate = 10         // put_LabelTemplate(IElementFactory)
+    const val IID_IElementFactory = "75faba47-2cf2-54ae-91e6-0581556fddaa"
+    const val IAnnotatedScrollBar_add_DetailLabelRequested = 17  // add_DetailLabelRequested(TypedEventHandler<...>, out token)
+    const val IAnnotatedScrollBar_remove_DetailLabelRequested = 18 // remove_DetailLabelRequested(token)
+    const val IID_IAnnotatedScrollBarDetailLabelRequestedEventArgs = "43275b82-f594-590d-90ff-76fd219feaa8"
+    const val IAnnotatedScrollBarDetailLabelRequestedEventArgs_put_Content = 7   // put_Content(object)
+    const val IAnnotatedScrollBarDetailLabelRequestedEventArgs_get_ScrollOffset = 8 // get_ScrollOffset(out double)
+
+    // ---- Microsoft.UI.Xaml.Controls.AnnotatedScrollBarLabel ----
+    const val CLS_AnnotatedScrollBarLabel = "Microsoft.UI.Xaml.Controls.AnnotatedScrollBarLabel"
+    const val IID_IAnnotatedScrollBarLabelFactory = "b6169805-c01c-54c6-80e8-c6c98f9aaa53" // activatable factory
+    const val IAnnotatedScrollBarLabelFactory_CreateInstance = 6 // CreateInstance(object content, double offset, out label)
+
+    /** The actual IID of TypedEventHandler<AnnotatedScrollBar, AnnotatedScrollBarDetailLabelRequestedEventArgs> (computed at runtime). */
+    val IID_AnnotatedScrollBarDetailLabelRequestedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.AnnotatedScrollBar;{$IID_IAnnotatedScrollBar});" +
+                "rc(Microsoft.UI.Xaml.Controls.AnnotatedScrollBarDetailLabelRequestedEventArgs;" +
+                "{$IID_IAnnotatedScrollBarDetailLabelRequestedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.SemanticZoom ----
+    const val CLS_SemanticZoom = "Microsoft.UI.Xaml.Controls.SemanticZoom"
+    const val IID_ISemanticZoom = "7e14616d-55ef-548c-a997-c923e302718f" // activatable (default factory)
+    const val IID_ISemanticZoomInformation = "12d62b04-bb13-50f2-9d8b-e57c02b4bde4" // implemented by ListViewBase
+    const val ISemanticZoom_put_ZoomedInView = 7          // put_ZoomedInView(ISemanticZoomInformation)
+    const val ISemanticZoom_put_ZoomedOutView = 9         // put_ZoomedOutView(ISemanticZoomInformation)
+    const val ISemanticZoom_get_IsZoomedInViewActive = 10 // get_IsZoomedInViewActive(out boolean)
+    const val ISemanticZoom_put_IsZoomedInViewActive = 11 // put_IsZoomedInViewActive(boolean)
+    const val ISemanticZoom_get_CanChangeViews = 12       // get_CanChangeViews(out boolean)
+    const val ISemanticZoom_put_CanChangeViews = 13       // put_CanChangeViews(boolean)
+    const val ISemanticZoom_add_ViewChangeStarted = 14    // add_ViewChangeStarted(SemanticZoomViewChangedEventHandler, out token)
+    const val ISemanticZoom_remove_ViewChangeStarted = 15 // remove_ViewChangeStarted(token)
+    const val ISemanticZoom_ToggleActiveView = 18         // ToggleActiveView()
+    const val ISemanticZoom_get_IsZoomOutButtonEnabled = 19 // get_IsZoomOutButtonEnabled(out boolean)
+    const val ISemanticZoom_put_IsZoomOutButtonEnabled = 20 // put_IsZoomOutButtonEnabled(boolean)
+    const val IID_SemanticZoomViewChangedEventHandler = "4cc95c52-8a54-53b7-9251-0b3efa605398" // delegate
 
     // ---- Microsoft.UI.Xaml.Controls.IconElement / SymbolIcon ----
     const val IID_IIconElement = "18f69350-279e-50ea-8d23-138e717ed939"
