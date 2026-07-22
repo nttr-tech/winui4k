@@ -55,7 +55,9 @@ class WProgressBar(minimum: Double = 0.0, maximum: Double = 100.0, value: Double
 
     init {
         if (minimum != 0.0) this.minimum = minimum
-        if (maximum != 100.0) this.maximum = maximum
+        // RangeBase's native default Maximum is 1.0 (unlike Slider, ProgressBar doesn't
+        // override it in its metadata), so always set it, including the default argument of 100.0
+        this.maximum = maximum
         if (value != 0.0) this.value = value
     }
 }
