@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
+import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
@@ -32,6 +33,14 @@ class WTableColumn(
 
     /** Whether clicking the header can sort this column (equivalent to TableViewColumn.CanSort). */
     val canSort: Boolean = true,
+
+    /**
+     * The comparator used to sort this column. If null, uses the default comparison
+     * (numeric if both cells parse as numbers, otherwise string comparison).
+     * Specify this for columns whose sort order should differ from their display string,
+     * such as "12.4 KB".
+     */
+    val comparator: Comparator<String>? = null,
 )
 
 // Fluent colors referenced by the real WinUI.TableView's theme resources (Themes/Resources.xaml).
@@ -56,7 +65,8 @@ private val DARK_GRID_LINE = WColor(255, 255, 255, 18)         // ControlStrokeC
  *
  * Provides:
  * [addRow] / [getValueAt] / [setValueAt] / [removeRow] / [removeAllRows] / [rowCount] / [columnCount],
- * [selectedRow] / [selectionMode] / [addRowSelectionListener] / [removeRowSelectionListener],
+ * [selectedRow] / [selectedRows] / [selectionMode] / [addRowSelectionListener] / [removeRowSelectionListener],
+ * [addRowInvokedListener] / [removeRowInvokedListener] (row double-click),
  * [sortBy] / [clearSort] / [canSortColumns] (a header click cycles through ascending -> descending -> cleared).
  */
 class WTable(private val columns: List<WTableColumn>) : WControl(
@@ -111,11 +121,21 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     /** SelectionChanged event tokens registered via addRowSelectionListener. */
     private val selectionTokens = ListenerTokens<() -> Unit>()
 
+    /** Listeners registered via addRowInvokedListener (invoked from each row element's DoubleTapped). */
+    private val rowInvokedListeners = mutableListOf<(Int) -> Unit>()
+
     /** A guard so listeners don't fire from the re-selection that happens during rebuildItems. */
     private var isRebuilding = false
 
     /** Whether header clicks are allowed to sort (equivalent to TableView.CanSortColumns). */
     var canSortColumns: Boolean = true
+
+    /**
+     * The current display order (the model index of each row, from top to bottom in display order).
+     * Matches insertion order when unsorted.
+     */
+    val displayOrder: List<Int>
+        get() = displayToModel
 
     /** The index of the column currently sorted on, or -1 if unsorted. */
     var sortedColumn: Int = -1
@@ -148,6 +168,41 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     var selectionMode: ListViewSelectionMode
         get() = ListViewSelectionMode.of(listViewBase.getInt(XamlInterop.IListViewBase_get_SelectionMode))
         set(value) = listViewBase.call(XamlInterop.IListViewBase_put_SelectionMode, value.native)
+
+    /**
+     * The model indices of the selected rows (in insertion order). Empty list if nothing is selected.
+     * Also returns multiple selections when [selectionMode] is MULTIPLE / EXTENDED
+     * (via ListViewBase.SelectedItems). Returns model indices rather than display positions even
+     * while sorted.
+     */
+    val selectedRows: List<Int>
+        get() {
+            val selectedItems = listViewBase.getPtr(XamlInterop.IListViewBase_get_SelectedItems)
+            val vector = selectedItems.queryInterface(FoundationInterop.IID_IVector_Object)
+            selectedItems.release()
+            try {
+                val size = vector.getInt(FoundationInterop.IVector_get_Size)
+                if (size == 0) return emptyList()
+                // Build the set of selected items' (row elements') IUnknown addresses, then reverse-look-up
+                // every row in a single pass (COM identity rule: QI'ing IUnknown always returns the same pointer).
+                val selectedAddresses = HashSet<Long>(size)
+                for (i in 0 until size) {
+                    val item = vector.getPtr(FoundationInterop.IVector_GetAt, i)
+                    val unknown = item.queryInterface(KComObject.IID_IUNKNOWN)
+                    selectedAddresses += unknown.ptr.address
+                    unknown.release()
+                    item.release()
+                }
+                return rows.indices.filter { index ->
+                    val mine = rows[index].element.uiElement.queryInterface(KComObject.IID_IUNKNOWN)
+                    val matched = mine.ptr.address in selectedAddresses
+                    mine.release()
+                    matched
+                }
+            } finally {
+                vector.release()
+            }
+        }
 
     init {
         require(columns.isNotEmpty()) { "columns must not be empty" }
@@ -197,10 +252,35 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
 
     /** Appends a row. Any [values] short of the column count are padded with empty strings. */
     fun addRow(values: List<String>) {
+        addRows(listOf(values))
+    }
+
+    /**
+     * Appends multiple rows at the end in one batch. Even while sorted, re-ordering only happens
+     * once, so use this instead of repeated [addRow] calls when inserting a large number of rows
+     * at once, such as when displaying a directory listing.
+     */
+    fun addRows(rowsValues: List<List<String>>) {
+        if (rowsValues.isEmpty()) return
+        val selected = selectedRow
+        val start = rows.size
+        for (values in rowsValues) rows += buildRow(values)
+
+        if (sortDirection == null) {
+            // If unsorted, just append to the end (avoids a full rebuild)
+            for (index in start until rows.size) {
+                itemVector.call(FoundationInterop.IVector_Append, rows[index].element.uiElement.ptr)
+            }
+            displayToModel = displayToModel + (start until rows.size)
+        } else {
+            rebuildItems(selected)
+        }
+    }
+
+    /** Builds one row's UI (a Grid whose columns match the header's widths + cell WLabels). Built once when the row is added and reused afterward. */
+    private fun buildRow(values: List<String>): Row {
         val cellValues = MutableList(columns.size) { values.getOrElse(it) { "" } }
 
-        // The row's UI (a Grid whose columns match the header's widths + cell WLabels) is built
-        // once when the row is added and reused afterward
         val grid = WGrid()
         grid.addRow()
         val cellBorders = mutableListOf<WBorder>()
@@ -221,15 +301,22 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         element.borderColor = gridLineColor()
 
         val row = Row(cellValues, element, cellBorders, cells)
-        rows += row
 
-        if (sortDirection == null) {
-            // If unsorted, just append to the end (avoids a full rebuild)
-            itemVector.call(FoundationInterop.IVector_Append, element.uiElement.ptr)
-            displayToModel = displayToModel + (rows.size - 1)
-        } else {
-            rebuildItems(selectedRow)
+        // Subscribe to the row's DoubleTapped (double-click) and notify addRowInvokedListener's
+        // listeners. Look up the model index at fire time by the model row's (Row's) identity,
+        // since that's what needs to be passed to the listeners.
+        element.uiElement.addEventHandler(
+            "WinUI4K.DoubleTappedHandler",
+            XamlInterop.IID_DoubleTappedEventHandler,
+            XamlInterop.IUIElement_add_DoubleTapped,
+        ) { _, _ ->
+            System.err.println("[debug] DoubleTapped fired") // temporary debug logging, remove once verified
+            val modelIndex = rows.indexOf(row)
+            if (modelIndex >= 0) {
+                for (listener in rowInvokedListeners.toList()) listener(modelIndex)
+            }
         }
+        return row
     }
 
     /** Returns a cell's value. */
@@ -253,6 +340,14 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         }
         rows.removeAt(row)
         rebuildItems(newSelected)
+    }
+
+    /**
+     * Selects all rows (ListViewBase.SelectAll).
+     * Only has an effect when [selectionMode] is MULTIPLE / EXTENDED.
+     */
+    fun selectAll() {
+        listViewBase.call(XamlInterop.IListViewBase_SelectAll)
     }
 
     /** Removes all rows. Keeps the column definitions and sort state. */
@@ -294,6 +389,20 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     fun removeRowSelectionListener(listener: () -> Unit) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
+    }
+
+    /**
+     * Subscribes to row double-clicks (double-taps) (UIElement.DoubleTapped).
+     * Listeners receive the row's model index (insertion order).
+     * Use this for actions that commit a row, such as double-click-to-open in the Filer sample.
+     */
+    fun addRowInvokedListener(listener: (Int) -> Unit) {
+        rowInvokedListeners += listener
+    }
+
+    /** Unsubscribes a listener registered via [addRowInvokedListener]. */
+    fun removeRowInvokedListener(listener: (Int) -> Unit) {
+        rowInvokedListeners -= listener
     }
 
     /**
@@ -415,8 +524,11 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         val indices = rows.indices.toList()
         val column = sortedColumn
         if (column < 0 || sortDirection == null) return indices
+        val comparator = columns[column].comparator
         val ascending = indices.sortedWith { a, b ->
-            compareCells(rows[a].values[column], rows[b].values[column])
+            val x = rows[a].values[column]
+            val y = rows[b].values[column]
+            comparator?.compare(x, y) ?: compareCells(x, y)
         }
         return if (sortDirection == SortDirection.DESCENDING) ascending.reversed() else ascending
     }

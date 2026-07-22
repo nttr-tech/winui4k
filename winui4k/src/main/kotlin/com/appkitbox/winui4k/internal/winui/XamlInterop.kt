@@ -66,7 +66,12 @@ internal object XamlInterop {
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
     const val IUIElement_put_ContextFlyout = 46        // put_ContextFlyout(FlyoutBase)
     const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
+    const val IUIElement_add_DoubleTapped = 170        // add_DoubleTapped(DoubleTappedEventHandler, out token)
+    const val IUIElement_remove_DoubleTapped = 171     // remove_DoubleTapped(token)
     const val IUIElement_UpdateLayout = 220            // UpdateLayout() — a synchronous layout pass
+
+    /** delegate Input.DoubleTappedEventHandler(sender, DoubleTappedRoutedEventArgs) — Invoke is vtbl[3] */
+    const val IID_DoubleTappedEventHandler = "f7a501b9-e277-5611-87b0-0e0607622183"
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_get_ActualWidth = 13   // get_ActualWidth(out DOUBLE)
     const val IFrameworkElement_get_ActualHeight = 14  // get_ActualHeight(out DOUBLE)
@@ -558,6 +563,7 @@ internal object XamlInterop {
     const val IID_IListViewFactory = "03ebefb8-f64a-5bf9-9570-cb09eeea2335"
     const val IID_IListView = "f6015db1-df63-52fd-a164-0df44715ee0a" // default interface (no members)
     const val IID_IListViewBase = "775c57ac-abce-5beb-8e34-3b8158aedd80"
+    const val IListViewBase_get_SelectedItems = 6      // get_SelectedItems(out IVector<Object>)
     const val IListViewBase_get_SelectionMode = 7      // get_SelectionMode(out ListViewSelectionMode)
     const val IListViewBase_put_SelectionMode = 8      // put_SelectionMode(ListViewSelectionMode)
     const val IListViewBase_get_IsItemClickEnabled = 15 // get_IsItemClickEnabled(out boolean)
