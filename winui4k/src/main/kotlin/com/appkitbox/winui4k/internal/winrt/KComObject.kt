@@ -46,7 +46,7 @@ internal class KComObject(
     class Method(val descriptor: CallDescriptor, val body: (Array<Any?>) -> Int)
 
     private val refCount = AtomicInteger(1)
-    private val interfaces = LinkedHashMap<String, Ptr>() // iid(lowercase) -> COM ptr
+    private val interfaces = LinkedHashMap<Guid.Bits, Ptr>() // iid -> COM ptr
     private val registrationKeys = ArrayList<Long>()
 
     /**
@@ -97,7 +97,7 @@ internal class KComObject(
         val key = NEXT_KEY.getAndIncrement()
         memory.putPtr(obj, 0, vtbl)
         memory.putLong(obj, 8, key)
-        interfaces[iid.lowercase()] = obj
+        interfaces[Guid.bitsOf(iid)] = obj
         registrationKeys.add(key)
         REGISTRY[key] = vtblMethods // published here (safely visible to the stub via the CHM)
         return this
@@ -129,11 +129,13 @@ internal class KComObject(
 
     private fun queryInterface(riid: Ptr, ppv: Ptr): Int {
         val memory = Ffi.backend.memory
-        val iid = Guid.read(riid)
+        // QI is called frequently from the XAML side, so the GUID is compared as raw bits
+        // instead of being formatted into a string
+        val iid = Guid.readBits(riid)
         val match: Ptr? = when {
-            iid == IID_IUNKNOWN -> primary
-            inspectable && iid == IID_IINSPECTABLE -> primary
-            iid == IID_IAGILE_OBJECT -> primary // declares that it is safe to use from any thread
+            iid == BITS_IUNKNOWN -> primary
+            inspectable && iid == BITS_IINSPECTABLE -> primary
+            iid == BITS_IAGILE_OBJECT -> primary // declares that it is safe to use from any thread
             else -> interfaces[iid]
         }
         if (match != null) {
@@ -157,6 +159,10 @@ internal class KComObject(
         const val IID_IUNKNOWN = "00000000-0000-0000-c000-000000000046"
         const val IID_IINSPECTABLE = "af86e2e0-b12d-4c6a-9c5a-d7aa65101e90"
         const val IID_IAGILE_OBJECT = "94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90"
+
+        private val BITS_IUNKNOWN = Guid.bitsOf(IID_IUNKNOWN)
+        private val BITS_IINSPECTABLE = Guid.bitsOf(IID_IINSPECTABLE)
+        private val BITS_IAGILE_OBJECT = Guid.bitsOf(IID_IAGILE_OBJECT)
 
         /** HRESULT f(this, riid, ppv) */
         val QI_DESC: CallDescriptor = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)

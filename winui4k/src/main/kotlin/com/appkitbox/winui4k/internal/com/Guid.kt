@@ -34,4 +34,32 @@ internal object Guid {
             d1, d2, d3, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
         )
     }
+
+    /**
+     * The native 16-byte memory representation of a GUID, expressed directly as two
+     * little-endian Longs. Used to compare GUIDs on the QueryInterface hot path without
+     * formatting a string.
+     */
+    data class Bits(val low: Long, val high: Long)
+
+    /** Reads a native GUID as [Bits] (allocates only a single Bits instance). */
+    fun readBits(ptr: Ptr): Bits {
+        val memory = Ffi.backend.memory
+        return Bits(memory.getLong(ptr, 0), memory.getLong(ptr, 8))
+    }
+
+    /** Converts "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" to [Bits] (the same bit layout as [readBits]). */
+    fun bitsOf(iid: String): Bits {
+        val hex = iid.replace("-", "")
+        require(hex.length == 32) { "bad GUID: $iid" }
+        val data1 = hex.substring(0, 8).toLong(16)
+        val data2 = hex.substring(8, 12).toLong(16)
+        val data3 = hex.substring(12, 16).toLong(16)
+        val low = data1 or (data2 shl 32) or (data3 shl 48)
+        var high = 0L
+        for (i in 0 until 8) {
+            high = high or (hex.substring(16 + i * 2, 18 + i * 2).toLong(16) shl (8 * i))
+        }
+        return Bits(low, high)
+    }
 }
