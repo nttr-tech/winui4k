@@ -265,6 +265,25 @@ object WinUiUtilities {
     }
 
     /**
+     * Looks up the resource under key [key] in Application.Resources (ResourceDictionary.Lookup).
+     * MergedDictionaries (e.g. XamlControlsResources's AccentButtonStyle) are searched too.
+     * Throws an HRESULT exception if not found. The caller must release the returned reference.
+     */
+    internal fun lookupApplicationResource(key: String): ComPtr {
+        val app = checkNotNull(currentApp) { "The Application has not been created yet" }
+        val appResources = app.getPtr(Abi.IApplication_get_Resources)
+        val map = appResources.queryInterface(Abi.IID_IMap_Object_Object)
+        appResources.release()
+        val boxedKey = PropertyValues.boxString(key)
+        return try {
+            map.getPtr(Abi.IMap_Lookup, boxedKey.ptr)
+        } finally {
+            boxedKey.release()
+            map.release()
+        }
+    }
+
+    /**
      * Registers a handler on Application.ResourceManagerRequested that returns an MRT
      * Core ResourceManager reading the runtime package's resources.pri.
      * Called the first time XAML looks up a resource (= when XamlControlsResources is created).

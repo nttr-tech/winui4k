@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.HorizontalAlignment
+import com.appkitbox.winui4k.ItemsViewSelectionMode
 import com.appkitbox.winui4k.ListViewSelectionMode
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SelectionMode
@@ -11,6 +12,8 @@ import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WColor
 import com.appkitbox.winui4k.WComponent
+import com.appkitbox.winui4k.WItemContainer
+import com.appkitbox.winui4k.WItemsView
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WList
 import com.appkitbox.winui4k.WListBox
@@ -20,10 +23,65 @@ import com.appkitbox.winui4k.WTableColumn
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTree
 import com.appkitbox.winui4k.WTreeNode
+import com.appkitbox.winui4k.WUniformGridLayout
 
 /**
- * Collections category: demo pages for ListBox / ListView / TableView / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
  */
+
+// region ItemsView
+
+/** The ItemsView page: lines up demos for trying out WItemsView's various features. */
+internal fun buildItemsViewPage(): WComponent {
+    val page = buildPage(
+        "ItemsView",
+        "A collection-display control with a swappable layout. Try out WItemsView's various features.",
+    )
+
+    page.add(buildUniformGridItemsViewExample())
+    return page
+}
+
+/** A card grid: UniformGridLayout + ItemContainer + ItemInvoked. */
+private fun buildUniformGridItemsViewExample(): WComponent {
+    val result = WLabel("Clicked: none")
+
+    val fruits = listOf("Apple", "Orange", "Grape", "Peach", "Cherry", "Banana")
+    val containers = fruits.map { name ->
+        val label = WLabel(name)
+        label.setMargin(12.0, 12.0, 12.0, 12.0)
+        val card = WBorder(label)
+        card.background = CARD_BACKGROUND
+        card.borderColor = CARD_BORDER
+        card.borderThickness = 1.0
+        card.cornerRadius = 8.0
+        WItemContainer(card)
+    }
+
+    val layout = WUniformGridLayout()
+    layout.minItemWidth = 160.0
+    layout.minColumnSpacing = 12.0
+    layout.minRowSpacing = 12.0
+
+    val itemsView = WItemsView()
+    itemsView.layout = layout
+    itemsView.selectionMode = ItemsViewSelectionMode.NONE
+    itemsView.isItemInvokedEnabled = true
+    itemsView.setItems(containers)
+    itemsView.addItemInvokedListener { index ->
+        result.text = "Clicked: ${fruits[index]} (index = $index)"
+    }
+    itemsView.width = 520.0
+    itemsView.height = 200.0
+    itemsView.horizontalAlignment = HorizontalAlignment.LEFT
+
+    val body = WPanel(spacing = 10.0)
+    body.add(itemsView)
+    body.add(result)
+    return buildExample("A card grid (UniformGridLayout / ItemContainer / ItemInvoked)", body)
+}
+
+// endregion
 
 // region ListBox
 

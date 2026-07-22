@@ -34,6 +34,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "InfoBadge" to ::buildInfoBadgePage,
     "InfoBar" to ::buildInfoBarPage,
     "JumpList" to ::buildJumpListPage,
+    "ItemsView" to ::buildItemsViewPage,
     "ListBox" to ::buildListBoxPage,
     "ListView" to ::buildListViewPage,
     "MenuBar" to ::buildMenuBarPage,
@@ -105,6 +106,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "TimePicker",
     ),
     "Collections" to listOf(
+        "ItemsView",
         "ListBox",
         "ListView",
         "TableView",

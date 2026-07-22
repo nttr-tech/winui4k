@@ -66,6 +66,7 @@ internal object Abi {
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
     const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
+    const val IFrameworkElement_put_Style = 53         // put_Style(Style)
     const val IFrameworkElement_get_RequestedTheme = 57 // get_RequestedTheme(out ElementTheme)
     const val IFrameworkElement_put_RequestedTheme = 58 // put_RequestedTheme(ElementTheme)
     const val IFrameworkElement_get_ActualTheme = 60   // get_ActualTheme(out ElementTheme)
@@ -1533,6 +1534,7 @@ internal object Abi {
 
     // ---- Windows.Foundation.Collections.IMap<K, V> (OS side, FoundationContract.winmd) ----
     // Lookup=6 get_Size=7 HasKey=8 GetView=9 Insert=10 Remove=11 Clear=12
+    const val IMap_Lookup = 6                          // Lookup(K, out V)
     const val IMap_Insert = 10                         // Insert(K, V, out boolean replaced)
     private const val IID_IMap_OPEN = "3c2925fe-8519-45c1-aa79-197b6718c1c1" // base IID of IMap`2
 
@@ -2243,4 +2245,67 @@ internal object Abi {
 
     /** Common to IReference<T> (both Color and Int32): get_Value is always vtbl[6]. */
     const val IReference_Color_get_Value = 6
+
+    // ---- Microsoft.UI.Xaml.Controls.FontIconSource (an IconSource subclass) ----
+    const val CLS_FontIconSource = "Microsoft.UI.Xaml.Controls.FontIconSource"
+    const val IID_IFontIconSourceFactory = "bb40eeee-64d1-5133-b1d6-ae13c21b6678"
+    const val IID_IFontIconSource = "b89d614c-e9b5-5b6a-9bec-ad78b1a14b74"
+    const val IFontIconSource_put_Glyph = 7             // put_Glyph(HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Controls.ItemsView ----
+    const val CLS_ItemsView = "Microsoft.UI.Xaml.Controls.ItemsView"
+    const val IID_IItemsViewFactory = "aeeec7b9-3cc8-52df-8e2e-99a295c253aa"
+    const val IID_IItemsView = "bbb195d8-6a7f-5a42-9866-25fd5a4473ab"
+    const val IItemsView_put_ItemsSource = 7            // put_ItemsSource(IInspectable)
+    const val IItemsView_put_Layout = 14                // put_Layout(Layout)
+    const val IItemsView_get_IsItemInvokedEnabled = 15
+    const val IItemsView_put_IsItemInvokedEnabled = 16
+    const val IItemsView_get_SelectionMode = 17         // get_SelectionMode(out ItemsViewSelectionMode)
+    const val IItemsView_put_SelectionMode = 18         // put_SelectionMode(ItemsViewSelectionMode enum)
+    const val IItemsView_add_ItemInvoked = 32           // add_ItemInvoked(TypedEventHandler<ItemsView, ItemsViewItemInvokedEventArgs>, out token)
+    const val IItemsView_remove_ItemInvoked = 33
+
+    const val IID_IItemsViewItemInvokedEventArgs = "5a2386e8-15b8-5f25-874b-7912f633ce21"
+    const val IItemsViewItemInvokedEventArgs_get_InvokedItem = 6  // get_InvokedItem(out IInspectable)
+
+    /** The actual IID of TypedEventHandler<ItemsView, ItemsViewItemInvokedEventArgs> (computed at runtime). */
+    val IID_ItemsViewItemInvokedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ItemsView;{$IID_IItemsView});" +
+                "rc(Microsoft.UI.Xaml.Controls.ItemsViewItemInvokedEventArgs;" +
+                "{$IID_IItemsViewItemInvokedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.ItemContainer ----
+    const val CLS_ItemContainer = "Microsoft.UI.Xaml.Controls.ItemContainer"
+    const val IID_IItemContainerFactory = "ee1cc57c-6bf2-5ee9-a943-c95ca775edb4"
+    const val IID_IItemContainer = "6332a67f-7fd9-53c7-afd8-cfa1237cf6d1"
+    const val IItemContainer_get_Child = 6              // get_Child(out UIElement)
+    const val IItemContainer_put_Child = 7              // put_Child(UIElement)
+
+    // ---- Microsoft.UI.Xaml.Controls.Layout (the argument type of ItemsView.Layout) ----
+    const val IID_ILayout = "24e50c1c-9c51-5144-9ddc-3f500191c262"
+
+    // ---- Microsoft.UI.Xaml.Controls.UniformGridLayout (a VirtualizingLayout subclass) ----
+    const val CLS_UniformGridLayout = "Microsoft.UI.Xaml.Controls.UniformGridLayout"
+    const val IID_IUniformGridLayoutFactory = "0d9ed808-f3f9-5034-9627-152b91e91b4b"
+    const val IID_IUniformGridLayout = "8a164cbc-2a5e-56e5-a011-fb76334aabdf"
+    const val IUniformGridLayout_get_Orientation = 6    // get_Orientation(out Orientation)
+    const val IUniformGridLayout_put_Orientation = 7    // put_Orientation(Orientation enum)
+    const val IUniformGridLayout_get_MinItemWidth = 8   // get_MinItemWidth(out double)
+    const val IUniformGridLayout_put_MinItemWidth = 9
+    const val IUniformGridLayout_get_MinItemHeight = 10
+    const val IUniformGridLayout_put_MinItemHeight = 11
+    const val IUniformGridLayout_get_MinRowSpacing = 12
+    const val IUniformGridLayout_put_MinRowSpacing = 13
+    const val IUniformGridLayout_get_MinColumnSpacing = 14
+    const val IUniformGridLayout_put_MinColumnSpacing = 15
+    const val IUniformGridLayout_get_ItemsJustification = 16  // get_ItemsJustification(out UniformGridLayoutItemsJustification)
+    const val IUniformGridLayout_put_ItemsJustification = 17
+    const val IUniformGridLayout_get_ItemsStretch = 18  // get_ItemsStretch(out UniformGridLayoutItemsStretch)
+    const val IUniformGridLayout_put_ItemsStretch = 19
+    const val IUniformGridLayout_get_MaximumRowsOrColumns = 20
+    const val IUniformGridLayout_put_MaximumRowsOrColumns = 21
 }

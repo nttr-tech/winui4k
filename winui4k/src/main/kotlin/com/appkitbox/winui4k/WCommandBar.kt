@@ -96,6 +96,21 @@ class WCommandBar : WControl(
         }
     }
 
+    /**
+     * Arbitrary content shown on the bar's left side (ContentControl.Content; CommandBar derives from ContentControl).
+     * Typically used for a heading label.
+     */
+    var content: WComponent? = null
+        set(value) {
+            field = value
+            contentControl.call(Abi.IContentControl_put_Content, value?.uiElement?.ptr)
+        }
+
+    /** The IContentControl view that holds Content. */
+    private val contentControl: ComPtr by lazy {
+        inspectable.queryInterface(Abi.IID_IContentControl)
+    }
+
     /** Whether the overflow menu is open (AppBar.IsOpen). */
     var isOpen: Boolean
         get() = appBar.getBool(Abi.IAppBar_get_IsOpen)

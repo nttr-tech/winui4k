@@ -70,6 +70,11 @@ class WBorder(child: WComponent? = null) : WComponent(
             XamlStructs.putThickness(inspectable, Abi.IBorder_put_Padding, value, value, value, value)
         }
 
+    /** Sets the padding on each side individually (Border.Padding). */
+    fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
+        XamlStructs.putThickness(inspectable, Abi.IBorder_put_Padding, left, top, right, bottom)
+    }
+
     init {
         if (child != null) this.child = child
     }

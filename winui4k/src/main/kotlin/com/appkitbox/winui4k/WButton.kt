@@ -20,6 +20,22 @@ class WButton(text: String = "") : WButtonBase(
             inspectable.call(Abi.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
+    /**
+     * Whether to apply the built-in accent-colored style (AccentButtonStyle).
+     * Gives the emphasized look of a dialog's default button. Setting it back to false restores the default style.
+     */
+    var isAccent: Boolean = false
+        set(value) {
+            field = value
+            if (value) {
+                val style = WinUiUtilities.lookupApplicationResource("AccentButtonStyle")
+                frameworkElement.call(Abi.IFrameworkElement_put_Style, style.ptr)
+                style.release()
+            } else {
+                frameworkElement.call(Abi.IFrameworkElement_put_Style, null)
+            }
+        }
+
     init {
         if (text.isNotEmpty()) this.text = text
     }

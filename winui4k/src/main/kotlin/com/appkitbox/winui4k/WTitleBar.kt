@@ -69,6 +69,27 @@ class WTitleBar : WControl(
             iconSource.release()
         }
 
+    /**
+     * The glyph of a font icon shown to the left of the title (TitleBar.IconSource). null hides it.
+     * Pass a Segoe Fluent Icons code point like "".
+     * Builds a FontIconSource and assigns it to IconSource (this writes to the same property as
+     * [iconUri]; whichever is set last wins).
+     */
+    var iconGlyph: String? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                inspectable.call(Abi.ITitleBar_put_IconSource, null)
+                return
+            }
+            val fontIconSource = Activation.composeDefault(Abi.CLS_FontIconSource, Abi.IID_IFontIconSourceFactory)
+            Hstring.use(value) { h -> fontIconSource.call(Abi.IFontIconSource_put_Glyph, h) }
+            val iconSource = fontIconSource.queryInterface(Abi.IID_IIconSource)
+            fontIconSource.release()
+            inspectable.call(Abi.ITitleBar_put_IconSource, iconSource.ptr)
+            iconSource.release()
+        }
+
     /** Whether the back button is shown (TitleBar.IsBackButtonVisible). */
     var isBackButtonVisible: Boolean
         get() = inspectable.getBool(Abi.ITitleBar_get_IsBackButtonVisible)
