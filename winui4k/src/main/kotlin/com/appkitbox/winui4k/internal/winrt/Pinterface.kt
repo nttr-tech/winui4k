@@ -26,17 +26,17 @@ internal object Pinterface {
      *       → matches e2fcc7c1-3bfc-5a0b-b2b0-72e769d1cb7e, the known value for IIterable<String>.
      */
     fun iid(signature: String): String {
-        val md = MessageDigest.getInstance("SHA-1")
-        md.update(PINTERFACE_NAMESPACE)
-        md.update(signature.toByteArray(Charsets.US_ASCII))
-        val h = md.digest()
-        h[6] = ((h[6].toInt() and 0x0F) or 0x50).toByte() // version 5
-        h[8] = ((h[8].toInt() and 0x3F) or 0x80).toByte() // RFC 4122 variant
-        val sb = StringBuilder(36)
+        val digest = MessageDigest.getInstance("SHA-1")
+        digest.update(PINTERFACE_NAMESPACE)
+        digest.update(signature.toByteArray(Charsets.US_ASCII))
+        val hash = digest.digest()
+        hash[6] = ((hash[6].toInt() and 0x0F) or 0x50).toByte() // version 5
+        hash[8] = ((hash[8].toInt() and 0x3F) or 0x80).toByte() // RFC 4122 variant
+        val builder = StringBuilder(36)
         for (i in 0 until 16) {
-            if (i == 4 || i == 6 || i == 8 || i == 10) sb.append('-')
-            sb.append("%02x".format(h[i]))
+            if (i == 4 || i == 6 || i == 8 || i == 10) builder.append('-')
+            builder.append("%02x".format(hash[i]))
         }
-        return sb.toString()
+        return builder.toString()
     }
 }

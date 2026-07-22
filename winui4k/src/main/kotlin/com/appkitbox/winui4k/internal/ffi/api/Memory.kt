@@ -17,22 +17,22 @@ fun MemoryScope.allocate(type: StructType): StructValue =
  * handling are left to the backend (unaligned access must be tolerated).
  */
 interface MemoryAccess {
-    fun getByte(p: Ptr, offset: Long): Byte
-    fun putByte(p: Ptr, offset: Long, value: Byte)
-    fun getShort(p: Ptr, offset: Long): Short
-    fun putShort(p: Ptr, offset: Long, value: Short)
-    fun getInt(p: Ptr, offset: Long): Int
-    fun putInt(p: Ptr, offset: Long, value: Int)
-    fun getLong(p: Ptr, offset: Long): Long
-    fun putLong(p: Ptr, offset: Long, value: Long)
-    fun getDouble(p: Ptr, offset: Long): Double
-    fun putDouble(p: Ptr, offset: Long, value: Double)
-    fun getPtr(p: Ptr, offset: Long): Ptr
-    fun putPtr(p: Ptr, offset: Long, value: Ptr)
+    fun getByte(pointer: Ptr, offset: Long): Byte
+    fun putByte(pointer: Ptr, offset: Long, value: Byte)
+    fun getShort(pointer: Ptr, offset: Long): Short
+    fun putShort(pointer: Ptr, offset: Long, value: Short)
+    fun getInt(pointer: Ptr, offset: Long): Int
+    fun putInt(pointer: Ptr, offset: Long, value: Int)
+    fun getLong(pointer: Ptr, offset: Long): Long
+    fun putLong(pointer: Ptr, offset: Long, value: Long)
+    fun getDouble(pointer: Ptr, offset: Long): Double
+    fun putDouble(pointer: Ptr, offset: Long, value: Double)
+    fun getPtr(pointer: Ptr, offset: Long): Ptr
+    fun putPtr(pointer: Ptr, offset: Long, value: Ptr)
 
     /** Reads a UTF-16 string of [chars] characters (for reading HSTRING / BSTR buffers). */
-    fun getUtf16(p: Ptr, offset: Long, chars: Int): String
+    fun getUtf16(pointer: Ptr, offset: Long, chars: Int): String
 
     /** Writes a NUL-terminated UTF-16 string (needs (length + 1) * 2 bytes). */
-    fun putUtf16z(p: Ptr, offset: Long, value: String)
+    fun putUtf16z(pointer: Ptr, offset: Long, value: String)
 }

@@ -40,55 +40,55 @@ internal object Hstring {
     private val leakedCache = HashMap<String, Ptr>()
 
     /** Creates an HSTRING. The caller must release it with [free]. */
-    fun of(s: String): Ptr = Ffi.backend.withScope { scope ->
-        val buf = scope.allocate((s.length + 1).toLong() * 2, 2)
-        Ffi.backend.memory.putUtf16z(buf, 0, s)
+    fun of(value: String): Ptr = Ffi.backend.withScope { scope ->
+        val buffer = scope.allocate((value.length + 1).toLong() * 2, 2)
+        Ffi.backend.memory.putUtf16z(buffer, 0, value)
         val out = scope.allocate(8)
-        checkHr(create(buf, s.length, out) as Int, "WindowsCreateString")
+        checkHr(create(buffer, value.length, out) as Int, "WindowsCreateString")
         Ffi.backend.memory.getPtr(out, 0)
     }
 
     /** An HSTRING reused for the process lifetime, e.g. a runtime class name (intentionally leaked). */
     @Synchronized
-    fun ofCached(s: String): Ptr = leakedCache.getOrPut(s) { of(s) }
+    fun ofCached(value: String): Ptr = leakedCache.getOrPut(value) { of(value) }
 
     /**
-     * Duplicates the reference to [h] (WindowsDuplicateString) and returns the copy.
+     * Duplicates the reference to [hstring] (WindowsDuplicateString) and returns the copy.
      * Use this when handing a cached HSTRING to an out parameter whose contract
      * requires transferring ownership (e.g. GetRuntimeClassName): passing the cached
      * HSTRING as-is would let the caller's WindowsDeleteString free it, leaving the
      * cache holding a dangling pointer (use-after-free on the next lookup).
      */
-    fun duplicate(h: Ptr): Ptr {
-        if (h.isNull) return Ptr.NULL
+    fun duplicate(hstring: Ptr): Ptr {
+        if (hstring.isNull) return Ptr.NULL
         return Ffi.backend.withScope { scope ->
             val out = scope.allocate(8)
-            checkHr(duplicateString(h, out) as Int, "WindowsDuplicateString")
+            checkHr(duplicateString(hstring, out) as Int, "WindowsDuplicateString")
             Ffi.backend.memory.getPtr(out, 0)
         }
     }
 
-    fun read(h: Ptr): String {
-        if (h.isNull) return "" // a NULL HSTRING is the empty string
+    fun read(hstring: Ptr): String {
+        if (hstring.isNull) return "" // a NULL HSTRING is the empty string
         return Ffi.backend.withScope { scope ->
-            val lenOut = scope.allocate(4)
-            val buf = getRawBuffer(h, lenOut) as Ptr
-            val n = Ffi.backend.memory.getInt(lenOut, 0)
-            Ffi.backend.memory.getUtf16(buf, 0, n)
+            val lengthOut = scope.allocate(4)
+            val buffer = getRawBuffer(hstring, lengthOut) as Ptr
+            val length = Ffi.backend.memory.getInt(lengthOut, 0)
+            Ffi.backend.memory.getUtf16(buffer, 0, length)
         }
     }
 
-    fun free(h: Ptr) {
-        if (!h.isNull) delete(h)
+    fun free(hstring: Ptr) {
+        if (!hstring.isNull) delete(hstring)
     }
 
     /** Creates a temporary HSTRING, passes it to the block, and reliably frees it afterward. */
-    internal inline fun <T> use(s: String, block: (Ptr) -> T): T {
-        val h = of(s)
+    internal inline fun <T> use(value: String, block: (Ptr) -> T): T {
+        val hstring = of(value)
         try {
-            return block(h)
+            return block(hstring)
         } finally {
-            free(h)
+            free(hstring)
         }
     }
 }
@@ -100,10 +100,10 @@ internal object Hstring {
 internal fun ComPtr.getString(slot: Int, vararg args: Any?): String = Ffi.backend.withScope { scope ->
     val out = scope.allocate(8)
     call(slot, *args, out)
-    val h = Ffi.backend.memory.getPtr(out, 0)
+    val hstring = Ffi.backend.memory.getPtr(out, 0)
     try {
-        Hstring.read(h)
+        Hstring.read(hstring)
     } finally {
-        Hstring.free(h)
+        Hstring.free(hstring)
     }
 }

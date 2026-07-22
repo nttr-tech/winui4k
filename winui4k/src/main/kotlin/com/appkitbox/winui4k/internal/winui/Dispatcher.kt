@@ -74,11 +74,11 @@ internal object Dispatcher {
 
     /** Posts [block] onto the UI thread's message loop. Callable from any thread. */
     fun invokeLater(block: () -> Unit) {
-        val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
+        val queue = checkNotNull(this.queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
         pending.add(block)
         val enqueued = Ffi.backend.withScope { scope ->
             val out = scope.allocate(1, 1) // TryEnqueue(handler, out boolean)
-            q.call(Abi.IDispatcherQueue_TryEnqueue, enqueueHandler.primary, out)
+            queue.call(Abi.IDispatcherQueue_TryEnqueue, enqueueHandler.primary, out)
             Ffi.backend.memory.getByte(out, 0).toInt() != 0
         }
         if (!enqueued) {
@@ -101,8 +101,8 @@ internal object Dispatcher {
         val timerRef = AtomicReference<ComPtr?>(null)
         runOnDispatchThread {
             if (done.get()) return@runOnDispatchThread
-            val q = checkNotNull(queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
-            val timer = q.getPtr(Abi.IDispatcherQueue_CreateTimer)
+            val queue = checkNotNull(this.queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
+            val timer = queue.getPtr(Abi.IDispatcherQueue_CreateTimer)
             // TimeSpan is an int64 in 100ns units, passed by value
             timer.call(Abi.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)
             timer.putBool(Abi.IDispatcherQueueTimer_put_IsRepeating, false)

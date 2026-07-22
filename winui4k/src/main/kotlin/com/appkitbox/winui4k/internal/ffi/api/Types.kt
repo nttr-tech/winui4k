@@ -58,11 +58,11 @@ class StructType(val name: String, val fields: List<Field>) {
         offsets = LongArray(fields.size)
         fields.forEachIndexed { i, field ->
             require(field.kind != ValueKind.VOID) { "VOID field in $name" }
-            val a = field.kind.alignment
-            offset = (offset + a - 1) / a * a
+            val fieldAlignment = field.kind.alignment
+            offset = (offset + fieldAlignment - 1) / fieldAlignment * fieldAlignment
             offsets[i] = offset
             offset += field.kind.byteSize
-            if (a > maxAlignment) maxAlignment = a
+            if (fieldAlignment > maxAlignment) maxAlignment = fieldAlignment
         }
         alignment = maxAlignment
         byteSize = (offset + maxAlignment - 1) / maxAlignment * maxAlignment

@@ -65,7 +65,7 @@ internal class KComObject(
 
     fun addInterface(iid: String, methods: List<Method>): KComObject {
         val memory = Ffi.backend.memory
-        val vtblMethods = buildList {
+        val vtableMethods = buildList {
             // --- IUnknown ---
             add(Method(QI_DESC) { args ->
                 queryInterface(args[1] as Ptr, args[2] as Ptr)
@@ -92,14 +92,14 @@ internal class KComObject(
             addAll(methods)
         }
 
-        val vtbl = sharedVtable(vtblMethods.map { it.descriptor })
-        val obj = OBJ_POOL.poll() ?: Ffi.backend.globalScope.allocate(16) // struct { vtable*; instanceKey }
+        val vtable = sharedVtable(vtableMethods.map { it.descriptor })
+        val comObject = OBJ_POOL.poll() ?: Ffi.backend.globalScope.allocate(16) // struct { vtable*; instanceKey }
         val key = NEXT_KEY.getAndIncrement()
-        memory.putPtr(obj, 0, vtbl)
-        memory.putLong(obj, 8, key)
-        interfaces[Guid.bitsOf(iid)] = obj
+        memory.putPtr(comObject, 0, vtable)
+        memory.putLong(comObject, 8, key)
+        interfaces[Guid.bitsOf(iid)] = comObject
         registrationKeys.add(key)
-        REGISTRY[key] = vtblMethods // published here (safely visible to the stub via the CHM)
+        REGISTRY[key] = vtableMethods // published here (safely visible to the stub via the CHM)
         return this
     }
 
@@ -114,9 +114,9 @@ internal class KComObject(
     }
 
     private fun releaseRef(): Int {
-        val rc = refCount.decrementAndGet()
-        if (rc == 0) reclaim()
-        return rc
+        val remainingCount = refCount.decrementAndGet()
+        if (remainingCount == 0) reclaim()
+        return remainingCount
     }
 
     /** Reference count reached 0: removes the registration so the Kotlin side becomes GC-eligible, and returns the obj block to the pool. */
@@ -186,12 +186,12 @@ internal class KComObject(
         private fun sharedVtable(shape: List<CallDescriptor>): Ptr =
             VTABLES.computeIfAbsent(shape) { descriptors ->
                 val memory = Ffi.backend.memory
-                val vtbl = Ffi.backend.globalScope.allocate(descriptors.size.toLong() * 8)
+                val vtable = Ffi.backend.globalScope.allocate(descriptors.size.toLong() * 8)
                 descriptors.forEachIndexed { slot, descriptor ->
                     val stub = Ffi.backend.upcallStub(descriptor) { args -> dispatch(slot, args) }
-                    memory.putPtr(vtbl, slot.toLong() * 8, stub)
+                    memory.putPtr(vtable, slot.toLong() * 8, stub)
                 }
-                vtbl
+                vtable
             }
 
         /**

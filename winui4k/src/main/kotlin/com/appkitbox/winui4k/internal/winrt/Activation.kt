@@ -31,11 +31,11 @@ internal object Activation {
 
     /** Equivalent to a default constructor (IActivationFactory::ActivateInstance). */
     fun activate(runtimeClass: String): ComPtr {
-        val f = factory(runtimeClass, IID_IACTIVATION_FACTORY)
+        val factory = factory(runtimeClass, IID_IACTIVATION_FACTORY)
         try {
-            return f.getPtr(6)
+            return factory.getPtr(6)
         } finally {
-            f.release()
+            factory.release()
         }
     }
 
@@ -47,17 +47,17 @@ internal object Activation {
      */
     fun composeDefault(runtimeClass: String, factoryIid: String): ComPtr =
         Ffi.backend.withScope { scope ->
-            val f = factory(runtimeClass, factoryIid)
+            val factory = factory(runtimeClass, factoryIid)
             try {
                 val inner = scope.allocate(8)
                 val instance = scope.allocate(8)
-                f.call(6, null, inner, instance)
+                factory.call(6, null, inner, instance)
                 // A non-derived instantiation doesn't use inner, so release the reference it returned.
                 val innerPtr = Ffi.backend.memory.getPtr(inner, 0)
                 if (!innerPtr.isNull) ComPtr(innerPtr).release()
                 ComPtr(Ffi.backend.memory.getPtr(instance, 0))
             } finally {
-                f.release()
+                factory.release()
             }
         }
 }

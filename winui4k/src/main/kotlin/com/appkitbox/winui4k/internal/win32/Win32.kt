@@ -67,13 +67,13 @@ internal object Win32 {
     /** Returns the full path of a loaded module, or null if it isn't loaded. */
     fun moduleFilePath(module: String): String? = Ffi.backend.withScope { scope ->
         val memory = Ffi.backend.memory
-        val name = scope.allocate((module.length + 1).toLong() * 2, 2)
-        memory.putUtf16z(name, 0, module)
-        val handle = getModuleHandleW(name) as Ptr
+        val nameBuffer = scope.allocate((module.length + 1).toLong() * 2, 2)
+        memory.putUtf16z(nameBuffer, 0, module)
+        val handle = getModuleHandleW(nameBuffer) as Ptr
         if (handle.isNull) return null
-        val buf = scope.allocate(32768L * 2, 2)
-        val n = getModuleFileNameW(handle, buf, 32768) as Int
-        if (n <= 0) return null
-        memory.getUtf16(buf, 0, n)
+        val pathBuffer = scope.allocate(32768L * 2, 2)
+        val length = getModuleFileNameW(handle, pathBuffer, 32768) as Int
+        if (length <= 0) return null
+        memory.getUtf16(pathBuffer, 0, length)
     }
 }

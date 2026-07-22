@@ -83,95 +83,95 @@ internal object XamlStructs {
     fun putThickness(target: ComPtr, slot: Int, left: Double, top: Double, right: Double, bottom: Double) {
         Ffi.backend.withScope { scope ->
             val memory = Ffi.backend.memory
-            val t = scope.allocate(THICKNESS)
-            memory.putDouble(t.ptr, 0, left)
-            memory.putDouble(t.ptr, 8, top)
-            memory.putDouble(t.ptr, 16, right)
-            memory.putDouble(t.ptr, 24, bottom)
-            target.call(slot, t)
+            val thickness = scope.allocate(THICKNESS)
+            memory.putDouble(thickness.ptr, 0, left)
+            memory.putDouble(thickness.ptr, 8, top)
+            memory.putDouble(thickness.ptr, 16, right)
+            memory.putDouble(thickness.ptr, 24, bottom)
+            target.call(slot, thickness)
         }
     }
 
     /** Puts a CornerRadius with the same radius on all four corners (double×4) by value. */
     fun putCornerRadius(target: ComPtr, slot: Int, radius: Double) {
         Ffi.backend.withScope { scope ->
-            val c = scope.allocate(CORNER_RADIUS)
-            for (i in 0 until 4) Ffi.backend.memory.putDouble(c.ptr, i * 8L, radius)
-            target.call(slot, c)
+            val cornerRadius = scope.allocate(CORNER_RADIUS)
+            for (i in 0 until 4) Ffi.backend.memory.putDouble(cornerRadius.ptr, i * 8L, radius)
+            target.call(slot, cornerRadius)
         }
     }
 
     /** Puts a GridLength by value (RowDefinition.Height / ColumnDefinition.Width). */
     fun putGridLength(target: ComPtr, slot: Int, value: Double, unitType: Int) {
         Ffi.backend.withScope { scope ->
-            val g = scope.allocate(GRID_LENGTH)
-            Ffi.backend.memory.putDouble(g.ptr, 0, value)
-            Ffi.backend.memory.putInt(g.ptr, 8, unitType)
-            target.call(slot, g)
+            val gridLength = scope.allocate(GRID_LENGTH)
+            Ffi.backend.memory.putDouble(gridLength.ptr, 0, value)
+            Ffi.backend.memory.putInt(gridLength.ptr, 8, unitType)
+            target.call(slot, gridLength)
         }
     }
 
     /** Puts a FontWeight (u2) by value (TextBlock.FontWeight). */
     fun putFontWeight(target: ComPtr, slot: Int, weight: Int) {
         Ffi.backend.withScope { scope ->
-            val w = scope.allocate(FONT_WEIGHT)
-            Ffi.backend.memory.putShort(w.ptr, 0, weight.toShort())
-            target.call(slot, w)
+            val fontWeight = scope.allocate(FONT_WEIGHT)
+            Ffi.backend.memory.putShort(fontWeight.ptr, 0, weight.toShort())
+            target.call(slot, fontWeight)
         }
     }
 
     /** Gets a Windows.UI.Color (u8×4) via an out argument (e.g. ColorPicker.Color). */
     fun getColor(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
-        val c = scope.allocate(COLOR)
-        target.call(slot, c.ptr) // an out argument, so it's passed as a pointer
-        IntArray(4) { Ffi.backend.memory.getByte(c.ptr, it.toLong()).toInt() and 0xFF } // A, R, G, B
+        val color = scope.allocate(COLOR)
+        target.call(slot, color.ptr) // an out argument, so it's passed as a pointer
+        IntArray(4) { Ffi.backend.memory.getByte(color.ptr, it.toLong()).toInt() and 0xFF } // A, R, G, B
     }
 
     /** Puts a Windows.UI.Color (u8×4) by value (SolidColorBrush.Color). */
     fun putColor(target: ComPtr, slot: Int, alpha: Int, red: Int, green: Int, blue: Int) {
         Ffi.backend.withScope { scope ->
-            val c = scope.allocate(COLOR)
+            val color = scope.allocate(COLOR)
             val memory = Ffi.backend.memory
-            memory.putByte(c.ptr, 0, alpha.toByte())
-            memory.putByte(c.ptr, 1, red.toByte())
-            memory.putByte(c.ptr, 2, green.toByte())
-            memory.putByte(c.ptr, 3, blue.toByte())
-            target.call(slot, c)
+            memory.putByte(color.ptr, 0, alpha.toByte())
+            memory.putByte(color.ptr, 1, red.toByte())
+            memory.putByte(color.ptr, 2, green.toByte())
+            memory.putByte(color.ptr, 3, blue.toByte())
+            target.call(slot, color)
         }
     }
 
     /** Puts a PointInt32 (i4×2) by value (AppWindow.Move). */
     fun putPointInt32(target: ComPtr, slot: Int, x: Int, y: Int) {
         Ffi.backend.withScope { scope ->
-            val p = scope.allocate(POINT_INT32)
-            Ffi.backend.memory.putInt(p.ptr, 0, x)
-            Ffi.backend.memory.putInt(p.ptr, 4, y)
-            target.call(slot, p)
+            val point = scope.allocate(POINT_INT32)
+            Ffi.backend.memory.putInt(point.ptr, 0, x)
+            Ffi.backend.memory.putInt(point.ptr, 4, y)
+            target.call(slot, point)
         }
     }
 
     /** Puts a SizeInt32 (i4×2) by value (AppWindow.Resize / IAppWindow2.ResizeClient). */
     fun putSizeInt32(target: ComPtr, slot: Int, width: Int, height: Int) {
         Ffi.backend.withScope { scope ->
-            val s = scope.allocate(SIZE_INT32)
-            Ffi.backend.memory.putInt(s.ptr, 0, width)
-            Ffi.backend.memory.putInt(s.ptr, 4, height)
-            target.call(slot, s)
+            val size = scope.allocate(SIZE_INT32)
+            Ffi.backend.memory.putInt(size.ptr, 0, width)
+            Ffi.backend.memory.putInt(size.ptr, 4, height)
+            target.call(slot, size)
         }
     }
 
     /** Gets a PointInt32 (i4×2) via an out argument (AppWindow.Position). Returned in [x, y] order. */
     fun getPointInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
-        val p = scope.allocate(POINT_INT32)
-        target.call(slot, p.ptr) // an out argument, so it's passed as a pointer
-        intArrayOf(Ffi.backend.memory.getInt(p.ptr, 0), Ffi.backend.memory.getInt(p.ptr, 4))
+        val point = scope.allocate(POINT_INT32)
+        target.call(slot, point.ptr) // an out argument, so it's passed as a pointer
+        intArrayOf(Ffi.backend.memory.getInt(point.ptr, 0), Ffi.backend.memory.getInt(point.ptr, 4))
     }
 
     /** Gets a SizeInt32 (i4×2) via an out argument (AppWindow.Size / IAppWindow2.ClientSize). Returned in [width, height] order. */
     fun getSizeInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
-        val s = scope.allocate(SIZE_INT32)
-        target.call(slot, s.ptr)
-        intArrayOf(Ffi.backend.memory.getInt(s.ptr, 0), Ffi.backend.memory.getInt(s.ptr, 4))
+        val size = scope.allocate(SIZE_INT32)
+        target.call(slot, size.ptr)
+        intArrayOf(Ffi.backend.memory.getInt(size.ptr, 0), Ffi.backend.memory.getInt(size.ptr, 4))
     }
 
     /**
@@ -179,20 +179,20 @@ internal object XamlStructs {
      * Returned in [x, y, width, height] order.
      */
     fun getRectInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
-        val r = scope.allocate(RECT_INT32)
-        target.call(slot, r.ptr)
+        val rect = scope.allocate(RECT_INT32)
+        target.call(slot, rect.ptr)
         val memory = Ffi.backend.memory
         intArrayOf(
-            memory.getInt(r.ptr, 0), memory.getInt(r.ptr, 4),
-            memory.getInt(r.ptr, 8), memory.getInt(r.ptr, 12),
+            memory.getInt(rect.ptr, 0), memory.getInt(rect.ptr, 4),
+            memory.getInt(rect.ptr, 8), memory.getInt(rect.ptr, 12),
         )
     }
 
     /** Gets a WindowId (u8 Value) via an out argument (AppWindow.Id / OwnerWindowId). */
     fun getWindowId(target: ComPtr, slot: Int): Long = Ffi.backend.withScope { scope ->
-        val w = scope.allocate(WINDOW_ID)
-        target.call(slot, w.ptr)
-        Ffi.backend.memory.getLong(w.ptr, 0)
+        val windowId = scope.allocate(WINDOW_ID)
+        target.call(slot, windowId.ptr)
+        Ffi.backend.memory.getLong(windowId.ptr, 0)
     }
 
     /**
@@ -202,8 +202,8 @@ internal object XamlStructs {
      * caller's own `Ffi.backend.withScope`).
      */
     fun windowIdValue(scope: MemoryScope, value: Long): StructValue {
-        val w = scope.allocate(WINDOW_ID)
-        Ffi.backend.memory.putLong(w.ptr, 0, value)
-        return w
+        val windowId = scope.allocate(WINDOW_ID)
+        Ffi.backend.memory.putLong(windowId.ptr, 0, value)
+        return windowId
     }
 }

@@ -26,12 +26,13 @@ internal object Guid {
     /** Reads a native GUID as a lowercase canonical string. */
     fun read(ptr: Ptr): String {
         val memory = Ffi.backend.memory
-        val d1 = memory.getInt(ptr, 0).toLong() and 0xFFFFFFFFL
-        val d2 = memory.getShort(ptr, 4).toInt() and 0xFFFF
-        val d3 = memory.getShort(ptr, 6).toInt() and 0xFFFF
-        val b = ByteArray(8) { memory.getByte(ptr, 8L + it) }
+        val data1 = memory.getInt(ptr, 0).toLong() and 0xFFFFFFFFL
+        val data2 = memory.getShort(ptr, 4).toInt() and 0xFFFF
+        val data3 = memory.getShort(ptr, 6).toInt() and 0xFFFF
+        val bytes = ByteArray(8) { memory.getByte(ptr, 8L + it) }
         return "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x".format(
-            d1, d2, d3, b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+            data1, data2, data3,
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
         )
     }
 

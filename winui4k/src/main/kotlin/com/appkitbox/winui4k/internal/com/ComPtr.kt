@@ -79,8 +79,8 @@ internal class ComPtr(val ptr: Ptr) {
     fun getPtrOrNull(slot: Int, vararg args: Any?): ComPtr? = Ffi.backend.withScope { scope ->
         val out = scope.allocate(8)
         call(slot, *args, out)
-        val p = Ffi.backend.memory.getPtr(out, 0)
-        if (p.isNull) null else ComPtr(p)
+        val pointer = Ffi.backend.memory.getPtr(out, 0)
+        if (pointer.isNull) null else ComPtr(pointer)
     }
 
     /** `HRESULT f(boolean* out)` pattern. WinRT's boolean is 1 byte. */

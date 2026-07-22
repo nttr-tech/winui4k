@@ -34,19 +34,19 @@ internal object PropertyValues {
     }
 
     /** Boxes a Kotlin String into an IInspectable (PropertyValue.CreateString). */
-    fun boxString(s: String): ComPtr =
-        Hstring.use(s) { h -> statics.getPtr(IPropertyValueStatics_CreateString, h) }
+    fun boxString(value: String): ComPtr =
+        Hstring.use(value) { hstring -> statics.getPtr(IPropertyValueStatics_CreateString, hstring) }
 
     /**
      * The reverse of [boxString]: extracts the string if the IInspectable is a boxed string.
      * Returns null if it isn't a boxed string (PropertyValue), e.g. when it holds a UIElement.
      */
     fun unboxString(boxed: ComPtr): String? {
-        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        val propertyValue = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
         return try {
-            pv.getString(IPropertyValue_GetString)
+            propertyValue.getString(IPropertyValue_GetString)
         } finally {
-            pv.release()
+            propertyValue.release()
         }
     }
 
@@ -71,11 +71,11 @@ internal object PropertyValues {
      * Returns null if it isn't a boxed boolean (PropertyValue).
      */
     fun unboxBool(boxed: ComPtr): Boolean? {
-        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        val propertyValue = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
         return try {
-            pv.getBool(IPropertyValue_GetBoolean)
+            propertyValue.getBool(IPropertyValue_GetBoolean)
         } finally {
-            pv.release()
+            propertyValue.release()
         }
     }
 
@@ -98,11 +98,11 @@ internal object PropertyValues {
      * Returns null if it isn't a boxed Int32 (PropertyValue).
      */
     fun unboxInt(boxed: ComPtr): Int? {
-        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        val propertyValue = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
         return try {
-            pv.getInt(IPropertyValue_GetInt32)
+            propertyValue.getInt(IPropertyValue_GetInt32)
         } finally {
-            pv.release()
+            propertyValue.release()
         }
     }
 }
