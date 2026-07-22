@@ -19,7 +19,7 @@ import com.appkitbox.winui4k.WSpinner
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTextPane
 
-/**
+/*
  * Text category: demo pages for AutoSuggestBox / NumberBox / PasswordBox / RichEditBox / RichTextBlock / TextBlock / TextBox.
  */
 

@@ -32,7 +32,7 @@ import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTitleBar
 
-/**
+/*
  * Windowing category: the 4 pages AppWindow / AppWindowTitleBar / Multiple windows / TitleBar.
  * Since these demos mostly manipulate native windows themselves, destructive operations (switching
  * to FullScreen / CompactOverlay / a different Presenter, etc.) are never applied to the main
