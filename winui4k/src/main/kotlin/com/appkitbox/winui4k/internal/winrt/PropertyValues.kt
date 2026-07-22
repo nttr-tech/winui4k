@@ -24,18 +24,18 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateInt32 = 10 // CreateInt32(i4, out IInspectable)
     private const val IPropertyValueStatics_CreateDouble = 15 // CreateDouble(r8, out IInspectable)
 
-    private fun statics(): ComPtr =
+    /**
+     * Process-lifetime cache of the PropertyValue statics factory. box is a hot path used by
+     * Content assignment and list-item insertion, so this avoids a per-call RoGetActivationFactory
+     * (the statics factory is agile, so it's safe to reuse across threads).
+     */
+    private val statics: ComPtr by lazy {
         Activation.factory("Windows.Foundation.PropertyValue", IID_IPROPERTY_VALUE_STATICS)
+    }
 
     /** Boxes a Kotlin String into an IInspectable (PropertyValue.CreateString). */
-    fun boxString(s: String): ComPtr {
-        val statics = statics()
-        return try {
-            Hstring.use(s) { h -> statics.getPtr(IPropertyValueStatics_CreateString, h) }
-        } finally {
-            statics.release()
-        }
-    }
+    fun boxString(s: String): ComPtr =
+        Hstring.use(s) { h -> statics.getPtr(IPropertyValueStatics_CreateString, h) }
 
     /**
      * The reverse of [boxString]: extracts the string if the IInspectable is a boxed string.
@@ -55,22 +55,15 @@ internal object PropertyValues {
      * Used to pass it to an IReference<Boolean>-typed property (ToggleButton.IsChecked).
      * WinRT's boolean is 1 byte, so the descriptor is given explicitly.
      */
-    fun boxBool(value: Boolean): ComPtr {
-        val statics = statics()
-        return try {
-            Ffi.backend.withScope { scope ->
-                val out = scope.allocate(8)
-                statics.callWith(
-                    IPropertyValueStatics_CreateBoolean,
-                    CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.U8, ArgKind.PTR),
-                    if (value) 1.toByte() else 0.toByte(),
-                    out,
-                )
-                ComPtr(Ffi.backend.memory.getPtr(out, 0))
-            }
-        } finally {
-            statics.release()
-        }
+    fun boxBool(value: Boolean): ComPtr = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(8)
+        statics.callWith(
+            IPropertyValueStatics_CreateBoolean,
+            CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.U8, ArgKind.PTR),
+            if (value) 1.toByte() else 0.toByte(),
+            out,
+        )
+        ComPtr(Ffi.backend.memory.getPtr(out, 0))
     }
 
     /**
@@ -92,27 +85,13 @@ internal object PropertyValues {
      * PreferredMinimum/MaximumWidth/Height). INT32 is an ordinary 4-byte argument, so it can be
      * passed as-is via [ComPtr.getPtr]'s automatic inference.
      */
-    fun boxInt(value: Int): ComPtr {
-        val statics = statics()
-        return try {
-            statics.getPtr(IPropertyValueStatics_CreateInt32, value)
-        } finally {
-            statics.release()
-        }
-    }
+    fun boxInt(value: Int): ComPtr = statics.getPtr(IPropertyValueStatics_CreateInt32, value)
 
     /**
      * Boxes a Kotlin Double into an IInspectable (PropertyValue.CreateDouble).
      * Used to pass it to an IReference<Double>-typed parameter (ScrollViewer.ChangeView's offset).
      */
-    fun boxDouble(value: Double): ComPtr {
-        val statics = statics()
-        return try {
-            statics.getPtr(IPropertyValueStatics_CreateDouble, value)
-        } finally {
-            statics.release()
-        }
-    }
+    fun boxDouble(value: Double): ComPtr = statics.getPtr(IPropertyValueStatics_CreateDouble, value)
 
     /**
      * The reverse of [boxInt]: extracts the Int if the IInspectable is a boxed Int32.
