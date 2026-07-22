@@ -124,7 +124,8 @@ tasks.named("processResources") {
 // ---------------------------------------------------------------------------
 
 dependencies {
-    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
     testRuntimeOnly(libs.junit.platform.launcher)
     // Tests run on JDK 25, so use the Panama backend
     testRuntimeOnly(project(":winui4k-ffi-panama"))
