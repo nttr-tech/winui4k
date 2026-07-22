@@ -27,6 +27,7 @@ internal object XamlInterop {
     const val IID_IApplicationFactory = "9fd96657-5294-5a65-a1db-4fea143597da"
     const val IApplicationFactory_CreateInstance = 6   // (outer, out inner, out instance)
     const val IID_IApplicationOverrides = "a33e81ef-c665-503b-8827-d27ef1720a06"
+
     // IApplicationOverrides: vtbl[6] OnLaunched(LaunchActivatedEventArgs)
     const val IID_IApplication = "06a8f4e7-1146-55af-820d-ebd55643b021"
     const val IApplication_get_Resources = 6           // get_Resources(out ResourceDictionary)
@@ -34,6 +35,7 @@ internal object XamlInterop {
     const val IApplication_Exit = 17                   // Exit()
     const val IID_IApplication3 = "be941595-61fe-5b36-a3d3-962a647d7c6f"
     const val IApplication3_put_DispatcherShutdownMode = 7 // put_DispatcherShutdownMode(DispatcherShutdownMode)
+
     // enum Microsoft.UI.Xaml.DispatcherShutdownMode (OnLastWindowClose=0, OnExplicitShutdown=1)
     const val DispatcherShutdownMode_OnExplicitShutdown = 1
 
@@ -85,6 +87,7 @@ internal object XamlInterop {
     const val IFrameworkElement_remove_SizeChanged = 68 // remove_SizeChanged(token)
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
+
     /** IID of Microsoft.UI.Xaml.SizeChangedEventHandler (a delegate). */
     const val IID_SizeChangedEventHandler = "8d7b1a58-14c6-51c9-892c-9fcce368e77d"
 
@@ -179,6 +182,7 @@ internal object XamlInterop {
     const val IID_IRelativePanelFactory = "c85f1443-d973-50fd-9497-b867f492468f"
     const val IID_IRelativePanel = "c432fcc4-88f2-59d8-9d0e-a237beaeb07f"
     const val IID_IRelativePanelStatics = "bdd929a2-76cc-59c4-82c1-f14b5da4221a"
+
     // Every element-relative Set* is SetXxx(UIElement element, Object value) — value is the reference element
     const val IRelativePanelStatics_SetLeftOf = 9
     const val IRelativePanelStatics_SetAbove = 12
@@ -190,6 +194,7 @@ internal object XamlInterop {
     const val IRelativePanelStatics_SetAlignTopWith = 30
     const val IRelativePanelStatics_SetAlignRightWith = 33
     const val IRelativePanelStatics_SetAlignBottomWith = 36
+
     // Every panel-relative Set* is SetXxxWithPanel(UIElement element, boolean value)
     const val IRelativePanelStatics_SetAlignLeftWithPanel = 39
     const val IRelativePanelStatics_SetAlignTopWithPanel = 42

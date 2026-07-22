@@ -38,8 +38,11 @@ internal object DateTimeConversions {
 
     /** Windows.Globalization.DayOfWeek (Sunday=0..Saturday=6) -> java.time.DayOfWeek. */
     fun nativeDayOfWeekToJava(native: Int): java.time.DayOfWeek {
-        return if (native == 0) java.time.DayOfWeek.SUNDAY
-        else java.time.DayOfWeek.of(native)
+        return if (native == 0) {
+            java.time.DayOfWeek.SUNDAY
+        } else {
+            java.time.DayOfWeek.of(native)
+        }
     }
 
     /** java.time.DayOfWeek -> Windows.Globalization.DayOfWeek (Sunday=0..Saturday=6). */

@@ -71,7 +71,8 @@ internal object PanamaBackend : FfiBackend {
         val functionDescriptor = descriptor.toFunctionDescriptor()
         val invoker = UpcallInvoker(descriptor, body)
         var handle = LOOKUP.findVirtual(
-            UpcallInvoker::class.java, "invoke",
+            UpcallInvoker::class.java,
+            "invoke",
             MethodType.methodType(Any::class.java, Array<Any?>::class.java),
         ).bindTo(invoker)
         handle = handle.asCollector(Array<Any?>::class.java, descriptor.args.size)

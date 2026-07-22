@@ -1,14 +1,5 @@
 package com.appkitbox.winui4k.internal.ffi.jnr
 
-import com.kenai.jffi.CallContext
-import com.kenai.jffi.CallingConvention
-import com.kenai.jffi.Closure
-import com.kenai.jffi.ClosureManager
-import com.kenai.jffi.HeapInvocationBuffer
-import com.kenai.jffi.Invoker
-import com.kenai.jffi.Library
-import com.kenai.jffi.MemoryIO
-import com.kenai.jffi.Type
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.DowncallHandle
@@ -20,6 +11,15 @@ import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.StructType
 import com.appkitbox.winui4k.internal.ffi.api.StructValue
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.kenai.jffi.CallContext
+import com.kenai.jffi.CallingConvention
+import com.kenai.jffi.Closure
+import com.kenai.jffi.ClosureManager
+import com.kenai.jffi.HeapInvocationBuffer
+import com.kenai.jffi.Invoker
+import com.kenai.jffi.Library
+import com.kenai.jffi.MemoryIO
+import com.kenai.jffi.Type
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 

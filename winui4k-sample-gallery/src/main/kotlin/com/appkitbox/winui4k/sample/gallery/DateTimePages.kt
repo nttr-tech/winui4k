@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-/**
+/*
  * Date & time category: demo pages for CalendarDatePicker / CalendarView / DatePicker / TimePicker.
  */
 

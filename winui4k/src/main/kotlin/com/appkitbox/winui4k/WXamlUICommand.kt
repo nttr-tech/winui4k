@@ -173,7 +173,10 @@ class WStandardUICommand(kind: StandardUICommandKind) : WXamlUICommand(createWit
             val instance = scope.allocate(8)
             factory.call(
                 XamlInterop.IStandardUICommandFactory_CreateInstanceWithKind,
-                kind.native, null, inner, instance,
+                kind.native,
+                null,
+                inner,
+                instance,
             )
             factory.release()
             ComPtr(Ffi.backend.memory.getPtr(instance, 0))

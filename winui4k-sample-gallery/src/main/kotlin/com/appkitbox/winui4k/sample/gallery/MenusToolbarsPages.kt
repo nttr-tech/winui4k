@@ -34,7 +34,7 @@ import com.appkitbox.winui4k.WSwipeItems
 import com.appkitbox.winui4k.WToggleMenuFlyoutItem
 import com.appkitbox.winui4k.WXamlUICommand
 
-/**
+/*
  * Menus & toolbars category: demo pages for AppBarButton / AppBarSeparator / AppBarToggleButton / CommandBar / CommandBarFlyout / MenuBar / MenuFlyout / SwipeControl / StandardUICommand / XamlUICommand.
  */
 

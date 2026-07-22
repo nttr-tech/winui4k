@@ -44,16 +44,19 @@ internal class CleanerCleanupBackend private constructor(
             val cleanerClass = Class.forName("java.lang.ref.Cleaner")
             val cleanableClass = Class.forName("java.lang.ref.Cleaner\$Cleanable")
             val create = lookup.findStatic(
-                cleanerClass, "create",
+                cleanerClass,
+                "create",
                 MethodType.methodType(cleanerClass, ThreadFactory::class.java),
             )
             val register = lookup.findVirtual(
-                cleanerClass, "register",
+                cleanerClass,
+                "register",
                 MethodType.methodType(cleanableClass, Any::class.java, Runnable::class.java),
             )
             val clean = lookup.findVirtual(cleanableClass, "clean", MethodType.methodType(Void.TYPE))
             val fence = lookup.findStatic(
-                Reference::class.java, "reachabilityFence",
+                Reference::class.java,
+                "reachabilityFence",
                 MethodType.methodType(Void.TYPE, Any::class.java),
             )
             CleanerCleanupBackend(checkNotNull(create.invoke(threadFactory)), register, clean, fence)

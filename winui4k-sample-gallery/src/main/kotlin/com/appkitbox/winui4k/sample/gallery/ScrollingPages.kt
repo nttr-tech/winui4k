@@ -25,7 +25,7 @@ import com.appkitbox.winui4k.WScrollView
 import com.appkitbox.winui4k.WSemanticZoom
 import com.appkitbox.winui4k.WSlider
 
-/**
+/*
  * Scrolling category: demo pages for AnnotatedScrollBar / PipsPager / ScrollView / ScrollViewer / SemanticZoom.
  */
 
@@ -34,8 +34,12 @@ import com.appkitbox.winui4k.WSlider
 /** A tile grid (14 rows x 6 columns) larger than the viewport, used by the scrolling demos. Overflows in both directions. */
 private fun buildScrollingTileContent(): WComponent {
     val palette = listOf(
-        WColor(0, 120, 212), WColor(16, 137, 62), WColor(202, 80, 16),
-        WColor(142, 68, 173), WColor(193, 0, 76), WColor(0, 153, 188),
+        WColor(0, 120, 212),
+        WColor(16, 137, 62),
+        WColor(202, 80, 16),
+        WColor(142, 68, 173),
+        WColor(193, 0, 76),
+        WColor(0, 153, 188),
     )
     val content = WPanel(spacing = 8.0)
     for (row in 0 until 14) {

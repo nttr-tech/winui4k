@@ -43,7 +43,12 @@ class WColorPicker : WControl(
             return WColor(r, g, b, a)
         }
         set(value) = XamlStructs.putColor(
-            inspectable, XamlInterop.IColorPicker_put_Color, value.alpha, value.red, value.green, value.blue,
+            inspectable,
+            XamlInterop.IColorPicker_put_Color,
+            value.alpha,
+            value.red,
+            value.green,
+            value.blue,
         )
 
     /** Whether alpha (opacity) can be adjusted (ColorPicker.IsAlphaEnabled). */

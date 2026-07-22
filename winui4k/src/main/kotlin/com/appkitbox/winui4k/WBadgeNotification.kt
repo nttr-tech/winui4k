@@ -12,7 +12,8 @@ object WBadgeNotification {
     /** BadgeNotificationManager.Current (the default interface's pointer). */
     private val manager: ComPtr by lazy {
         val statics = Activation.factory(
-            NotificationInterop.CLS_BadgeNotificationManager, NotificationInterop.IID_IBadgeNotificationManagerStatics,
+            NotificationInterop.CLS_BadgeNotificationManager,
+            NotificationInterop.IID_IBadgeNotificationManagerStatics,
         )
         val m = statics.getPtr(NotificationInterop.IBadgeNotificationManagerStatics_get_Current)
         statics.release()

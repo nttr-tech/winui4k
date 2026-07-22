@@ -11,7 +11,8 @@ import com.appkitbox.winui4k.internal.ffi.api.function
 internal object WinRtRuntime {
     private val roInitialize by lazy {
         Ffi.backend.function(
-            "combase.dll", "RoInitialize",
+            "combase.dll",
+            "RoInitialize",
             CallDescriptor(ValueKind.I32, ArgKind.I32),
         )
     }

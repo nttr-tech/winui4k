@@ -121,7 +121,9 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     /** ActionListener-like. Subscribes to ButtonBase.Click (RoutedEventHandler) under the hood. */
     fun addActionListener(listener: () -> Unit) {
         val token = buttonBase.addEventHandler(
-            "WinUI4K.ClickHandler", XamlInterop.IID_RoutedEventHandler, XamlInterop.IButtonBase_add_Click,
+            "WinUI4K.ClickHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IButtonBase_add_Click,
         ) { _, _ -> listener() }
         clickTokens.add(listener, token)
     }

@@ -5,9 +5,9 @@ import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.NavigationViewBackButtonVisible
 import com.appkitbox.winui4k.Orientation
+import com.appkitbox.winui4k.SystemBackdropType
 import com.appkitbox.winui4k.TextWrapping
 import com.appkitbox.winui4k.TitleBarHeightOption
-import com.appkitbox.winui4k.SystemBackdropType
 import com.appkitbox.winui4k.TitleBarTheme
 import com.appkitbox.winui4k.WAppWindow
 import com.appkitbox.winui4k.WAppWindowPresenterKind
@@ -209,11 +209,20 @@ private fun buildAppWindowPresenterExample(): WComponent {
     borderRow.add(applyBorderButton)
 
     val maximizeButton = WButton("Maximize")
-    maximizeButton.addActionListener { presenter?.maximize(); refreshState() }
+    maximizeButton.addActionListener {
+        presenter?.maximize()
+        refreshState()
+    }
     val minimizeButton = WButton("Minimize")
-    minimizeButton.addActionListener { presenter?.minimize(); refreshState() }
+    minimizeButton.addActionListener {
+        presenter?.minimize()
+        refreshState()
+    }
     val restoreButton = WButton("Restore")
-    restoreButton.addActionListener { presenter?.restore(); refreshState() }
+    restoreButton.addActionListener {
+        presenter?.restore()
+        refreshState()
+    }
     val stateButtons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     stateButtons.add(maximizeButton)
     stateButtons.add(minimizeButton)
@@ -300,7 +309,10 @@ private fun buildAppWindowModalExample(): WComponent {
         "IsModal requires an owner window. An AppWindow with an owner can only be created via " +
             "AppWindowStatics.Create(presenter, ownerWindowId), and is a separate \"raw AppWindow\" " +
             "unrelated to a WFrame's Content.",
-    ).also { it.foreground = TEXT_SECONDARY; it.textWrapping = TextWrapping.WRAP }
+    ).also {
+        it.foreground = TEXT_SECONDARY
+        it.textWrapping = TextWrapping.WRAP
+    }
 
     val body = WPanel(spacing = 8.0)
     body.add(note)
@@ -768,7 +780,10 @@ private fun buildTitleBarDragRegionExample(): WComponent {
     val note = WLabel(
         "The TitleBar.IsDragRegion attached property lets you make any component a draggable " +
             "region (by default, AutoRefreshDragRegions automatically makes things like buttons non-draggable).",
-    ).also { it.foreground = TEXT_SECONDARY; it.textWrapping = TextWrapping.WRAP }
+    ).also {
+        it.foreground = TEXT_SECONDARY
+        it.textWrapping = TextWrapping.WRAP
+    }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     buttons.add(dragButton)

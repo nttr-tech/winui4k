@@ -76,7 +76,9 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     /** Registers a listener called when it expands (Expander.Expanding). */
     fun addExpandListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.ExpanderHandler", XamlInterop.IID_ExpanderExpandingHandler, XamlInterop.IExpander_add_Expanding,
+            "WinUI4K.ExpanderHandler",
+            XamlInterop.IID_ExpanderExpandingHandler,
+            XamlInterop.IExpander_add_Expanding,
         ) { _, _ -> listener() }
         expandTokens.add(listener, token)
     }
@@ -90,7 +92,9 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     /** Registers a listener called when it collapses (Expander.Collapsed). */
     fun addCollapseListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.ExpanderHandler", XamlInterop.IID_ExpanderCollapsedHandler, XamlInterop.IExpander_add_Collapsed,
+            "WinUI4K.ExpanderHandler",
+            XamlInterop.IID_ExpanderCollapsedHandler,
+            XamlInterop.IExpander_add_Collapsed,
         ) { _, _ -> listener() }
         collapseTokens.add(listener, token)
     }

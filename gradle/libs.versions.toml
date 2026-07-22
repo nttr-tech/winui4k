@@ -3,6 +3,8 @@ kotlin = "2.4.0"
 # 6.0+ targets JVM 11, so pin to the last version verifiable against a Java 8 target
 kotest = "5.9.1"
 shadow = "9.6.0"
+spotless = "8.8.0"
+ktlint = "1.8.0"
 # NuGet package versions (referenced by winui4k core's fetch tasks)
 windowsAppSdk = "2.2.0"
 windowsAppSdkFoundation = "2.1.0"
@@ -11,6 +13,7 @@ webView2 = "1.0.3719.77"
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 shadow-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
+spotless-gradle-plugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 jna = "net.java.dev.jna:jna:5.17.0"
 jnr-ffi = "com.github.jnr:jnr-ffi:2.2.17"
 kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"

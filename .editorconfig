@@ -1,0 +1,17 @@
+root = true
+
+[*.{kt,kts}]
+# The existing code follows IntelliJ IDEA's formatting output, so use this instead of ktlint_official
+ktlint_code_style = intellij_idea
+indent_size = 4
+max_line_length = off
+# Disable rules that would rewrite the existing code on a large scale, like block body <-> expression body
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_class-signature = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+# Disable lint-style rules that require renaming file names or property names; that's out of scope for formatting
+ktlint_standard_filename = disabled
+ktlint_standard_property-naming = disabled
+# Disabled to preserve column-aligned trailing comments (e.g. the vtable slot tables)
+ktlint_standard_no-multi-spaces = disabled

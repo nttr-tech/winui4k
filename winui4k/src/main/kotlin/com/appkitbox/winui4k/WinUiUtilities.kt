@@ -1,8 +1,5 @@
 package com.appkitbox.winui4k
 
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicBoolean
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.lifetime.ReleasePump
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
@@ -19,11 +16,14 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
-import com.appkitbox.winui4k.internal.winui.FoundationInterop
-import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WinAppSdkBootstrap
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * WinUI 3's equivalent of SwingUtilities. Handles lazily starting the UI thread and
@@ -58,7 +58,10 @@ object WinUiUtilities {
 
     /** GetXamlType(this, TypeName byval, out IXamlType) */
     private val DESC_GET_XAML_TYPE = CallDescriptor(
-        ValueKind.I32, ArgKind.PTR, ArgKind.Struct(XamlStructs.TYPE_NAME), ArgKind.PTR,
+        ValueKind.I32,
+        ArgKind.PTR,
+        ArgKind.Struct(XamlStructs.TYPE_NAME),
+        ArgKind.PTR,
     )
 
     /** GetXmlnsDefinitions(this, out UINT32, out XmlnsDefinition*) / GetXamlType(this, HSTRING, out) */
@@ -123,7 +126,8 @@ object WinUiUtilities {
                 .addInterface(
                     XamlInterop.IID_ApplicationInitializationCallback,
                     listOf(
-                        KComObject.Method(DESC_THIS_PTR) { // Invoke(this, params)
+                        KComObject.Method(DESC_THIS_PTR) {
+                            // Invoke(this, params)
                             createApplication(onReady)
                             KComObject.S_OK
                         },
@@ -228,7 +232,8 @@ object WinUiUtilities {
         outer.addInterface(
             XamlInterop.IID_IApplicationOverrides,
             listOf(
-                KComObject.Method(DESC_THIS_PTR) { // OnLaunched(this, LaunchActivatedEventArgs)
+                KComObject.Method(DESC_THIS_PTR) {
+                    // OnLaunched(this, LaunchActivatedEventArgs)
                     // Application.Resources cannot be touched until core initialization
                     // completes (= from OnLaunched onward); it's E_UNEXPECTED during the
                     // init callback
@@ -244,20 +249,26 @@ object WinUiUtilities {
             listOf(
                 KComObject.Method(DESC_GET_XAML_TYPE) { args ->
                     realProvider.rawCall(
-                        XamlInterop.IXamlMetadataProvider_GetXamlType, DESC_GET_XAML_TYPE,
-                        args[1] as StructValue, args[2] as Ptr,
+                        XamlInterop.IXamlMetadataProvider_GetXamlType,
+                        DESC_GET_XAML_TYPE,
+                        args[1] as StructValue,
+                        args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
-                        XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName, DESC_THIS_PTR_PTR,
-                        args[1] as Ptr, args[2] as Ptr,
+                        XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName,
+                        DESC_THIS_PTR_PTR,
+                        args[1] as Ptr,
+                        args[2] as Ptr,
                     )
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
-                        XamlInterop.IXamlMetadataProvider_GetXmlnsDefinitions, DESC_THIS_PTR_PTR,
-                        args[1] as Ptr, args[2] as Ptr,
+                        XamlInterop.IXamlMetadataProvider_GetXmlnsDefinitions,
+                        DESC_THIS_PTR_PTR,
+                        args[1] as Ptr,
+                        args[2] as Ptr,
                     )
                 },
             ),
@@ -360,12 +371,14 @@ object WinUiUtilities {
             .addInterface(
                 XamlInterop.IID_ResourceManagerRequestedHandler,
                 listOf(
-                    KComObject.Method(DESC_THIS_PTR_PTR) { args -> // Invoke(this, sender, args)
+                    KComObject.Method(DESC_THIS_PTR_PTR) { args ->
+                        // Invoke(this, sender, args)
                         val eventArgs = ComPtr(args[2] as Ptr)
                             .queryInterface(XamlInterop.IID_IResourceManagerRequestedEventArgs)
                         val rm = createFrameworkResourceManager()
                         eventArgs.call(
-                            XamlInterop.IResourceManagerRequestedEventArgs_put_CustomResourceManager, rm,
+                            XamlInterop.IResourceManagerRequestedEventArgs_put_CustomResourceManager,
+                            rm,
                         )
                         eventArgs.release()
                         KComObject.S_OK

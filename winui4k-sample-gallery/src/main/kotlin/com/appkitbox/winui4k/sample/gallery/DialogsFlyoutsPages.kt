@@ -19,7 +19,7 @@ import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WPopup
 import com.appkitbox.winui4k.WTeachingTip
 
-/**
+/*
  * Dialogs & flyouts category: demo pages for ContentDialog / Flyout / Popup / TeachingTip.
  */
 

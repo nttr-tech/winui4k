@@ -94,14 +94,18 @@ internal object WinAppSdkBootstrap {
         // HRESULT MddBootstrapInitialize2(UINT32 majorMinor, PCWSTR versionTag,
         //                                 PACKAGE_VERSION minVersion, MddBootstrapInitializeOptions options)
         val bootstrapInitialize = Ffi.backend.function(
-            library, "MddBootstrapInitialize2",
+            library,
+            "MddBootstrapInitialize2",
             CallDescriptor(ValueKind.I32, ArgKind.I32, ArgKind.PTR, ArgKind.I64, ArgKind.I32),
         )
         Ffi.backend.withScope { scope ->
             val emptyTag = scope.allocate(2, 2) // L"" (the stable channel)
             Ffi.backend.memory.putUtf16z(emptyTag, 0, "")
             val hr = bootstrapInitialize(
-                WINAPPSDK_MAJOR_MINOR, emptyTag, WINAPPSDK_MIN_VERSION, BOOTSTRAP_ON_NO_MATCH_SHOW_UI,
+                WINAPPSDK_MAJOR_MINOR,
+                emptyTag,
+                WINAPPSDK_MIN_VERSION,
+                BOOTSTRAP_ON_NO_MATCH_SHOW_UI,
             ) as Int
             checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.2 runtime installed?)")
         }

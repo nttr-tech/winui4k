@@ -208,8 +208,10 @@ internal object XamlStructs {
         target.call(slot, rect.ptr)
         val memory = Ffi.backend.memory
         intArrayOf(
-            memory.getInt(rect.ptr, 0), memory.getInt(rect.ptr, 4),
-            memory.getInt(rect.ptr, 8), memory.getInt(rect.ptr, 12),
+            memory.getInt(rect.ptr, 0),
+            memory.getInt(rect.ptr, 4),
+            memory.getInt(rect.ptr, 8),
+            memory.getInt(rect.ptr, 12),
         )
     }
 

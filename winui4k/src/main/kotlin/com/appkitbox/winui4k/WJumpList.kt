@@ -36,7 +36,9 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
             val operation = statics.getPtr(NotificationInterop.IJumpListStatics_LoadCurrentAsync)
             statics.release()
             val result = Async.awaitResult(
-                operation, NotificationInterop.IID_AsyncOperationCompletedHandler_JumpList, "JumpList.LoadCurrentAsync",
+                operation,
+                NotificationInterop.IID_AsyncOperationCompletedHandler_JumpList,
+                "JumpList.LoadCurrentAsync",
             )
             operation.release()
             return WJumpList(result)

@@ -57,7 +57,8 @@ internal object Async {
     private val coWaitForMultipleObjects by lazy {
         // HRESULT CoWaitForMultipleObjects(DWORD flags, DWORD timeout, ULONG count, HANDLE* handles, DWORD* index)
         Ffi.backend.function(
-            "ole32.dll", "CoWaitForMultipleObjects",
+            "ole32.dll",
+            "CoWaitForMultipleObjects",
             CallDescriptor(ValueKind.I32, ArgKind.I32, ArgKind.I32, ArgKind.I32, ArgKind.PTR, ArgKind.PTR),
         )
     }
@@ -150,7 +151,11 @@ internal object Async {
             Ffi.backend.memory.putPtr(handles, 0, completedEvent)
             val signaledIndex = scope.allocate(4)
             coWaitForMultipleObjects(
-                COWAIT_DEFAULT, TIMEOUT_MILLIS, 1, handles, signaledIndex,
+                COWAIT_DEFAULT,
+                TIMEOUT_MILLIS,
+                1,
+                handles,
+                signaledIndex,
             ) as Int
         }
         check(waitResult != RPC_S_CALLPENDING) { "$what timed out" }

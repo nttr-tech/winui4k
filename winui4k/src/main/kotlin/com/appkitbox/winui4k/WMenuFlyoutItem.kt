@@ -99,7 +99,9 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     /** ActionListener-like. Subscribes to MenuFlyoutItem.Click (RoutedEventHandler) under the hood. */
     fun addActionListener(listener: () -> Unit) {
         val token = menuFlyoutItem.addEventHandler(
-            "WinUI4K.MenuClickHandler", XamlInterop.IID_RoutedEventHandler, XamlInterop.IMenuFlyoutItem_add_Click,
+            "WinUI4K.MenuClickHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IMenuFlyoutItem_add_Click,
         ) { _, _ -> listener() }
         clickTokens.add(listener, token)
     }

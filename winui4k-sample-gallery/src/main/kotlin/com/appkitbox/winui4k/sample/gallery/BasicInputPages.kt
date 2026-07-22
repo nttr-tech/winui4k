@@ -35,7 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
+/*
  * Basic input category: demo pages for Button / CheckBox / ColorPicker / ComboBox / DropDownButton / HyperlinkButton / RadioButton / RatingControl / RepeatButton / Slider / SplitButton / ToggleButton / ToggleSplitButton / ToggleSwitch.
  */
 
@@ -490,8 +490,18 @@ private fun buildRadioButtonGroupExample(): WComponent {
     }
 
     val row = WPanel(spacing = 32.0, orientation = Orientation.HORIZONTAL)
-    row.add(buildGroup("Background", "background") { background = it; result.text = "Background: $background / Foreground: $foreground" })
-    row.add(buildGroup("Foreground", "foreground") { foreground = it; result.text = "Background: $background / Foreground: $foreground" })
+    row.add(
+        buildGroup("Background", "background") {
+            background = it
+            result.text = "Background: $background / Foreground: $foreground"
+        },
+    )
+    row.add(
+        buildGroup("Foreground", "foreground") {
+            foreground = it
+            result.text = "Background: $background / Foreground: $foreground"
+        },
+    )
 
     val body = WPanel(spacing = 8.0)
     body.add(row)

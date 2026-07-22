@@ -1,11 +1,5 @@
 package com.appkitbox.winui4k.internal.ffi.jna
 
-import com.sun.jna.CallbackProxy
-import com.sun.jna.CallbackReference
-import com.sun.jna.Function
-import com.sun.jna.Memory
-import com.sun.jna.NativeLibrary
-import com.sun.jna.Pointer
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.DowncallHandle
@@ -16,6 +10,12 @@ import com.appkitbox.winui4k.internal.ffi.api.MemoryScope
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.StructValue
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.sun.jna.CallbackProxy
+import com.sun.jna.CallbackReference
+import com.sun.jna.Function
+import com.sun.jna.Memory
+import com.sun.jna.NativeLibrary
+import com.sun.jna.Pointer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 

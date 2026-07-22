@@ -81,7 +81,9 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     fun addItemListener(listener: (Boolean?) -> Unit) {
         val tokens = LongArray(ADD_SLOTS.size) { i ->
             toggleButton.addEventHandler(
-                "WinUI4K.ToggleHandler", XamlInterop.IID_RoutedEventHandler, ADD_SLOTS[i],
+                "WinUI4K.ToggleHandler",
+                XamlInterop.IID_RoutedEventHandler,
+                ADD_SLOTS[i],
             ) { _, _ -> listener(isChecked) }
         }
         itemTokens.addLast(listener to tokens)

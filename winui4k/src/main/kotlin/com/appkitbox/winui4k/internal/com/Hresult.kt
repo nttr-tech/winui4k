@@ -29,13 +29,15 @@ class WindowsRuntimeException(what: String, val hresult: Int) :
 private object RestrictedError {
     private val getRestrictedErrorInfo by lazy {
         Ffi.backend.function(
-            "combase.dll", "GetRestrictedErrorInfo",
+            "combase.dll",
+            "GetRestrictedErrorInfo",
             CallDescriptor(ValueKind.I32, ArgKind.PTR),
         )
     }
     private val sysFreeString by lazy {
         Ffi.backend.function(
-            "oleaut32.dll", "SysFreeString",
+            "oleaut32.dll",
+            "SysFreeString",
             CallDescriptor(ValueKind.VOID, ArgKind.PTR),
         )
     }

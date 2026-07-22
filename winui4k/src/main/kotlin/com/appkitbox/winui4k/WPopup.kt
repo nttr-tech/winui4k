@@ -66,7 +66,9 @@ class WPopup(child: WComponent? = null) : WComponent(
     /** Registers a listener called when it closes (Popup.Closed). Also called on a light dismiss. */
     fun addCloseListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.PopupClosedHandler", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Closed,
+            "WinUI4K.PopupClosedHandler",
+            FoundationInterop.IID_EventHandler_Object,
+            XamlInterop.IPopup_add_Closed,
         ) { _, _ -> listener() }
         closeTokens.add(listener, token)
     }

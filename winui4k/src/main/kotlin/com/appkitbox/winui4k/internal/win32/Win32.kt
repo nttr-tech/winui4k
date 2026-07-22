@@ -12,25 +12,29 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 internal object Win32 {
     private val setProcessDpiAwarenessContext by lazy {
         Ffi.backend.function(
-            "user32.dll", "SetProcessDpiAwarenessContext",
+            "user32.dll",
+            "SetProcessDpiAwarenessContext",
             CallDescriptor(ValueKind.I32, ArgKind.PTR),
         )
     }
     private val getModuleHandleW by lazy {
         Ffi.backend.function(
-            "kernel32.dll", "GetModuleHandleW",
+            "kernel32.dll",
+            "GetModuleHandleW",
             CallDescriptor(ValueKind.PTR, ArgKind.PTR),
         )
     }
     private val getModuleFileNameW by lazy {
         Ffi.backend.function(
-            "kernel32.dll", "GetModuleFileNameW",
+            "kernel32.dll",
+            "GetModuleFileNameW",
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.I32),
         )
     }
     private val createEventW by lazy {
         Ffi.backend.function(
-            "kernel32.dll", "CreateEventW",
+            "kernel32.dll",
+            "CreateEventW",
             CallDescriptor(ValueKind.PTR, ArgKind.PTR, ArgKind.I32, ArgKind.I32, ArgKind.PTR),
         )
     }
@@ -66,7 +70,8 @@ internal object Win32 {
 
     private val loadLibraryW by lazy {
         Ffi.backend.function(
-            "kernel32.dll", "LoadLibraryW",
+            "kernel32.dll",
+            "LoadLibraryW",
             CallDescriptor(ValueKind.PTR, ArgKind.PTR),
         )
     }
@@ -84,7 +89,8 @@ internal object Win32 {
 
     private val setEnvironmentVariableW by lazy {
         Ffi.backend.function(
-            "kernel32.dll", "SetEnvironmentVariableW",
+            "kernel32.dll",
+            "SetEnvironmentVariableW",
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR),
         )
     }

@@ -49,7 +49,9 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
             val windowId = XamlStructs.windowIdValue(scope, appWindow.id)
             WDisplayArea(
                 statics.getPtr(
-                    WindowingInterop.IDisplayAreaStatics_GetFromWindowId, windowId, WindowingInterop.DisplayAreaFallback_Nearest,
+                    WindowingInterop.IDisplayAreaStatics_GetFromWindowId,
+                    windowId,
+                    WindowingInterop.DisplayAreaFallback_Nearest,
                 ),
             )
         }

@@ -1,0 +1,4 @@
+# Don't let Git auto-convert line endings; treat file contents as-is.
+# The line-ending policy (CRLF for .bat/.cmd run directly on Windows, LF for everything else)
+# is maintained as the files' own content, and Spotless (lineEndings = UNIX) guarantees it for Kotlin sources.
+* -text

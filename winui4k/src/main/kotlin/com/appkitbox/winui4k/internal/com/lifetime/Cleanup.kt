@@ -63,7 +63,8 @@ internal object Cleanup {
     private fun initializeMta() {
         runCatching {
             val roInitialize = Ffi.backend.function(
-                "combase.dll", "RoInitialize",
+                "combase.dll",
+                "RoInitialize",
                 CallDescriptor(ValueKind.I32, ArgKind.I32),
             )
             roInitialize(1) // RO_INIT_MULTITHREADED

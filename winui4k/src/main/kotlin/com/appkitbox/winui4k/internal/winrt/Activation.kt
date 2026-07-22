@@ -16,7 +16,8 @@ internal object Activation {
 
     private val roGetActivationFactory by lazy {
         Ffi.backend.function(
-            "combase.dll", "RoGetActivationFactory",
+            "combase.dll",
+            "RoGetActivationFactory",
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR),
         )
     }

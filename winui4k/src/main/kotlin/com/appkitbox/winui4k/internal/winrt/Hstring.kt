@@ -14,25 +14,29 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 internal object Hstring {
     private val create by lazy {
         Ffi.backend.function(
-            "combase.dll", "WindowsCreateString",
+            "combase.dll",
+            "WindowsCreateString",
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.I32, ArgKind.PTR),
         )
     }
     private val getRawBuffer by lazy {
         Ffi.backend.function(
-            "combase.dll", "WindowsGetStringRawBuffer",
+            "combase.dll",
+            "WindowsGetStringRawBuffer",
             CallDescriptor(ValueKind.PTR, ArgKind.PTR, ArgKind.PTR),
         )
     }
     private val delete by lazy {
         Ffi.backend.function(
-            "combase.dll", "WindowsDeleteString",
+            "combase.dll",
+            "WindowsDeleteString",
             CallDescriptor(ValueKind.I32, ArgKind.PTR),
         )
     }
     private val duplicateString by lazy {
         Ffi.backend.function(
-            "combase.dll", "WindowsDuplicateString",
+            "combase.dll",
+            "WindowsDuplicateString",
             CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR),
         )
     }

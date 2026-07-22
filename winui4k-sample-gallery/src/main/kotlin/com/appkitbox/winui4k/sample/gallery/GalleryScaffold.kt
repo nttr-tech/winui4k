@@ -15,7 +15,12 @@ import com.appkitbox.winui4k.WPanel
 /** A page's skeleton (large heading + favorite star + description). Each page adds its demos onto this return value. */
 internal fun buildPage(title: String, description: String): WPanel {
     val titleRow = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
-    titleRow.add(WLabel(title).also { it.fontSize = 28.0; it.fontWeight = 600 })
+    titleRow.add(
+        WLabel(title).also {
+            it.fontSize = 28.0
+            it.fontWeight = 600
+        },
+    )
     if (title in pages) {
         titleRow.add(buildFavoriteToggle(title).also { it.verticalAlignment = VerticalAlignment.CENTER })
     }
@@ -48,7 +53,12 @@ internal fun buildExample(title: String, body: WComponent): WComponent {
     card.padding = 16.0
 
     val section = WPanel(spacing = 8.0)
-    section.add(WLabel(title).also { it.fontWeight = 600; it.textWrapping = TextWrapping.WRAP })
+    section.add(
+        WLabel(title).also {
+            it.fontWeight = 600
+            it.textWrapping = TextWrapping.WRAP
+        },
+    )
     section.add(card)
     return section
 }
@@ -92,7 +102,12 @@ internal fun buildExample(title: String, example: WComponent, options: WComponen
     grid.add(optionsCard, row = 0, column = 1)
 
     val section = WPanel(spacing = 8.0)
-    section.add(WLabel(title).also { it.fontWeight = 600; it.textWrapping = TextWrapping.WRAP })
+    section.add(
+        WLabel(title).also {
+            it.fontWeight = 600
+            it.textWrapping = TextWrapping.WRAP
+        },
+    )
     section.add(grid)
     return section
 }

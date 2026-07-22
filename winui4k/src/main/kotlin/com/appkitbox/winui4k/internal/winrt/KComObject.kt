@@ -67,27 +67,35 @@ internal class KComObject(
         val memory = Ffi.backend.memory
         val vtableMethods = buildList {
             // --- IUnknown ---
-            add(Method(QI_DESC) { args ->
-                queryInterface(args[1] as Ptr, args[2] as Ptr)
-            })
+            add(
+                Method(QI_DESC) { args ->
+                    queryInterface(args[1] as Ptr, args[2] as Ptr)
+                },
+            )
             add(Method(ComPtr.UNKNOWN_DESC) { _ -> refCount.incrementAndGet() })
             add(Method(ComPtr.UNKNOWN_DESC) { _ -> releaseRef() })
             // --- IInspectable ---
             if (inspectable) {
-                add(Method(GET_IIDS_DESC) { args ->
-                    memory.putInt(args[1] as Ptr, 0, 0)
-                    memory.putPtr(args[2] as Ptr, 0, Ptr.NULL)
-                    S_OK
-                })
-                add(Method(OUT_PTR_DESC) { args ->
-                    // GetRuntimeClassName's out parameter transfers ownership (the caller deletes it)
-                    memory.putPtr(args[1] as Ptr, 0, Hstring.duplicate(Hstring.ofCached(runtimeClassName)))
-                    S_OK
-                })
-                add(Method(OUT_PTR_DESC) { args ->
-                    memory.putInt(args[1] as Ptr, 0, 0) // BaseTrust
-                    S_OK
-                })
+                add(
+                    Method(GET_IIDS_DESC) { args ->
+                        memory.putInt(args[1] as Ptr, 0, 0)
+                        memory.putPtr(args[2] as Ptr, 0, Ptr.NULL)
+                        S_OK
+                    },
+                )
+                add(
+                    Method(OUT_PTR_DESC) { args ->
+                        // GetRuntimeClassName's out parameter transfers ownership (the caller deletes it)
+                        memory.putPtr(args[1] as Ptr, 0, Hstring.duplicate(Hstring.ofCached(runtimeClassName)))
+                        S_OK
+                    },
+                )
+                add(
+                    Method(OUT_PTR_DESC) { args ->
+                        memory.putInt(args[1] as Ptr, 0, 0) // BaseTrust
+                        S_OK
+                    },
+                )
             }
             addAll(methods)
         }

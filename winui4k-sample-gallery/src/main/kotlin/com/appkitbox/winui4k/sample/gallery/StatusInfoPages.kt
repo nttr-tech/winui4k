@@ -17,7 +17,7 @@ import com.appkitbox.winui4k.WProgressRing
 import com.appkitbox.winui4k.WSlider
 import com.appkitbox.winui4k.WToolTip
 
-/**
+/*
  * Status & info category: demo pages for InfoBadge / InfoBar / ProgressBar / ProgressRing / ToolTip.
  */
 

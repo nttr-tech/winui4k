@@ -22,7 +22,7 @@ import com.appkitbox.winui4k.WVariableSizedWrapGrid
 import java.io.File
 import java.util.prefs.Preferences
 
-/**
+/*
  * Equivalent of the real WinUI 3 Gallery's Home page.
  * A header with a hero image, tiles linking out, and a Recent / Favorites toggle view below it.
  * "Recently visited" and "Favorites" are persisted via [GallerySettings].
@@ -299,7 +299,12 @@ private fun buildHomeHeader(): WComponent {
 
     val titleBlock = WPanel(spacing = 0.0)
     titleBlock.add(WLabel("Windows App SDK").also { it.fontSize = 18.0 })
-    titleBlock.add(WLabel("WinUI4K Gallery").also { it.fontSize = 40.0; it.fontWeight = 600 })
+    titleBlock.add(
+        WLabel("WinUI4K Gallery").also {
+            it.fontSize = 40.0
+            it.fontWeight = 600
+        },
+    )
 
     val tiles = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
     tiles.add(
@@ -572,7 +577,10 @@ internal fun buildFavoriteToggle(pageName: String): WToggleButton {
 
 /** A section heading (e.g. "Recently visited"). */
 private fun buildSectionTitle(title: String): WComponent =
-    WLabel(title).also { it.fontSize = 16.0; it.fontWeight = 600 }
+    WLabel(title).also {
+        it.fontSize = 16.0
+        it.fontWeight = 600
+    }
 
 /** Lines cards up in a wrapping grid. */
 private fun buildCardGrid(names: List<String>, navigateTo: (String) -> Unit): WComponent {

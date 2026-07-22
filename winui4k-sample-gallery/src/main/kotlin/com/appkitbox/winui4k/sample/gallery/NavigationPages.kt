@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.WNavigationView
 import com.appkitbox.winui4k.WNavigationViewItem
 import com.appkitbox.winui4k.WPanel
 
-/**
+/*
  * Navigation category: demo pages for NavigationView.
  */
 

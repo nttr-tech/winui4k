@@ -19,7 +19,7 @@ import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WTextField
 
-/**
+/*
  * Shell category: demo pages for AppNotification / BadgeNotification / JumpList.
  */
 
@@ -264,8 +264,11 @@ private fun buildJumpListEditExample(): WComponent {
     fun refreshItems(jumpList: WJumpList) {
         val names = jumpList.items.map { if (it.isSeparator) "――――" else it.displayName }
         itemsLabel.text =
-            if (names.isEmpty()) "No custom items"
-            else "Current items: " + names.joinToString(" / ")
+            if (names.isEmpty()) {
+                "No custom items"
+            } else {
+                "Current items: " + names.joinToString(" / ")
+            }
     }
 
     fun edit(block: (WJumpList) -> String) {

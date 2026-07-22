@@ -144,8 +144,13 @@ class WAnnotatedScrollBar : WControl(
 
         /** IValueConverter.Convert / ConvertBack (this, object, TypeName byval, object, HSTRING, out object). */
         val DESC_CONVERT = CallDescriptor(
-            ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.Struct(XamlStructs.TYPE_NAME),
-            ArgKind.PTR, ArgKind.PTR, ArgKind.PTR,
+            ValueKind.I32,
+            ArgKind.PTR,
+            ArgKind.PTR,
+            ArgKind.Struct(XamlStructs.TYPE_NAME),
+            ArgKind.PTR,
+            ArgKind.PTR,
+            ArgKind.PTR,
         )
 
         const val E_NOTIMPL = -0x7FFF_BFFF // 0x80004001

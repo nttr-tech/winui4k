@@ -142,18 +142,21 @@ internal object FoundationInterop {
     internal const val IID_AsyncOperationCompletedHandler_OPEN = "fcdcf02c-e5d8-4478-915a-4d90b74b83a5"
 
     // ---- Windows.Foundation.IReference<Int32> (box/unbox via PropertyValue.CreateInt32/GetInt32) ----
+
     /** Used by OverlappedPresenter's PreferredMinimum/MaximumWidth/Height (null = unset). */
     val IID_IReference_Int32: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};i4)")
     }
 
     // ---- Windows.Foundation.IReference<Double> (box via PropertyValue.CreateDouble) ----
+
     /** Used by ScrollViewer.ChangeView's offset argument (null = no change). */
     val IID_IReference_Double: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};f8)")
     }
 
     // ---- Windows.Foundation.IReference<Windows.UI.Color> (PropertyValue has no CreateColor, so implemented ourselves) ----
+
     /** Used by AppWindowTitleBar's 12 color properties. Implementation is internal.winui.ColorReference. */
     val IID_IReference_Color: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.UI.Color;u1;u1;u1;u1))")

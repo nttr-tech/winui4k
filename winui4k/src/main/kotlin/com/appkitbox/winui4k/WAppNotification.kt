@@ -5,8 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.NotificationInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
+import com.appkitbox.winui4k.internal.winui.NotificationInterop
 
 /**
  * TrayIcon.displayMessage-like: the Windows App SDK's toast notification, AppNotification.
@@ -195,7 +195,8 @@ object WAppNotificationManager {
     val isSupported: Boolean
         get() {
             val statics2 = Activation.factory(
-                NotificationInterop.CLS_AppNotificationManager, NotificationInterop.IID_IAppNotificationManagerStatics2,
+                NotificationInterop.CLS_AppNotificationManager,
+                NotificationInterop.IID_IAppNotificationManagerStatics2,
             )
             return try {
                 statics2.getBool(NotificationInterop.IAppNotificationManagerStatics2_IsSupported)

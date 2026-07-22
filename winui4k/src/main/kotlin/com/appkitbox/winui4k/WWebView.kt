@@ -1,12 +1,12 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Async
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WebView2Interop
@@ -178,8 +178,12 @@ class WWebView(source: String = "") : WComponent(
             return WColor(r, g, b, a)
         }
         set(value) = XamlStructs.putColor(
-            inspectable, WebView2Interop.IWebView2_put_DefaultBackgroundColor,
-            value.alpha, value.red, value.green, value.blue,
+            inspectable,
+            WebView2Interop.IWebView2_put_DefaultBackgroundColor,
+            value.alpha,
+            value.red,
+            value.green,
+            value.blue,
         )
 
     /**
@@ -282,7 +286,9 @@ class WWebView(source: String = "") : WComponent(
             return
         }
         Async.onStringResult(
-            operation, WebView2Interop.IID_AsyncOperationCompletedHandler_String, "WebView2.ExecuteScriptAsync",
+            operation,
+            WebView2Interop.IID_AsyncOperationCompletedHandler_String,
+            "WebView2.ExecuteScriptAsync",
         ) { result ->
             // Dispatch from the completion-notification thread over to the UI thread before delivering it
             WinUiUtilities.invokeLater { resultHandler(result) }

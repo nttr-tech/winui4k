@@ -130,6 +130,7 @@ internal object WindowingInterop {
 
     // ---- Microsoft.UI.Windowing.AppWindowTitleBar (obtained from AppWindow.TitleBar, cannot be created directly) ----
     const val IID_IAppWindowTitleBar = "5574efa2-c91c-5700-a363-539c71a7aaf4"
+
     // all 12 color properties are IReference<Windows.UI.Color> (nullable)
     const val IAppWindowTitleBar_get_BackgroundColor = 6
     const val IAppWindowTitleBar_put_BackgroundColor = 7

@@ -2,15 +2,19 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
-import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.time.LocalDate
 
 /** CalendarView's display mode. */
 enum class CalendarViewDisplayMode(internal val native: Int) {
-    MONTH(0), YEAR(1), DECADE(2);
+    MONTH(0),
+    YEAR(1),
+    DECADE(2),
+    ;
+
     companion object {
         fun of(native: Int): CalendarViewDisplayMode = entries.first { it.native == native }
     }
@@ -18,7 +22,11 @@ enum class CalendarViewDisplayMode(internal val native: Int) {
 
 /** CalendarView's selection mode. */
 enum class CalendarViewSelectionMode(internal val native: Int) {
-    NONE(0), SINGLE(1), MULTIPLE(2);
+    NONE(0),
+    SINGLE(1),
+    MULTIPLE(2),
+    ;
+
     companion object {
         fun of(native: Int): CalendarViewSelectionMode = entries.first { it.native == native }
     }

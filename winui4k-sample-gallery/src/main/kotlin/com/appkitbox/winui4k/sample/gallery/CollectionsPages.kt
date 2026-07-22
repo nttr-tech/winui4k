@@ -25,7 +25,7 @@ import com.appkitbox.winui4k.WTree
 import com.appkitbox.winui4k.WTreeNode
 import com.appkitbox.winui4k.WUniformGridLayout
 
-/**
+/*
  * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
  */
 

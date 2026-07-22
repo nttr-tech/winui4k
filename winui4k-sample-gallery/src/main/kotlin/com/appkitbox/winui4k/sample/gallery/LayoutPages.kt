@@ -22,7 +22,7 @@ import com.appkitbox.winui4k.WRelativePanel
 import com.appkitbox.winui4k.WSplitView
 import com.appkitbox.winui4k.WVariableSizedWrapGrid
 
-/**
+/*
  * Layout category: demo pages for Border / Canvas / Expander / Grid / RelativePanel / SplitView / StackPanel / VariableSizedWrapGrid.
  */
 

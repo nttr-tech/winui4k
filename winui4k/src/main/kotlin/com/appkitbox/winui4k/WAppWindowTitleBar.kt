@@ -1,9 +1,9 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winui.ColorReference
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
-import com.appkitbox.winui4k.internal.winui.ColorReference
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**

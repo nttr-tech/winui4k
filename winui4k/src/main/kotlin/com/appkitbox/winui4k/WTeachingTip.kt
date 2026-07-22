@@ -133,7 +133,9 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     /** Registers a listener called when the action button is pressed (TeachingTip.ActionButtonClick). */
     fun addActionListener(listener: () -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.TeachingTipHandler", XamlInterop.IID_TeachingTipObjectHandler, XamlInterop.ITeachingTip_add_ActionButtonClick,
+            "WinUI4K.TeachingTipHandler",
+            XamlInterop.IID_TeachingTipObjectHandler,
+            XamlInterop.ITeachingTip_add_ActionButtonClick,
         ) { _, _ -> listener() }
         actionTokens.add(listener, token)
     }
@@ -147,7 +149,9 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     /** Registers a listener called when it closes (TeachingTip.Closed). Passed the reason it closed. */
     fun addCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.TeachingTipHandler", XamlInterop.IID_TeachingTipClosedHandler, XamlInterop.ITeachingTip_add_Closed,
+            "WinUI4K.TeachingTipHandler",
+            XamlInterop.IID_TeachingTipClosedHandler,
+            XamlInterop.ITeachingTip_add_Closed,
         ) { _, args ->
             listener(TeachingTipCloseReason.of(ComPtr(args).getInt(XamlInterop.ITeachingTipClosedEventArgs_get_Reason)))
         }

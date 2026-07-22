@@ -10,7 +10,7 @@ import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WWebView
 
-/**
+/*
  * Media category: the WebView2 demo page.
  */
 
@@ -48,7 +48,12 @@ private fun framedWebView(webView: WWebView): WComponent {
 /** One feature example within the Options panel (bold title + content). */
 private fun optionsSection(title: String, vararg contents: WComponent): WComponent {
     val section = WPanel(spacing = 8.0)
-    section.add(WLabel(title).also { it.fontWeight = 600; it.textWrapping = TextWrapping.WRAP })
+    section.add(
+        WLabel(title).also {
+            it.fontWeight = 600
+            it.textWrapping = TextWrapping.WRAP
+        },
+    )
     contents.forEach { section.add(it) }
     return section
 }

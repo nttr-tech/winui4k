@@ -337,7 +337,9 @@ abstract class WComponent internal constructor(
             } else {
                 val boxed = PropertyValues.boxString(value)
                 toolTipServiceStatics.call(
-                    XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, boxed.ptr,
+                    XamlInterop.IToolTipServiceStatics_SetToolTip,
+                    dependencyObject,
+                    boxed.ptr,
                 )
                 boxed.release()
             }
@@ -350,7 +352,9 @@ abstract class WComponent internal constructor(
     fun setToolTip(toolTip: WToolTip) {
         this.toolTip = null
         toolTipServiceStatics.call(
-            XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, toolTip.inspectable.ptr,
+            XamlInterop.IToolTipServiceStatics_SetToolTip,
+            dependencyObject,
+            toolTip.inspectable.ptr,
         )
     }
 

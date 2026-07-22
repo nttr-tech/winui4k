@@ -59,7 +59,9 @@ class WToggleSwitch(header: String = "") : WControl(
      */
     fun addItemListener(listener: (Boolean) -> Unit) {
         val token = inspectable.addEventHandler(
-            "WinUI4K.ToggledHandler", XamlInterop.IID_RoutedEventHandler, XamlInterop.IToggleSwitch_add_Toggled,
+            "WinUI4K.ToggledHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IToggleSwitch_add_Toggled,
         ) { _, _ -> listener(isOn) }
         itemTokens.add(listener, token)
     }

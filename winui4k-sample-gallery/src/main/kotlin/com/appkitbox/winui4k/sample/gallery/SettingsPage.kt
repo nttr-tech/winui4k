@@ -17,7 +17,7 @@ import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WNavigationView
 import com.appkitbox.winui4k.WPanel
 
-/**
+/*
  * The Settings page: a reproduction of the real WinUI 3 Gallery's SettingsPage
  * (the real one's Sound settings and About section are out of scope here).
  * The real one uses the Community Toolkit's SettingsCard, which winui4k doesn't have, so
@@ -34,7 +34,12 @@ internal fun buildSettingsPage(
     val page = WPanel()
     page.maxWidth = 1064.0 // the real SettingsPage's MaxWidth
 
-    page.add(WLabel(SETTINGS_PAGE_NAME).also { it.fontSize = 28.0; it.fontWeight = 600 })
+    page.add(
+        WLabel(SETTINGS_PAGE_NAME).also {
+            it.fontSize = 28.0
+            it.fontWeight = 600
+        },
+    )
 
     // Equivalent to the real SettingsSectionHeaderTextBlockStyle (BodyStrong + Margin="1,30,0,6")
     page.add(
