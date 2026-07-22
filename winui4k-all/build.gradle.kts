@@ -18,9 +18,11 @@ dependencies {
 // (which targets Java 22) — on a Java 8 run, Ffi skips it at the ServiceLoader level
 targetJvm25AtRuntime()
 
-// Produce a single fatJar (winui4k-all-<version>-all.jar) combining all modules + external
+// Produce a single fatJar (winui4k-<version>-all.jar) combining all modules + external
 // dependencies (kotlin-stdlib / coroutines / miglayout / JNA / JNR)
 tasks.shadowJar {
+    // Avoid the duplication between the module name (winui4k-all) and the classifier (all); use winui4k-<version>-all.jar instead
+    archiveBaseName = "winui4k"
     // The three FFI backends have same-named META-INF/services files, so merging is required
     // (with the default EXCLUDE strategy, duplicate files get discarded before reaching the transformer)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
