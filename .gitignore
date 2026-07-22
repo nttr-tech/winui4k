@@ -22,6 +22,9 @@ __pycache__/
 # Windows App SDK installer
 installer/
 
+# jpackage
+jpkg-*/
+
 # OS
 .DS_Store
 Thumbs.db
