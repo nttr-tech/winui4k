@@ -78,11 +78,17 @@ object UiTestHarness {
      * finish before exiting (without waiting, a COM upcall during shutdown can crash the JVM).
      */
     fun shutdown() {
-        frame?.let { frame ->
-            onUiThread { frame.isVisible = false }
+        // No UI thread = WinUI never started (no test that uses the UI ever ran), so do nothing
+        val uiThread = Thread.getAllStackTraces().keys.firstOrNull { it.name == "WinUI4K-UI" } ?: return
+        val frame = this.frame
+        if (frame != null) {
             this.frame = null
+            onUiThread { frame.isVisible = false } // the last window closing triggers auto-exit
+        } else {
+            // The message loop is still running even if only window-free tests ran, so exit explicitly.
+            // Swallow the IllegalStateException that exit() throws if it has already exited
+            runCatching { WinUiUtilities.exit() }
         }
-        Thread.getAllStackTraces().keys.firstOrNull { it.name == "WinUI4K-UI" }
-            ?.join(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
+        uiThread.join(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
     }
 }
