@@ -39,7 +39,7 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
 }
 
 application {
-    mainClass = "jp.hisano.winui4k.gallery.GalleryAppKt"
+    mainClass = "com.appkitbox.winui4k.gallery.GalleryAppKt"
 }
 
 // ---------------------------------------------------------------------------

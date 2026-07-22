@@ -1,13 +1,13 @@
 ---
 name: add-winui-component
-description: WinUI 3 コントロールの Kotlin ラッパー (W* クラス) を winui4k に追加する。winmd から ABI 値 (IID / vtable スロット / enum 値) を機械的に抽出し、Abi.kt → jp.hisano.winui4k パッケージ → GalleryApp の順に実装する。Use when adding a Kotlin wrapper for a WinUI 3 control (CheckBox, Slider, ToggleSwitch, ComboBox, ProgressBar, ...), when the user asks to 「コンポーネントを追加」「コントロールに対応」「ラッパーを実装」, or when extending an existing W* class with more WinUI APIs.
+description: WinUI 3 コントロールの Kotlin ラッパー (W* クラス) を winui4k に追加する。winmd から ABI 値 (IID / vtable スロット / enum 値) を機械的に抽出し、Abi.kt → com.appkitbox.winui4k パッケージ → GalleryApp の順に実装する。Use when adding a Kotlin wrapper for a WinUI 3 control (CheckBox, Slider, ToggleSwitch, ComboBox, ProgressBar, ...), when the user asks to 「コンポーネントを追加」「コントロールに対応」「ラッパーを実装」, or when extending an existing W* class with more WinUI APIs.
 argument-hint: [WinUIコントロール名 (例: CheckBox)]
 ---
 
 # WinUI コンポーネントの Kotlin ラッパー追加
 
 Microsoft.UI.Xaml.Controls 配下のコントロールを、Swing 風の `W*` クラスとして
-`src/main/kotlin/jp/hisano/winui4k/` に追加する手順。対象: $ARGUMENTS
+`src/main/kotlin/com/appkitbox/winui4k/` に追加する手順。対象: $ARGUMENTS
 
 ## 鉄則
 
@@ -62,7 +62,7 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 
 ### 3. Abi.kt に定数を追加する
 
-`src/main/kotlin/jp/hisano/winui4k/internal/winui/Abi.kt` の既存セクションの形式に合わせる:
+`src/main/kotlin/com/appkitbox/winui4k/internal/winui/Abi.kt` の既存セクションの形式に合わせる:
 
 - `// ---- Microsoft.UI.Xaml.Controls.CheckBox ----` のセクションコメント
 - `CLS_CheckBox` / `IID_ICheckBoxFactory` / `IID_ICheckBox` / スロット定数
@@ -72,7 +72,7 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 
 ### 4. ラッパークラスを作成する
 
-`src/main/kotlin/jp/hisano/winui4k/W<SwingName>.kt` を新規作成する。
+`src/main/kotlin/com/appkitbox/winui4k/W<SwingName>.kt` を新規作成する。
 
 - 基底クラス: ButtonBase 派生 (Button / HyperlinkButton / RepeatButton / ...) なら
   `WButtonBase` (text / content / command / addActionListener を継承)、
@@ -86,7 +86,7 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
     (戻り値は既定インターフェースのポインタ)
   - `activatable factory: <default IActivationFactory>` →
     `Activation.activate(Abi.CLS_X).queryInterface(Abi.IID_IX)`
-- **jp.hisano.winui4k / internal.winui パッケージで `java.lang.foreign` を import しない** (FFI バックエンド
+- **com.appkitbox.winui4k / internal.winui パッケージで `java.lang.foreign` を import しない** (FFI バックエンド
   非依存を保つ規約)。ネイティブメモリ操作が必要なら `internal.ffi.api` の
   `Ffi.backend.withScope { ... }` / `Ffi.backend.memory` / `Ptr` を使う
 - プロパティ・イベント・enum・構造体・ICommand などの実装パターンは
@@ -94,7 +94,7 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 
 ### 5. GalleryApp にデモページを追加する
 
-`src/main/kotlin/jp/hisano/winui4k/gallery/GalleryApp.kt`:
+`src/main/kotlin/com/appkitbox/winui4k/gallery/GalleryApp.kt`:
 
 - `buildNavigationPane()` の `pages` にページ名 (WinUI のコントロール名) を追加する
 - `build<Name>Page()` を実装し、追加した API を一通り操作できるデモを

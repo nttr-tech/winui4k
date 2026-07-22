@@ -12,9 +12,9 @@
 | `internal.com` | COM の基盤 (ComPtr, Guid, checkHr / WindowsRuntimeException) |
 | `internal.winrt` | WinRT ランタイム (Hstring, KComObject, WinRtRuntime, Activation, PropertyValues, Pinterface, Async, addEventHandler) |
 | `internal.winui` | WinUI 3 / WinAppSDK 固有 (Abi 定数, Dispatcher, WinAppSdkBootstrap, XamlStructs) |
-| `jp.hisano.winui4k` (ルート) | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ (他は internal) |
+| `com.appkitbox.winui4k` (ルート) | Swing 風の公開 API (WinUiUtilities と W* クラス)。ユーザーが触るのはここだけ (他は internal) |
 
-依存方向: `jp.hisano.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` (`internal.win32 → internal.ffi.api`)。
+依存方向: `com.appkitbox.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` (`internal.win32 → internal.ffi.api`)。
 
 `inspectable` は各 W* クラスが持つ既定インターフェースのポインタ。別インターフェースの
 メンバーを使うときは `queryInterface` したものを `by lazy` で保持する (WButton の

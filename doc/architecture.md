@@ -5,8 +5,8 @@ Java の FFI (Panama または JNA) で WinRT の COM ABI (`RoGetActivationFacto
 
 ## レイヤ構成
 
-技術スタック 1 層 = 1 パッケージで、`jp.hisano.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` の一方向に依存する。
-公開 API はルートパッケージ `jp.hisano.winui4k` のみで、他は `internal` 配下にある。
+技術スタック 1 層 = 1 パッケージで、`com.appkitbox.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` の一方向に依存する。
+公開 API はルートパッケージ `com.appkitbox.winui4k` のみで、他は `internal` 配下にある。
 
 | レイヤ | パッケージ | 役割 |
 |---|---|---|
@@ -16,7 +16,7 @@ Java の FFI (Panama または JNA) で WinRT の COM ABI (`RoGetActivationFacto
 | COM | `internal/com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
 | WinRT | `internal/winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate、overrides、集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
 | WinUI | `internal/winui/` | `Abi` (IID / vtable スロット。すべて winmd から機械抽出)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
-| API | ルート (`jp/hisano/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
+| API | ルート (`com/appkitbox/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
 
 ## FFI バックエンド
 
