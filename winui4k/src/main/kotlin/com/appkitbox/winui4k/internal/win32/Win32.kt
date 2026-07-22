@@ -64,6 +64,46 @@ internal object Win32 {
         closeHandle(handle)
     }
 
+    private val loadLibraryW by lazy {
+        Ffi.backend.function(
+            "kernel32.dll", "LoadLibraryW",
+            CallDescriptor(ValueKind.PTR, ArgKind.PTR),
+        )
+    }
+
+    /** Loads a DLL into this process (LoadLibraryW). Throws IllegalStateException on failure. */
+    fun loadLibrary(path: String) {
+        val handle = Ffi.backend.withScope { scope ->
+            val memory = Ffi.backend.memory
+            val pathBuffer = scope.allocate((path.length + 1).toLong() * 2, 2)
+            memory.putUtf16z(pathBuffer, 0, path)
+            loadLibraryW(pathBuffer) as Ptr
+        }
+        check(!handle.isNull) { "LoadLibraryW($path) failed" }
+    }
+
+    private val setEnvironmentVariableW by lazy {
+        Ffi.backend.function(
+            "kernel32.dll", "SetEnvironmentVariableW",
+            CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR),
+        )
+    }
+
+    /**
+     * Sets an environment variable for this process (SetEnvironmentVariableW).
+     * Only visible to the native side (GetEnvironmentVariable); not reflected in the JVM's System.getenv.
+     */
+    fun setEnvironmentVariable(name: String, value: String) {
+        Ffi.backend.withScope { scope ->
+            val memory = Ffi.backend.memory
+            val nameBuffer = scope.allocate((name.length + 1).toLong() * 2, 2)
+            memory.putUtf16z(nameBuffer, 0, name)
+            val valueBuffer = scope.allocate((value.length + 1).toLong() * 2, 2)
+            memory.putUtf16z(valueBuffer, 0, value)
+            setEnvironmentVariableW(nameBuffer, valueBuffer)
+        }
+    }
+
     /** Returns the full path of a loaded module, or null if it isn't loaded. */
     fun moduleFilePath(module: String): String? = Ffi.backend.withScope { scope ->
         val memory = Ffi.backend.memory

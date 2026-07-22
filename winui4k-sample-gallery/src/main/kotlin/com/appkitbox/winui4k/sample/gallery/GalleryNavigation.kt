@@ -73,6 +73,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "ToggleSplitButton" to ::buildToggleSplitButtonPage,
     "ToggleSwitch" to ::buildToggleSwitchPage,
     "TreeView" to ::buildTreeViewPage,
+    "WebView2" to ::buildWebView2Page,
     "VariableSizedWrapGrid" to ::buildVariableSizedWrapGridPage,
     "XamlUICommand" to ::buildXamlUICommandPage,
     "AppWindow" to ::buildAppWindowPage,
@@ -129,6 +130,9 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "SplitView",
         "StackPanel",
         "VariableSizedWrapGrid",
+    ),
+    "Media" to listOf(
+        "WebView2",
     ),
     "Menus & toolbars" to listOf(
         "AppBarButton",
@@ -189,6 +193,7 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
     "Collections" to Symbol.LIST,
     "Dialogs & flyouts" to Symbol.COMMENT,
     "Layout" to Symbol.VIEW_ALL,
+    "Media" to Symbol.GLOBE,
     "Menus & toolbars" to Symbol.SAVE,
     "Navigation" to Symbol.GLOBAL_NAVIGATION_BUTTON,
     "Scrolling" to Symbol.ZOOM,

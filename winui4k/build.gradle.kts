@@ -70,12 +70,92 @@ val fetchBootstrap = tasks.register("fetchBootstrap") {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Fetch the WebView2 Core WinRT implementation DLL from NuGet and bundle it as a JAR resource
+// (since WinAppSDK 1.2, the runtime package no longer bundles Microsoft.Web.WebView2.Core.dll and
+//  expects the app to place it, so winui4k bundles and pre-loads it instead)
+// ---------------------------------------------------------------------------
+
+/** The version of Microsoft.Web.WebView2 that Microsoft.WindowsAppSDK.WinUI 2.2.1 depends on. */
+val webView2Version = "1.0.3719.77"
+
+val webView2ResourceDir: Provider<Directory> =
+    layout.buildDirectory.dir("generated-resources/webview2")
+
+val fetchWebView2 = tasks.register("fetchWebView2") {
+    description = "Extracts Microsoft.Web.WebView2.Core.dll (x86/x64/arm64) from the NuGet package"
+    val version = webView2Version
+    val outputDir = webView2ResourceDir
+    inputs.property("webView2Version", version)
+    outputs.dir(outputDir)
+
+    doLast {
+        val dir = outputDir.get().asFile
+        val nupkg = dir.resolve("webview2.nupkg")
+        val rids = listOf("win-x86", "win-x64", "win-arm64")
+        val alreadyExtracted = rids.all { rid ->
+            dir.resolve("native/$rid/Microsoft.Web.WebView2.Core.dll").exists()
+        }
+        if (alreadyExtracted) return@doLast
+
+        val url = "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/" +
+            "$version/microsoft.web.webview2.$version.nupkg"
+        logger.lifecycle("Downloading Microsoft.Web.WebView2 $version ...")
+        URI(url).toURL().openStream().use { input ->
+            nupkg.outputStream().use { input.copyTo(it) }
+        }
+
+        ZipFile(nupkg).use { zip ->
+            for (rid in rids) {
+                // The DLL under native_uap is the WinRT (Microsoft.Web.WebView2.Core namespace) implementation
+                val entryPath = "runtimes/$rid/native_uap/Microsoft.Web.WebView2.Core.dll"
+                val entry = zip.getEntry(entryPath)
+                    ?: error("webview2 core dll not found in nupkg for $rid")
+                val dest = dir.resolve("native/$rid/Microsoft.Web.WebView2.Core.dll")
+                dest.parentFile.mkdirs()
+                zip.getInputStream(entry).use { input ->
+                    dest.outputStream().use { input.copyTo(it) }
+                }
+                logger.lifecycle("Extracted: $dest")
+            }
+        }
+        nupkg.delete()
+    }
+}
+
 sourceSets.main {
     resources.srcDir(nativeResourceDir)
+    resources.srcDir(webView2ResourceDir)
 }
 
 tasks.named("processResources") {
     dependsOn(fetchBootstrap)
+    dependsOn(fetchWebView2)
+}
+
+// ---------------------------------------------------------------------------
+// Tests (real E2E that launches actual WinUI. Requires Windows + the WinAppSDK runtime)
+// ---------------------------------------------------------------------------
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Tests run on JDK 25, so use the Panama backend
+    testRuntimeOnly(project(":winui4k-ffi-panama"))
+}
+
+// Also include the Java 22-targeted winui4k-ffi-panama on the test runtime classpath
+// (the tests themselves target Java 8, but run on JDK 25)
+configurations.testRuntimeClasspath {
+    attributes {
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 // ---------------------------------------------------------------------------

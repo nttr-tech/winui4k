@@ -92,6 +92,39 @@ internal object Async {
         return operation.getPtr(IAsyncOperation_GetResults)
     }
 
+    /**
+     * Calls [onResult] with the result string when an IAsyncOperation<String> completes
+     * (the non-blocking-wait version). Used for operations like WebView2's ExecuteScriptAsync,
+     * where completion needs the UI thread's message processing and a blocking wait would deadlock.
+     *
+     * This function takes ownership of [operation]'s reference and releases it on completion.
+     * [onResult] is called on the completion-notification thread (not necessarily the UI
+     * thread), so dispatch on the caller's side if it needs to touch W* APIs.
+     * [handlerIid] is the actual IID of AsyncOperationCompletedHandler<String> (a pinterface-computed value).
+     */
+    fun onStringResult(operation: ComPtr, handlerIid: String, what: String, onResult: (String) -> Unit) {
+        val handler = KComObject("WinUI4K.AsyncStringResultHandler", inspectable = false)
+            .addInterface(
+                handlerIid,
+                listOf(
+                    KComObject.Method(DESC_COMPLETED_HANDLER) {
+                        try {
+                            checkStatus(operation, what) // throws an HRESULT exception here on failure
+                            onResult(operation.getString(IAsyncOperation_GetResults))
+                        } finally {
+                            operation.release()
+                        }
+                        KComObject.S_OK
+                    },
+                ),
+            )
+        try {
+            operation.call(IAsyncOperation_put_Completed, handler.primary)
+        } finally {
+            handler.release() // put_Completed holds a reference to it; it's reclaimed by Release after completion fires
+        }
+    }
+
     /** The delegate that signals [completedEvent] on completion (Action and Operation<T> both have the same Invoke shape). */
     private fun completedHandler(handlerIid: String, completedEvent: Ptr): KComObject =
         KComObject("WinUI4K.AsyncCompletedHandler", inspectable = false)
