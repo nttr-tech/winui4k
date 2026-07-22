@@ -42,21 +42,50 @@ WinUiUtilities.invokeLater {
 
 ## 起動
 
-必要なのは次の 2 つだけです (Visual Studio、C++ ビルドツール、.NET SDK は不要)。
-
-1. **JDK 25** (x64)：[Eclipse Temurin](https://adoptium.net/) などから入手してパスに設定します
-2. **Windows App SDK 2.2 ランタイム**：https://aka.ms/windowsappsdk から `WindowsAppRuntimeInstall-x64.exe` を実行します
-   (未インストールでも起動時にインストールを促すダイアログが出ます)
+必要なのは **JDK 25** (x64) だけです (Visual Studio、C++ ビルドツール、.NET SDK は不要)。
+[Eclipse Temurin](https://adoptium.net/) などから入手してパスに設定してください。
 
 ```powershell
 .\gradlew run
 ```
 
 これで Gallery が起動します。
-初回は Gradle と NuGet パッケージ (ブートストラップ DLL、約 6 MB) を自動取得します。
 Java 8 + JNA での起動は `.\gradlew :winui4k-sample-gallery:runJna`、Java 8 + JNR での起動は `.\gradlew :winui4k-sample-gallery:runJnr` で確認できます。
 
 動作環境は Windows 11 x64 です (Windows 10 1809 以降でも動く想定)。
+
+## Windows App SDK ランタイムの自動セットアップ
+
+winui4k はアプリ起動時に Windows App SDK ランタイムを自動でセットアップします。
+
+### ブートストラップ DLL
+
+Windows App SDK の初期化に必要なブートストラップ DLL (`Microsoft.WindowsAppRuntime.Bootstrap.dll`) は winui4k の JAR に内蔵されています (x86 / x64 / arm64 の 3 アーキテクチャ対応)。`WinUiUtilities` の初回呼び出し時に、実行中の PC アーキテクチャに合った DLL が一時ディレクトリへ自動展開され、プロセス終了時に削除されます。
+
+### ランタイムのインストール
+
+Windows App SDK 2.2 ランタイムが必要です。未インストールの場合は以下の順に対応します。
+
+1. **インストーラーの自動実行**：カレントディレクトリ (または `winui4k.installer.dir` で指定したディレクトリ) に `WindowsAppRuntimeInstall-x64.exe` 等のインストーラーがあれば、`--quiet` オプションでサイレントインストールを実行し、アプリをそのまま起動します
+2. **インストールダイアログの表示**：インストーラーが見つからない場合は、Microsoft のダイアログが表示され、ユーザーにランタイムのダウンロードを促します
+
+インストーラーは以下のコマンドでダウンロードできます。
+
+```powershell
+.\gradlew :winui4k:downloadInstallers
+```
+
+`winui4k/installer/` に x86 / x64 / arm64 の 3 種類がダウンロードされます (各約 104 MB)。アプリ配布時にアーキテクチャに合ったインストーラーを同梱すれば、エンドユーザーの環境にランタイムが自動インストールされます。
+
+手動でインストールする場合は https://aka.ms/windowsappsdk から `WindowsAppRuntimeInstall-x64.exe` を実行してください。
+
+### システムプロパティ
+
+| プロパティ | 説明 |
+|---|---|
+| `winui4k.bootstrap.dll` | ブートストラップ DLL のパスを明示指定する (JAR 内蔵 DLL の代わりに使用) |
+| `winui4k.installer.dir` | ランタイムインストーラーの検索ディレクトリを指定する (既定はカレントディレクトリ)。絶対パス・相対パスの両方に対応 |
+| `winui4k.ffi` | FFI バックエンドを指定する (`panama` / `jna` / `jnr`) |
 
 ## モジュール構成
 

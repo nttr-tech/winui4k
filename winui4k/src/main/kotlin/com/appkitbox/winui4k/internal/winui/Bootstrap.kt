@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.internal.winui
 
+import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
 import com.appkitbox.winui4k.internal.com.checkHr
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
@@ -78,6 +79,18 @@ internal object WinAppSdkBootstrap {
     }
 
     fun initialize() {
+        try {
+            callBootstrapInitialize()
+        } catch (exception: WindowsRuntimeException) {
+            if (installRuntimeIfAvailable()) {
+                callBootstrapInitialize()
+            } else {
+                throw exception
+            }
+        }
+    }
+
+    private fun callBootstrapInitialize() {
         // HRESULT MddBootstrapInitialize2(UINT32 majorMinor, PCWSTR versionTag,
         //                                 PACKAGE_VERSION minVersion, MddBootstrapInitializeOptions options)
         val bootstrapInitialize = Ffi.backend.function(
@@ -92,6 +105,29 @@ internal object WinAppSdkBootstrap {
             ) as Int
             checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.2 runtime installed?)")
         }
+    }
+
+    private fun installRuntimeIfAvailable(): Boolean {
+        val installer = findRuntimeInstaller() ?: return false
+        val process = ProcessBuilder(installer.absolutePath, "--quiet")
+            .inheritIO()
+            .start()
+        val exitCode = process.waitFor()
+        return exitCode == 0
+    }
+
+    private fun findRuntimeInstaller(): File? {
+        val arch = System.getProperty("os.arch").lowercase()
+        val archSuffix = when {
+            arch == "aarch64" || arch == "arm64" -> "arm64"
+            arch.contains("64") -> "x64"
+            else -> "x86"
+        }
+        val fileName = "WindowsAppRuntimeInstall-$archSuffix.exe"
+        val installerDirectory = System.getProperty("winui4k.installer.dir")
+        val baseDirectory = if (installerDirectory != null) File(installerDirectory) else File(System.getProperty("user.dir"))
+        val candidate = baseDirectory.resolve(fileName)
+        return if (candidate.isFile) candidate else null
     }
 
     fun shutdown() {

@@ -77,3 +77,36 @@ sourceSets.main {
 tasks.named("processResources") {
     dependsOn(fetchBootstrap)
 }
+
+// ---------------------------------------------------------------------------
+// Download the Windows App SDK runtime installers
+// ---------------------------------------------------------------------------
+
+val windowsAppSdkVersion = "2.2.0"
+
+tasks.register("downloadInstallers") {
+    description = "Downloads the Windows App SDK $windowsAppSdkVersion runtime installers (x86/x64/arm64)"
+    group = "build"
+    val version = windowsAppSdkVersion
+    val outputDir = layout.projectDirectory.dir("installer")
+    inputs.property("windowsAppSdkVersion", version)
+    outputs.dir(outputDir)
+
+    doLast {
+        val dir = outputDir.asFile.apply { mkdirs() }
+        for (arch in listOf("x86", "x64", "arm64")) {
+            val fileName = "WindowsAppRuntimeInstall-$arch.exe"
+            val dest = dir.resolve(fileName)
+            if (dest.exists()) {
+                logger.lifecycle("Already exists: $dest")
+                continue
+            }
+            val url = "https://aka.ms/windowsappsdk/2.2/$version/windowsappruntimeinstall-$arch.exe"
+            logger.lifecycle("Downloading $fileName ...")
+            URI(url).toURL().openStream().use { input ->
+                dest.outputStream().use { input.copyTo(it) }
+            }
+            logger.lifecycle("Downloaded: $dest")
+        }
+    }
+}

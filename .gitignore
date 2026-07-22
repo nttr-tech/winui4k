@@ -19,6 +19,9 @@ __pycache__/
 *.py[cod]
 .venv/
 
+# Windows App SDK installer
+installer/
+
 # OS
 .DS_Store
 Thumbs.db
