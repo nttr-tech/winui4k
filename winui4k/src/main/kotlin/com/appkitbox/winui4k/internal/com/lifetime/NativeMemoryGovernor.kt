@@ -25,6 +25,9 @@ internal object NativeMemoryGovernor {
     val live: Long
         get() = liveCount.get()
 
+    // A COM reference backing a large native-side resource looks small on the JVM heap, so GC
+    // can't keep up; explicitly requesting a GC once the live count crosses a threshold is the whole point here
+    @Suppress("ExplicitGarbageCollectionCall")
     fun onAdopted() {
         val live = liveCount.incrementAndGet()
         if (threshold <= 0) return

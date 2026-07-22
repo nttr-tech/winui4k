@@ -6,9 +6,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.kt|*.kts) ./gradlew.bat spotlessApply \"-PspotlessIdeHook=$f\" --quiet >/dev/null 2>&1 || true ;; esac",
-            "timeout": 120,
-            "statusMessage": "Formatting with Spotless..."
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.kt|*.kts) ./gradlew.bat spotlessApply \"-PspotlessIdeHook=$f\" --quiet >/dev/null 2>&1 || true; if ! out=$(./gradlew.bat detektFile \"-PdetektFile=$f\" 2>&1); then { echo 'detekt findings (fix them):';echo \"$out\" | grep -E ':[0-9]+:[0-9]+: .* \\[[A-Za-z]+\\]' || echo \"$out\" | tail -20; } >&2; exit 2; fi ;; esac",
+            "timeout": 180,
+            "statusMessage": "Formatting with Spotless and checking with detekt..."
           }
         ]
       }

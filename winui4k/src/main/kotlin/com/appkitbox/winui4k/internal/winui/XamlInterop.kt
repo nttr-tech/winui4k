@@ -19,6 +19,7 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * NotificationInterop / WebView2Interop). If this file passes 3000 lines, split it further by
  * namespace within Microsoft.UI.Xaml (Controls / Media / Documents / ...).
  */
+@Suppress("LargeClass") // A list of ABI constants (IIDs / vtable slots); the splitting policy is in the comment above
 internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Application ----
     const val CLS_Application = "Microsoft.UI.Xaml.Application"

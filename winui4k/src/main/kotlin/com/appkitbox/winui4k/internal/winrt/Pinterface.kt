@@ -25,6 +25,7 @@ internal object Pinterface {
      * Verified: pinterface({faa585ea-6214-4217-afda-7f46de5869b3};string)
      *       → matches e2fcc7c1-3bfc-5a0b-b2b0-72e769d1cb7e, the known value for IIterable<String>.
      */
+    @Suppress("ComplexCondition") // Enumerates the UUID string's hyphen positions (RFC 4122)
     fun iid(signature: String): String {
         val digest = MessageDigest.getInstance("SHA-1")
         digest.update(PINTERFACE_NAMESPACE)

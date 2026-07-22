@@ -26,8 +26,6 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateDouble = 15 // CreateDouble(r8, out IInspectable)
     private const val IPropertyValueStatics_CreateDateTime = 21 // CreateDateTime(DateTime i8, out IInspectable)
     private const val IPropertyValueStatics_CreateTimeSpan = 22 // CreateTimeSpan(TimeSpan i8, out IInspectable)
-    private const val IPropertyValue_GetDateTime = 21 // GetDateTime(out DateTime i8)
-    private const val IPropertyValue_GetTimeSpan = 22 // GetTimeSpan(out TimeSpan i8)
 
     /**
      * Process-lifetime cache of the PropertyValue statics factory. box is a hot path used by

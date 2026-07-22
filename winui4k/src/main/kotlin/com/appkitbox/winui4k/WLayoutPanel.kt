@@ -141,6 +141,8 @@ class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
         WinUiUtilities.invokeLater { performLayout() }
     }
 
+    // The branching is inherent to the layout algorithm's spec (size-determination priority order)
+    @Suppress("CyclomaticComplexMethod", "ComplexCondition")
     private fun performLayout() {
         layoutPending = false
         val manager = layout ?: return

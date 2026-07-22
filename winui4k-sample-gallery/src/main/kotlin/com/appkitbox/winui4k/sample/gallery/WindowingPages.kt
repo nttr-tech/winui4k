@@ -160,6 +160,7 @@ private fun buildAppWindowCenterExample(): WComponent {
 }
 
 /** 3) OverlappedPresenter's 6 toggles + Maximize/Minimize/Restore + the State display. */
+@Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildAppWindowPresenterExample(): WComponent {
     val status = WLabel("No child window has been created yet")
     var child: WFrame? = null

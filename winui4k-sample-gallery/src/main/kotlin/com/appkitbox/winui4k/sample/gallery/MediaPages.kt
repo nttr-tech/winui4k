@@ -82,7 +82,7 @@ private fun buildBrowserWebViewExample(): WComponent {
         // An invalid URI (e.g. missing a scheme) makes CreateUri throw, so catch it instead of crashing
         try {
             webView.source = addressBar.text
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             status.text = "Invalid URL: ${addressBar.text}"
         }
     }
@@ -118,6 +118,7 @@ private fun buildBrowserWebViewExample(): WComponent {
 }
 
 /** ExecuteScript: run the page's JavaScript from Kotlin and receive the result as JSON. */
+@Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildExecuteScriptExample(): WComponent {
     val webView = WWebView()
     webView.width = 560.0
@@ -199,6 +200,7 @@ private fun buildExecuteScriptExample(): WComponent {
 }
 
 /** WebMessage: two-way messaging between Kotlin and the page's JavaScript. */
+@Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildWebMessageExample(): WComponent {
     val webView = WWebView()
     webView.width = 560.0

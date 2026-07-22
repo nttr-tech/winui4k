@@ -91,6 +91,7 @@ internal object XamlStructs {
     val WINDOW_ID = StructType("Microsoft.UI.WindowId", listOf(Field("Value", I64)))
 
     /** Puts a Thickness (double×4) by value. */
+    @Suppress("LongParameterList") // The parameters map 1:1 to the Thickness struct's fields
     fun putThickness(target: ComPtr, slot: Int, left: Double, top: Double, right: Double, bottom: Double) {
         Ffi.backend.withScope { scope ->
             val memory = Ffi.backend.memory
@@ -139,6 +140,7 @@ internal object XamlStructs {
     }
 
     /** Puts a Windows.UI.Color (u8×4) by value (SolidColorBrush.Color). */
+    @Suppress("LongParameterList") // The parameters map 1:1 to the Color struct's fields
     fun putColor(target: ComPtr, slot: Int, alpha: Int, red: Int, green: Int, blue: Int) {
         Ffi.backend.withScope { scope ->
             val color = scope.allocate(COLOR)

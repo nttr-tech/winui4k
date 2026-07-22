@@ -207,6 +207,7 @@ internal class KComObject(
          * via the this pointer. If an exception escapes to the native side it crashes the whole
          * JVM, so it must always be caught and mapped to E_FAIL.
          */
+        @Suppress("PrintStackTrace") // No logging framework in this library, so stderr is the last resort
         private fun dispatch(slot: Int, args: Array<Any?>): Int {
             val self = args[0] as Ptr
             val methods = REGISTRY[Ffi.backend.memory.getLong(self, 8)]

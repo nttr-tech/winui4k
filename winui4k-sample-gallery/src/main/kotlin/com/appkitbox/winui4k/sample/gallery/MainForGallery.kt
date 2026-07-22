@@ -23,6 +23,7 @@ import java.io.File
  * Shows a page navigation list on the left and the selected component's demo page on the right.
  * Add more pages to [pages] as they're added.
  */
+@Suppress("LongMethod", "CyclomaticComplexMethod") // Declarative UI-building + a long list of page registrations
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K Gallery")

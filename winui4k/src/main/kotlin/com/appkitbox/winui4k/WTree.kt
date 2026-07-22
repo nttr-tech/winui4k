@@ -330,6 +330,7 @@ class WTree : WControl(
      * Looks a TreeViewNode pointer back up to the added [WTreeNode].
      * Compares addresses using COM identity rules (QI'ing IUnknown always returns the same pointer).
      */
+    @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
     private fun resolveNode(node: ComPtr): WTreeNode? {
         val target = node.queryInterface(KComObject.IID_IUNKNOWN)
         try {

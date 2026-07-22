@@ -64,6 +64,7 @@ internal object JnaBackend : FfiBackend {
     override fun downcallHandle(descriptor: CallDescriptor): DowncallHandle =
         handles.computeIfAbsent(descriptor) { JnaDowncallHandle(it) }
 
+    @Suppress("NestedBlockDepth") // Just looks deep due to the anonymous CallbackProxy + scope management; branching is simple
     override fun upcallStub(descriptor: CallDescriptor, body: (Array<Any?>) -> Any?): Ptr {
         val proxy = object : CallbackProxy {
             override fun getParameterTypes(): Array<Class<*>> =
@@ -121,6 +122,7 @@ internal object JnaBackend : FfiBackend {
             }
         }
 
+        @Suppress("NestedBlockDepth") // Two-level dispatch on ArgKind x value type (branching on the Windows x64 ABI)
         private fun lower(kind: ArgKind, value: Any?): Any? = when (kind) {
             is ArgKind.Scalar -> when (kind.kind) {
                 ValueKind.PTR -> when (value) {

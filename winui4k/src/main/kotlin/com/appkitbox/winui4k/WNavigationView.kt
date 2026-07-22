@@ -275,6 +275,7 @@ class WNavigationView : WControl(
      * Resolves an added [WNavigationViewItem] back from the SelectedItem pointer.
      * Compares addresses under COM's identity rule (QI'ing IUnknown always returns the same pointer).
      */
+    @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
     private fun resolveItem(selected: ComPtr): WNavigationViewItem? {
         val target = selected.queryInterface(KComObject.IID_IUNKNOWN)
         try {

@@ -88,6 +88,7 @@ private fun loadAllNotes(): List<Note> {
  * Below a TitleBar (a sticky-note icon plus a back button), switches between the note list
  * (equivalent to AllNotesPage) and the editing page (equivalent to NotePage).
  */
+@Suppress("LongMethod") // Declarative UI-building sample code
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUINotes")

@@ -45,6 +45,47 @@ val ktlintOverrides = mapOf(
     "ktlint_standard_no-multi-spaces" to "disabled",
 )
 
+// Static analysis follows detekt. Formatting and naming are handled by ktlint (Spotless), so
+// rules that overlap are disabled in the root config/detekt/detekt.yml.
+// detekt 1.23's embedded Kotlin compiler doesn't run on JDK 25 (JavaVersion.parse can't parse
+// "25.0.3"), so run the CLI in a separate process on JDK 21 instead of the Gradle plugin's in-process execution
+val detektVersion = the<VersionCatalogsExtension>().named("libs").findVersion("detekt").get().requiredVersion
+val detektCli by configurations.creating
+
+dependencies {
+    detektCli("io.gitlab.arturbosch.detekt:detekt-cli:$detektVersion")
+}
+
+val detektConfigFile = rootProject.file("config/detekt/detekt.yml")
+val detektReportFile = layout.buildDirectory.file("reports/detekt/detekt.txt")
+
+val detektTask = tasks.register<JavaExec>("detekt") {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = "Runs detekt static analysis on Kotlin sources."
+    // Capturing a script object in the onlyIf lambda would break configuration cache, so capture only the File
+    val srcDir = file("src")
+    onlyIf { srcDir.exists() }
+    inputs.files(fileTree("src") { include("**/*.kt", "**/*.kts") }).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(detektConfigFile).withPathSensitivity(PathSensitivity.NONE)
+    outputs.file(detektReportFile)
+    classpath = detektCli
+    mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) })
+    args(
+        "--config",
+        detektConfigFile.absolutePath,
+        "--build-upon-default-config",
+        "--input",
+        file("src").absolutePath,
+        "--report",
+        "txt:${detektReportFile.get().asFile.absolutePath}",
+    )
+}
+
+tasks.named("check") {
+    dependsOn(detektTask)
+}
+
 spotless {
     // The repo standardizes on LF for every file (don't let Windows convert it to native line endings)
     lineEndings = com.diffplug.spotless.LineEnding.UNIX

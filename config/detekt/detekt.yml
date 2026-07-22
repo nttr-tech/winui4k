@@ -1,0 +1,47 @@
+# detekt's config. Only the differences from the default config are written here
+# (buildUponDefaultConfig = true). Formatting and naming are handled by ktlint (Spotless), so
+# rules that overlap with ktlint are disabled here. When changing rule settings, be careful not
+# to break the division of labor with the ktlintOverrides in
+# buildSrc/src/main/kotlin/winui4k.kotlin-common.gradle.kts.
+
+# Naming (file names, class names, function names, etc.) overlaps with ktlint's filename /
+# class-naming / function-naming / property-naming / package-name, so disable the whole rule set
+naming:
+  active: false
+
+# Disabled because it's mostly the W* wrappers, whose function count grows in proportion to WinUI's API surface
+complexity:
+  TooManyFunctions:
+    active: false
+
+exceptions:
+  # Catching Throwable is a required pattern at COM callback boundaries, since letting an
+  # exception leak into the native frame crashes the process. Mostly false positives, so disabled
+  TooGenericExceptionCaught:
+    active: false
+
+performance:
+  # Unavoidable in the FFI backends, which pass varargs through to native calls via the spread
+  # operator. The array-copy cost warning is a false positive here, so disabled
+  SpreadOperator:
+    active: false
+
+style:
+  # Early return via guard clauses is idiomatic Kotlin, so disabled
+  ReturnCount:
+    active: false
+  # Allow destructuring an ARGB color into its 4 components (val (a, r, g, b) = ...)
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 4
+  # Disabled: this codebase is FFI-centric and handles a large number of numeric constants like vtable slots and IIDs
+  MagicNumber:
+    active: false
+  # Overlaps with ktlint's max_line_length (turned off in this repo)
+  MaxLineLength:
+    active: false
+  # Overlaps with ktlint's final-newline
+  NewLineAtEndOfFile:
+    active: false
+  # Overlaps with ktlint's no-wildcard-imports
+  WildcardImport:
+    active: false

@@ -117,6 +117,7 @@ class WRichTextBlock : WComponent(
         }
 
         /** Creates a Bold / Italic / Underline Span, puts a single Run inside it, and appends it. */
+        @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
         private fun appendSpan(runtimeClass: String, text: String) {
             val span = Activation.activate(runtimeClass).queryInterface(XamlInterop.IID_ISpan)
             try {

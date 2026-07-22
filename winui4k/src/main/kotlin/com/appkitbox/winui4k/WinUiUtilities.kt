@@ -221,6 +221,7 @@ object WinUiUtilities {
      * IXamlMetadataProvider) to IApplicationFactory.CreateInstance and composes it with
      * the XAML Application via aggregation.
      */
+    @Suppress("LongMethod") // Keeps the ABI steps for aggregating the Application together in one place, on purpose
     private fun createApplication(onReady: () -> Unit) {
         // Forwards all methods to the real provider (created lazily) that resolves XAML types for WinUI controls
         val realProvider: ComPtr by lazy {

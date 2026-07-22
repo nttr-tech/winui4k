@@ -253,7 +253,9 @@ class MigLayoutManager(
 
         override fun getVisualPadding(): IntArray? = null
 
-        override fun paintDebugOutline(showVisualPadding: Boolean) {}
+        override fun paintDebugOutline(showVisualPadding: Boolean) {
+            // Debug painting isn't supported (no way to paint directly onto the WinUI side)
+        }
 
         override fun getComponentType(disregardScrollPane: Boolean): Int = componentType
 
@@ -280,7 +282,9 @@ class MigLayoutManager(
 
         override fun isLeftToRight(): Boolean = true
 
-        override fun paintDebugCell(x: Int, y: Int, width: Int, height: Int) {}
+        override fun paintDebugCell(x: Int, y: Int, width: Int, height: Int) {
+            // Debug painting isn't supported (no way to paint directly onto the WinUI side)
+        }
 
         override fun getX(): Int = 0
 

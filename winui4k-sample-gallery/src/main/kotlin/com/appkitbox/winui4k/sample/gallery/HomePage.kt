@@ -265,6 +265,7 @@ internal fun buildHomePage(navigateTo: (String) -> Unit): WComponent {
 }
 
 /** Header: overlays the app name and external-link tiles on top of the hero image. */
+@Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildHomeHeader(): WComponent {
     // Fit the hero image to the area while preserving its aspect ratio, letting the background color show through faintly
     val hero = WImage(galleryImageUri("GalleryHeaderImage.png"))

@@ -94,7 +94,7 @@ internal object Dispatcher {
         if (!enqueued) {
             // Don't silently swallow an enqueue failure (the queue shutting down) — surface it
             pending.remove(block)
-            throw IllegalStateException("DispatcherQueue.TryEnqueue failed (the UI thread is shutting down)")
+            error("DispatcherQueue.TryEnqueue failed (the UI thread is shutting down)")
         }
     }
 

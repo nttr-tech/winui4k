@@ -76,6 +76,7 @@ internal fun buildAnnotatedScrollBarPage(): WComponent {
 }
 
 /** Navigation paired with a ScrollView: Labels / connecting a ScrollController / DetailLabelRequested. */
+@Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildAnnotatedScrollBarExample(): WComponent {
     // The same color groups as the real Gallery. Attach a label at each group's starting scroll offset
     data class ColorGroup(val name: String, val color: WColor, val count: Int)
