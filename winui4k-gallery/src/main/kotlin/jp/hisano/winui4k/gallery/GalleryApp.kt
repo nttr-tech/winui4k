@@ -32,6 +32,7 @@ import jp.hisano.winui4k.TeachingTipPlacement
 import jp.hisano.winui4k.TextChangeReason
 import jp.hisano.winui4k.TextTrimming
 import jp.hisano.winui4k.TextWrapping
+import jp.hisano.winui4k.TitleBarHeightOption
 import jp.hisano.winui4k.WAutoSuggestBox
 import jp.hisano.winui4k.TickPlacement
 import jp.hisano.winui4k.WAppBarButton
@@ -94,6 +95,7 @@ import jp.hisano.winui4k.WTableColumn
 import jp.hisano.winui4k.WTeachingTip
 import jp.hisano.winui4k.WTextField
 import jp.hisano.winui4k.WTextPane
+import jp.hisano.winui4k.WTitleBar
 import jp.hisano.winui4k.WToggleButton
 import jp.hisano.winui4k.WToggleMenuFlyoutItem
 import jp.hisano.winui4k.WToggleSplitButton
@@ -112,6 +114,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * A WinUI 3 Gallery-style component gallery.
@@ -130,15 +133,106 @@ fun main() {
         val pageBackground = WBorder(WScrollPane(pageArea))
         pageBackground.background = PAGE_BACKGROUND
 
-        val navigationView = buildGalleryNavigationView { buildPage ->
+        // History of page names to go back through via the back button. Assigning selectedItem also
+        // fires SelectionChanged, so isNavigatingBack marks "currently going back" to avoid re-pushing
+        // onto the history.
+        val history = ArrayDeque<String>()
+        var isNavigatingBack = false
+        var currentPageName: String? = null
+
+        val titleBar = WTitleBar()
+        titleBar.title = "WinUI4K Gallery"
+        titleBar.isPaneToggleButtonVisible = true
+        titleBar.isBackButtonVisible = true
+        titleBar.isBackButtonEnabled = false
+
+        // Set the same icon as the real WinUI 3 Gallery on the title bar and taskbar
+        val iconFile = extractGalleryIcon()
+        if (iconFile != null) {
+            titleBar.iconUri = iconFile.toPath().toUri().toString()
+            frame.appWindow.setIcon(iconFile.absolutePath)
+        }
+
+        // Like the real Gallery, put a page search box in the middle of the title bar
+        // (width 580 also matches the real Gallery's MaxWidth)
+        val searchBox = WAutoSuggestBox("Search controls and samples...")
+        searchBox.width = 580.0
+        titleBar.content = searchBox
+
+        lateinit var navigation: GalleryNavigation
+        navigation = buildGalleryNavigationView { name, buildPage ->
+            if (!isNavigatingBack) {
+                currentPageName?.let { history.addLast(it) }
+            }
+            currentPageName = name
+            titleBar.isBackButtonEnabled = history.isNotEmpty()
             pageArea.removeAll()
             pageArea.add(buildPage())
+            // The TitleBar page's demo creates a separate WTitleBar for illustration. WinUI 3's
+            // TitleBar control has the behavior of overwriting its ancestor window's real title
+            // (Window.Title / AppWindow.Title) with its own Title when Loaded fires (an async
+            // timing after this callback), so schedule another pass once layout has settled to
+            // restore the main title.
+            frame.title = "WinUI4K Gallery"
+            WinUiUtilities.schedule(200) { frame.title = "WinUI4K Gallery" }
         }
+        val navigationView = navigation.navigationView
         navigationView.content = pageBackground
+        // Consolidate the pane-toggle button onto the title bar to avoid showing it twice
+        navigationView.isPaneToggleButtonVisible = false
 
-        frame.setContentPane(navigationView)
+        titleBar.addBackRequestedListener {
+            val previousName = history.removeLastOrNull() ?: return@addBackRequestedListener
+            val previousItem = navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
+            isNavigatingBack = true
+            navigationView.selectedItem = previousItem
+            isNavigatingBack = false
+            titleBar.isBackButtonEnabled = history.isNotEmpty()
+        }
+        titleBar.addPaneToggleRequestedListener {
+            navigationView.isPaneOpen = !navigationView.isPaneOpen
+        }
+
+        // Narrow down page names as the search box is typed into, and navigate to the chosen page on submit
+        val pageNames = pages.keys.toList()
+        searchBox.addTextChangedListener { text, reason ->
+            if (reason == TextChangeReason.USER_INPUT) {
+                searchBox.setSuggestions(pageNames.filter { it.contains(text, ignoreCase = true) })
+            }
+        }
+        searchBox.addQuerySubmittedListener { query, chosen ->
+            val target = chosen ?: pageNames.firstOrNull { it.contains(query, ignoreCase = true) }
+            val item = target?.let { navigation.itemsByPageName[it] }
+            if (item != null) {
+                navigationView.selectedItem = item
+                searchBox.text = ""
+            }
+        }
+
+        val rootGrid = WGrid()
+        rootGrid.addRow(GridLength.AUTO)
+        rootGrid.addRow(GridLength.star())
+        rootGrid.add(titleBar, row = 0, column = 0)
+        rootGrid.add(navigationView, row = 1, column = 0)
+
+        frame.setContentPane(rootGrid)
+        frame.extendsContentIntoTitleBar = true
+        frame.setTitleBar(titleBar)
+        frame.appWindow.titleBar.preferredHeightOption = TitleBarHeightOption.TALL
         frame.isVisible = true
     }
+}
+
+/**
+ * Extracts the same icon as the real WinUI 3 Gallery (GalleryIcon.ico) from resources to a temp file.
+ * WinUI's BitmapImage / AppWindow.SetIcon only accept a URI or file path.
+ */
+private fun extractGalleryIcon(): File? {
+    val resource = object {}.javaClass.getResourceAsStream("/GalleryIcon.ico") ?: return null
+    val file = File.createTempFile("winui4k-gallery-icon-", ".ico")
+    file.deleteOnExit()
+    resource.use { input -> file.outputStream().use { output -> input.copyTo(output) } }
+    return file
 }
 
 // Colors matching the WinUI 3 Gallery's light theme
@@ -152,7 +246,7 @@ private val CARD_BACKGROUND = WColor(251, 251, 251)
 private val CARD_BORDER = WColor(229, 229, 229)
 
 /** A subdued text color for things like page descriptions. */
-private val TEXT_SECONDARY = WColor(97, 97, 97)
+internal val TEXT_SECONDARY = WColor(97, 97, 97)
 
 /** Page name (WinUI control name) -> the function that builds its demo page. */
 private val pages: Map<String, () -> WComponent> = linkedMapOf(
@@ -206,6 +300,10 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "TreeView" to ::buildTreeViewPage,
     "VariableSizedWrapGrid" to ::buildVariableSizedWrapGridPage,
     "XamlUICommand" to ::buildXamlUICommandPage,
+    "AppWindow" to ::buildAppWindowPage,
+    "AppWindowTitleBar" to ::buildAppWindowTitleBarPage,
+    "Multiple windows" to ::buildMultipleWindowsPage,
+    "TitleBar" to ::buildTitleBarPage,
 )
 
 /** Navigation categories (matching the real WinUI 3 Gallery's grouping) -> the page names in each. */
@@ -276,6 +374,12 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "TextBlock",
         "TextBox",
     ),
+    "Windowing" to listOf(
+        "AppWindow",
+        "AppWindowTitleBar",
+        "Multiple windows",
+        "TitleBar",
+    ),
 )
 
 /** Category name -> the icon shown to the left of the category name in the navigation. */
@@ -288,13 +392,23 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
     "Navigation" to Symbol.GLOBAL_NAVIGATION_BUTTON,
     "Shell" to Symbol.MESSAGE,
     "Text" to Symbol.FONT,
+    "Windowing" to Symbol.NEW_WINDOW,
+)
+
+/**
+ * [buildGalleryNavigationView]'s return value: the navigation itself, plus a "page name ->
+ * WNavigationViewItem" lookup used to sync selection for the back button.
+ */
+private class GalleryNavigation(
+    val navigationView: WNavigationView,
+    val itemsByPageName: Map<String, WNavigationViewItem>,
 )
 
 /**
  * The left-hand navigation. Lines up page items under each category's parent item
- * (with an icon), and selecting one passes the selected page's builder to [onSelect].
+ * (with an icon), and selecting one passes the selected page's name and builder to [onSelect].
  */
-private fun buildGalleryNavigationView(onSelect: (() -> WComponent) -> Unit): WNavigationView {
+private fun buildGalleryNavigationView(onSelect: (String, () -> WComponent) -> Unit): GalleryNavigation {
     val navigationView = WNavigationView()
     navigationView.paneTitle = "WinUI4K Gallery"
     navigationView.isSettingsVisible = false
@@ -302,6 +416,7 @@ private fun buildGalleryNavigationView(onSelect: (() -> WComponent) -> Unit): WN
     navigationView.openPaneLength = 260.0
 
     var firstPageItem: WNavigationViewItem? = null
+    val itemsByPageName = mutableMapOf<String, WNavigationViewItem>()
     for ((category, names) in categories) {
         // Categories aren't selectable (SelectsOnInvoked=false); they only toggle their children open/closed
         val categoryItem = WNavigationViewItem(category, categoryIcons[category])
@@ -310,6 +425,7 @@ private fun buildGalleryNavigationView(onSelect: (() -> WComponent) -> Unit): WN
         for (name in names) {
             val pageItem = WNavigationViewItem(name)
             categoryItem.addItem(pageItem)
+            itemsByPageName[name] = pageItem
             if (firstPageItem == null) firstPageItem = pageItem
         }
         navigationView.addItem(categoryItem)
@@ -317,14 +433,14 @@ private fun buildGalleryNavigationView(onSelect: (() -> WComponent) -> Unit): WN
 
     navigationView.addSelectionListener { item ->
         val name = item?.text ?: return@addSelectionListener
-        pages[name]?.let(onSelect)
+        pages[name]?.let { buildPage -> onSelect(name, buildPage) }
     }
     navigationView.selectedItem = firstPageItem // show the first category's first page initially
-    return navigationView
+    return GalleryNavigation(navigationView, itemsByPageName)
 }
 
 /** A page's skeleton (large heading + description). Each page adds its demos onto this return value. */
-private fun buildPage(title: String, description: String): WPanel {
+internal fun buildPage(title: String, description: String): WPanel {
     val header = WPanel(spacing = 4.0)
     header.add(WLabel(title).also { it.fontSize = 28.0; it.fontWeight = 600 })
     header.add(
@@ -351,7 +467,7 @@ private fun buildButtonPage(): WComponent {
 }
 
 /** One demo section (heading + body placed on a card). */
-private fun buildExample(title: String, body: WComponent): WComponent {
+internal fun buildExample(title: String, body: WComponent): WComponent {
     // Like the real Gallery, keep the demo body from stretching to the card's
     // full width; left-align it instead
     body.horizontalAlignment = HorizontalAlignment.LEFT

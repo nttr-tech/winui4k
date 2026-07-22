@@ -2,10 +2,13 @@ package jp.hisano.winui4k.internal.winui
 
 import jp.hisano.winui4k.internal.com.ComPtr
 import jp.hisano.winui4k.internal.ffi.api.Ffi
+import jp.hisano.winui4k.internal.ffi.api.MemoryScope
 import jp.hisano.winui4k.internal.ffi.api.StructType
 import jp.hisano.winui4k.internal.ffi.api.StructType.Field
+import jp.hisano.winui4k.internal.ffi.api.StructValue
 import jp.hisano.winui4k.internal.ffi.api.ValueKind.F64
 import jp.hisano.winui4k.internal.ffi.api.ValueKind.I32
+import jp.hisano.winui4k.internal.ffi.api.ValueKind.I64
 import jp.hisano.winui4k.internal.ffi.api.ValueKind.PTR
 import jp.hisano.winui4k.internal.ffi.api.ValueKind.U16
 import jp.hisano.winui4k.internal.ffi.api.ValueKind.U8
@@ -51,6 +54,30 @@ internal object XamlStructs {
         "Windows.UI.Xaml.Interop.TypeName",
         listOf(Field("Name", PTR), Field("Kind", I32)),
     )
+
+    /** Windows.Graphics.PointInt32 { INT32 X, Y } (Windows.Graphics.winmd) */
+    val POINT_INT32 = StructType(
+        "Windows.Graphics.PointInt32",
+        listOf(Field("X", I32), Field("Y", I32)),
+    )
+
+    /** Windows.Graphics.SizeInt32 { INT32 Width, Height } (Windows.Graphics.winmd) */
+    val SIZE_INT32 = StructType(
+        "Windows.Graphics.SizeInt32",
+        listOf(Field("Width", I32), Field("Height", I32)),
+    )
+
+    /** Windows.Graphics.RectInt32 { INT32 X, Y, Width, Height } (Windows.Graphics.winmd) */
+    val RECT_INT32 = StructType(
+        "Windows.Graphics.RectInt32",
+        listOf(Field("X", I32), Field("Y", I32), Field("Width", I32), Field("Height", I32)),
+    )
+
+    /**
+     * Microsoft.UI.WindowId { UINT64 Value } (Microsoft.UI.winmd).
+     * WinRT's u8 (unsigned 64-bit) has the same ABI representation as [I64], so it's used as-is.
+     */
+    val WINDOW_ID = StructType("Microsoft.UI.WindowId", listOf(Field("Value", I64)))
 
     /** Puts a Thickness (double×4) by value. */
     fun putThickness(target: ComPtr, slot: Int, left: Double, top: Double, right: Double, bottom: Double) {
@@ -111,5 +138,72 @@ internal object XamlStructs {
             memory.putByte(c.ptr, 3, blue.toByte())
             target.call(slot, c)
         }
+    }
+
+    /** Puts a PointInt32 (i4×2) by value (AppWindow.Move). */
+    fun putPointInt32(target: ComPtr, slot: Int, x: Int, y: Int) {
+        Ffi.backend.withScope { scope ->
+            val p = scope.allocate(POINT_INT32)
+            Ffi.backend.memory.putInt(p.ptr, 0, x)
+            Ffi.backend.memory.putInt(p.ptr, 4, y)
+            target.call(slot, p)
+        }
+    }
+
+    /** Puts a SizeInt32 (i4×2) by value (AppWindow.Resize / IAppWindow2.ResizeClient). */
+    fun putSizeInt32(target: ComPtr, slot: Int, width: Int, height: Int) {
+        Ffi.backend.withScope { scope ->
+            val s = scope.allocate(SIZE_INT32)
+            Ffi.backend.memory.putInt(s.ptr, 0, width)
+            Ffi.backend.memory.putInt(s.ptr, 4, height)
+            target.call(slot, s)
+        }
+    }
+
+    /** Gets a PointInt32 (i4×2) via an out argument (AppWindow.Position). Returned in [x, y] order. */
+    fun getPointInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
+        val p = scope.allocate(POINT_INT32)
+        target.call(slot, p.ptr) // an out argument, so it's passed as a pointer
+        intArrayOf(Ffi.backend.memory.getInt(p.ptr, 0), Ffi.backend.memory.getInt(p.ptr, 4))
+    }
+
+    /** Gets a SizeInt32 (i4×2) via an out argument (AppWindow.Size / IAppWindow2.ClientSize). Returned in [width, height] order. */
+    fun getSizeInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
+        val s = scope.allocate(SIZE_INT32)
+        target.call(slot, s.ptr)
+        intArrayOf(Ffi.backend.memory.getInt(s.ptr, 0), Ffi.backend.memory.getInt(s.ptr, 4))
+    }
+
+    /**
+     * Gets a RectInt32 (i4×4) via an out argument (DisplayArea.OuterBounds / WorkArea).
+     * Returned in [x, y, width, height] order.
+     */
+    fun getRectInt32(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
+        val r = scope.allocate(RECT_INT32)
+        target.call(slot, r.ptr)
+        val memory = Ffi.backend.memory
+        intArrayOf(
+            memory.getInt(r.ptr, 0), memory.getInt(r.ptr, 4),
+            memory.getInt(r.ptr, 8), memory.getInt(r.ptr, 12),
+        )
+    }
+
+    /** Gets a WindowId (u8 Value) via an out argument (AppWindow.Id / OwnerWindowId). */
+    fun getWindowId(target: ComPtr, slot: Int): Long = Ffi.backend.withScope { scope ->
+        val w = scope.allocate(WINDOW_ID)
+        target.call(slot, w.ptr)
+        Ffi.backend.memory.getLong(w.ptr, 0)
+    }
+
+    /**
+     * Turns a WindowId (u8 Value) into a [StructValue] for passing by value.
+     * Used when it needs to be passed alongside other arguments (like a presenter pointer) in the
+     * same call, so this only prepares the value without making the call itself (use it inside the
+     * caller's own `Ffi.backend.withScope`).
+     */
+    fun windowIdValue(scope: MemoryScope, value: Long): StructValue {
+        val w = scope.allocate(WINDOW_ID)
+        Ffi.backend.memory.putLong(w.ptr, 0, value)
+        return w
     }
 }

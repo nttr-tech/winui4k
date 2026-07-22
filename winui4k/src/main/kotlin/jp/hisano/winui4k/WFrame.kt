@@ -41,4 +41,26 @@ class WFrame(title: String = "") {
             field = value
             if (value) window.call(Abi.IWindow_Activate) else window.call(Abi.IWindow_Close)
         }
+
+    /** An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.). */
+    val appWindow: WAppWindow by lazy {
+        val window2 = window.queryInterface(Abi.IID_IWindow2)
+        WAppWindow(window2.getPtr(Abi.IWindow2_get_AppWindow))
+    }
+
+    /**
+     * Whether the app's content extends into the system title bar area (Window.ExtendsContentIntoTitleBar).
+     * Set to true together with [setTitleBar] to build a custom title bar (like WTitleBar).
+     */
+    var extendsContentIntoTitleBar: Boolean
+        get() = window.getBool(Abi.IWindow_get_ExtendsContentIntoTitleBar)
+        set(value) = window.putBool(Abi.IWindow_put_ExtendsContentIntoTitleBar, value)
+
+    /**
+     * When [extendsContentIntoTitleBar] = true, specifies the component to treat as the draggable
+     * region (Window.SetTitleBar). Pass null to clear it.
+     */
+    fun setTitleBar(component: WComponent?) {
+        window.call(Abi.IWindow_SetTitleBar, component?.uiElement?.ptr)
+    }
 }

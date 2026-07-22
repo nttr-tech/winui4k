@@ -18,8 +18,10 @@ internal object PropertyValues {
     private const val IID_IPROPERTY_VALUE = "4bd682dd-7554-40e9-9a9b-82654ede7e62"
     private const val IPropertyValue_GetBoolean = 18 // GetBoolean(out boolean)
     private const val IPropertyValue_GetString = 19 // GetString(out HSTRING)
+    private const val IPropertyValue_GetInt32 = 11 // GetInt32(out i4)
     private const val IPropertyValueStatics_CreateString = 18 // CreateString(HSTRING, out IInspectable)
     private const val IPropertyValueStatics_CreateBoolean = 17 // CreateBoolean(boolean, out IInspectable)
+    private const val IPropertyValueStatics_CreateInt32 = 10 // CreateInt32(i4, out IInspectable)
 
     private fun statics(): ComPtr =
         Activation.factory("Windows.Foundation.PropertyValue", IID_IPROPERTY_VALUE_STATICS)
@@ -78,6 +80,34 @@ internal object PropertyValues {
         val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
         return try {
             pv.getBool(IPropertyValue_GetBoolean)
+        } finally {
+            pv.release()
+        }
+    }
+
+    /**
+     * Boxes a Kotlin Int into an IInspectable (PropertyValue.CreateInt32).
+     * Used to pass it to an IReference<Int32>-typed property (OverlappedPresenter's
+     * PreferredMinimum/MaximumWidth/Height). INT32 is an ordinary 4-byte argument, so it can be
+     * passed as-is via [ComPtr.getPtr]'s automatic inference.
+     */
+    fun boxInt(value: Int): ComPtr {
+        val statics = statics()
+        return try {
+            statics.getPtr(IPropertyValueStatics_CreateInt32, value)
+        } finally {
+            statics.release()
+        }
+    }
+
+    /**
+     * The reverse of [boxInt]: extracts the Int if the IInspectable is a boxed Int32.
+     * Returns null if it isn't a boxed Int32 (PropertyValue).
+     */
+    fun unboxInt(boxed: ComPtr): Int? {
+        val pv = boxed.queryInterfaceOrNull(IID_IPROPERTY_VALUE) ?: return null
+        return try {
+            pv.getInt(IPropertyValue_GetInt32)
         } finally {
             pv.release()
         }
