@@ -19,12 +19,12 @@ class WPasswordFieldTest : FunSpec() {
         }
 
         test("the PasswordChanged listener fires with the new value on every change to password") {
-            // PasswordChanged fires via the message loop for a PasswordBox on the visual tree
+            // PasswordChanged fires via the message loop once the PasswordBox has been loaded (template applied)
             val received = LinkedBlockingQueue<String>()
             val passwordField = onUiThreadGet {
                 WPasswordField().also { it.addPasswordChangedListener { password -> received.add(password) } }
             }
-            UiTestHarness.attach(passwordField)
+            UiTestHarness.attachAndAwaitLoaded(passwordField)
             try {
                 onUiThread { passwordField.password = "a" }
                 received.poll(UiTestHarness.TIMEOUT_SECONDS, TimeUnit.SECONDS) shouldBe "a"

@@ -21,12 +21,13 @@ class WDatePickerTest : FunSpec() {
         }
 
         test("changing date reaches the SelectedDateChanged listener with the new date") {
-            // SelectedDateChanged fires via the message loop for a DatePicker on the visual tree
+            // DatePicker doesn't fire SelectedDateChanged for a date change made before template
+            // application (before Loaded), so add it to the visual tree and wait for Loaded first
             val received = LinkedBlockingQueue<LocalDate>()
             val datePicker = onUiThreadGet {
                 WDatePicker().also { it.addSelectedDateChangedListener { date -> date?.let(received::add) } }
             }
-            UiTestHarness.attach(datePicker)
+            UiTestHarness.attachAndAwaitLoaded(datePicker)
             try {
                 onUiThread { datePicker.date = LocalDate.of(2030, 5, 17) }
                 received.poll(UiTestHarness.TIMEOUT_SECONDS, TimeUnit.SECONDS) shouldBe LocalDate.of(2030, 5, 17)

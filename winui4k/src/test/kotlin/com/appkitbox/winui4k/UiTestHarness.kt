@@ -40,6 +40,21 @@ object UiTestHarness {
         onUiThread { frame.add(component) }
     }
 
+    /**
+     * Adds [component] to the shared window and waits for its Loaded event (template applied).
+     * Control-internal events like TextChanged and SelectedDateChanged don't fire for property
+     * changes made before template application, so tests that verify such events should use
+     * this instead of [attach].
+     */
+    fun attachAndAwaitLoaded(component: WComponent) {
+        val loaded = CountDownLatch(1)
+        val listener: () -> Unit = { loaded.countDown() }
+        onUiThread { component.addLoadedListener(listener) }
+        attach(component)
+        check(loaded.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) { "The Loaded event never arrived" }
+        onUiThread { component.removeLoadedListener(listener) }
+    }
+
     /** Removes an [attach]ed [component] from the shared window. */
     fun detach(component: WComponent) {
         val frame = frame ?: return

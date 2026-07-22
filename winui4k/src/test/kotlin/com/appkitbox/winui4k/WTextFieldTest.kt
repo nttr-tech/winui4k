@@ -25,12 +25,12 @@ class WTextFieldTest : FunSpec() {
         }
 
         test("the TextChanged listener fires with the new text on every change to text") {
-            // TextChanged fires via the message loop for a TextBox on the visual tree
+            // TextChanged fires via the message loop once the TextBox has been loaded (template applied)
             val received = LinkedBlockingQueue<String>()
             val textField = onUiThreadGet {
                 WTextField().also { it.addTextChangedListener { text -> received.add(text) } }
             }
-            UiTestHarness.attach(textField)
+            UiTestHarness.attachAndAwaitLoaded(textField)
             try {
                 onUiThread { textField.text = "one" }
                 received.poll(UiTestHarness.TIMEOUT_SECONDS, TimeUnit.SECONDS) shouldBe "one"
@@ -53,7 +53,7 @@ class WTextFieldTest : FunSpec() {
                     it.addTextChangedListener { text -> monitorReceived.add(text) }
                 }
             }
-            UiTestHarness.attach(textField)
+            UiTestHarness.attachAndAwaitLoaded(textField)
             try {
                 onUiThread { textField.text = "first" }
                 monitorReceived.poll(UiTestHarness.TIMEOUT_SECONDS, TimeUnit.SECONDS) shouldBe "first"
