@@ -2,6 +2,7 @@ package com.appkitbox.winui4k.internal.com
 
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
+import com.appkitbox.winui4k.internal.ffi.api.DowncallHandle
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.StructValue
@@ -31,16 +32,8 @@ internal class ComPtr(val ptr: Ptr) {
     }
 
     /** Calls a vtable slot with an explicit descriptor, returning the raw HRESULT / ULONG. */
-    fun rawCall(slot: Int, descriptor: CallDescriptor, vararg args: Any?): Int {
-        val handle = Ffi.backend.downcallHandle(descriptor)
-        val all = arrayOfNulls<Any?>(args.size + 1)
-        all[0] = ptr
-        for (i in args.indices) {
-            val a = args[i]
-            all[i + 1] = if (a is ComPtr) a.ptr else a // a ComPtr can be passed unwrapped
-        }
-        return handle.invoke(vtblEntry(slot), *all) as Int
-    }
+    fun rawCall(slot: Int, descriptor: CallDescriptor, vararg args: Any?): Int =
+        invokeWith(Ffi.backend.downcallHandle(descriptor), slot, args)
 
     /**
      * Calls a method that returns an HRESULT, throwing on failure. The descriptor is
@@ -48,7 +41,26 @@ internal class ComPtr(val ptr: Ptr) {
      * (Ptr/ComPtr/null -> pointer, Int -> I32, Long -> I64, Double -> F64, StructValue -> struct by value).
      */
     fun call(slot: Int, vararg args: Any?) {
-        checkHr(rawCall(slot, inferDescriptor(args), *args), "vtbl[$slot]")
+        // This is the hot path every property get/put goes through, so calls with only
+        // scalar arguments look up the handle directly via a Long key that bit-packs the
+        // type signature, skipping descriptor reconstruction (list allocation + hashing).
+        val signature = scalarSignature(args)
+        val handle = if (signature >= 0) {
+            SCALAR_HANDLES.computeIfAbsent(signature) { Ffi.backend.downcallHandle(inferDescriptor(args)) }
+        } else {
+            Ffi.backend.downcallHandle(inferDescriptor(args)) // a call with struct arguments
+        }
+        checkHr(invokeWith(handle, slot, args), "vtbl[$slot]")
+    }
+
+    private fun invokeWith(handle: DowncallHandle, slot: Int, args: Array<out Any?>): Int {
+        val all = arrayOfNulls<Any?>(args.size + 1)
+        all[0] = ptr
+        for (i in args.indices) {
+            val argument = args[i]
+            all[i + 1] = if (argument is ComPtr) argument.ptr else argument // a ComPtr can be passed unwrapped
+        }
+        return handle.invoke(vtblEntry(slot), *all) as Int
     }
 
     /** For cases where the signature must be explicit, e.g. a struct-by-value return. */
@@ -124,6 +136,30 @@ internal class ComPtr(val ptr: Ptr) {
 
         /** HRESULT QueryInterface(this, riid, ppv) */
         private val QI_DESC = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
+
+        /** Inferred signature (scalar arguments only) -> downcall handle. */
+        private val SCALAR_HANDLES = java.util.concurrent.ConcurrentHashMap<Long, DowncallHandle>()
+
+        /**
+         * Bit-packs the argument types' signature into a Long, 3 bits per argument.
+         * Returns -1 (not cacheable) if any argument is a struct value or there are more
+         * than 20 arguments (would overflow).
+         */
+        private fun scalarSignature(args: Array<out Any?>): Long {
+            if (args.size > 20) return -1
+            var signature = 1L
+            for (argument in args) {
+                val code = when (argument) {
+                    null, is Ptr, is ComPtr -> 1L
+                    is Int -> 2L
+                    is Long -> 3L
+                    is Double -> 4L
+                    else -> return -1 // e.g. StructValue (unsupported types are reported by inferDescriptor)
+                }
+                signature = signature shl 3 or code
+            }
+            return signature
+        }
 
         private fun inferDescriptor(args: Array<out Any?>): CallDescriptor {
             val kinds = buildList(args.size + 1) {
