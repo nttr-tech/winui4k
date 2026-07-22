@@ -20,7 +20,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     implementation(project(":winui4k"))
-    implementation(project(":winui4k-coroutines"))
+    implementation(project(":winui4k-extension-coroutines"))
     runtimeOnly(project(":winui4k-panama"))
     runtimeOnly(project(":winui4k-jna"))
     runtimeOnly(project(":winui4k-jnr"))

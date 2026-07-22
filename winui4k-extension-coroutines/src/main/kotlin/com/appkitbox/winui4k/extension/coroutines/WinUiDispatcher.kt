@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.coroutines
+package com.appkitbox.winui4k.extension.coroutines
 
 import com.appkitbox.winui4k.WinUiUtilities
 import kotlinx.coroutines.CancellableContinuation
@@ -18,7 +18,7 @@ import kotlin.coroutines.CoroutineContext
  */
 @Suppress("unused")
 public val Dispatchers.WinUi: WinUiDispatcher
-    get() = com.appkitbox.winui4k.coroutines.WinUi
+    get() = com.appkitbox.winui4k.extension.coroutines.WinUi
 
 /**
  * The dispatcher for WinUI's UI thread (DispatcherQueue).

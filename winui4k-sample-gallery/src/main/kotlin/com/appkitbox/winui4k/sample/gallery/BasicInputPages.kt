@@ -25,7 +25,7 @@ import com.appkitbox.winui4k.WSplitButton
 import com.appkitbox.winui4k.WToggleButton
 import com.appkitbox.winui4k.WToggleSplitButton
 import com.appkitbox.winui4k.WToggleSwitch
-import com.appkitbox.winui4k.coroutines.WinUi
+import com.appkitbox.winui4k.extension.coroutines.WinUi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

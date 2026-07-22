@@ -37,7 +37,7 @@ WinUiUtilities.invokeLater {
 - **ブリッジ DLL なし**：`RoGetActivationFactory`、HSTRING、vtable 呼び出し、upcall による COM オブジェクト実装、COM 集約まで、WinRT の COM ABI を JVM の FFI だけで扱います
 - **60 超のコントロール**：Button / TextBox から NavigationView、TeachingTip、AppNotification、AppWindow まで `W*` クラスとしてラップ済み。Gallery で全部試せます
 - **Java 8 でも動く**：FFI バックエンドは差し替え式。Panama (Java 22 以降、既定)、JNA (Java 8 以降)、JNR (Java 8 以降) の 3 実装を同梱します
-- **コルーチン対応**：`Dispatchers.WinUi` (winui4k-coroutines) で UI スレッドへディスパッチし、`delay` は DispatcherQueueTimer にネイティブ対応します
+- **コルーチン対応**：`Dispatchers.WinUi` (winui4k-extension-coroutines) で UI スレッドへディスパッチし、`delay` は DispatcherQueueTimer にネイティブ対応します
 - **推測値ゼロの ABI**：IID と vtable スロットはすべて winmd から機械抽出した値です ([doc/architecture.md](doc/architecture.md))
 
 ## 起動
@@ -95,7 +95,7 @@ Windows App SDK 2.2 ランタイムが必要です。未インストールの場
 | `winui4k-panama` | Panama (`java.lang.foreign`) FFI バックエンド。Java 22 以降 |
 | `winui4k-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
 | `winui4k-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 |
-| `winui4k-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
+| `winui4k-extension-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
 | `winui4k-sample-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
 
 # 参考情報
