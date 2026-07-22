@@ -379,6 +379,28 @@ abstract class WComponent internal constructor(
         accelerators.release()
         accelerator.release()
     }
+
+    /**
+     * Adds a keyboard shortcut that runs [action] on press
+     * (UIElement.KeyboardAccelerators + KeyboardAccelerator.Invoked).
+     * While this element is visible, pressing [key] + [modifiers] calls [action].
+     * Sets Handled so a click-triggered default action doesn't also fire.
+     */
+    fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier, action: () -> Unit) {
+        val accelerator = createKeyboardAccelerator(key, modifiers)
+        accelerator.addEventHandler(
+            "WinUI4K.KeyboardAcceleratorInvokedHandler",
+            XamlInterop.IID_KeyboardAcceleratorInvokedHandler,
+            XamlInterop.IKeyboardAccelerator_add_Invoked,
+        ) { _, args ->
+            ComPtr(args).putBool(XamlInterop.IKeyboardAcceleratorInvokedEventArgs_put_Handled, true)
+            action()
+        }
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
+        accelerators.release()
+        accelerator.release()
+    }
 }
 
 /**

@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.NavigationViewPaneDisplayMode
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.Symbol
 import com.appkitbox.winui4k.SystemBackdropType
+import com.appkitbox.winui4k.TabViewWidthMode
 import com.appkitbox.winui4k.TextAlignment
 import com.appkitbox.winui4k.TextTrimming
 import com.appkitbox.winui4k.VerticalAlignment
@@ -18,10 +19,11 @@ import com.appkitbox.winui4k.VirtualKey
 import com.appkitbox.winui4k.VirtualKeyModifier
 import com.appkitbox.winui4k.WAppBarButton
 import com.appkitbox.winui4k.WAutoSuggestBox
-import com.appkitbox.winui4k.WButton
+import com.appkitbox.winui4k.WBreadcrumbBar
 import com.appkitbox.winui4k.WCommandBar
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WContentDialog
+import com.appkitbox.winui4k.WDisplayArea
 import com.appkitbox.winui4k.WFrame
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WItemContainer
@@ -33,7 +35,10 @@ import com.appkitbox.winui4k.WMenuFlyoutSeparator
 import com.appkitbox.winui4k.WNavigationView
 import com.appkitbox.winui4k.WNavigationViewItem
 import com.appkitbox.winui4k.WPanel
-import com.appkitbox.winui4k.WRadioMenuFlyoutItem
+import com.appkitbox.winui4k.WSelectorBar
+import com.appkitbox.winui4k.WSelectorBarItem
+import com.appkitbox.winui4k.WTabView
+import com.appkitbox.winui4k.WTabViewItem
 import com.appkitbox.winui4k.WTable
 import com.appkitbox.winui4k.WTableColumn
 import com.appkitbox.winui4k.WTextField
@@ -52,29 +57,37 @@ internal class FilerTab(var directory: File) {
 
 /**
  * The Fluent Design filer's main window.
- * Composed of title-bar-integrated tabs, a navigation toolbar + breadcrumbs, a CommandBar,
- * a NavigationView sidebar, a details (WTable) / icon (WItemsView) listing, and a status bar.
+ * Composed of a title-bar-integrated TabView, a navigation toolbar + BreadcrumbBar, a CommandBar,
+ * a NavigationView sidebar, a SelectorBar for switching the view,
+ * a details (WTable) / icon (WItemsView) listing, and a status bar.
  */
 @Suppress("TooManyFunctions") // Acts as the controller for the whole window, so it naturally has one method per feature
 internal class FilerWindow {
     private val frame = WFrame(title = "winui4k Filer")
     private val titleBar = WTitleBar()
-    private val tabStrip = WPanel(spacing = 4.0, orientation = Orientation.HORIZONTAL)
+    private val tabView = WTabView()
 
     private val tabs = mutableListOf(FilerTab(defaultDirectory()))
     private var activeTabIndex = 0
     private val activeTab: FilerTab
         get() = tabs[activeTabIndex]
 
-    // The toolbar (back / forward / up / refresh + breadcrumbs / path entry + filter)
-    private val backButton = compactButton("Back", Symbol.BACK)
-    private val forwardButton = compactButton("Forward", Symbol.FORWARD)
-    private val upButton = compactButton("Up", Symbol.UP)
-    private val refreshButton = compactButton("Refresh", Symbol.REFRESH)
-    private val breadcrumbPanel = WPanel(spacing = 0.0, orientation = Orientation.HORIZONTAL)
+    /** A guard so TabView's SelectionChanged is ignored while tabs are being added/removed. */
+    private var isSyncingTabs = false
+
+    // The toolbar (back / forward / up / refresh + BreadcrumbBar / path entry + view switch + filter)
+    private val backButton = compactButton("Back (Alt+←)", Symbol.BACK)
+    private val forwardButton = compactButton("Forward (Alt+→)", Symbol.FORWARD)
+    private val upButton = compactButton("Up (Alt+↑)", Symbol.UP)
+    private val refreshButton = compactButton("Refresh (F5)", Symbol.REFRESH)
+    private val breadcrumbBar = WBreadcrumbBar()
     private val pathBox = WAutoSuggestBox("Type a path and press Enter")
     private val pathEditButton = compactButton("Edit path (Ctrl+L)", Symbol.EDIT)
+    private val viewSelector = WSelectorBar()
     private val filterBox = WTextField("Filter")
+
+    /** The File corresponding to each level of BreadcrumbBar (looks up the destination from ItemClicked's index). */
+    private var breadcrumbParts: List<File> = emptyList()
 
     // The file listing (details = WTable / icons = WItemsView)
     private val table = WTable(
@@ -122,17 +135,45 @@ internal class FilerWindow {
         frame.extendsContentIntoTitleBar = true
         frame.setTitleBar(titleBar)
         frame.systemBackdrop = SystemBackdropType.MICA
-        frame.appWindow.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        resizeToWorkArea()
         refresh()
         frame.isVisible = true
+    }
+
+    /** Sizes the window as a ratio of the monitor's work area (a physical-pixel size, so this follows DPI). */
+    private fun resizeToWorkArea() {
+        val workArea = WDisplayArea.primary().workArea
+        frame.appWindow.resize(
+            (workArea.width * WINDOW_WIDTH_RATIO).toInt(),
+            (workArea.height * WINDOW_HEIGHT_RATIO).toInt(),
+        )
     }
 
     // region Building the UI
 
     private fun buildTitleBar(): WComponent {
         titleBar.iconGlyph = "" // The Folder glyph in Segoe Fluent Icons
-        titleBar.content = tabStrip
-        WTitleBar.setIsDragRegion(tabStrip, false)
+
+        tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
+        tabView.canReorderTabs = false // Tabs are managed by index, so reordering is disabled
+        tabView.isAddTabButtonVisible = true
+        tabView.addTab(WTabViewItem(tabLabel(activeTab.directory)))
+        tabView.selectedIndex = 0
+        tabView.addAddTabButtonClickListener { addTab() }
+        tabView.addTabCloseRequestedListener { index -> closeTab(index) }
+        tabView.addSelectionListener {
+            if (isSyncingTabs) return@addSelectionListener
+            val index = tabView.selectedIndex
+            if (index >= 0 && index != activeTabIndex) activateTab(index)
+        }
+        // Ctrl+T / Ctrl+W ride on TabView as app-wide shortcuts for tab operations
+        tabView.addKeyboardAccelerator(VirtualKey.T, VirtualKeyModifier.CONTROL) { addTab() }
+        tabView.addKeyboardAccelerator(VirtualKey.W, VirtualKeyModifier.CONTROL) { closeTab(activeTabIndex) }
+
+        // Left-align the tab strip like Files does (TitleBar's content area is centered by default)
+        tabView.horizontalAlignment = HorizontalAlignment.LEFT
+        titleBar.content = tabView
+        WTitleBar.setIsDragRegion(tabView, false)
         return titleBar
     }
 
@@ -145,12 +186,18 @@ internal class FilerWindow {
 
         pathBox.isVisible = false
         pathBox.verticalAlignment = VerticalAlignment.CENTER
-        breadcrumbPanel.verticalAlignment = VerticalAlignment.CENTER
+        breadcrumbBar.verticalAlignment = VerticalAlignment.CENTER
         val addressHost = WGrid()
         addressHost.addRow(GridLength.star())
         addressHost.addColumn(GridLength.star())
-        addressHost.add(breadcrumbPanel, row = 0, column = 0)
+        addressHost.add(breadcrumbBar, row = 0, column = 0)
         addressHost.add(pathBox, row = 0, column = 0)
+
+        viewSelector.addItem(WSelectorBarItem("Details"))
+        viewSelector.addItem(WSelectorBarItem("Icons"))
+        viewSelector.selectedIndex = 0
+        viewSelector.addSelectionListener { index -> setIconView(index == 1) }
+        viewSelector.verticalAlignment = VerticalAlignment.CENTER
 
         filterBox.verticalAlignment = VerticalAlignment.CENTER
 
@@ -161,17 +208,18 @@ internal class FilerWindow {
         toolbar.addColumn(GridLength.AUTO)
         toolbar.addColumn(GridLength.star())
         toolbar.addColumn(GridLength.AUTO)
+        toolbar.addColumn(GridLength.AUTO)
         toolbar.addColumn(GridLength.pixel(FILTER_BOX_WIDTH))
         toolbar.add(navPanel, row = 0, column = 0)
         toolbar.add(addressHost, row = 0, column = 1)
         toolbar.add(pathEditButton, row = 0, column = 2)
-        toolbar.add(filterBox, row = 0, column = 3)
+        toolbar.add(viewSelector, row = 0, column = 3)
+        toolbar.add(filterBox, row = 0, column = 4)
         return toolbar
     }
 
     private fun buildCommandBar(): WComponent {
         val commandBar = WCommandBar()
-
         commandBar.addPrimaryCommand(
             commandButton("New folder", Symbol.NEW_FOLDER, VirtualKey.N, VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT) {
                 createNewFolder()
@@ -186,32 +234,19 @@ internal class FilerWindow {
         commandBar.addPrimaryCommand(
             commandButton("Paste", Symbol.PASTE, VirtualKey.V, VirtualKeyModifier.CONTROL) { pasteClipboard() },
         )
-        val renameButton = commandButton("Rename", Symbol.RENAME, VirtualKey.F2) { renameSelection() }
-        commandBar.addPrimaryCommand(renameButton)
-        val deleteButton = commandButton("Delete", Symbol.DELETE, VirtualKey.DELETE) { deleteSelection() }
-        commandBar.addPrimaryCommand(deleteButton)
-        commandBar.addPrimaryCommand(buildViewButton())
+        commandBar.addPrimaryCommand(
+            commandButton("Rename", Symbol.RENAME, VirtualKey.F2) { renameSelection() },
+        )
+        commandBar.addPrimaryCommand(
+            commandButton("Delete", Symbol.DELETE, VirtualKey.DELETE) { deleteSelection() },
+        )
         return commandBar
-    }
-
-    /** The button with a flyout for switching view modes (details / icon). */
-    private fun buildViewButton(): WAppBarButton {
-        val detailItem = WRadioMenuFlyoutItem("Details view", groupName = "viewMode")
-        detailItem.isChecked = true
-        val iconItem = WRadioMenuFlyoutItem("Icon view", groupName = "viewMode")
-        detailItem.addActionListener { setIconView(false) }
-        iconItem.addActionListener { setIconView(true) }
-        val flyout = WMenuFlyout()
-        flyout.add(detailItem)
-        flyout.add(iconItem)
-        val viewButton = WAppBarButton("View", Symbol.VIEW)
-        viewButton.flyout = flyout
-        return viewButton
     }
 
     private fun buildNavigationArea(): WComponent {
         contentHost.addRow(GridLength.star())
         contentHost.addColumn(GridLength.star())
+        contentHost.setMargin(0.0, 0.0, 8.0, 0.0)
         navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
         navigationView.isSettingsVisible = false
         navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
@@ -305,6 +340,9 @@ internal class FilerWindow {
                 navigateTo(target)
             }
         }
+        breadcrumbBar.addItemClickedListener { index ->
+            breadcrumbParts.getOrNull(index)?.let { navigateTo(it) }
+        }
         filterBox.addTextChangedListener { applyFilterAndShow() }
     }
 
@@ -351,7 +389,7 @@ internal class FilerWindow {
 
     /** Re-enumerates the active tab's contents and refreshes the display. Enumeration runs on a separate thread so it doesn't block the UI. */
     private fun refresh() {
-        updateTabStrip()
+        tabView.getTab(activeTabIndex).header = tabLabel(activeTab.directory)
         updateBreadcrumb()
         updateNavButtons()
         selectionLabel.text = ""
@@ -397,7 +435,7 @@ internal class FilerWindow {
     }
 
     private fun buildIconCard(file: File): WItemContainer {
-        val glyph = WLabel(if (file.isDirectory) "" else "")
+        val glyph = WLabel(if (file.isDirectory) "" else "") // Folder / Document
         glyph.fontFamily = "Segoe Fluent Icons"
         glyph.fontSize = ICON_GLYPH_SIZE
         glyph.horizontalAlignment = HorizontalAlignment.CENTER
@@ -419,44 +457,9 @@ internal class FilerWindow {
         applyFilterAndShow()
     }
 
-    private fun updateTabStrip() {
-        tabStrip.removeAll()
-        tabs.forEachIndexed { index, tab ->
-            val tabButton = WButton(tabLabel(tab.directory))
-            tabButton.isAccent = index == activeTabIndex
-            tabButton.addActionListener { activateTab(index) }
-            tabStrip.add(tabButton)
-            if (index == activeTabIndex && tabs.size > 1) {
-                val closeButton = WButton("✕")
-                closeButton.toolTip = "Close tab (Ctrl+W)"
-                closeButton.addKeyboardAccelerator(VirtualKey.W, VirtualKeyModifier.CONTROL)
-                closeButton.addActionListener { closeTab(index) }
-                tabStrip.add(closeButton)
-            }
-        }
-        val newTabButton = WButton("+")
-        newTabButton.toolTip = "New tab (Ctrl+T)"
-        newTabButton.addKeyboardAccelerator(VirtualKey.T, VirtualKeyModifier.CONTROL)
-        newTabButton.addActionListener { addTab() }
-        tabStrip.add(newTabButton)
-    }
-
     private fun updateBreadcrumb() {
-        breadcrumbPanel.removeAll()
-        val parts = generateSequence(activeTab.directory) { it.parentFile }.toList().asReversed()
-        parts.forEachIndexed { index, part ->
-            if (index > 0) {
-                val separator = WLabel("") // The ChevronRight glyph in Segoe Fluent Icons
-                separator.fontFamily = "Segoe Fluent Icons"
-                separator.fontSize = BREADCRUMB_SEPARATOR_SIZE
-                separator.verticalAlignment = VerticalAlignment.CENTER
-                breadcrumbPanel.add(separator)
-            }
-            val label = part.name.ifEmpty { part.path.removeSuffix(File.separator) }
-            val button = WButton(label)
-            button.addActionListener { navigateTo(part) }
-            breadcrumbPanel.add(button)
-        }
+        breadcrumbParts = generateSequence(activeTab.directory) { it.parentFile }.toList().asReversed()
+        breadcrumbBar.setItems(breadcrumbParts.map(::tabLabel))
     }
 
     private fun updateNavButtons() {
@@ -481,7 +484,7 @@ internal class FilerWindow {
 
     private fun showPathBox(show: Boolean) {
         pathBox.isVisible = show
-        breadcrumbPanel.isVisible = !show
+        breadcrumbBar.isVisible = !show
         if (show) pathBox.text = activeTab.directory.absolutePath
     }
 
@@ -490,7 +493,6 @@ internal class FilerWindow {
     // region Tabs
 
     private fun activateTab(index: Int) {
-        if (index == activeTabIndex) return
         activeTabIndex = index
         filterBox.text = ""
         refresh()
@@ -498,7 +500,11 @@ internal class FilerWindow {
 
     private fun addTab() {
         tabs.add(FilerTab(defaultDirectory()))
+        isSyncingTabs = true
+        tabView.addTab(WTabViewItem(tabLabel(tabs.last().directory)))
+        isSyncingTabs = false
         activeTabIndex = tabs.size - 1
+        tabView.selectedIndex = activeTabIndex
         filterBox.text = ""
         refresh()
     }
@@ -506,7 +512,13 @@ internal class FilerWindow {
     private fun closeTab(index: Int) {
         if (tabs.size <= 1) return
         tabs.removeAt(index)
-        if (activeTabIndex >= tabs.size) activeTabIndex = tabs.size - 1
+        isSyncingTabs = true
+        tabView.removeTab(index)
+        // TabView moves the selection on its own, so match our own state to the result
+        activeTabIndex = tabView.selectedIndex.coerceIn(0, tabs.size - 1)
+        if (tabView.selectedIndex != activeTabIndex) tabView.selectedIndex = activeTabIndex
+        isSyncingTabs = false
+        filterBox.text = ""
         refresh()
     }
 
@@ -671,14 +683,13 @@ internal class FilerWindow {
         directory.name.ifEmpty { directory.path.removeSuffix(File.separator) }
 
     private companion object {
-        const val WINDOW_WIDTH = 1200
-        const val WINDOW_HEIGHT = 760
+        const val WINDOW_WIDTH_RATIO = 0.6
+        const val WINDOW_HEIGHT_RATIO = 0.7
         const val SIDEBAR_WIDTH = 220.0
         const val FILTER_BOX_WIDTH = 200.0
         const val ICON_ITEM_WIDTH = 120.0
         const val ICON_GLYPH_SIZE = 40.0
         const val STATUS_FONT_SIZE = 12.0
-        const val BREADCRUMB_SEPARATOR_SIZE = 10.0
 
         fun defaultDirectory(): File = File(System.getProperty("user.home"))
     }

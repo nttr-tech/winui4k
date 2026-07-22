@@ -310,7 +310,6 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
             XamlInterop.IID_DoubleTappedEventHandler,
             XamlInterop.IUIElement_add_DoubleTapped,
         ) { _, _ ->
-            System.err.println("[debug] DoubleTapped fired") // temporary debug logging, remove once verified
             val modelIndex = rows.indexOf(row)
             if (modelIndex >= 0) {
                 for (listener in rowInvokedListeners.toList()) listener(modelIndex)

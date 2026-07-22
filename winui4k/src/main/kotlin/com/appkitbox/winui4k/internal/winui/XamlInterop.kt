@@ -1748,6 +1748,21 @@ internal object XamlInterop {
     const val IID_IKeyboardAccelerator = "6f8bf1e2-4e91-5cf9-a6be-4770caf3d770"
     const val IKeyboardAccelerator_put_Key = 7         // put_Key(VirtualKey)
     const val IKeyboardAccelerator_put_Modifiers = 9   // put_Modifiers(VirtualKeyModifiers)
+    const val IKeyboardAccelerator_add_Invoked = 14    // add_Invoked(TypedEventHandler, out token)
+    const val IKeyboardAccelerator_remove_Invoked = 15 // remove_Invoked(token)
+
+    const val IID_IKeyboardAcceleratorInvokedEventArgs = "62c9fdb0-b574-527d-97eb-5c7f674441e0"
+    const val IKeyboardAcceleratorInvokedEventArgs_put_Handled = 7 // put_Handled(boolean)
+
+    /** The actual IID of TypedEventHandler<KeyboardAccelerator, KeyboardAcceleratorInvokedEventArgs> (computed at runtime). */
+    val IID_KeyboardAcceleratorInvokedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Input.KeyboardAccelerator;{$IID_IKeyboardAccelerator});" +
+                "rc(Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs;" +
+                "{$IID_IKeyboardAcceleratorInvokedEventArgs}))",
+        )
+    }
 
     /** The actual IID of IVector<Microsoft.UI.Xaml.Controls.ICommandBarElement> (used to QI PrimaryCommands). */
     val IID_IVector_ICommandBarElement: String by lazy {
@@ -1907,4 +1922,103 @@ internal object XamlInterop {
     const val IUniformGridLayout_put_ItemsStretch = 19
     const val IUniformGridLayout_get_MaximumRowsOrColumns = 20
     const val IUniformGridLayout_put_MaximumRowsOrColumns = 21
+
+    // ---- Microsoft.UI.Xaml.Controls.TabView ----
+    const val CLS_TabView = "Microsoft.UI.Xaml.Controls.TabView"
+    const val IID_ITabViewFactory = "e7e83685-eedf-5106-9429-884435ab166b"
+    const val IID_ITabView = "07b509e1-1d38-551b-95f4-4732b049f6a6"
+    const val ITabView_get_TabWidthMode = 6            // get_TabWidthMode(out TabViewWidthMode)
+    const val ITabView_put_TabWidthMode = 7            // put_TabWidthMode(TabViewWidthMode)
+    const val ITabView_get_IsAddTabButtonVisible = 18  // get_IsAddTabButtonVisible(out boolean)
+    const val ITabView_put_IsAddTabButtonVisible = 19  // put_IsAddTabButtonVisible(boolean)
+    const val ITabView_add_TabCloseRequested = 24      // add_TabCloseRequested(TypedEventHandler, out token)
+    const val ITabView_remove_TabCloseRequested = 25   // remove_TabCloseRequested(token)
+    const val ITabView_add_AddTabButtonClick = 28      // add_AddTabButtonClick(TypedEventHandler, out token)
+    const val ITabView_remove_AddTabButtonClick = 29   // remove_AddTabButtonClick(token)
+    const val ITabView_get_TabItems = 34               // get_TabItems(out IVector<Object>)
+    const val ITabView_get_CanReorderTabs = 41         // get_CanReorderTabs(out boolean)
+    const val ITabView_put_CanReorderTabs = 42         // put_CanReorderTabs(boolean)
+    const val ITabView_get_SelectedIndex = 45          // get_SelectedIndex(out INT32)
+    const val ITabView_put_SelectedIndex = 46          // put_SelectedIndex(INT32)
+    const val ITabView_add_SelectionChanged = 51       // add_SelectionChanged(SelectionChangedEventHandler, out token)
+    const val ITabView_remove_SelectionChanged = 52    // remove_SelectionChanged(token)
+
+    const val CLS_TabViewItem = "Microsoft.UI.Xaml.Controls.TabViewItem"
+    const val IID_ITabViewItemFactory = "b64c2423-7e56-5d41-8a84-1ee28f9826a4"
+    const val IID_ITabViewItem = "64980afa-97af-5190-90b3-4ba277b1113d"
+    const val ITabViewItem_get_Header = 6              // get_Header(out IInspectable)
+    const val ITabViewItem_put_Header = 7              // put_Header(IInspectable)
+    const val ITabViewItem_get_IsClosable = 12         // get_IsClosable(out boolean)
+    const val ITabViewItem_put_IsClosable = 13         // put_IsClosable(boolean)
+
+    const val IID_ITabViewTabCloseRequestedEventArgs = "d56ab9b2-e264-5c7e-a1cb-e41a16a6c6c6"
+    const val ITabViewTabCloseRequestedEventArgs_get_Tab = 7 // get_Tab(out TabViewItem)
+
+    /** The actual IID of TypedEventHandler<TabView, TabViewTabCloseRequestedEventArgs> (computed at runtime). */
+    val IID_TabViewTabCloseRequestedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.TabView;{$IID_ITabView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TabViewTabCloseRequestedEventArgs;" +
+                "{$IID_ITabViewTabCloseRequestedEventArgs}))",
+        )
+    }
+
+    /** The actual IID of TypedEventHandler<TabView, Object> (AddTabButtonClick) (computed at runtime). */
+    val IID_TabViewAddTabButtonClickHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.TabView;{$IID_ITabView});" +
+                "cinterface(IInspectable))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.BreadcrumbBar ----
+    const val CLS_BreadcrumbBar = "Microsoft.UI.Xaml.Controls.BreadcrumbBar"
+    const val IID_IBreadcrumbBarFactory = "d5b6a6d9-3148-5cbc-a6ae-0f44cde41952"
+    const val IID_IBreadcrumbBar = "2e47b7d6-5fbd-54c7-b0b1-ceff4a19c744"
+    const val IBreadcrumbBar_put_ItemsSource = 7       // put_ItemsSource(IInspectable)
+    const val IBreadcrumbBar_add_ItemClicked = 10      // add_ItemClicked(TypedEventHandler, out token)
+    const val IBreadcrumbBar_remove_ItemClicked = 11   // remove_ItemClicked(token)
+
+    const val IID_IBreadcrumbBarItemClickedEventArgs = "1ceea503-365e-580d-bcd4-e9ad0248f6b5"
+    const val IBreadcrumbBarItemClickedEventArgs_get_Index = 6 // get_Index(out INT32)
+
+    /** The actual IID of TypedEventHandler<BreadcrumbBar, BreadcrumbBarItemClickedEventArgs> (computed at runtime). */
+    val IID_BreadcrumbBarItemClickedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.BreadcrumbBar;{$IID_IBreadcrumbBar});" +
+                "rc(Microsoft.UI.Xaml.Controls.BreadcrumbBarItemClickedEventArgs;" +
+                "{$IID_IBreadcrumbBarItemClickedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.SelectorBar ----
+    const val CLS_SelectorBar = "Microsoft.UI.Xaml.Controls.SelectorBar"
+    const val IID_ISelectorBarFactory = "71243dc7-b46c-5a04-9894-e420e462703f"
+    const val IID_ISelectorBar = "7f4ad191-55ea-508e-bf47-7047d8677370"
+    const val ISelectorBar_get_Items = 6               // get_Items(out IVector<SelectorBarItem>)
+    const val ISelectorBar_get_SelectedItem = 7        // get_SelectedItem(out SelectorBarItem)
+    const val ISelectorBar_put_SelectedItem = 8        // put_SelectedItem(SelectorBarItem)
+    const val ISelectorBar_add_SelectionChanged = 9    // add_SelectionChanged(TypedEventHandler, out token)
+    const val ISelectorBar_remove_SelectionChanged = 10 // remove_SelectionChanged(token)
+
+    const val CLS_SelectorBarItem = "Microsoft.UI.Xaml.Controls.SelectorBarItem"
+    const val IID_ISelectorBarItemFactory = "e46b62ea-e60d-5989-bea7-5470da326816"
+    const val IID_ISelectorBarItem = "3cdba1f9-a13a-56a2-b9a9-f954998d3658"
+    const val ISelectorBarItem_get_Text = 6            // get_Text(out string)
+    const val ISelectorBarItem_put_Text = 7            // put_Text(string)
+
+    const val IID_ISelectorBarSelectionChangedEventArgs = "73b3f6c5-5050-5c5a-899c-4e6e0474cb63"
+
+    /** The actual IID of TypedEventHandler<SelectorBar, SelectorBarSelectionChangedEventArgs> (computed at runtime). */
+    val IID_SelectorBarSelectionChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.SelectorBar;{$IID_ISelectorBar});" +
+                "rc(Microsoft.UI.Xaml.Controls.SelectorBarSelectionChangedEventArgs;" +
+                "{$IID_ISelectorBarSelectionChangedEventArgs}))",
+        )
+    }
 }
