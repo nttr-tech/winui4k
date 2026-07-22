@@ -1,5 +1,8 @@
 package jp.hisano.winui4k
 
+import jp.hisano.winui4k.internal.com.ComPtr
+import jp.hisano.winui4k.internal.ffi.api.Ffi
+import jp.hisano.winui4k.internal.ffi.api.withScope
 import jp.hisano.winui4k.internal.winrt.Activation
 import jp.hisano.winui4k.internal.winrt.Hstring
 import jp.hisano.winui4k.internal.winrt.getString
@@ -93,6 +96,22 @@ class WLabel(text: String = "") : WComponent(
         get() = inspectable.getDouble(Abi.ITextBlock_get_FontSize)
         set(value) = inspectable.call(Abi.ITextBlock_put_FontSize, value)
 
+    /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
+    var fontFamily: String
+        get() {
+            val family = inspectable.getPtrOrNull(Abi.ITextBlock_get_FontFamily) ?: return ""
+            return try {
+                family.getString(Abi.IFontFamily_get_Source)
+            } finally {
+                family.release()
+            }
+        }
+        set(value) {
+            val family = createFontFamily(value)
+            inspectable.call(Abi.ITextBlock_put_FontFamily, family.ptr)
+            family.release()
+        }
+
     /** Font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. */
     var fontWeight: Int = 400
         set(value) {
@@ -136,4 +155,20 @@ class WLabel(text: String = "") : WComponent(
     init {
         if (text.isNotEmpty()) this.text = text
     }
+}
+
+/**
+ * Creates a Media.FontFamily from a family name.
+ * Calls the composable factory's CreateInstanceWithName(HSTRING, outer, out inner, out instance)
+ * with outer = NULL (same convention as [Activation.composeDefault]).
+ */
+private fun createFontFamily(name: String): ComPtr = Ffi.backend.withScope { scope ->
+    val factory = Activation.factory(Abi.CLS_FontFamily, Abi.IID_IFontFamilyFactory)
+    val inner = scope.allocate(8)
+    val instance = scope.allocate(8)
+    Hstring.use(name) { h ->
+        factory.call(Abi.IFontFamilyFactory_CreateInstanceWithName, h, null, inner, instance)
+    }
+    factory.release()
+    ComPtr(Ffi.backend.memory.getPtr(instance, 0))
 }

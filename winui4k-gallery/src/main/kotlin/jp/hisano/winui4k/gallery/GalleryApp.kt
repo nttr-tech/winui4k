@@ -64,6 +64,8 @@ import jp.hisano.winui4k.WJumpList
 import jp.hisano.winui4k.WJumpListItem
 import jp.hisano.winui4k.WLabel
 import jp.hisano.winui4k.WList
+import jp.hisano.winui4k.WListBox
+import jp.hisano.winui4k.SelectionMode
 import jp.hisano.winui4k.WMenuBar
 import jp.hisano.winui4k.WMenuBarItem
 import jp.hisano.winui4k.WMenuFlyout
@@ -292,6 +294,7 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "Grid" to ::buildGridPage,
     "HyperlinkButton" to ::buildHyperlinkButtonPage,
     "JumpList" to ::buildJumpListPage,
+    "ListBox" to ::buildListBoxPage,
     "ListView" to ::buildListViewPage,
     "MenuBar" to ::buildMenuBarPage,
     "MenuFlyout" to ::buildMenuFlyoutPage,
@@ -347,6 +350,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ToggleSwitch",
     ),
     "Collections" to listOf(
+        "ListBox",
         "ListView",
         "TableView",
         "TreeView",
@@ -624,6 +628,106 @@ private fun buildCoroutineButtonExample(): WComponent {
     return buildExample("Coroutine integration (Dispatchers.WinUi / delay / withContext / cancel)", row)
 }
 
+/** The ListBox page: lines up demos for trying out WListBox's various features. */
+private fun buildListBoxPage(): WComponent {
+    val page = buildPage("ListBox", "A control for selecting an item from an always-visible list. Try out WListBox's various features.")
+
+    page.add(buildListBoxColorExample())
+    page.add(buildListBoxFontExample())
+    page.add(buildListBoxSelectionModeExample())
+    return page
+}
+
+/** Color selection: mirrors example 1 from the official Gallery (inline items + SelectionChanged changes a rectangle's color). */
+private fun buildListBoxColorExample(): WComponent {
+    // Same color names as the official Gallery. Repaints the rectangle below based on the selection
+    val colors = linkedMapOf(
+        "Blue" to WColor(0, 0, 255),
+        "Green" to WColor(0, 128, 0),
+        "Red" to WColor(255, 0, 0),
+        "Yellow" to WColor(255, 255, 0),
+    )
+
+    // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
+    val output = WBorder()
+    output.width = 100.0
+    output.height = 30.0
+    output.horizontalAlignment = HorizontalAlignment.LEFT
+
+    val listBox = WListBox(colors.keys.toList())
+    listBox.width = 200.0
+    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+    listBox.addListSelectionListener {
+        output.background = colors[listBox.selectedItem]
+    }
+
+    val body = WPanel(spacing = 10.0)
+    body.add(listBox)
+    body.add(output)
+    return buildExample("A list box with inline items (SelectionChanged)", body)
+}
+
+/** Font selection: mirrors example 2 from the official Gallery (fixed height + initial selection + selection changes the font). */
+private fun buildListBoxFontExample(): WComponent {
+    val fonts = listOf("Arial", "Comic Sans MS", "Courier New", "Segoe UI", "Times New Roman")
+
+    val output = WLabel("You can set the font used for this text.")
+    output.foreground = TEXT_SECONDARY
+
+    val listBox = WListBox(fonts)
+    listBox.width = 200.0
+    listBox.height = 164.0
+    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+    listBox.addListSelectionListener {
+        listBox.selectedItem?.let { output.fontFamily = it }
+    }
+    listBox.selectedIndex = 2 // Selects Courier New initially, same as the official Gallery
+
+    val body = WPanel(spacing = 10.0)
+    body.add(listBox)
+    body.add(output)
+    return buildExample("A list box with a fixed height (SelectedIndex / FontFamily)", body)
+}
+
+/** Selection mode: switching selectionMode plus selectAll / selectedItems / scrollIntoView. */
+private fun buildListBoxSelectionModeExample(): WComponent {
+    val listBox = WListBox((1..20).map { "Option $it" })
+    listBox.width = 240.0
+    listBox.height = 200.0
+    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+
+    val selection = WLabel("Selection: none")
+    listBox.addListSelectionListener {
+        val items = listBox.selectedItems
+        selection.text = if (items.isEmpty()) "Selection: none" else "Selection: ${items.joinToString(", ")}"
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    for (selectionMode in SelectionMode.entries) {
+        buttons.add(
+            WButton(selectionMode.name).also { button ->
+                button.addActionListener { listBox.selectionMode = selectionMode }
+            },
+        )
+    }
+    buttons.add(
+        WButton("Select all").also { button ->
+            button.addActionListener { listBox.selectAll() }
+        },
+    )
+    buttons.add(
+        WButton("Scroll to end").also { button ->
+            button.addActionListener { listBox.scrollIntoView(listBox.itemCount - 1) }
+        },
+    )
+
+    val body = WPanel(spacing = 8.0)
+    body.add(buttons)
+    body.add(listBox)
+    body.add(selection)
+    return buildExample("Selection mode (SelectionMode / SelectAll / SelectedItems / ScrollIntoView)", body)
+}
+
 /** The ListView page: lines up demos for trying out WList's various features. */
 private fun buildListViewPage(): WComponent {
     val page = buildPage("ListView", "A list that lines items up vertically for selection. Try out WList's various features.")
@@ -654,8 +758,10 @@ private fun buildSimpleListExample(): WComponent {
 
 /** Adding and removing items: addItem / removeItem / removeAllItems / itemCount. */
 private fun buildListItemOperationsExample(): WComponent {
+    // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
     val list = WList(listOf("Item 1", "Item 2", "Item 3"))
     list.width = 240.0
+    list.horizontalAlignment = HorizontalAlignment.LEFT
 
     val count = WLabel("Item count: ${list.itemCount}")
     val input = WTextField("Item name to add").also { it.width = 200.0 }
@@ -701,6 +807,7 @@ private fun buildListItemOperationsExample(): WComponent {
 private fun buildListSelectionModeExample(): WComponent {
     val list = WList((1..5).map { "Option $it" })
     list.width = 240.0
+    list.horizontalAlignment = HorizontalAlignment.LEFT
 
     val mode = WLabel("Selection mode: ${list.selectionMode}")
 

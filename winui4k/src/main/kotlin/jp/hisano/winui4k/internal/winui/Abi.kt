@@ -200,6 +200,8 @@ internal object Abi {
     const val IID_ITextBlock = "1ac8d84f-392c-5c7e-83f5-a53e3bf0abb0"
     const val ITextBlock_get_FontSize = 6
     const val ITextBlock_put_FontSize = 7
+    const val ITextBlock_get_FontFamily = 8            // get_FontFamily(out FontFamily)
+    const val ITextBlock_put_FontFamily = 9            // put_FontFamily(FontFamily)
     const val ITextBlock_put_FontWeight = 11           // put_FontWeight(FontWeight { u2 Weight } passed by value)
     const val ITextBlock_put_Foreground = 19           // put_Foreground(Brush)
     const val ITextBlock_get_TextWrapping = 20         // get_TextWrapping(out TextWrapping)
@@ -213,6 +215,13 @@ internal object Abi {
     const val ITextBlock_get_Inlines = 28              // get_Inlines(out InlineCollection)
     const val ITextBlock_get_IsTextSelectionEnabled = 35 // get_IsTextSelectionEnabled(out boolean)
     const val ITextBlock_put_IsTextSelectionEnabled = 36 // put_IsTextSelectionEnabled(boolean)
+
+    // ---- Microsoft.UI.Xaml.Media.FontFamily ----
+    const val CLS_FontFamily = "Microsoft.UI.Xaml.Media.FontFamily"
+    const val IID_IFontFamilyFactory = "61b88a77-d0f9-5e9e-8c28-eda01fede22e"
+    const val IFontFamilyFactory_CreateInstanceWithName = 6 // CreateInstanceWithName(HSTRING, outer, out inner, out instance)
+    const val IID_IFontFamily = "18fa5bc1-7294-527c-bb02-b213e0b3a2a3"
+    const val IFontFamily_get_Source = 6               // get_Source(out HSTRING)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox ----
     const val CLS_TextBox = "Microsoft.UI.Xaml.Controls.TextBox"
@@ -527,6 +536,16 @@ internal object Abi {
     const val IItemsControl_put_ItemsSource = 7        // put_ItemsSource(IInspectable)
     const val IItemsControl_get_Items = 8              // get_Items(out ItemCollection)
     const val IItemsControl_put_ItemContainerStyle = 19 // put_ItemContainerStyle(Style)
+
+    // ---- Microsoft.UI.Xaml.Controls.ListBox ----
+    const val CLS_ListBox = "Microsoft.UI.Xaml.Controls.ListBox"
+    const val IID_IListBoxFactory = "d048e0bc-4692-5c60-b2e9-07c4433ce050"
+    const val IID_IListBox = "f3e7dedf-7a3c-59f1-9e05-ae5026b54293"
+    const val IListBox_get_SelectedItems = 6           // get_SelectedItems(out IVector<Object>)
+    const val IListBox_get_SelectionMode = 7           // get_SelectionMode(out SelectionMode)
+    const val IListBox_put_SelectionMode = 8           // put_SelectionMode(SelectionMode)
+    const val IListBox_ScrollIntoView = 11             // ScrollIntoView(IInspectable)
+    const val IListBox_SelectAll = 12                  // SelectAll()
 
     // ---- Microsoft.UI.Xaml.Style ----
     const val IID_IStyle = "65e1d164-572f-5b0e-a80f-9c02441fac49"
