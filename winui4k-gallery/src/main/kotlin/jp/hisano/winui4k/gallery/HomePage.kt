@@ -1,5 +1,6 @@
 package jp.hisano.winui4k.gallery
 
+import jp.hisano.winui4k.GridLength
 import jp.hisano.winui4k.HorizontalAlignment
 import jp.hisano.winui4k.Orientation
 import jp.hisano.winui4k.ScrollBarVisibility
@@ -13,6 +14,7 @@ import jp.hisano.winui4k.WComponent
 import jp.hisano.winui4k.WGrid
 import jp.hisano.winui4k.WImage
 import jp.hisano.winui4k.WLabel
+import jp.hisano.winui4k.WLinearGradientPaint
 import jp.hisano.winui4k.WPanel
 import jp.hisano.winui4k.WScrollPane
 import jp.hisano.winui4k.WToggleButton
@@ -234,12 +236,31 @@ private fun buildHomeHeader(): WComponent {
     hero.stretch = Stretch.UNIFORM_TO_FILL
     hero.opacity = 0.9
 
+    // The height matches the real OpacityMaskView's Height="400". Without a fixed height the cell would
+    // grow to the image's natural size, and if it's shorter than the overlay (title + tiles ~= 370) the
+    // image centers vertically and a band of the background color shows above the hero, so pin it to a
+    // value larger than the overlay to cover it completely
     val heroBackground = WBorder(hero)
     heroBackground.background = HEADER_BACKGROUND
-    heroBackground.height = 340.0
+    heroBackground.height = 400.0
+
+    // Equivalent to the real OpacityMaskView's mask (fades out at 0.75-0.85). Since an opacity mask isn't
+    // available, overlay a gradient toward the composited color of the content area below (Mica + translucent
+    // white ~= near white) on top of the hero. As in the real Gallery, fully blend it in the gap between the
+    // link tiles (0.7-0.8 of the fixed 400 height = 280-320), staying opaque past that. The boundary's y only
+    // depends on the hero's fixed height, so it doesn't move even if the window width changes how the image is cropped
+    val heroFade = WBorder()
+    heroFade.backgroundGradient = WLinearGradientPaint(
+        listOf(
+            0.0 to WColor(252, 252, 252, 0),
+            0.7 to WColor(252, 252, 252, 0),
+            0.8 to WColor(252, 252, 252),
+            1.0 to WColor(252, 252, 252),
+        ),
+    )
 
     val titleBlock = WPanel(spacing = 0.0)
-    titleBlock.add(WLabel("winui4k").also { it.fontSize = 18.0 })
+    titleBlock.add(WLabel("Windows App SDK").also { it.fontSize = 18.0 })
     titleBlock.add(WLabel("WinUI4K Gallery").also { it.fontSize = 40.0; it.fontWeight = 600 })
 
     val tiles = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
@@ -292,8 +313,9 @@ private fun buildHomeHeader(): WComponent {
         ),
     )
 
-    val overlay = WPanel(spacing = 40.0)
-    overlay.margin = 36.0
+    // The real spacing: the title block is Margin="36,48,0,0", and the tiles are 56 below the title
+    val overlay = WPanel(spacing = 56.0)
+    overlay.setMargin(36.0, 48.0, 36.0, 36.0)
     overlay.add(titleBlock)
     overlay.add(buildHorizontalScroller(tiles))
 
@@ -301,6 +323,7 @@ private fun buildHomeHeader(): WComponent {
     val header = WGrid()
     header.addRow()
     header.add(heroBackground, row = 0, column = 0)
+    header.add(heroFade, row = 0, column = 0)
     header.add(overlay, row = 0, column = 0)
     return header
 }
@@ -315,8 +338,8 @@ private fun buildLinkTile(
 ): WComponent {
     val icon: WComponent = if (imageFileName != null) {
         WImage(galleryImageUri(imageFileName)).also {
-            it.width = 28.0
-            it.height = 28.0
+            it.width = 36.0 // the real Gallery fills the whole icon row (height 36) with the image
+            it.height = 36.0
             it.stretch = Stretch.UNIFORM
             it.horizontalAlignment = HorizontalAlignment.LEFT
         }
@@ -324,26 +347,58 @@ private fun buildLinkTile(
         WLabel(glyph ?: "").also {
             it.fontFamily = "Segoe Fluent Icons"
             it.fontSize = 24.0
+            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.setMargin(0.0, 8.0, 0.0, 0.0) // the real FontIcon's Margin="0,8,0,0"
         }
     }
 
-    val content = WPanel(spacing = 8.0)
-    content.add(icon)
-    content.add(WLabel(title).also { it.fontWeight = 600 })
-    content.add(
+    val texts = WPanel(spacing = 4.0)
+    texts.add(WLabel(title).also { it.fontWeight = 600 })
+    texts.add(
         WLabel(description).also {
             it.foreground = TEXT_SECONDARY
             it.fontSize = 12.0
             it.textWrapping = TextWrapping.WRAP
         },
     )
-    content.horizontalAlignment = HorizontalAlignment.LEFT
-    content.verticalAlignment = VerticalAlignment.TOP
+    texts.setMargin(0.0, 16.0, 0.0, 0.0) // equivalent to the real one's RowSpacing="16"
+
+    // Equivalent to the real Tile's inner Grid (Padding="24", rows 36 / *). Fix the icon row's
+    // height so the y position below the title lines up across every tile, whether the icon is
+    // an image or a glyph
+    val content = WGrid()
+    content.addRow(GridLength.pixel(36.0))
+    content.addRow(GridLength.star())
+    content.add(icon, row = 0, column = 0)
+    content.add(texts, row = 1, column = 0)
+    content.margin = 24.0
+
+    // Equivalent to the real Tile's bottom-right FontIcon (E8A7 = OpenInNewWindow), indicating it's an
+    // external link. The real one uses Margin="-12" inside a Grid with Padding 24, so place it 12 in from the tile's edge
+    val cornerIcon = WLabel("")
+    cornerIcon.fontFamily = "Segoe Fluent Icons"
+    cornerIcon.fontSize = 14.0
+    cornerIcon.foreground = TEXT_SECONDARY
+    cornerIcon.horizontalAlignment = HorizontalAlignment.RIGHT
+    cornerIcon.verticalAlignment = VerticalAlignment.BOTTOM
+    cornerIcon.margin = 12.0
+
+    // Placing them in the same cell draws the icon at the body's bottom-right
+    val body = WGrid()
+    body.addRow()
+    body.add(content, row = 0, column = 0)
+    body.add(cornerIcon, row = 0, column = 0)
 
     val tile = WButton()
-    tile.content = content
-    tile.width = 220.0
-    tile.height = 140.0
+    tile.content = body
+    // Spacing is managed via content / cornerIcon's margins (equivalent to the real HyperlinkButton's Padding="-1")
+    tile.padding = 0.0
+    // Left at the default (CENTER), the Grid wouldn't fill the whole button and the icon wouldn't reach the bottom-right
+    tile.horizontalContentAlignment = HorizontalAlignment.STRETCH
+    tile.verticalContentAlignment = VerticalAlignment.STRETCH
+    // The same dimensions as the real Tile (232x172)
+    tile.width = 232.0
+    tile.height = 172.0
     tile.addActionListener { openUrl(url) }
     return tile
 }
@@ -396,8 +451,10 @@ private fun buildFilterSection(navigateTo: (String) -> Unit): WComponent {
     toggles.add(favoritesToggle)
     toggles.horizontalAlignment = HorizontalAlignment.CENTER
 
+    // The real spacing: the SelectorBar is Margin="36,24,0,16", the content below it is Margin="36,0,36,36"
+    // (the 16 gap between the toggle and the content is expressed via spacing)
     val section = WPanel(spacing = 16.0)
-    section.margin = 36.0
+    section.setMargin(36.0, 24.0, 36.0, 36.0)
     section.add(toggles)
     section.add(contentArea)
     return section

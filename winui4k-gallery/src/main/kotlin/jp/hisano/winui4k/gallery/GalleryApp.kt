@@ -63,6 +63,7 @@ import jp.hisano.winui4k.WHyperlinkButton
 import jp.hisano.winui4k.WJumpList
 import jp.hisano.winui4k.WJumpListItem
 import jp.hisano.winui4k.WLabel
+import jp.hisano.winui4k.WLinearGradientPaint
 import jp.hisano.winui4k.WList
 import jp.hisano.winui4k.WListBox
 import jp.hisano.winui4k.SelectionMode
@@ -177,6 +178,7 @@ fun main() {
         // (width 580 also matches the real Gallery's MaxWidth)
         val searchBox = WAutoSuggestBox("Search controls and samples...")
         searchBox.width = 580.0
+        searchBox.queryIcon = Symbol.FIND // the same magnifying glass as the real Gallery's QueryIcon="Find"
         titleBar.content = searchBox
 
         navigation = buildGalleryNavigationView(
@@ -455,7 +457,6 @@ private fun buildGalleryNavigationView(
     onSelect: (String, () -> WComponent) -> Unit,
 ): GalleryNavigation {
     val navigationView = WNavigationView()
-    navigationView.paneTitle = "WinUI4K Gallery"
     navigationView.isSettingsVisible = false
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
     navigationView.openPaneLength = 260.0
@@ -1121,6 +1122,7 @@ private fun buildBorderPage(): WComponent {
 
     page.add(buildBorderStyleExample())
     page.add(buildBorderBackgroundExample())
+    page.add(buildBorderGradientExample())
     return page
 }
 
@@ -1176,6 +1178,32 @@ private fun buildBorderBackgroundExample(): WComponent {
     body.add(border)
     body.add(paddingButton)
     return buildExample("Background and padding (Background / Padding)", body)
+}
+
+/** Switching between a gradient background and its angle. */
+private fun buildBorderGradientExample(): WComponent {
+    val stops = listOf(0.0 to WColor.BLUE, 1.0 to WColor.PURPLE)
+
+    val border = WBorder(WLabel("Content with a gradient background").also { it.foreground = WColor.WHITE })
+    border.backgroundGradient = WLinearGradientPaint(stops)
+    border.cornerRadius = 8.0
+    border.padding = 16.0
+    border.width = 320.0
+    border.height = 80.0
+    border.horizontalAlignment = HorizontalAlignment.LEFT
+
+    var angle = 90.0
+    val angleButton = WButton("Change angle (90°)")
+    angleButton.addActionListener {
+        angle = if (angle >= 270.0) 0.0 else angle + 90.0
+        border.backgroundGradient = WLinearGradientPaint(stops, angle = angle)
+        angleButton.text = "Change angle (${angle.toInt()}°)"
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(border)
+    body.add(angleButton)
+    return buildExample("Gradient background (LinearGradientBrush)", body)
 }
 
 /** The Canvas page: lines up demos for trying out WCanvas's various features. */
@@ -3557,6 +3585,7 @@ private fun buildSimpleAutoSuggestBoxExample(): WComponent {
     val suggestBox = WAutoSuggestBox(placeholder = "Enter a fruit name")
     suggestBox.width = 300.0
     suggestBox.header = "Search fruits"
+    suggestBox.queryIcon = Symbol.FIND
     suggestBox.addTextChangedListener { text, reason ->
         // Only filter suggestions on the user's own keystrokes (do nothing for e.g. suggestion selection)
         if (reason == TextChangeReason.USER_INPUT) {

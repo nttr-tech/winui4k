@@ -101,14 +101,17 @@ abstract class WComponent internal constructor(
         get() = VerticalAlignment.of(frameworkElement.getInt(Abi.IFrameworkElement_get_VerticalAlignment))
         set(value) = frameworkElement.call(Abi.IFrameworkElement_put_VerticalAlignment, value.native)
 
-    /** A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. */
+    /** A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. Use [setMargin] to set each side individually. */
     var margin: Double = 0.0
         set(value) {
             field = value
-            XamlStructs.putThickness(
-                frameworkElement, Abi.IFrameworkElement_put_Margin, value, value, value, value,
-            )
+            setMargin(value, value, value, value)
         }
+
+    /** Sets the margin on each side individually (FrameworkElement.Margin). */
+    fun setMargin(left: Double, top: Double, right: Double, bottom: Double) {
+        XamlStructs.putThickness(frameworkElement, Abi.IFrameworkElement_put_Margin, left, top, right, bottom)
+    }
 
     /** Opacity, from 0.0 (transparent) to 1.0 (opaque, the default) (UIElement.Opacity). */
     var opacity: Double

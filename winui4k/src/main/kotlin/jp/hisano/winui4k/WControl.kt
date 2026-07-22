@@ -16,6 +16,16 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         get() = control.getBool(Abi.IControl_get_IsEnabled)
         set(value) = control.putBool(Abi.IControl_put_IsEnabled, value)
 
+    /** The content's horizontal alignment (Control.HorizontalContentAlignment). Defaults to CENTER for e.g. Button. */
+    var horizontalContentAlignment: HorizontalAlignment
+        get() = HorizontalAlignment.of(control.getInt(Abi.IControl_get_HorizontalContentAlignment))
+        set(value) = control.call(Abi.IControl_put_HorizontalContentAlignment, value.native)
+
+    /** The content's vertical alignment (Control.VerticalContentAlignment). Defaults to CENTER for e.g. Button. */
+    var verticalContentAlignment: VerticalAlignment
+        get() = VerticalAlignment.of(control.getInt(Abi.IControl_get_VerticalContentAlignment))
+        set(value) = control.call(Abi.IControl_put_VerticalContentAlignment, value.native)
+
     /** A uniform corner radius on all four corners (Control.CornerRadius). Half the height makes it a pill shape. */
     var cornerRadius: Double = 0.0
         set(value) {

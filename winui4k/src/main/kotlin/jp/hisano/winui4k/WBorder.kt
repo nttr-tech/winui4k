@@ -47,6 +47,22 @@ class WBorder(child: WComponent? = null) : WComponent(
             putBrush(Abi.IBorder_put_Background, value)
         }
 
+    /**
+     * A gradient background (Border.Background). Written to the same property as [background],
+     * so whichever is set last takes effect.
+     */
+    var backgroundGradient: WLinearGradientPaint? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                inspectable.call(Abi.IBorder_put_Background, null)
+            } else {
+                val brush = value.createBrush()
+                inspectable.call(Abi.IBorder_put_Background, brush)
+                brush.release()
+            }
+        }
+
     /** The inner padding, the same on all four sides (Border.Padding). */
     var padding: Double = 0.0
         set(value) {

@@ -102,6 +102,16 @@ internal object Abi {
     const val IID_ISolidColorBrush = "b3865c31-37c8-55c1-8a72-d41c67642e2a"
     const val ISolidColorBrush_put_Color = 7           // put_Color(Windows.UI.Color) — struct (u8x4: A,R,G,B) passed by value
 
+    // ---- Microsoft.UI.Xaml.Media.LinearGradientBrush / GradientStop ----
+    const val CLS_LinearGradientBrush = "Microsoft.UI.Xaml.Media.LinearGradientBrush"
+    const val IID_ILinearGradientBrushFactory = "c0ba7de3-ccfd-534c-882f-3ab39ae723f3"
+    const val ILinearGradientBrushFactory_CreateInstanceWithGradientStopCollectionAndAngle = 6 // (GradientStopCollection, DOUBLE, out LinearGradientBrush)
+    const val CLS_GradientStop = "Microsoft.UI.Xaml.Media.GradientStop"
+    const val IID_IGradientStop = "48bcb039-e8e1-5743-94c3-f766011d3b5d"
+    const val IGradientStop_put_Color = 7              // put_Color(Windows.UI.Color) — struct passed by value
+    const val IGradientStop_put_Offset = 9             // put_Offset(DOUBLE)
+    const val CLS_GradientStopCollection = "Microsoft.UI.Xaml.Media.GradientStopCollection"
+
     // ---- Microsoft.UI.Xaml.Controls.Canvas ----
     const val CLS_Canvas = "Microsoft.UI.Xaml.Controls.Canvas"
     const val IID_ICanvasFactory = "374c5050-3481-5557-9948-804c0b8eea89"
@@ -315,6 +325,7 @@ internal object Abi {
     const val IAutoSuggestBox_get_PlaceholderText = 16
     const val IAutoSuggestBox_put_PlaceholderText = 17
     const val IAutoSuggestBox_put_Header = 19          // put_Header(IInspectable)
+    const val IAutoSuggestBox_put_QueryIcon = 25       // put_QueryIcon(IconElement)
     const val IAutoSuggestBox_add_SuggestionChosen = 30 // add_SuggestionChosen(TypedEventHandler, out token)
     const val IAutoSuggestBox_remove_SuggestionChosen = 31 // remove_SuggestionChosen(token)
     const val IAutoSuggestBox_add_TextChanged = 32     // add_TextChanged(TypedEventHandler, out token)
@@ -406,7 +417,10 @@ internal object Abi {
     const val IControl_put_IsEnabled = 29              // put_IsEnabled(boolean)
     const val IControl_put_FontWeight = 17             // put_FontWeight(FontWeight) — struct passed by value
     const val IControl_put_Padding = 35                // put_Padding(Thickness) — struct passed by value
+    const val IControl_get_HorizontalContentAlignment = 36 // get_HorizontalContentAlignment(out HorizontalAlignment)
     const val IControl_put_HorizontalContentAlignment = 37 // put_HorizontalContentAlignment(HorizontalAlignment)
+    const val IControl_get_VerticalContentAlignment = 38 // get_VerticalContentAlignment(out VerticalAlignment)
+    const val IControl_put_VerticalContentAlignment = 39 // put_VerticalContentAlignment(VerticalAlignment)
     const val IControl_put_Background = 41             // put_Background(Brush)
     const val IControl_put_BorderThickness = 45        // put_BorderThickness(Thickness) — struct passed by value
     const val IControl_put_BorderBrush = 47            // put_BorderBrush(Brush)
@@ -1158,6 +1172,13 @@ internal object Abi {
     val IID_IVector_UIElement: String by lazy {
         Pinterface.iid(
             "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.UIElement;{$IID_IUIElement}))",
+        )
+    }
+
+    /** The actual IID of IVector<Microsoft.UI.Xaml.Media.GradientStop> (GradientStopCollection's default interface). */
+    val IID_IVector_GradientStop: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_IVector_OPEN};rc(Microsoft.UI.Xaml.Media.GradientStop;{$IID_IGradientStop}))",
         )
     }
 

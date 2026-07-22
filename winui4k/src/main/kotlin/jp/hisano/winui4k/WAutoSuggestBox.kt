@@ -79,6 +79,19 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
             boxed.release()
         }
 
+    /** The icon shown on the right of the text (AutoSuggestBox.QueryIcon). Creates and passes a SymbolIcon. */
+    var queryIcon: Symbol? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                inspectable.call(Abi.IAutoSuggestBox_put_QueryIcon, null)
+            } else {
+                val icon = value.createIconElement()
+                inspectable.call(Abi.IAutoSuggestBox_put_QueryIcon, icon)
+                icon.release()
+            }
+        }
+
     /** Whether the suggestion list is open (AutoSuggestBox.IsSuggestionListOpen). */
     var isSuggestionListOpen: Boolean
         get() = inspectable.getBool(Abi.IAutoSuggestBox_get_IsSuggestionListOpen)
