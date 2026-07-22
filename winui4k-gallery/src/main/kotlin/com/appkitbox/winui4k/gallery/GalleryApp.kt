@@ -167,6 +167,18 @@ fun main() {
             )
         }
 
+        // The Settings page shown when the pane's bottom-left Settings (gear) item is selected
+        fun showSettings() {
+            if (!isNavigatingBack && currentPageName != SETTINGS_PAGE_NAME) {
+                history.addLast(currentPageName)
+            }
+            currentPageName = SETTINGS_PAGE_NAME
+            titleBar.isBackButtonVisible = true
+            pageArea.margin = 24.0
+            pageArea.removeAll()
+            pageArea.add(buildSettingsPage(navigation.navigationView))
+        }
+
         // Set the same icon as the real WinUI 3 Gallery on the title bar and taskbar
         val iconFile = extractGalleryIcon()
         if (iconFile != null) {
@@ -188,6 +200,7 @@ fun main() {
                 }
                 showHome()
             },
+            onSettings = ::showSettings,
         ) { name, buildPage ->
             if (!isNavigatingBack) {
                 history.addLast(currentPageName) // transitions from home push null
@@ -210,14 +223,20 @@ fun main() {
         navigationView.content = pageBackground
         // Consolidate the pane-toggle button onto the title bar to avoid showing it twice
         navigationView.isPaneToggleButtonVisible = false
+        // Restore the navigation placement (Left / Top) saved on the Settings page
+        if (GallerySettings.navigationStyle == "Top") {
+            navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.TOP
+        }
 
         titleBar.addBackRequestedListener {
             if (history.isEmpty()) return@addBackRequestedListener
             val previousName = history.removeLast()
-            // null means home; go through SelectionChanged to show the right page (or Home)
-            val previousItem =
-                if (previousName == null) navigation.homeItem
-                else navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
+            // null means home; go through SelectionChanged to show the right page (or Home / Settings)
+            val previousItem = when (previousName) {
+                null -> navigation.homeItem
+                SETTINGS_PAGE_NAME -> navigation.settingsItem
+                else -> navigation.itemsByPageName[previousName] ?: return@addBackRequestedListener
+            }
             isNavigatingBack = true
             navigationView.selectedItem = previousItem
             isNavigatingBack = false
@@ -278,10 +297,10 @@ private fun extractGalleryIcon(): File? {
 private val PAGE_BACKGROUND = WColor(255, 255, 255, 128)
 
 /** The background of cards that host demos (translucent white, matching CardBackgroundFillColorDefault). */
-private val CARD_BACKGROUND = WColor(255, 255, 255, 179)
+internal val CARD_BACKGROUND = WColor(255, 255, 255, 179)
 
 /** A card's border. */
-private val CARD_BORDER = WColor(229, 229, 229)
+internal val CARD_BORDER = WColor(229, 229, 229)
 
 /** A subdued text color for things like page descriptions. */
 internal val TEXT_SECONDARY = WColor(97, 97, 97)
@@ -444,6 +463,7 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
 private class GalleryNavigation(
     val navigationView: WNavigationView,
     val homeItem: WNavigationViewItem,
+    val settingsItem: WNavigationViewItem,
     val itemsByPageName: Map<String, WNavigationViewItem>,
 )
 
@@ -454,9 +474,13 @@ private class GalleryNavigation(
  */
 private fun buildGalleryNavigationView(
     onHome: () -> Unit,
+    onSettings: () -> Unit,
     onSelect: (String, () -> WComponent) -> Unit,
 ): GalleryNavigation {
     val navigationView = WNavigationView()
+    // Show Settings (gear) at the pane's bottom-left, matching the real Gallery. Not using the
+    // built-in Settings entry since its label gets localized to the OS's language ("Settings" ->
+    // something else), so a self-built English footer item is used instead
     navigationView.isSettingsVisible = false
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
     navigationView.openPaneLength = 260.0
@@ -479,15 +503,18 @@ private fun buildGalleryNavigationView(
         navigationView.addItem(categoryItem)
     }
 
+    val settingsItem = WNavigationViewItem(SETTINGS_PAGE_NAME, Symbol.SETTING)
+    navigationView.addFooterItem(settingsItem)
+
     navigationView.addSelectionListener { item ->
-        if (item == null) return@addSelectionListener
-        if (item == homeItem) {
-            onHome()
-        } else {
-            pages[item.text]?.let { buildPage -> onSelect(item.text, buildPage) }
+        when {
+            item == null -> return@addSelectionListener
+            item == homeItem -> onHome()
+            item == settingsItem -> onSettings()
+            else -> pages[item.text]?.let { buildPage -> onSelect(item.text, buildPage) }
         }
     }
-    return GalleryNavigation(navigationView, homeItem, itemsByPageName)
+    return GalleryNavigation(navigationView, homeItem, settingsItem, itemsByPageName)
 }
 
 /** A page's skeleton (large heading + favorite star + description). Each page adds its demos onto this return value. */

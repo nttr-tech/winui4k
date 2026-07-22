@@ -61,6 +61,26 @@ internal object GallerySettings {
     fun setFavorite(name: String, isFavorite: Boolean) {
         favorites = if (isFavorite) (favorites - name) + name else favorites - name
     }
+
+    /** Clears all recently-visited page history (the Settings page's Clear recents). */
+    fun clearRecentlyVisited() {
+        recentlyVisited = emptyList()
+    }
+
+    /** Clears all favorites (the Settings page's Remove favorites). */
+    fun clearFavorites() {
+        favorites = emptyList()
+    }
+
+    /** The app theme chosen on the Settings page ("Light" / "Dark" / "Default"). */
+    var appTheme: String
+        get() = preferences.get("appTheme", "Default")
+        set(value) = preferences.put("appTheme", value)
+
+    /** The navigation placement chosen on the Settings page ("Left" / "Top"). */
+    var navigationStyle: String
+        get() = preferences.get("navigationStyle", "Left")
+        set(value) = preferences.put("navigationStyle", value)
 }
 
 /** The header's background color (a representative color from the real light theme's #CED8E4-#D5DBE3 gradient). */
