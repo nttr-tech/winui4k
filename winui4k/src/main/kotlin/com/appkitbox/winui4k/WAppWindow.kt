@@ -20,7 +20,7 @@ data class WDimension(val width: Int, val height: Int)
  * Obtained from [WFrame.appWindow], or created for modal use via [create].
  *
  * Provides [title] / [size] / [clientSize] / [position] / [titleBar], plus
- * [resize] / [resizeClient] / [move] / [setIcon] / [setPresenter].
+ * [show] / [hide] / [resize] / [resizeClient] / [move] / [setIcon] / [setPresenter].
  */
 class WAppWindow internal constructor(private val appWindow: ComPtr) {
     /** An IAppWindow2 view for ClientSize / ResizeClient. */
@@ -53,6 +53,18 @@ class WAppWindow internal constructor(private val appWindow: ComPtr) {
     val titleBar: WAppWindowTitleBar by lazy {
         WAppWindowTitleBar(appWindow.getPtr(WindowingInterop.IAppWindow_get_TitleBar))
     }
+
+    /**
+     * Shows the window (AppWindow.Show(activateWindow)).
+     * If [activate] = false, this shows the window inactively without taking focus or bringing
+     * it to the front (unlike Window.Activate via [WFrame.isVisible] = true, this doesn't
+     * interrupt whatever window you're currently working in).
+     */
+    fun show(activate: Boolean = true) =
+        appWindow.putBool(WindowingInterop.IAppWindow_ShowWithActivation, activate)
+
+    /** Hides the window without closing it (AppWindow.Hide). Can be shown again via [show]. */
+    fun hide() = appWindow.call(WindowingInterop.IAppWindow_Hide)
 
     /** Changes the whole window's size (title bar included) (AppWindow.Resize). */
     fun resize(width: Int, height: Int) = XamlStructs.putSizeInt32(appWindow, WindowingInterop.IAppWindow_Resize, width, height)

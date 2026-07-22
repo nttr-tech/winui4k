@@ -66,6 +66,7 @@ internal object WindowingInterop {
     const val IAppWindow_SetPresenter = 25              // SetPresenter(AppWindowPresenter)
     const val IAppWindow_SetPresenterKind = 26          // SetPresenter(AppWindowPresenterKind)
     const val IAppWindow_Show = 27                      // Show()
+    const val IAppWindow_ShowWithActivation = 28        // Show(boolean activateWindow)
 
     const val IID_IAppWindow2 = "6cd41292-794c-5cac-8961-210d012c6ebc"
     const val IAppWindow2_get_ClientSize = 6            // get_ClientSize(out SizeInt32) — out of a struct

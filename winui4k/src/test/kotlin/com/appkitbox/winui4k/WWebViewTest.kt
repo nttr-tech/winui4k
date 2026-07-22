@@ -74,7 +74,10 @@ class WWebViewTest : FunSpec() {
                     }
                     frame.add(webView)
                     webView.navigateToString(TEST_HTML)
-                    frame.isVisible = true
+                    // Window.Activate (frame.isVisible = true) brings the window to the foreground
+                    // and steals focus, so show it inactively via AppWindow.Show(false) instead
+                    // (WebView2 initialization needs a visible window, so it can't stay hidden)
+                    frame.appWindow.show(activate = false)
                 }
                 withClue("The test page didn't finish loading within $TIMEOUT_SECONDS seconds") {
                     navigationCompleted.await(TIMEOUT_SECONDS, TimeUnit.SECONDS).shouldBeTrue()
