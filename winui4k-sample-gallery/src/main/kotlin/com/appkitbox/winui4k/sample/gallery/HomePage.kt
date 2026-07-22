@@ -83,8 +83,9 @@ internal object GallerySettings {
         set(value) = preferences.put("navigationStyle", value)
 }
 
-/** The header's background color (a representative color from the real light theme's #CED8E4-#D5DBE3 gradient). */
-private val HEADER_BACKGROUND = WColor(206, 216, 228)
+/** The header's background color (a representative color from the real light theme's #CED8E4-#D5DBE3 gradient; dark uses a darker blue). */
+private val HEADER_BACKGROUND: WColor
+    get() = if (isDarkTheme) WColor(26, 34, 48) else WColor(206, 216, 228)
 
 /** Recently added/updated pages (equivalent to the real Gallery's IsNew / IsUpdated). Swap these out with each release. */
 private val recentlyAddedOrUpdatedPages = listOf(
@@ -270,12 +271,15 @@ private fun buildHomeHeader(): WComponent {
     // link tiles (0.7-0.8 of the fixed 400 height = 280-320), staying opaque past that. The boundary's y only
     // depends on the hero's fixed height, so it doesn't move even if the window width changes how the image is cropped
     val heroFade = WBorder()
+    // The color it fades into is the content area's composited color (Mica + translucent layer); switch it with the theme
+    val fadeColor = if (isDarkTheme) WColor(42, 42, 42) else WColor(252, 252, 252)
+    val fadeTransparent = WColor(fadeColor.red, fadeColor.green, fadeColor.blue, 0)
     heroFade.backgroundGradient = WLinearGradientPaint(
         listOf(
-            0.0 to WColor(252, 252, 252, 0),
-            0.7 to WColor(252, 252, 252, 0),
-            0.8 to WColor(252, 252, 252),
-            1.0 to WColor(252, 252, 252),
+            0.0 to fadeTransparent,
+            0.7 to fadeTransparent,
+            0.8 to fadeColor,
+            1.0 to fadeColor,
         ),
     )
 

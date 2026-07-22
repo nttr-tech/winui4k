@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.ColorSpectrumShape
 import com.appkitbox.winui4k.CommandBarDefaultLabelPosition
 import com.appkitbox.winui4k.ContentDialogButton
 import com.appkitbox.winui4k.ContentDialogResult
+import com.appkitbox.winui4k.ElementTheme
 import com.appkitbox.winui4k.ExpandDirection
 import com.appkitbox.winui4k.FlyoutPlacement
 import com.appkitbox.winui4k.GridLength
@@ -34,6 +35,7 @@ import com.appkitbox.winui4k.TextChangeReason
 import com.appkitbox.winui4k.TextTrimming
 import com.appkitbox.winui4k.TextWrapping
 import com.appkitbox.winui4k.TitleBarHeightOption
+import com.appkitbox.winui4k.TitleBarTheme
 import com.appkitbox.winui4k.WAutoSuggestBox
 import com.appkitbox.winui4k.TickPlacement
 import com.appkitbox.winui4k.WAppBarButton
@@ -129,6 +131,24 @@ fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K Gallery")
 
+        // The root that hosts the title bar and navigation. Settings' App theme is set here as
+        // RequestedTheme and applies to every element in the window
+        val rootGrid = WGrid()
+
+        // Applies the app theme and title bar coloring saved on the Settings page
+        fun applyAppTheme(appTheme: String) {
+            val theme = elementThemeOf(appTheme)
+            rootGrid.requestedTheme = theme
+            frame.appWindow.titleBar.preferredTheme = when (theme) {
+                ElementTheme.LIGHT -> TitleBarTheme.LIGHT
+                ElementTheme.DARK -> TitleBarTheme.DARK
+                ElementTheme.DEFAULT -> TitleBarTheme.USE_DEFAULT_APP_MODE
+            }
+        }
+        applyAppTheme(GallerySettings.appTheme)
+        // Lets pages built from here on pick colors (CARD_BACKGROUND etc.) for the current theme
+        isDarkTheme = rootGrid.actualTheme == ElementTheme.DARK
+
         // Content gets set by the initial selection when the navigation is built
         val pageArea = WPanel()
         pageArea.margin = 24.0
@@ -176,7 +196,7 @@ fun main() {
             titleBar.isBackButtonVisible = true
             pageArea.margin = 24.0
             pageArea.removeAll()
-            pageArea.add(buildSettingsPage(navigation.navigationView))
+            pageArea.add(buildSettingsPage(navigation.navigationView, ::applyAppTheme))
         }
 
         // Set the same icon as the real WinUI 3 Gallery on the title bar and taskbar
@@ -261,11 +281,28 @@ fun main() {
             }
         }
 
-        val rootGrid = WGrid()
         rootGrid.addRow(GridLength.AUTO)
         rootGrid.addRow(GridLength.star())
         rootGrid.add(titleBar, row = 0, column = 0)
         rootGrid.add(navigationView, row = 1, column = 0)
+
+        // When the theme changes, rebuild the visible page to re-pick colors (CARD_BACKGROUND etc.).
+        // To avoid destroying the source of the change (the Settings page's combo box) while it's
+        // still handling its own event, defer the rebuild onto the message loop
+        rootGrid.addActualThemeChangedListener {
+            isDarkTheme = rootGrid.actualTheme == ElementTheme.DARK
+            pageBackground.background = PAGE_BACKGROUND
+            WinUiUtilities.invokeLater {
+                when (val name = currentPageName) {
+                    null -> showHome()
+                    SETTINGS_PAGE_NAME -> showSettings()
+                    else -> {
+                        pageArea.removeAll()
+                        pageArea.add(pages.getValue(name)())
+                    }
+                }
+            }
+        }
 
         // Select Home on launch (SelectionChanged -> showHome)
         navigationView.selectedItem = navigation.homeItem
@@ -280,6 +317,13 @@ fun main() {
     }
 }
 
+/** Converts the app theme saved on the Settings page ("Light" / "Dark" / "Default") to an [ElementTheme]. */
+private fun elementThemeOf(appTheme: String): ElementTheme = when (appTheme) {
+    "Light" -> ElementTheme.LIGHT
+    "Dark" -> ElementTheme.DARK
+    else -> ElementTheme.DEFAULT
+}
+
 /**
  * Extracts the same icon as the real WinUI 3 Gallery (GalleryIcon.ico) from resources to a temp file.
  * WinUI's BitmapImage / AppWindow.SetIcon only accept a URI or file path.
@@ -292,18 +336,29 @@ private fun extractGalleryIcon(): File? {
     return file
 }
 
-// Colors matching the WinUI 3 Gallery's light theme
-/** The content area's background (translucent white, matching LayerFillColorDefault). The Mica behind it shows through faintly. */
-private val PAGE_BACKGROUND = WColor(255, 255, 255, 128)
+// Colors matching the WinUI 3 Gallery's theme resources (return light or dark depending on the current theme).
+// Pages are rebuilt on every navigation, so they're painted with whichever theme's color was in
+// effect when built. Repainting on a theme change is handled by main()'s ActualThemeChanged (which
+// rebuilds the visible page).
 
-/** The background of cards that host demos (translucent white, matching CardBackgroundFillColorDefault). */
-internal val CARD_BACKGROUND = WColor(255, 255, 255, 179)
+/** Whether the current app theme is dark. Updated by the root element's ActualThemeChanged. */
+internal var isDarkTheme = false
 
-/** A card's border. */
-internal val CARD_BORDER = WColor(229, 229, 229)
+/** The content area's background (translucent, matching LayerFillColorDefault). The Mica behind it shows through faintly. */
+private val PAGE_BACKGROUND: WColor
+    get() = if (isDarkTheme) WColor(58, 58, 58, 76) else WColor(255, 255, 255, 128)
 
-/** A subdued text color for things like page descriptions. */
-internal val TEXT_SECONDARY = WColor(97, 97, 97)
+/** The background of cards that host demos (translucent, matching CardBackgroundFillColorDefault). */
+internal val CARD_BACKGROUND: WColor
+    get() = if (isDarkTheme) WColor(255, 255, 255, 13) else WColor(255, 255, 255, 179)
+
+/** A card's border (matching CardStrokeColorDefault). */
+internal val CARD_BORDER: WColor
+    get() = if (isDarkTheme) WColor(0, 0, 0, 25) else WColor(229, 229, 229)
+
+/** A subdued text color for things like page descriptions (matching TextFillColorSecondary). */
+internal val TEXT_SECONDARY: WColor
+    get() = if (isDarkTheme) WColor(255, 255, 255, 197) else WColor(97, 97, 97)
 
 /** Page name (WinUI control name) -> the function that builds its demo page. */
 internal val pages: Map<String, () -> WComponent> = linkedMapOf(

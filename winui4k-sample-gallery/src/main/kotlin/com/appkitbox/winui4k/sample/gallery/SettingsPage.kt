@@ -27,7 +27,10 @@ import com.appkitbox.winui4k.WPanel
 /** The name representing the Settings page in the back history (a value that doesn't collide with any [pages] page name). */
 internal const val SETTINGS_PAGE_NAME = "Settings"
 
-internal fun buildSettingsPage(navigationView: WNavigationView): WComponent {
+internal fun buildSettingsPage(
+    navigationView: WNavigationView,
+    applyAppTheme: (String) -> Unit,
+): WComponent {
     val page = WPanel()
     page.maxWidth = 1064.0 // the real SettingsPage's MaxWidth
 
@@ -42,7 +45,7 @@ internal fun buildSettingsPage(navigationView: WNavigationView): WComponent {
     )
 
     val cards = WPanel(spacing = 4.0) // the real SettingsCardSpacing
-    cards.add(buildAppThemeCard())
+    cards.add(buildAppThemeCard(applyAppTheme))
     cards.add(buildNavigationStyleCard(navigationView))
     cards.add(buildManageSamplesCard())
     page.add(cards)
@@ -50,7 +53,7 @@ internal fun buildSettingsPage(navigationView: WNavigationView): WComponent {
 }
 
 /** App theme: choosing the app theme (Light / Dark / Use system setting). */
-private fun buildAppThemeCard(): WComponent {
+private fun buildAppThemeCard(applyAppTheme: (String) -> Unit): WComponent {
     val themeCombo = WComboBox(listOf("Light", "Dark", "Use system setting"))
     themeCombo.selectedIndex = when (GallerySettings.appTheme) {
         "Light" -> 0
@@ -58,13 +61,13 @@ private fun buildAppThemeCard(): WComponent {
         else -> 2
     }
     themeCombo.addListSelectionListener {
-        // The gallery's palette is fixed to a light theme (CARD_BACKGROUND etc.), so this
-        // doesn't apply to RequestedTheme — it only persists the selection
-        GallerySettings.appTheme = when (themeCombo.selectedIndex) {
+        val appTheme = when (themeCombo.selectedIndex) {
             0 -> "Light"
             1 -> "Dark"
             else -> "Default"
         }
+        GallerySettings.appTheme = appTheme
+        applyAppTheme(appTheme)
     }
     return buildSettingsCard(
         glyph = "",

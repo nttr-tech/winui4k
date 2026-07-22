@@ -66,6 +66,7 @@ internal object Abi {
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
     const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
+    const val IFrameworkElement_get_RequestedTheme = 57 // get_RequestedTheme(out ElementTheme)
     const val IFrameworkElement_put_RequestedTheme = 58 // put_RequestedTheme(ElementTheme)
     const val IFrameworkElement_get_ActualTheme = 60   // get_ActualTheme(out ElementTheme)
     const val IFrameworkElement_add_SizeChanged = 67   // add_SizeChanged(SizeChangedEventHandler, out token)

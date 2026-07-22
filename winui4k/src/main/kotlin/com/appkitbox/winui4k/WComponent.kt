@@ -54,6 +54,26 @@ enum class VerticalAlignment(internal val native: Int) {
 }
 
 /**
+ * Microsoft.UI.Xaml.ElementTheme (the UI theme applied to an element and its descendants).
+ * Values extracted from the winmd (Default=0, Light=1, Dark=2).
+ */
+enum class ElementTheme(internal val native: Int) {
+    /** Follows the OS's app mode setting (or the parent element's theme) (the default). */
+    DEFAULT(0),
+
+    /** Always the light theme. */
+    LIGHT(1),
+
+    /** Always the dark theme. */
+    DARK(2),
+    ;
+
+    internal companion object {
+        fun of(native: Int): ElementTheme = entries.first { it.native == native }
+    }
+}
+
+/**
  * A thin Swing-like API layer. Everything underneath is a native WinUI 3 control.
  * (Use only inside the WinUiUtilities.invokeLater callback = on the UI thread)
  */
@@ -122,6 +142,40 @@ abstract class WComponent internal constructor(
     var isVisible: Boolean
         get() = uiElement.getInt(Abi.IUIElement_get_Visibility) == 0 // Visibility.Visible
         set(value) = uiElement.call(Abi.IUIElement_put_Visibility, if (value) 0 else 1)
+
+    /**
+     * The theme applied to this element and everything below it (FrameworkElement.RequestedTheme).
+     * Setting it on the root element makes it the whole app's theme. [ElementTheme.DEFAULT] follows the OS setting.
+     */
+    var requestedTheme: ElementTheme
+        get() = ElementTheme.of(frameworkElement.getInt(Abi.IFrameworkElement_get_RequestedTheme))
+        set(value) = frameworkElement.call(Abi.IFrameworkElement_put_RequestedTheme, value.native)
+
+    /**
+     * The theme actually in effect (FrameworkElement.ActualTheme).
+     * Returns the resolved LIGHT / DARK even when [requestedTheme] is [ElementTheme.DEFAULT].
+     */
+    val actualTheme: ElementTheme
+        get() = ElementTheme.of(frameworkElement.getInt(Abi.IFrameworkElement_get_ActualTheme))
+
+    /** Event tokens registered via addActualThemeChangedListener. */
+    private val actualThemeChangedTokens = ListenerTokens<() -> Unit>()
+
+    /** Subscribes to changes in the applied theme (FrameworkElement.ActualThemeChanged). */
+    fun addActualThemeChangedListener(listener: () -> Unit) {
+        val token = frameworkElement.addEventHandler(
+            "WinUI4K.ActualThemeChangedHandler",
+            Abi.IID_ActualThemeChangedHandler,
+            Abi.IFrameworkElement_add_ActualThemeChanged,
+        ) { _, _ -> listener() }
+        actualThemeChangedTokens.add(listener, token)
+    }
+
+    /** Unsubscribes a listener registered via [addActualThemeChangedListener]. */
+    fun removeActualThemeChangedListener(listener: () -> Unit) {
+        val token = actualThemeChangedTokens.remove(listener) ?: return
+        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_ActualThemeChanged, token)
+    }
 
     /** Event tokens registered via addSizeChangedListener. */
     private val sizeChangedTokens = ListenerTokens<() -> Unit>()
