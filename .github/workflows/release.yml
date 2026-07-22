@@ -23,13 +23,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build the Gallery installer (exe)
+      - name: Build the Gallery installer (exe) and the all-in-one jar
         run: |
           $version = $env:GITHUB_REF_NAME.Substring(1)
-          ./gradlew :winui4k-sample-gallery:packageExe "-Pwinui4kVersion=$version"
+          ./gradlew :winui4k-sample-gallery:packageExe :winui4k-all:shadowJar "-Pwinui4kVersion=$version"
 
       - name: Create the GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: winui4k-sample-gallery/build/jpackage/winui4k-gallery-installer-*.exe
+          files: |
+            winui4k-all/build/libs/winui4k-*-all.jar
+            winui4k-sample-gallery/build/jpackage/winui4k-gallery-installer-*.exe
           generate_release_notes: true
