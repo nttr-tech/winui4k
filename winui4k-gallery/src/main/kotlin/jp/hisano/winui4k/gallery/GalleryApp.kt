@@ -98,6 +98,9 @@ import jp.hisano.winui4k.WToggleButton
 import jp.hisano.winui4k.WToggleMenuFlyoutItem
 import jp.hisano.winui4k.WToggleSplitButton
 import jp.hisano.winui4k.WToggleSwitch
+import jp.hisano.winui4k.TreeViewSelectionMode
+import jp.hisano.winui4k.WTree
+import jp.hisano.winui4k.WTreeNode
 import jp.hisano.winui4k.WVariableSizedWrapGrid
 import jp.hisano.winui4k.WXamlUICommand
 import jp.hisano.winui4k.WinUiUtilities
@@ -200,6 +203,7 @@ private val pages: Map<String, () -> WComponent> = linkedMapOf(
     "ToggleButton" to ::buildToggleButtonPage,
     "ToggleSplitButton" to ::buildToggleSplitButtonPage,
     "ToggleSwitch" to ::buildToggleSwitchPage,
+    "TreeView" to ::buildTreeViewPage,
     "VariableSizedWrapGrid" to ::buildVariableSizedWrapGridPage,
     "XamlUICommand" to ::buildXamlUICommandPage,
 )
@@ -225,6 +229,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
     "Collections" to listOf(
         "ListView",
         "TableView",
+        "TreeView",
     ),
     "Dialogs & flyouts" to listOf(
         "ContentDialog",
@@ -710,6 +715,115 @@ private fun buildTableRowOperationsExample(): WComponent {
     body.add(table)
     body.add(count)
     return buildExample("Adding and removing rows (AddRow / RemoveRow / SetValueAt)", body)
+}
+
+/** TreeView page: lines up demos for trying out WTree's various features. */
+private fun buildTreeViewPage(): WComponent {
+    val page = buildPage("TreeView", "A tree that can expand and collapse hierarchical data. Try out WTree's various features.")
+
+    page.add(buildSimpleTreeExample())
+    page.add(buildTreeMultiSelectExample())
+    page.add(buildTreeExpandCollapseExample())
+    return page
+}
+
+/** Builds the same sample tree (Work Documents / Personal Documents) as the real Gallery. */
+private fun buildSampleTree(): WTree {
+    val tree = WTree()
+    tree.width = 345.0
+    // Pin it to the left so the tree doesn't shift toward the center if the panel widens (e.g. from a long label)
+    tree.horizontalAlignment = HorizontalAlignment.LEFT
+
+    val workFolder = WTreeNode("Work Documents")
+    workFolder.add(WTreeNode("XYZ Functional Spec"))
+    workFolder.add(WTreeNode("Feature Schedule"))
+    workFolder.isExpanded = true
+
+    val remodelFolder = WTreeNode("Home Remodel")
+    remodelFolder.add(WTreeNode("Contractor Contact Info"))
+    remodelFolder.add(WTreeNode("Paint Color Scheme"))
+    remodelFolder.isExpanded = true
+
+    val personalFolder = WTreeNode("Personal Documents")
+    personalFolder.add(remodelFolder)
+    personalFolder.isExpanded = true
+
+    tree.addRootNode(workFolder)
+    tree.addRootNode(personalFolder)
+    return tree
+}
+
+/** Basic tree: drag-to-reorder and responding to node clicks (ItemInvoked). */
+private fun buildSimpleTreeExample(): WComponent {
+    val result = WLabel("Click: none")
+    result.textWrapping = TextWrapping.WRAP
+
+    val tree = buildSampleTree()
+    tree.canDragItems = true
+    tree.canReorderItems = true
+    tree.addItemInvokedListener { node ->
+        result.text = if (node == null) "Click: none" else "Click: ${node.text} (depth = ${node.depth})"
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(tree)
+    body.add(result)
+    return buildExample("Simple tree (drag & drop reordering / ItemInvoked)", body)
+}
+
+/** Multiple selection: checkboxes from SelectionMode = MULTIPLE, plus SelectAll / SelectedNodes. */
+private fun buildTreeMultiSelectExample(): WComponent {
+    val tree = buildSampleTree()
+    tree.selectionMode = TreeViewSelectionMode.MULTIPLE
+
+    val result = WLabel("Selected: none")
+    result.textWrapping = TextWrapping.WRAP
+    val showButton = WButton("Show selection")
+    showButton.addActionListener {
+        val names = tree.selectedNodes.joinToString(", ") { it.text }
+        result.text = if (names.isEmpty()) "Selected: none" else "Selected: $names"
+    }
+    val selectAllButton = WButton("Select all")
+    selectAllButton.addActionListener { tree.selectAll() }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(showButton)
+    buttons.add(selectAllButton)
+
+    val body = WPanel(spacing = 8.0)
+    body.add(tree)
+    body.add(buttons)
+    body.add(result)
+    return buildExample("Multiple selection (SelectionMode / SelectAll / SelectedNodes)", body)
+}
+
+/** Expand and collapse: the Expand / Collapse methods and the Expanding / Collapsed events. */
+private fun buildTreeExpandCollapseExample(): WComponent {
+    val log = WLabel("Event: none")
+    log.textWrapping = TextWrapping.WRAP
+
+    val tree = buildSampleTree()
+    tree.addExpandingListener { node -> log.text = "Event: Expanding (${node?.text})" }
+    tree.addCollapsedListener { node -> log.text = "Event: Collapsed (${node?.text})" }
+
+    val expandButton = WButton("Expand all")
+    expandButton.addActionListener {
+        for (root in tree.rootNodes) tree.expand(root)
+    }
+    val collapseButton = WButton("Collapse all")
+    collapseButton.addActionListener {
+        for (root in tree.rootNodes) tree.collapse(root)
+    }
+
+    val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    buttons.add(expandButton)
+    buttons.add(collapseButton)
+
+    val body = WPanel(spacing = 8.0)
+    body.add(buttons)
+    body.add(tree)
+    body.add(log)
+    return buildExample("Expand and collapse (Expand / Collapse / Expanding / Collapsed)", body)
 }
 
 /** A colored tile for the layout demos (a Border painted with a background). Fills its parent if a size isn't given. */

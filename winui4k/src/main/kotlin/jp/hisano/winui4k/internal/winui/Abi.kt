@@ -56,6 +56,7 @@ internal object Abi {
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_put_Width = 16
     const val IFrameworkElement_put_Height = 18
+    const val IFrameworkElement_put_MaxWidth = 22      // put_MaxWidth(DOUBLE)
     const val IFrameworkElement_get_HorizontalAlignment = 27 // get_HorizontalAlignment(out HorizontalAlignment)
     const val IFrameworkElement_put_HorizontalAlignment = 28 // put_HorizontalAlignment(HorizontalAlignment)
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
@@ -543,6 +544,51 @@ internal object Abi {
     const val IID_IItemClickEventArgs = "1cf87a70-6348-57ec-9eac-fa0565adc60f"
     const val IItemClickEventArgs_get_ClickedItem = 6  // get_ClickedItem(out IInspectable)
 
+    // ---- Microsoft.UI.Xaml.Controls.TreeView ----
+    const val CLS_TreeView = "Microsoft.UI.Xaml.Controls.TreeView"
+    const val IID_ITreeViewFactory = "9c6220be-f9eb-518a-b30e-7e41de5efda9"
+    const val IID_ITreeView = "1bef9af4-712c-50ef-9bb4-881b975232ab"
+    const val ITreeView_get_RootNodes = 6              // get_RootNodes(out IVector<TreeViewNode>)
+    const val ITreeView_get_SelectionMode = 7          // get_SelectionMode(out TreeViewSelectionMode)
+    const val ITreeView_put_SelectionMode = 8          // put_SelectionMode(TreeViewSelectionMode)
+    const val ITreeView_get_SelectedNodes = 9          // get_SelectedNodes(out IVector<TreeViewNode>)
+    const val ITreeView_Expand = 10                    // Expand(TreeViewNode)
+    const val ITreeView_Collapse = 11                  // Collapse(TreeViewNode)
+    const val ITreeView_SelectAll = 12                 // SelectAll()
+    const val ITreeView_add_ItemInvoked = 13           // add_ItemInvoked(TypedEventHandler, out token)
+    const val ITreeView_remove_ItemInvoked = 14        // remove_ItemInvoked(token)
+    const val ITreeView_add_Expanding = 15             // add_Expanding(TypedEventHandler, out token)
+    const val ITreeView_remove_Expanding = 16          // remove_Expanding(token)
+    const val ITreeView_add_Collapsed = 17             // add_Collapsed(TypedEventHandler, out token)
+    const val ITreeView_remove_Collapsed = 18          // remove_Collapsed(token)
+    const val IID_ITreeView2 = "b947ca7d-0f6f-594c-83ec-14153d343225"
+    const val ITreeView2_get_CanDragItems = 10         // get_CanDragItems(out boolean)
+    const val ITreeView2_put_CanDragItems = 11         // put_CanDragItems(boolean)
+    const val ITreeView2_get_CanReorderItems = 12      // get_CanReorderItems(out boolean)
+    const val ITreeView2_put_CanReorderItems = 13      // put_CanReorderItems(boolean)
+    const val ITreeView2_get_SelectedNode = 30         // get_SelectedNode(out TreeViewNode) — nullable
+    const val ITreeView2_put_SelectedNode = 31         // put_SelectedNode(TreeViewNode)
+
+    // ---- Microsoft.UI.Xaml.Controls.TreeViewNode ----
+    const val CLS_TreeViewNode = "Microsoft.UI.Xaml.Controls.TreeViewNode"
+    const val IID_ITreeViewNodeFactory = "c105a5e5-cea8-5efd-8be8-3d89b54cbd5f"
+    const val IID_ITreeViewNode = "00378a74-790b-5328-8afa-7d65e22da426"
+    const val ITreeViewNode_get_Content = 6            // get_Content(out IInspectable)
+    const val ITreeViewNode_put_Content = 7            // put_Content(IInspectable)
+    const val ITreeViewNode_get_Parent = 8             // get_Parent(out TreeViewNode) — nullable
+    const val ITreeViewNode_get_IsExpanded = 9         // get_IsExpanded(out boolean)
+    const val ITreeViewNode_put_IsExpanded = 10        // put_IsExpanded(boolean)
+    const val ITreeViewNode_get_HasChildren = 11       // get_HasChildren(out boolean)
+    const val ITreeViewNode_get_Depth = 12             // get_Depth(out INT32)
+    const val ITreeViewNode_get_Children = 15          // get_Children(out IVector<TreeViewNode>)
+
+    const val IID_ITreeViewItemInvokedEventArgs = "1a05853c-b101-542c-9a1e-775a044c4652"
+    const val ITreeViewItemInvokedEventArgs_get_InvokedItem = 6 // get_InvokedItem(out IInspectable)
+    const val IID_ITreeViewExpandingEventArgs = "bd769ef7-cadc-5334-93ad-c9bbe820643d"
+    const val ITreeViewExpandingEventArgs_get_Node = 6 // get_Node(out TreeViewNode)
+    const val IID_ITreeViewCollapsedEventArgs = "8ee00b59-42c6-5d73-809f-68710088e5a5"
+    const val ITreeViewCollapsedEventArgs_get_Node = 6 // get_Node(out TreeViewNode)
+
     // ---- Microsoft.UI.Xaml.Controls.Primitives.ToggleButton ----
     const val CLS_ToggleButton = "Microsoft.UI.Xaml.Controls.Primitives.ToggleButton"
     const val IID_IToggleButtonFactory = "519511bb-d35b-5e2d-966c-8369405a4408"
@@ -879,6 +925,36 @@ internal object Abi {
             "pinterface({$IID_TypedEventHandler_OPEN};" +
                 "rc(Microsoft.UI.Xaml.FrameworkElement;{$IID_IFrameworkElement});" +
                 "cinterface(IInspectable))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewItemInvokedEventArgs>. */
+    val IID_TreeViewItemInvokedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs;" +
+                "{$IID_ITreeViewItemInvokedEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewExpandingEventArgs>. */
+    val IID_TreeViewExpandingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeViewExpandingEventArgs;" +
+                "{$IID_ITreeViewExpandingEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<TreeView, TreeViewCollapsedEventArgs>. */
+    val IID_TreeViewCollapsedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeViewCollapsedEventArgs;" +
+                "{$IID_ITreeViewCollapsedEventArgs}))",
         )
     }
 

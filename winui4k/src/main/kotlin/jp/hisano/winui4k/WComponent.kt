@@ -79,6 +79,16 @@ abstract class WComponent internal constructor(
             frameworkElement.call(Abi.IFrameworkElement_put_Height, value)
         }
 
+    /**
+     * Upper bound on the width (FrameworkElement.MaxWidth). Unlike [width], this is measured against the
+     * content's natural width and only clamps it once it exceeds this value (unlimited by default).
+     */
+    var maxWidth: Double = Double.POSITIVE_INFINITY
+        set(value) {
+            field = value
+            frameworkElement.call(Abi.IFrameworkElement_put_MaxWidth, value)
+        }
+
     /** Horizontal position within the space the parent allots (FrameworkElement.HorizontalAlignment). */
     var horizontalAlignment: HorizontalAlignment
         get() = HorizontalAlignment.of(frameworkElement.getInt(Abi.IFrameworkElement_get_HorizontalAlignment))
