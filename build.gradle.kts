@@ -1,12 +1,3 @@
-plugins {
-    kotlin("jvm") version "2.4.0" apply false
-}
-
-subprojects {
-    group = "com.appkitbox.winui4k"
-    version = "0.1.0"
-
-    repositories {
-        mavenCentral()
-    }
-}
+// Common settings for each module live in the buildSrc convention plugins
+// (winui4k.kotlin-common / winui4k.kotlin-library / winui4k.kotlin-application).
+// Dependency and plugin versions are centrally managed in gradle/libs.versions.toml.

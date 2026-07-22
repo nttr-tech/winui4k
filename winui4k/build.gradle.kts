@@ -1,31 +1,17 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.net.URI
 import java.util.zip.ZipFile
 
+// Core targets Java 8
+// (the FFI implementations have been split out into winui4k-ffi-panama / winui4k-ffi-jna / winui4k-ffi-jnr, so the core has no JDK-specific dependency)
 plugins {
-    kotlin("jvm")
-    `java-library`
-}
-
-// Build with JDK 25, but guarantee only Java 8 bytecode + Java 8 API
-// (the FFI implementations have been split out into winui4k-ffi-panama / winui4k-ffi-jna, so the core has no JDK-specific dependency)
-kotlin {
-    jvmToolchain(25)
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_1_8)
-        freeCompilerArgs.add("-Xjdk-release=8")
-    }
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
+    id("winui4k.kotlin-library")
 }
 
 // ---------------------------------------------------------------------------
 // Fetch the Windows App SDK bootstrap DLL from NuGet and bundle it as a JAR resource
 // ---------------------------------------------------------------------------
 
-val windowsAppSdkFoundationVersion = "2.1.0"
+val windowsAppSdkFoundationVersion = libs.versions.windowsAppSdkFoundation.get()
 
 val nativeResourceDir: Provider<Directory> =
     layout.buildDirectory.dir("generated-resources/bootstrap")
@@ -76,8 +62,8 @@ val fetchBootstrap = tasks.register("fetchBootstrap") {
 //  expects the app to place it, so winui4k bundles and pre-loads it instead)
 // ---------------------------------------------------------------------------
 
-/** The version of Microsoft.Web.WebView2 that Microsoft.WindowsAppSDK.WinUI 2.2.1 depends on. */
-val webView2Version = "1.0.3719.77"
+/** The version of Microsoft.Web.WebView2 that Microsoft.WindowsAppSDK.WinUI depends on. */
+val webView2Version = libs.versions.webView2.get()
 
 val webView2ResourceDir: Provider<Directory> =
     layout.buildDirectory.dir("generated-resources/webview2")
@@ -138,19 +124,15 @@ tasks.named("processResources") {
 // ---------------------------------------------------------------------------
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
     // Tests run on JDK 25, so use the Panama backend
     testRuntimeOnly(project(":winui4k-ffi-panama"))
 }
 
 // Also include the Java 22-targeted winui4k-ffi-panama on the test runtime classpath
 // (the tests themselves target Java 8, but run on JDK 25)
-configurations.testRuntimeClasspath {
-    attributes {
-        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
-    }
-}
+targetJvm25AtRuntime("testRuntimeClasspath")
 
 tasks.test {
     useJUnitPlatform()
@@ -162,7 +144,7 @@ tasks.test {
 // Download the Windows App SDK runtime installers
 // ---------------------------------------------------------------------------
 
-val windowsAppSdkVersion = "2.2.0"
+val windowsAppSdkVersion = libs.versions.windowsAppSdk.get()
 
 tasks.register("downloadInstallers") {
     description = "Downloads the Windows App SDK $windowsAppSdkVersion runtime installers (x86/x64/arm64)"

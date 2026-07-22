@@ -1,24 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    kotlin("jvm")
-    `java-library`
-}
-
-// Build with JDK 25, target Java 8 bytecode (miglayout-core's 5.x series is the last one compatible with Java 8)
-kotlin {
-    jvmToolchain(25)
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_1_8)
-        freeCompilerArgs.add("-Xjdk-release=8")
-    }
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
+    id("winui4k.kotlin-library")
 }
 
 dependencies {
     api(project(":winui4k"))
-    api("com.miglayout:miglayout-core:5.3")
+    api(libs.miglayout.core) // the 5.x series is the last one compatible with Java 8
 }
