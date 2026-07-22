@@ -30,6 +30,12 @@ internal object Hstring {
             CallDescriptor(ValueKind.I32, ArgKind.PTR),
         )
     }
+    private val duplicateString by lazy {
+        Ffi.backend.function(
+            "combase.dll", "WindowsDuplicateString",
+            CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR),
+        )
+    }
 
     private val leakedCache = HashMap<String, Ptr>()
 
@@ -45,6 +51,22 @@ internal object Hstring {
     /** An HSTRING reused for the process lifetime, e.g. a runtime class name (intentionally leaked). */
     @Synchronized
     fun ofCached(s: String): Ptr = leakedCache.getOrPut(s) { of(s) }
+
+    /**
+     * Duplicates the reference to [h] (WindowsDuplicateString) and returns the copy.
+     * Use this when handing a cached HSTRING to an out parameter whose contract
+     * requires transferring ownership (e.g. GetRuntimeClassName): passing the cached
+     * HSTRING as-is would let the caller's WindowsDeleteString free it, leaving the
+     * cache holding a dangling pointer (use-after-free on the next lookup).
+     */
+    fun duplicate(h: Ptr): Ptr {
+        if (h.isNull) return Ptr.NULL
+        return Ffi.backend.withScope { scope ->
+            val out = scope.allocate(8)
+            checkHr(duplicateString(h, out) as Int, "WindowsDuplicateString")
+            Ffi.backend.memory.getPtr(out, 0)
+        }
+    }
 
     fun read(h: Ptr): String {
         if (h.isNull) return "" // a NULL HSTRING is the empty string

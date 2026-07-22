@@ -65,7 +65,8 @@ internal class KComObject(
                     S_OK
                 })
                 add(Method(OUT_PTR_DESC) { args ->
-                    memory.putPtr(args[1] as Ptr, 0, Hstring.ofCached(runtimeClassName))
+                    // GetRuntimeClassName's out parameter transfers ownership (the caller deletes it)
+                    memory.putPtr(args[1] as Ptr, 0, Hstring.duplicate(Hstring.ofCached(runtimeClassName)))
                     S_OK
                 })
                 add(Method(OUT_PTR_DESC) { args ->
