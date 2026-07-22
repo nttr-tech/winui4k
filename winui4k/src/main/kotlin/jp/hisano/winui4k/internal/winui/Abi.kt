@@ -50,6 +50,8 @@ internal object Abi {
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
     const val IUIElement_get_Opacity = 9               // get_Opacity(out double)
     const val IUIElement_put_Opacity = 10              // put_Opacity(double)
+    const val IUIElement_get_Visibility = 23           // get_Visibility(out Visibility enum: Visible=0, Collapsed=1)
+    const val IUIElement_put_Visibility = 24           // put_Visibility(Visibility enum)
     const val IUIElement_get_XamlRoot = 109            // get_XamlRoot(out XamlRoot)
     const val IUIElement_put_XamlRoot = 110            // put_XamlRoot(XamlRoot)
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
@@ -66,8 +68,12 @@ internal object Abi {
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
     const val IFrameworkElement_put_RequestedTheme = 58 // put_RequestedTheme(ElementTheme)
     const val IFrameworkElement_get_ActualTheme = 60   // get_ActualTheme(out ElementTheme)
+    const val IFrameworkElement_add_SizeChanged = 67   // add_SizeChanged(SizeChangedEventHandler, out token)
+    const val IFrameworkElement_remove_SizeChanged = 68 // remove_SizeChanged(token)
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
+    /** IID of Microsoft.UI.Xaml.SizeChangedEventHandler (a delegate). */
+    const val IID_SizeChangedEventHandler = "8d7b1a58-14c6-51c9-892c-9fcce368e77d"
 
     // ---- Microsoft.UI.Xaml.Controls.StackPanel ----
     const val CLS_StackPanel = "Microsoft.UI.Xaml.Controls.StackPanel"
@@ -790,6 +796,28 @@ internal object Abi {
     // ---- Microsoft.UI.Xaml.Controls.ScrollViewer ----
     const val CLS_ScrollViewer = "Microsoft.UI.Xaml.Controls.ScrollViewer"
     const val IID_IScrollViewer = "1dc28c2e-996c-5394-89c3-4dc656b4ad46" // activatable (default factory)
+    const val IScrollViewer_get_HorizontalScrollBarVisibility = 6  // get_HorizontalScrollBarVisibility(out ScrollBarVisibility enum)
+    const val IScrollViewer_put_HorizontalScrollBarVisibility = 7  // put_HorizontalScrollBarVisibility(ScrollBarVisibility enum)
+    const val IScrollViewer_get_VerticalScrollBarVisibility = 8    // get_VerticalScrollBarVisibility(out ScrollBarVisibility enum)
+    const val IScrollViewer_put_VerticalScrollBarVisibility = 9    // put_VerticalScrollBarVisibility(ScrollBarVisibility enum)
+    const val IScrollViewer_put_HorizontalScrollMode = 25          // put_HorizontalScrollMode(ScrollMode enum)
+    const val IScrollViewer_put_VerticalScrollMode = 27            // put_VerticalScrollMode(ScrollMode enum)
+    const val IScrollViewer_get_HorizontalOffset = 40              // get_HorizontalOffset(out double)
+    const val IScrollViewer_get_ViewportWidth = 41                 // get_ViewportWidth(out double)
+    const val IScrollViewer_get_ScrollableWidth = 42               // get_ScrollableWidth(out double)
+    const val IScrollViewer_add_ViewChanged = 74                   // add_ViewChanged(EventHandler<ScrollViewerViewChangedEventArgs>, out token)
+    const val IScrollViewer_remove_ViewChanged = 75                // remove_ViewChanged(token)
+    const val IScrollViewer_ChangeView = 83                        // ChangeView(IReference<double>, IReference<double>, IReference<float>, out boolean)
+    const val IID_IScrollViewerViewChangedEventArgs = "bf7bb85b-1d46-5004-a370-ecb626630588"
+
+    /** The actual IID of EventHandler<ScrollViewerViewChangedEventArgs> (computed at runtime). */
+    val IID_ScrollViewerViewChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_EventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.Controls.ScrollViewerViewChangedEventArgs;" +
+                "{$IID_IScrollViewerViewChangedEventArgs}))",
+        )
+    }
 
     // ---- Microsoft.UI.Xaml.Controls.IconElement / SymbolIcon ----
     const val IID_IIconElement = "18f69350-279e-50ea-8d23-138e717ed939"
@@ -1792,6 +1820,12 @@ internal object Abi {
     /** Used by OverlappedPresenter's PreferredMinimum/MaximumWidth/Height (null clears it). */
     val IID_IReference_Int32: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};i4)")
+    }
+
+    // ---- Windows.Foundation.IReference<Double> (boxed via PropertyValue.CreateDouble) ----
+    /** Used by ScrollViewer.ChangeView's offset argument (null = no change). */
+    val IID_IReference_Double: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};f8)")
     }
 
     // ---- Windows.Foundation.IReference<Windows.UI.Color> (hand-rolled since PropertyValue has no CreateColor) ----

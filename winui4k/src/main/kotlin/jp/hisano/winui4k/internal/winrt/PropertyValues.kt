@@ -22,6 +22,7 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateString = 18 // CreateString(HSTRING, out IInspectable)
     private const val IPropertyValueStatics_CreateBoolean = 17 // CreateBoolean(boolean, out IInspectable)
     private const val IPropertyValueStatics_CreateInt32 = 10 // CreateInt32(i4, out IInspectable)
+    private const val IPropertyValueStatics_CreateDouble = 15 // CreateDouble(r8, out IInspectable)
 
     private fun statics(): ComPtr =
         Activation.factory("Windows.Foundation.PropertyValue", IID_IPROPERTY_VALUE_STATICS)
@@ -95,6 +96,19 @@ internal object PropertyValues {
         val statics = statics()
         return try {
             statics.getPtr(IPropertyValueStatics_CreateInt32, value)
+        } finally {
+            statics.release()
+        }
+    }
+
+    /**
+     * Boxes a Kotlin Double into an IInspectable (PropertyValue.CreateDouble).
+     * Used to pass it to an IReference<Double>-typed parameter (ScrollViewer.ChangeView's offset).
+     */
+    fun boxDouble(value: Double): ComPtr {
+        val statics = statics()
+        return try {
+            statics.getPtr(IPropertyValueStatics_CreateDouble, value)
         } finally {
             statics.release()
         }

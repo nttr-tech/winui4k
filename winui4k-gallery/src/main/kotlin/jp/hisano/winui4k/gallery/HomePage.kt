@@ -2,6 +2,7 @@ package jp.hisano.winui4k.gallery
 
 import jp.hisano.winui4k.HorizontalAlignment
 import jp.hisano.winui4k.Orientation
+import jp.hisano.winui4k.ScrollBarVisibility
 import jp.hisano.winui4k.Stretch
 import jp.hisano.winui4k.TextWrapping
 import jp.hisano.winui4k.VerticalAlignment
@@ -13,6 +14,7 @@ import jp.hisano.winui4k.WGrid
 import jp.hisano.winui4k.WImage
 import jp.hisano.winui4k.WLabel
 import jp.hisano.winui4k.WPanel
+import jp.hisano.winui4k.WScrollPane
 import jp.hisano.winui4k.WToggleButton
 import jp.hisano.winui4k.WVariableSizedWrapGrid
 import java.io.File
@@ -148,6 +150,64 @@ private fun galleryImageUri(fileName: String): String? = extractedImageUris.getO
     file.toPath().toUri().toString()
 }
 
+/** One of [buildHorizontalScroller]'s left/right scroll buttons (the real Gallery's ScrollButtonStyle 16x38 chevron). */
+private fun buildScrollButton(glyph: String): WButton {
+    val icon = WLabel(glyph)
+    icon.fontFamily = "Segoe Fluent Icons"
+    icon.fontSize = 8.0 // the real Gallery's FlipViewButtonFontSize (8, in generic.xaml)
+
+    val button = WButton()
+    button.content = icon
+    button.padding = 0.0
+    button.width = 16.0
+    button.height = 38.0
+    button.verticalAlignment = VerticalAlignment.CENTER
+    button.margin = 8.0
+    button.isVisible = false // stays hidden until overflow is detected
+    return button
+}
+
+/**
+ * Overlays left/right scroll buttons when a horizontal row of content overflows
+ * (equivalent to the real Gallery's HorizontalScrollContainer). Doesn't show a scrollbar;
+ * clicking a button animates a scroll by one viewport's worth.
+ */
+private fun buildHorizontalScroller(content: WComponent): WComponent {
+    val scroller = WScrollPane(content)
+    scroller.horizontalScrollBarVisibility = ScrollBarVisibility.HIDDEN
+    scroller.verticalScrollBarVisibility = ScrollBarVisibility.DISABLED
+
+    // Segoe Fluent Icons: EDD9 = ChevronLeftSmall, EDDA = ChevronRightSmall (same glyphs as the real Gallery)
+    val backButton = buildScrollButton("")
+    backButton.horizontalAlignment = HorizontalAlignment.LEFT
+    val forwardButton = buildScrollButton("")
+    forwardButton.horizontalAlignment = HorizontalAlignment.RIGHT
+
+    // Equivalent to the real Gallery's Scroller_ViewChanging / UpdateScrollButtonsVisibility:
+    // hide the back button at the left edge, and the forward button at the right edge
+    fun updateButtons() {
+        backButton.isVisible = scroller.horizontalOffset > 1
+        forwardButton.isVisible = scroller.horizontalOffset < scroller.scrollableWidth - 1
+    }
+    scroller.addViewChangedListener { updateButtons() }
+    scroller.addSizeChangedListener { updateButtons() }
+
+    backButton.addActionListener {
+        scroller.scrollToHorizontalOffset(scroller.horizontalOffset - scroller.viewportWidth)
+    }
+    forwardButton.addActionListener {
+        scroller.scrollToHorizontalOffset(scroller.horizontalOffset + scroller.viewportWidth)
+    }
+
+    // Placing them in the same cell draws the buttons in front of the scrolled content
+    val container = WGrid()
+    container.addRow()
+    container.add(scroller, row = 0, column = 0)
+    container.add(backButton, row = 0, column = 0)
+    container.add(forwardButton, row = 0, column = 0)
+    return container
+}
+
 /** Gets a page name's card-icon image file name ("Multiple windows" -> "MultipleWindows.png"). */
 private fun controlImageFileName(pageName: String): String = pageName.replace(" ", "") + ".png"
 
@@ -235,7 +295,7 @@ private fun buildHomeHeader(): WComponent {
     val overlay = WPanel(spacing = 40.0)
     overlay.margin = 36.0
     overlay.add(titleBlock)
-    overlay.add(tiles)
+    overlay.add(buildHorizontalScroller(tiles))
 
     // Placing children in the same cell draws the later-added one on top (overlays text on the image)
     val header = WGrid()
@@ -352,10 +412,11 @@ private fun buildRecentView(navigateTo: (String) -> Unit): WComponent {
     if (recentlyVisited.isNotEmpty()) {
         view.add(buildSectionTitle("Recently visited"))
         val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
-        for (name in recentlyVisited.take(4)) {
+        for (name in recentlyVisited) {
             row.add(buildControlCard(name, navigateTo))
         }
-        view.add(row)
+        // Same as the real Gallery: let horizontal scrolling reveal any overflow
+        view.add(buildHorizontalScroller(row))
     }
 
     view.add(buildSectionTitle("Recently added or updated"))

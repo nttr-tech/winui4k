@@ -2,6 +2,8 @@ package jp.hisano.winui4k
 
 import jp.hisano.winui4k.internal.com.ComPtr
 import jp.hisano.winui4k.internal.winrt.Activation
+import jp.hisano.winui4k.internal.winrt.addEventHandler
+import jp.hisano.winui4k.internal.winrt.removeEventHandler
 import jp.hisano.winui4k.internal.winui.Abi
 import jp.hisano.winui4k.internal.winui.XamlStructs
 
@@ -112,6 +114,30 @@ abstract class WComponent internal constructor(
     var opacity: Double
         get() = uiElement.getDouble(Abi.IUIElement_get_Opacity)
         set(value) = uiElement.call(Abi.IUIElement_put_Opacity, value)
+
+    /** Whether this is shown (UIElement.Visibility). false is Collapsed (doesn't reserve layout space either). */
+    var isVisible: Boolean
+        get() = uiElement.getInt(Abi.IUIElement_get_Visibility) == 0 // Visibility.Visible
+        set(value) = uiElement.call(Abi.IUIElement_put_Visibility, if (value) 0 else 1)
+
+    /** Event tokens registered via addSizeChangedListener. */
+    private val sizeChangedTokens = ListenerTokens<() -> Unit>()
+
+    /** Subscribes to post-layout size changes (FrameworkElement.SizeChanged). */
+    fun addSizeChangedListener(listener: () -> Unit) {
+        val token = frameworkElement.addEventHandler(
+            "WinUI4K.SizeChangedHandler",
+            Abi.IID_SizeChangedEventHandler,
+            Abi.IFrameworkElement_add_SizeChanged,
+        ) { _, _ -> listener() }
+        sizeChangedTokens.add(listener, token)
+    }
+
+    /** Unsubscribes a listener registered via [addSizeChangedListener]. */
+    fun removeSizeChangedListener(listener: () -> Unit) {
+        val token = sizeChangedTokens.remove(listener) ?: return
+        frameworkElement.removeEventHandler(Abi.IFrameworkElement_remove_SizeChanged, token)
+    }
 
     /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */
     var contextFlyout: WFlyoutBase? = null
