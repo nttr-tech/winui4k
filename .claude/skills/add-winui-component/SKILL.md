@@ -1,6 +1,6 @@
 ---
 name: add-winui-component
-description: WinUI 3 コントロールの Kotlin ラッパー (W* クラス) を winui4k に追加する。winmd から ABI 値 (IID / vtable スロット / enum 値) を機械的に抽出し、Abi.kt → com.appkitbox.winui4k パッケージ → GalleryApp の順に実装する。Use when adding a Kotlin wrapper for a WinUI 3 control (CheckBox, Slider, ToggleSwitch, ComboBox, ProgressBar, ...), when the user asks to 「コンポーネントを追加」「コントロールに対応」「ラッパーを実装」, or when extending an existing W* class with more WinUI APIs.
+description: WinUI 3 コントロールの Kotlin ラッパー (W* クラス) を winui4k に追加する。winmd から ABI 値 (IID / vtable スロット / enum 値) を機械的に抽出し、Abi.kt → com.appkitbox.winui4k パッケージ → Gallery の順に実装する。Use when adding a Kotlin wrapper for a WinUI 3 control (CheckBox, Slider, ToggleSwitch, ComboBox, ProgressBar, ...), when the user asks to 「コンポーネントを追加」「コントロールに対応」「ラッパーを実装」, or when extending an existing W* class with more WinUI APIs.
 argument-hint: [WinUIコントロール名 (例: CheckBox)]
 ---
 
@@ -92,9 +92,9 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 - プロパティ・イベント・enum・構造体・ICommand などの実装パターンは
   [references/patterns.md](references/patterns.md) を必ず読んで踏襲する
 
-### 5. GalleryApp にデモページを追加する
+### 5. Gallery にデモページを追加する
 
-`src/main/kotlin/com/appkitbox/winui4k/sample/gallery/GalleryApp.kt`:
+`winui4k-sample-gallery/src/main/kotlin/com/appkitbox/winui4k/sample/gallery/MainForGallery.kt`:
 
 - `buildNavigationPane()` の `pages` にページ名 (WinUI のコントロール名) を追加する
 - `build<Name>Page()` を実装し、追加した API を一通り操作できるデモを
