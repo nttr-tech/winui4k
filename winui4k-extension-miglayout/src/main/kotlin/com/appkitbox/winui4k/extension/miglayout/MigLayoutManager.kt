@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.layout.miglayout
+package com.appkitbox.winui4k.extension.miglayout
 
 import com.appkitbox.winui4k.WButtonBase
 import com.appkitbox.winui4k.WCheckBox

@@ -8,7 +8,7 @@ import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WLayoutPanel
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WinUiUtilities
-import com.appkitbox.winui4k.layout.miglayout.MigLayoutManager
+import com.appkitbox.winui4k.extension.miglayout.MigLayoutManager
 
 /**
  * A simple MigLayout form sample. Follows the Fluent Design System's spacing widths and design

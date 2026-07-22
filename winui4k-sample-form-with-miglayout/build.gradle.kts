@@ -18,7 +18,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    implementation(project(":winui4k-layout-miglayout"))
+    implementation(project(":winui4k-extension-miglayout"))
     runtimeOnly(project(":winui4k-panama"))
     runtimeOnly(project(":winui4k-jna"))
     runtimeOnly(project(":winui4k-jnr"))
