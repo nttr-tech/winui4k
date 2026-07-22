@@ -316,7 +316,7 @@ private fun buildHomeHeader(): WComponent {
             "Getting started",
             "See an overview of winui4k and WinUI in the docs.",
             imageFileName = "Header-WinUI.png",
-            url = "https://github.com/hisano/winui4k#readme",
+            url = "https://github.com/nttr-tech/winui4k#readme",
         ),
     )
     tiles.add(
@@ -332,7 +332,7 @@ private fun buildHomeHeader(): WComponent {
             "winui4k on GitHub",
             "View winui4k's source code and repository.",
             glyph = "", // Segoe Fluent Icons: Globe
-            url = "https://github.com/hisano/winui4k",
+            url = "https://github.com/nttr-tech/winui4k",
         ),
     )
     tiles.add(
