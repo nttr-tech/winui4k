@@ -8,7 +8,7 @@ Java の FFI (Panama / JNA / JNR) で WinRT ABI + COM + Win32 を直接呼び出
 Apache Licenseですので商用・非商用を問わずにご自由に利用いただけます。
 
 下のスクリーンショットは Microsoft 製の WinUI 3 Gallery ではありません。
-**すべて Kotlin で書かれた** 同梱の Gallery アプリ ([winui4k-gallery](winui4k-gallery/)) です。
+**すべて Kotlin で書かれた** 同梱の Gallery アプリ ([winui4k-sample-gallery](winui4k-sample-gallery/)) です。
 
 ![winui4k Gallery](doc/images/gallery-table.png)
 
@@ -54,7 +54,7 @@ WinUiUtilities.invokeLater {
 
 これで Gallery が起動します。
 初回は Gradle と NuGet パッケージ (ブートストラップ DLL、約 6 MB) を自動取得します。
-Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna`、Java 8 + JNR での起動は `.\gradlew :winui4k-gallery:runJnr` で確認できます。
+Java 8 + JNA での起動は `.\gradlew :winui4k-sample-gallery:runJna`、Java 8 + JNR での起動は `.\gradlew :winui4k-sample-gallery:runJnr` で確認できます。
 
 動作環境は Windows 11 x64 です (Windows 10 1809 以降でも動く想定)。
 
@@ -67,7 +67,7 @@ Java 8 + JNA での起動は `.\gradlew :winui4k-gallery:runJna`、Java 8 + JNR 
 | `winui4k-jna` | JNA FFI バックエンド。Java 8 以降 (x64 のみ) |
 | `winui4k-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 |
 | `winui4k-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
-| `winui4k-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
+| `winui4k-sample-gallery` | 全コントロールのデモアプリ (WinUI 3 Gallery 風) |
 
 # 参考情報
 

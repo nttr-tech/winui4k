@@ -94,7 +94,7 @@ Microsoft.UI.Xaml.winmd に無い。NuGet の `microsoft.windows.sdk.contracts` 
 
 ### 5. GalleryApp にデモページを追加する
 
-`src/main/kotlin/com/appkitbox/winui4k/gallery/GalleryApp.kt`:
+`src/main/kotlin/com/appkitbox/winui4k/sample/gallery/GalleryApp.kt`:
 
 - `buildNavigationPane()` の `pages` にページ名 (WinUI のコントロール名) を追加する
 - `build<Name>Page()` を実装し、追加した API を一通り操作できるデモを

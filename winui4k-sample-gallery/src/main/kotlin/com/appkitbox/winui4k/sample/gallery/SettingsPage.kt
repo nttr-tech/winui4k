@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.gallery
+package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.ContentDialogButton
 import com.appkitbox.winui4k.ContentDialogResult

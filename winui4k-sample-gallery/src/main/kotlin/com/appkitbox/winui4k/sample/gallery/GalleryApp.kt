@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.gallery
+package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.coroutines.WinUi
 import com.appkitbox.winui4k.BadgeGlyph
@@ -286,7 +286,7 @@ fun main() {
  */
 private fun extractGalleryIcon(): File? {
     val resource = object {}.javaClass.getResourceAsStream("/GalleryIcon.ico") ?: return null
-    val file = File.createTempFile("winui4k-gallery-icon-", ".ico")
+    val file = File.createTempFile("winui4k-sample-gallery-icon-", ".ico")
     file.deleteOnExit()
     resource.use { input -> file.outputStream().use { output -> input.copyTo(output) } }
     return file

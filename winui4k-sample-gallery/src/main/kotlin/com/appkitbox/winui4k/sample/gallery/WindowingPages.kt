@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.gallery
+package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.CompactOverlaySize
 import com.appkitbox.winui4k.GridLength

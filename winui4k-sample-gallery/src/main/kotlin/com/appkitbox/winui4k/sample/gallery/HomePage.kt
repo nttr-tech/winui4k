@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.gallery
+package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.HorizontalAlignment
@@ -32,7 +32,7 @@ import java.util.prefs.Preferences
 internal object GallerySettings {
     private const val MAX_RECENTLY_VISITED = 8
 
-    private val preferences = Preferences.userRoot().node("com/appkitbox/winui4k/gallery")
+    private val preferences = Preferences.userRoot().node("com/appkitbox/winui4k/sample/gallery")
 
     /** Page names can contain spaces, so store them newline-separated. */
     private fun load(key: String): List<String> =
@@ -166,7 +166,7 @@ private val extractedImageUris = mutableMapOf<String, String?>()
 private fun galleryImageUri(fileName: String): String? = extractedImageUris.getOrPut(fileName) {
     val resource = object {}.javaClass.getResourceAsStream("/images/$fileName")
         ?: return@getOrPut null
-    val file = File.createTempFile("winui4k-gallery-", "-$fileName")
+    val file = File.createTempFile("winui4k-sample-gallery-", "-$fileName")
     file.deleteOnExit()
     resource.use { input -> file.outputStream().use { output -> input.copyTo(output) } }
     file.toPath().toUri().toString()
