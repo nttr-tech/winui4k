@@ -41,7 +41,16 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  *  3. RoInitialize(STA) — this thread becomes the UI thread
  *  4. Application.Start(callback) — inside the callback, composes an Application
  *     "subclass" via COM aggregation (WinRT composition) and builds the UI in OnLaunched
- *  5. Start returns once the last window closes, and the bootstrap is then released
+ *  5. Start returns via [exit] (or the automatic exit triggered by the last window
+ *     closing), and the bootstrap is then released
+ *
+ * How shutdown works: XAML's default (DispatcherShutdownMode.OnLastWindowClose) ends the
+ * message loop the instant the last window closes, and XAML's own constraints mean it can
+ * never be restarted within the same process. So this switches to OnExplicitShutdown to
+ * keep the loop itself alive, tracks the number of open [WFrame]s, and once that count hits
+ * 0, "posts" running Application.Exit onto the message loop instead of calling it immediately
+ * (the default behavior when [exitOnLastWindowClosed] = true). That means even after the
+ * last window closes, opening a new window before the deferred check runs keeps the app alive.
  */
 object WinUiUtilities {
 
@@ -159,6 +168,50 @@ object WinUiUtilities {
     }
 
     /**
+     * Whether to auto-exit the app when the last [WFrame] closes (default true).
+     * Set to false to keep the message loop running even after every window closes,
+     * so [invokeLater] can still open a new window. Call [exit] to shut down explicitly.
+     */
+    @Volatile
+    var exitOnLastWindowClosed: Boolean = true
+
+    /** The number of open (not yet Closed) WFrames. Updated only on the UI thread. */
+    private var openWindowCount = 0
+
+    /** Called when a [WFrame] is created. Must be called on the UI thread. */
+    internal fun noteWindowCreated() {
+        openWindowCount++
+    }
+
+    /**
+     * Called when a [WFrame] closes (Window.Closed). Must be called on the UI thread.
+     * If it was the last window, posts the exit check onto the message loop instead of
+     * running it immediately — this deferral means opening a new window right after
+     * closing (within the same cycle) keeps the app from exiting.
+     */
+    internal fun noteWindowClosed() {
+        openWindowCount--
+        if (openWindowCount == 0 && exitOnLastWindowClosed) {
+            Dispatcher.invokeLater {
+                if (openWindowCount == 0 && exitOnLastWindowClosed) exitNow()
+            }
+        }
+    }
+
+    /**
+     * Exits the app (Application.Exit). The message loop ends, the UI thread returns, and
+     * any later [invokeLater] call throws [IllegalStateException]. Callable from any thread.
+     */
+    fun exit() {
+        invokeLater { exitNow() }
+    }
+
+    /** Calls Application.Exit. Must be called on the UI thread. */
+    private fun exitNow() {
+        currentApp?.call(XamlInterop.IApplication_Exit)
+    }
+
+    /**
      * Does at the ABI level what C#'s `class App : Application { override OnLaunched(...) }`
      * does: passes the Kotlin-implemented outer (IApplicationOverrides +
      * IXamlMetadataProvider) to IApplicationFactory.CreateInstance and composes it with
@@ -222,6 +275,16 @@ object WinUiUtilities {
         }
         factory.release()
         currentApp = app
+
+        // Don't let the message loop end when the last window closes (OnExplicitShutdown).
+        // Exit instead happens via noteWindowClosed's deferred check (default) or exit()'s
+        // call to Application.Exit
+        val app3 = app.queryInterface(XamlInterop.IID_IApplication3)
+        app3.call(
+            XamlInterop.IApplication3_put_DispatcherShutdownMode,
+            XamlInterop.DispatcherShutdownMode_OnExplicitShutdown,
+        )
+        app3.release()
 
         // An unpackaged (non-templated) app can't discover the default theme resources
         // (ms-appx:///Microsoft.UI.Xaml/Themes/themeresources.xaml) on its own via XAML,

@@ -31,6 +31,11 @@ internal object XamlInterop {
     const val IID_IApplication = "06a8f4e7-1146-55af-820d-ebd55643b021"
     const val IApplication_get_Resources = 6           // get_Resources(out ResourceDictionary)
     const val IApplication_put_Resources = 7           // put_Resources(ResourceDictionary)
+    const val IApplication_Exit = 17                   // Exit()
+    const val IID_IApplication3 = "be941595-61fe-5b36-a3d3-962a647d7c6f"
+    const val IApplication3_put_DispatcherShutdownMode = 7 // put_DispatcherShutdownMode(DispatcherShutdownMode)
+    // enum Microsoft.UI.Xaml.DispatcherShutdownMode (OnLastWindowClose=0, OnExplicitShutdown=1)
+    const val DispatcherShutdownMode_OnExplicitShutdown = 1
 
     /** delegate Microsoft.UI.Xaml.ApplicationInitializationCallback — Invoke is vtbl[3] */
     const val IID_ApplicationInitializationCallback = "d8eef1c9-1234-56f1-9963-45dd9c80a661"
@@ -41,8 +46,10 @@ internal object XamlInterop {
     const val IID_IWindow = "61f0ec79-5d52-56b5-86fb-40fa4af288b0"
     const val IWindow_put_Content = 9
     const val IWindow_put_Title = 15
+    const val IWindow_add_Closed = 20                  // add_Closed(TypedEventHandler<Object, WindowEventArgs>, out token)
     const val IWindow_Activate = 26
     const val IWindow_Close = 27
+    const val IID_IWindowEventArgs = "1140827c-fe0a-5268-bc2b-f4492c2ccb49"
 
     // ---- Microsoft.UI.Xaml.UIElement / FrameworkElement ----
     const val IID_IUIElement = "c3c01020-320c-5cf6-9d24-d396bbfa4d8b"
@@ -1227,6 +1234,15 @@ internal object XamlInterop {
                 "cinterface(IInspectable);" +
                 "rc(Microsoft.UI.Xaml.ResourceManagerRequestedEventArgs;" +
                 "{$IID_IResourceManagerRequestedEventArgs}))",
+        )
+    }
+
+    /** Runtime-computed actual IID of TypedEventHandler<Object, WindowEventArgs>. The first type argument is Object. */
+    val IID_WindowClosedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "cinterface(IInspectable);" +
+                "rc(Microsoft.UI.Xaml.WindowEventArgs;{$IID_IWindowEventArgs}))",
         )
     }
 

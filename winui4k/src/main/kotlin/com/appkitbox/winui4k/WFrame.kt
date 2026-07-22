@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /** JFrame-like: WinUI 3's Window. */
@@ -22,6 +23,15 @@ class WFrame(title: String = "") {
     init {
         window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
         if (title.isNotEmpty()) this.title = title
+        // Tracks the number of open windows and auto-exits the app once the last one closes
+        // (see WinUiUtilities.exitOnLastWindowClosed). Closed fires exactly once whether via
+        // Close() or the title bar's close button
+        WinUiUtilities.noteWindowCreated()
+        window.addEventHandler(
+            "WinUI4K.WindowClosedHandler",
+            XamlInterop.IID_WindowClosedHandler,
+            XamlInterop.IWindow_add_Closed,
+        ) { _, _ -> WinUiUtilities.noteWindowClosed() }
     }
 
     fun add(component: WComponent) = contentPane.add(component)
