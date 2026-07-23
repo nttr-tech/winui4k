@@ -2,6 +2,10 @@ plugins {
     id("winui4k.kotlin-common")
     `java-library`
     `maven-publish`
+    signing
+    // For publishing releases to Maven Central (Central Portal Publisher API).
+    // The nmcpAggregation block in the root build.gradle.kts aggregates this module's publication
+    id("com.gradleup.nmcp")
 }
 
 // ---------------------------------------------------------------------------
@@ -67,12 +71,26 @@ publishing {
     }
 }
 
+// GPG signing for Maven Central publishing (a hard requirement for releases).
+// The key is passed via environment variables; signing is skipped for local builds
+// without them and for SNAPSHOT publishing
+val signingKey = providers.environmentVariable("SIGNING_KEY")
+if (signingKey.isPresent) {
+    signing {
+        useInMemoryPgpKeys(signingKey.get(), providers.environmentVariable("SIGNING_PASSWORD").orNull)
+        sign(publishing.publications)
+    }
+}
+
 // The SNAPSHOT repository rejects release versions, so detect accidental publishing before it runs
 tasks.withType<PublishToMavenRepository>().configureEach {
     val projectVersion = version.toString()
     doFirst {
-        check(projectVersion.endsWith("-SNAPSHOT")) {
-            "Only versions ending in -SNAPSHOT can be published to the SNAPSHOT repository (current: $projectVersion)"
+        val publishTask = this as PublishToMavenRepository
+        if (publishTask.repository.name == "centralSnapshots") {
+            check(projectVersion.endsWith("-SNAPSHOT")) {
+                "Only versions ending in -SNAPSHOT can be published to the SNAPSHOT repository (current: $projectVersion)"
+            }
         }
     }
 }

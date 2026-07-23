@@ -14,4 +14,8 @@ dependencies {
     implementation(libs.shadow.gradle.plugin)
     // Lets the convention plugin (winui4k.kotlin-common) apply the Spotless plugin
     implementation(libs.spotless.gradle.plugin)
+    // Lets the convention plugin (winui4k.kotlin-library) and the root build.gradle.kts
+    // apply the nmcp plugins for publishing to Maven Central
+    implementation(libs.nmcp.gradle.plugin)
+    implementation(libs.nmcp.aggregation.gradle.plugin)
 }

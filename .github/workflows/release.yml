@@ -28,6 +28,20 @@ jobs:
           $version = $env:GITHUB_REF_NAME.Substring(1)
           ./gradlew :winui4k-sample-gallery:packageExe :winui4k-all:shadowJar "-Pwinui4kVersion=$version"
 
+      # Uploads to the Central Portal and runs validation (publishingType: USER_MANAGED).
+      # Finally, review the contents at https://central.sonatype.com/publishing/deployments
+      # and press the "Publish" button to release to Maven Central.
+      # maven-publish doesn't play well with the configuration cache, so run with it disabled
+      - name: Upload to Maven Central (requires manual publishing on the portal)
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          ./gradlew publishAggregationToCentralPortal "-Pwinui4kVersion=$version" --no-configuration-cache
+
       - name: Create the GitHub release
         uses: softprops/action-gh-release@v2
         with:

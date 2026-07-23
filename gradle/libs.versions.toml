@@ -6,6 +6,7 @@ shadow = "9.6.0"
 spotless = "8.8.0"
 ktlint = "1.8.0"
 detekt = "1.23.8"
+nmcp = "1.6.1"
 # NuGet package versions (referenced by winui4k core's fetch tasks)
 windowsAppSdk = "2.2.0"
 windowsAppSdkFoundation = "2.1.0"
@@ -16,6 +17,8 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 shadow-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
 spotless-gradle-plugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 detekt-cli = { module = "io.gitlab.arturbosch.detekt:detekt-cli", version.ref = "detekt" }
+nmcp-gradle-plugin = { module = "com.gradleup.nmcp:com.gradleup.nmcp.gradle.plugin", version.ref = "nmcp" }
+nmcp-aggregation-gradle-plugin = { module = "com.gradleup.nmcp.aggregation:com.gradleup.nmcp.aggregation.gradle.plugin", version.ref = "nmcp" }
 jna = "net.java.dev.jna:jna:5.17.0"
 jnr-ffi = "com.github.jnr:jnr-ffi:2.2.17"
 kotlinx-coroutines-core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"

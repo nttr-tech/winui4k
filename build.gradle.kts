@@ -6,6 +6,30 @@ plugins {
     id("com.diffplug.spotless")
     // Lets the detektFile task acquire the JDK 21 toolchain
     id("jvm-toolchains")
+    // Publishing releases to Maven Central (Central Portal Publisher API).
+    // Aggregates and uploads the publications of every library module (winui4k.kotlin-library)
+    id("com.gradleup.nmcp.aggregation")
+}
+
+nmcpAggregation {
+    // Disable the duplicate check because the root project and the :winui4k module share the same name.
+    // The root has no publication and a different group, so this doesn't affect the aggregation result
+    allowDuplicateProjectNames.set(true)
+    centralPortal {
+        // User token generated on the Central Portal (central.sonatype.com)
+        username = providers.environmentVariable("CENTRAL_USERNAME")
+        password = providers.environmentVariable("CENTRAL_PASSWORD")
+        // After upload and validation, review the contents on central.sonatype.com and confirm publishing manually
+        publishingType = "USER_MANAGED"
+    }
+}
+
+dependencies {
+    // Modules that don't apply com.gradleup.nmcp (samples, etc.) are ignored during aggregation.
+    // Including the root itself would clash with the :winui4k module name, so limit to subprojects
+    subprojects.forEach {
+        "nmcpAggregation"(project(it.path))
+    }
 }
 
 // detekt 1.23's embedded Kotlin compiler doesn't run on JDK 25, so run the CLI in a
