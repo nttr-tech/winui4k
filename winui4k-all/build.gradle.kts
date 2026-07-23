@@ -5,6 +5,8 @@ plugins {
     id("winui4k.fat-jar")
 }
 
+description = "All-in-one aggregation of the WinUI4K core, extensions, and FFI backends"
+
 dependencies {
     api(project(":winui4k"))
     api(project(":winui4k-extension-coroutines"))

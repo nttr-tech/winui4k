@@ -8,6 +8,8 @@ plugins {
     id("winui4k.kotlin-library")
 }
 
+description = "WinUI4K is a Kotlin library for building WinUI applications"
+
 // ---------------------------------------------------------------------------
 // Fetch the Windows App SDK bootstrap DLL from NuGet and bundle it as a JAR resource
 // ---------------------------------------------------------------------------

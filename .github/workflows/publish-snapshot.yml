@@ -1,0 +1,47 @@
+# Publishes the libraries to the Maven Central SNAPSHOT repository.
+#
+# Prerequisites:
+#   1. Create a Sonatype account on central.sonatype.com and verify the com.appkitbox namespace
+#   2. Generate a token via "Generate User Token" in the account settings
+#   3. Register the token as the CENTRAL_USERNAME / CENTRAL_PASSWORD repository secrets
+#
+# After publishing, the artifacts can be found under
+# com/appkitbox/winui4k/ at https://central.sonatype.com/repository/maven-snapshots/.
+name: Publish Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (must end in -SNAPSHOT)'
+        required: true
+        default: '0.1.0-SNAPSHOT'
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Validate the version
+        run: |
+          if (-not "${{ inputs.version }}".EndsWith("-SNAPSHOT")) {
+            Write-Error "Only versions ending in -SNAPSHOT can be published to the SNAPSHOT repository: ${{ inputs.version }}"
+            exit 1
+          }
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish to the Maven Central snapshot repository
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: ./gradlew publishAllPublicationsToCentralSnapshotsRepository "-Pwinui4kVersion=${{ inputs.version }}"

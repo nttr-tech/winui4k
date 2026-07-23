@@ -3,6 +3,8 @@ plugins {
     id("winui4k.kotlin-library")
 }
 
+description = "WinUI4K FFI backend using JNR-FFI for Java 8+"
+
 dependencies {
     implementation(project(":winui4k"))
     // Uses the bundled low-level layer jffi (com.kenai.jffi) directly. Runtime-determined function
