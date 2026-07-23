@@ -50,10 +50,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Set up JDK 25 (Microsoft Build of OpenJDK because Temurin does not distribute JDK 25 for Windows aarch64)
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: microsoft
           java-version: 25
 
       - name: Set up Gradle
