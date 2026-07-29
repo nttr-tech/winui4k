@@ -193,6 +193,7 @@ object WAppNotificationManager {
     private var invokedHandlerAdded = false
 
     /** Whether AppNotification is usable in this environment (AppNotificationManager.IsSupported). */
+    @JvmStatic
     val isSupported: Boolean
         get() {
             val statics2 = Activation.factory(
@@ -207,6 +208,7 @@ object WAppNotificationManager {
         }
 
     /** Whether notifications are currently enabled (AppNotificationManager.Setting). */
+    @JvmStatic
     val setting: NotificationSetting
         get() = NotificationSetting.of(manager.getInt(NotificationInterop.IAppNotificationManager_get_Setting))
 
@@ -215,16 +217,19 @@ object WAppNotificationManager {
      * For an unpackaged app, this registers automatically using the executable's display
      * name and icon.
      */
+    @JvmStatic
     fun register() {
         manager.call(NotificationInterop.IAppNotificationManager_Register)
     }
 
     /** Unregisters the receiver for notification clicks (AppNotificationManager.Unregister). */
+    @JvmStatic
     fun unregister() {
         manager.call(NotificationInterop.IAppNotificationManager_Unregister)
     }
 
     /** Sends a notification (AppNotificationManager.Show). */
+    @JvmStatic
     fun show(notification: WAppNotification) {
         val built = notification.build()
         manager.call(NotificationInterop.IAppNotificationManager_Show, built.ptr)
@@ -240,6 +245,7 @@ object WAppNotificationManager {
      * Call this for the first time before [register] (subscribing for the first time after
      * Register makes the WinAppSDK side return E_ILLEGAL_METHOD_CALL).
      */
+    @JvmStatic
     fun addNotificationInvokedListener(listener: Consumer<String>) {
         if (!invokedHandlerAdded) {
             manager.addEventHandler(
@@ -259,6 +265,7 @@ object WAppNotificationManager {
     }
 
     /** Unsubscribes a listener registered via [addNotificationInvokedListener]. */
+    @JvmStatic
     fun removeNotificationInvokedListener(listener: Consumer<String>) {
         invokedListeners.remove(listener)
     }

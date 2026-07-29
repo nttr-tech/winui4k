@@ -53,21 +53,21 @@ final class ShellPages {
 
     private static void ensureNotificationRegistered() {
         if (!notificationRegistered) {
-            WAppNotificationManager.INSTANCE.register();
+            WAppNotificationManager.register();
             notificationRegistered = true;
         }
     }
 
     /** Whether notifications are usable in this environment: isSupported / setting. */
     private static WComponent buildNotificationStatusExample() {
-        WLabel supported = new WLabel("IsSupported: " + WAppNotificationManager.INSTANCE.isSupported());
+        WLabel supported = new WLabel("IsSupported: " + WAppNotificationManager.isSupported());
         WLabel setting = new WLabel("Setting: not fetched yet");
 
         WButton refreshButton = new WButton("Fetch Setting");
         refreshButton.addActionListener(() -> {
             String text;
             try {
-                text = "Setting: " + WAppNotificationManager.INSTANCE.getSetting();
+                text = "Setting: " + WAppNotificationManager.getSetting();
             } catch (Exception e) {
                 text = "Failed to fetch Setting: " + e.getMessage();
             }
@@ -105,7 +105,7 @@ final class ShellPages {
                 if (Boolean.TRUE.equals(longDuration.isChecked())) {
                     notification.setDuration(NotificationDuration.LONG);
                 }
-                WAppNotificationManager.INSTANCE.show(notification);
+                WAppNotificationManager.show(notification);
                 message = "Sent";
             } catch (Exception e) {
                 message = "Failed to send: " + e.getMessage();
@@ -133,7 +133,7 @@ final class ShellPages {
         scenarioComboBox.setSelectedIndex(0);
 
         WLabel received = new WLabel("Waiting for a click (clicking the notification body or a button delivers the argument here)");
-        WAppNotificationManager.INSTANCE.addNotificationInvokedListener(argument -> {
+        WAppNotificationManager.addNotificationInvokedListener(argument -> {
             received.setText("Received argument: " + argument);
         });
 
@@ -143,7 +143,7 @@ final class ShellPages {
             try {
                 ensureNotificationRegistered();
                 NotificationScenario scenario = NotificationScenario.values()[scenarioComboBox.getSelectedIndex()];
-                WAppNotificationManager.INSTANCE.show(
+                WAppNotificationManager.show(
                     new WAppNotification("Want to reply?")
                         .addText("Button clicks can be received on the app side.")
                         .addArgument("action", "open")
@@ -189,7 +189,7 @@ final class ShellPages {
         clearButton.addActionListener(() -> {
             String message;
             try {
-                WBadgeNotification.INSTANCE.clear();
+                WBadgeNotification.clear();
                 message = "Cleared the badge";
             } catch (Exception e) {
                 message = "Failed to clear: " + e.getMessage();
@@ -214,7 +214,7 @@ final class ShellPages {
         button.addActionListener(() -> {
             String message;
             try {
-                WBadgeNotification.INSTANCE.setCount(count);
+                WBadgeNotification.setCount(count);
                 message = "Set the badge to " + count + (count > 99 ? " (100 and above shows as 99+)" : "");
             } catch (Exception e) {
                 message = "Failed to set: " + e.getMessage();
@@ -239,7 +239,7 @@ final class ShellPages {
             BadgeGlyph glyph = BadgeGlyph.values()[glyphComboBox.getSelectedIndex()];
             String message;
             try {
-                WBadgeNotification.INSTANCE.setGlyph(glyph);
+                WBadgeNotification.setGlyph(glyph);
                 message = "Set the badge to " + glyph;
             } catch (Exception e) {
                 message = "Failed to set: " + e.getMessage();
@@ -272,10 +272,10 @@ final class ShellPages {
 
         // IsSupported can return true even for a run without a package identity, so verify it by actually loading
         Throwable loadFailure;
-        if (WJumpList.Companion.isSupported()) {
+        if (WJumpList.isSupported()) {
             Throwable failure = null;
             try {
-                WJumpList.Companion.load();
+                WJumpList.load();
             } catch (Exception e) {
                 failure = e;
             }
@@ -312,7 +312,7 @@ final class ShellPages {
         WButton addButton = new WButton("Add item and save");
         addButton.addActionListener(() -> {
             edit(jumpList -> {
-                WJumpListItem item = WJumpListItem.Companion.of(argumentsField.getText(), nameField.getText());
+                WJumpListItem item = WJumpListItem.of(argumentsField.getText(), nameField.getText());
                 item.setDescription("An item added by WinUI4K Gallery");
                 item.setGroupName("Gallery");
                 jumpList.add(item);
@@ -323,7 +323,7 @@ final class ShellPages {
         WButton separatorButton = new WButton("Add separator and save");
         separatorButton.addActionListener(() -> {
             edit(jumpList -> {
-                jumpList.add(WJumpListItem.Companion.separator());
+                jumpList.add(WJumpListItem.separator());
                 return "Added a separator";
             }, result, itemsLabel);
         });
@@ -337,7 +337,7 @@ final class ShellPages {
         });
 
         try {
-            refreshItems(WJumpList.Companion.load(), itemsLabel);
+            refreshItems(WJumpList.load(), itemsLabel);
         } catch (Exception ignored) {
         }
 
@@ -370,7 +370,7 @@ final class ShellPages {
     private static void edit(Function<WJumpList, String> block, WLabel result, WLabel itemsLabel) {
         String message;
         try {
-            WJumpList jumpList = WJumpList.Companion.load();
+            WJumpList jumpList = WJumpList.load();
             String text = block.apply(jumpList);
             jumpList.save();
             refreshItems(jumpList, itemsLabel);

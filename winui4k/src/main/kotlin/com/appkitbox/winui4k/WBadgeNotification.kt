@@ -21,17 +21,20 @@ object WBadgeNotification {
     }
 
     /** Sets the badge to a number (e.g. an unread count). 100 and above shows as "99+". */
+    @JvmStatic
     fun setCount(count: Int) {
         require(count >= 0) { "count must be 0 or greater: $count" }
         manager.call(NotificationInterop.IBadgeNotificationManager_SetBadgeAsCount, count)
     }
 
     /** Sets the badge to a status glyph (alarm / playing, etc.). */
+    @JvmStatic
     fun setGlyph(glyph: BadgeGlyph) {
         manager.call(NotificationInterop.IBadgeNotificationManager_SetBadgeAsGlyph, glyph.native)
     }
 
     /** Clears the badge. */
+    @JvmStatic
     fun clear() {
         manager.call(NotificationInterop.IBadgeNotificationManager_ClearBadge)
     }

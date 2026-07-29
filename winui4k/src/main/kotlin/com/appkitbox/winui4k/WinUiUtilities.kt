@@ -83,6 +83,7 @@ object WinUiUtilities {
      * Only callable before the first FFI use (= WinUI startup).
      * Can also be selected via the system property -Dwinui4k.ffi=panama|jna.
      */
+    @JvmStatic
     fun setFfiBackend(backend: FfiBackend) {
         Ffi.setBackend(backend)
     }
@@ -147,6 +148,7 @@ object WinUiUtilities {
     }
 
     /** True if the current thread is WinUI's UI thread (SwingUtilities.isEventDispatchThread-like). */
+    @JvmStatic
     val isDispatchThread: Boolean
         get() = Dispatcher.isDispatchThread
 
@@ -156,6 +158,7 @@ object WinUiUtilities {
      * Calls made after the app has exited (the last window closed) throw [IllegalStateException].
      * A [block] posted right before exit may not run.
      */
+    @JvmStatic
     fun invokeLater(block: Runnable) {
         ensureStarted()
         Dispatcher.invokeLater(block::run)
@@ -166,6 +169,7 @@ object WinUiUtilities {
      * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
      * fired yet. Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
      */
+    @JvmStatic
     fun schedule(delayMillis: Long, block: Runnable): AutoCloseable {
         ensureStarted()
         return Dispatcher.schedule(delayMillis, block::run)
@@ -176,6 +180,7 @@ object WinUiUtilities {
      * Set to false to keep the message loop running even after every window closes,
      * so [invokeLater] can still open a new window. Call [exit] to shut down explicitly.
      */
+    @JvmStatic
     @Volatile
     var exitOnLastWindowClosed: Boolean = true
 
@@ -206,6 +211,7 @@ object WinUiUtilities {
      * Exits the app (Application.Exit). The message loop ends, the UI thread returns, and
      * any later [invokeLater] call throws [IllegalStateException]. Callable from any thread.
      */
+    @JvmStatic
     fun exit() {
         invokeLater { exitNow() }
     }

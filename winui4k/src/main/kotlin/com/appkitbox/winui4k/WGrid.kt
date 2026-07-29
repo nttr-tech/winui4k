@@ -16,12 +16,15 @@ class GridLength private constructor(
 ) {
     companion object {
         /** Sized to fit its content (Auto). */
+        @JvmField
         val AUTO = GridLength(0.0, 0)
 
         /** A fixed pixel size. */
+        @JvmStatic
         fun pixel(value: Double) = GridLength(value, 1)
 
         /** A proportional share of the remaining space (Star). [weight] is the share's weight. */
+        @JvmStatic
         @JvmOverloads
         fun star(weight: Double = 1.0) = GridLength(weight, 2)
     }

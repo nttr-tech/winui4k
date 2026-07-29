@@ -169,6 +169,7 @@ class WTitleBar : WControl(
          * Sets whether [component] is treated as a draggable region (the TitleBar.IsDragRegion
          * attached property). Passing null restores the default auto-detection (AutoRefreshDragRegions).
          */
+        @JvmStatic
         fun setIsDragRegion(component: WComponent, isDragRegion: Boolean?) {
             if (isDragRegion == null) {
                 statics2.call(XamlInterop.ITitleBarStatics2_SetIsDragRegion, component.uiElement.ptr, null)

@@ -170,6 +170,7 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
 
     companion object {
         /** Creates a new OverlappedPresenter for a normal window (OverlappedPresenterStatics.Create). */
+        @JvmStatic
         fun create(): WOverlappedPresenter {
             val statics = Activation.factory(WindowingInterop.CLS_OverlappedPresenter, WindowingInterop.IID_IOverlappedPresenterStatics)
             return try {
@@ -183,6 +184,7 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
          * Creates an OverlappedPresenter for a dialog (thin border, not shown in the taskbar)
          * (OverlappedPresenterStatics.CreateForDialog). Also set [isModal] to true to make it modal.
          */
+        @JvmStatic
         fun createForDialog(): WOverlappedPresenter {
             val statics = Activation.factory(WindowingInterop.CLS_OverlappedPresenter, WindowingInterop.IID_IOverlappedPresenterStatics)
             return try {
@@ -203,6 +205,7 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
 class WFullScreenPresenter internal constructor(ptr: ComPtr) : WAppWindowPresenter(ptr) {
     companion object {
         /** Creates a new FullScreenPresenter (FullScreenPresenterStatics.Create). */
+        @JvmStatic
         fun create(): WFullScreenPresenter {
             val statics = Activation.factory(WindowingInterop.CLS_FullScreenPresenter, WindowingInterop.IID_IFullScreenPresenterStatics)
             return try {
@@ -246,6 +249,7 @@ class WCompactOverlayPresenter internal constructor(ptr: ComPtr) : WAppWindowPre
 
     companion object {
         /** Creates a new CompactOverlayPresenter (CompactOverlayPresenterStatics.Create). */
+        @JvmStatic
         fun create(): WCompactOverlayPresenter {
             val statics = Activation.factory(WindowingInterop.CLS_CompactOverlayPresenter, WindowingInterop.IID_ICompactOverlayPresenterStatics)
             return try {

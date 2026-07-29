@@ -39,12 +39,14 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
         }
 
         /** Gets the primary display's DisplayArea (DisplayAreaStatics.Primary). */
+        @JvmStatic
         fun primary(): WDisplayArea = WDisplayArea(statics.getPtr(WindowingInterop.IDisplayAreaStatics_get_Primary))
 
         /**
          * Gets the DisplayArea closest to whatever display [appWindow] is on
          * (DisplayAreaStatics.GetFromWindowId, with the fallback fixed to Nearest).
          */
+        @JvmStatic
         fun nearest(appWindow: WAppWindow): WDisplayArea = Ffi.backend.withScope { scope ->
             val windowId = XamlStructs.windowIdValue(scope, appWindow.id)
             WDisplayArea(

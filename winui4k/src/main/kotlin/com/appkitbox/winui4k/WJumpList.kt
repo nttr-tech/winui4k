@@ -20,6 +20,7 @@ import com.appkitbox.winui4k.internal.winui.NotificationInterop
 class WJumpList private constructor(private val jumpList: ComPtr) {
     companion object {
         /** Whether jump lists are usable in this environment (JumpList.IsSupported). */
+        @JvmStatic
         val isSupported: Boolean
             get() {
                 val statics = Activation.factory(NotificationInterop.CLS_JumpList, NotificationInterop.IID_IJumpListStatics)
@@ -31,6 +32,7 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
             }
 
         /** Loads the current jump list (awaits JumpList.LoadCurrentAsync's completion). */
+        @JvmStatic
         fun load(): WJumpList {
             val statics = Activation.factory(NotificationInterop.CLS_JumpList, NotificationInterop.IID_IJumpListStatics)
             val operation = statics.getPtr(NotificationInterop.IJumpListStatics_LoadCurrentAsync)
@@ -98,6 +100,7 @@ class WJumpList private constructor(private val jumpList: ComPtr) {
 class WJumpListItem internal constructor(internal val item: ComPtr) {
     companion object {
         /** Creates an item with launch arguments (JumpListItem.CreateWithArguments). */
+        @JvmStatic
         fun of(arguments: String, displayName: String): WJumpListItem {
             val statics = Activation.factory(NotificationInterop.CLS_JumpListItem, NotificationInterop.IID_IJumpListItemStatics)
             val item = Hstring.use(arguments) { a ->
@@ -110,6 +113,7 @@ class WJumpListItem internal constructor(internal val item: ComPtr) {
         }
 
         /** Creates a separator item (JumpListItem.CreateSeparator). */
+        @JvmStatic
         fun separator(): WJumpListItem {
             val statics = Activation.factory(NotificationInterop.CLS_JumpListItem, NotificationInterop.IID_IJumpListItemStatics)
             val item = statics.getPtr(NotificationInterop.IJumpListItemStatics_CreateSeparator)

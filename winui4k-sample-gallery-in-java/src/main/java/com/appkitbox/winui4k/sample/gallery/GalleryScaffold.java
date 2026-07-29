@@ -93,9 +93,9 @@ final class GalleryScaffold {
         // Lay the example (fills remaining width) and Options (fixed width) side by side
         WGrid grid = new WGrid();
         grid.setColumnSpacing(12.0);
-        grid.addColumn(GridLength.Companion.star(1.0));
-        grid.addColumn(GridLength.Companion.getAUTO());
-        grid.addRow(GridLength.Companion.getAUTO());
+        grid.addColumn(GridLength.star());
+        grid.addColumn();
+        grid.addRow();
         grid.add(exampleCard, 0, 0, 1, 1);
         grid.add(optionsCard, 0, 1, 1, 1);
 

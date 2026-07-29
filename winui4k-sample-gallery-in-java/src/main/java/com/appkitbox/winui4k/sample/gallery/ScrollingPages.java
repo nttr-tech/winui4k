@@ -57,7 +57,7 @@ final class ScrollingPages {
             for (int column = 0; column < 6; column++) {
                 WBorder tile = GalleryScaffold.buildTile(palette.get((row + column) % palette.size()), 130.0, 48.0);
                 WLabel label = new WLabel(row + "-" + column);
-                label.setForeground(WColor.Companion.getWHITE());
+                label.setForeground(WColor.WHITE);
                 tile.setChild(label);
                 tile.setPadding(8.0);
                 rowPanel.add(tile);

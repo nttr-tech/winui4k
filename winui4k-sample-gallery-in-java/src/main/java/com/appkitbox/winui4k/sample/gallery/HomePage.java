@@ -230,7 +230,7 @@ final class HomePage {
 
         // Placing them in the same cell draws the buttons in front of the scrolled content
         WGrid container = new WGrid();
-        container.addRow(GridLength.Companion.getAUTO());
+        container.addRow();
         container.add(scroller, 0, 0, 1, 1);
         container.add(backButton, 0, 0, 1, 1);
         container.add(forwardButton, 0, 0, 1, 1);
@@ -363,7 +363,7 @@ final class HomePage {
 
         // Placing children in the same cell draws the later-added one on top (overlays text on the image)
         WGrid header = new WGrid();
-        header.addRow(GridLength.Companion.getAUTO());
+        header.addRow();
         header.add(heroBackground, 0, 0, 1, 1);
         header.add(heroFade, 0, 0, 1, 1);
         header.add(overlay, 0, 0, 1, 1);
@@ -409,8 +409,8 @@ final class HomePage {
         // Equivalent to the inner Grid of the official Tile (Padding="24", rows 36 / *). Fixing the icon row height
         // keeps the title and everything below it at the same y position across all tiles, image icon or glyph icon
         WGrid content = new WGrid();
-        content.addRow(GridLength.Companion.pixel(36.0));
-        content.addRow(GridLength.Companion.star(1.0));
+        content.addRow(GridLength.pixel(36.0));
+        content.addRow(GridLength.star());
         content.add(icon, 0, 0, 1, 1);
         content.add(texts, 1, 0, 1, 1);
         content.setMargin(24.0);
@@ -427,7 +427,7 @@ final class HomePage {
 
         // Placing them in the same cell draws the icon at the body's bottom-right
         WGrid body = new WGrid();
-        body.addRow(GridLength.Companion.getAUTO());
+        body.addRow();
         body.add(content, 0, 0, 1, 1);
         body.add(cornerIcon, 0, 0, 1, 1);
 

@@ -97,6 +97,7 @@ class WAppWindow internal constructor(private val appWindow: ComPtr) {
          * `frame.setContentPane`, so the caller must either prepare a separate [WFrame] to show
          * whatever UI is needed, or operate on this AppWindow itself).
          */
+        @JvmStatic
         @JvmOverloads
         fun create(presenter: WAppWindowPresenter, owner: WFrame? = null): WAppWindow {
             val statics = Activation.factory(WindowingInterop.CLS_AppWindow, WindowingInterop.IID_IAppWindowStatics)

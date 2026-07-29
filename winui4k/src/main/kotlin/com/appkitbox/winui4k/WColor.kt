@@ -23,15 +23,34 @@ class WColor @JvmOverloads constructor(
     }
 
     companion object {
+        @JvmField
         val BLACK = WColor(0, 0, 0)
+
+        @JvmField
         val WHITE = WColor(255, 255, 255)
+
+        @JvmField
         val GRAY = WColor(128, 128, 128)
+
+        @JvmField
         val LIGHT_GRAY = WColor(192, 192, 192)
+
+        @JvmField
         val RED = WColor(237, 28, 36)
+
+        @JvmField
         val GREEN = WColor(34, 177, 76)
+
+        @JvmField
         val BLUE = WColor(0, 120, 215)
+
+        @JvmField
         val YELLOW = WColor(255, 201, 14)
+
+        @JvmField
         val ORANGE = WColor(255, 127, 39)
+
+        @JvmField
         val PURPLE = WColor(163, 73, 164)
     }
 }

@@ -157,9 +157,9 @@ final class SettingsPage {
         WComponent control
     ) {
         WGrid grid = new WGrid(0.0, 16.0);
-        grid.addColumn(GridLength.Companion.getAUTO());
-        grid.addColumn(GridLength.Companion.star(1.0));
-        grid.addColumn(GridLength.Companion.getAUTO());
+        grid.addColumn();
+        grid.addColumn(GridLength.star());
+        grid.addColumn();
 
         WLabel icon = new WLabel(glyph);
         icon.setFontFamily("Segoe Fluent Icons");

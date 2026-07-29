@@ -43,7 +43,7 @@ public class MainForGallery {
     }
 
     public static void main(String[] args) {
-        WinUiUtilities.INSTANCE.invokeLater(() -> {
+        WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("WinUI4K Gallery");
 
             // The root that hosts the title bar and navigation. Settings' App theme is set here as
@@ -157,7 +157,7 @@ public class MainForGallery {
                         // on Loaded (an asynchronous point after this callback), so it is scheduled once more after the
                         // layout settles to restore the main title
                         frame.setTitle("WinUI4K Gallery");
-                        WinUiUtilities.INSTANCE.schedule(200, () -> {
+                        WinUiUtilities.schedule(200, () -> {
                             frame.setTitle("WinUI4K Gallery");
                         });
                     });
@@ -223,8 +223,8 @@ public class MainForGallery {
                 }
             });
 
-            rootGrid.addRow(GridLength.Companion.getAUTO());
-            rootGrid.addRow(GridLength.Companion.star(1.0));
+            rootGrid.addRow();
+            rootGrid.addRow(GridLength.star());
             rootGrid.add(titleBar, 0, 0, 1, 1);
             rootGrid.add(navigationView, 1, 0, 1, 1);
 
@@ -234,7 +234,7 @@ public class MainForGallery {
             rootGrid.addActualThemeChangedListener(() -> {
                 GalleryTheme.isDarkTheme = rootGrid.getActualTheme() == ElementTheme.DARK;
                 pageBackground.setBackground(GalleryTheme.PAGE_BACKGROUND());
-                WinUiUtilities.INSTANCE.invokeLater(() -> {
+                WinUiUtilities.invokeLater(() -> {
                     String name = currentPageName[0];
                     if (name == null) {
                         showHome.run();

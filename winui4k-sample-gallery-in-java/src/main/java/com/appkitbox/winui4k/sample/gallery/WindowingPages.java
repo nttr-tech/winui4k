@@ -161,7 +161,7 @@ final class WindowingPages {
             WFrame frame = child[0];
             if (frame == null) {
             }
-            WRectangle workArea = WDisplayArea.Companion.nearest(frame.getAppWindow()).getWorkArea();
+            WRectangle workArea = WDisplayArea.nearest(frame.getAppWindow()).getWorkArea();
             WDimension size = frame.getAppWindow().getSize();
             int x = workArea.getX() + (workArea.getWidth() - size.getWidth()) / 2;
             int y = workArea.getY() + (workArea.getHeight() - size.getHeight()) / 2;
@@ -191,7 +191,7 @@ final class WindowingPages {
             addCloseButton(frame);
             frame.add(new WLabel("Use the toggles and buttons to operate OverlappedPresenter's properties."));
             frame.getAppWindow().resize(480, 360);
-            WOverlappedPresenter newPresenter = WOverlappedPresenter.Companion.create();
+            WOverlappedPresenter newPresenter = WOverlappedPresenter.create();
             frame.getAppWindow().setPresenter(newPresenter);
             child[0] = frame;
             presenter[0] = newPresenter;
@@ -301,7 +301,7 @@ final class WindowingPages {
             addCloseButton(frame);
             frame.add(new WLabel("Drag-resize the window to see the constraints in action."));
             frame.getAppWindow().resize(400, 300);
-            WOverlappedPresenter newPresenter = WOverlappedPresenter.Companion.create();
+            WOverlappedPresenter newPresenter = WOverlappedPresenter.create();
             newPresenter.setPreferredMinimumWidth(300);
             newPresenter.setPreferredMinimumHeight(200);
             newPresenter.setPreferredMaximumWidth(800);
@@ -345,9 +345,9 @@ final class WindowingPages {
             // Creates a raw AppWindow that requires an owner (the Gallery itself). Even with IsModal=true it is
             // a bare AppWindow with no Content, so a real app would have to layer its own UI on top of it.
             WFrame mainFrame = new WFrame("Gallery");
-            WOverlappedPresenter presenter = WOverlappedPresenter.Companion.createForDialog();
+            WOverlappedPresenter presenter = WOverlappedPresenter.createForDialog();
             presenter.setModal(true);
-            WAppWindow modalWindow = WAppWindow.Companion.create(presenter, mainFrame);
+            WAppWindow modalWindow = WAppWindow.create(presenter, mainFrame);
             modalWindow.setTitle("Modal AppWindow (no content)");
             modalWindow.resize(360, 200);
             status.setText("Created an AppWindow with IsModal = " + presenter.isModal() + " "
@@ -389,7 +389,7 @@ final class WindowingPages {
             WFrame frame = child[0];
             if (frame == null) {
             }
-            frame.getAppWindow().setPresenter(WFullScreenPresenter.Companion.create());
+            frame.getAppWindow().setPresenter(WFullScreenPresenter.create());
             status.setText("Switched to FullScreenPresenter");
         });
 
@@ -450,7 +450,7 @@ final class WindowingPages {
             if (frame == null) {
             }
             CompactOverlaySize size = CompactOverlaySize.values()[Math.max(sizeCombo.getSelectedIndex(), 0)];
-            WCompactOverlayPresenter presenter = WCompactOverlayPresenter.Companion.create();
+            WCompactOverlayPresenter presenter = WCompactOverlayPresenter.create();
             presenter.setInitialSize(size);
             frame.getAppWindow().setPresenter(presenter);
             status.setText("Switched to CompactOverlayPresenter (InitialSize = " + size + ")");
@@ -549,7 +549,7 @@ final class WindowingPages {
         targetCombo.setSelectedIndex(0);
 
         WColorPicker picker = new WColorPicker();
-        picker.setColor(WColor.Companion.getBLUE());
+        picker.setColor(WColor.BLUE);
 
         WButton applyButton = new WButton("Apply this color");
         applyButton.addActionListener(() -> {
@@ -869,16 +869,16 @@ final class WindowingPages {
         titleBar.setTitle("Drag region demo");
 
         WButton dragButton = new WButton("This spot is a drag region (SetIsDragRegion = true)");
-        WTitleBar.Companion.setIsDragRegion(dragButton, true);
+        WTitleBar.setIsDragRegion(dragButton, true);
 
         WButton autoButton = new WButton("Restore default auto-detection (null)");
         autoButton.addActionListener(() -> {
-            WTitleBar.Companion.setIsDragRegion(dragButton, null);
+            WTitleBar.setIsDragRegion(dragButton, null);
         });
 
         WButton nonDragButton = new WButton("SetIsDragRegion = false");
         nonDragButton.addActionListener(() -> {
-            WTitleBar.Companion.setIsDragRegion(dragButton, false);
+            WTitleBar.setIsDragRegion(dragButton, false);
         });
 
         WLabel note = new WLabel(
@@ -931,8 +931,8 @@ final class WindowingPages {
             });
 
             WGrid root = new WGrid();
-            root.addRow(GridLength.Companion.getAUTO());
-            root.addRow(GridLength.Companion.star(1.0));
+            root.addRow();
+            root.addRow(GridLength.star());
             root.add(titleBar, 0, 0, 1, 1);
             root.add(navigationView, 1, 0, 1, 1);
 
