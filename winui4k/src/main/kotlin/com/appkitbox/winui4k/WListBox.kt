@@ -53,7 +53,7 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     }
 
     /** Event tokens for SelectionChanged registered via addListSelectionListener. */
-    private val selectionTokens = ListenerTokens<() -> Unit>()
+    private val selectionTokens = ListenerTokens<Runnable>()
 
     /** Item count (Items.Size). */
     val itemCount: Int
@@ -152,17 +152,17 @@ class WListBox(items: List<String> = emptyList()) : WControl(
     }
 
     /** ListSelectionListener-like. Backed by a subscription to Selector.SelectionChanged. */
-    fun addListSelectionListener(listener: () -> Unit) {
+    fun addListSelectionListener(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
             XamlInterop.ISelector_add_SelectionChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
-    fun removeListSelectionListener(listener: () -> Unit) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }

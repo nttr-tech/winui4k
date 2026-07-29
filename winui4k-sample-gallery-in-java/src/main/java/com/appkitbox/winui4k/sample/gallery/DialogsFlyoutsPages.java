@@ -20,7 +20,6 @@ import com.appkitbox.winui4k.WPopup;
 import com.appkitbox.winui4k.WTeachingTip;
 import java.util.ArrayList;
 import java.util.List;
-import kotlin.Unit;
 
 /*
  * Dialogs & flyouts category: demo pages for ContentDialog / Flyout / Popup / TeachingTip.
@@ -64,9 +63,7 @@ final class DialogsFlyoutsPages {
                         result.setText("Result: Cancel");
                         break;
                 }
-                return Unit.INSTANCE;
             });
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -92,16 +89,13 @@ final class DialogsFlyoutsPages {
         dialog.setPrimaryButtonEnabled(false);
         agreeCheckBox.addItemListener((checked) -> {
             dialog.setPrimaryButtonEnabled(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WButton showButton = new WButton("Show dialog with consent checkbox");
         showButton.addActionListener(() -> {
             dialog.show(showButton, (dialogResult) -> {
                 result.setText(dialogResult == ContentDialogResult.PRIMARY ? "Result: Continue" : "Result: Cancel");
-                return Unit.INSTANCE;
             });
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -135,7 +129,6 @@ final class DialogsFlyoutsPages {
         deleteButton.addActionListener(() -> {
             result.setText("Deleted");
             flyout.hide();
-            return Unit.INSTANCE;
         });
         flyoutContent.add(deleteButton);
 
@@ -163,13 +156,11 @@ final class DialogsFlyoutsPages {
         placementComboBox.setSelectedIndex(FlyoutPlacement.TOP.ordinal());
         placementComboBox.addListSelectionListener(() -> {
             flyout.setPlacement(FlyoutPlacement.values()[placementComboBox.getSelectedIndex()]);
-            return Unit.INSTANCE;
         });
 
         WButton showButton = new WButton("Show flyout");
         showButton.addActionListener(() -> {
             flyout.showAt(showButton);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -201,7 +192,6 @@ final class DialogsFlyoutsPages {
         popup.setVerticalOffset(200.0);
         popup.addCloseListener(() -> {
             result.setText("State: collapsed");
-            return Unit.INSTANCE;
         });
 
         WPanel popupContent = new WPanel(8.0, Orientation.VERTICAL);
@@ -211,7 +201,6 @@ final class DialogsFlyoutsPages {
         WButton closeButton = new WButton("Close");
         closeButton.addActionListener(() -> {
             popup.hide();
-            return Unit.INSTANCE;
         });
         popupContent.add(closeButton);
 
@@ -227,7 +216,6 @@ final class DialogsFlyoutsPages {
         WCheckBox lightDismissCheckBox = new WCheckBox("Close on an outside click (IsLightDismissEnabled)");
         lightDismissCheckBox.addItemListener((checked) -> {
             popup.setLightDismissEnabled(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WButton showButton = new WButton("Show popup");
@@ -236,7 +224,6 @@ final class DialogsFlyoutsPages {
                 popup.show(showButton);
                 result.setText("State: expanded");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -277,18 +264,15 @@ final class DialogsFlyoutsPages {
         tip.addActionListener(() -> {
             result.setText("Action: turned on autosave");
             tip.hide();
-            return Unit.INSTANCE;
         });
         tip.addCloseListener((reason) -> {
             if (reason != TeachingTipCloseReason.PROGRAMMATIC) {
                 result.setText("Reason for closing: " + reason);
             }
-            return Unit.INSTANCE;
         });
 
         showButton.addActionListener(() -> {
             tip.show();
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -307,7 +291,6 @@ final class DialogsFlyoutsPages {
         WButton showButton = new WButton("Show announcement");
         showButton.addActionListener(() -> {
             tip.show();
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);

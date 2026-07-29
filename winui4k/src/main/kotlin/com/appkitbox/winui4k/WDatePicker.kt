@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.time.LocalDate
+import java.util.function.Consumer
 
 /**
  * WinUI 3's DatePicker (a Control subclass).
@@ -19,7 +20,7 @@ import java.time.LocalDate
 class WDatePicker : WControl(
     Activation.composeDefault(XamlInterop.CLS_DatePicker, XamlInterop.IID_IDatePickerFactory),
 ) {
-    private val selectedDateChangedTokens = ListenerTokens<(LocalDate?) -> Unit>()
+    private val selectedDateChangedTokens = ListenerTokens<Consumer<LocalDate?>>()
 
     /** The heading text (DatePicker.Header). */
     var header: String
@@ -97,7 +98,7 @@ class WDatePicker : WControl(
         set(value) = inspectable.call(XamlInterop.IDatePicker_put_Orientation, value.native)
 
     /** Registers a listener for when the selected date changes (DatePicker.SelectedDateChanged). */
-    fun addSelectedDateChangedListener(listener: (LocalDate?) -> Unit) {
+    fun addSelectedDateChangedListener(listener: Consumer<LocalDate?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.DatePickerSelectedDateChangedHandler",
             XamlInterop.IID_DatePickerSelectedDateChangedHandler,
@@ -110,13 +111,13 @@ class WDatePicker : WControl(
                 it.release()
                 ticks?.let { t -> DateTimeConversions.ticksToLocalDate(t) }
             }
-            listener(newDate)
+            listener.accept(newDate)
         }
         selectedDateChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSelectedDateChangedListener]. */
-    fun removeSelectedDateChangedListener(listener: (LocalDate?) -> Unit) {
+    fun removeSelectedDateChangedListener(listener: Consumer<LocalDate?>) {
         val token = selectedDateChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IDatePicker_remove_SelectedDateChanged, token)
     }

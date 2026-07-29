@@ -96,20 +96,20 @@ class WScrollPane(content: WComponent? = null) : WControl(
     }
 
     /** Event tokens registered via addViewChangedListener. */
-    private val viewChangedTokens = ListenerTokens<() -> Unit>()
+    private val viewChangedTokens = ListenerTokens<Runnable>()
 
     /** Subscribes to scroll position changes (ScrollViewer.ViewChanged; also fires during inertial scrolling). */
-    fun addViewChangedListener(listener: () -> Unit) {
+    fun addViewChangedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewerViewChangedHandler",
             XamlInterop.IID_ScrollViewerViewChangedHandler,
             XamlInterop.IScrollViewer_add_ViewChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         viewChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addViewChangedListener]. */
-    fun removeViewChangedListener(listener: () -> Unit) {
+    fun removeViewChangedListener(listener: Runnable) {
         val token = viewChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IScrollViewer_remove_ViewChanged, token)
     }

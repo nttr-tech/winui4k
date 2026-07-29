@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Common base for commands that can be set on ButtonBase.Command / MenuFlyoutItem.Command
@@ -29,7 +30,7 @@ abstract class WCommandBase internal constructor() {
  */
 class WCommand(
     isEnabled: Boolean = true,
-    private val execute: (parameter: String?) -> Unit,
+    private val execute: Consumer<String?>,
 ) : WCommandBase() {
     override val commandPtr: Ptr
         get() = comObject.primary
@@ -79,7 +80,7 @@ class WCommand(
                 // vtbl[9] Execute(this, parameter)
                 KComObject.Method(DESC_THIS_PTR) { args ->
                     val param = args[1] as Ptr
-                    execute(
+                    execute.accept(
                         if (param.isNull) null else PropertyValues.unboxString(ComPtr(param)),
                     )
                     KComObject.S_OK

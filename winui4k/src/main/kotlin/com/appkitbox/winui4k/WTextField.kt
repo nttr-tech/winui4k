@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * JTextField-like: WinUI 3's TextBox.
@@ -19,7 +20,7 @@ class WTextField(placeholder: String = "") : WControl(
         .queryInterface(XamlInterop.IID_ITextBox),
 ) {
     /** TextChanged event tokens registered via addTextChangedListener. */
-    private val textChangedTokens = ListenerTokens<(String) -> Unit>()
+    private val textChangedTokens = ListenerTokens<Consumer<String>>()
 
     var text: String
         get() = inspectable.getString(XamlInterop.ITextBox_get_Text)
@@ -83,17 +84,17 @@ class WTextField(placeholder: String = "") : WControl(
     }
 
     /** Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change. */
-    fun addTextChangedListener(listener: (String) -> Unit) {
+    fun addTextChangedListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TextChangedHandler",
             XamlInterop.IID_TextChangedEventHandler,
             XamlInterop.ITextBox_add_TextChanged,
-        ) { _, _ -> listener(text) }
+        ) { _, _ -> listener.accept(text) }
         textChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
-    fun removeTextChangedListener(listener: (String) -> Unit) {
+    fun removeTextChangedListener(listener: Consumer<String>) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITextBox_remove_TextChanged, token)
     }

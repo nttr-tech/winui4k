@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.IntConsumer
 
 /**
  * Microsoft.UI.Xaml.Controls.TabViewWidthMode (how tab widths are decided).
@@ -111,9 +112,9 @@ class WTabView : WControl(
     private val tabs = mutableListOf<WTabViewItem>()
 
     /** Listener → event token (used by the remove functions). */
-    private val selectionTokens = ListenerTokens<() -> Unit>()
-    private val addTabButtonTokens = ListenerTokens<() -> Unit>()
-    private val closeRequestedTokens = ListenerTokens<(Int) -> Unit>()
+    private val selectionTokens = ListenerTokens<Runnable>()
+    private val addTabButtonTokens = ListenerTokens<Runnable>()
+    private val closeRequestedTokens = ListenerTokens<IntConsumer>()
 
     /** The number of tabs. */
     val tabCount: Int
@@ -159,33 +160,33 @@ class WTabView : WControl(
     fun getTab(index: Int): WTabViewItem = tabs[index]
 
     /** Subscribes to selection changes (TabView.SelectionChanged). */
-    fun addSelectionListener(listener: () -> Unit) {
+    fun addSelectionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
             XamlInterop.ITabView_add_SelectionChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSelectionListener]. */
-    fun removeSelectionListener(listener: () -> Unit) {
+    fun removeSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_SelectionChanged, token)
     }
 
     /** Subscribes to a click of the "+" button at the end of the tab strip (TabView.AddTabButtonClick). */
-    fun addAddTabButtonClickListener(listener: () -> Unit) {
+    fun addAddTabButtonClickListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewAddTabButtonClickHandler",
             XamlInterop.IID_TabViewAddTabButtonClickHandler,
             XamlInterop.ITabView_add_AddTabButtonClick,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         addTabButtonTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addAddTabButtonClickListener]. */
-    fun removeAddTabButtonClickListener(listener: () -> Unit) {
+    fun removeAddTabButtonClickListener(listener: Runnable) {
         val token = addTabButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_AddTabButtonClick, token)
     }
@@ -195,7 +196,7 @@ class WTabView : WControl(
      * The listener receives the target tab's index. TabView doesn't close the tab automatically,
      * so call [removeTab] from the listener if it's OK to close it.
      */
-    fun addTabCloseRequestedListener(listener: (Int) -> Unit) {
+    fun addTabCloseRequestedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewTabCloseRequestedHandler",
             XamlInterop.IID_TabViewTabCloseRequestedHandler,
@@ -207,13 +208,13 @@ class WTabView : WControl(
             } finally {
                 tab.release()
             }
-            if (index >= 0) listener(index)
+            if (index >= 0) listener.accept(index)
         }
         closeRequestedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addTabCloseRequestedListener]. */
-    fun removeTabCloseRequestedListener(listener: (Int) -> Unit) {
+    fun removeTabCloseRequestedListener(listener: IntConsumer) {
         val token = closeRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_TabCloseRequested, token)
     }

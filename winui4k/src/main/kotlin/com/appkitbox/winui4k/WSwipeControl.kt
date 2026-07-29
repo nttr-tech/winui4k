@@ -156,7 +156,7 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
     private val lifetime = ComLifetime.adopt(this, inspectable)
 
     /** Invoked event tokens registered via addActionListener. */
-    private val invokedTokens = ListenerTokens<() -> Unit>()
+    private val invokedTokens = ListenerTokens<Runnable>()
 
     /** The button's label (SwipeItem.Text). */
     var text: String
@@ -210,17 +210,17 @@ class WSwipeItem(text: String = "", icon: Symbol? = null) {
      * ActionListener-like: subscribes to the item running. Subscribes to SwipeItem.Invoked
      * (TypedEventHandler<SwipeItem, SwipeItemInvokedEventArgs>) under the hood.
      */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SwipeItemInvokedHandler",
             XamlInterop.IID_SwipeItemInvokedHandler,
             XamlInterop.ISwipeItem_add_Invoked,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         invokedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = invokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISwipeItem_remove_Invoked, token)
     }

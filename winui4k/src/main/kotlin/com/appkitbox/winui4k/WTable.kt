@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.util.function.IntConsumer
 
 /**
  * A column's sort direction (equivalent to WinUI.TableView's SortDirection).
@@ -119,10 +120,10 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     private val headerButtons: List<WButton>
 
     /** SelectionChanged event tokens registered via addRowSelectionListener. */
-    private val selectionTokens = ListenerTokens<() -> Unit>()
+    private val selectionTokens = ListenerTokens<Runnable>()
 
     /** Listeners registered via addRowInvokedListener (invoked from each row element's DoubleTapped). */
-    private val rowInvokedListeners = mutableListOf<(Int) -> Unit>()
+    private val rowInvokedListeners = mutableListOf<IntConsumer>()
 
     /** A guard so listeners don't fire from the re-selection that happens during rebuildItems. */
     private var isRebuilding = false
@@ -312,7 +313,7 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
         ) { _, _ ->
             val modelIndex = rows.indexOf(row)
             if (modelIndex >= 0) {
-                for (listener in rowInvokedListeners.toList()) listener(modelIndex)
+                for (listener in rowInvokedListeners.toList()) listener.accept(modelIndex)
             }
         }
         return row
@@ -375,17 +376,17 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
     }
 
     /** Subscribes to row-selection changes. Backed by subscribing to Selector.SelectionChanged. */
-    fun addRowSelectionListener(listener: () -> Unit) {
+    fun addRowSelectionListener(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
             XamlInterop.ISelector_add_SelectionChanged,
-        ) { _, _ -> if (!isRebuilding) listener() }
+        ) { _, _ -> if (!isRebuilding) listener.run() }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addRowSelectionListener]. */
-    fun removeRowSelectionListener(listener: () -> Unit) {
+    fun removeRowSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -395,12 +396,12 @@ class WTable(private val columns: List<WTableColumn>) : WControl(
      * Listeners receive the row's model index (insertion order).
      * Use this for actions that commit a row, such as double-click-to-open in the Filer sample.
      */
-    fun addRowInvokedListener(listener: (Int) -> Unit) {
+    fun addRowInvokedListener(listener: IntConsumer) {
         rowInvokedListeners += listener
     }
 
     /** Unsubscribes a listener registered via [addRowInvokedListener]. */
-    fun removeRowInvokedListener(listener: (Int) -> Unit) {
+    fun removeRowInvokedListener(listener: IntConsumer) {
         rowInvokedListeners -= listener
     }
 

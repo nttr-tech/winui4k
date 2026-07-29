@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-import kotlin.Unit;
 
 /*
  * Navigation category: demo pages for NavigationView.
@@ -68,7 +67,6 @@ final class NavigationPages {
             if (item != null) {
                 contentLabel.setText("Showing " + item.getText());
             }
-            return Unit.INSTANCE;
         });
         navigationView.setSelectedItem(home);
 
@@ -95,13 +93,11 @@ final class NavigationPages {
         WButton toggleButton = new WButton("Toggle pane");
         toggleButton.addActionListener(() -> {
             navigationView.setPaneOpen(!navigationView.isPaneOpen());
-            return Unit.INSTANCE;
         });
 
         WButton settingsButton = new WButton("Toggle settings item");
         settingsButton.addActionListener(() -> {
             navigationView.setSettingsVisible(!navigationView.isSettingsVisible());
-            return Unit.INSTANCE;
         });
 
         WPanel modeButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -110,7 +106,6 @@ final class NavigationPages {
             WButton button = new WButton(mode.name());
             button.addActionListener(() -> {
                 navigationView.setPaneDisplayMode(mode);
-                return Unit.INSTANCE;
             });
             modeButtons.add(button);
         }
@@ -153,7 +148,6 @@ final class NavigationPages {
 
         navigationView.addItemInvokedListener(name -> {
             result.setText("Clicked: " + name);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -186,14 +180,12 @@ final class NavigationPages {
         breadcrumbBar.addItemClickedListener(index -> {
             breadcrumbBar.setItems(fullPath.subList(0, index + 1));
             result.setText("Clicked: " + fullPath.get(index) + " (index " + index + ")");
-            return Unit.INSTANCE;
         });
 
         WButton resetButton = new WButton("Reset the hierarchy");
         resetButton.addActionListener(() -> {
             breadcrumbBar.setItems(fullPath);
             result.setText("Hierarchy reset");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -230,7 +222,6 @@ final class NavigationPages {
             if (index >= 0) {
                 result.setText("Showing " + labels.get(index));
             }
-            return Unit.INSTANCE;
         });
         selectorBar.setSelectedIndex(0);
 
@@ -281,20 +272,17 @@ final class NavigationPages {
         tabView.addAddTabButtonClickListener(() -> {
             tabView.addTab(newTab.get());
             tabView.setSelectedIndex(tabView.getTabCount() - 1);
-            return Unit.INSTANCE;
         });
         tabView.addTabCloseRequestedListener(index -> {
             if (tabView.getTabCount() > 1) {
                 tabView.removeTab(index);
             }
-            return Unit.INSTANCE;
         });
         tabView.addSelectionListener(() -> {
             int index = tabView.getSelectedIndex();
             if (index >= 0) {
                 result.setText(tabView.getTab(index).getHeader());
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);

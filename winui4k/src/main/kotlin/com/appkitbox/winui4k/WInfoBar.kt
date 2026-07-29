@@ -43,7 +43,7 @@ class WInfoBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_InfoBar, XamlInterop.IID_IInfoBarFactory), // default interface = IInfoBar
 ) {
     /** CloseButtonClick event tokens registered via addCloseButtonListener. */
-    private val closeButtonTokens = ListenerTokens<() -> Unit>()
+    private val closeButtonTokens = ListenerTokens<Runnable>()
 
     private var actionButtonComponent: WButtonBase? = null
 
@@ -108,17 +108,17 @@ class WInfoBar : WControl(
         }
 
     /** Subscribes to clicks on the close (x) button (InfoBar.CloseButtonClick). */
-    fun addCloseButtonListener(listener: () -> Unit) {
+    fun addCloseButtonListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarCloseButtonClickHandler",
             XamlInterop.IID_InfoBarCloseButtonClickHandler,
             XamlInterop.IInfoBar_add_CloseButtonClick,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         closeButtonTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCloseButtonListener]. */
-    fun removeCloseButtonListener(listener: () -> Unit) {
+    fun removeCloseButtonListener(listener: Runnable) {
         val token = closeButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_CloseButtonClick, token)
     }

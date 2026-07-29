@@ -17,7 +17,6 @@ import com.appkitbox.winui4k.WProgressRing;
 import com.appkitbox.winui4k.WSlider;
 import com.appkitbox.winui4k.WToolTip;
 
-import kotlin.Unit;
 
 /*
  * Status & info category: demo pages for InfoBadge / InfoBar / ProgressBar / ProgressRing / ToolTip.
@@ -64,13 +63,11 @@ final class StatusInfoPages {
         WButton addButton = new WButton("+1");
         addButton.addActionListener(() -> {
             badge.setValue(badge.getValue() + 1);
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Reset to 0");
         clearButton.addActionListener(() -> {
             badge.setValue(0);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -149,7 +146,6 @@ final class StatusInfoPages {
         infoBar.setWidth(500.0);
         infoBar.addCloseButtonListener(() -> {
             result.setText("Closed via the close (x) button");
-            return Unit.INSTANCE;
         });
 
         WButton toggleButton = new WButton("Open the bar");
@@ -157,7 +153,6 @@ final class StatusInfoPages {
             infoBar.setOpen(!infoBar.isOpen());
             toggleButton.setText(infoBar.isOpen() ? "Close the bar" : "Open the bar");
             result.setText(infoBar.isOpen() ? "The bar is open" : "The bar is closed");
-            return Unit.INSTANCE;
         });
 
         WPanel column = new WPanel(12.0, Orientation.VERTICAL);
@@ -177,7 +172,6 @@ final class StatusInfoPages {
         WButton actionButton = new WButton("Restart");
         actionButton.addActionListener(() -> {
             result.setText("A restart was requested");
-            return Unit.INSTANCE;
         });
 
         WInfoBar infoBar = new WInfoBar();
@@ -221,8 +215,7 @@ final class StatusInfoPages {
         slider.setWidth(300.0);
         slider.addChangeListener(value -> {
             progressBar.setValue(value);
-            label.setText(value.intValue() + " %");
-            return Unit.INSTANCE;
+            label.setText((int) value + " %");
         });
 
         WPanel column = new WPanel(12.0, Orientation.VERTICAL);
@@ -242,7 +235,6 @@ final class StatusInfoPages {
         toggleButton.addActionListener(() -> {
             progressBar.setIndeterminate(!progressBar.isIndeterminate());
             toggleButton.setText(progressBar.isIndeterminate() ? "Stop" : "Start");
-            return Unit.INSTANCE;
         });
 
         WPanel column = new WPanel(12.0, Orientation.VERTICAL);
@@ -261,14 +253,12 @@ final class StatusInfoPages {
         pauseButton.addActionListener(() -> {
             progressBar.setShowPaused(!progressBar.getShowPaused());
             pauseButton.setText(progressBar.getShowPaused() ? "Resume" : "Pause");
-            return Unit.INSTANCE;
         });
 
         WButton errorButton = new WButton("Error");
         errorButton.addActionListener(() -> {
             progressBar.setShowError(!progressBar.getShowError());
             errorButton.setText(progressBar.getShowError() ? "Clear error" : "Error");
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -307,7 +297,6 @@ final class StatusInfoPages {
         toggleButton.addActionListener(() -> {
             progressRing.setActive(!progressRing.isActive());
             toggleButton.setText(progressRing.isActive() ? "Stop" : "Start");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -330,8 +319,7 @@ final class StatusInfoPages {
         slider.setWidth(300.0);
         slider.addChangeListener(value -> {
             progressRing.setValue(value);
-            label.setText(value.intValue() + " %");
-            return Unit.INSTANCE;
+            label.setText((int) value + " %");
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);

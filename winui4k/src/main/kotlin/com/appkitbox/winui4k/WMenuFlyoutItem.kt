@@ -43,7 +43,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
-    private val clickTokens = ListenerTokens<() -> Unit>()
+    private val clickTokens = ListenerTokens<Runnable>()
 
     /** The menu item's label (MenuFlyoutItem.Text). */
     var text: String
@@ -97,17 +97,17 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         }
 
     /** ActionListener-like. Subscribes to MenuFlyoutItem.Click (RoutedEventHandler) under the hood. */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = menuFlyoutItem.addEventHandler(
             "WinUI4K.MenuClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IMenuFlyoutItem_add_Click,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         clickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         menuFlyoutItem.removeEventHandler(XamlInterop.IMenuFlyoutItem_remove_Click, token)
     }

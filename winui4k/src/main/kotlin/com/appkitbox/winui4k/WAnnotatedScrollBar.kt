@@ -15,6 +15,7 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.util.function.DoubleFunction
 
 /**
  * WinUI 3's AnnotatedScrollBar (a Control subclass). Extends a vertical scrollbar with a rail
@@ -29,7 +30,7 @@ class WAnnotatedScrollBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_AnnotatedScrollBar, XamlInterop.IID_IAnnotatedScrollBarFactory), // default interface = IAnnotatedScrollBar
 ) {
     /** DetailLabelRequested event tokens registered via addDetailLabelRequestedListener. */
-    private val detailLabelRequestedTokens = ListenerTokens<(Double) -> String>()
+    private val detailLabelRequestedTokens = ListenerTokens<DoubleFunction<String>>()
 
     /** The IScrollController view (AnnotatedScrollBar.ScrollController). Passed to a ScrollView. */
     private val scrollController: ComPtr by lazy {
@@ -80,7 +81,7 @@ class WAnnotatedScrollBar : WControl(
      * (AnnotatedScrollBar.DetailLabelRequested). The listener receives the target scroll offset,
      * and the string it returns is displayed as the tooltip.
      */
-    fun addDetailLabelRequestedListener(listener: (Double) -> String) {
+    fun addDetailLabelRequestedListener(listener: DoubleFunction<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AnnotatedScrollBarDetailLabelRequestedHandler",
             XamlInterop.IID_AnnotatedScrollBarDetailLabelRequestedHandler,
@@ -88,7 +89,7 @@ class WAnnotatedScrollBar : WControl(
         ) { _, args ->
             val eventArgs = ComPtr(args)
             val offset = eventArgs.getDouble(XamlInterop.IAnnotatedScrollBarDetailLabelRequestedEventArgs_get_ScrollOffset)
-            val boxed = PropertyValues.boxString(listener(offset))
+            val boxed = PropertyValues.boxString(listener.apply(offset))
             eventArgs.call(XamlInterop.IAnnotatedScrollBarDetailLabelRequestedEventArgs_put_Content, boxed.ptr)
             boxed.release()
         }
@@ -96,7 +97,7 @@ class WAnnotatedScrollBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addDetailLabelRequestedListener]. */
-    fun removeDetailLabelRequestedListener(listener: (Double) -> String) {
+    fun removeDetailLabelRequestedListener(listener: DoubleFunction<String>) {
         val token = detailLabelRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAnnotatedScrollBar_remove_DetailLabelRequested, token)
     }

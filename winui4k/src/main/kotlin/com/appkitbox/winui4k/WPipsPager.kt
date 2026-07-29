@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.IntConsumer
 
 /**
  * Microsoft.UI.Xaml.Controls.PipsPagerButtonVisibility (how the previous/next page buttons are shown).
@@ -37,7 +38,7 @@ class WPipsPager : WControl(
     Activation.composeDefault(XamlInterop.CLS_PipsPager, XamlInterop.IID_IPipsPagerFactory), // default interface = IPipsPager
 ) {
     /** SelectedIndexChanged event tokens registered via addSelectedIndexChangedListener. */
-    private val selectedIndexChangedTokens = ListenerTokens<(Int) -> Unit>()
+    private val selectedIndexChangedTokens = ListenerTokens<IntConsumer>()
 
     /** The total page count (PipsPager.NumberOfPages). -1 means unbounded. */
     var numberOfPages: Int
@@ -73,7 +74,7 @@ class WPipsPager : WControl(
      * Subscribes to changes of the selected page (PipsPager.SelectedIndexChanged). The listener
      * receives the new [selectedPageIndex].
      */
-    fun addSelectedIndexChangedListener(listener: (Int) -> Unit) {
+    fun addSelectedIndexChangedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PipsPagerSelectedIndexChangedHandler",
             XamlInterop.IID_PipsPagerSelectedIndexChangedHandler,
@@ -81,13 +82,13 @@ class WPipsPager : WControl(
         ) { _, _ ->
             // args (PipsPagerSelectedIndexChangedEventArgs) carries no information, so read the
             // selection from the control itself
-            listener(selectedPageIndex)
+            listener.accept(selectedPageIndex)
         }
         selectedIndexChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSelectedIndexChangedListener]. */
-    fun removeSelectedIndexChangedListener(listener: (Int) -> Unit) {
+    fun removeSelectedIndexChangedListener(listener: IntConsumer) {
         val token = selectedIndexChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPipsPager_remove_SelectedIndexChanged, token)
     }

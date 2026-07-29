@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.ListViewSelectionMode (how many items can be selected).
@@ -58,10 +59,10 @@ class WList(items: List<String> = emptyList()) : WControl(
     }
 
     /** SelectionChanged event tokens registered via addListSelectionListener. */
-    private val selectionTokens = ListenerTokens<() -> Unit>()
+    private val selectionTokens = ListenerTokens<Runnable>()
 
     /** ItemClick event tokens registered via addItemClickListener. */
-    private val itemClickTokens = ListenerTokens<(String) -> Unit>()
+    private val itemClickTokens = ListenerTokens<Consumer<String>>()
 
     /** Item count (Items.Size). */
     val itemCount: Int
@@ -136,17 +137,17 @@ class WList(items: List<String> = emptyList()) : WControl(
     }
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
-    fun addListSelectionListener(listener: () -> Unit) {
+    fun addListSelectionListener(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
             XamlInterop.ISelector_add_SelectionChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
-    fun removeListSelectionListener(listener: () -> Unit) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -156,7 +157,7 @@ class WList(items: List<String> = emptyList()) : WControl(
      * The listener receives the clicked item's string.
      * Only fires while [isItemClickEnabled] is true.
      */
-    fun addItemClickListener(listener: (String) -> Unit) {
+    fun addItemClickListener(listener: Consumer<String>) {
         val token = listViewBase.addEventHandler(
             "WinUI4K.ItemClickHandler",
             XamlInterop.IID_ItemClickEventHandler,
@@ -170,13 +171,13 @@ class WList(items: List<String> = emptyList()) : WControl(
             } finally {
                 boxed.release()
             }
-            listener(item)
+            listener.accept(item)
         }
         itemClickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemClickListener]. */
-    fun removeItemClickListener(listener: (String) -> Unit) {
+    fun removeItemClickListener(listener: Consumer<String>) {
         val token = itemClickTokens.remove(listener) ?: return
         listViewBase.removeEventHandler(XamlInterop.IListViewBase_remove_ItemClick, token)
     }

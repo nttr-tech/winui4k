@@ -13,6 +13,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Equivalent to Swing's Action (implemented on the WinUI side): Microsoft.UI.Xaml.Input.XamlUICommand.
@@ -50,7 +51,7 @@ open class WXamlUICommand internal constructor(
         get() = icommand.ptr
 
     /** ExecuteRequested event tokens registered via addExecuteListener. */
-    private val executeTokens = ListenerTokens<(String?) -> Unit>()
+    private val executeTokens = ListenerTokens<Consumer<String?>>()
 
     /** The label shown on the control (XamlUICommand.Label). */
     var label: String
@@ -100,7 +101,7 @@ open class WXamlUICommand internal constructor(
      * ActionListener-like: subscribes to the command's execution (XamlUICommand.ExecuteRequested).
      * The listener receives the control's commandParameter (null if unset).
      */
-    fun addExecuteListener(listener: (parameter: String?) -> Unit) {
+    fun addExecuteListener(listener: Consumer<String?>) {
         val token = xamlUICommand.addEventHandler(
             "WinUI4K.ExecuteRequestedHandler",
             XamlInterop.IID_XamlUICommandExecuteRequestedHandler,
@@ -114,13 +115,13 @@ open class WXamlUICommand internal constructor(
                     it.release()
                 }
             }
-            listener(parameter)
+            listener.accept(parameter)
         }
         executeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addExecuteListener]. */
-    fun removeExecuteListener(listener: (parameter: String?) -> Unit) {
+    fun removeExecuteListener(listener: Consumer<String?>) {
         val token = executeTokens.remove(listener) ?: return
         xamlUICommand.removeEventHandler(XamlInterop.IXamlUICommand_remove_ExecuteRequested, token)
     }

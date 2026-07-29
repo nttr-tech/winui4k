@@ -273,62 +273,62 @@ abstract class WComponent internal constructor(
         get() = ElementTheme.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_ActualTheme))
 
     /** Event tokens registered via addActualThemeChangedListener. */
-    private val actualThemeChangedTokens = ListenerTokens<() -> Unit>()
+    private val actualThemeChangedTokens = ListenerTokens<Runnable>()
 
     /** Subscribes to changes in the applied theme (FrameworkElement.ActualThemeChanged). */
-    fun addActualThemeChangedListener(listener: () -> Unit) {
+    fun addActualThemeChangedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.ActualThemeChangedHandler",
             XamlInterop.IID_ActualThemeChangedHandler,
             XamlInterop.IFrameworkElement_add_ActualThemeChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         actualThemeChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActualThemeChangedListener]. */
-    fun removeActualThemeChangedListener(listener: () -> Unit) {
+    fun removeActualThemeChangedListener(listener: Runnable) {
         val token = actualThemeChangedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_ActualThemeChanged, token)
     }
 
     /** Event tokens registered via addSizeChangedListener. */
-    private val sizeChangedTokens = ListenerTokens<() -> Unit>()
+    private val sizeChangedTokens = ListenerTokens<Runnable>()
 
     /** Subscribes to post-layout size changes (FrameworkElement.SizeChanged). */
-    fun addSizeChangedListener(listener: () -> Unit) {
+    fun addSizeChangedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.SizeChangedHandler",
             XamlInterop.IID_SizeChangedEventHandler,
             XamlInterop.IFrameworkElement_add_SizeChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         sizeChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSizeChangedListener]. */
-    fun removeSizeChangedListener(listener: () -> Unit) {
+    fun removeSizeChangedListener(listener: Runnable) {
         val token = sizeChangedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_SizeChanged, token)
     }
 
     /** Event tokens registered via addLoadedListener. */
-    private val loadedTokens = ListenerTokens<() -> Unit>()
+    private val loadedTokens = ListenerTokens<Runnable>()
 
     /**
      * Subscribes to the moment the element is added to the visual tree and ready to render
      * (FrameworkElement.Loaded). Useful for initializing parts that are only reachable after the
      * template is applied (e.g. ScrollView.ScrollPresenter).
      */
-    fun addLoadedListener(listener: () -> Unit) {
+    fun addLoadedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.LoadedHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IFrameworkElement_add_Loaded,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         loadedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addLoadedListener]. */
-    fun removeLoadedListener(listener: () -> Unit) {
+    fun removeLoadedListener(listener: Runnable) {
         val token = loadedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_Loaded, token)
     }
@@ -394,7 +394,7 @@ abstract class WComponent internal constructor(
      * While this element is visible, pressing [key] + [modifiers] calls [action].
      * Sets Handled so a click-triggered default action doesn't also fire.
      */
-    fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier, action: () -> Unit) {
+    fun addKeyboardAccelerator(key: VirtualKey, vararg modifiers: VirtualKeyModifier, action: Runnable) {
         val accelerator = createKeyboardAccelerator(key, modifiers)
         accelerator.addEventHandler(
             "WinUI4K.KeyboardAcceleratorInvokedHandler",
@@ -402,7 +402,7 @@ abstract class WComponent internal constructor(
             XamlInterop.IKeyboardAccelerator_add_Invoked,
         ) { _, args ->
             ComPtr(args).putBool(XamlInterop.IKeyboardAcceleratorInvokedEventArgs_put_Handled, true)
-            action()
+            action.run()
         }
         val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
         accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)

@@ -37,7 +37,6 @@ import java.util.function.Consumer;
 import java.util.prefs.Preferences;
 
 import kotlin.Pair;
-import kotlin.Unit;
 
 /*
  * Equivalent of the real WinUI 3 Gallery's Home page.
@@ -217,20 +216,16 @@ final class HomePage {
         };
         scroller.addViewChangedListener(() -> {
             updateButtons.run();
-            return Unit.INSTANCE;
         });
         scroller.addSizeChangedListener(() -> {
             updateButtons.run();
-            return Unit.INSTANCE;
         });
 
         backButton.addActionListener(() -> {
             scroller.scrollToHorizontalOffset(scroller.getHorizontalOffset() - scroller.getViewportWidth());
-            return Unit.INSTANCE;
         });
         forwardButton.addActionListener(() -> {
             scroller.scrollToHorizontalOffset(scroller.getHorizontalOffset() + scroller.getViewportWidth());
-            return Unit.INSTANCE;
         });
 
         // Placing them in the same cell draws the buttons in front of the scrolled content
@@ -448,7 +443,6 @@ final class HomePage {
         tile.setHeight(172.0);
         tile.addActionListener(() -> {
             openUrl(url);
-            return Unit.INSTANCE;
         });
         return tile;
     }
@@ -494,11 +488,9 @@ final class HomePage {
         };
         recentToggle.addActionListener(() -> {
             select.accept(true);
-            return Unit.INSTANCE;
         });
         favoritesToggle.addActionListener(() -> {
             select.accept(false);
-            return Unit.INSTANCE;
         });
         select.accept(true);
 
@@ -588,7 +580,6 @@ final class HomePage {
             boolean isFavorite = Boolean.TRUE.equals(checked);
             star.setText(isFavorite ? "" : "");
             GallerySettings.setFavorite(pageName, isFavorite);
-            return Unit.INSTANCE;
         });
         return toggle;
     }
@@ -644,7 +635,6 @@ final class HomePage {
         card.setHeight(88.0);
         card.addActionListener(() -> {
             navigateTo.accept(name);
-            return Unit.INSTANCE;
         });
         return card;
     }

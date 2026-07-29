@@ -36,8 +36,8 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     }
 
     /** Listener → event token (used by the remove functions). */
-    private val expandTokens = ListenerTokens<() -> Unit>()
-    private val collapseTokens = ListenerTokens<() -> Unit>()
+    private val expandTokens = ListenerTokens<Runnable>()
+    private val collapseTokens = ListenerTokens<Runnable>()
 
     /** The header text (Expander.Header). Object-typed, so a boxed string is passed. */
     var header: String = ""
@@ -74,33 +74,33 @@ class WExpander(header: String = "", content: WComponent? = null) : WControl(
     }
 
     /** Registers a listener called when it expands (Expander.Expanding). */
-    fun addExpandListener(listener: () -> Unit) {
+    fun addExpandListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderExpandingHandler,
             XamlInterop.IExpander_add_Expanding,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         expandTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addExpandListener]. */
-    fun removeExpandListener(listener: () -> Unit) {
+    fun removeExpandListener(listener: Runnable) {
         val token = expandTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Expanding, token)
     }
 
     /** Registers a listener called when it collapses (Expander.Collapsed). */
-    fun addCollapseListener(listener: () -> Unit) {
+    fun addCollapseListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderCollapsedHandler,
             XamlInterop.IExpander_add_Collapsed,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         collapseTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCollapseListener]. */
-    fun removeCollapseListener(listener: () -> Unit) {
+    fun removeCollapseListener(listener: Runnable) {
         val token = collapseTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Collapsed, token)
     }

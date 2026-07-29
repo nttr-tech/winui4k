@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * JComboBox-like: WinUI 3's ComboBox (a Selector subclass).
@@ -34,10 +35,10 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     }
 
     /** SelectionChanged event tokens registered via addListSelectionListener. */
-    private val selectionTokens = ListenerTokens<() -> Unit>()
+    private val selectionTokens = ListenerTokens<Runnable>()
 
     /** TextSubmitted event tokens registered via addTextSubmitListener. */
-    private val textSubmitTokens = ListenerTokens<(String) -> Unit>()
+    private val textSubmitTokens = ListenerTokens<Consumer<String>>()
 
     /** The number of items (Items.Size). */
     val itemCount: Int
@@ -120,17 +121,17 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
     }
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
-    fun addListSelectionListener(listener: () -> Unit) {
+    fun addListSelectionListener(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
             XamlInterop.ISelector_add_SelectionChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
-    fun removeListSelectionListener(listener: () -> Unit) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -139,20 +140,20 @@ class WComboBox(items: List<String> = emptyList()) : WControl(
      * Subscribes to text being committed with Enter on an editable combo (ComboBox.TextSubmitted).
      * The listener receives the committed string. Only fires while [isEditable] is true.
      */
-    fun addTextSubmitListener(listener: (String) -> Unit) {
+    fun addTextSubmitListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TextSubmittedHandler",
             XamlInterop.IID_ComboBoxTextSubmittedHandler,
             XamlInterop.IComboBox_add_TextSubmitted,
         ) { _, args ->
             // args is a ComboBoxTextSubmittedEventArgs; read the committed Text and pass it along
-            listener(ComPtr(args).getString(XamlInterop.IComboBoxTextSubmittedEventArgs_get_Text))
+            listener.accept(ComPtr(args).getString(XamlInterop.IComboBoxTextSubmittedEventArgs_get_Text))
         }
         textSubmitTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addTextSubmitListener]. */
-    fun removeTextSubmitListener(listener: (String) -> Unit) {
+    fun removeTextSubmitListener(listener: Consumer<String>) {
         val token = textSubmitTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IComboBox_remove_TextSubmitted, token)
     }

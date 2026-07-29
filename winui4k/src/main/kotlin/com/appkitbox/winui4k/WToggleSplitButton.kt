@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * A [WSplitButton] that toggles on/off: WinUI 3's ToggleSplitButton.
@@ -19,7 +20,7 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
     }
 
     /** IsCheckedChanged event tokens registered via addItemListener. */
-    private val itemTokens = ListenerTokens<(Boolean) -> Unit>()
+    private val itemTokens = ListenerTokens<Consumer<Boolean>>()
 
     /** The checked state (ToggleSplitButton.IsChecked). Unlike ToggleButton, a plain boolean. */
     var isChecked: Boolean
@@ -30,17 +31,17 @@ class WToggleSplitButton(text: String = "") : WSplitButton(
      * ItemListener-like: subscribes to changes in the checked state. The listener receives
      * the new [isChecked] value. Subscribes to ToggleSplitButton.IsCheckedChanged (TypedEventHandler) under the hood.
      */
-    fun addItemListener(listener: (Boolean) -> Unit) {
+    fun addItemListener(listener: Consumer<Boolean>) {
         val token = toggleSplitButton.addEventHandler(
             "WinUI4K.ToggleSplitButtonHandler",
             XamlInterop.IID_ToggleSplitButtonIsCheckedChangedHandler,
             XamlInterop.IToggleSplitButton_add_IsCheckedChanged,
-        ) { _, _ -> listener(isChecked) }
+        ) { _, _ -> listener.accept(isChecked) }
         itemTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemListener]. */
-    fun removeItemListener(listener: (Boolean) -> Unit) {
+    fun removeItemListener(listener: Consumer<Boolean>) {
         val token = itemTokens.remove(listener) ?: return
         toggleSplitButton.removeEventHandler(XamlInterop.IToggleSplitButton_remove_IsCheckedChanged, token)
     }

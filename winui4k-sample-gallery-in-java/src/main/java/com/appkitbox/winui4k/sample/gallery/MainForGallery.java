@@ -19,7 +19,6 @@ import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WScrollPane;
 import com.appkitbox.winui4k.WTitleBar;
 import com.appkitbox.winui4k.WinUiUtilities;
-import kotlin.Unit;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -160,7 +159,6 @@ public class MainForGallery {
                         frame.setTitle("WinUI4K Gallery");
                         WinUiUtilities.INSTANCE.schedule(200, () -> {
                             frame.setTitle("WinUI4K Gallery");
-                            return Unit.INSTANCE;
                         });
                     });
             WNavigationView navigationView = navigation[0].navigationView;
@@ -174,7 +172,6 @@ public class MainForGallery {
 
             titleBar.addBackRequestedListener(() -> {
                 if (history.isEmpty()) {
-                    return Unit.INSTANCE;
                 }
                 String previousName = history.removeLast();
                 // null means home; go through SelectionChanged to show the right page (or Home / Settings)
@@ -186,17 +183,14 @@ public class MainForGallery {
                 } else {
                     previousItem = navigation[0].itemsByPageName.get(previousName);
                     if (previousItem == null) {
-                        return Unit.INSTANCE;
                     }
                 }
                 isNavigatingBack[0] = true;
                 navigationView.setSelectedItem(previousItem);
                 isNavigatingBack[0] = false;
-                return Unit.INSTANCE;
             });
             titleBar.addPaneToggleRequestedListener(() -> {
                 navigationView.setPaneOpen(!navigationView.isPaneOpen());
-                return Unit.INSTANCE;
             });
 
             // Narrow down page names as the search box is typed into, and navigate to the chosen page on submit
@@ -211,7 +205,6 @@ public class MainForGallery {
                     }
                     searchBox.setSuggestions(suggestions);
                 }
-                return Unit.INSTANCE;
             });
             searchBox.addQuerySubmittedListener((query, chosen) -> {
                 String target = chosen;
@@ -228,7 +221,6 @@ public class MainForGallery {
                     navigationView.setSelectedItem(item);
                     searchBox.setText("");
                 }
-                return Unit.INSTANCE;
             });
 
             rootGrid.addRow(GridLength.Companion.getAUTO());
@@ -252,9 +244,7 @@ public class MainForGallery {
                         pageArea.removeAll();
                         pageArea.add(GalleryNavigation.pages.get(name).get());
                     }
-                    return Unit.INSTANCE;
                 });
-                return Unit.INSTANCE;
             });
 
             // Select Home on launch (SelectionChanged -> showHome)
@@ -267,7 +257,6 @@ public class MainForGallery {
             // Mica, matching the real Gallery, lets the wallpaper's color (a pale blue with the default wallpaper) show through faintly across the whole window
             frame.setSystemBackdrop(SystemBackdropType.MICA);
             frame.setVisible(true);
-            return Unit.INSTANCE;
         });
     }
 

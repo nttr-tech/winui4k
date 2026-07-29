@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import kotlin.Pair;
-import kotlin.Unit;
 
 /*
  * Shell category: demo pages for AppNotification / BadgeNotification / JumpList.
@@ -73,7 +72,6 @@ final class ShellPages {
                 text = "Failed to fetch Setting: " + e.getMessage();
             }
             setting.setText(text);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -113,7 +111,6 @@ final class ShellPages {
                 message = "Failed to send: " + e.getMessage();
             }
             result.setText(message);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -138,7 +135,6 @@ final class ShellPages {
         WLabel received = new WLabel("Waiting for a click (clicking the notification body or a button delivers the argument here)");
         WAppNotificationManager.INSTANCE.addNotificationInvokedListener(argument -> {
             received.setText("Received argument: " + argument);
-            return Unit.INSTANCE;
         });
 
         WButton sendButton = new WButton("Send notification with buttons");
@@ -159,7 +155,6 @@ final class ShellPages {
                 message = "Failed to send: " + e.getMessage();
             }
             received.setText(message);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -200,7 +195,6 @@ final class ShellPages {
                 message = "Failed to clear: " + e.getMessage();
             }
             result.setText(message);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -226,7 +220,6 @@ final class ShellPages {
                 message = "Failed to set: " + e.getMessage();
             }
             result.setText(message);
-            return Unit.INSTANCE;
         });
         return button;
     }
@@ -252,7 +245,6 @@ final class ShellPages {
                 message = "Failed to set: " + e.getMessage();
             }
             result.setText(message);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -326,7 +318,6 @@ final class ShellPages {
                 jumpList.add(item);
                 return "Added. Right-click the taskbar icon to check";
             }, result, itemsLabel);
-            return Unit.INSTANCE;
         });
 
         WButton separatorButton = new WButton("Add separator and save");
@@ -335,7 +326,6 @@ final class ShellPages {
                 jumpList.add(WJumpListItem.Companion.separator());
                 return "Added a separator";
             }, result, itemsLabel);
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Remove all items and save");
@@ -344,7 +334,6 @@ final class ShellPages {
                 jumpList.removeAll();
                 return "Removed all items";
             }, result, itemsLabel);
-            return Unit.INSTANCE;
         });
 
         try {

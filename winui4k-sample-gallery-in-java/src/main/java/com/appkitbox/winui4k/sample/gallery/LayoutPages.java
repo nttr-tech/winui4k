@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import kotlin.Pair;
-import kotlin.Unit;
 
 /*
  * Layout category: demo pages for Border / Canvas / Expander / Grid / RelativePanel / SplitView / StackPanel / VariableSizedWrapGrid.
@@ -63,13 +62,11 @@ final class LayoutPages {
         WButton thicknessButton = new WButton("Increase border thickness");
         thicknessButton.addActionListener(() -> {
             border.setBorderThickness(border.getBorderThickness() >= 8.0 ? 2.0 : border.getBorderThickness() + 2.0);
-            return Unit.INSTANCE;
         });
 
         WButton cornerButton = new WButton("Toggle rounded corners");
         cornerButton.addActionListener(() -> {
             border.setCornerRadius(border.getCornerRadius() > 0 ? 0.0 : 12.0);
-            return Unit.INSTANCE;
         });
 
         WButton colorButton = new WButton("Change border color");
@@ -82,7 +79,6 @@ final class LayoutPages {
         colorButton.addActionListener(() -> {
             colorIndex[0] = (colorIndex[0] + 1) % colors.size();
             border.setBorderColor(colors.get(colorIndex[0]));
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -106,7 +102,6 @@ final class LayoutPages {
         WButton paddingButton = new WButton("Increase padding");
         paddingButton.addActionListener(() -> {
             border.setPadding(border.getPadding() >= 48.0 ? 16.0 : border.getPadding() + 16.0);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -137,7 +132,6 @@ final class LayoutPages {
             angle[0] = angle[0] >= 270.0 ? 0.0 : angle[0] + 90.0;
             border.setBackgroundGradient(new WLinearGradientPaint(stops, angle[0]));
             angleButton.setText("Change angle (" + (int) angle[0] + "°)");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -176,7 +170,6 @@ final class LayoutPages {
             x[0] = x[0] >= 256.0 ? 16.0 : x[0] + 48.0;
             y[0] = y[0] >= 96.0 ? 16.0 : y[0] + 16.0;
             canvas.setLocation(movingTile, x[0], y[0]);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -202,7 +195,6 @@ final class LayoutPages {
             redOnTop[0] = !redOnTop[0];
             canvas.setZIndex(redTile, redOnTop[0] ? 1 : 0);
             canvas.setZIndex(greenTile, redOnTop[0] ? 0 : 1);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -260,7 +252,6 @@ final class LayoutPages {
         northButton.addActionListener(() -> {
             northTile.setVisible(!northTile.isVisible());
             panel.revalidate();
-            return Unit.INSTANCE;
         });
 
         WButton westButton = new WButton("Detach / re-add West");
@@ -272,7 +263,6 @@ final class LayoutPages {
                 panel.add(westTile, WBorderLayout.Constraint.WEST);
             }
             westAttached[0] = !westAttached[0];
-            return Unit.INSTANCE;
         });
 
         WButton widenButton = new WButton("Change West's content");
@@ -282,7 +272,6 @@ final class LayoutPages {
             westTile.setChild(new WLabel(wideWest[0] ? "West (wider content)" : "West"));
             westTile.invalidateNaturalSize();
             panel.revalidate();
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -334,17 +323,14 @@ final class LayoutPages {
         expander.setWidth(320.0);
         expander.addExpandListener(() -> {
             state.setText("State: expanded");
-            return Unit.INSTANCE;
         });
         expander.addCollapseListener(() -> {
             state.setText("State: collapsed");
-            return Unit.INSTANCE;
         });
 
         WButton toggleButton = new WButton("Toggle from code");
         toggleButton.addActionListener(() -> {
             expander.setExpanded(!expander.isExpanded());
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -364,7 +350,6 @@ final class LayoutPages {
             WButton button = new WButton(direction.name());
             button.addActionListener(() -> {
                 expander.setExpandDirection(direction);
-                return Unit.INSTANCE;
             });
             buttons.add(button);
         }
@@ -428,7 +413,6 @@ final class LayoutPages {
             double next = grid.getRowSpacing() > 4.0 ? 4.0 : 16.0;
             grid.setRowSpacing(next);
             grid.setColumnSpacing(next);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -535,7 +519,6 @@ final class LayoutPages {
         WButton toggleButton = new WButton("Toggle pane");
         toggleButton.addActionListener(() -> {
             splitView.setPaneOpen(!splitView.isPaneOpen());
-            return Unit.INSTANCE;
         });
 
         WPanel modeButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -544,7 +527,6 @@ final class LayoutPages {
             WButton button = new WButton(mode.name());
             button.addActionListener(() -> {
                 splitView.setDisplayMode(mode);
-                return Unit.INSTANCE;
             });
             modeButtons.add(button);
         }
@@ -555,7 +537,6 @@ final class LayoutPages {
                     splitView.getPanePlacement() == SplitViewPanePlacement.LEFT
                             ? SplitViewPanePlacement.RIGHT
                             : SplitViewPanePlacement.LEFT);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -591,13 +572,11 @@ final class LayoutPages {
                     panel.getOrientation() == Orientation.VERTICAL
                             ? Orientation.HORIZONTAL
                             : Orientation.VERTICAL);
-            return Unit.INSTANCE;
         });
 
         WButton spacingButton = new WButton("Toggle spacing");
         spacingButton.addActionListener(() -> {
             panel.setSpacing(panel.getSpacing() > 8.0 ? 8.0 : 24.0);
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -638,7 +617,6 @@ final class LayoutPages {
         WButton maxButton = new WButton("Toggle wrap count");
         maxButton.addActionListener(() -> {
             grid.setMaximumRowsOrColumns(grid.getMaximumRowsOrColumns() == 4 ? 6 : 4);
-            return Unit.INSTANCE;
         });
 
         WButton orientationButton = new WButton("Toggle direction");
@@ -647,7 +625,6 @@ final class LayoutPages {
                     grid.getOrientation() == Orientation.VERTICAL
                             ? Orientation.HORIZONTAL
                             : Orientation.VERTICAL);
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -712,7 +689,6 @@ final class LayoutPages {
         card.addActionListener(() -> {
             count[0]++;
             state.setText("Click count: " + count[0]);
-            return Unit.INSTANCE;
         });
 
         WSettingsCard linkCard = new WSettingsCard("Open a web site", "ActionIcon can be changed to any Symbol, and a tooltip can be attached to it.");
@@ -725,7 +701,6 @@ final class LayoutPages {
         actionIconSwitch.setOn(true);
         actionIconSwitch.addItemListener((isOn) -> {
             card.setActionIconVisible(isOn);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -752,8 +727,7 @@ final class LayoutPages {
         slider.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         slider.addChangeListener((value) -> {
             card.setWidth(value);
-            widthLabel.setText("Card width: " + value.intValue() + "px");
-            return Unit.INSTANCE;
+            widthLabel.setText("Card width: " + (int) value + "px");
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -781,7 +755,6 @@ final class LayoutPages {
             if (index >= 0) {
                 card.setContentAlignment(ContentAlignment.values()[index]);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -805,7 +778,6 @@ final class LayoutPages {
         enabledSwitch.setOn(true);
         enabledSwitch.addItemListener((isOn) -> {
             card.setEnabled(isOn);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);

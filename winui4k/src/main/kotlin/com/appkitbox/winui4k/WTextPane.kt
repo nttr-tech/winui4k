@@ -25,7 +25,7 @@ class WTextPane(placeholder: String = "") : WControl(
     }
 
     /** TextChanged event tokens registered via addTextChangedListener. */
-    private val textChangedTokens = ListenerTokens<() -> Unit>()
+    private val textChangedTokens = ListenerTokens<Runnable>()
 
     /** The whole content as plain text (ITextDocument.GetText / SetText). Ends with a trailing newline. */
     var text: String
@@ -119,17 +119,17 @@ class WTextPane(placeholder: String = "") : WControl(
     }
 
     /** Subscribes to text changes (RichEditBox.TextChanged). */
-    fun addTextChangedListener(listener: () -> Unit) {
+    fun addTextChangedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.RichEditTextChangedHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IRichEditBox_add_TextChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         textChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
-    fun removeTextChangedListener(listener: () -> Unit) {
+    fun removeTextChangedListener(listener: Runnable) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IRichEditBox_remove_TextChanged, token)
     }

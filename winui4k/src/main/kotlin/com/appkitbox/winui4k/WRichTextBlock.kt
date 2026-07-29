@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * WinUI 3's RichTextBlock (a direct FrameworkElement, so it derives from [WComponent]). No Swing equivalent.
@@ -75,6 +76,11 @@ class WRichTextBlock : WComponent(
         } finally {
             paragraph.release()
         }
+    }
+
+    /** A Java-friendly overload of [addParagraph]. [build] receives a [ParagraphBuilder]. */
+    fun addParagraph(build: Consumer<ParagraphBuilder>) {
+        addParagraph { build.accept(this) }
     }
 
     /** Removes all paragraphs (Blocks.Clear). */

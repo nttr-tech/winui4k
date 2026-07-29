@@ -12,6 +12,10 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WebView2Interop
 import com.appkitbox.winui4k.internal.winui.WebView2Runtime
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.util.function.BiConsumer
+import java.util.function.Consumer
+import java.util.function.IntConsumer
+import java.util.function.Predicate
 
 /**
  * Microsoft.Web.WebView2.Core.CoreWebView2WebErrorStatus (the reason a navigation failed).
@@ -110,16 +114,16 @@ class WWebView(source: String = "") : WComponent(
     }
 
     /** NavigationStarting event tokens registered via addNavigationStartingListener. */
-    private val navigationStartingTokens = ListenerTokens<(String) -> Boolean>()
+    private val navigationStartingTokens = ListenerTokens<Predicate<String>>()
 
     /** NavigationCompleted event tokens registered via addNavigationCompletedListener. */
-    private val navigationCompletedTokens = ListenerTokens<(Boolean, WebErrorStatus) -> Unit>()
+    private val navigationCompletedTokens = ListenerTokens<BiConsumer<Boolean, WebErrorStatus>>()
 
     /** WebMessageReceived event tokens registered via addWebMessageReceivedListener. */
-    private val webMessageReceivedTokens = ListenerTokens<(String) -> Unit>()
+    private val webMessageReceivedTokens = ListenerTokens<Consumer<String>>()
 
     /** CoreWebView2Initialized event tokens registered via addCoreWebView2InitializedListener. */
-    private val coreWebView2InitializedTokens = ListenerTokens<(Int) -> Unit>()
+    private val coreWebView2InitializedTokens = ListenerTokens<IntConsumer>()
 
     /**
      * The URI of the page to display (WebView2.Source). "" if unset.
@@ -231,7 +235,7 @@ class WWebView(source: String = "") : WComponent(
     fun navigateToString(html: String) {
         val core = inspectable.getPtrOrNull(WebView2Interop.IWebView2_get_CoreWebView2)
         if (core == null) {
-            lateinit var navigateOnce: (Int) -> Unit
+            lateinit var navigateOnce: IntConsumer
             navigateOnce = { exceptionHresult ->
                 removeCoreWebView2InitializedListener(navigateOnce)
                 if (exceptionHresult == 0) {
@@ -276,7 +280,7 @@ class WWebView(source: String = "") : WComponent(
      * Only usable once CoreWebView2 is initialized (a no-op before that, and [resultHandler]
      * won't be called either).
      */
-    fun executeScript(script: String, resultHandler: ((String) -> Unit)? = null) {
+    fun executeScript(script: String, resultHandler: Consumer<String>? = null) {
         if (!isCoreWebView2Initialized) return
         val operation = Hstring.use(script) { h ->
             inspectable.getPtr(WebView2Interop.IWebView2_ExecuteScriptAsync, h)
@@ -291,7 +295,7 @@ class WWebView(source: String = "") : WComponent(
             "WebView2.ExecuteScriptAsync",
         ) { result ->
             // Dispatch from the completion-notification thread over to the UI thread before delivering it
-            WinUiUtilities.invokeLater { resultHandler(result) }
+            WinUiUtilities.invokeLater { resultHandler.accept(result) }
         }
     }
 
@@ -335,7 +339,7 @@ class WWebView(source: String = "") : WComponent(
      * The listener receives the destination URI; returning false cancels the navigation
      * (a cancellation shows up as NavigationCompleted with [WebErrorStatus.OPERATION_CANCELED]).
      */
-    fun addNavigationStartingListener(listener: (uri: String) -> Boolean) {
+    fun addNavigationStartingListener(listener: Predicate<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationStartingHandler",
             WebView2Interop.IID_WebView2NavigationStartingHandler,
@@ -344,7 +348,7 @@ class WWebView(source: String = "") : WComponent(
             // args is CoreWebView2NavigationStartingEventArgs. Read Uri, and set Cancel if false is returned
             val argsPtr = ComPtr(args)
             val uri = argsPtr.getString(WebView2Interop.ICoreWebView2NavigationStartingEventArgs_get_Uri)
-            if (!listener(uri)) {
+            if (!listener.test(uri)) {
                 argsPtr.putBool(WebView2Interop.ICoreWebView2NavigationStartingEventArgs_put_Cancel, true)
             }
         }
@@ -352,7 +356,7 @@ class WWebView(source: String = "") : WComponent(
     }
 
     /** Unsubscribes a listener registered via [addNavigationStartingListener]. */
-    fun removeNavigationStartingListener(listener: (String) -> Boolean) {
+    fun removeNavigationStartingListener(listener: Predicate<String>) {
         val token = navigationStartingTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationStarting, token)
     }
@@ -362,7 +366,7 @@ class WWebView(source: String = "") : WComponent(
      * The listener receives success/failure and, on failure, the reason (on success,
      * [WebErrorStatus.UNKNOWN]).
      */
-    fun addNavigationCompletedListener(listener: (isSuccess: Boolean, status: WebErrorStatus) -> Unit) {
+    fun addNavigationCompletedListener(listener: BiConsumer<Boolean, WebErrorStatus>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationCompletedHandler",
             WebView2Interop.IID_WebView2NavigationCompletedHandler,
@@ -370,7 +374,7 @@ class WWebView(source: String = "") : WComponent(
         ) { _, args ->
             // args is CoreWebView2NavigationCompletedEventArgs. Read IsSuccess and WebErrorStatus and deliver them
             val argsPtr = ComPtr(args)
-            listener(
+            listener.accept(
                 argsPtr.getBool(WebView2Interop.ICoreWebView2NavigationCompletedEventArgs_get_IsSuccess),
                 WebErrorStatus.of(
                     argsPtr.getInt(WebView2Interop.ICoreWebView2NavigationCompletedEventArgs_get_WebErrorStatus),
@@ -381,7 +385,7 @@ class WWebView(source: String = "") : WComponent(
     }
 
     /** Unsubscribes a listener registered via [addNavigationCompletedListener]. */
-    fun removeNavigationCompletedListener(listener: (Boolean, WebErrorStatus) -> Unit) {
+    fun removeNavigationCompletedListener(listener: BiConsumer<Boolean, WebErrorStatus>) {
         val token = navigationCompletedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationCompleted, token)
     }
@@ -391,14 +395,14 @@ class WWebView(source: String = "") : WComponent(
      * The page sends them via window.chrome.webview.postMessage(...).
      * The listener receives the JSON representation of the message (quoted if a string was sent).
      */
-    fun addWebMessageReceivedListener(listener: (messageAsJson: String) -> Unit) {
+    fun addWebMessageReceivedListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2WebMessageReceivedHandler",
             WebView2Interop.IID_WebView2WebMessageReceivedHandler,
             WebView2Interop.IWebView2_add_WebMessageReceived,
         ) { _, args ->
             // args is CoreWebView2WebMessageReceivedEventArgs. Read WebMessageAsJson and deliver it
-            listener(
+            listener.accept(
                 ComPtr(args).getString(WebView2Interop.ICoreWebView2WebMessageReceivedEventArgs_get_WebMessageAsJson),
             )
         }
@@ -406,7 +410,7 @@ class WWebView(source: String = "") : WComponent(
     }
 
     /** Unsubscribes a listener registered via [addWebMessageReceivedListener]. */
-    fun removeWebMessageReceivedListener(listener: (String) -> Unit) {
+    fun removeWebMessageReceivedListener(listener: Consumer<String>) {
         val token = webMessageReceivedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_WebMessageReceived, token)
     }
@@ -417,20 +421,20 @@ class WWebView(source: String = "") : WComponent(
      * causes are the WebView2 Runtime not being installed, or the user data folder not being writable).
      * Once this succeeds, CoreWebView2-backed features like [documentTitle] and [postWebMessageAsJson] become usable.
      */
-    fun addCoreWebView2InitializedListener(listener: (exceptionHresult: Int) -> Unit) {
+    fun addCoreWebView2InitializedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2CoreWebView2InitializedHandler",
             WebView2Interop.IID_WebView2CoreWebView2InitializedHandler,
             WebView2Interop.IWebView2_add_CoreWebView2Initialized,
         ) { _, args ->
             // args is CoreWebView2InitializedEventArgs. Read Exception (Windows.Foundation.HResult) and deliver it
-            listener(ComPtr(args).getInt(WebView2Interop.ICoreWebView2InitializedEventArgs_get_Exception))
+            listener.accept(ComPtr(args).getInt(WebView2Interop.ICoreWebView2InitializedEventArgs_get_Exception))
         }
         coreWebView2InitializedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCoreWebView2InitializedListener]. */
-    fun removeCoreWebView2InitializedListener(listener: (Int) -> Unit) {
+    fun removeCoreWebView2InitializedListener(listener: IntConsumer) {
         val token = coreWebView2InitializedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_CoreWebView2Initialized, token)
     }

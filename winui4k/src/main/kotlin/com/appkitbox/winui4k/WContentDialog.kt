@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.ContentDialogResult (which button it closed with).
@@ -121,7 +122,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
      * Opens the dialog (ContentDialog.ShowAsync). Shown in the same window as [owner]
      * (inherits its XamlRoot). When closed, [onClosed] is called with the button that was pressed.
      */
-    fun show(owner: WComponent, onClosed: ((ContentDialogResult) -> Unit)? = null) {
+    fun show(owner: WComponent, onClosed: Consumer<ContentDialogResult>? = null) {
         // WinUI 3's ContentDialog requires the XamlRoot to show in
         val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
         uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
@@ -136,7 +137,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
                 XamlInterop.IContentDialog_add_Closed,
             ) { _, args ->
                 inspectable.removeEventHandler(XamlInterop.IContentDialog_remove_Closed, token)
-                onClosed(ContentDialogResult.of(ComPtr(args).getInt(XamlInterop.IContentDialogClosedEventArgs_get_Result)))
+                onClosed.accept(ContentDialogResult.of(ComPtr(args).getInt(XamlInterop.IContentDialogClosedEventArgs_get_Result)))
             }
         }
 

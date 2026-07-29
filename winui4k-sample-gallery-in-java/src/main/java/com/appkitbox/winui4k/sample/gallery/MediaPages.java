@@ -10,7 +10,6 @@ import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WWebView;
 
-import kotlin.Unit;
 
 /*
  * Media category: the WebView2 demo page.
@@ -86,15 +85,12 @@ final class MediaPages {
 
         backButton.addActionListener(() -> {
             webView.goBack();
-            return Unit.INSTANCE;
         });
         forwardButton.addActionListener(() -> {
             webView.goForward();
-            return Unit.INSTANCE;
         });
         reloadButton.addActionListener(() -> {
             webView.reload();
-            return Unit.INSTANCE;
         });
         goButton.addActionListener(() -> {
             // An invalid URI (e.g. missing a scheme) makes CreateUri throw, so catch it instead of crashing
@@ -103,14 +99,12 @@ final class MediaPages {
             } catch (Exception e) {
                 status.setText("Invalid URL: " + addressBar.getText());
             }
-            return Unit.INSTANCE;
         });
 
         webView.addCoreWebView2InitializedListener(exceptionHresult -> {
             if (exceptionHresult != 0) {
                 status.setText(String.format("CoreWebView2 initialization failed: HRESULT=0x%08x", exceptionHresult));
             }
-            return Unit.INSTANCE;
         });
         webView.addNavigationStartingListener(uri -> {
             status.setText("Navigating: " + uri);
@@ -121,7 +115,6 @@ final class MediaPages {
             forwardButton.setEnabled(webView.getCanGoForward());
             addressBar.setText(webView.getSource());
             status.setText(isSuccess ? "Done: " + webView.getDocumentTitle() : "Failed: " + errorStatus);
-            return Unit.INSTANCE;
         });
 
         WPanel toolBar = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -167,11 +160,9 @@ final class MediaPages {
         WButton runButton = new WButton("Run");
         Runnable runScript = () -> webView.executeScript(scriptField.getText(), json -> {
             result.setText("Result (JSON): " + json);
-            return Unit.INSTANCE;
         });
         runButton.addActionListener(() -> {
             runScript.run();
-            return Unit.INSTANCE;
         });
 
         // Presets: swap in a script and run it right away
@@ -179,20 +170,17 @@ final class MediaPages {
         readPresetButton.addActionListener(() -> {
             scriptField.setText("document.getElementById('price').textContent");
             runScript.run();
-            return Unit.INSTANCE;
         });
         // Let the stock display toggle between "In stock" / "Out of stock" via separate buttons
         WButton inStockButton = new WButton("In stock");
         inStockButton.addActionListener(() -> {
             scriptField.setText("document.getElementById('stock').textContent = 'Stock: In stock'");
             runScript.run();
-            return Unit.INSTANCE;
         });
         WButton outOfStockButton = new WButton("Out of stock");
         outOfStockButton.addActionListener(() -> {
             scriptField.setText("document.getElementById('stock').textContent = 'Stock: Out of stock'");
             runScript.run();
-            return Unit.INSTANCE;
         });
         WPanel stockButtons = new WPanel(8.0, Orientation.HORIZONTAL);
         stockButtons.add(inStockButton);
@@ -264,13 +252,11 @@ final class MediaPages {
         WButton sendButton = new WButton("Send to page");
         sendButton.addActionListener(() -> {
             webView.postWebMessageAsString(messageField.getText());
-            return Unit.INSTANCE;
         });
 
         WLabel received = purposeLabel("Pressing \"Send to Kotlin\" on the page will show it here");
         webView.addWebMessageReceivedListener(messageAsJson -> {
             received.setText("Received from page: " + unquoteJsonString(messageAsJson));
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(16.0, Orientation.VERTICAL);

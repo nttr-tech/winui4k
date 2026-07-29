@@ -23,10 +23,10 @@ class WTitleBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_TitleBar, XamlInterop.IID_ITitleBarFactory),
 ) {
     /** Event tokens for listeners registered via addBackRequestedListener. */
-    private val backRequestedTokens = ListenerTokens<() -> Unit>()
+    private val backRequestedTokens = ListenerTokens<Runnable>()
 
     /** Event tokens for listeners registered via addPaneToggleRequestedListener. */
-    private val paneToggleRequestedTokens = ListenerTokens<() -> Unit>()
+    private val paneToggleRequestedTokens = ListenerTokens<Runnable>()
 
     /** The heading string (TitleBar.Title). */
     var title: String
@@ -128,33 +128,33 @@ class WTitleBar : WControl(
         }
 
     /** Subscribes to back button clicks (TitleBar.BackRequested). */
-    fun addBackRequestedListener(listener: () -> Unit) {
+    fun addBackRequestedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarBackRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
             XamlInterop.ITitleBar_add_BackRequested,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         backRequestedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addBackRequestedListener]. */
-    fun removeBackRequestedListener(listener: () -> Unit) {
+    fun removeBackRequestedListener(listener: Runnable) {
         val token = backRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_BackRequested, token)
     }
 
     /** Subscribes to pane-toggle button clicks (TitleBar.PaneToggleRequested). */
-    fun addPaneToggleRequestedListener(listener: () -> Unit) {
+    fun addPaneToggleRequestedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarPaneToggleRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
             XamlInterop.ITitleBar_add_PaneToggleRequested,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         paneToggleRequestedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addPaneToggleRequestedListener]. */
-    fun removePaneToggleRequestedListener(listener: () -> Unit) {
+    fun removePaneToggleRequestedListener(listener: Runnable) {
         val token = paneToggleRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_PaneToggleRequested, token)
     }

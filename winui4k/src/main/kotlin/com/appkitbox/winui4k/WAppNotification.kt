@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.NotificationInterop
+import java.util.function.Consumer
 
 /**
  * TrayIcon.displayMessage-like: the Windows App SDK's toast notification, AppNotification.
@@ -182,7 +183,7 @@ object WAppNotificationManager {
     }
 
     /** Listeners registered via addNotificationInvokedListener. */
-    private val invokedListeners = mutableListOf<(String) -> Unit>()
+    private val invokedListeners = mutableListOf<Consumer<String>>()
 
     /**
      * Registers exactly one COM NotificationInvoked handler and fans it out to all listeners.
@@ -239,7 +240,7 @@ object WAppNotificationManager {
      * Call this for the first time before [register] (subscribing for the first time after
      * Register makes the WinAppSDK side return E_ILLEGAL_METHOD_CALL).
      */
-    fun addNotificationInvokedListener(listener: (String) -> Unit) {
+    fun addNotificationInvokedListener(listener: Consumer<String>) {
         if (!invokedHandlerAdded) {
             manager.addEventHandler(
                 "WinUI4K.NotificationInvokedHandler",
@@ -250,7 +251,7 @@ object WAppNotificationManager {
                 val eventArgs = ComPtr(args).queryInterface(NotificationInterop.IID_IAppNotificationActivatedEventArgs)
                 val argument = eventArgs.getString(NotificationInterop.IAppNotificationActivatedEventArgs_get_Argument)
                 eventArgs.release()
-                Dispatcher.invokeLater { invokedListeners.toList().forEach { it(argument) } }
+                Dispatcher.invokeLater { invokedListeners.toList().forEach { it.accept(argument) } }
             }
             invokedHandlerAdded = true
         }
@@ -258,7 +259,7 @@ object WAppNotificationManager {
     }
 
     /** Unsubscribes a listener registered via [addNotificationInvokedListener]. */
-    fun removeNotificationInvokedListener(listener: (String) -> Unit) {
+    fun removeNotificationInvokedListener(listener: Consumer<String>) {
         invokedListeners.remove(listener)
     }
 }

@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import kotlin.Unit;
 
 /*
  * Basic input category: demo pages for Button / CheckBox / ColorPicker / ComboBox / DropDownButton / HyperlinkButton / RadioButton / RatingControl / RepeatButton / Slider / SplitButton / ToggleButton / ToggleSplitButton / ToggleSwitch.
@@ -61,14 +60,12 @@ final class BasicInputPages {
         standardButton.addActionListener(() -> {
             count[0]++;
             result.setText("Click count: " + count[0]);
-            return Unit.INSTANCE;
         });
 
         WButton toggleButton = new WButton("Disable button");
         toggleButton.addActionListener(() -> {
             standardButton.setEnabled(!standardButton.isEnabled());
             toggleButton.setText(standardButton.isEnabled() ? "Disable button" : "Enable button");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -88,7 +85,6 @@ final class BasicInputPages {
         WButton deleteButton = new WButton("Yes, delete everything");
         deleteButton.addActionListener(() -> {
             flyout.hide();
-            return Unit.INSTANCE;
         });
         flyoutContent.add(deleteButton);
 
@@ -102,7 +98,6 @@ final class BasicInputPages {
         WLabel result = new WLabel("Command has not run yet");
         WCommand command = new WCommand(true, (parameter) -> {
             result.setText("Command ran (parameter = " + parameter + ")");
-            return Unit.INSTANCE;
         });
 
         WButton commandButton = new WButton("Run command");
@@ -113,7 +108,6 @@ final class BasicInputPages {
         toggleButton.addActionListener(() -> {
             command.setEnabled(!command.isEnabled());
             toggleButton.setText(command.isEnabled() ? "Disable command" : "Enable command");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -145,7 +139,6 @@ final class BasicInputPages {
         WCheckBox checkBox = new WCheckBox("Receive notifications");
         checkBox.addItemListener((checked) -> {
             result.setText(Boolean.TRUE.equals(checked) ? "State: on" : "State: off");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -169,7 +162,6 @@ final class BasicInputPages {
             } else {
                 result.setText("State: off");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -191,20 +183,17 @@ final class BasicInputPages {
         boolean[] updating = {false};
         parent.addItemListener((checked) -> {
             if (updating[0] || checked == null) {
-                return Unit.INSTANCE;
             }
             updating[0] = true;
             for (WCheckBox child : children) {
                 child.setChecked(checked);
             }
             updating[0] = false;
-            return Unit.INSTANCE;
         });
         for (WCheckBox child : children) {
             child.setMargin(4.0);
             child.addItemListener((checked) -> {
                 if (updating[0]) {
-                    return Unit.INSTANCE;
                 }
                 updating[0] = true;
                 int checkedCount = 0;
@@ -221,7 +210,6 @@ final class BasicInputPages {
                     parent.setChecked(null);
                 }
                 updating[0] = false;
-                return Unit.INSTANCE;
             });
         }
 
@@ -254,7 +242,6 @@ final class BasicInputPages {
         colorPicker.setColor(WColor.Companion.getBLUE());
         colorPicker.addChangeListener((color) -> {
             tile.setBackground(color);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(24.0, Orientation.HORIZONTAL);
@@ -274,7 +261,6 @@ final class BasicInputPages {
             boolean ring = colorPicker.getSpectrumShape() == ColorSpectrumShape.RING;
             colorPicker.setSpectrumShape(ring ? ColorSpectrumShape.BOX : ColorSpectrumShape.RING);
             shapeButton.setText(ring ? "Make the spectrum a ring" : "Make the spectrum a box");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -308,7 +294,6 @@ final class BasicInputPages {
             result.setText(item == null
                 ? "Selected: none"
                 : "Selected: " + item + " (index = " + comboBox.getSelectedIndex() + ")");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -346,7 +331,6 @@ final class BasicInputPages {
             if (!exists) {
                 comboBox.addItem(text);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -380,7 +364,6 @@ final class BasicInputPages {
             button.addActionListener(() -> {
                 result.setText("Selected: " + name);
                 flyout.hide();
-                return Unit.INSTANCE;
             });
             menu.add(button);
         }
@@ -425,7 +408,6 @@ final class BasicInputPages {
         hyperlinkButton.addActionListener(() -> {
             count[0]++;
             result.setText("Click count: " + count[0]);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -460,7 +442,6 @@ final class BasicInputPages {
                 if (Boolean.TRUE.equals(checked)) {
                     result.setText("Selected: " + name);
                 }
-                return Unit.INSTANCE;
             });
             body.add(radioButton);
         }
@@ -501,7 +482,6 @@ final class BasicInputPages {
                 if (Boolean.TRUE.equals(checked)) {
                     onSelect.accept(name);
                 }
-                return Unit.INSTANCE;
             });
             panel.add(radioButton);
         }
@@ -529,8 +509,7 @@ final class BasicInputPages {
         WRatingControl rating = new WRatingControl();
         rating.setClearEnabled(true);
         rating.addChangeListener((value) -> {
-            result.setText(value < 0 ? "Rating: unset" : "Rating: " + value.intValue());
-            return Unit.INSTANCE;
+            result.setText(value < 0 ? "Rating: unset" : "Rating: " + (int) value);
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -559,7 +538,6 @@ final class BasicInputPages {
         toggleButton.addActionListener(() -> {
             rating.setReadOnly(!rating.isReadOnly());
             toggleButton.setText(rating.isReadOnly() ? "Turn off read-only" : "Make read-only");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -590,7 +568,6 @@ final class BasicInputPages {
         repeatButton.addActionListener(() -> {
             count[0]++;
             result.setText("Click count: " + count[0]);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -616,7 +593,6 @@ final class BasicInputPages {
             repeatButton.addActionListener(() -> {
                 count[0]++;
                 result.setText("Click count: " + count[0]);
-                return Unit.INSTANCE;
             });
             row.add(repeatButton);
         }
@@ -647,8 +623,7 @@ final class BasicInputPages {
         WSlider slider = new WSlider(0.0, 100.0, 0.0);
         slider.setWidth(300.0);
         slider.addChangeListener((value) -> {
-            result.setText("Value: " + value.intValue());
-            return Unit.INSTANCE;
+            result.setText("Value: " + (int) value);
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -718,14 +693,12 @@ final class BasicInputPages {
                 tile.setBackground(color);
                 splitButton.setText("Apply color (" + name + ")");
                 flyout.hide();
-                return Unit.INSTANCE;
             });
             menu.add(button);
         }
         splitButton.setFlyout(flyout);
         splitButton.addActionListener(() -> {
             tile.setBackground(currentColor[0]);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -754,13 +727,11 @@ final class BasicInputPages {
         WToggleButton toggleButton = new WToggleButton("Mute");
         toggleButton.addItemListener((checked) -> {
             result.setText(Boolean.TRUE.equals(checked) ? "State: on" : "State: off");
-            return Unit.INSTANCE;
         });
 
         WButton codeButton = new WButton("Toggle from code");
         codeButton.addActionListener(() -> {
             toggleButton.setChecked(!Boolean.TRUE.equals(toggleButton.isChecked()));
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -813,14 +784,12 @@ final class BasicInputPages {
                 toggleSplitButton.setChecked(true);
                 render.run();
                 flyout.hide();
-                return Unit.INSTANCE;
             });
             menu.add(button);
         }
         toggleSplitButton.setFlyout(flyout);
         toggleSplitButton.addItemListener((checked) -> {
             render.run();
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -851,13 +820,11 @@ final class BasicInputPages {
         WToggleSwitch toggleSwitch = new WToggleSwitch("");
         toggleSwitch.addItemListener((isOn) -> {
             result.setText(isOn ? "State: on" : "State: off");
-            return Unit.INSTANCE;
         });
 
         WButton codeButton = new WButton("Toggle from code");
         codeButton.addActionListener(() -> {
             toggleSwitch.setOn(!toggleSwitch.isOn());
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);

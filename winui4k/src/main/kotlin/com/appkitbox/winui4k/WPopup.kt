@@ -16,7 +16,7 @@ class WPopup(child: WComponent? = null) : WComponent(
     Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */
-    private val closeTokens = ListenerTokens<() -> Unit>()
+    private val closeTokens = ListenerTokens<Runnable>()
 
     /** The content shown in the popup (Popup.Child). */
     var child: WComponent? = null
@@ -64,17 +64,17 @@ class WPopup(child: WComponent? = null) : WComponent(
     }
 
     /** Registers a listener called when it closes (Popup.Closed). Also called on a light dismiss. */
-    fun addCloseListener(listener: () -> Unit) {
+    fun addCloseListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PopupClosedHandler",
             FoundationInterop.IID_EventHandler_Object,
             XamlInterop.IPopup_add_Closed,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         closeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCloseListener]. */
-    fun removeCloseListener(listener: () -> Unit) {
+    fun removeCloseListener(listener: Runnable) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
     }

@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.DoubleConsumer
 
 /**
  * Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode (spin button placement).
@@ -38,7 +39,7 @@ class WSpinner(value: Double = Double.NaN) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NumberBox, XamlInterop.IID_INumberBoxFactory), // default interface = INumberBox
 ) {
     /** ValueChanged event tokens registered via addChangeListener. */
-    private val changeTokens = ListenerTokens<(Double) -> Unit>()
+    private val changeTokens = ListenerTokens<DoubleConsumer>()
 
     /** The current value (NumberBox.Value). NaN when empty. */
     var value: Double
@@ -101,20 +102,20 @@ class WSpinner(value: Double = Double.NaN) : WControl(
     }
 
     /** Subscribes to value changes (NumberBox.ValueChanged). The listener receives the value after the change. */
-    fun addChangeListener(listener: (Double) -> Unit) {
+    fun addChangeListener(listener: DoubleConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NumberBoxValueChangedHandler",
             XamlInterop.IID_NumberBoxValueChangedHandler,
             XamlInterop.INumberBox_add_ValueChanged,
         ) { _, args ->
             // args is NumberBoxValueChangedEventArgs; read NewValue and pass it along
-            listener(ComPtr(args).getDouble(XamlInterop.INumberBoxValueChangedEventArgs_get_NewValue))
+            listener.accept(ComPtr(args).getDouble(XamlInterop.INumberBoxValueChangedEventArgs_get_NewValue))
         }
         changeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: (Double) -> Unit) {
+    fun removeChangeListener(listener: DoubleConsumer) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INumberBox_remove_ValueChanged, token)
     }

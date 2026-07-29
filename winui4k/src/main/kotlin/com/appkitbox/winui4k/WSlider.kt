@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.DoubleConsumer
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.SliderSnapsTo (where the thumb snaps to).
@@ -66,7 +67,7 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
     }
 
     /** ValueChanged event tokens registered via addChangeListener. */
-    private val changeTokens = ListenerTokens<(Double) -> Unit>()
+    private val changeTokens = ListenerTokens<DoubleConsumer>()
 
     /** The current value (RangeBase.Value). */
     var value: Double
@@ -132,20 +133,20 @@ class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.
      * ChangeListener-like: subscribes to value changes. The listener receives the new value.
      * Subscribes to RangeBase.ValueChanged (RangeBaseValueChangedEventHandler) under the hood.
      */
-    fun addChangeListener(listener: (Double) -> Unit) {
+    fun addChangeListener(listener: DoubleConsumer) {
         val token = rangeBase.addEventHandler(
             "WinUI4K.ValueChangedHandler",
             XamlInterop.IID_RangeBaseValueChangedEventHandler,
             XamlInterop.IRangeBase_add_ValueChanged,
         ) { _, args ->
             // args is a RangeBaseValueChangedEventArgs; read NewValue and pass it along
-            listener(ComPtr(args).getDouble(XamlInterop.IRangeBaseValueChangedEventArgs_get_NewValue))
+            listener.accept(ComPtr(args).getDouble(XamlInterop.IRangeBaseValueChangedEventArgs_get_NewValue))
         }
         changeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: (Double) -> Unit) {
+    fun removeChangeListener(listener: DoubleConsumer) {
         val token = changeTokens.remove(listener) ?: return
         rangeBase.removeEventHandler(XamlInterop.IRangeBase_remove_ValueChanged, token)
     }

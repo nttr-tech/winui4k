@@ -5,7 +5,6 @@ import com.appkitbox.winui4k.Symbol;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WNavigationView;
 import com.appkitbox.winui4k.WNavigationViewItem;
-import kotlin.Unit;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -273,7 +272,6 @@ class GalleryNavigation {
 
         navigationView.addSelectionListener(item -> {
             if (item == null) {
-                return Unit.INSTANCE;
             }
             if (item == homeItem) {
                 onHome.run();
@@ -285,7 +283,6 @@ class GalleryNavigation {
                     onSelect.accept(item.getText(), buildPage);
                 }
             }
-            return Unit.INSTANCE;
         });
         return new GalleryNavigation(navigationView, homeItem, settingsItem, itemsByPageName);
     }

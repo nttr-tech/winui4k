@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import kotlin.Unit;
 
 /*
  * Windowing category: the four pages AppWindow / AppWindowTitleBar / Multiple windows / TitleBar.
@@ -81,7 +80,6 @@ final class WindowingPages {
         WButton closeButton = new WButton("Close this window");
         closeButton.addActionListener(() -> {
             frame.setVisible(false);
-            return Unit.INSTANCE;
         });
         frame.add(closeButton);
     }
@@ -99,41 +97,34 @@ final class WindowingPages {
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
             status.setText("Opened a child window (Title = \"" + frame.getAppWindow().getTitle() + "\")");
-            return Unit.INSTANCE;
         });
 
         WButton titleButton = new WButton("Change the title");
         titleButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().setTitle("Changed title (" + (System.currentTimeMillis() % 1000) + ")");
             status.setText("Title = \"" + frame.getAppWindow().getTitle() + "\"");
-            return Unit.INSTANCE;
         });
 
         WButton resizeButton = new WButton("Resize(640, 480)");
         resizeButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().resize(640, 480);
             status.setText("Size = " + frame.getAppWindow().getSize()
                 + " / ClientSize = " + frame.getAppWindow().getClientSize());
-            return Unit.INSTANCE;
         });
 
         WButton moveButton = new WButton("Move(100, 100)");
         moveButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().move(100, 100);
             status.setText("Position = " + frame.getAppWindow().getPosition());
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -163,14 +154,12 @@ final class WindowingPages {
             frame.getAppWindow().move(50, 50); // first place it near the edge of the screen
             child[0] = frame;
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         WButton centerButton = new WButton("Center it");
         centerButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             WRectangle workArea = WDisplayArea.Companion.nearest(frame.getAppWindow()).getWorkArea();
             WDimension size = frame.getAppWindow().getSize();
@@ -178,7 +167,6 @@ final class WindowingPages {
             int y = workArea.getY() + (workArea.getHeight() - size.getHeight()) / 2;
             frame.getAppWindow().move(x, y);
             status.setText("WorkArea = " + workArea + " → Position = " + frame.getAppWindow().getPosition());
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -208,7 +196,6 @@ final class WindowingPages {
             child[0] = frame;
             presenter[0] = newPresenter;
             status.setText("state = " + newPresenter.getState());
-            return Unit.INSTANCE;
         });
 
         Runnable refreshState = () ->
@@ -219,7 +206,6 @@ final class WindowingPages {
             if (presenter[0] != null) {
                 presenter[0].setAlwaysOnTop(Boolean.TRUE.equals(checked));
             }
-            return Unit.INSTANCE;
         });
         WCheckBox maximizableCheck = new WCheckBox("IsMaximizable");
         maximizableCheck.setChecked(true);
@@ -227,7 +213,6 @@ final class WindowingPages {
             if (presenter[0] != null) {
                 presenter[0].setMaximizable(Boolean.TRUE.equals(checked));
             }
-            return Unit.INSTANCE;
         });
         WCheckBox minimizableCheck = new WCheckBox("IsMinimizable");
         minimizableCheck.setChecked(true);
@@ -235,7 +220,6 @@ final class WindowingPages {
             if (presenter[0] != null) {
                 presenter[0].setMinimizable(Boolean.TRUE.equals(checked));
             }
-            return Unit.INSTANCE;
         });
         WCheckBox resizableCheck = new WCheckBox("IsResizable");
         resizableCheck.setChecked(true);
@@ -243,7 +227,6 @@ final class WindowingPages {
             if (presenter[0] != null) {
                 presenter[0].setResizable(Boolean.TRUE.equals(checked));
             }
-            return Unit.INSTANCE;
         });
         WCheckBox borderCheck = new WCheckBox("HasBorder");
         borderCheck.setChecked(true);
@@ -256,7 +239,6 @@ final class WindowingPages {
                     Boolean.TRUE.equals(borderCheck.isChecked()),
                     Boolean.TRUE.equals(titleBarCheck.isChecked()));
             }
-            return Unit.INSTANCE;
         });
 
         WPanel checks = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -276,7 +258,6 @@ final class WindowingPages {
                 presenter[0].maximize();
             }
             refreshState.run();
-            return Unit.INSTANCE;
         });
         WButton minimizeButton = new WButton("Minimize");
         minimizeButton.addActionListener(() -> {
@@ -284,7 +265,6 @@ final class WindowingPages {
                 presenter[0].minimize();
             }
             refreshState.run();
-            return Unit.INSTANCE;
         });
         WButton restoreButton = new WButton("Restore");
         restoreButton.addActionListener(() -> {
@@ -292,7 +272,6 @@ final class WindowingPages {
                 presenter[0].restore();
             }
             refreshState.run();
-            return Unit.INSTANCE;
         });
         WPanel stateButtons = new WPanel(8.0, Orientation.HORIZONTAL);
         stateButtons.add(maximizeButton);
@@ -330,21 +309,18 @@ final class WindowingPages {
             frame.getAppWindow().setPresenter(newPresenter);
             presenter[0] = newPresenter;
             status.setText("Set Min = (300, 200) / Max = (800, 600)");
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Clear the constraints (null)");
         clearButton.addActionListener(() -> {
             WOverlappedPresenter p = presenter[0];
             if (p == null) {
-                return Unit.INSTANCE;
             }
             p.setPreferredMinimumWidth(null);
             p.setPreferredMinimumHeight(null);
             p.setPreferredMaximumWidth(null);
             p.setPreferredMaximumHeight(null);
             status.setText("Cleared the constraints");
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -376,7 +352,6 @@ final class WindowingPages {
             modalWindow.resize(360, 200);
             status.setText("Created an AppWindow with IsModal = " + presenter.isModal() + " "
                 + "(it looks like an empty window since Content isn't set)");
-            return Unit.INSTANCE;
         });
 
         WLabel note = new WLabel(
@@ -407,29 +382,24 @@ final class WindowingPages {
             status.setText("Opened a child window");
             // addCloseButton is skipped since it can be unreachable while full-screen; provide a separate restore button instead
             frame.add(new WLabel("Try \"Go full screen\" followed by \"Restore\"."));
-            return Unit.INSTANCE;
         });
 
         WButton fullScreenButton = new WButton("Go full screen");
         fullScreenButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().setPresenter(WFullScreenPresenter.Companion.create());
             status.setText("Switched to FullScreenPresenter");
-            return Unit.INSTANCE;
         });
 
         WButton restoreButton = new WButton("Restore (back to the default Presenter)");
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
             status.setText("Restored to the default Presenter");
-            return Unit.INSTANCE;
         });
 
         WButton closeButton = new WButton("Close this window");
@@ -437,7 +407,6 @@ final class WindowingPages {
             if (child[0] != null) {
                 child[0].setVisible(false);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -466,7 +435,6 @@ final class WindowingPages {
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         List<String> sizeNames = new ArrayList<String>();
@@ -480,25 +448,21 @@ final class WindowingPages {
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             CompactOverlaySize size = CompactOverlaySize.values()[Math.max(sizeCombo.getSelectedIndex(), 0)];
             WCompactOverlayPresenter presenter = WCompactOverlayPresenter.Companion.create();
             presenter.setInitialSize(size);
             frame.getAppWindow().setPresenter(presenter);
             status.setText("Switched to CompactOverlayPresenter (InitialSize = " + size + ")");
-            return Unit.INSTANCE;
         });
 
         WButton restoreButton = new WButton("Restore (back to the default Presenter)");
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
             status.setText("Restored to the default Presenter");
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -575,7 +539,6 @@ final class WindowingPages {
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         List<String> slotNames = new ArrayList<String>();
@@ -592,12 +555,10 @@ final class WindowingPages {
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
-                return Unit.INSTANCE;
             }
             TitleBarColorSlot slot = TITLE_BAR_COLOR_SLOTS.get(Math.max(targetCombo.getSelectedIndex(), 0));
             slot.set.accept(frame.getAppWindow().getTitleBar(), picker.getColor());
             status.setText("Applied " + slot.name + " = " + picker.getColor());
-            return Unit.INSTANCE;
         });
 
         WButton resetButton = new WButton("ResetToDefault (restore all colors)");
@@ -606,7 +567,6 @@ final class WindowingPages {
                 child[0].getAppWindow().getTitleBar().resetToDefault();
             }
             status.setText("Restored all colors to their defaults");
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -635,7 +595,6 @@ final class WindowingPages {
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         WCheckBox extendCheck = new WCheckBox("ExtendsContentIntoTitleBar");
@@ -643,7 +602,6 @@ final class WindowingPages {
             if (child[0] != null) {
                 child[0].setExtendsContentIntoTitleBar(Boolean.TRUE.equals(checked));
             }
-            return Unit.INSTANCE;
         });
 
         WPanel heightButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -652,12 +610,10 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
-                    return Unit.INSTANCE;
                 }
                 frame.getAppWindow().getTitleBar().setPreferredHeightOption(option);
                 status.setText("PreferredHeightOption = " + option
                     + " (Height = " + frame.getAppWindow().getTitleBar().getHeight() + "px)");
-                return Unit.INSTANCE;
             });
             heightButtons.add(button);
         }
@@ -685,7 +641,6 @@ final class WindowingPages {
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         WPanel themeButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -694,11 +649,9 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
-                    return Unit.INSTANCE;
                 }
                 frame.getAppWindow().getTitleBar().setPreferredTheme(theme);
                 status.setText("PreferredTheme = " + theme);
-                return Unit.INSTANCE;
             });
             themeButtons.add(button);
         }
@@ -739,7 +692,6 @@ final class WindowingPages {
             frame.setSystemBackdrop(SystemBackdropType.MICA);
             child[0] = frame;
             status.setText("SystemBackdrop = " + frame.getSystemBackdrop());
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -749,11 +701,9 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
-                    return Unit.INSTANCE;
                 }
                 frame.setSystemBackdrop(type);
                 status.setText("SystemBackdrop = " + frame.getSystemBackdrop());
-                return Unit.INSTANCE;
             });
             buttons.add(button);
         }
@@ -796,7 +746,6 @@ final class WindowingPages {
             closeButton.addActionListener(() -> {
                 frame.setVisible(false);
                 updateCount.run();
-                return Unit.INSTANCE;
             });
             frame.add(new WLabel("This window is a WFrame independent of the Gallery itself."));
             frame.add(closeButton);
@@ -804,7 +753,6 @@ final class WindowingPages {
             frame.getAppWindow().resizeClient(600, 400);
             children.add(frame);
             updateCount.run();
-            return Unit.INSTANCE;
         });
 
         WButton closeAllButton = new WButton("Close all");
@@ -813,7 +761,6 @@ final class WindowingPages {
                 frame.setVisible(false);
             }
             updateCount.run();
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -856,11 +803,9 @@ final class WindowingPages {
         log.setTextWrapping(TextWrapping.WRAP);
         titleBar.addBackRequestedListener(() -> {
             log.setText("Event: BackRequested");
-            return Unit.INSTANCE;
         });
         titleBar.addPaneToggleRequestedListener(() -> {
             log.setText("Event: PaneToggleRequested");
-            return Unit.INSTANCE;
         });
 
         WTextField titleField = new WTextField("Title");
@@ -873,32 +818,27 @@ final class WindowingPages {
         applyButton.addActionListener(() -> {
             titleBar.setTitle(titleField.getText());
             titleBar.setSubtitle(subtitleField.getText());
-            return Unit.INSTANCE;
         });
 
         WCheckBox backVisibleCheck = new WCheckBox("IsBackButtonVisible");
         backVisibleCheck.setChecked(true);
         backVisibleCheck.addItemListener(checked -> {
             titleBar.setBackButtonVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
         WCheckBox backEnabledCheck = new WCheckBox("IsBackButtonEnabled");
         backEnabledCheck.setChecked(true);
         backEnabledCheck.addItemListener(checked -> {
             titleBar.setBackButtonEnabled(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
         WCheckBox paneToggleCheck = new WCheckBox("IsPaneToggleButtonVisible");
         paneToggleCheck.setChecked(true);
         paneToggleCheck.addItemListener(checked -> {
             titleBar.setPaneToggleButtonVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WCheckBox useSearchBoxCheck = new WCheckBox("Show a search box as Content");
         useSearchBoxCheck.addItemListener(checked -> {
             titleBar.setContent(Boolean.TRUE.equals(checked) ? new WAutoSuggestBox("Search") : null);
-            return Unit.INSTANCE;
         });
 
         WPanel fields = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -934,13 +874,11 @@ final class WindowingPages {
         WButton autoButton = new WButton("Restore default auto-detection (null)");
         autoButton.addActionListener(() -> {
             WTitleBar.Companion.setIsDragRegion(dragButton, null);
-            return Unit.INSTANCE;
         });
 
         WButton nonDragButton = new WButton("SetIsDragRegion = false");
         nonDragButton.addActionListener(() -> {
             WTitleBar.Companion.setIsDragRegion(dragButton, false);
-            return Unit.INSTANCE;
         });
 
         WLabel note = new WLabel(
@@ -985,13 +923,11 @@ final class WindowingPages {
             navigationView.setContent(content);
             navigationView.addSelectionListener(item -> {
                 content.setText(item != null ? item.getText() : "");
-                return Unit.INSTANCE;
             });
             navigationView.setSelectedItem(item1);
 
             titleBar.addPaneToggleRequestedListener(() -> {
                 navigationView.setPaneOpen(!navigationView.isPaneOpen());
-                return Unit.INSTANCE;
             });
 
             WGrid root = new WGrid(0.0, 0.0);
@@ -1007,7 +943,6 @@ final class WindowingPages {
             frame.getAppWindow().resize(560, 400);
             frame.setVisible(true);
             status.setText("Opened a child window");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);

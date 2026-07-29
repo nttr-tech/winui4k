@@ -20,7 +20,6 @@ import com.appkitbox.winui4k.WPanel;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import kotlin.Unit;
 
 /*
  * The Settings page: a reproduction of the real WinUI 3 Gallery's SettingsPage
@@ -69,7 +68,6 @@ final class SettingsPage {
             String appTheme = selectedIndex == 0 ? "Light" : selectedIndex == 1 ? "Dark" : "Default";
             GallerySettings.setAppTheme(appTheme);
             applyAppTheme.accept(appTheme);
-            return Unit.INSTANCE;
         });
         return buildSettingsCard(
             "\uE790",
@@ -88,7 +86,6 @@ final class SettingsPage {
             // The real one also uses Auto for Left (auto-switches among Left-family modes by width)
             navigationView.setPaneDisplayMode(
                 isLeft ? NavigationViewPaneDisplayMode.AUTO : NavigationViewPaneDisplayMode.TOP);
-            return Unit.INSTANCE;
         });
         return buildSettingsCard(
             "\uF594",
@@ -121,9 +118,7 @@ final class SettingsPage {
                     GallerySettings.clearRecentlyVisited();
                     updateButtonStates.run();
                 }
-                return Unit.INSTANCE;
             });
-            return Unit.INSTANCE;
         });
 
         removeFavoritesButton.addActionListener(() -> {
@@ -138,9 +133,7 @@ final class SettingsPage {
                     GallerySettings.clearFavorites();
                     updateButtonStates.run();
                 }
-                return Unit.INSTANCE;
             });
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);

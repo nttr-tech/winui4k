@@ -58,7 +58,7 @@ class WSettingsCard(header: String = "", description: String = "") : WControl(
     }
 
     /** The Click event tokens registered by addActionListener (used by removeActionListener). */
-    private val clickTokens = ListenerTokens<() -> Unit>()
+    private val clickTokens = ListenerTokens<Runnable>()
 
     /** The FrameworkElement view of the card's internal layout (a Grid built by XamlReader). The root for FindName. */
     private val layoutRoot: ComPtr
@@ -239,17 +239,17 @@ class WSettingsCard(header: String = "", description: String = "") : WControl(
     }
 
     /** Subscribes to clicks on the card. Use it when [isClickEnabled] is on. */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         clickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered with [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }

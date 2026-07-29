@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import kotlin.Unit;
 
 /*
  * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
@@ -81,7 +80,6 @@ final class CollectionsPages {
         itemsView.setItems(containers);
         itemsView.addItemInvokedListener(index -> {
             result.setText("Clicked: " + fruits.get(index) + " (index = " + index + ")");
-            return Unit.INSTANCE;
         });
         itemsView.setWidth(520.0);
         itemsView.setHeight(200.0);
@@ -128,7 +126,6 @@ final class CollectionsPages {
         listBox.setHorizontalAlignment(HorizontalAlignment.LEFT);
         listBox.addListSelectionListener(() -> {
             output.setBackground(colors.get(listBox.getSelectedItem()));
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(10.0, Orientation.VERTICAL);
@@ -153,7 +150,6 @@ final class CollectionsPages {
             if (selected != null) {
                 output.setFontFamily(selected);
             }
-            return Unit.INSTANCE;
         });
         listBox.setSelectedIndex(2); // Selects Courier New initially, same as the official Gallery
 
@@ -178,7 +174,6 @@ final class CollectionsPages {
         listBox.addListSelectionListener(() -> {
             List<String> selectedItems = listBox.getSelectedItems();
             selection.setText(selectedItems.isEmpty() ? "Selected: none" : "Selection: " + String.join(", ", selectedItems));
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -186,20 +181,17 @@ final class CollectionsPages {
             WButton button = new WButton(selectionMode.name());
             button.addActionListener(() -> {
                 listBox.setSelectionMode(selectionMode);
-                return Unit.INSTANCE;
             });
             buttons.add(button);
         }
         WButton selectAllButton = new WButton("Select all");
         selectAllButton.addActionListener(() -> {
             listBox.selectAll();
-            return Unit.INSTANCE;
         });
         buttons.add(selectAllButton);
         WButton scrollButton = new WButton("Scroll to end");
         scrollButton.addActionListener(() -> {
             listBox.scrollIntoView(listBox.getItemCount() - 1);
-            return Unit.INSTANCE;
         });
         buttons.add(scrollButton);
 
@@ -235,7 +227,6 @@ final class CollectionsPages {
         list.addListSelectionListener(() -> {
             String item = list.getSelectedItem();
             result.setText(item == null ? "Selected: none" : "Selected: " + item + " (index = " + list.getSelectedIndex() + ")");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -262,7 +253,6 @@ final class CollectionsPages {
                 input.setText("");
                 count.setText("Item count: " + list.getItemCount());
             }
-            return Unit.INSTANCE;
         });
 
         WButton removeButton = new WButton("Remove selected");
@@ -272,14 +262,12 @@ final class CollectionsPages {
                 list.removeItem(index);
                 count.setText("Item count: " + list.getItemCount());
             }
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Remove all");
         clearButton.addActionListener(() -> {
             list.removeAllItems();
             count.setText("Item count: " + list.getItemCount());
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -313,14 +301,12 @@ final class CollectionsPages {
             button.addActionListener(() -> {
                 list.setSelectionMode(selectionMode);
                 mode.setText("Selection mode: " + list.getSelectionMode());
-                return Unit.INSTANCE;
             });
             buttons.add(button);
         }
         WButton selectAllButton = new WButton("Select all");
         selectAllButton.addActionListener(() -> {
             list.selectAll();
-            return Unit.INSTANCE;
         });
         buttons.add(selectAllButton);
 
@@ -340,7 +326,6 @@ final class CollectionsPages {
         list.setItemClickEnabled(true);
         list.addItemClickListener(item -> {
             result.setText("Clicked: " + item);
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -393,7 +378,6 @@ final class CollectionsPages {
             } else {
                 result.setText("Selection: " + table.getValueAt(row, 0) + " (row = " + row + ")");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -409,13 +393,11 @@ final class CollectionsPages {
         WButton sortByPriceButton = new WButton("Sort by price descending");
         sortByPriceButton.addActionListener(() -> {
             table.sortBy(1, SortDirection.DESCENDING);
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Clear sort");
         clearButton.addActionListener(() -> {
             table.clearSort();
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -446,7 +428,6 @@ final class CollectionsPages {
             table.addRow("New item " + nextItemNumber[0], String.valueOf(nextItemNumber[0] * 100), "1");
             nextItemNumber[0]++;
             updateCount.run();
-            return Unit.INSTANCE;
         });
 
         WButton removeButton = new WButton("Remove selected row");
@@ -456,7 +437,6 @@ final class CollectionsPages {
                 table.removeRow(row);
                 updateCount.run();
             }
-            return Unit.INSTANCE;
         });
 
         WButton incrementButton = new WButton("Selected quantity +1");
@@ -471,14 +451,12 @@ final class CollectionsPages {
                 }
                 table.setValueAt(row, 2, String.valueOf(quantity + 1));
             }
-            return Unit.INSTANCE;
         });
 
         WButton clearButton = new WButton("Remove all");
         clearButton.addActionListener(() -> {
             table.removeAllRows();
             updateCount.run();
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -547,7 +525,6 @@ final class CollectionsPages {
             result.setText(node == null
                     ? "Clicked: none"
                     : "Click: " + node.getText() + " (depth = " + node.getDepth() + ")");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -573,12 +550,10 @@ final class CollectionsPages {
                 names.append(node.getText());
             }
             result.setText(names.length() == 0 ? "Selected: none" : "Selected: " + names);
-            return Unit.INSTANCE;
         });
         WButton selectAllButton = new WButton("Select all");
         selectAllButton.addActionListener(() -> {
             tree.selectAll();
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -600,11 +575,9 @@ final class CollectionsPages {
         WTree tree = buildSampleTree();
         tree.addExpandingListener(node -> {
             log.setText("Event: Expanding (" + (node != null ? node.getText() : null) + ")");
-            return Unit.INSTANCE;
         });
         tree.addCollapsedListener(node -> {
             log.setText("Event: Collapsed (" + (node != null ? node.getText() : null) + ")");
-            return Unit.INSTANCE;
         });
 
         WButton expandButton = new WButton("Expand all");
@@ -612,14 +585,12 @@ final class CollectionsPages {
             for (WTreeNode root : tree.getRootNodes()) {
                 tree.expand(root);
             }
-            return Unit.INSTANCE;
         });
         WButton collapseButton = new WButton("Collapse all");
         collapseButton.addActionListener(() -> {
             for (WTreeNode root : tree.getRootNodes()) {
                 tree.collapse(root);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);

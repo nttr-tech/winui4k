@@ -156,9 +156,9 @@ object WinUiUtilities {
      * Calls made after the app has exited (the last window closed) throw [IllegalStateException].
      * A [block] posted right before exit may not run.
      */
-    fun invokeLater(block: () -> Unit) {
+    fun invokeLater(block: Runnable) {
         ensureStarted()
-        Dispatcher.invokeLater(block)
+        Dispatcher.invokeLater(block::run)
     }
 
     /**
@@ -166,9 +166,9 @@ object WinUiUtilities {
      * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
      * fired yet. Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
      */
-    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable {
+    fun schedule(delayMillis: Long, block: Runnable): AutoCloseable {
         ensureStarted()
-        return Dispatcher.schedule(delayMillis, block)
+        return Dispatcher.schedule(delayMillis, block::run)
     }
 
     /**

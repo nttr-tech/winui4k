@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.ColorSpectrumShape (the spectrum's shape).
@@ -34,7 +35,7 @@ class WColorPicker : WControl(
     Activation.composeDefault(XamlInterop.CLS_ColorPicker, XamlInterop.IID_IColorPickerFactory),
 ) {
     /** ColorChanged event tokens registered via addChangeListener. */
-    private val changeTokens = ListenerTokens<(WColor) -> Unit>()
+    private val changeTokens = ListenerTokens<Consumer<WColor>>()
 
     /** The selected color (ColorPicker.Color). A Windows.UI.Color struct is passed by value. */
     var color: WColor
@@ -79,7 +80,7 @@ class WColorPicker : WControl(
      * ChangeListener-like: subscribes to color changes. The listener receives the new color.
      * Subscribes to ColorPicker.ColorChanged (TypedEventHandler<ColorPicker, ColorChangedEventArgs>) under the hood.
      */
-    fun addChangeListener(listener: (WColor) -> Unit) {
+    fun addChangeListener(listener: Consumer<WColor>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ColorChangedHandler",
             XamlInterop.IID_ColorPickerColorChangedHandler,
@@ -87,13 +88,13 @@ class WColorPicker : WControl(
         ) { _, args ->
             // args is a ColorChangedEventArgs; read NewColor (an out struct) and pass it along
             val (a, r, g, b) = XamlStructs.getColor(ComPtr(args), XamlInterop.IColorChangedEventArgs_get_NewColor)
-            listener(WColor(r, g, b, a))
+            listener.accept(WColor(r, g, b, a))
         }
         changeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: (WColor) -> Unit) {
+    fun removeChangeListener(listener: Consumer<WColor>) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IColorPicker_remove_ColorChanged, token)
     }

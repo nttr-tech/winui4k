@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.IntConsumer
 
 /**
  * A breadcrumb trail: WinUI 3's BreadcrumbBar (no Swing equivalent).
@@ -17,7 +18,7 @@ class WBreadcrumbBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_BreadcrumbBar, XamlInterop.IID_IBreadcrumbBarFactory), // default interface = IBreadcrumbBar
 ) {
     /** Listener → event token (used by the remove function). */
-    private val itemClickedTokens = ListenerTokens<(Int) -> Unit>()
+    private val itemClickedTokens = ListenerTokens<IntConsumer>()
 
     /** The hierarchy's labels currently shown. */
     var items: List<String> = emptyList()
@@ -38,20 +39,20 @@ class WBreadcrumbBar : WControl(
      * Subscribes to a level being clicked (BreadcrumbBar.ItemClicked).
      * The listener receives the clicked level's index (the subscript into [items]).
      */
-    fun addItemClickedListener(listener: (Int) -> Unit) {
+    fun addItemClickedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.BreadcrumbBarItemClickedHandler",
             XamlInterop.IID_BreadcrumbBarItemClickedHandler,
             XamlInterop.IBreadcrumbBar_add_ItemClicked,
         ) { _, args ->
             val index = ComPtr(args).getInt(XamlInterop.IBreadcrumbBarItemClickedEventArgs_get_Index)
-            listener(index)
+            listener.accept(index)
         }
         itemClickedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemClickedListener]. */
-    fun removeItemClickedListener(listener: (Int) -> Unit) {
+    fun removeItemClickedListener(listener: IntConsumer) {
         val token = itemClickedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IBreadcrumbBar_remove_ItemClicked, token)
     }

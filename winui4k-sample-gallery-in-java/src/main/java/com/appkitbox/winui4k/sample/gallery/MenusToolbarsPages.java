@@ -36,7 +36,6 @@ import com.appkitbox.winui4k.WXamlUICommand;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import kotlin.Unit;
 
 /*
  * Menus & toolbars category: demo pages for AppBarButton / AppBarSeparator / AppBarToggleButton / CommandBar / CommandBarFlyout / MenuBar / MenuFlyout / SwipeControl / StandardUICommand / XamlUICommand.
@@ -63,14 +62,12 @@ final class MenusToolbarsPages {
         WAppBarButton likeButton = new WAppBarButton("Like", Symbol.LIKE);
         likeButton.addActionListener(() -> {
             result.setText("Click: Like");
-            return Unit.INSTANCE;
         });
 
         WAppBarButton saveButton = new WAppBarButton("Save", Symbol.SAVE);
         saveButton.setKeyboardAcceleratorText("Ctrl+S"); // shown in the tooltip
         saveButton.addActionListener(() -> {
             result.setText("Click: Save");
-            return Unit.INSTANCE;
         });
 
         WAppBarButton disabledButton = new WAppBarButton("Disabled", Symbol.CANCEL);
@@ -94,7 +91,6 @@ final class MenusToolbarsPages {
             WMenuFlyoutItem item = new WMenuFlyoutItem(text, null);
             item.addActionListener(() -> {
                 result.setText("Selected item: " + text);
-                return Unit.INSTANCE;
             });
             menuFlyout.add(item);
         }
@@ -152,7 +148,6 @@ final class MenusToolbarsPages {
         WAppBarToggleButton shuffleButton = new WAppBarToggleButton("Shuffle", Symbol.SHUFFLE);
         shuffleButton.addItemListener((isChecked) -> {
             result.setText("Shuffle: " + (Boolean.TRUE.equals(isChecked) ? "on" : "off"));
-            return Unit.INSTANCE;
         });
 
         WAppBarToggleButton boldButton = new WAppBarToggleButton("Bold", Symbol.BOLD);
@@ -187,7 +182,6 @@ final class MenusToolbarsPages {
             WAppBarButton button = new WAppBarButton(label, icon);
             button.addActionListener(() -> {
                 result.setText("Click: " + label);
-                return Unit.INSTANCE;
             });
             return button;
         };
@@ -204,7 +198,6 @@ final class MenusToolbarsPages {
         WButton openButton = new WButton("Toggle IsOpen");
         openButton.addActionListener(() -> {
             commandBar.setOpen(!commandBar.isOpen());
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -247,7 +240,6 @@ final class MenusToolbarsPages {
             WAppBarButton button = new WAppBarButton(label, icon);
             button.addActionListener(() -> {
                 result.setText("Click: " + label);
-                return Unit.INSTANCE;
             });
             return button;
         };
@@ -270,7 +262,6 @@ final class MenusToolbarsPages {
         WButton showButton = new WButton("Show flyout");
         showButton.addActionListener(() -> {
             flyout.showAt(target);
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -304,7 +295,6 @@ final class MenusToolbarsPages {
             WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text, null);
             menuItem.addActionListener(() -> {
                 result.setText("Selected item: " + text);
-                return Unit.INSTANCE;
             });
             return menuItem;
         };
@@ -344,7 +334,6 @@ final class MenusToolbarsPages {
             WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text, icon);
             menuItem.addActionListener(() -> {
                 result.setText("Selected item: " + text);
-                return Unit.INSTANCE;
             });
             return menuItem;
         };
@@ -374,14 +363,12 @@ final class MenusToolbarsPages {
         statusBarItem.setChecked(true);
         statusBarItem.addActionListener(() -> {
             result.setText("Show status bar: " + statusBarItem.isChecked());
-            return Unit.INSTANCE;
         });
 
         Function<String, WRadioMenuFlyoutItem> radio = (text) -> {
             WRadioMenuFlyoutItem radioItem = new WRadioMenuFlyoutItem(text, "orientation");
             radioItem.addActionListener(() -> {
                 result.setText("Orientation: " + text);
-                return Unit.INSTANCE;
             });
             return radioItem;
         };
@@ -428,7 +415,6 @@ final class MenusToolbarsPages {
             WMenuFlyoutItem item = new WMenuFlyoutItem(text, null);
             item.addActionListener(() -> {
                 result.setText("Selected item: " + text);
-                return Unit.INSTANCE;
             });
             menuFlyout.add(item);
         }
@@ -453,7 +439,6 @@ final class MenusToolbarsPages {
             item.setChecked(text.equals("Rating"));
             item.addActionListener(() -> {
                 result.setText("Sort by: " + text);
-                return Unit.INSTANCE;
             });
             menuFlyout.add(item);
         }
@@ -477,13 +462,11 @@ final class MenusToolbarsPages {
         copyItem.setKeyboardAcceleratorText("Ctrl+C"); // a display-only shortcut string
         copyItem.addActionListener(() -> {
             result.setText("Selected item: Copy");
-            return Unit.INSTANCE;
         });
         menuFlyout.add(copyItem);
         WMenuFlyoutItem deleteItem = new WMenuFlyoutItem("Delete", Symbol.DELETE);
         deleteItem.addActionListener(() -> {
             result.setText("Selected item: Delete");
-            return Unit.INSTANCE;
         });
         menuFlyout.add(deleteItem);
 
@@ -524,7 +507,6 @@ final class MenusToolbarsPages {
         pinItem.setBackground(new WColor(96, 165, 250, 255));
         pinItem.addActionListener(() -> {
             result.setText("Item run: Pin");
-            return Unit.INSTANCE;
         });
         WSwipeItems leftItems = new WSwipeItems(SwipeMode.REVEAL);
         leftItems.add(pinItem);
@@ -534,7 +516,6 @@ final class MenusToolbarsPages {
         deleteItem.setBackground(new WColor(239, 68, 68, 255));
         deleteItem.addActionListener(() -> {
             result.setText("Item run: Delete");
-            return Unit.INSTANCE;
         });
         WSwipeItems rightItems = new WSwipeItems(SwipeMode.EXECUTE);
         rightItems.add(deleteItem);
@@ -586,7 +567,6 @@ final class MenusToolbarsPages {
             WStandardUICommand command = new WStandardUICommand(kind);
             command.addExecuteListener((parameter) -> {
                 result.setText("Command run: " + command.getLabel());
-                return Unit.INSTANCE;
             });
             // The label, icon, and shortcut (e.g. Ctrl+C) apply automatically from the command
             WAppBarButton button = new WAppBarButton("", null);
@@ -626,7 +606,6 @@ final class MenusToolbarsPages {
         command.addExecuteListener((parameter) -> {
             count[0]++;
             result.setText("Run count: " + count[0]);
-            return Unit.INSTANCE;
         });
 
         // Set the same command on a Button and an AppBarButton (label and icon apply automatically)

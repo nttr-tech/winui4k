@@ -19,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
-import kotlin.Unit;
 
 /*
  * Date & time category: demo pages for CalendarDatePicker / CalendarView / DatePicker / TimePicker.
@@ -57,7 +56,6 @@ final class DateTimePages {
             } else {
                 result.setText("Selected date: (none)");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -95,14 +93,12 @@ final class DateTimePages {
         isGroupLabelVisible.setChecked(true);
         isGroupLabelVisible.addItemListener(checked -> {
             calendarView.setGroupLabelVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WCheckBox isOutOfScopeEnabled = new WCheckBox("IsOutOfScopeEnabled");
         isOutOfScopeEnabled.setChecked(true);
         isOutOfScopeEnabled.addItemListener(checked -> {
             calendarView.setOutOfScopeEnabled(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WComboBox selectionModeCombo = new WComboBox(Arrays.asList("None", "Single", "Multiple"));
@@ -118,7 +114,6 @@ final class DateTimePages {
             } else {
                 calendarView.setSelectionMode(CalendarViewSelectionMode.SINGLE);
             }
-            return Unit.INSTANCE;
         });
 
         List<String> calendarIdentifiers = Arrays.asList(
@@ -134,7 +129,6 @@ final class DateTimePages {
             if (selected != null) {
                 calendarView.setCalendarIdentifier(selected);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);
@@ -194,7 +188,6 @@ final class DateTimePages {
             } else {
                 result.setText("");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.HORIZONTAL);
@@ -206,21 +199,18 @@ final class DateTimePages {
         dayVisibleCheck.setChecked(true);
         dayVisibleCheck.addItemListener(checked -> {
             picker.setDayVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WCheckBox monthVisibleCheck = new WCheckBox("MonthVisible");
         monthVisibleCheck.setChecked(true);
         monthVisibleCheck.addItemListener(checked -> {
             picker.setMonthVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WCheckBox yearVisibleCheck = new WCheckBox("YearVisible");
         yearVisibleCheck.setChecked(false);
         yearVisibleCheck.addItemListener(checked -> {
             picker.setYearVisible(Boolean.TRUE.equals(checked));
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);
@@ -278,7 +268,6 @@ final class DateTimePages {
             } else {
                 result.setText("");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -295,7 +284,6 @@ final class DateTimePages {
             if (selected != null) {
                 picker.setClockIdentifier(selected);
             }
-            return Unit.INSTANCE;
         });
 
         WComboBox minuteIncrementCombo = new WComboBox(Arrays.asList("1", "5", "10", "15", "30"));
@@ -307,7 +295,6 @@ final class DateTimePages {
             if (selected != null) {
                 picker.setMinuteIncrement(Integer.parseInt(selected));
             }
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);

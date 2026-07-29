@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import kotlin.Unit;
 
 /*
  * Text category: demo pages for AutoSuggestBox / NumberBox / PasswordBox / RichEditBox / RichTextBlock / TextBlock / TextBox.
@@ -67,7 +66,6 @@ final class TextPages {
                 }
                 suggestBox.setSuggestions(filtered);
             }
-            return Unit.INSTANCE;
         });
         suggestBox.addQuerySubmittedListener((queryText, chosenSuggestion) -> {
             if (chosenSuggestion != null) {
@@ -75,7 +73,6 @@ final class TextPages {
             } else {
                 result.setText("Committed as typed: " + queryText);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -109,8 +106,7 @@ final class TextPages {
         spinner.setPlaceholderText("1 + 2 * 3");
         spinner.setAcceptsExpression(true);
         spinner.addChangeListener(value -> {
-            result.setText(value.isNaN() ? "Not entered" : "Value: " + value);
-            return Unit.INSTANCE;
+            result.setText(Double.isNaN(value) ? "Not entered" : "Value: " + value);
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -163,7 +159,6 @@ final class TextPages {
             } else {
                 result.setText("OK (" + password.length() + " characters)");
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.VERTICAL);
@@ -211,13 +206,11 @@ final class TextPages {
         WButton boldButton = new WButton("Bold");
         boldButton.addActionListener(() -> {
             textPane.toggleSelectionBold();
-            return Unit.INSTANCE;
         });
 
         WButton italicButton = new WButton("Italic");
         italicButton.addActionListener(() -> {
             textPane.toggleSelectionItalic();
-            return Unit.INSTANCE;
         });
 
         WButton undoButton = new WButton("Undo");
@@ -225,7 +218,6 @@ final class TextPages {
             if (textPane.getCanUndo()) {
                 textPane.undo();
             }
-            return Unit.INSTANCE;
         });
 
         WButton redoButton = new WButton("Redo");
@@ -233,7 +225,6 @@ final class TextPages {
             if (textPane.getCanRedo()) {
                 textPane.redo();
             }
-            return Unit.INSTANCE;
         });
 
         WPanel toolbar = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -275,11 +266,9 @@ final class TextPages {
             paragraph.run(", and ");
             paragraph.underline("underlined");
             paragraph.run(" text together in a single block.");
-            return Unit.INSTANCE;
         });
         richTextBlock.addParagraph(paragraph -> {
             paragraph.run("Adding multiple paragraphs displays them with spacing in between.");
-            return Unit.INSTANCE;
         });
         return GalleryScaffold.buildExample(
                 "Displaying formatted text (Paragraph / Run / Bold / Italic / Underline)", richTextBlock);
@@ -294,20 +283,17 @@ final class TextPages {
         richTextBlock.setWidth(400.0);
         richTextBlock.addParagraph(paragraph -> {
             paragraph.run("This text can be selected with the mouse. Drag to select, then press the button below.");
-            return Unit.INSTANCE;
         });
 
         WButton readButton = new WButton("Get selected text");
         readButton.addActionListener(() -> {
             String selected = richTextBlock.getSelectedText();
             result.setText(selected.isEmpty() ? "Nothing is selected" : "Selected: " + selected);
-            return Unit.INSTANCE;
         });
 
         WButton selectAllButton = new WButton("Select all");
         selectAllButton.addActionListener(() -> {
             richTextBlock.selectAll();
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -442,7 +428,6 @@ final class TextPages {
         toggleButton.addActionListener(() -> {
             textField.setReadOnly(!textField.isReadOnly());
             toggleButton.setText(textField.isReadOnly() ? "Allow editing" : "Make read-only again");
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -460,13 +445,11 @@ final class TextPages {
         textField.setWidth(300.0);
         textField.addTextChangedListener(text -> {
             mirror.setText(text.isEmpty() ? "The text you type appears here" : text);
-            return Unit.INSTANCE;
         });
 
         WButton selectAllButton = new WButton("Select all");
         selectAllButton.addActionListener(() -> {
             textField.selectAll();
-            return Unit.INSTANCE;
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);

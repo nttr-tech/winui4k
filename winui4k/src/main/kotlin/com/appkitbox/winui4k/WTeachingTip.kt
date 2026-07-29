@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.TeachingTipPlacementMode ([WTeachingTip.preferredPlacement]).
@@ -65,8 +66,8 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TeachingTip, XamlInterop.IID_ITeachingTipFactory), // default interface = ITeachingTip
 ) {
     /** Listener -> event token (used to remove). */
-    private val actionTokens = ListenerTokens<() -> Unit>()
-    private val closeTokens = ListenerTokens<(TeachingTipCloseReason) -> Unit>()
+    private val actionTokens = ListenerTokens<Runnable>()
+    private val closeTokens = ListenerTokens<Consumer<TeachingTipCloseReason>>()
 
     /** The callout's heading (TeachingTip.Title). */
     var title: String
@@ -131,35 +132,37 @@ class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
     }
 
     /** Registers a listener called when the action button is pressed (TeachingTip.ActionButtonClick). */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipObjectHandler,
             XamlInterop.ITeachingTip_add_ActionButtonClick,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         actionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = actionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_ActionButtonClick, token)
     }
 
     /** Registers a listener called when it closes (TeachingTip.Closed). Passed the reason it closed. */
-    fun addCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
+    fun addCloseListener(listener: Consumer<TeachingTipCloseReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipClosedHandler,
             XamlInterop.ITeachingTip_add_Closed,
         ) { _, args ->
-            listener(TeachingTipCloseReason.of(ComPtr(args).getInt(XamlInterop.ITeachingTipClosedEventArgs_get_Reason)))
+            listener.accept(
+                TeachingTipCloseReason.of(ComPtr(args).getInt(XamlInterop.ITeachingTipClosedEventArgs_get_Reason)),
+            )
         }
         closeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addCloseListener]. */
-    fun removeCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
+    fun removeCloseListener(listener: Consumer<TeachingTipCloseReason>) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_Closed, token)
     }

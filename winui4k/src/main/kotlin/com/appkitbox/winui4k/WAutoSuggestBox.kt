@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.BiConsumer
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.AutoSuggestionBoxTextChangeReason (why the text changed).
@@ -46,13 +48,13 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
     }
 
     /** TextChanged event tokens registered via addTextChangedListener. */
-    private val textChangedTokens = ListenerTokens<(String, TextChangeReason) -> Unit>()
+    private val textChangedTokens = ListenerTokens<BiConsumer<String, TextChangeReason>>()
 
     /** QuerySubmitted event tokens registered via addQuerySubmittedListener. */
-    private val querySubmittedTokens = ListenerTokens<(String, String?) -> Unit>()
+    private val querySubmittedTokens = ListenerTokens<BiConsumer<String, String?>>()
 
     /** SuggestionChosen event tokens registered via addSuggestionChosenListener. */
-    private val suggestionChosenTokens = ListenerTokens<(String) -> Unit>()
+    private val suggestionChosenTokens = ListenerTokens<Consumer<String>>()
 
     /** The text currently being entered (AutoSuggestBox.Text). */
     var text: String
@@ -110,7 +112,7 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
      * The listener receives the text after the change and the reason for the change.
      * As a rule, only filter suggestions when the reason is [TextChangeReason.USER_INPUT].
      */
-    fun addTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
+    fun addTextChangedListener(listener: BiConsumer<String, TextChangeReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxTextChangedHandler",
             XamlInterop.IID_AutoSuggestBoxTextChangedHandler,
@@ -120,13 +122,13 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
             val reason = TextChangeReason.of(
                 ComPtr(args).getInt(XamlInterop.IAutoSuggestBoxTextChangedEventArgs_get_Reason),
             )
-            listener(text, reason)
+            listener.accept(text, reason)
         }
         textChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
-    fun removeTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
+    fun removeTextChangedListener(listener: BiConsumer<String, TextChangeReason>) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_TextChanged, token)
     }
@@ -135,7 +137,7 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
      * Subscribes to confirmation via Enter or choosing a suggestion (AutoSuggestBox.QuerySubmitted).
      * The listener receives the entered text, and if confirmed from a suggestion, that suggestion (null otherwise).
      */
-    fun addQuerySubmittedListener(listener: (queryText: String, chosenSuggestion: String?) -> Unit) {
+    fun addQuerySubmittedListener(listener: BiConsumer<String, String?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxQuerySubmittedHandler",
             XamlInterop.IID_AutoSuggestBoxQuerySubmittedHandler,
@@ -152,19 +154,19 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
                     it.release()
                 }
             }
-            listener(queryText, chosen)
+            listener.accept(queryText, chosen)
         }
         querySubmittedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addQuerySubmittedListener]. */
-    fun removeQuerySubmittedListener(listener: (String, String?) -> Unit) {
+    fun removeQuerySubmittedListener(listener: BiConsumer<String, String?>) {
         val token = querySubmittedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_QuerySubmitted, token)
     }
 
     /** Subscribes to suggestion highlight changes (AutoSuggestBox.SuggestionChosen). The listener receives the suggestion string. */
-    fun addSuggestionChosenListener(listener: (String) -> Unit) {
+    fun addSuggestionChosenListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxSuggestionChosenHandler",
             XamlInterop.IID_AutoSuggestBoxSuggestionChosenHandler,
@@ -177,13 +179,13 @@ class WAutoSuggestBox(placeholder: String = "") : WControl(
             } finally {
                 boxed.release()
             }
-            listener(selected)
+            listener.accept(selected)
         }
         suggestionChosenTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSuggestionChosenListener]. */
-    fun removeSuggestionChosenListener(listener: (String) -> Unit) {
+    fun removeSuggestionChosenListener(listener: Consumer<String>) {
         val token = suggestionChosenTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_SuggestionChosen, token)
     }

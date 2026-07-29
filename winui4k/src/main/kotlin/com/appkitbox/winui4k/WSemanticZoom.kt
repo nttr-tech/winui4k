@@ -17,7 +17,7 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     Activation.activate(XamlInterop.CLS_SemanticZoom, XamlInterop.IID_ISemanticZoom), // created via the default factory
 ) {
     /** ViewChangeStarted event tokens registered via addViewChangeStartedListener. */
-    private val viewChangeStartedTokens = ListenerTokens<() -> Unit>()
+    private val viewChangeStartedTokens = ListenerTokens<Runnable>()
 
     /** The detail view (SemanticZoom.ZoomedInView). The ListViewBase is passed as ISemanticZoomInformation. */
     val zoomedInView: WList = zoomedInView
@@ -46,17 +46,17 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     }
 
     /** Subscribes to the start of a view switch (SemanticZoom.ViewChangeStarted). */
-    fun addViewChangeStartedListener(listener: () -> Unit) {
+    fun addViewChangeStartedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SemanticZoomViewChangedEventHandler",
             XamlInterop.IID_SemanticZoomViewChangedEventHandler,
             XamlInterop.ISemanticZoom_add_ViewChangeStarted,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         viewChangeStartedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addViewChangeStartedListener]. */
-    fun removeViewChangeStartedListener(listener: () -> Unit) {
+    fun removeViewChangeStartedListener(listener: Runnable) {
         val token = viewChangeStartedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISemanticZoom_remove_ViewChangeStarted, token)
     }

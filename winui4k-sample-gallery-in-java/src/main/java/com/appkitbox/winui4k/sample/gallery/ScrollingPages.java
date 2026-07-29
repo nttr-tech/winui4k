@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-import kotlin.Unit;
 
 /*
  * Scrolling category: demo pages for AnnotatedScrollBar / PipsPager / ScrollView / ScrollViewer / SemanticZoom.
@@ -165,7 +164,6 @@ final class ScrollingPages {
         // Connect it as the vertical scroll controller after the ScrollView's template is applied (Loaded)
         scrollView.addLoadedListener(() -> {
             annotatedScrollBar.connectTo(scrollView);
-            return Unit.INSTANCE;
         });
         // Place the labels (markers) after the content is laid out (SizeChanged = the scroll range is
         // finalized). The real Gallery also rebuilds its labels on ItemsRepeater's SizeChanged
@@ -175,7 +173,6 @@ final class ScrollingPages {
             for (GroupOffset groupOffset : groupStartOffsets) {
                 annotatedScrollBar.addLabel(groupOffset.name, groupOffset.offset);
             }
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -188,7 +185,6 @@ final class ScrollingPages {
         heightSlider.setWidth(240.0);
         heightSlider.addChangeListener(value -> {
             annotatedScrollBar.setHeight(value);
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);
@@ -237,7 +233,6 @@ final class ScrollingPages {
         pager.setHorizontalAlignment(HorizontalAlignment.CENTER);
         pager.addSelectedIndexChangedListener(index -> {
             image.setSourceUri(imageUris.get(index));
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -257,7 +252,6 @@ final class ScrollingPages {
         selected.setForeground(GalleryTheme.TEXT_SECONDARY());
         pager.addSelectedIndexChangedListener(index -> {
             selected.setText("Selected page: " + (index + 1));
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -272,7 +266,6 @@ final class ScrollingPages {
         orientationCombo.addListSelectionListener(() -> {
             pager.setOrientation(
                 "Vertical".equals(orientationCombo.getSelectedItem()) ? Orientation.VERTICAL : Orientation.HORIZONTAL);
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);
@@ -303,7 +296,6 @@ final class ScrollingPages {
                 visibility = PipsPagerButtonVisibility.VISIBLE;
             }
             apply.accept(visibility);
-            return Unit.INSTANCE;
         });
         return combo;
     }
@@ -351,7 +343,6 @@ final class ScrollingPages {
         zoomModeCombo.addListSelectionListener(() -> {
             scrollView.setZoomMode(
                 "Disabled".equals(zoomModeCombo.getSelectedItem()) ? ScrollingZoomMode.DISABLED : ScrollingZoomMode.ENABLED);
-            return Unit.INSTANCE;
         });
 
         WComboBox orientationCombo = new WComboBox(Arrays.asList("None", "Vertical", "Horizontal", "Both"));
@@ -371,7 +362,6 @@ final class ScrollingPages {
                 orientation = ScrollingContentOrientation.NONE;
             }
             scrollView.setContentOrientation(orientation);
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(12.0, Orientation.VERTICAL);
@@ -403,7 +393,6 @@ final class ScrollingPages {
                 visibility = ScrollingScrollBarVisibility.AUTO;
             }
             apply.accept(visibility);
-            return Unit.INSTANCE;
         });
         return combo;
     }
@@ -419,7 +408,6 @@ final class ScrollingPages {
         offset.setForeground(GalleryTheme.TEXT_SECONDARY());
         scrollView.addViewChangedListener(() -> {
             offset.setText("Position: (" + (int) scrollView.getHorizontalOffset() + ", " + (int) scrollView.getVerticalOffset() + ")");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -429,22 +417,18 @@ final class ScrollingPages {
         WButton toStart = new WButton("To start");
         toStart.addActionListener(() -> {
             scrollView.scrollTo(0.0, 0.0);
-            return Unit.INSTANCE;
         });
         WButton toEnd = new WButton("To end");
         toEnd.addActionListener(() -> {
             scrollView.scrollTo(scrollView.getScrollableWidth(), scrollView.getScrollableHeight());
-            return Unit.INSTANCE;
         });
         WButton down = new WButton("Down +100");
         down.addActionListener(() -> {
             scrollView.scrollBy(0.0, 100.0);
-            return Unit.INSTANCE;
         });
         WButton right = new WButton("Right +100");
         right.addActionListener(() -> {
             scrollView.scrollBy(100.0, 0.0);
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(8.0, Orientation.VERTICAL);
@@ -514,7 +498,6 @@ final class ScrollingPages {
                 visibility = ScrollBarVisibility.AUTO;
             }
             apply.accept(visibility);
-            return Unit.INSTANCE;
         });
         return combo;
     }
@@ -531,7 +514,6 @@ final class ScrollingPages {
         scrollPane.addViewChangedListener(() -> {
             offset.setText("Horizontal position: " + (int) scrollPane.getHorizontalOffset()
                 + " / Scrollable width: " + (int) scrollPane.getScrollableWidth());
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -541,17 +523,14 @@ final class ScrollingPages {
         WButton toStart = new WButton("To left edge");
         toStart.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(0.0);
-            return Unit.INSTANCE;
         });
         WButton toEnd = new WButton("To right edge");
         toEnd.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(scrollPane.getScrollableWidth());
-            return Unit.INSTANCE;
         });
         WButton center = new WButton("To center");
         center.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(scrollPane.getScrollableWidth() / 2.0);
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(8.0, Orientation.VERTICAL);
@@ -603,7 +582,6 @@ final class ScrollingPages {
             // ViewChangeStarted fires at the "start" of a switch, so this shows the view about to be displayed
             activeView.setText(
                 semanticZoom.isZoomedInViewActive() ? "Showing: summary view (ZoomedOut)" : "Showing: detail view (ZoomedIn)");
-            return Unit.INSTANCE;
         });
 
         WPanel body = new WPanel(12.0, Orientation.VERTICAL);
@@ -613,7 +591,6 @@ final class ScrollingPages {
         WButton toggle = new WButton("Switch view (ToggleActiveView)");
         toggle.addActionListener(() -> {
             semanticZoom.toggleActiveView();
-            return Unit.INSTANCE;
         });
 
         WPanel options = new WPanel(8.0, Orientation.VERTICAL);

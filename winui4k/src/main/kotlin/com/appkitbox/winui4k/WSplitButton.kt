@@ -29,7 +29,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     }
 
     /** Click event tokens registered via addActionListener. */
-    private val clickTokens = ListenerTokens<() -> Unit>()
+    private val clickTokens = ListenerTokens<Runnable>()
 
     /** The button's label string (ContentControl.Content). Object-typed, so it's boxed when passed. */
     var text: String
@@ -58,17 +58,17 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
      * ActionListener-like: subscribes to clicks on the body (left side).
      * Subscribes to SplitButton.Click (TypedEventHandler<SplitButton, SplitButtonClickEventArgs>) under the hood.
      */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = splitButton.addEventHandler(
             "WinUI4K.SplitButtonClickHandler",
             XamlInterop.IID_SplitButtonClickHandler,
             XamlInterop.ISplitButton_add_Click,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         clickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         splitButton.removeEventHandler(XamlInterop.ISplitButton_remove_Click, token)
     }

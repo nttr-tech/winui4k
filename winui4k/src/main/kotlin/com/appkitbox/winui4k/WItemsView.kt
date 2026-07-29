@@ -12,6 +12,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.IntConsumer
 
 /**
  * Microsoft.UI.Xaml.Controls.ItemsViewSelectionMode (ItemsView's selection mode).
@@ -46,7 +47,7 @@ class WItemsView : WControl(
     Activation.composeDefault(XamlInterop.CLS_ItemsView, XamlInterop.IID_IItemsViewFactory),
 ) {
     /** ItemInvoked event tokens registered via addItemInvokedListener. */
-    private val itemInvokedTokens = ListenerTokens<(Int) -> Unit>()
+    private val itemInvokedTokens = ListenerTokens<IntConsumer>()
 
     /** The items set via setItems. Also used to look up the invoked item's index. */
     private var items: List<WItemContainer> = emptyList()
@@ -86,7 +87,7 @@ class WItemsView : WControl(
      * Subscribes to item clicks (ItemsView.ItemInvoked).
      * The listener receives the index within the list passed to [setItems].
      */
-    fun addItemInvokedListener(listener: (Int) -> Unit) {
+    fun addItemInvokedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ItemsViewItemInvokedHandler",
             XamlInterop.IID_ItemsViewItemInvokedHandler,
@@ -99,13 +100,13 @@ class WItemsView : WControl(
             } finally {
                 invoked.release()
             }
-            if (index >= 0) listener(index)
+            if (index >= 0) listener.accept(index)
         }
         itemInvokedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
-    fun removeItemInvokedListener(listener: (Int) -> Unit) {
+    fun removeItemInvokedListener(listener: IntConsumer) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
     }

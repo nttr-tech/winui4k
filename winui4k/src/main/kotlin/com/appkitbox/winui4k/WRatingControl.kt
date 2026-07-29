@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.DoubleConsumer
 
 /**
  * Star-based rating input: WinUI 3's RatingControl.
@@ -17,7 +18,7 @@ class WRatingControl : WControl(
     Activation.composeDefault(XamlInterop.CLS_RatingControl, XamlInterop.IID_IRatingControlFactory),
 ) {
     /** ValueChanged event tokens registered via addChangeListener. */
-    private val changeTokens = ListenerTokens<(Double) -> Unit>()
+    private val changeTokens = ListenerTokens<DoubleConsumer>()
 
     /** The rating value (RatingControl.Value). Unset is -1. */
     var value: Double
@@ -53,17 +54,17 @@ class WRatingControl : WControl(
      * ChangeListener-like: subscribes to changes in the rating value. The listener receives
      * the new [value]. Subscribes to RatingControl.ValueChanged (TypedEventHandler<RatingControl, Object>) under the hood.
      */
-    fun addChangeListener(listener: (Double) -> Unit) {
+    fun addChangeListener(listener: DoubleConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.RatingChangedHandler",
             XamlInterop.IID_RatingControlValueChangedHandler,
             XamlInterop.IRatingControl_add_ValueChanged,
-        ) { _, _ -> listener(value) }
+        ) { _, _ -> listener.accept(value) }
         changeTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: (Double) -> Unit) {
+    fun removeChangeListener(listener: DoubleConsumer) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IRatingControl_remove_ValueChanged, token)
     }

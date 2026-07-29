@@ -43,7 +43,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
-    private val clickTokens = ListenerTokens<() -> Unit>()
+    private val clickTokens = ListenerTokens<Runnable>()
 
     private var contentComponent: WComponent? = null
 
@@ -119,17 +119,17 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
 
     /** ActionListener-like. Subscribes to ButtonBase.Click (RoutedEventHandler) under the hood. */
-    fun addActionListener(listener: () -> Unit) {
+    fun addActionListener(listener: Runnable) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         clickTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: () -> Unit) {
+    fun removeActionListener(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }

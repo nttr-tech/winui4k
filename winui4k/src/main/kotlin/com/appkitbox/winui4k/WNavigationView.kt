@@ -10,6 +10,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.function.Consumer
 
 /**
  * Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode (the pane's current display state).
@@ -109,8 +110,8 @@ class WNavigationView : WControl(
     private val items = mutableListOf<WNavigationViewItem>()
 
     /** Listener -> event token (used to remove). */
-    private val selectionTokens = ListenerTokens<(WNavigationViewItem?) -> Unit>()
-    private val itemInvokedTokens = ListenerTokens<(String) -> Unit>()
+    private val selectionTokens = ListenerTokens<Consumer<WNavigationViewItem?>>()
+    private val itemInvokedTokens = ListenerTokens<Consumer<String>>()
 
     /** Whether the pane is open (NavigationView.IsPaneOpen). */
     var isPaneOpen: Boolean
@@ -218,7 +219,7 @@ class WNavigationView : WControl(
      * The listener receives the selected [WNavigationViewItem]
      * (null if something other than an added item is selected, such as the settings item).
      */
-    fun addSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
+    fun addSelectionListener(listener: Consumer<WNavigationViewItem?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewSelectionChangedHandler,
@@ -231,13 +232,13 @@ class WNavigationView : WControl(
             } finally {
                 selected?.release()
             }
-            listener(item)
+            listener.accept(item)
         }
         selectionTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addSelectionListener]. */
-    fun removeSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
+    fun removeSelectionListener(listener: Consumer<WNavigationViewItem?>) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_SelectionChanged, token)
     }
@@ -247,7 +248,7 @@ class WNavigationView : WControl(
      * The listener receives the clicked item's label string (InvokedItem is Content's value).
      * Also fires when re-clicking an already-selected item.
      */
-    fun addItemInvokedListener(listener: (String) -> Unit) {
+    fun addItemInvokedListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewItemInvokedHandler,
@@ -260,13 +261,13 @@ class WNavigationView : WControl(
             } finally {
                 boxed?.release()
             }
-            listener(item)
+            listener.accept(item)
         }
         itemInvokedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
-    fun removeItemInvokedListener(listener: (String) -> Unit) {
+    fun removeItemInvokedListener(listener: Consumer<String>) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_ItemInvoked, token)
     }

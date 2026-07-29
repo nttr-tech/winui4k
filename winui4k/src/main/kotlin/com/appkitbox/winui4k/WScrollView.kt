@@ -82,7 +82,7 @@ class WScrollView(content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ScrollView, XamlInterop.IID_IScrollViewFactory), // default interface = IScrollView
 ) {
     /** ViewChanged event tokens registered via addViewChangedListener. */
-    private val viewChangedTokens = ListenerTokens<() -> Unit>()
+    private val viewChangedTokens = ListenerTokens<Runnable>()
 
     /**
      * The internal ScrollPresenter (ScrollView.ScrollPresenter). null before the template is
@@ -168,17 +168,17 @@ class WScrollView(content: WComponent? = null) : WControl(
      * Subscribes to changes in scroll position / zoom factor (ScrollView.ViewChanged; also fires
      * during inertial scrolling).
      */
-    fun addViewChangedListener(listener: () -> Unit) {
+    fun addViewChangedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewViewChangedHandler",
             XamlInterop.IID_ScrollViewViewChangedHandler,
             XamlInterop.IScrollView_add_ViewChanged,
-        ) { _, _ -> listener() }
+        ) { _, _ -> listener.run() }
         viewChangedTokens.add(listener, token)
     }
 
     /** Unsubscribes a listener registered via [addViewChangedListener]. */
-    fun removeViewChangedListener(listener: () -> Unit) {
+    fun removeViewChangedListener(listener: Runnable) {
         val token = viewChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IScrollView_remove_ViewChanged, token)
     }
