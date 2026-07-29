@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import kotlin.Pair;
-
 /*
  * Shell category: demo pages for AppNotification / BadgeNotification / JumpList.
  */
@@ -147,8 +145,8 @@ final class ShellPages {
                     new WAppNotification("Want to reply?")
                         .addText("Button clicks can be received on the app side.")
                         .addArgument("action", "open")
-                        .addButton("Approve", new Pair<String, String>("action", "approve"))
-                        .addButton("Reject", new Pair<String, String>("action", "reject"))
+                        .addButton("Approve", Collections.singletonMap("action", "approve"))
+                        .addButton("Reject", Collections.singletonMap("action", "reject"))
                         .setScenario(scenario));
                 message = "Sent. Click the notification";
             } catch (Exception e) {

@@ -18,6 +18,7 @@ import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WExpander;
 import com.appkitbox.winui4k.WGrid;
+import com.appkitbox.winui4k.WGradientStop;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WLinearGradientPaint;
@@ -31,8 +32,6 @@ import com.appkitbox.winui4k.WVariableSizedWrapGrid;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import kotlin.Pair;
-
 /*
  * Layout category: demo pages for Border / Canvas / Expander / Grid / RelativePanel / SplitView / StackPanel / VariableSizedWrapGrid.
  */
@@ -112,14 +111,15 @@ final class LayoutPages {
 
     /** Switching between a gradient background and its angle. */
     private static WComponent buildBorderGradientExample() {
-        List<Pair<Double, WColor>> stops = Arrays.asList(
-                new Pair<Double, WColor>(0.0, WColor.BLUE),
-                new Pair<Double, WColor>(1.0, WColor.PURPLE));
+        WGradientStop[] stops = {
+            new WGradientStop(0.0, WColor.BLUE),
+            new WGradientStop(1.0, WColor.PURPLE)
+        };
 
         WLabel gradientLabel = new WLabel("Content with a gradient background");
         gradientLabel.setForeground(WColor.WHITE);
         WBorder border = new WBorder(gradientLabel);
-        border.setBackgroundGradient(new WLinearGradientPaint(stops, 90.0));
+        border.setBackgroundGradient(new WLinearGradientPaint(stops));
         border.setCornerRadius(8.0);
         border.setPadding(16.0);
         border.setWidth(320.0);
@@ -130,7 +130,7 @@ final class LayoutPages {
         WButton angleButton = new WButton("Change angle (90°)");
         angleButton.addActionListener(() -> {
             angle[0] = angle[0] >= 270.0 ? 0.0 : angle[0] + 90.0;
-            border.setBackgroundGradient(new WLinearGradientPaint(stops, angle[0]));
+            border.setBackgroundGradient(new WLinearGradientPaint(angle[0], stops));
             angleButton.setText("Change angle (" + (int) angle[0] + "°)");
         });
 

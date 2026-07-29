@@ -77,6 +77,10 @@ class WAppNotification @JvmOverloads constructor(text: String = "") {
         return this
     }
 
+    /** A Java-friendly overload of [addButton]. The click arguments are passed as a plain Map. */
+    fun addButton(content: String, arguments: Map<String, String>): WAppNotification =
+        addButton(content, *arguments.entries.map { it.key to it.value }.toTypedArray())
+
     /** Sets the notification's purpose (reminder / alarm / urgent, etc.). */
     fun setScenario(scenario: NotificationScenario): WAppNotification {
         builder.getPtr(NotificationInterop.IAppNotificationBuilder_SetScenario, scenario.native).release()

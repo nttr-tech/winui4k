@@ -12,6 +12,7 @@ import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WGrid;
+import com.appkitbox.winui4k.WGradientStop;
 import com.appkitbox.winui4k.WImage;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WLinearGradientPaint;
@@ -35,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.prefs.Preferences;
-
-import kotlin.Pair;
 
 /*
  * Equivalent of the real WinUI 3 Gallery's Home page.
@@ -295,12 +294,11 @@ final class HomePage {
         WColor fadeColor = GalleryTheme.isDarkTheme ? new WColor(42, 42, 42, 255) : new WColor(252, 252, 252, 255);
         WColor fadeTransparent = new WColor(fadeColor.getRed(), fadeColor.getGreen(), fadeColor.getBlue(), 0);
         heroFade.setBackgroundGradient(new WLinearGradientPaint(
-            Arrays.asList(
-                new Pair<>(0.0, fadeTransparent),
-                new Pair<>(0.7, fadeTransparent),
-                new Pair<>(0.8, fadeColor),
-                new Pair<>(1.0, fadeColor)),
-            90.0));
+            90.0,
+            new WGradientStop(0.0, fadeTransparent),
+            new WGradientStop(0.7, fadeTransparent),
+            new WGradientStop(0.8, fadeColor),
+            new WGradientStop(1.0, fadeColor)));
 
         WPanel titleBlock = new WPanel();
         WLabel appSdkLabel = new WLabel("Windows App SDK");

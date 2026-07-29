@@ -6,6 +6,12 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
+/** A position and a color on a gradient. Doubles as a Pair replacement for Java. */
+data class WGradientStop(
+    val offset: Double,
+    val color: WColor,
+)
+
 /**
  * java.awt.LinearGradientPaint-like: WinUI 3's LinearGradientBrush.
  * [stops] is a sequence of "offset (0.0..1.0) -> color" pairs. [angle] is the gradient axis's
@@ -15,6 +21,13 @@ class WLinearGradientPaint @JvmOverloads constructor(
     val stops: List<Pair<Double, WColor>>,
     val angle: Double = 90.0,
 ) {
+    /** A vararg constructor for Java. The angle defaults to 90 degrees. */
+    constructor(vararg stops: WGradientStop) : this(stops.map { it.offset to it.color })
+
+    /** A vararg constructor for Java. */
+    constructor(angle: Double, vararg stops: WGradientStop) :
+        this(stops.map { it.offset to it.color }, angle)
+
     /** Creates a new LinearGradientBrush for this definition. The caller must release it. */
     internal fun createBrush(): ComPtr {
         // Fill a GradientStopCollection (whose default interface is IVector<GradientStop>) with the
