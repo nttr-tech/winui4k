@@ -28,7 +28,7 @@ enum class CommandBarLabelPosition(internal val native: Int) {
  * Meant to sit on a WCommandBar, so it has [label] and [icon]; Click / Command /
  * Flyout work the same way they do on Button.
  */
-class WAppBarButton(label: String = "", icon: Symbol? = null) : WButtonBase(
+class WAppBarButton @JvmOverloads constructor(label: String = "", icon: Symbol? = null) : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_AppBarButton, XamlInterop.IID_IAppBarButtonFactory),
 ) {
     /** The IButton view that holds Flyout (AppBarButton is a Button subclass). */

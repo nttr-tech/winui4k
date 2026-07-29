@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * [isChecked] / [addItemListener] are inherited from WToggleButton; this adds
  * [label] and [icon] for use on a WCommandBar.
  */
-class WAppBarToggleButton(label: String = "", icon: Symbol? = null) : WToggleButton(
+class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: Symbol? = null) : WToggleButton(
     Activation.composeDefault(XamlInterop.CLS_AppBarToggleButton, XamlInterop.IID_IAppBarToggleButtonFactory),
 ) {
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */

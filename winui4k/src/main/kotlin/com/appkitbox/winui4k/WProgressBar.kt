@@ -12,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * [value] / [minimum] / [maximum] (RangeBase) plus WinUI-specific [showError] / [showPaused]
  * (error / paused visual states).
  */
-class WProgressBar(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
+class WProgressBar @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ProgressBar, XamlInterop.IID_IProgressBarFactory), // default interface = IProgressBar
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum. */

@@ -8,7 +8,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * Wraps each item in a [WItemsView], forming the unit that selection and clicks
  * (ItemInvoked) target. Set its contents as a single [child].
  */
-class WItemContainer(child: WComponent? = null) : WControl(
+class WItemContainer @JvmOverloads constructor(child: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ItemContainer, XamlInterop.IID_IItemContainerFactory),
 ) {
     /** The single child shown inside the container (ItemContainer.Child). */

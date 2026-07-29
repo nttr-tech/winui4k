@@ -39,7 +39,7 @@ enum class TextChangeReason(internal val native: Int) {
  * you can also subscribe to [addQuerySubmittedListener] (Enter / choosing a suggestion) and
  * [addSuggestionChosenListener] (a suggestion getting highlighted).
  */
-class WAutoSuggestBox(placeholder: String = "") : WControl(
+class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_AutoSuggestBox, XamlInterop.IID_IAutoSuggestBox),
 ) {
     /** The IItemsControl view used to set ItemsSource. */

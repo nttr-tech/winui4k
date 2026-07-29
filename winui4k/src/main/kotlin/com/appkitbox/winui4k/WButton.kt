@@ -10,7 +10,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * ContentControl.Content): [text] / [content], [clickMode], [isPressed], [isPointerOver],
  * [addActionListener] / [removeActionListener] (Click), [command] / [commandParameter], [flyout].
  */
-class WButton(text: String = "") : WButtonBase(
+class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
 ) {
     /** The flyout opened by clicking the button (Button.Flyout). */

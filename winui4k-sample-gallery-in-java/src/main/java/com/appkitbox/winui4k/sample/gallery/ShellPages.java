@@ -74,7 +74,7 @@ final class ShellPages {
             setting.setText(text);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(supported);
         body.add(setting);
         body.add(refreshButton);
@@ -113,7 +113,7 @@ final class ShellPages {
             result.setText(message);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(titleField);
         body.add(bodyField);
         body.add(longDuration);
@@ -157,7 +157,7 @@ final class ShellPages {
             received.setText(message);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(scenarioComboBox);
         body.add(sendButton);
         body.add(received);
@@ -203,7 +203,7 @@ final class ShellPages {
         row.add(countButton(150, result));
         row.add(clearButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
         return GalleryScaffold.buildExample("A numeric badge (SetBadgeAsCount / ClearBadge)", body);
@@ -253,7 +253,7 @@ final class ShellPages {
         applyButton.setVerticalAlignment(VerticalAlignment.BOTTOM);
         row.add(applyButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
         return GalleryScaffold.buildExample("A status-glyph badge (SetBadgeAsGlyph)", body);
@@ -346,7 +346,7 @@ final class ShellPages {
         buttons.add(separatorButton);
         buttons.add(clearButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(nameField);
         body.add(argumentsField);
         body.add(buttons);

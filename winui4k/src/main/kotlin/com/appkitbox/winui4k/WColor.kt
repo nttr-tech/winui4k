@@ -9,7 +9,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * java.awt.Color-like: a Windows.UI.Color value (each component 0..255).
  * For Brush-typed properties (e.g. Border.BorderBrush), converted to a SolidColorBrush before being passed.
  */
-class WColor(
+class WColor @JvmOverloads constructor(
     val red: Int,
     val green: Int,
     val blue: Int,

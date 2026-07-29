@@ -28,7 +28,7 @@ enum class ExpandDirection(internal val native: Int) {
  * Collapsible JPanel-like: WinUI 3's Expander.
  * Clicking the [header] expands/collapses the [content].
  */
-class WExpander(header: String = "", content: WComponent? = null) : WControl(
+class WExpander @JvmOverloads constructor(header: String = "", content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_Expander, XamlInterop.IID_IExpanderFactory), // default interface = IExpander
 ) {
     private val contentControl: ComPtr by lazy {

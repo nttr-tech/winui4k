@@ -23,7 +23,7 @@ import java.util.function.Consumer
  * )
  * ```
  */
-class WAppNotification(text: String = "") {
+class WAppNotification @JvmOverloads constructor(text: String = "") {
     private val builder: ComPtr =
         Activation.activate(NotificationInterop.CLS_AppNotificationBuilder)
             .queryInterface(NotificationInterop.IID_IAppNotificationBuilder)

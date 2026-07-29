@@ -57,7 +57,7 @@ enum class ContentDialogButton(internal val native: Int) {
  * JOptionPane-like: WinUI 3's ContentDialog. A modal dialog shown layered inside the window.
  * [show] opens it, and the button it closed with ([ContentDialogResult]) is delivered via a callback.
  */
-class WContentDialog(title: String = "", content: WComponent? = null) : WControl(
+class WContentDialog @JvmOverloads constructor(title: String = "", content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ContentDialog, XamlInterop.IID_IContentDialogFactory), // default interface = IContentDialog
 ) {
     private val contentControl: ComPtr by lazy {
@@ -122,6 +122,7 @@ class WContentDialog(title: String = "", content: WComponent? = null) : WControl
      * Opens the dialog (ContentDialog.ShowAsync). Shown in the same window as [owner]
      * (inherits its XamlRoot). When closed, [onClosed] is called with the button that was pressed.
      */
+    @JvmOverloads
     fun show(owner: WComponent, onClosed: Consumer<ContentDialogResult>? = null) {
         // WinUI 3's ContentDialog requires the XamlRoot to show in
         val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)

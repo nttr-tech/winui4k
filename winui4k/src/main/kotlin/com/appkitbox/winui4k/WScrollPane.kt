@@ -38,7 +38,7 @@ enum class ScrollBarVisibility(internal val native: Int) {
  * Shows scrollbars when [content] is larger than the viewport.
  * Horizontal scrolling is disabled by default; enable it by setting [horizontalScrollBarVisibility] to e.g. AUTO.
  */
-class WScrollPane(content: WComponent? = null) : WControl(
+class WScrollPane @JvmOverloads constructor(content: WComponent? = null) : WControl(
     Activation.activate(XamlInterop.CLS_ScrollViewer, XamlInterop.IID_IScrollViewer), // created via the default factory
 ) {
     private val contentControl: ComPtr by lazy {

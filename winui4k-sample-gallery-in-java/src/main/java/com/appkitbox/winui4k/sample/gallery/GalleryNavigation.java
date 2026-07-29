@@ -260,7 +260,7 @@ class GalleryNavigation {
             categoryItem.setSelectsOnInvoked(false);
             categoryItem.setExpanded(false); // keep every category collapsed at startup
             for (String name : entry.getValue()) {
-                WNavigationViewItem pageItem = new WNavigationViewItem(name, null);
+                WNavigationViewItem pageItem = new WNavigationViewItem(name);
                 categoryItem.addItem(pageItem);
                 itemsByPageName.put(name, pageItem);
             }

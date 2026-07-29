@@ -15,7 +15,7 @@ import java.util.function.IntConsumer
  * A single item of [WSelectorBar]: WinUI 3's SelectorBarItem.
  * Provides [text] (the label).
  */
-class WSelectorBarItem(text: String = "") : WControl(
+class WSelectorBarItem @JvmOverloads constructor(text: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_SelectorBarItem, XamlInterop.IID_ISelectorBarItemFactory), // default interface = ISelectorBarItem
 ) {
     /** The item's label (SelectorBarItem.Text). */

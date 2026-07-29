@@ -22,6 +22,7 @@ class GridLength private constructor(
         fun pixel(value: Double) = GridLength(value, 1)
 
         /** A proportional share of the remaining space (Star). [weight] is the share's weight. */
+        @JvmOverloads
         fun star(weight: Double = 1.0) = GridLength(weight, 2)
     }
 }
@@ -30,7 +31,7 @@ class GridLength private constructor(
  * GridBagLayout-like JPanel: WinUI 3's Grid.
  * Define rows/columns with [addRow] / [addColumn], and place children at a cell (row, column) with [add].
  */
-class WGrid(
+class WGrid @JvmOverloads constructor(
     rowSpacing: Double = 0.0,
     columnSpacing: Double = 0.0,
 ) : WContainer(
@@ -59,6 +60,7 @@ class WGrid(
     }
 
     /** Adds a row (appends a RowDefinition to Grid.RowDefinitions). */
+    @JvmOverloads
     fun addRow(height: GridLength = GridLength.AUTO) {
         val definition = Activation.activate(XamlInterop.CLS_RowDefinition, XamlInterop.IID_IRowDefinition)
         XamlStructs.putGridLength(definition, XamlInterop.IRowDefinition_put_Height, height.value, height.unitType)
@@ -67,6 +69,7 @@ class WGrid(
     }
 
     /** Adds a column (appends a ColumnDefinition to Grid.ColumnDefinitions). */
+    @JvmOverloads
     fun addColumn(width: GridLength = GridLength.AUTO) {
         val definition = Activation.activate(XamlInterop.CLS_ColumnDefinition, XamlInterop.IID_IColumnDefinition)
         XamlStructs.putGridLength(definition, XamlInterop.IColumnDefinition_put_Width, width.value, width.unitType)
@@ -75,6 +78,7 @@ class WGrid(
     }
 
     /** Adds a child placed at cell ([row], [column]) (the Grid.SetRow / SetColumn attached properties). */
+    @JvmOverloads
     fun add(component: WComponent, row: Int, column: Int, rowSpan: Int = 1, columnSpan: Int = 1) {
         statics.call(XamlInterop.IGridStatics_SetRow, component.frameworkElement.ptr, row)
         statics.call(XamlInterop.IGridStatics_SetColumn, component.frameworkElement.ptr, column)

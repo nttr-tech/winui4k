@@ -39,7 +39,7 @@ enum class TreeViewSelectionMode(internal val native: Int) {
  * [add] / [remove] / [removeAllChildren] edit its child nodes.
  * Expanded state is read via [isExpanded], hierarchy info via [hasChildren] / [depth] / [childCount].
  */
-class WTreeNode(text: String = "") {
+class WTreeNode @JvmOverloads constructor(text: String = "") {
     /** Default interface pointer (ITreeViewNode). */
     internal val inspectable: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_TreeViewNode, XamlInterop.IID_ITreeViewNodeFactory)

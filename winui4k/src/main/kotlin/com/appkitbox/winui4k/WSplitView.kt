@@ -47,7 +47,7 @@ enum class SplitViewPanePlacement(internal val native: Int) {
  * JSplitPane-like: WinUI 3's SplitView.
  * Displays a collapsible [pane] alongside the main [content].
  */
-class WSplitView(pane: WComponent? = null, content: WComponent? = null) : WControl(
+class WSplitView @JvmOverloads constructor(pane: WComponent? = null, content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_SplitView, XamlInterop.IID_ISplitViewFactory), // default interface = ISplitView
 ) {
     /** The main content (SplitView.Content). */

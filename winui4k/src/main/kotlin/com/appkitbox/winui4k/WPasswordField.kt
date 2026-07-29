@@ -30,7 +30,7 @@ enum class PasswordRevealMode(internal val native: Int) {
 }
 
 /** JPasswordField-like: WinUI 3's PasswordBox. */
-class WPasswordField(placeholder: String = "") : WControl(
+class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBox),
 ) {
     /** PasswordChanged event tokens registered via addPasswordChangedListener. */

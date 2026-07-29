@@ -229,7 +229,7 @@ final class HomePage {
         });
 
         // Placing them in the same cell draws the buttons in front of the scrolled content
-        WGrid container = new WGrid(0.0, 0.0);
+        WGrid container = new WGrid();
         container.addRow(GridLength.Companion.getAUTO());
         container.add(scroller, 0, 0, 1, 1);
         container.add(backButton, 0, 0, 1, 1);
@@ -264,7 +264,7 @@ final class HomePage {
      * {@code navigateTo} is the callback that navigates to a page when its card is clicked (the argument is the page name).
      */
     static WComponent buildHomePage(Consumer<String> navigateTo) {
-        WPanel page = new WPanel(0.0, Orientation.VERTICAL);
+        WPanel page = new WPanel();
         page.add(buildHomeHeader());
         page.add(buildFilterSection(navigateTo));
         return page;
@@ -290,7 +290,7 @@ final class HomePage {
         // white ~= near white) on top of the hero. As in the real Gallery, fully blend it in the gap between the
         // link tiles (0.7-0.8 of the fixed 400 height = 280-320), staying opaque past that. The boundary's y only
         // depends on the hero's fixed height, so it doesn't move even if the window width changes how the image is cropped
-        WBorder heroFade = new WBorder(null);
+        WBorder heroFade = new WBorder();
         // The color it fades into is the content area's composited color (Mica + translucent layer); switch it with the theme
         WColor fadeColor = GalleryTheme.isDarkTheme ? new WColor(42, 42, 42, 255) : new WColor(252, 252, 252, 255);
         WColor fadeTransparent = new WColor(fadeColor.getRed(), fadeColor.getGreen(), fadeColor.getBlue(), 0);
@@ -302,7 +302,7 @@ final class HomePage {
                 new Pair<>(1.0, fadeColor)),
             90.0));
 
-        WPanel titleBlock = new WPanel(0.0, Orientation.VERTICAL);
+        WPanel titleBlock = new WPanel();
         WLabel appSdkLabel = new WLabel("Windows App SDK");
         appSdkLabel.setFontSize(18.0);
         titleBlock.add(appSdkLabel);
@@ -356,13 +356,13 @@ final class HomePage {
                 "https://developer.microsoft.com/windows/"));
 
         // The real spacing: the title block is Margin="36,48,0,0", and the tiles are 56 below the title
-        WPanel overlay = new WPanel(56.0, Orientation.VERTICAL);
+        WPanel overlay = new WPanel(56.0);
         overlay.setMargin(36.0, 48.0, 36.0, 36.0);
         overlay.add(titleBlock);
         overlay.add(buildHorizontalScroller(tiles));
 
         // Placing children in the same cell draws the later-added one on top (overlays text on the image)
-        WGrid header = new WGrid(0.0, 0.0);
+        WGrid header = new WGrid();
         header.addRow(GridLength.Companion.getAUTO());
         header.add(heroBackground, 0, 0, 1, 1);
         header.add(heroFade, 0, 0, 1, 1);
@@ -395,7 +395,7 @@ final class HomePage {
             icon = glyphLabel;
         }
 
-        WPanel texts = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel texts = new WPanel(4.0);
         WLabel titleLabel = new WLabel(title);
         titleLabel.setFontWeight(600);
         texts.add(titleLabel);
@@ -408,7 +408,7 @@ final class HomePage {
 
         // Equivalent to the inner Grid of the official Tile (Padding="24", rows 36 / *). Fixing the icon row height
         // keeps the title and everything below it at the same y position across all tiles, image icon or glyph icon
-        WGrid content = new WGrid(0.0, 0.0);
+        WGrid content = new WGrid();
         content.addRow(GridLength.Companion.pixel(36.0));
         content.addRow(GridLength.Companion.star(1.0));
         content.add(icon, 0, 0, 1, 1);
@@ -426,7 +426,7 @@ final class HomePage {
         cornerIcon.setMargin(12.0);
 
         // Placing them in the same cell draws the icon at the body's bottom-right
-        WGrid body = new WGrid(0.0, 0.0);
+        WGrid body = new WGrid();
         body.addRow(GridLength.Companion.getAUTO());
         body.add(content, 0, 0, 1, 1);
         body.add(cornerIcon, 0, 0, 1, 1);
@@ -474,7 +474,7 @@ final class HomePage {
 
     /** The Recent / Favorites toggle and the card list below it. */
     private static WComponent buildFilterSection(Consumer<String> navigateTo) {
-        WPanel contentArea = new WPanel(0.0, Orientation.VERTICAL);
+        WPanel contentArea = new WPanel();
 
         // Segoe Fluent Icons: E121 = Clock (matches the real Gallery's SelectorBarItem Icon="Clock"), E113 = Favorite
         WToggleButton recentToggle = buildFilterToggle("Recent", "");
@@ -501,7 +501,7 @@ final class HomePage {
 
         // The real spacing: the SelectorBar is Margin="36,24,0,16", the content below it is Margin="36,0,36,36"
         // (the 16 gap between the toggle and the content is expressed via spacing)
-        WPanel section = new WPanel(16.0, Orientation.VERTICAL);
+        WPanel section = new WPanel(16.0);
         section.setMargin(36.0, 24.0, 36.0, 36.0);
         section.add(toggles);
         section.add(contentArea);
@@ -510,7 +510,7 @@ final class HomePage {
 
     /** The Recent view: a row of recently-visited pages, plus a grid of recently added/updated pages. */
     private static WComponent buildRecentView(Consumer<String> navigateTo) {
-        WPanel view = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel view = new WPanel(12.0);
 
         // Don't show page names that no longer exist (equivalent to the real Gallery's GetValidItems)
         List<String> recentlyVisited = new ArrayList<>();
@@ -546,7 +546,7 @@ final class HomePage {
             return buildCardGrid(favorites, navigateTo);
         }
 
-        WPanel fallback = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel fallback = new WPanel(8.0);
         fallback.setMargin(36.0);
         WImage image = new WImage(galleryImageUri("RatingControl.png"));
         image.setHeight(36.0);
@@ -604,7 +604,7 @@ final class HomePage {
 
     /** A single page's card (icon + page name + description). Clicking it navigates to that page. */
     private static WComponent buildControlCard(String name, Consumer<String> navigateTo) {
-        WPanel texts = new WPanel(2.0, Orientation.VERTICAL);
+        WPanel texts = new WPanel(2.0);
         WLabel nameLabel = new WLabel(name);
         nameLabel.setFontWeight(600);
         texts.add(nameLabel);

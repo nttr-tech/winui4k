@@ -30,14 +30,14 @@ final class GalleryScaffold {
             titleRow.add(favorite);
         }
 
-        WPanel header = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel header = new WPanel(4.0);
         header.add(titleRow);
         WLabel descriptionLabel = new WLabel(description);
         descriptionLabel.setForeground(GalleryTheme.TEXT_SECONDARY());
         descriptionLabel.setTextWrapping(TextWrapping.WRAP);
         header.add(descriptionLabel);
 
-        WPanel page = new WPanel(24.0, Orientation.VERTICAL);
+        WPanel page = new WPanel(24.0);
         page.add(header);
         return page;
     }
@@ -54,7 +54,7 @@ final class GalleryScaffold {
         card.setCornerRadius(8.0);
         card.setPadding(16.0);
 
-        WPanel section = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel section = new WPanel(8.0);
         WLabel titleLabel = new WLabel(title);
         titleLabel.setFontWeight(600);
         titleLabel.setTextWrapping(TextWrapping.WRAP);
@@ -91,7 +91,7 @@ final class GalleryScaffold {
         optionsCard.setVerticalAlignment(VerticalAlignment.TOP);
 
         // Lay the example (fills remaining width) and Options (fixed width) side by side
-        WGrid grid = new WGrid(0.0, 0.0);
+        WGrid grid = new WGrid();
         grid.setColumnSpacing(12.0);
         grid.addColumn(GridLength.Companion.star(1.0));
         grid.addColumn(GridLength.Companion.getAUTO());
@@ -99,7 +99,7 @@ final class GalleryScaffold {
         grid.add(exampleCard, 0, 0, 1, 1);
         grid.add(optionsCard, 0, 1, 1, 1);
 
-        WPanel section = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel section = new WPanel(8.0);
         WLabel titleLabel = new WLabel(title);
         titleLabel.setFontWeight(600);
         titleLabel.setTextWrapping(TextWrapping.WRAP);
@@ -128,7 +128,7 @@ final class GalleryScaffold {
 
     /** A colored tile for the layout demos (a Border painted with a background). Fills its parent if a size isn't given. */
     static WBorder buildTile(WColor color, double width, double height, String label) {
-        WBorder tile = new WBorder(null);
+        WBorder tile = new WBorder();
         tile.setBackground(color);
         tile.setCornerRadius(4.0);
         if (!Double.isNaN(width)) {

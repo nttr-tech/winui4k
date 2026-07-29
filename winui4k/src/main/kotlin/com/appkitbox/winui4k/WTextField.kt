@@ -15,7 +15,7 @@ import java.util.function.Consumer
  * Enabling [acceptsReturn] and [textWrapping] turns it into a JTextArea-like multi-line input.
  * [addTextChangedListener] (TextChanged) delivers the current text on every change.
  */
-class WTextField(placeholder: String = "") : WControl(
+class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory)
         .queryInterface(XamlInterop.IID_ITextBox),
 ) {

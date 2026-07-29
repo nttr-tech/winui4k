@@ -48,7 +48,7 @@ public class MainForGallery {
 
             // The root that hosts the title bar and navigation. Settings' App theme is set here as
             // RequestedTheme and applies to every element in the window
-            WGrid rootGrid = new WGrid(0.0, 0.0);
+            WGrid rootGrid = new WGrid();
 
             // Applies the app theme and title bar coloring saved on the Settings page
             Consumer<String> applyAppTheme = appTheme -> {
@@ -73,7 +73,7 @@ public class MainForGallery {
             GalleryTheme.isDarkTheme = rootGrid.getActualTheme() == ElementTheme.DARK;
 
             // Content gets set by the initial selection when the navigation is built
-            WPanel pageArea = new WPanel(0.0, Orientation.VERTICAL);
+            WPanel pageArea = new WPanel();
             pageArea.setMargin(24.0);
 
             // The content area is translucent white, matching the real Gallery's Layer; the Mica behind it shows through faintly

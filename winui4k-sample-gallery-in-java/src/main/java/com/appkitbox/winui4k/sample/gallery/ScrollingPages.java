@@ -51,7 +51,7 @@ final class ScrollingPages {
             new WColor(142, 68, 173, 255),
             new WColor(193, 0, 76, 255),
             new WColor(0, 153, 188, 255));
-        WPanel content = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel content = new WPanel(8.0);
         for (int row = 0; row < 14; row++) {
             WPanel rowPanel = new WPanel(8.0, Orientation.HORIZONTAL);
             for (int column = 0; column < 6; column++) {
@@ -123,7 +123,7 @@ final class ScrollingPages {
         double rowSpacing = 4.0;
         double rowPitch = tileSize + rowSpacing;
 
-        WPanel content = new WPanel(rowSpacing, Orientation.VERTICAL);
+        WPanel content = new WPanel(rowSpacing);
         // Each group's starting scroll offset (in pixels) and name. Used by the labels and DetailLabelRequested
         List<GroupOffset> groupStartOffsets = new ArrayList<>();
         int rowIndex = 0;
@@ -187,7 +187,7 @@ final class ScrollingPages {
             annotatedScrollBar.setHeight(value);
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(GalleryScaffold.optionsLabel("Shrinking the height lets you see labels get thinned out so they don't collide."));
         options.add(heightSlider);
 
@@ -235,7 +235,7 @@ final class ScrollingPages {
             image.setSourceUri(imageUris.get(index));
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(image);
         body.add(pager);
         return GalleryScaffold.buildExample("Paired with an image gallery (NumberOfPages / SelectedPageIndex / SelectedIndexChanged)", body);
@@ -254,7 +254,7 @@ final class ScrollingPages {
             selected.setText("Selected page: " + (index + 1));
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(pager);
         body.add(selected);
 
@@ -268,7 +268,7 @@ final class ScrollingPages {
                 "Vertical".equals(orientationCombo.getSelectedItem()) ? Orientation.VERTICAL : Orientation.HORIZONTAL);
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(orientationCombo);
         options.add(visibilityCombo("Previous button visibility", pager::setPreviousButtonVisibility));
         options.add(visibilityCombo("Next button visibility", pager::setNextButtonVisibility));
@@ -331,7 +331,7 @@ final class ScrollingPages {
         note.setTextWrapping(TextWrapping.WRAP);
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(note);
         body.add(scrollView);
 
@@ -364,7 +364,7 @@ final class ScrollingPages {
             scrollView.setContentOrientation(orientation);
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(zoomModeCombo);
         options.add(orientationCombo);
         options.add(scrollBarCombo("Horizontal ScrollBar", scrollView::setHorizontalScrollBarVisibility));
@@ -410,7 +410,7 @@ final class ScrollingPages {
             offset.setText("Position: (" + (int) scrollView.getHorizontalOffset() + ", " + (int) scrollView.getVerticalOffset() + ")");
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(scrollView);
         body.add(offset);
 
@@ -431,7 +431,7 @@ final class ScrollingPages {
             scrollView.scrollBy(100.0, 0.0);
         });
 
-        WPanel options = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(8.0);
         options.add(GalleryScaffold.optionsLabel("ScrollTo animates to an absolute position; ScrollBy animates by a relative amount from the current position."));
         options.add(toStart);
         options.add(toEnd);
@@ -466,10 +466,10 @@ final class ScrollingPages {
         scrollPane.setHorizontalScrollBarVisibility(ScrollBarVisibility.AUTO);
         scrollPane.setVerticalScrollBarVisibility(ScrollBarVisibility.VISIBLE);
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(scrollPane);
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(visibilityCombo("Horizontal ScrollBar", ScrollBarVisibility.AUTO, scrollPane::setHorizontalScrollBarVisibility));
         options.add(visibilityCombo("Vertical ScrollBar", ScrollBarVisibility.VISIBLE, scrollPane::setVerticalScrollBarVisibility));
 
@@ -516,7 +516,7 @@ final class ScrollingPages {
                 + " / Scrollable width: " + (int) scrollPane.getScrollableWidth());
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(scrollPane);
         body.add(offset);
 
@@ -533,7 +533,7 @@ final class ScrollingPages {
             scrollPane.scrollToHorizontalOffset(scrollPane.getScrollableWidth() / 2.0);
         });
 
-        WPanel options = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(8.0);
         options.add(GalleryScaffold.optionsLabel("ScrollToHorizontalOffset (ChangeView) animates the horizontal scroll position."));
         options.add(toStart);
         options.add(center);
@@ -584,7 +584,7 @@ final class ScrollingPages {
                 semanticZoom.isZoomedInViewActive() ? "Showing: summary view (ZoomedOut)" : "Showing: detail view (ZoomedIn)");
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(semanticZoom);
         body.add(activeView);
 
@@ -593,7 +593,7 @@ final class ScrollingPages {
             semanticZoom.toggleActiveView();
         });
 
-        WPanel options = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(8.0);
         options.add(GalleryScaffold.optionsLabel("You can also switch by zooming out with Ctrl+mouse wheel, or via the zoom-out button in the bottom-left of the summary view."));
         options.add(toggle);
 

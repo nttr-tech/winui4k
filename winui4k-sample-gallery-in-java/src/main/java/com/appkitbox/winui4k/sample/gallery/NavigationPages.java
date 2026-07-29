@@ -114,7 +114,7 @@ final class NavigationPages {
         buttons.add(toggleButton);
         buttons.add(settingsButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(navigationView);
         body.add(buttons);
         body.add(modeButtons);
@@ -142,15 +142,15 @@ final class NavigationPages {
         WNavigationViewItem documents = new WNavigationViewItem("Documents", Symbol.FOLDER);
         documents.setSelectsOnInvoked(false);
         documents.setExpanded(true);
-        documents.addItem(new WNavigationViewItem("Specs", null));
-        documents.addItem(new WNavigationViewItem("Meeting notes", null));
+        documents.addItem(new WNavigationViewItem("Specs"));
+        documents.addItem(new WNavigationViewItem("Meeting notes"));
         navigationView.addItem(documents);
 
         navigationView.addItemInvokedListener(name -> {
             result.setText("Clicked: " + name);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(navigationView);
         body.add(result);
         return GalleryScaffold.buildExample("A hierarchical menu and clicks (nested MenuItems / IsExpanded / ItemInvoked)", body);
@@ -188,7 +188,7 @@ final class NavigationPages {
             result.setText("Hierarchy reset");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(breadcrumbBar);
         body.add(result);
         body.add(resetButton);
@@ -225,7 +225,7 @@ final class NavigationPages {
         });
         selectorBar.setSelectedIndex(0);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(selectorBar);
         body.add(result);
         return GalleryScaffold.buildExample("Switching the selection (Items / SelectedItem / SelectionChanged)", body);
@@ -285,7 +285,7 @@ final class NavigationPages {
             }
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(tabView);
         body.add(result);
         return GalleryScaffold.buildExample("Adding, removing, and switching tabs (TabItems / AddTabButtonClick / TabCloseRequested)", body);

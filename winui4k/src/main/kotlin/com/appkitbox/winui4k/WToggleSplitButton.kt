@@ -11,7 +11,7 @@ import java.util.function.Consumer
  * A [WSplitButton] that toggles on/off: WinUI 3's ToggleSplitButton.
  * Clicking the body flips [isChecked]; the right-side arrow opens the flyout.
  */
-class WToggleSplitButton(text: String = "") : WSplitButton(
+class WToggleSplitButton @JvmOverloads constructor(text: String = "") : WSplitButton(
     Activation.composeDefault(XamlInterop.CLS_ToggleSplitButton, XamlInterop.IID_IToggleSplitButtonFactory),
 ) {
     /** The IToggleSplitButton view holding IsChecked / IsCheckedChanged. */

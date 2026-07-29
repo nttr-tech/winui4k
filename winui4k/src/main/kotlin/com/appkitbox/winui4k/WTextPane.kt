@@ -16,7 +16,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * selection via [toggleSelectionBold] / [toggleSelectionItalic].
  * The whole content is read/written via [text] (plain text) and [rtfText] (RTF format).
  */
-class WTextPane(placeholder: String = "") : WControl(
+class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_RichEditBox, XamlInterop.IID_IRichEditBoxFactory), // default interface = IRichEditBox
 ) {
     /** RichEditBox.Document (Microsoft.UI.Text.ITextDocument). The entry point for text and formatting operations. */

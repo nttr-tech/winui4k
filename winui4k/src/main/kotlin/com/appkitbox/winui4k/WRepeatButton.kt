@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * JButton-like control that fires Click repeatedly while held down: WinUI 3's Primitives.RepeatButton.
  * [delay] (wait before the first fire) and [interval] (time between fires) control the repeat speed.
  */
-class WRepeatButton(text: String = "") : WButtonBase(
+class WRepeatButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     Activation.activate(XamlInterop.CLS_RepeatButton, XamlInterop.IID_IRepeatButton), // created via the default factory
 ) {
     /** Milliseconds to wait after pressing before Click starts firing repeatedly (RepeatButton.Delay). */

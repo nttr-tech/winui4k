@@ -41,7 +41,7 @@ enum class ListViewSelectionMode(internal val native: Int) {
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged),
  * [isItemClickEnabled] / [addItemClickListener] / [removeItemClickListener] (ItemClick).
  */
-class WList(items: List<String> = emptyList()) : WControl(
+class WList @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ListView, XamlInterop.IID_IListViewFactory), // default interface = IListView
 ) {
     private val selector: ComPtr by lazy {

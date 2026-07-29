@@ -30,6 +30,7 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
  */
 open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     WMenuFlyoutItemBase(inspectable) {
+    @JvmOverloads
     constructor(text: String = "", icon: Symbol? = null) : this(
         Activation.composeDefault(XamlInterop.CLS_MenuFlyoutItem, XamlInterop.IID_IMenuFlyoutItemFactory),
     ) {
@@ -117,7 +118,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
  * JCheckBoxMenuItem-like: WinUI 3's ToggleMenuFlyoutItem.
  * [isChecked] toggles on every click, and a checkmark is shown accordingly.
  */
-class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItem(
+class WToggleMenuFlyoutItem @JvmOverloads constructor(text: String = "", icon: Symbol? = null) : WMenuFlyoutItem(
     Activation.composeDefault(XamlInterop.CLS_ToggleMenuFlyoutItem, XamlInterop.IID_IToggleMenuFlyoutItemFactory),
 ) {
     /** The checked state (ToggleMenuFlyoutItem.IsChecked). */
@@ -135,7 +136,7 @@ class WToggleMenuFlyoutItem(text: String = "", icon: Symbol? = null) : WMenuFlyo
  * JRadioButtonMenuItem-like: WinUI 3's RadioMenuFlyoutItem.
  * Only one item within the same [groupName] can be checked at a time (mutually exclusive).
  */
-class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFlyoutItem(
+class WRadioMenuFlyoutItem @JvmOverloads constructor(text: String = "", groupName: String = "") : WMenuFlyoutItem(
     Activation.composeDefault(XamlInterop.CLS_RadioMenuFlyoutItem, XamlInterop.IID_IRadioMenuFlyoutItemFactory),
 ) {
     /** The checked state (RadioMenuFlyoutItem.IsChecked). */
@@ -160,7 +161,7 @@ class WRadioMenuFlyoutItem(text: String = "", groupName: String = "") : WMenuFly
  * JMenu submenu-like: WinUI 3's MenuFlyoutSubItem.
  * Hovering over it shows the child items added with [add] in a cascade.
  */
-class WMenuFlyoutSubItem(text: String = "", icon: Symbol? = null) : WMenuFlyoutItemBase(
+class WMenuFlyoutSubItem @JvmOverloads constructor(text: String = "", icon: Symbol? = null) : WMenuFlyoutItemBase(
     // activatable (default factory), so activate then QI to the default interface
     Activation.activate(XamlInterop.CLS_MenuFlyoutSubItem, XamlInterop.IID_IMenuFlyoutSubItem),
 ) {

@@ -53,7 +53,7 @@ enum class SwipeBehaviorOnInvoked(internal val native: Int) {
  * Swiping [content] left, right, up, or down reveals the corresponding [WSwipeItems], such as [leftItems].
  * (Swiping is touch/pen only; it doesn't open on a mouse drag.)
  */
-class WSwipeControl(content: WComponent? = null) : WControl(
+class WSwipeControl @JvmOverloads constructor(content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_SwipeControl, XamlInterop.IID_ISwipeControlFactory),
 ) {
     private val contentControl: ComPtr by lazy {
@@ -114,7 +114,7 @@ class WSwipeControl(content: WComponent? = null) : WControl(
  * The collection of items shown on one edge of a SwipeControl: WinUI 3's SwipeItems.
  * Not a UIElement, so this is not a subclass of WComponent.
  */
-class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
+class WSwipeItems @JvmOverloads constructor(mode: SwipeMode = SwipeMode.REVEAL) {
     /** The default interface (ISwipeItems). */
     internal val inspectable: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_SwipeItems, XamlInterop.IID_ISwipeItemsFactory)
@@ -146,7 +146,7 @@ class WSwipeItems(mode: SwipeMode = SwipeMode.REVEAL) {
  * A single button revealed by swiping: WinUI 3's SwipeItem.
  * Not a UIElement, so this is not a subclass of WComponent.
  */
-class WSwipeItem(text: String = "", icon: Symbol? = null) {
+class WSwipeItem @JvmOverloads constructor(text: String = "", icon: Symbol? = null) {
     /** The default interface (ISwipeItem). */
     internal val inspectable: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_SwipeItem, XamlInterop.IID_ISwipeItemFactory)

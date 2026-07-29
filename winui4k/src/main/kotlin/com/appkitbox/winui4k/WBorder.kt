@@ -9,7 +9,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * Draws a border ([borderColor] / [borderThickness]), rounded corners ([cornerRadius]),
  * a background ([background]), and padding ([padding]) around a single [child].
  */
-class WBorder(child: WComponent? = null) : WComponent(
+class WBorder @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     Activation.activate(XamlInterop.CLS_Border, XamlInterop.IID_IBorder),
 ) {
     /** The single child shown inside the border (Border.Child). */

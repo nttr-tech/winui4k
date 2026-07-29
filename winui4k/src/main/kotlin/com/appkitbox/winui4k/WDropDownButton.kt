@@ -8,7 +8,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * JButton-like with a drop-down arrow: WinUI 3's DropDownButton (a Button subclass).
  * Opens [flyout] on click. The arrow (chevron) is drawn automatically by WinUI.
  */
-class WDropDownButton(text: String = "") : WButtonBase(
+class WDropDownButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_DropDownButton, XamlInterop.IID_IDropDownButtonFactory),
 ) {
     /** The IButton view holding Flyout (DropDownButton is a Button subclass). */

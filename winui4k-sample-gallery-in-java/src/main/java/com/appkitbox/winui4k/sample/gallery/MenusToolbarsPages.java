@@ -88,7 +88,7 @@ final class MenusToolbarsPages {
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
         for (String text : Arrays.asList("PNG format", "JPEG format", "SVG format")) {
-            WMenuFlyoutItem item = new WMenuFlyoutItem(text, null);
+            WMenuFlyoutItem item = new WMenuFlyoutItem(text);
             item.addActionListener(() -> {
                 result.setText("Selected item: " + text);
             });
@@ -200,7 +200,7 @@ final class MenusToolbarsPages {
             commandBar.setOpen(!commandBar.isOpen());
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(commandBar);
         WPanel controls = new WPanel(16.0, Orientation.HORIZONTAL);
         controls.add(openButton);
@@ -264,7 +264,7 @@ final class MenusToolbarsPages {
             flyout.showAt(target);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(target);
         WPanel controls = new WPanel(16.0, Orientation.HORIZONTAL);
         controls.add(showButton);
@@ -292,7 +292,7 @@ final class MenusToolbarsPages {
         WLabel result = new WLabel("Selected item: none");
 
         Function<String, WMenuFlyoutItem> item = (text) -> {
-            WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text, null);
+            WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text);
             menuItem.addActionListener(() -> {
                 result.setText("Selected item: " + text);
             });
@@ -320,7 +320,7 @@ final class MenusToolbarsPages {
         menuBar.add(editMenu);
         menuBar.add(helpMenu);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(menuBar);
         body.add(result);
         return GalleryScaffold.buildExample("A simple menu bar", body);
@@ -359,7 +359,7 @@ final class MenusToolbarsPages {
         fileMenu.add(shareSubMenu);
 
         // A toggle item and radio items (mutually exclusive selection)
-        WToggleMenuFlyoutItem statusBarItem = new WToggleMenuFlyoutItem("Show status bar", null);
+        WToggleMenuFlyoutItem statusBarItem = new WToggleMenuFlyoutItem("Show status bar");
         statusBarItem.setChecked(true);
         statusBarItem.addActionListener(() -> {
             result.setText("Show status bar: " + statusBarItem.isChecked());
@@ -386,7 +386,7 @@ final class MenusToolbarsPages {
         menuBar.add(fileMenu);
         menuBar.add(viewMenu);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(menuBar);
         body.add(result);
         return GalleryScaffold.buildExample("Icons, shortcuts, submenus, and toggle / radio items", body);
@@ -412,7 +412,7 @@ final class MenusToolbarsPages {
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
         for (String text : Arrays.asList("Reset items", "Repeat", "Shuffle")) {
-            WMenuFlyoutItem item = new WMenuFlyoutItem(text, null);
+            WMenuFlyoutItem item = new WMenuFlyoutItem(text);
             item.addActionListener(() -> {
                 result.setText("Selected item: " + text);
             });
@@ -532,7 +532,7 @@ final class MenusToolbarsPages {
         swipeControl.setLeftItems(leftItems);
         swipeControl.setRightItems(rightItems);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(swipeControl);
         body.add(result);
         return GalleryScaffold.buildExample("Swipe items (LeftItems: Reveal / RightItems: Execute)", body);
@@ -569,12 +569,12 @@ final class MenusToolbarsPages {
                 result.setText("Command run: " + command.getLabel());
             });
             // The label, icon, and shortcut (e.g. Ctrl+C) apply automatically from the command
-            WAppBarButton button = new WAppBarButton("", null);
+            WAppBarButton button = new WAppBarButton();
             button.setCommand(command);
             row.add(button);
         }
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
         return GalleryScaffold.buildExample("A toolbar of predefined commands (Kind / ExecuteRequested)", body);
@@ -611,7 +611,7 @@ final class MenusToolbarsPages {
         // Set the same command on a Button and an AppBarButton (label and icon apply automatically)
         WButton button = new WButton("");
         button.setCommand(command);
-        WAppBarButton appBarButton = new WAppBarButton("", null);
+        WAppBarButton appBarButton = new WAppBarButton();
         appBarButton.setCommand(command);
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -621,7 +621,7 @@ final class MenusToolbarsPages {
         result.setVerticalAlignment(VerticalAlignment.CENTER);
         row.add(result);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         WLabel shortcutLabel = new WLabel("The Ctrl+Shift+F shortcut also runs it");
         shortcutLabel.setForeground(GalleryTheme.TEXT_SECONDARY());

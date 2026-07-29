@@ -34,7 +34,7 @@ enum class TabViewWidthMode(internal val native: Int) {
  * A single JTabbedPane-tab-like: WinUI 3's TabViewItem.
  * Provides [header] (the tab's label), [isClosable], and [content] (shown while selected).
  */
-class WTabViewItem(header: String = "") : WControl(
+class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TabViewItem, XamlInterop.IID_ITabViewItemFactory), // default interface = ITabViewItem
 ) {
     private val contentControl: ComPtr by lazy {

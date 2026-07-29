@@ -18,7 +18,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * When a child's content (e.g. its text) changes and its natural size changes with it, call that
  * child's [WComponent.invalidateNaturalSize] and this panel's [revalidate].
  */
-class WLayoutPanel(layout: WLayoutManager? = null) : WContainer(
+class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
 ) {
     /** The layout manager that computes where children go. Replacing it triggers a re-layout. */

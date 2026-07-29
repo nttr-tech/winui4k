@@ -6,7 +6,7 @@ package com.appkitbox.winui4k
  * their preferred width and the remaining height; center gets everything left over.
  * Hidden children ([WComponent.isVisible] = false) are excluded from layout (same as Swing).
  */
-class WBorderLayout(
+class WBorderLayout @JvmOverloads constructor(
     /** The horizontal gap between regions (like BorderLayout.hgap). */
     val hgap: Double = 0.0,
     /** The vertical gap between regions (like BorderLayout.vgap). */

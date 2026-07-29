@@ -78,7 +78,7 @@ enum class ScrollingZoomMode(internal val native: Int) {
  * switched via [contentOrientation], and scroll position changes are exposed as the
  * [scrollTo] / [scrollBy] methods.
  */
-class WScrollView(content: WComponent? = null) : WControl(
+class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ScrollView, XamlInterop.IID_IScrollViewFactory), // default interface = IScrollView
 ) {
     /** ViewChanged event tokens registered via addViewChangedListener. */

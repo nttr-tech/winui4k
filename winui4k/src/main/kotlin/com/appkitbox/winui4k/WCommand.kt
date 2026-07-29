@@ -32,6 +32,9 @@ class WCommand(
     isEnabled: Boolean = true,
     private val execute: Consumer<String?>,
 ) : WCommandBase() {
+    /** A Java-friendly constructor that defaults the enabled state to true. */
+    constructor(execute: Consumer<String?>) : this(true, execute)
+
     override val commandPtr: Ptr
         get() = comObject.primary
 

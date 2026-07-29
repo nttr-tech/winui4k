@@ -55,26 +55,32 @@ class WRelativePanel : WContainer(
         putElement(XamlInterop.IRelativePanelStatics_SetAlignVerticalCenterWith, component, anchor)
 
     /** Aligns [component]'s left edge with the panel's left edge (RelativePanel.AlignLeftWithPanel). */
+    @JvmOverloads
     fun alignLeftWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignLeftWithPanel, component, value)
 
     /** Aligns [component]'s top edge with the panel's top edge (RelativePanel.AlignTopWithPanel). */
+    @JvmOverloads
     fun alignTopWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignTopWithPanel, component, value)
 
     /** Aligns [component]'s right edge with the panel's right edge (RelativePanel.AlignRightWithPanel). */
+    @JvmOverloads
     fun alignRightWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignRightWithPanel, component, value)
 
     /** Aligns [component]'s bottom edge with the panel's bottom edge (RelativePanel.AlignBottomWithPanel). */
+    @JvmOverloads
     fun alignBottomWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignBottomWithPanel, component, value)
 
     /** Aligns [component]'s horizontal center with the panel (RelativePanel.AlignHorizontalCenterWithPanel). */
+    @JvmOverloads
     fun alignHorizontalCenterWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignHorizontalCenterWithPanel, component, value)
 
     /** Aligns [component]'s vertical center with the panel (RelativePanel.AlignVerticalCenterWithPanel). */
+    @JvmOverloads
     fun alignVerticalCenterWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignVerticalCenterWithPanel, component, value)
 

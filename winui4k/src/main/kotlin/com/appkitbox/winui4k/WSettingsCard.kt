@@ -49,7 +49,7 @@ enum class ContentAlignment {
  * [ContentAlignment.RIGHT] it wraps automatically according to the card width, using the same
  * thresholds as the Toolkit (476 / 286px).
  */
-class WSettingsCard(header: String = "", description: String = "") : WControl(
+class WSettingsCard @JvmOverloads constructor(header: String = "", description: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
 ) {
     /** The Primitives.IButtonBase view, used for Click / Command. */

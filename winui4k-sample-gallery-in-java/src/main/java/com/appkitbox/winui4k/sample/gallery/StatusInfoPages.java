@@ -81,7 +81,7 @@ final class StatusInfoPages {
 
     /** A small column that stacks a control under a label (used by the badge demos). */
     private static WComponent labeledColumn(String label, WComponent control) {
-        WPanel column = new WPanel(6.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(6.0);
         column.setHorizontalAlignment(HorizontalAlignment.LEFT);
         WLabel labelText = new WLabel(label);
         labelText.setForeground(GalleryTheme.TEXT_SECONDARY());
@@ -109,7 +109,7 @@ final class StatusInfoPages {
 
     /** Severity: lines up all four of Informational / Success / Warning / Error. */
     private static WComponent buildInfoBarSeverityExample() {
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         InfoBarSeverity[] severities = {
                 InfoBarSeverity.INFORMATIONAL,
                 InfoBarSeverity.SUCCESS,
@@ -155,7 +155,7 @@ final class StatusInfoPages {
             result.setText(infoBar.isOpen() ? "The bar is open" : "The bar is closed");
         });
 
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(toggleButton);
         result.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -183,7 +183,7 @@ final class StatusInfoPages {
         infoBar.setOpen(true);
         infoBar.setWidth(500.0);
 
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         column.add(infoBar);
         column.add(result);
         return GalleryScaffold.buildExample("Action button (ActionButton)", column);
@@ -218,7 +218,7 @@ final class StatusInfoPages {
             label.setText((int) value + " %");
         });
 
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         column.add(progressBar);
         column.add(slider);
         column.add(label);
@@ -237,7 +237,7 @@ final class StatusInfoPages {
             toggleButton.setText(progressBar.isIndeterminate() ? "Stop" : "Start");
         });
 
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         column.add(progressBar);
         toggleButton.setHorizontalAlignment(HorizontalAlignment.LEFT);
         column.add(toggleButton);
@@ -265,7 +265,7 @@ final class StatusInfoPages {
         buttons.add(pauseButton);
         buttons.add(errorButton);
 
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         column.add(progressBar);
         column.add(buttons);
         return GalleryScaffold.buildExample("Visual states (ShowPaused / ShowError)", column);
@@ -324,7 +324,7 @@ final class StatusInfoPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(progressRing);
-        WPanel column = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel column = new WPanel(12.0);
         column.add(slider);
         column.add(label);
         column.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -380,7 +380,7 @@ final class StatusInfoPages {
     private static WComponent buildRichToolTipExample() {
         WButton button = new WButton("Rich hint");
 
-        WPanel content = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel content = new WPanel(4.0);
         WLabel heading = new WLabel("Heading");
         heading.setFontWeight(600);
         content.add(heading);

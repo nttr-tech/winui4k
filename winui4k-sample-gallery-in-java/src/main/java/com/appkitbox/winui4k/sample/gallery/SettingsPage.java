@@ -35,7 +35,7 @@ final class SettingsPage {
     static final String SETTINGS_PAGE_NAME = "Settings";
 
     static WComponent buildSettingsPage(WNavigationView navigationView, Consumer<String> applyAppTheme) {
-        WPanel page = new WPanel(0.0, Orientation.VERTICAL);
+        WPanel page = new WPanel();
         page.setMaxWidth(1064.0); // the real SettingsPage's MaxWidth
 
         WLabel titleLabel = new WLabel(SETTINGS_PAGE_NAME);
@@ -49,7 +49,7 @@ final class SettingsPage {
         sectionLabel.setMargin(1.0, 30.0, 0.0, 6.0);
         page.add(sectionLabel);
 
-        WPanel cards = new WPanel(4.0, Orientation.VERTICAL); // the real SettingsCardSpacing
+        WPanel cards = new WPanel(4.0); // the real SettingsCardSpacing
         cards.add(buildAppThemeCard(applyAppTheme));
         cards.add(buildNavigationStyleCard(navigationView));
         cards.add(buildManageSamplesCard());
@@ -167,7 +167,7 @@ final class SettingsPage {
         icon.setVerticalAlignment(VerticalAlignment.CENTER);
         grid.add(icon, 0, 0, 1, 1);
 
-        WPanel labels = new WPanel(2.0, Orientation.VERTICAL);
+        WPanel labels = new WPanel(2.0);
         labels.setVerticalAlignment(VerticalAlignment.CENTER);
         WLabel headerLabel = new WLabel(header);
         headerLabel.setTextWrapping(TextWrapping.WRAP);

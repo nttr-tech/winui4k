@@ -78,7 +78,7 @@ final class BasicInputPages {
 
     /** A button with a flyout: opens a popup on click. */
     private static WComponent buildFlyoutButtonExample() {
-        WPanel flyoutContent = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel flyoutContent = new WPanel(8.0);
         WFlyout flyout = new WFlyout(flyoutContent);
 
         flyoutContent.add(new WLabel("Delete all items?"));
@@ -96,7 +96,7 @@ final class BasicInputPages {
     /** A button with a WCommand: running the command and auto-disabling via isEnabled. */
     private static WComponent buildCommandButtonExample() {
         WLabel result = new WLabel("Command has not run yet");
-        WCommand command = new WCommand(true, (parameter) -> {
+        WCommand command = new WCommand( (parameter) -> {
             result.setText("Command ran (parameter = " + parameter + ")");
         });
 
@@ -213,7 +213,7 @@ final class BasicInputPages {
             });
         }
 
-        WPanel body = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(4.0);
         body.add(parent);
         for (WCheckBox child : children) {
             body.add(child);
@@ -263,7 +263,7 @@ final class BasicInputPages {
             shapeButton.setText(ring ? "Make the spectrum a ring" : "Make the spectrum a box");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(shapeButton);
         body.add(colorPicker);
         return GalleryScaffold.buildExample("Display options (IsAlphaEnabled / ColorSpectrumShape / IsMoreButtonVisible)", body);
@@ -356,7 +356,7 @@ final class BasicInputPages {
     private static WComponent buildSimpleDropDownButtonExample() {
         WLabel result = new WLabel("Selected: none");
 
-        WPanel menu = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel menu = new WPanel(4.0);
         WFlyout flyout = new WFlyout(menu);
         for (String name : Arrays.asList("Mail", "Calendar", "Contacts")) {
             WButton button = new WButton(name);
@@ -434,7 +434,7 @@ final class BasicInputPages {
     private static WComponent buildSimpleRadioButtonExample() {
         WLabel result = new WLabel("Selected: none");
 
-        WPanel body = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(4.0);
         for (String name : Arrays.asList("Small", "Medium", "Large")) {
             WRadioButton radioButton = new WRadioButton(name);
             radioButton.setGroupName("Size");
@@ -465,7 +465,7 @@ final class BasicInputPages {
             result.setText("Background: " + background[0] + " / Foreground: " + foreground[0]);
         }));
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
         return GalleryScaffold.buildExample("Multiple groups (GroupName)", body);
@@ -473,7 +473,7 @@ final class BasicInputPages {
 
     /** One group of radio buttons (a local function named buildGroup in the Kotlin version). */
     private static WComponent buildRadioButtonGroup(String title, String group, Consumer<String> onSelect) {
-        WPanel panel = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel panel = new WPanel(4.0);
         panel.add(new WLabel(title));
         for (String name : Arrays.asList("White", "Black", "Blue")) {
             WRadioButton radioButton = new WRadioButton(name);
@@ -678,7 +678,7 @@ final class BasicInputPages {
         WBorder tile = GalleryScaffold.buildTile(WColor.Companion.getLIGHT_GRAY(), 48.0, 48.0);
         WColor[] currentColor = {WColor.Companion.getRED()};
 
-        WPanel menu = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel menu = new WPanel(4.0);
         WFlyout flyout = new WFlyout(menu);
         WSplitButton splitButton = new WSplitButton("Apply color");
         String[] names = {"Red", "Green", "Blue"};
@@ -774,7 +774,7 @@ final class BasicInputPages {
         };
         render.run();
 
-        WPanel menu = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel menu = new WPanel(4.0);
         WFlyout flyout = new WFlyout(menu);
         for (String name : Arrays.asList("•", "-", "◆")) {
             WButton button = new WButton(name);

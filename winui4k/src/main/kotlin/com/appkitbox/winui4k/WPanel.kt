@@ -21,7 +21,7 @@ enum class Orientation(internal val native: Int) {
 }
 
 /** JPanel-like with a BoxLayout: WinUI 3's StackPanel. Defaults to vertical. */
-class WPanel(
+class WPanel @JvmOverloads constructor(
     spacing: Double = 0.0,
     orientation: Orientation = Orientation.VERTICAL,
 ) : WContainer(

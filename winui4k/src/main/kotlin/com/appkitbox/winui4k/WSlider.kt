@@ -58,7 +58,7 @@ enum class TickPlacement(internal val native: Int) {
  * [tickFrequency] / [tickPlacement] / [orientation] / [isDirectionReversed] / [header] (Slider),
  * and [addChangeListener] / [removeChangeListener] (ValueChanged).
  */
-class WSlider(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
+class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
     Activation.composeDefault(XamlInterop.CLS_Slider, XamlInterop.IID_ISliderFactory), // default interface = ISlider
 ) {
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum / ValueChanged. */

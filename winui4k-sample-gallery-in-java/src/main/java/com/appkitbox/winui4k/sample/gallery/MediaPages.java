@@ -52,7 +52,7 @@ final class MediaPages {
 
     /** One feature example within the Options panel (bold title + content). */
     private static WComponent optionsSection(String title, WComponent... contents) {
-        WPanel section = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel section = new WPanel(8.0);
         WLabel titleLabel = new WLabel(title);
         titleLabel.setFontWeight(600);
         titleLabel.setTextWrapping(TextWrapping.WRAP);
@@ -124,7 +124,7 @@ final class MediaPages {
         toolBar.add(addressBar);
         toolBar.add(goButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(toolBar);
         body.add(framedWebView(webView));
         body.add(status);
@@ -144,7 +144,7 @@ final class MediaPages {
                 + "<p style=\"margin: 4px 0\" id=\"stock\">Stock: In stock</p>\n"
                 + "</body></html>");
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         WLabel purpose = purposeLabel(
             "ExecuteScript runs a page's JavaScript from Kotlin and receives the value of the "
                 + "last expression as JSON. It's useful for reading values from a page (a price, input "
@@ -186,7 +186,7 @@ final class MediaPages {
         stockButtons.add(inStockButton);
         stockButtons.add(outOfStockButton);
 
-        WPanel options = new WPanel(16.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(16.0);
         options.add(
             optionsSection(
                 "Run a script directly",
@@ -237,7 +237,7 @@ final class MediaPages {
                 + "</script>\n"
                 + "</body></html>");
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         WLabel purpose = purposeLabel(
             "WebMessage is a mechanism for Kotlin and the page's JavaScript to send messages to "
                 + "each other. In a layout that embeds a web page as part of the screen, it's useful "
@@ -259,7 +259,7 @@ final class MediaPages {
             received.setText("Received from page: " + unquoteJsonString(messageAsJson));
         });
 
-        WPanel options = new WPanel(16.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(16.0);
         options.add(
             optionsSection(
                 "Send from Kotlin processing to the page",

@@ -12,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * Unlike Flyout, it has no decoration (background/shadow), so decorate the content side with
  * something like WBorder.
  */
-class WPopup(child: WComponent? = null) : WComponent(
+class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */

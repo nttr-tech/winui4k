@@ -78,7 +78,7 @@ final class DialogsFlyoutsPages {
         WLabel result = new WLabel("Result: not shown yet");
 
         WCheckBox agreeCheckBox = new WCheckBox("I agree to the terms of use");
-        WPanel dialogContent = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel dialogContent = new WPanel(8.0);
         dialogContent.add(new WLabel("Agreeing enables the primary button."));
         dialogContent.add(agreeCheckBox);
 
@@ -122,7 +122,7 @@ final class DialogsFlyoutsPages {
     private static WComponent buildSimpleFlyoutExample() {
         WLabel result = new WLabel("Not run yet");
 
-        WPanel flyoutContent = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel flyoutContent = new WPanel(8.0);
         WFlyout flyout = new WFlyout(flyoutContent);
         flyoutContent.add(new WLabel("Permanently delete all items?"));
         WButton deleteButton = new WButton("Yes, delete everything");
@@ -187,14 +187,14 @@ final class DialogsFlyoutsPages {
     private static WComponent buildSimplePopupExample() {
         WLabel result = new WLabel("State: collapsed");
 
-        WPopup popup = new WPopup(null);
+        WPopup popup = new WPopup();
         popup.setHorizontalOffset(200.0);
         popup.setVerticalOffset(200.0);
         popup.addCloseListener(() -> {
             result.setText("State: collapsed");
         });
 
-        WPanel popupContent = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel popupContent = new WPanel(8.0);
         WLabel popupLabel = new WLabel("This is a popup.");
         popupLabel.setFontSize(18.0);
         popupContent.add(popupLabel);
@@ -231,7 +231,7 @@ final class DialogsFlyoutsPages {
         result.setVerticalAlignment(VerticalAlignment.CENTER);
         row.add(result);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(lightDismissCheckBox);
         body.add(row);
         return GalleryScaffold.buildExample("A basic popup (IsOpen / Offset / IsLightDismissEnabled / Closed)", body);

@@ -86,7 +86,7 @@ final class LayoutPages {
         buttons.add(cornerButton);
         buttons.add(colorButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(border);
         body.add(buttons);
         return GalleryScaffold.buildExample("Border and corner rounding (BorderBrush / BorderThickness / CornerRadius)", body);
@@ -104,7 +104,7 @@ final class LayoutPages {
             border.setPadding(border.getPadding() >= 48.0 ? 16.0 : border.getPadding() + 16.0);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(border);
         body.add(paddingButton);
         return GalleryScaffold.buildExample("Background and padding (Background / Padding)", body);
@@ -134,7 +134,7 @@ final class LayoutPages {
             angleButton.setText("Change angle (" + (int) angle[0] + "°)");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(border);
         body.add(angleButton);
         return GalleryScaffold.buildExample("Gradient background (LinearGradientBrush)", body);
@@ -172,7 +172,7 @@ final class LayoutPages {
             canvas.setLocation(movingTile, x[0], y[0]);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(canvas);
         body.add(moveButton);
         return GalleryScaffold.buildExample("Absolute positioning (Canvas.Left / Canvas.Top)", body);
@@ -197,7 +197,7 @@ final class LayoutPages {
             canvas.setZIndex(greenTile, redOnTop[0] ? 0 : 1);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(canvas);
         body.add(swapButton);
         return GalleryScaffold.buildExample("Stacking order (Canvas.ZIndex)", body);
@@ -279,7 +279,7 @@ final class LayoutPages {
         buttons.add(westButton);
         buttons.add(widenButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(panel);
         body.add(buttons);
         return GalleryScaffold.buildExample("Dynamic changes and re-layout (revalidate / invalidateNaturalSize)", body);
@@ -315,7 +315,7 @@ final class LayoutPages {
     private static WComponent buildExpanderBasicExample() {
         WLabel state = new WLabel("State: collapsed");
 
-        WPanel content = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel content = new WPanel(8.0);
         content.add(new WLabel("This is the expanded content."));
         content.add(new WButton("A button inside"));
 
@@ -333,7 +333,7 @@ final class LayoutPages {
             expander.setExpanded(!expander.isExpanded());
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(expander);
         body.add(toggleButton);
         body.add(state);
@@ -354,7 +354,7 @@ final class LayoutPages {
             buttons.add(button);
         }
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(expander);
         return GalleryScaffold.buildExample("Expand direction (ExpandDirection)", body);
@@ -415,7 +415,7 @@ final class LayoutPages {
             grid.setColumnSpacing(next);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(grid);
         body.add(spacingButton);
         return GalleryScaffold.buildExample("Cell spans and spacing (RowSpan / ColumnSpan / Spacing)", body);
@@ -498,7 +498,7 @@ final class LayoutPages {
 
     /** Opening/closing the pane, display mode, and placement. */
     private static WComponent buildSplitViewExample() {
-        WPanel paneContent = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel paneContent = new WPanel(8.0);
         paneContent.add(new WLabel("Pane"));
         paneContent.add(new WButton("Menu 1"));
         paneContent.add(new WButton("Menu 2"));
@@ -539,7 +539,7 @@ final class LayoutPages {
                             : SplitViewPanePlacement.LEFT);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(splitView);
         body.add(toggleButton);
         body.add(modeButtons);
@@ -561,7 +561,7 @@ final class LayoutPages {
 
     /** The direction children line up in, and the spacing between them. */
     private static WComponent buildStackPanelExample() {
-        WPanel panel = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel panel = new WPanel(8.0);
         panel.add(GalleryScaffold.buildTile(WColor.Companion.getRED(), 48.0, 48.0));
         panel.add(GalleryScaffold.buildTile(WColor.Companion.getGREEN(), 48.0, 48.0));
         panel.add(GalleryScaffold.buildTile(WColor.Companion.getBLUE(), 48.0, 48.0));
@@ -583,7 +583,7 @@ final class LayoutPages {
         buttons.add(orientationButton);
         buttons.add(spacingButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(panel);
         return GalleryScaffold.buildExample("Direction and spacing (Orientation / Spacing)", body);
@@ -631,7 +631,7 @@ final class LayoutPages {
         buttons.add(maxButton);
         buttons.add(orientationButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(grid);
         return GalleryScaffold.buildExample("Cell spans and wrapping (RowSpan / ColumnSpan / MaximumRowsOrColumns)", body);
@@ -670,7 +670,7 @@ final class LayoutPages {
 
         WSettingsCard plainCard = new WSettingsCard("A card with only a header", "");
 
-        WPanel body = new WPanel(4.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(4.0);
         body.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         body.add(toggleCard);
         body.add(comboCard);
@@ -703,7 +703,7 @@ final class LayoutPages {
             card.setActionIconVisible(isOn);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         body.add(card);
         body.add(linkCard);
@@ -730,7 +730,7 @@ final class LayoutPages {
             widthLabel.setText("Card width: " + (int) value + "px");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         body.add(card);
         body.add(slider);
@@ -761,7 +761,7 @@ final class LayoutPages {
         options.add(GalleryScaffold.optionsLabel("ContentAlignment"));
         options.add(combo);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         body.add(card);
         body.add(options);
@@ -780,7 +780,7 @@ final class LayoutPages {
             card.setEnabled(isOn);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.setWidth(SETTINGS_CARD_DEMO_WIDTH);
         body.add(card);
         body.add(enabledSwitch);

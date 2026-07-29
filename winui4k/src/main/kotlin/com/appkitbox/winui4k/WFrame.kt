@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /** JFrame-like: WinUI 3's Window. */
-class WFrame(title: String = "") {
+class WFrame @JvmOverloads constructor(title: String = "") {
     private val window: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_Window, XamlInterop.IID_IWindowFactory) // IWindow
 

@@ -12,7 +12,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * An item placed in a [WNavigationView]'s menu. Has a label ([text]) and an icon
  * ([icon]); adding child items via [addItem] turns it into a hierarchical menu.
  */
-class WNavigationViewItem(text: String = "", icon: Symbol? = null) : WControl(
+class WNavigationViewItem @JvmOverloads constructor(text: String = "", icon: Symbol? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NavigationViewItem, XamlInterop.IID_INavigationViewItemFactory), // default interface = INavigationViewItem
 ) {
     private val contentControl: ComPtr by lazy {

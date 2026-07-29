@@ -28,7 +28,7 @@ class WMenuBar : WControl(
  * JMenu-like: WinUI 3's MenuBarItem.
  * [title] becomes the label on the menu bar, and clicking it opens the items added with [add].
  */
-class WMenuBarItem(title: String = "") : WControl(
+class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_MenuBarItem, XamlInterop.IID_IMenuBarItemFactory),
 ) {
     private val items: ComPtr by lazy {

@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * Setting [navigateUri] makes a click open the default browser.
  * If left unset, it behaves like a normal button and can handle Click via [addActionListener].
  */
-class WHyperlinkButton(text: String = "", navigateUri: String = "") : WButtonBase(
+class WHyperlinkButton @JvmOverloads constructor(text: String = "", navigateUri: String = "") : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_HyperlinkButton, XamlInterop.IID_IHyperlinkButtonFactory),
 ) {
     /**

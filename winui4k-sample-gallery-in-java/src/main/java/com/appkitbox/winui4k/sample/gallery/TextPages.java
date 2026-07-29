@@ -75,7 +75,7 @@ final class TextPages {
             }
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(suggestBox);
         body.add(result);
         return GalleryScaffold.buildExample("Filtering suggestions (TextChanged / QuerySubmitted)", body);
@@ -109,7 +109,7 @@ final class TextPages {
             result.setText(Double.isNaN(value) ? "Not entered" : "Value: " + value);
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(spinner);
         body.add(result);
         return GalleryScaffold.buildExample("Expression input (AcceptsExpression / ValueChanged)", body);
@@ -161,7 +161,7 @@ final class TextPages {
             }
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(passwordField);
         body.add(result);
         return GalleryScaffold.buildExample("Simple password box (Header / PasswordChanged)", body);
@@ -177,7 +177,7 @@ final class TextPages {
         customCharField.setWidth(300.0);
         customCharField.setPasswordChar("#");
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(hiddenField);
         body.add(customCharField);
         return GalleryScaffold.buildExample("Reveal mode and mask character (PasswordRevealMode / PasswordChar)", body);
@@ -233,7 +233,7 @@ final class TextPages {
         toolbar.add(undoButton);
         toolbar.add(redoButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(toolbar);
         body.add(textPane);
         return GalleryScaffold.buildExample("Editing formatted text (Bold / Italic / Undo / Redo)", body);
@@ -300,7 +300,7 @@ final class TextPages {
         row.add(readButton);
         row.add(selectAllButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(richTextBlock);
         body.add(row);
         body.add(result);
@@ -330,7 +330,7 @@ final class TextPages {
 
     /** Text appearance: change font size, weight, and color. */
     private static WComponent buildTextBlockStyleExample() {
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         WLabel sized = new WLabel("Text at font size 18");
         sized.setFontSize(18.0);
         body.add(sized);
@@ -355,7 +355,7 @@ final class TextPages {
         trimmed.setWidth(300.0);
         trimmed.setTextTrimming(TextTrimming.CHARACTER_ELLIPSIS);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         WLabel wrappedHeader = new WLabel("TextWrapping.WRAP:");
         wrappedHeader.setForeground(GalleryTheme.TEXT_SECONDARY());
         body.add(wrappedHeader);
@@ -456,7 +456,7 @@ final class TextPages {
         row.add(textField);
         row.add(selectAllButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(mirror);
         return GalleryScaffold.buildExample("Watching input (TextChanged / SelectAll)", body);

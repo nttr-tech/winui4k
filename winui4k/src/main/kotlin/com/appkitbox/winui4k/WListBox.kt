@@ -38,7 +38,7 @@ enum class SelectionMode(internal val native: Int) {
  * [scrollIntoView] (scrolls to a given position),
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged).
  */
-class WListBox(items: List<String> = emptyList()) : WControl(
+class WListBox @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ListBox, XamlInterop.IID_IListBoxFactory), // default interface = IListBox
 ) {
     private val selector: ComPtr by lazy {

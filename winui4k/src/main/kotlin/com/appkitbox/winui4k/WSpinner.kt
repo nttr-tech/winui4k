@@ -35,7 +35,7 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
  * Provides numeric entry, validation, and incrementing/decrementing via spin buttons. [value] is
  * NaN when empty. Enabling [acceptsExpression] lets it evaluate expressions like "(5 + 3) * 2".
  */
-class WSpinner(value: Double = Double.NaN) : WControl(
+class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NumberBox, XamlInterop.IID_INumberBoxFactory), // default interface = INumberBox
 ) {
     /** ValueChanged event tokens registered via addChangeListener. */

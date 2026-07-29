@@ -20,7 +20,7 @@ import java.util.function.Consumer
  * [isEditable] / [text] / [addTextSubmitListener] (for an editable combo),
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged).
  */
-class WComboBox(items: List<String> = emptyList()) : WControl(
+class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ComboBox, XamlInterop.IID_IComboBoxFactory), // default interface = IComboBox
 ) {
     private val selector: ComPtr by lazy {

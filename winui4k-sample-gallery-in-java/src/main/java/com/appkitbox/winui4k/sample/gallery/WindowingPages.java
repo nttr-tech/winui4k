@@ -133,7 +133,7 @@ final class WindowingPages {
         buttons.add(resizeButton);
         buttons.add(moveButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample(
@@ -173,7 +173,7 @@ final class WindowingPages {
         buttons.add(openButton);
         buttons.add(centerButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample("Screen centering (WDisplayArea.nearest / workArea)", body);
@@ -278,7 +278,7 @@ final class WindowingPages {
         stateButtons.add(minimizeButton);
         stateButtons.add(restoreButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(openButton);
         body.add(checks);
         body.add(borderRow);
@@ -327,7 +327,7 @@ final class WindowingPages {
         buttons.add(openButton);
         buttons.add(clearButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample("Min/max size (PreferredMinimum/MaximumWidth/Height)", body);
@@ -361,7 +361,7 @@ final class WindowingPages {
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
         note.setTextWrapping(TextWrapping.WRAP);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(note);
         body.add(openButton);
         body.add(status);
@@ -415,7 +415,7 @@ final class WindowingPages {
         buttons.add(restoreButton);
         buttons.add(closeButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample(
@@ -471,7 +471,7 @@ final class WindowingPages {
         buttons.add(applyButton);
         buttons.add(restoreButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample("CompactOverlay (CompactOverlayPresenter.InitialSize)", body);
@@ -575,7 +575,7 @@ final class WindowingPages {
         buttons.add(applyButton);
         buttons.add(resetButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(picker);
         body.add(status);
@@ -618,7 +618,7 @@ final class WindowingPages {
             heightButtons.add(button);
         }
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(openButton);
         body.add(extendCheck);
         body.add(heightButtons);
@@ -656,7 +656,7 @@ final class WindowingPages {
             themeButtons.add(button);
         }
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(openButton);
         body.add(themeButtons);
         body.add(status);
@@ -708,7 +708,7 @@ final class WindowingPages {
             buttons.add(button);
         }
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample("Switching backdrops (MICA / MICA_ALT / ACRYLIC / NONE)", body);
@@ -767,7 +767,7 @@ final class WindowingPages {
         buttons.add(openButton);
         buttons.add(closeAllButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(count);
         return GalleryScaffold.buildExample(
@@ -852,7 +852,7 @@ final class WindowingPages {
         checks.add(paneToggleCheck);
         checks.add(useSearchBoxCheck);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(titleBar);
         body.add(fields);
         body.add(checks);
@@ -892,7 +892,7 @@ final class WindowingPages {
         buttons.add(autoButton);
         buttons.add(nonDragButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(note);
         body.add(titleBar);
         body.add(buttons);
@@ -914,8 +914,8 @@ final class WindowingPages {
             WNavigationView navigationView = new WNavigationView();
             navigationView.setPaneToggleButtonVisible(false); // avoid showing it twice - only the TitleBar side is shown
             navigationView.setBackButtonVisible(NavigationViewBackButtonVisible.COLLAPSED);
-            WNavigationViewItem item1 = new WNavigationViewItem("Page 1", null);
-            WNavigationViewItem item2 = new WNavigationViewItem("Page 2", null);
+            WNavigationViewItem item1 = new WNavigationViewItem("Page 1");
+            WNavigationViewItem item2 = new WNavigationViewItem("Page 2");
             navigationView.addItem(item1);
             navigationView.addItem(item2);
             WLabel content = new WLabel("Page 1");
@@ -930,7 +930,7 @@ final class WindowingPages {
                 navigationView.setPaneOpen(!navigationView.isPaneOpen());
             });
 
-            WGrid root = new WGrid(0.0, 0.0);
+            WGrid root = new WGrid();
             root.addRow(GridLength.Companion.getAUTO());
             root.addRow(GridLength.Companion.star(1.0));
             root.add(titleBar, 0, 0, 1, 1);
@@ -945,7 +945,7 @@ final class WindowingPages {
             status.setText("Opened a child window");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(openButton);
         body.add(status);
         return GalleryScaffold.buildExample("End-to-end (WTitleBar + WNavigationView + Grid + setTitleBar)", body);

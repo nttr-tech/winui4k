@@ -34,7 +34,7 @@ enum class Stretch(internal val native: Int) {
  * Loads and displays an image from [sourceUri], a file URI ("file:///C:/..." pointing at a .png / .ico, etc.).
  * [stretch] controls how it's fit into its allotted area.
  */
-class WImage(sourceUri: String? = null) : WComponent(
+class WImage @JvmOverloads constructor(sourceUri: String? = null) : WComponent(
     Activation.activate(XamlInterop.CLS_Image, XamlInterop.IID_IImage), // created via the default factory
 ) {
     /**

@@ -62,7 +62,7 @@ enum class TeachingTipCloseReason(internal val native: Int) {
  * As in the real Gallery, add it into a container in the XAML tree ahead of time before use
  * (it renders nothing while closed). Opening it outside the tree shows no content.
  */
-class WTeachingTip(title: String = "", subtitle: String = "") : WControl(
+class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TeachingTip, XamlInterop.IID_ITeachingTipFactory), // default interface = ITeachingTip
 ) {
     /** Listener -> event token (used to remove). */

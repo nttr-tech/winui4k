@@ -95,7 +95,7 @@ enum class WebErrorStatus(internal val native: Int) {
  * subscribed to via [addCoreWebView2InitializedListener], and CoreWebView2-backed features
  * such as [documentTitle] and [postWebMessageAsJson] are only usable once initialization completes.
  */
-class WWebView(source: String = "") : WComponent(
+class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     Activation.composeDefault(WebView2Interop.CLS_WebView2, WebView2Interop.IID_IWebView2Factory),
 ) {
     private companion object {
@@ -280,6 +280,7 @@ class WWebView(source: String = "") : WComponent(
      * Only usable once CoreWebView2 is initialized (a no-op before that, and [resultHandler]
      * won't be called either).
      */
+    @JvmOverloads
     fun executeScript(script: String, resultHandler: Consumer<String>? = null) {
         if (!isCoreWebView2Initialized) return
         val operation = Hstring.use(script) { h ->

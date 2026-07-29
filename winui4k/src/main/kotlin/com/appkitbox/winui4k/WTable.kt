@@ -25,7 +25,7 @@ enum class SortDirection {
 /**
  * A column definition for [WTable] (equivalent to WinUI.TableView's TableViewColumn).
  */
-class WTableColumn(
+class WTableColumn @JvmOverloads constructor(
     /** The title shown in the column header. */
     val title: String,
 

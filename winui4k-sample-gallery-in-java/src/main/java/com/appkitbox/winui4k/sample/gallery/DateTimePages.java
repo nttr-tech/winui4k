@@ -58,7 +58,7 @@ final class DateTimePages {
             }
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(picker);
         body.add(result);
         return GalleryScaffold.buildExample("Header and PlaceholderText (Header / PlaceholderText / DateChanged)", body);
@@ -85,7 +85,7 @@ final class DateTimePages {
         WCalendarView calendarView = new WCalendarView();
         calendarView.setSelectionMode(CalendarViewSelectionMode.SINGLE);
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(calendarView);
 
         // Options
@@ -131,7 +131,7 @@ final class DateTimePages {
             }
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(isGroupLabelVisible);
         options.add(isOutOfScopeEnabled);
         options.add(selectionModeCombo);
@@ -164,7 +164,7 @@ final class DateTimePages {
         WDatePicker picker = new WDatePicker();
         picker.setHeader("Pick a date");
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(picker);
         return GalleryScaffold.buildExample("A DatePicker with a Header (Header)", body);
     }
@@ -213,7 +213,7 @@ final class DateTimePages {
             picker.setYearVisible(Boolean.TRUE.equals(checked));
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(GalleryScaffold.optionsLabel("Toggle which columns are shown with the checkboxes."));
         options.add(dayVisibleCheck);
         options.add(monthVisibleCheck);
@@ -246,7 +246,7 @@ final class DateTimePages {
     private static WComponent buildTimePickerSimpleExample() {
         WTimePicker picker = new WTimePicker();
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(picker);
         return GalleryScaffold.buildExample("The default TimePicker", body);
     }
@@ -270,7 +270,7 @@ final class DateTimePages {
             }
         });
 
-        WPanel body = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(12.0);
         body.add(picker);
         body.add(result);
 
@@ -297,7 +297,7 @@ final class DateTimePages {
             }
         });
 
-        WPanel options = new WPanel(12.0, Orientation.VERTICAL);
+        WPanel options = new WPanel(12.0);
         options.add(clockCombo);
         options.add(minuteIncrementCombo);
 

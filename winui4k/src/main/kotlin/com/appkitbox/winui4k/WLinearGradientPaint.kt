@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * [stops] is a sequence of "offset (0.0..1.0) -> color" pairs. [angle] is the gradient axis's
  * angle in degrees; 0.0 is left to right, 90.0 (the default) is top to bottom.
  */
-class WLinearGradientPaint(
+class WLinearGradientPaint @JvmOverloads constructor(
     val stops: List<Pair<Double, WColor>>,
     val angle: Double = 90.0,
 ) {

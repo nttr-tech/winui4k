@@ -12,7 +12,7 @@ import java.util.function.Consumer
  * Subscribe to changes in [isOn] via [addItemListener] (Toggled).
  * Customize the displayed text with [header] / [onContent] / [offContent].
  */
-class WToggleSwitch(header: String = "") : WControl(
+class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_ToggleSwitch, XamlInterop.IID_IToggleSwitch), // created via the default factory
 ) {
     /** Toggled event tokens registered via addItemListener. */

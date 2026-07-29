@@ -9,7 +9,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * Wraps children in cells of [itemWidth] × [itemHeight], and each child can span more than one
  * cell via the rowSpan / columnSpan parameters of [add].
  */
-class WVariableSizedWrapGrid(
+class WVariableSizedWrapGrid @JvmOverloads constructor(
     itemWidth: Double = Double.NaN,
     itemHeight: Double = Double.NaN,
 ) : WContainer(

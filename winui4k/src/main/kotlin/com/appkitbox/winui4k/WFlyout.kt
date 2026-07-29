@@ -69,7 +69,7 @@ abstract class WFlyoutBase internal constructor(
 }
 
 /** JPopupMenu-like: WinUI 3's Flyout. Set on WButton.flyout to open it on click. */
-class WFlyout(content: WComponent? = null) : WFlyoutBase(
+class WFlyout @JvmOverloads constructor(content: WComponent? = null) : WFlyoutBase(
     Activation.composeDefault(XamlInterop.CLS_Flyout, XamlInterop.IID_IFlyoutFactory),
 ) {
     var content: WComponent? = null

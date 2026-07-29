@@ -84,7 +84,7 @@ enum class TextTrimming(internal val native: Int) {
  * JLabel-like: WinUI 3's TextBlock.
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  */
-class WLabel(text: String = "") : WComponent(
+class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     Activation.activate(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlock),
 ) {
     var text: String

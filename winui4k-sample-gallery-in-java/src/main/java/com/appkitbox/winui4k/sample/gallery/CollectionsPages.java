@@ -85,7 +85,7 @@ final class CollectionsPages {
         itemsView.setHeight(200.0);
         itemsView.setHorizontalAlignment(HorizontalAlignment.LEFT);
 
-        WPanel body = new WPanel(10.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(10.0);
         body.add(itemsView);
         body.add(result);
         return GalleryScaffold.buildExample("A card grid (UniformGridLayout / ItemContainer / ItemInvoked)", body);
@@ -116,7 +116,7 @@ final class CollectionsPages {
         colors.put("Yellow", new WColor(255, 255, 0, 255));
 
         // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
-        WBorder output = new WBorder(null);
+        WBorder output = new WBorder();
         output.setWidth(100.0);
         output.setHeight(30.0);
         output.setHorizontalAlignment(HorizontalAlignment.LEFT);
@@ -128,7 +128,7 @@ final class CollectionsPages {
             output.setBackground(colors.get(listBox.getSelectedItem()));
         });
 
-        WPanel body = new WPanel(10.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(10.0);
         body.add(listBox);
         body.add(output);
         return GalleryScaffold.buildExample("A list box with inline items (SelectionChanged)", body);
@@ -153,7 +153,7 @@ final class CollectionsPages {
         });
         listBox.setSelectedIndex(2); // Selects Courier New initially, same as the official Gallery
 
-        WPanel body = new WPanel(10.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(10.0);
         body.add(listBox);
         body.add(output);
         return GalleryScaffold.buildExample("A list box with a fixed height (SelectedIndex / FontFamily)", body);
@@ -195,7 +195,7 @@ final class CollectionsPages {
         });
         buttons.add(scrollButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(listBox);
         body.add(selection);
@@ -276,7 +276,7 @@ final class CollectionsPages {
         buttons.add(removeButton);
         buttons.add(clearButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(list);
         body.add(count);
@@ -310,7 +310,7 @@ final class CollectionsPages {
         });
         buttons.add(selectAllButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(list);
         body.add(mode);
@@ -354,9 +354,9 @@ final class CollectionsPages {
     /** Sample data for the TableView demos (product name, price, quantity). */
     private static WTable buildProductTable() {
         WTable table = new WTable(Arrays.asList(
-                new WTableColumn("Product", 160.0, true, null),
-                new WTableColumn("Price", 100.0, true, null),
-                new WTableColumn("Quantity", 100.0, true, null)));
+                new WTableColumn("Product", 160.0),
+                new WTableColumn("Price", 100.0),
+                new WTableColumn("Quantity", 100.0)));
         table.addRow("Apple", "150", "12");
         table.addRow("Orange", "80", "30");
         table.addRow("Grape", "480", "5");
@@ -380,7 +380,7 @@ final class CollectionsPages {
             }
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(table);
         body.add(result);
         return GalleryScaffold.buildExample("A basic table (row selection)", body);
@@ -408,7 +408,7 @@ final class CollectionsPages {
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
         note.setTextWrapping(TextWrapping.WRAP);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(note);
         body.add(buttons);
         body.add(table);
@@ -465,7 +465,7 @@ final class CollectionsPages {
         buttons.add(incrementButton);
         buttons.add(clearButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(table);
         body.add(count);
@@ -527,7 +527,7 @@ final class CollectionsPages {
                     : "Click: " + node.getText() + " (depth = " + node.getDepth() + ")");
         });
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(tree);
         body.add(result);
         return GalleryScaffold.buildExample("Simple tree (drag & drop reordering / ItemInvoked)", body);
@@ -560,7 +560,7 @@ final class CollectionsPages {
         buttons.add(showButton);
         buttons.add(selectAllButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(tree);
         body.add(buttons);
         body.add(result);
@@ -597,7 +597,7 @@ final class CollectionsPages {
         buttons.add(expandButton);
         buttons.add(collapseButton);
 
-        WPanel body = new WPanel(8.0, Orientation.VERTICAL);
+        WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(tree);
         body.add(log);
