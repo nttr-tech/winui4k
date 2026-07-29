@@ -90,13 +90,13 @@ final class DateTimePages {
 
         // Options
         WCheckBox isGroupLabelVisible = new WCheckBox("IsGroupLabelVisible");
-        isGroupLabelVisible.setChecked(true);
+        isGroupLabelVisible.setSelected(true);
         isGroupLabelVisible.addItemListener(checked -> {
             calendarView.setGroupLabelVisible(Boolean.TRUE.equals(checked));
         });
 
         WCheckBox isOutOfScopeEnabled = new WCheckBox("IsOutOfScopeEnabled");
-        isOutOfScopeEnabled.setChecked(true);
+        isOutOfScopeEnabled.setSelected(true);
         isOutOfScopeEnabled.addItemListener(checked -> {
             calendarView.setOutOfScopeEnabled(Boolean.TRUE.equals(checked));
         });
@@ -196,19 +196,19 @@ final class DateTimePages {
 
         // Options
         WCheckBox dayVisibleCheck = new WCheckBox("DayVisible");
-        dayVisibleCheck.setChecked(true);
+        dayVisibleCheck.setSelected(true);
         dayVisibleCheck.addItemListener(checked -> {
             picker.setDayVisible(Boolean.TRUE.equals(checked));
         });
 
         WCheckBox monthVisibleCheck = new WCheckBox("MonthVisible");
-        monthVisibleCheck.setChecked(true);
+        monthVisibleCheck.setSelected(true);
         monthVisibleCheck.addItemListener(checked -> {
             picker.setMonthVisible(Boolean.TRUE.equals(checked));
         });
 
         WCheckBox yearVisibleCheck = new WCheckBox("YearVisible");
-        yearVisibleCheck.setChecked(false);
+        yearVisibleCheck.setSelected(false);
         yearVisibleCheck.addItemListener(checked -> {
             picker.setYearVisible(Boolean.TRUE.equals(checked));
         });

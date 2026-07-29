@@ -102,7 +102,7 @@ final class ShellPages {
                     .setAttributionText("WinUI4K Gallery")
                     .setTag("gallery-simple")
                     .setGroup("gallery");
-                if (Boolean.TRUE.equals(longDuration.isChecked())) {
+                if (longDuration.isSelected()) {
                     notification.setDuration(NotificationDuration.LONG);
                 }
                 WAppNotificationManager.show(notification);

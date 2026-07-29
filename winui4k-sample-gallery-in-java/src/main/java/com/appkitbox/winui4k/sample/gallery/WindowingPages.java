@@ -208,36 +208,36 @@ final class WindowingPages {
             }
         });
         WCheckBox maximizableCheck = new WCheckBox("IsMaximizable");
-        maximizableCheck.setChecked(true);
+        maximizableCheck.setSelected(true);
         maximizableCheck.addItemListener(checked -> {
             if (presenter[0] != null) {
                 presenter[0].setMaximizable(Boolean.TRUE.equals(checked));
             }
         });
         WCheckBox minimizableCheck = new WCheckBox("IsMinimizable");
-        minimizableCheck.setChecked(true);
+        minimizableCheck.setSelected(true);
         minimizableCheck.addItemListener(checked -> {
             if (presenter[0] != null) {
                 presenter[0].setMinimizable(Boolean.TRUE.equals(checked));
             }
         });
         WCheckBox resizableCheck = new WCheckBox("IsResizable");
-        resizableCheck.setChecked(true);
+        resizableCheck.setSelected(true);
         resizableCheck.addItemListener(checked -> {
             if (presenter[0] != null) {
                 presenter[0].setResizable(Boolean.TRUE.equals(checked));
             }
         });
         WCheckBox borderCheck = new WCheckBox("HasBorder");
-        borderCheck.setChecked(true);
+        borderCheck.setSelected(true);
         WCheckBox titleBarCheck = new WCheckBox("HasTitleBar");
-        titleBarCheck.setChecked(true);
+        titleBarCheck.setSelected(true);
         WButton applyBorderButton = new WButton("Apply Border/TitleBar (SetBorderAndTitleBar)");
         applyBorderButton.addActionListener(() -> {
             if (presenter[0] != null) {
                 presenter[0].setBorderAndTitleBar(
-                    Boolean.TRUE.equals(borderCheck.isChecked()),
-                    Boolean.TRUE.equals(titleBarCheck.isChecked()));
+                    borderCheck.isSelected(),
+                    titleBarCheck.isSelected());
             }
         });
 
@@ -821,17 +821,17 @@ final class WindowingPages {
         });
 
         WCheckBox backVisibleCheck = new WCheckBox("IsBackButtonVisible");
-        backVisibleCheck.setChecked(true);
+        backVisibleCheck.setSelected(true);
         backVisibleCheck.addItemListener(checked -> {
             titleBar.setBackButtonVisible(Boolean.TRUE.equals(checked));
         });
         WCheckBox backEnabledCheck = new WCheckBox("IsBackButtonEnabled");
-        backEnabledCheck.setChecked(true);
+        backEnabledCheck.setSelected(true);
         backEnabledCheck.addItemListener(checked -> {
             titleBar.setBackButtonEnabled(Boolean.TRUE.equals(checked));
         });
         WCheckBox paneToggleCheck = new WCheckBox("IsPaneToggleButtonVisible");
-        paneToggleCheck.setChecked(true);
+        paneToggleCheck.setSelected(true);
         paneToggleCheck.addItemListener(checked -> {
             titleBar.setPaneToggleButtonVisible(Boolean.TRUE.equals(checked));
         });

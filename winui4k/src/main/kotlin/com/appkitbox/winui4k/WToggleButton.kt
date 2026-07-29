@@ -69,6 +69,17 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
             boxed.release()
         }
 
+    /**
+     * A two-state view in the style of Swing's AbstractButton.isSelected.
+     * It is true only when [isChecked] is true; false and indeterminate (null) are both treated as false.
+     * Use [isChecked] when the indeterminate state has to be kept or read.
+     */
+    var isSelected: Boolean
+        get() = isChecked == true
+        set(value) {
+            isChecked = value
+        }
+
     /** Whether clicking cycles through true → null (indeterminate) → false (ToggleButton.IsThreeState). */
     var isThreeState: Boolean
         get() = toggleButton.getBool(XamlInterop.IToggleButton_get_IsThreeState)

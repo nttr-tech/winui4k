@@ -198,14 +198,14 @@ final class BasicInputPages {
                 updating[0] = true;
                 int checkedCount = 0;
                 for (WCheckBox c : children) {
-                    if (Boolean.TRUE.equals(c.isChecked())) {
+                    if (c.isSelected()) {
                         checkedCount++;
                     }
                 }
                 if (checkedCount == 0) {
-                    parent.setChecked(false);
+                    parent.setSelected(false);
                 } else if (checkedCount == children.size()) {
-                    parent.setChecked(true);
+                    parent.setSelected(true);
                 } else {
                     parent.setChecked(null);
                 }
@@ -731,7 +731,7 @@ final class BasicInputPages {
 
         WButton codeButton = new WButton("Toggle from code");
         codeButton.addActionListener(() -> {
-            toggleButton.setChecked(!Boolean.TRUE.equals(toggleButton.isChecked()));
+            toggleButton.setSelected(!toggleButton.isSelected());
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);

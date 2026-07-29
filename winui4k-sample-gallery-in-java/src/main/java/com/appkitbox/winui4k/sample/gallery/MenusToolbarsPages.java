@@ -151,7 +151,7 @@ final class MenusToolbarsPages {
         });
 
         WAppBarToggleButton boldButton = new WAppBarToggleButton("Bold", Symbol.BOLD);
-        boldButton.setChecked(true);
+        boldButton.setSelected(true);
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(shuffleButton);
