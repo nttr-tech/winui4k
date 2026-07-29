@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A two-part button split between clicking the body and expanding choices: WinUI 3's
@@ -58,7 +60,15 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
      * ActionListener-like: subscribes to clicks on the body (left side).
      * Subscribes to SplitButton.Click (TypedEventHandler<SplitButton, SplitButtonClickEventArgs>) under the hood.
      */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        clickTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = splitButton.addEventHandler(
             "WinUI4K.SplitButtonClickHandler",
             XamlInterop.IID_SplitButtonClickHandler,
@@ -68,7 +78,14 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         splitButton.removeEventHandler(XamlInterop.ISplitButton_remove_Click, token)
     }

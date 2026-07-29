@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A breadcrumb trail: WinUI 3's BreadcrumbBar (no Swing equivalent).
@@ -39,7 +41,15 @@ class WBreadcrumbBar : WControl(
      * Subscribes to a level being clicked (BreadcrumbBar.ItemClicked).
      * The listener receives the clicked level's index (the subscript into [items]).
      */
-    fun addItemClickedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun addItemClickedListener(listener: (Int) -> Unit) {
+        val adapter = IntConsumer { listener(it) }
+        addItemClickedListenerForJava(adapter)
+        itemClickedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addItemClickedListener")
+    fun addItemClickedListenerForJava(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.BreadcrumbBarItemClickedHandler",
             XamlInterop.IID_BreadcrumbBarItemClickedHandler,
@@ -52,7 +62,14 @@ class WBreadcrumbBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addItemClickedListener]. */
-    fun removeItemClickedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun removeItemClickedListener(listener: (Int) -> Unit) {
+        val adapter = itemClickedTokens.removeKotlinAdapter(listener) ?: return
+        removeItemClickedListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemClickedListener")
+    fun removeItemClickedListenerForJava(listener: IntConsumer) {
         val token = itemClickedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IBreadcrumbBar_remove_ItemClicked, token)
     }

@@ -7,6 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.SelectionMode (the ListBox's selection mode).
@@ -152,7 +154,15 @@ class WListBox @JvmOverloads constructor(items: List<String> = emptyList()) : WC
     }
 
     /** ListSelectionListener-like. Backed by a subscription to Selector.SelectionChanged. */
-    fun addListSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addListSelectionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addListSelectionListenerForJava(adapter)
+        selectionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addListSelectionListener")
+    fun addListSelectionListenerForJava(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
@@ -162,7 +172,14 @@ class WListBox @JvmOverloads constructor(items: List<String> = emptyList()) : WC
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
-    fun removeListSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeListSelectionListener(listener: () -> Unit) {
+        val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
+        removeListSelectionListenerForJava(adapter)
+    }
+
+    @JvmName("removeListSelectionListener")
+    fun removeListSelectionListenerForJava(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }

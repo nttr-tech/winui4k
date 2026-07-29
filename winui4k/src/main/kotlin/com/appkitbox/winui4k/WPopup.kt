@@ -5,6 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * javax.swing.Popup-like: WinUI 3's Primitives.Popup. A lightweight container that shows
@@ -64,7 +66,15 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     }
 
     /** Registers a listener called when it closes (Popup.Closed). Also called on a light dismiss. */
-    fun addCloseListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addCloseListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addCloseListenerForJava(adapter)
+        closeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCloseListener")
+    fun addCloseListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PopupClosedHandler",
             FoundationInterop.IID_EventHandler_Object,
@@ -74,7 +84,14 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     }
 
     /** Unsubscribes a listener registered via [addCloseListener]. */
-    fun removeCloseListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeCloseListener(listener: () -> Unit) {
+        val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
+        removeCloseListenerForJava(adapter)
+    }
+
+    @JvmName("removeCloseListener")
+    fun removeCloseListenerForJava(listener: Runnable) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
     }

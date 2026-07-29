@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.ExpandDirection (the direction the content expands toward).
@@ -74,7 +76,15 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     }
 
     /** Registers a listener called when it expands (Expander.Expanding). */
-    fun addExpandListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addExpandListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addExpandListenerForJava(adapter)
+        expandTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addExpandListener")
+    fun addExpandListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderExpandingHandler,
@@ -84,13 +94,28 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     }
 
     /** Unsubscribes a listener registered via [addExpandListener]. */
-    fun removeExpandListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeExpandListener(listener: () -> Unit) {
+        val adapter = expandTokens.removeKotlinAdapter(listener) ?: return
+        removeExpandListenerForJava(adapter)
+    }
+
+    @JvmName("removeExpandListener")
+    fun removeExpandListenerForJava(listener: Runnable) {
         val token = expandTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Expanding, token)
     }
 
     /** Registers a listener called when it collapses (Expander.Collapsed). */
-    fun addCollapseListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addCollapseListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addCollapseListenerForJava(adapter)
+        collapseTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCollapseListener")
+    fun addCollapseListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderCollapsedHandler,
@@ -100,7 +125,14 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     }
 
     /** Unsubscribes a listener registered via [addCollapseListener]. */
-    fun removeCollapseListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeCollapseListener(listener: () -> Unit) {
+        val adapter = collapseTokens.removeKotlinAdapter(listener) ?: return
+        removeCollapseListenerForJava(adapter)
+    }
+
+    @JvmName("removeCollapseListener")
+    fun removeCollapseListenerForJava(listener: Runnable) {
         val token = collapseTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Collapsed, token)
     }

@@ -14,6 +14,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Equivalent to Swing's Action (implemented on the WinUI side): Microsoft.UI.Xaml.Input.XamlUICommand.
@@ -101,7 +103,15 @@ open class WXamlUICommand internal constructor(
      * ActionListener-like: subscribes to the command's execution (XamlUICommand.ExecuteRequested).
      * The listener receives the control's commandParameter (null if unset).
      */
-    fun addExecuteListener(listener: Consumer<String?>) {
+    @JvmSynthetic
+    fun addExecuteListener(listener: (String?) -> Unit) {
+        val adapter = Consumer<String?> { listener(it) }
+        addExecuteListenerForJava(adapter)
+        executeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addExecuteListener")
+    fun addExecuteListenerForJava(listener: Consumer<String?>) {
         val token = xamlUICommand.addEventHandler(
             "WinUI4K.ExecuteRequestedHandler",
             XamlInterop.IID_XamlUICommandExecuteRequestedHandler,
@@ -121,7 +131,14 @@ open class WXamlUICommand internal constructor(
     }
 
     /** Unsubscribes a listener registered via [addExecuteListener]. */
-    fun removeExecuteListener(listener: Consumer<String?>) {
+    @JvmSynthetic
+    fun removeExecuteListener(listener: (String?) -> Unit) {
+        val adapter = executeTokens.removeKotlinAdapter(listener) ?: return
+        removeExecuteListenerForJava(adapter)
+    }
+
+    @JvmName("removeExecuteListener")
+    fun removeExecuteListenerForJava(listener: Consumer<String?>) {
         val token = executeTokens.remove(listener) ?: return
         xamlUICommand.removeEventHandler(XamlInterop.IXamlUICommand_remove_ExecuteRequested, token)
     }

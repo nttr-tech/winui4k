@@ -12,6 +12,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.time.LocalTime
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * WinUI 3's TimePicker (a Control subclass).
@@ -77,7 +79,15 @@ class WTimePicker : WControl(
         }
 
     /** Registers a listener for when the selected time changes (TimePicker.SelectedTimeChanged). */
-    fun addSelectedTimeChangedListener(listener: Consumer<LocalTime?>) {
+    @JvmSynthetic
+    fun addSelectedTimeChangedListener(listener: (LocalTime?) -> Unit) {
+        val adapter = Consumer<LocalTime?> { listener(it) }
+        addSelectedTimeChangedListenerForJava(adapter)
+        selectedTimeChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectedTimeChangedListener")
+    fun addSelectedTimeChangedListenerForJava(listener: Consumer<LocalTime?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TimePickerSelectedTimeChangedHandler",
             XamlInterop.IID_TimePickerSelectedTimeChangedHandler,
@@ -96,7 +106,14 @@ class WTimePicker : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectedTimeChangedListener]. */
-    fun removeSelectedTimeChangedListener(listener: Consumer<LocalTime?>) {
+    @JvmSynthetic
+    fun removeSelectedTimeChangedListener(listener: (LocalTime?) -> Unit) {
+        val adapter = selectedTimeChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectedTimeChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectedTimeChangedListener")
+    fun removeSelectedTimeChangedListenerForJava(listener: Consumer<LocalTime?>) {
         val token = selectedTimeChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITimePicker_remove_SelectedTimeChanged, token)
     }

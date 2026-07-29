@@ -7,6 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.ColorSpectrumShape (the spectrum's shape).
@@ -80,7 +82,15 @@ class WColorPicker : WControl(
      * ChangeListener-like: subscribes to color changes. The listener receives the new color.
      * Subscribes to ColorPicker.ColorChanged (TypedEventHandler<ColorPicker, ColorChangedEventArgs>) under the hood.
      */
-    fun addChangeListener(listener: Consumer<WColor>) {
+    @JvmSynthetic
+    fun addChangeListener(listener: (WColor) -> Unit) {
+        val adapter = Consumer<WColor> { listener(it) }
+        addChangeListenerForJava(adapter)
+        changeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addChangeListener")
+    fun addChangeListenerForJava(listener: Consumer<WColor>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ColorChangedHandler",
             XamlInterop.IID_ColorPickerColorChangedHandler,
@@ -94,7 +104,14 @@ class WColorPicker : WControl(
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: Consumer<WColor>) {
+    @JvmSynthetic
+    fun removeChangeListener(listener: (WColor) -> Unit) {
+        val adapter = changeTokens.removeKotlinAdapter(listener) ?: return
+        removeChangeListenerForJava(adapter)
+    }
+
+    @JvmName("removeChangeListener")
+    fun removeChangeListenerForJava(listener: Consumer<WColor>) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IColorPicker_remove_ColorChanged, token)
     }

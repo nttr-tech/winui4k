@@ -16,6 +16,8 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.util.function.DoubleFunction
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * WinUI 3's AnnotatedScrollBar (a Control subclass). Extends a vertical scrollbar with a rail
@@ -81,7 +83,15 @@ class WAnnotatedScrollBar : WControl(
      * (AnnotatedScrollBar.DetailLabelRequested). The listener receives the target scroll offset,
      * and the string it returns is displayed as the tooltip.
      */
-    fun addDetailLabelRequestedListener(listener: DoubleFunction<String>) {
+    @JvmSynthetic
+    fun addDetailLabelRequestedListener(listener: (Double) -> String) {
+        val adapter = DoubleFunction<String> { listener(it) }
+        addDetailLabelRequestedListenerForJava(adapter)
+        detailLabelRequestedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addDetailLabelRequestedListener")
+    fun addDetailLabelRequestedListenerForJava(listener: DoubleFunction<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AnnotatedScrollBarDetailLabelRequestedHandler",
             XamlInterop.IID_AnnotatedScrollBarDetailLabelRequestedHandler,
@@ -97,7 +107,14 @@ class WAnnotatedScrollBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addDetailLabelRequestedListener]. */
-    fun removeDetailLabelRequestedListener(listener: DoubleFunction<String>) {
+    @JvmSynthetic
+    fun removeDetailLabelRequestedListener(listener: (Double) -> String) {
+        val adapter = detailLabelRequestedTokens.removeKotlinAdapter(listener) ?: return
+        removeDetailLabelRequestedListenerForJava(adapter)
+    }
+
+    @JvmName("removeDetailLabelRequestedListener")
+    fun removeDetailLabelRequestedListenerForJava(listener: DoubleFunction<String>) {
         val token = detailLabelRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAnnotatedScrollBar_remove_DetailLabelRequested, token)
     }

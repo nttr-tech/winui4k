@@ -9,6 +9,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * WinUI 3's Controls.TitleBar. No Swing equivalent.
@@ -128,7 +130,15 @@ class WTitleBar : WControl(
         }
 
     /** Subscribes to back button clicks (TitleBar.BackRequested). */
-    fun addBackRequestedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addBackRequestedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addBackRequestedListenerForJava(adapter)
+        backRequestedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addBackRequestedListener")
+    fun addBackRequestedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarBackRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
@@ -138,13 +148,28 @@ class WTitleBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addBackRequestedListener]. */
-    fun removeBackRequestedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeBackRequestedListener(listener: () -> Unit) {
+        val adapter = backRequestedTokens.removeKotlinAdapter(listener) ?: return
+        removeBackRequestedListenerForJava(adapter)
+    }
+
+    @JvmName("removeBackRequestedListener")
+    fun removeBackRequestedListenerForJava(listener: Runnable) {
         val token = backRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_BackRequested, token)
     }
 
     /** Subscribes to pane-toggle button clicks (TitleBar.PaneToggleRequested). */
-    fun addPaneToggleRequestedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addPaneToggleRequestedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addPaneToggleRequestedListenerForJava(adapter)
+        paneToggleRequestedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addPaneToggleRequestedListener")
+    fun addPaneToggleRequestedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarPaneToggleRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
@@ -154,7 +179,14 @@ class WTitleBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addPaneToggleRequestedListener]. */
-    fun removePaneToggleRequestedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removePaneToggleRequestedListener(listener: () -> Unit) {
+        val adapter = paneToggleRequestedTokens.removeKotlinAdapter(listener) ?: return
+        removePaneToggleRequestedListenerForJava(adapter)
+    }
+
+    @JvmName("removePaneToggleRequestedListener")
+    fun removePaneToggleRequestedListenerForJava(listener: Runnable) {
         val token = paneToggleRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_PaneToggleRequested, token)
     }

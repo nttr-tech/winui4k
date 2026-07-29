@@ -10,6 +10,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A single item of [WSelectorBar]: WinUI 3's SelectorBarItem.
@@ -79,7 +81,15 @@ class WSelectorBar : WControl(
      * Subscribes to selection changes (SelectorBar.SelectionChanged).
      * The listener receives the selected item's index.
      */
-    fun addSelectionListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun addSelectionListener(listener: (Int) -> Unit) {
+        val adapter = IntConsumer { listener(it) }
+        addSelectionListenerForJava(adapter)
+        selectionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectionListener")
+    fun addSelectionListenerForJava(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SelectorBarSelectionChangedHandler",
             XamlInterop.IID_SelectorBarSelectionChangedHandler,
@@ -89,7 +99,14 @@ class WSelectorBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectionListener]. */
-    fun removeSelectionListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun removeSelectionListener(listener: (Int) -> Unit) {
+        val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectionListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectionListener")
+    fun removeSelectionListenerForJava(listener: IntConsumer) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISelectorBar_remove_SelectionChanged, token)
     }

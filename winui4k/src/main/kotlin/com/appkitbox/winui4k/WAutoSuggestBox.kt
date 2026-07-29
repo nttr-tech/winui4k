@@ -10,6 +10,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.BiConsumer
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.AutoSuggestionBoxTextChangeReason (why the text changed).
@@ -112,7 +114,15 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
      * The listener receives the text after the change and the reason for the change.
      * As a rule, only filter suggestions when the reason is [TextChangeReason.USER_INPUT].
      */
-    fun addTextChangedListener(listener: BiConsumer<String, TextChangeReason>) {
+    @JvmSynthetic
+    fun addTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
+        val adapter = BiConsumer<String, TextChangeReason> { first, second -> listener(first, second) }
+        addTextChangedListenerForJava(adapter)
+        textChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addTextChangedListener")
+    fun addTextChangedListenerForJava(listener: BiConsumer<String, TextChangeReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxTextChangedHandler",
             XamlInterop.IID_AutoSuggestBoxTextChangedHandler,
@@ -128,7 +138,14 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
-    fun removeTextChangedListener(listener: BiConsumer<String, TextChangeReason>) {
+    @JvmSynthetic
+    fun removeTextChangedListener(listener: (String, TextChangeReason) -> Unit) {
+        val adapter = textChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeTextChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeTextChangedListener")
+    fun removeTextChangedListenerForJava(listener: BiConsumer<String, TextChangeReason>) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_TextChanged, token)
     }
@@ -137,7 +154,15 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
      * Subscribes to confirmation via Enter or choosing a suggestion (AutoSuggestBox.QuerySubmitted).
      * The listener receives the entered text, and if confirmed from a suggestion, that suggestion (null otherwise).
      */
-    fun addQuerySubmittedListener(listener: BiConsumer<String, String?>) {
+    @JvmSynthetic
+    fun addQuerySubmittedListener(listener: (String, String?) -> Unit) {
+        val adapter = BiConsumer<String, String?> { first, second -> listener(first, second) }
+        addQuerySubmittedListenerForJava(adapter)
+        querySubmittedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addQuerySubmittedListener")
+    fun addQuerySubmittedListenerForJava(listener: BiConsumer<String, String?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxQuerySubmittedHandler",
             XamlInterop.IID_AutoSuggestBoxQuerySubmittedHandler,
@@ -160,13 +185,28 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     }
 
     /** Unsubscribes a listener registered via [addQuerySubmittedListener]. */
-    fun removeQuerySubmittedListener(listener: BiConsumer<String, String?>) {
+    @JvmSynthetic
+    fun removeQuerySubmittedListener(listener: (String, String?) -> Unit) {
+        val adapter = querySubmittedTokens.removeKotlinAdapter(listener) ?: return
+        removeQuerySubmittedListenerForJava(adapter)
+    }
+
+    @JvmName("removeQuerySubmittedListener")
+    fun removeQuerySubmittedListenerForJava(listener: BiConsumer<String, String?>) {
         val token = querySubmittedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_QuerySubmitted, token)
     }
 
     /** Subscribes to suggestion highlight changes (AutoSuggestBox.SuggestionChosen). The listener receives the suggestion string. */
-    fun addSuggestionChosenListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun addSuggestionChosenListener(listener: (String) -> Unit) {
+        val adapter = Consumer<String> { listener(it) }
+        addSuggestionChosenListenerForJava(adapter)
+        suggestionChosenTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSuggestionChosenListener")
+    fun addSuggestionChosenListenerForJava(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxSuggestionChosenHandler",
             XamlInterop.IID_AutoSuggestBoxSuggestionChosenHandler,
@@ -185,7 +225,14 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     }
 
     /** Unsubscribes a listener registered via [addSuggestionChosenListener]. */
-    fun removeSuggestionChosenListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun removeSuggestionChosenListener(listener: (String) -> Unit) {
+        val adapter = suggestionChosenTokens.removeKotlinAdapter(listener) ?: return
+        removeSuggestionChosenListenerForJava(adapter)
+    }
+
+    @JvmName("removeSuggestionChosenListener")
+    fun removeSuggestionChosenListenerForJava(listener: Consumer<String>) {
         val token = suggestionChosenTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_SuggestionChosen, token)
     }

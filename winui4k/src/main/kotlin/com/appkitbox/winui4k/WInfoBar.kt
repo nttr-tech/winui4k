@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.InfoBarSeverity (the color scheme and icon for a message's severity).
@@ -108,7 +110,15 @@ class WInfoBar : WControl(
         }
 
     /** Subscribes to clicks on the close (x) button (InfoBar.CloseButtonClick). */
-    fun addCloseButtonListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addCloseButtonListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addCloseButtonListenerForJava(adapter)
+        closeButtonTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCloseButtonListener")
+    fun addCloseButtonListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarCloseButtonClickHandler",
             XamlInterop.IID_InfoBarCloseButtonClickHandler,
@@ -118,7 +128,14 @@ class WInfoBar : WControl(
     }
 
     /** Unsubscribes a listener registered via [addCloseButtonListener]. */
-    fun removeCloseButtonListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeCloseButtonListener(listener: () -> Unit) {
+        val adapter = closeButtonTokens.removeKotlinAdapter(listener) ?: return
+        removeCloseButtonListenerForJava(adapter)
+    }
+
+    @JvmName("removeCloseButtonListener")
+    fun removeCloseButtonListenerForJava(listener: Runnable) {
         val token = closeButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_CloseButtonClick, token)
     }

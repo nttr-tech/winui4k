@@ -7,6 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.time.LocalDate
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /** CalendarView's display mode. */
 enum class CalendarViewDisplayMode(internal val native: Int) {
@@ -90,7 +92,15 @@ class WCalendarView : WControl(
     }
 
     /** Registers a listener for when the selected dates change (CalendarView.SelectedDatesChanged). */
-    fun addSelectedDatesChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addSelectedDatesChangedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addSelectedDatesChangedListenerForJava(adapter)
+        selectedDatesChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectedDatesChangedListener")
+    fun addSelectedDatesChangedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.CalendarViewSelectedDatesChangedHandler",
             XamlInterop.IID_CalendarViewSelectedDatesChangedHandler,
@@ -100,7 +110,14 @@ class WCalendarView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectedDatesChangedListener]. */
-    fun removeSelectedDatesChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeSelectedDatesChangedListener(listener: () -> Unit) {
+        val adapter = selectedDatesChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectedDatesChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectedDatesChangedListener")
+    fun removeSelectedDatesChangedListenerForJava(listener: Runnable) {
         val token = selectedDatesChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ICalendarView_remove_SelectedDatesChanged, token)
     }

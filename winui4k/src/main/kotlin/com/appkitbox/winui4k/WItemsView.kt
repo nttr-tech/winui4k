@@ -13,6 +13,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.ItemsViewSelectionMode (ItemsView's selection mode).
@@ -87,7 +89,15 @@ class WItemsView : WControl(
      * Subscribes to item clicks (ItemsView.ItemInvoked).
      * The listener receives the index within the list passed to [setItems].
      */
-    fun addItemInvokedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun addItemInvokedListener(listener: (Int) -> Unit) {
+        val adapter = IntConsumer { listener(it) }
+        addItemInvokedListenerForJava(adapter)
+        itemInvokedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addItemInvokedListener")
+    fun addItemInvokedListenerForJava(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ItemsViewItemInvokedHandler",
             XamlInterop.IID_ItemsViewItemInvokedHandler,
@@ -106,7 +116,14 @@ class WItemsView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
-    fun removeItemInvokedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun removeItemInvokedListener(listener: (Int) -> Unit) {
+        val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
+        removeItemInvokedListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemInvokedListener")
+    fun removeItemInvokedListenerForJava(listener: IntConsumer) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
     }

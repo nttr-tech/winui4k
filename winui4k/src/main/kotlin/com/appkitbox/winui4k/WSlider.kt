@@ -7,6 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.DoubleConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.SliderSnapsTo (where the thumb snaps to).
@@ -133,7 +135,15 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
      * ChangeListener-like: subscribes to value changes. The listener receives the new value.
      * Subscribes to RangeBase.ValueChanged (RangeBaseValueChangedEventHandler) under the hood.
      */
-    fun addChangeListener(listener: DoubleConsumer) {
+    @JvmSynthetic
+    fun addChangeListener(listener: (Double) -> Unit) {
+        val adapter = DoubleConsumer { listener(it) }
+        addChangeListenerForJava(adapter)
+        changeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addChangeListener")
+    fun addChangeListenerForJava(listener: DoubleConsumer) {
         val token = rangeBase.addEventHandler(
             "WinUI4K.ValueChangedHandler",
             XamlInterop.IID_RangeBaseValueChangedEventHandler,
@@ -146,7 +156,14 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: DoubleConsumer) {
+    @JvmSynthetic
+    fun removeChangeListener(listener: (Double) -> Unit) {
+        val adapter = changeTokens.removeKotlinAdapter(listener) ?: return
+        removeChangeListenerForJava(adapter)
+    }
+
+    @JvmName("removeChangeListener")
+    fun removeChangeListenerForJava(listener: DoubleConsumer) {
         val token = changeTokens.remove(listener) ?: return
         rangeBase.removeEventHandler(XamlInterop.IRangeBase_remove_ValueChanged, token)
     }

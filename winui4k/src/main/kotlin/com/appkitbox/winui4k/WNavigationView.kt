@@ -11,6 +11,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode (the pane's current display state).
@@ -219,7 +221,15 @@ class WNavigationView : WControl(
      * The listener receives the selected [WNavigationViewItem]
      * (null if something other than an added item is selected, such as the settings item).
      */
-    fun addSelectionListener(listener: Consumer<WNavigationViewItem?>) {
+    @JvmSynthetic
+    fun addSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
+        val adapter = Consumer<WNavigationViewItem?> { listener(it) }
+        addSelectionListenerForJava(adapter)
+        selectionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectionListener")
+    fun addSelectionListenerForJava(listener: Consumer<WNavigationViewItem?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewSelectionChangedHandler,
@@ -238,7 +248,14 @@ class WNavigationView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectionListener]. */
-    fun removeSelectionListener(listener: Consumer<WNavigationViewItem?>) {
+    @JvmSynthetic
+    fun removeSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
+        val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectionListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectionListener")
+    fun removeSelectionListenerForJava(listener: Consumer<WNavigationViewItem?>) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_SelectionChanged, token)
     }
@@ -248,7 +265,15 @@ class WNavigationView : WControl(
      * The listener receives the clicked item's label string (InvokedItem is Content's value).
      * Also fires when re-clicking an already-selected item.
      */
-    fun addItemInvokedListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun addItemInvokedListener(listener: (String) -> Unit) {
+        val adapter = Consumer<String> { listener(it) }
+        addItemInvokedListenerForJava(adapter)
+        itemInvokedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addItemInvokedListener")
+    fun addItemInvokedListenerForJava(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewItemInvokedHandler,
@@ -267,7 +292,14 @@ class WNavigationView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
-    fun removeItemInvokedListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun removeItemInvokedListener(listener: (String) -> Unit) {
+        val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
+        removeItemInvokedListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemInvokedListener")
+    fun removeItemInvokedListenerForJava(listener: Consumer<String>) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_ItemInvoked, token)
     }

@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.DoubleConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode (spin button placement).
@@ -102,7 +104,15 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     }
 
     /** Subscribes to value changes (NumberBox.ValueChanged). The listener receives the value after the change. */
-    fun addChangeListener(listener: DoubleConsumer) {
+    @JvmSynthetic
+    fun addChangeListener(listener: (Double) -> Unit) {
+        val adapter = DoubleConsumer { listener(it) }
+        addChangeListenerForJava(adapter)
+        changeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addChangeListener")
+    fun addChangeListenerForJava(listener: DoubleConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NumberBoxValueChangedHandler",
             XamlInterop.IID_NumberBoxValueChangedHandler,
@@ -115,7 +125,14 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
-    fun removeChangeListener(listener: DoubleConsumer) {
+    @JvmSynthetic
+    fun removeChangeListener(listener: (Double) -> Unit) {
+        val adapter = changeTokens.removeKotlinAdapter(listener) ?: return
+        removeChangeListenerForJava(adapter)
+    }
+
+    @JvmName("removeChangeListener")
+    fun removeChangeListenerForJava(listener: DoubleConsumer) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INumberBox_remove_ValueChanged, token)
     }

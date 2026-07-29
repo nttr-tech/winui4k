@@ -9,6 +9,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.TeachingTipPlacementMode ([WTeachingTip.preferredPlacement]).
@@ -132,7 +134,15 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     }
 
     /** Registers a listener called when the action button is pressed (TeachingTip.ActionButtonClick). */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        actionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipObjectHandler,
@@ -142,13 +152,28 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = actionTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = actionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_ActionButtonClick, token)
     }
 
     /** Registers a listener called when it closes (TeachingTip.Closed). Passed the reason it closed. */
-    fun addCloseListener(listener: Consumer<TeachingTipCloseReason>) {
+    @JvmSynthetic
+    fun addCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
+        val adapter = Consumer<TeachingTipCloseReason> { listener(it) }
+        addCloseListenerForJava(adapter)
+        closeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCloseListener")
+    fun addCloseListenerForJava(listener: Consumer<TeachingTipCloseReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipClosedHandler,
@@ -162,7 +187,14 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     }
 
     /** Unsubscribes a listener registered via [addCloseListener]. */
-    fun removeCloseListener(listener: Consumer<TeachingTipCloseReason>) {
+    @JvmSynthetic
+    fun removeCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
+        val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
+        removeCloseListenerForJava(adapter)
+    }
+
+    @JvmName("removeCloseListener")
+    fun removeCloseListenerForJava(listener: Consumer<TeachingTipCloseReason>) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_Closed, token)
     }

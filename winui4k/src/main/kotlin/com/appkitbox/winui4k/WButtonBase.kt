@@ -5,6 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.ClickMode (when Click fires).
@@ -119,7 +121,15 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
 
     /** ActionListener-like. Subscribes to ButtonBase.Click (RoutedEventHandler) under the hood. */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        clickTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -129,7 +139,14 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }

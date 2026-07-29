@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * JTextPane-like: WinUI 3's RichEditBox.
@@ -119,7 +121,15 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     /** Subscribes to text changes (RichEditBox.TextChanged). */
-    fun addTextChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addTextChangedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addTextChangedListenerForJava(adapter)
+        textChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addTextChangedListener")
+    fun addTextChangedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.RichEditTextChangedHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -129,7 +139,14 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
-    fun removeTextChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeTextChangedListener(listener: () -> Unit) {
+        val adapter = textChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeTextChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeTextChangedListener")
+    fun removeTextChangedListenerForJava(listener: Runnable) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IRichEditBox_remove_TextChanged, token)
     }

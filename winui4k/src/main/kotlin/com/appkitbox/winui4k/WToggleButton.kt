@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * JToggleButton-like: WinUI 3's Primitives.ToggleButton.
@@ -30,6 +32,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
 
     /** Event tokens registered via addItemListener (3 per listener: Checked / Unchecked / Indeterminate). */
     private val itemTokens = ArrayDeque<Pair<Consumer<Boolean?>, LongArray>>()
+    private val itemListenerAdapters = KotlinListenerAdapters<Consumer<Boolean?>>()
 
     private companion object {
         val ADD_SLOTS = intArrayOf(
@@ -90,7 +93,15 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      * the new [isChecked] value. Subscribes to ToggleButton.Checked / Unchecked / Indeterminate
      * (all RoutedEventHandler) together as one unit.
      */
-    fun addItemListener(listener: Consumer<Boolean?>) {
+    @JvmSynthetic
+    fun addItemListener(listener: (Boolean?) -> Unit) {
+        val adapter = Consumer<Boolean?> { listener(it) }
+        addItemListenerForJava(adapter)
+        itemListenerAdapters.add(listener, adapter)
+    }
+
+    @JvmName("addItemListener")
+    fun addItemListenerForJava(listener: Consumer<Boolean?>) {
         val tokens = LongArray(ADD_SLOTS.size) { i ->
             toggleButton.addEventHandler(
                 "WinUI4K.ToggleHandler",
@@ -102,7 +113,14 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     }
 
     /** Unsubscribes a listener registered via [addItemListener]. */
-    fun removeItemListener(listener: Consumer<Boolean?>) {
+    @JvmSynthetic
+    fun removeItemListener(listener: (Boolean?) -> Unit) {
+        val adapter = itemListenerAdapters.remove(listener) ?: return
+        removeItemListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemListener")
+    fun removeItemListenerForJava(listener: Consumer<Boolean?>) {
         val index = itemTokens.indexOfLast { it.first === listener }
         if (index < 0) return
         val (_, tokens) = itemTokens.removeAt(index)

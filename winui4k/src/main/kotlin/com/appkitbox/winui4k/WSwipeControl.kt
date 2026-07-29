@@ -10,6 +10,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.SwipeMode (behavior when swiped).
@@ -210,7 +212,15 @@ class WSwipeItem @JvmOverloads constructor(text: String = "", icon: Symbol? = nu
      * ActionListener-like: subscribes to the item running. Subscribes to SwipeItem.Invoked
      * (TypedEventHandler<SwipeItem, SwipeItemInvokedEventArgs>) under the hood.
      */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        invokedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SwipeItemInvokedHandler",
             XamlInterop.IID_SwipeItemInvokedHandler,
@@ -220,7 +230,14 @@ class WSwipeItem @JvmOverloads constructor(text: String = "", icon: Symbol? = nu
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = invokedTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = invokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISwipeItem_remove_Invoked, token)
     }

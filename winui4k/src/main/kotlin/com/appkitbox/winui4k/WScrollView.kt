@@ -7,6 +7,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.ScrollingScrollBarVisibility (how ScrollView shows its scrollbars).
@@ -168,7 +170,15 @@ class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WCont
      * Subscribes to changes in scroll position / zoom factor (ScrollView.ViewChanged; also fires
      * during inertial scrolling).
      */
-    fun addViewChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addViewChangedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addViewChangedListenerForJava(adapter)
+        viewChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addViewChangedListener")
+    fun addViewChangedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewViewChangedHandler",
             XamlInterop.IID_ScrollViewViewChangedHandler,
@@ -178,7 +188,14 @@ class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WCont
     }
 
     /** Unsubscribes a listener registered via [addViewChangedListener]. */
-    fun removeViewChangedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeViewChangedListener(listener: () -> Unit) {
+        val adapter = viewChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeViewChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeViewChangedListener")
+    fun removeViewChangedListenerForJava(listener: Runnable) {
         val token = viewChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IScrollView_remove_ViewChanged, token)
     }

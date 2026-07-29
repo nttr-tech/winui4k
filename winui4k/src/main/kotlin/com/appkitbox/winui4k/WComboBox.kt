@@ -10,6 +10,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * JComboBox-like: WinUI 3's ComboBox (a Selector subclass).
@@ -121,7 +123,15 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     /** ListSelectionListener-like. Subscribes to Selector.SelectionChanged under the hood. */
-    fun addListSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addListSelectionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addListSelectionListenerForJava(adapter)
+        selectionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addListSelectionListener")
+    fun addListSelectionListenerForJava(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
@@ -131,7 +141,14 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     /** Unsubscribes a listener registered via [addListSelectionListener]. */
-    fun removeListSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeListSelectionListener(listener: () -> Unit) {
+        val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
+        removeListSelectionListenerForJava(adapter)
+    }
+
+    @JvmName("removeListSelectionListener")
+    fun removeListSelectionListenerForJava(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -140,7 +157,15 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
      * Subscribes to text being committed with Enter on an editable combo (ComboBox.TextSubmitted).
      * The listener receives the committed string. Only fires while [isEditable] is true.
      */
-    fun addTextSubmitListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun addTextSubmitListener(listener: (String) -> Unit) {
+        val adapter = Consumer<String> { listener(it) }
+        addTextSubmitListenerForJava(adapter)
+        textSubmitTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addTextSubmitListener")
+    fun addTextSubmitListenerForJava(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TextSubmittedHandler",
             XamlInterop.IID_ComboBoxTextSubmittedHandler,
@@ -153,7 +178,14 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     /** Unsubscribes a listener registered via [addTextSubmitListener]. */
-    fun removeTextSubmitListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun removeTextSubmitListener(listener: (String) -> Unit) {
+        val adapter = textSubmitTokens.removeKotlinAdapter(listener) ?: return
+        removeTextSubmitListenerForJava(adapter)
+    }
+
+    @JvmName("removeTextSubmitListener")
+    fun removeTextSubmitListenerForJava(listener: Consumer<String>) {
         val token = textSubmitTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IComboBox_remove_TextSubmitted, token)
     }

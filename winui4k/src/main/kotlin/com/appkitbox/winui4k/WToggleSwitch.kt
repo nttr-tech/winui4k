@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * A two-state on/off switch: WinUI 3's ToggleSwitch.
@@ -58,7 +60,15 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
      * ItemListener-like: subscribes to on/off changes. The listener receives the new [isOn] value.
      * Subscribes to ToggleSwitch.Toggled (RoutedEventHandler) under the hood.
      */
-    fun addItemListener(listener: Consumer<Boolean>) {
+    @JvmSynthetic
+    fun addItemListener(listener: (Boolean) -> Unit) {
+        val adapter = Consumer<Boolean> { listener(it) }
+        addItemListenerForJava(adapter)
+        itemTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addItemListener")
+    fun addItemListenerForJava(listener: Consumer<Boolean>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ToggledHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -68,7 +78,14 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     }
 
     /** Unsubscribes a listener registered via [addItemListener]. */
-    fun removeItemListener(listener: Consumer<Boolean>) {
+    @JvmSynthetic
+    fun removeItemListener(listener: (Boolean) -> Unit) {
+        val adapter = itemTokens.removeKotlinAdapter(listener) ?: return
+        removeItemListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemListener")
+    fun removeItemListenerForJava(listener: Consumer<Boolean>) {
         val token = itemTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IToggleSwitch_remove_Toggled, token)
     }

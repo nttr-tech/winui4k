@@ -11,6 +11,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.TreeViewSelectionMode (how many nodes can be selected).
@@ -251,7 +253,15 @@ class WTree : WControl(
      * Subscribes to node clicks (TreeView.ItemInvoked).
      * The listener receives the clicked [WTreeNode] (null if it isn't one of the added nodes).
      */
-    fun addItemInvokedListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun addItemInvokedListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = Consumer<WTreeNode?> { listener(it) }
+        addItemInvokedListenerForJava(adapter)
+        itemInvokedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addItemInvokedListener")
+    fun addItemInvokedListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewItemInvokedHandler,
@@ -270,7 +280,14 @@ class WTree : WControl(
     }
 
     /** Unsubscribes a listener registered via [addItemInvokedListener]. */
-    fun removeItemInvokedListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun removeItemInvokedListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
+        removeItemInvokedListenerForJava(adapter)
+    }
+
+    @JvmName("removeItemInvokedListener")
+    fun removeItemInvokedListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_ItemInvoked, token)
     }
@@ -279,7 +296,15 @@ class WTree : WControl(
      * Subscribes to node expansion (TreeView.Expanding).
      * The listener receives the [WTreeNode] being expanded (null if it isn't one of the added nodes).
      */
-    fun addExpandingListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun addExpandingListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = Consumer<WTreeNode?> { listener(it) }
+        addExpandingListenerForJava(adapter)
+        expandingTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addExpandingListener")
+    fun addExpandingListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewExpandingHandler,
@@ -291,7 +316,14 @@ class WTree : WControl(
     }
 
     /** Unsubscribes a listener registered via [addExpandingListener]. */
-    fun removeExpandingListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun removeExpandingListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = expandingTokens.removeKotlinAdapter(listener) ?: return
+        removeExpandingListenerForJava(adapter)
+    }
+
+    @JvmName("removeExpandingListener")
+    fun removeExpandingListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = expandingTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Expanding, token)
     }
@@ -300,7 +332,15 @@ class WTree : WControl(
      * Subscribes to node collapse (TreeView.Collapsed).
      * The listener receives the [WTreeNode] that was collapsed (null if it isn't one of the added nodes).
      */
-    fun addCollapsedListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun addCollapsedListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = Consumer<WTreeNode?> { listener(it) }
+        addCollapsedListenerForJava(adapter)
+        collapsedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCollapsedListener")
+    fun addCollapsedListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewCollapsedHandler,
@@ -312,7 +352,14 @@ class WTree : WControl(
     }
 
     /** Unsubscribes a listener registered via [addCollapsedListener]. */
-    fun removeCollapsedListener(listener: Consumer<WTreeNode?>) {
+    @JvmSynthetic
+    fun removeCollapsedListener(listener: (WTreeNode?) -> Unit) {
+        val adapter = collapsedTokens.removeKotlinAdapter(listener) ?: return
+        removeCollapsedListenerForJava(adapter)
+    }
+
+    @JvmName("removeCollapsedListener")
+    fun removeCollapsedListenerForJava(listener: Consumer<WTreeNode?>) {
         val token = collapsedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Collapsed, token)
     }

@@ -4,6 +4,8 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * WinUI 3's SemanticZoom (a Control subclass). Toggles between two views of a single collection
@@ -46,7 +48,15 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     }
 
     /** Subscribes to the start of a view switch (SemanticZoom.ViewChangeStarted). */
-    fun addViewChangeStartedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addViewChangeStartedListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addViewChangeStartedListenerForJava(adapter)
+        viewChangeStartedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addViewChangeStartedListener")
+    fun addViewChangeStartedListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SemanticZoomViewChangedEventHandler",
             XamlInterop.IID_SemanticZoomViewChangedEventHandler,
@@ -56,7 +66,14 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     }
 
     /** Unsubscribes a listener registered via [addViewChangeStartedListener]. */
-    fun removeViewChangeStartedListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeViewChangeStartedListener(listener: () -> Unit) {
+        val adapter = viewChangeStartedTokens.removeKotlinAdapter(listener) ?: return
+        removeViewChangeStartedListenerForJava(adapter)
+    }
+
+    @JvmName("removeViewChangeStartedListener")
+    fun removeViewChangeStartedListenerForJava(listener: Runnable) {
         val token = viewChangeStartedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISemanticZoom_remove_ViewChangeStarted, token)
     }

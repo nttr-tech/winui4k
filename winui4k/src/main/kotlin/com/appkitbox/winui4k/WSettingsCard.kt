@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * The content placement of a [WSettingsCard] (equivalent to the Toolkit's ContentAlignment).
@@ -239,7 +241,15 @@ class WSettingsCard @JvmOverloads constructor(header: String = "", description: 
     }
 
     /** Subscribes to clicks on the card. Use it when [isClickEnabled] is on. */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        clickTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -249,7 +259,14 @@ class WSettingsCard @JvmOverloads constructor(header: String = "", description: 
     }
 
     /** Unsubscribes a listener registered with [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }

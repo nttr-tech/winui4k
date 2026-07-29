@@ -9,6 +9,8 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.TabViewWidthMode (how tab widths are decided).
@@ -160,7 +162,15 @@ class WTabView : WControl(
     fun getTab(index: Int): WTabViewItem = tabs[index]
 
     /** Subscribes to selection changes (TabView.SelectionChanged). */
-    fun addSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addSelectionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addSelectionListenerForJava(adapter)
+        selectionTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectionListener")
+    fun addSelectionListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
@@ -170,13 +180,28 @@ class WTabView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectionListener]. */
-    fun removeSelectionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeSelectionListener(listener: () -> Unit) {
+        val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectionListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectionListener")
+    fun removeSelectionListenerForJava(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_SelectionChanged, token)
     }
 
     /** Subscribes to a click of the "+" button at the end of the tab strip (TabView.AddTabButtonClick). */
-    fun addAddTabButtonClickListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addAddTabButtonClickListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addAddTabButtonClickListenerForJava(adapter)
+        addTabButtonTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addAddTabButtonClickListener")
+    fun addAddTabButtonClickListenerForJava(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewAddTabButtonClickHandler",
             XamlInterop.IID_TabViewAddTabButtonClickHandler,
@@ -186,7 +211,14 @@ class WTabView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addAddTabButtonClickListener]. */
-    fun removeAddTabButtonClickListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeAddTabButtonClickListener(listener: () -> Unit) {
+        val adapter = addTabButtonTokens.removeKotlinAdapter(listener) ?: return
+        removeAddTabButtonClickListenerForJava(adapter)
+    }
+
+    @JvmName("removeAddTabButtonClickListener")
+    fun removeAddTabButtonClickListenerForJava(listener: Runnable) {
         val token = addTabButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_AddTabButtonClick, token)
     }
@@ -196,7 +228,15 @@ class WTabView : WControl(
      * The listener receives the target tab's index. TabView doesn't close the tab automatically,
      * so call [removeTab] from the listener if it's OK to close it.
      */
-    fun addTabCloseRequestedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun addTabCloseRequestedListener(listener: (Int) -> Unit) {
+        val adapter = IntConsumer { listener(it) }
+        addTabCloseRequestedListenerForJava(adapter)
+        closeRequestedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addTabCloseRequestedListener")
+    fun addTabCloseRequestedListenerForJava(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewTabCloseRequestedHandler",
             XamlInterop.IID_TabViewTabCloseRequestedHandler,
@@ -214,7 +254,14 @@ class WTabView : WControl(
     }
 
     /** Unsubscribes a listener registered via [addTabCloseRequestedListener]. */
-    fun removeTabCloseRequestedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun removeTabCloseRequestedListener(listener: (Int) -> Unit) {
+        val adapter = closeRequestedTokens.removeKotlinAdapter(listener) ?: return
+        removeTabCloseRequestedListenerForJava(adapter)
+    }
+
+    @JvmName("removeTabCloseRequestedListener")
+    fun removeTabCloseRequestedListenerForJava(listener: IntConsumer) {
         val token = closeRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_TabCloseRequested, token)
     }

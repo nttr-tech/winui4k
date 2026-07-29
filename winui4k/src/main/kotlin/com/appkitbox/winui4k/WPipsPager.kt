@@ -5,6 +5,8 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.PipsPagerButtonVisibility (how the previous/next page buttons are shown).
@@ -74,7 +76,15 @@ class WPipsPager : WControl(
      * Subscribes to changes of the selected page (PipsPager.SelectedIndexChanged). The listener
      * receives the new [selectedPageIndex].
      */
-    fun addSelectedIndexChangedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun addSelectedIndexChangedListener(listener: (Int) -> Unit) {
+        val adapter = IntConsumer { listener(it) }
+        addSelectedIndexChangedListenerForJava(adapter)
+        selectedIndexChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addSelectedIndexChangedListener")
+    fun addSelectedIndexChangedListenerForJava(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PipsPagerSelectedIndexChangedHandler",
             XamlInterop.IID_PipsPagerSelectedIndexChangedHandler,
@@ -88,7 +98,14 @@ class WPipsPager : WControl(
     }
 
     /** Unsubscribes a listener registered via [addSelectedIndexChangedListener]. */
-    fun removeSelectedIndexChangedListener(listener: IntConsumer) {
+    @JvmSynthetic
+    fun removeSelectedIndexChangedListener(listener: (Int) -> Unit) {
+        val adapter = selectedIndexChangedTokens.removeKotlinAdapter(listener) ?: return
+        removeSelectedIndexChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removeSelectedIndexChangedListener")
+    fun removeSelectedIndexChangedListenerForJava(listener: IntConsumer) {
         val token = selectedIndexChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPipsPager_remove_SelectedIndexChanged, token)
     }

@@ -8,6 +8,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Microsoft.UI.Xaml.Controls.PasswordRevealMode (how the password is displayed).
@@ -80,7 +82,15 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     }
 
     /** Subscribes to password changes (PasswordBox.PasswordChanged). The listener receives the password after the change. */
-    fun addPasswordChangedListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun addPasswordChangedListener(listener: (String) -> Unit) {
+        val adapter = Consumer<String> { listener(it) }
+        addPasswordChangedListenerForJava(adapter)
+        passwordChangedTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addPasswordChangedListener")
+    fun addPasswordChangedListenerForJava(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PasswordChangedHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -90,7 +100,14 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     }
 
     /** Unsubscribes a listener registered via [addPasswordChangedListener]. */
-    fun removePasswordChangedListener(listener: Consumer<String>) {
+    @JvmSynthetic
+    fun removePasswordChangedListener(listener: (String) -> Unit) {
+        val adapter = passwordChangedTokens.removeKotlinAdapter(listener) ?: return
+        removePasswordChangedListenerForJava(adapter)
+    }
+
+    @JvmName("removePasswordChangedListener")
+    fun removePasswordChangedListenerForJava(listener: Consumer<String>) {
         val token = passwordChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPasswordBox_remove_PasswordChanged, token)
     }

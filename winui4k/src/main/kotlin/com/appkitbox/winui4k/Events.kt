@@ -1,5 +1,22 @@
 package com.appkitbox.winui4k
 
+import java.util.IdentityHashMap
+
+internal class KotlinListenerAdapters<L : Any> {
+    private val adapters = IdentityHashMap<Any, ArrayDeque<L>>()
+
+    fun add(listener: Any, adapter: L) {
+        adapters.getOrPut(listener) { ArrayDeque() }.addLast(adapter)
+    }
+
+    fun remove(listener: Any): L? {
+        val listenerAdapters = adapters[listener] ?: return null
+        val adapter = listenerAdapters.removeLast()
+        if (listenerAdapters.isEmpty()) adapters.remove(listener)
+        return adapter
+    }
+}
+
 /**
  * A "listener → event token" mapping. Removes one entry at a time, last-added first
  * (so the same listener can be added more than once and removed independently).
@@ -7,6 +24,7 @@ package com.appkitbox.winui4k
  */
 internal class ListenerTokens<L : Any> {
     private val tokens = ArrayDeque<Pair<L, Long>>()
+    private val kotlinAdapters = KotlinListenerAdapters<L>()
 
     fun add(listener: L, token: Long) {
         tokens.addLast(listener to token)
@@ -18,4 +36,10 @@ internal class ListenerTokens<L : Any> {
         if (index < 0) return null
         return tokens.removeAt(index).second
     }
+
+    fun addKotlinAdapter(listener: Any, adapter: L) {
+        kotlinAdapters.add(listener, adapter)
+    }
+
+    fun removeKotlinAdapter(listener: Any): L? = kotlinAdapters.remove(listener)
 }

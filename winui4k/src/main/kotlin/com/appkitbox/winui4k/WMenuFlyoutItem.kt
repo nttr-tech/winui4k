@@ -9,6 +9,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
 
 /**
  * Common base for menu items (MenuFlyoutItem / MenuFlyoutSubItem / MenuFlyoutSeparator):
@@ -98,7 +100,15 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         }
 
     /** ActionListener-like. Subscribes to MenuFlyoutItem.Click (RoutedEventHandler) under the hood. */
-    fun addActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun addActionListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addActionListenerForJava(adapter)
+        clickTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) {
         val token = menuFlyoutItem.addEventHandler(
             "WinUI4K.MenuClickHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -108,7 +118,14 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     }
 
     /** Unsubscribes a listener registered via [addActionListener]. */
-    fun removeActionListener(listener: Runnable) {
+    @JvmSynthetic
+    fun removeActionListener(listener: () -> Unit) {
+        val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         menuFlyoutItem.removeEventHandler(XamlInterop.IMenuFlyoutItem_remove_Click, token)
     }
