@@ -93,6 +93,7 @@ internal object XamlInterop {
     const val IFrameworkElement_remove_SizeChanged = 68 // remove_SizeChanged(token)
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
+    const val IFrameworkElement_FindName = 77          // FindName(HSTRING, out Object) — finds an element in the XAML name scope
 
     /** IID of Microsoft.UI.Xaml.SizeChangedEventHandler (a delegate). */
     const val IID_SizeChangedEventHandler = "8d7b1a58-14c6-51c9-892c-9fcce368e77d"

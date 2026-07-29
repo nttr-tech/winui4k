@@ -1,16 +1,20 @@
 package com.appkitbox.winui4k.sample.gallery
 
+import com.appkitbox.winui4k.ContentAlignment
 import com.appkitbox.winui4k.ExpandDirection
 import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SplitViewDisplayMode
 import com.appkitbox.winui4k.SplitViewPanePlacement
+import com.appkitbox.winui4k.Symbol
 import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WBorderLayout
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WCanvas
+import com.appkitbox.winui4k.WCheckBox
 import com.appkitbox.winui4k.WColor
+import com.appkitbox.winui4k.WComboBox
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WExpander
 import com.appkitbox.winui4k.WGrid
@@ -19,7 +23,10 @@ import com.appkitbox.winui4k.WLayoutPanel
 import com.appkitbox.winui4k.WLinearGradientPaint
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WRelativePanel
+import com.appkitbox.winui4k.WSettingsCard
+import com.appkitbox.winui4k.WSlider
 import com.appkitbox.winui4k.WSplitView
+import com.appkitbox.winui4k.WToggleSwitch
 import com.appkitbox.winui4k.WVariableSizedWrapGrid
 
 /*
@@ -603,5 +610,146 @@ private fun buildWrapGridSpanExample(): WComponent {
     body.add(grid)
     return buildExample("Cell spans and wrapping (RowSpan / ColumnSpan / MaximumRowsOrColumns)", body)
 }
+
+// endregion
+
+// region SettingsCard
+
+/** The SettingsCard page: lines up demos for trying out WSettingsCard's various features. */
+internal fun buildSettingsCardPage(): WComponent {
+    val page = buildPage(
+        "SettingsCard",
+        "A card that represents a single entry on a settings page (equivalent to the Windows Community Toolkit's SettingsCard). " +
+            "Try out WSettingsCard's various features.",
+    )
+
+    page.add(buildSettingsCardBasicExample())
+    page.add(buildSettingsCardClickExample())
+    page.add(buildSettingsCardWrapExample())
+    page.add(buildSettingsCardAlignmentExample())
+    page.add(buildSettingsCardStateExample())
+    return page
+}
+
+/** The basic form: a header, description, and icon on the left, with content on the right. */
+private fun buildSettingsCardBasicExample(): WComponent {
+    val toggleCard = WSettingsCard("Enable the feature", "Write an explanation under Header and Description, and put the control on the right.")
+    toggleCard.headerIcon = Symbol.SETTING
+    toggleCard.content = WToggleSwitch()
+
+    val comboCard = WSettingsCard("Display mode", "Content can hold any component.")
+    comboCard.headerIcon = Symbol.VIEW_ALL
+    comboCard.content = WComboBox(listOf("Light", "Dark", "Follow the system setting")).also { it.selectedIndex = 2 }
+
+    val plainCard = WSettingsCard("A card with only a header")
+
+    val body = WPanel(spacing = 4.0)
+    body.width = SETTINGS_CARD_DEMO_WIDTH
+    body.add(toggleCard)
+    body.add(comboCard)
+    body.add(plainCard)
+    return buildExample("A basic card (Header / Description / HeaderIcon / Content)", body)
+}
+
+/** A clickable card and its chevron icon (ActionIcon). */
+private fun buildSettingsCardClickExample(): WComponent {
+    val state = WLabel("Click count: 0")
+    var count = 0
+
+    val card = WSettingsCard("Storage", "With IsClickEnabled=true the whole card becomes a button, and the background changes on hover / press.")
+    card.headerIcon = Symbol.SAVE
+    card.isClickEnabled = true
+    card.addActionListener {
+        count++
+        state.text = "Click count: $count"
+    }
+
+    val linkCard = WSettingsCard("Open a web site", "ActionIcon can be changed to any Symbol, and a tooltip can be attached to it.")
+    linkCard.headerIcon = Symbol.GLOBE
+    linkCard.isClickEnabled = true
+    linkCard.actionIcon = Symbol.GO
+    linkCard.actionIconToolTip = "Opens in the browser"
+
+    val actionIconSwitch = WToggleSwitch("Show the chevron icon (IsActionIconVisible)")
+    actionIconSwitch.isOn = true
+    actionIconSwitch.addItemListener { isOn -> card.isActionIconVisible = isOn }
+
+    val body = WPanel(spacing = 8.0)
+    body.width = SETTINGS_CARD_DEMO_WIDTH
+    body.add(card)
+    body.add(linkCard)
+    body.add(state)
+    body.add(actionIconSwitch)
+    return buildExample("A clickable card (IsClickEnabled / ActionIcon / ActionIconToolTip)", body)
+}
+
+/** Automatic wrapping based on width (RightWrapped / RightWrappedNoIcon). */
+private fun buildSettingsCardWrapExample(): WComponent {
+    val card = WSettingsCard(
+        "A card that wraps by width",
+        "At 476px or less the content moves to the row below, and under 286px the icon is hidden as well.",
+    )
+    card.headerIcon = Symbol.SETTING
+    card.content = WComboBox(listOf("Option 1", "Option 2")).also { it.selectedIndex = 0 }
+
+    val widthLabel = WLabel("Card width: ${SETTINGS_CARD_DEMO_WIDTH.toInt()}px")
+    val slider = WSlider(minimum = 200.0, maximum = SETTINGS_CARD_DEMO_WIDTH, value = SETTINGS_CARD_DEMO_WIDTH)
+    slider.width = SETTINGS_CARD_DEMO_WIDTH
+    slider.addChangeListener { value ->
+        card.width = value
+        widthLabel.text = "Card width: ${value.toInt()}px"
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.width = SETTINGS_CARD_DEMO_WIDTH
+    body.add(card)
+    body.add(slider)
+    body.add(widthLabel)
+    return buildExample("Automatic wrapping based on width (RightWrapped / RightWrappedNoIcon)", body)
+}
+
+/** ContentAlignment (Right / Left / Vertical). */
+private fun buildSettingsCardAlignmentExample(): WComponent {
+    val card = WSettingsCard("Content placement", "With Left the header is hidden, and with Vertical the content fills the width of the row below.")
+    card.headerIcon = Symbol.ALIGN_LEFT
+    card.content = WCheckBox("A checkbox as the content")
+
+    val combo = WComboBox(ContentAlignment.entries.map { it.name })
+    combo.selectedIndex = 0
+    combo.addListSelectionListener {
+        val index = combo.selectedIndex
+        if (index >= 0) card.contentAlignment = ContentAlignment.entries[index]
+    }
+
+    val options = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    options.add(optionsLabel("ContentAlignment"))
+    options.add(combo)
+
+    val body = WPanel(spacing = 8.0)
+    body.width = SETTINGS_CARD_DEMO_WIDTH
+    body.add(card)
+    body.add(options)
+    return buildExample("Content placement (ContentAlignment)", body)
+}
+
+/** How the disabled state looks. */
+private fun buildSettingsCardStateExample(): WComponent {
+    val card = WSettingsCard("A card that can be disabled", "With IsEnabled=false the colors switch to the disabled state.")
+    card.headerIcon = Symbol.IMPORTANT
+    card.content = WToggleSwitch()
+
+    val enabledSwitch = WToggleSwitch("Enable the card (IsEnabled)")
+    enabledSwitch.isOn = true
+    enabledSwitch.addItemListener { isOn -> card.isEnabled = isOn }
+
+    val body = WPanel(spacing = 8.0)
+    body.width = SETTINGS_CARD_DEMO_WIDTH
+    body.add(card)
+    body.add(enabledSwitch)
+    return buildExample("The disabled state (IsEnabled)", body)
+}
+
+/** The width of the SettingsCard demos (a width that looks like a real settings page list). */
+private const val SETTINGS_CARD_DEMO_WIDTH = 560.0
 
 // endregion
