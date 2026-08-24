@@ -25,3 +25,8 @@
   コレクションを更新するだけで表示に反映されない。get_TabItems は毎回取得し直すこと
   (WTabView の `withTabItemVector`)。同様に実体を差し替えるコレクションプロパティは他の
   コントロールにもありうるため、IVector のキャッシュは原則避ける。
+- **Clipboard.setStorageItems に渡したパスと getStorageItems で戻るパスが一致しない**
+  StorageFile 経由で戻るパスは常にロング形式に正規化される。一方 Java の
+  `File.createTempFile().absolutePath` は環境によって 8.3 短縮形式 (例: `RUNNER~1`) を含む
+  (GitHub Actions の Windows ランナーで発生)。パスを比較する場合は
+  `toPath().toRealPath()` で短縮名を展開してから比較すること (ClipboardTest 参照)。

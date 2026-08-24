@@ -81,7 +81,9 @@ class ClipboardTest : FunSpec() {
             val paths = awaitResult<List<String>> { onResult ->
                 Clipboard.getContent().getStorageItems { onResult(it) }
             }
-            paths.map { it.lowercase() } shouldContain file.absolutePath.lowercase()
+            // On CI the temp directory comes back in 8.3 short form (e.g. RUNNER~1) while
+            // paths from the clipboard are in long form, so resolve to real paths before comparing
+            paths.map { it.toRealPath() } shouldContain file.absolutePath.toRealPath()
         }
 
         test("ClipboardContentOptions properties read back the set values, and setContent with options succeeds") {
@@ -136,6 +138,9 @@ class ClipboardTest : FunSpec() {
             count.get() shouldBe countAfterRemove
         }
     }
+
+    /** Resolves to the real path with 8.3 short names expanded. */
+    private fun String.toRealPath(): String = File(this).toPath().toRealPath().toString()
 
     /** Copies [text] to the clipboard on the UI thread. */
     private fun copyText(text: String) {
