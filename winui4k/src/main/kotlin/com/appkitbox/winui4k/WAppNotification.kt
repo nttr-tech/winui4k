@@ -60,7 +60,11 @@ class WAppNotification @JvmOverloads constructor(text: String = "") {
         return this
     }
 
-    /** Adds a button to the notification. On click, [arguments] is passed to NotificationInvoked. */
+    /**
+     * Adds a button to the notification. On click, [arguments] is passed to NotificationInvoked.
+     * From Java, use the overload that takes a Map.
+     */
+    @JvmSynthetic
     fun addButton(content: String, vararg arguments: Pair<String, String>): WAppNotification {
         val factory = Activation.factory(NotificationInterop.CLS_AppNotificationButton, NotificationInterop.IID_IAppNotificationButtonFactory)
         val button = Hstring.use(content) { h ->
@@ -80,7 +84,9 @@ class WAppNotification @JvmOverloads constructor(text: String = "") {
     }
 
     /** A Java-friendly overload of [addButton]. The click arguments are passed as a plain Map. */
-    fun addButton(content: String, arguments: Map<String, String>): WAppNotification =
+    @JvmOverloads
+    @JvmName("addButton")
+    fun addButtonForJava(content: String, arguments: Map<String, String> = emptyMap()): WAppNotification =
         addButton(content, *arguments.entries.map { it.key to it.value }.toTypedArray())
 
     /** Sets the notification's purpose (reminder / alarm / urgent, etc.). */
@@ -171,6 +177,7 @@ enum class NotificationSetting(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int) = entries.first { it.native == native }
     }
 }

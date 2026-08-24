@@ -56,6 +56,7 @@ class WRichTextBlock : WComponent(
     }
 
     /** Appends a paragraph at the end (Blocks.Append). Content is assembled via [ParagraphBuilder]. */
+    @JvmSynthetic
     fun addParagraph(build: ParagraphBuilder.() -> Unit) {
         // Create the Paragraph, fill Inlines with inline content, then append it to Blocks
         val paragraph = Activation.activate(XamlInterop.CLS_Paragraph, XamlInterop.IID_IParagraph)
