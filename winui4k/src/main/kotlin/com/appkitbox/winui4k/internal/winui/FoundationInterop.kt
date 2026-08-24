@@ -140,8 +140,8 @@ internal object FoundationInterop {
 
     // ---- Windows.Foundation.Collections.IIterable<T> / IIterator<T> (OS-side, FoundationContract.winmd) ----
     // IIterable: First=6. IIterator: get_Current=6 get_HasCurrent=7 MoveNext=8 GetMany=9
-    private const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // Base IID of IIterable`1
-    private const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // Base IID of IIterator`1
+    internal const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // Base IID of IIterable`1
+    internal const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // Base IID of IIterator`1
 
     /** Concrete IID of IIterable<Object> (passed to ItemsControl.ItemsSource). */
     val IID_IIterable_Object: String by lazy {

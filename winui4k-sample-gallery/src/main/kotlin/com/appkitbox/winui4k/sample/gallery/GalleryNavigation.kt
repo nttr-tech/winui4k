@@ -21,6 +21,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "CalendarView" to ::buildCalendarViewPage,
     "Canvas" to ::buildCanvasPage,
     "CheckBox" to ::buildCheckBoxPage,
+    "Clipboard" to ::buildClipboardPage,
     "ColorPicker" to ::buildColorPickerPage,
     "ComboBox" to ::buildComboBoxPage,
     "CommandBar" to ::buildCommandBarPage,
@@ -178,6 +179,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ToolTip",
     ),
     "System" to listOf(
+        "Clipboard",
         "Storage pickers",
     ),
     "Text" to listOf(
