@@ -64,6 +64,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "SplitButton" to ::buildSplitButtonPage,
     "SplitView" to ::buildSplitViewPage,
     "StackPanel" to ::buildStackPanelPage,
+    "Storage pickers" to ::buildStoragePickersPage,
     "StandardUICommand" to ::buildStandardUICommandPage,
     "SwipeControl" to ::buildSwipeControlPage,
     "TableView" to ::buildTableViewPage,
@@ -176,6 +177,9 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ProgressRing",
         "ToolTip",
     ),
+    "System" to listOf(
+        "Storage pickers",
+    ),
     "Text" to listOf(
         "AutoSuggestBox",
         "NumberBox",
@@ -207,6 +211,7 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
     "Scrolling" to Symbol.ZOOM,
     "Shell" to Symbol.MESSAGE,
     "Status & info" to Symbol.IMPORTANT,
+    "System" to Symbol.FOLDER,
     "Text" to Symbol.FONT,
     "Windowing" to Symbol.NEW_WINDOW,
 )

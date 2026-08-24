@@ -111,6 +111,22 @@ internal object FoundationInterop {
         )
     }
 
+    /** Concrete IID of IVector<String> (implemented by StringVector). String's signature is string. */
+    val IID_IVector_String: String by lazy {
+        Pinterface.iid("pinterface({$IID_IVector_OPEN};string)")
+    }
+
+    // ---- Windows.Foundation.Collections.IVectorView<T> (OS-side, FoundationContract.winmd) ----
+    // GetAt=6 get_Size=7 IndexOf=8 GetMany=9
+    const val IVectorView_GetAt = 6                    // GetAt(UINT32, out T)
+    const val IVectorView_get_Size = 7                 // get_Size(out UINT32)
+    internal const val IID_IVectorView_OPEN = "bbe1fa4c-b0e3-4583-baef-1f1b2e483e56" // Base IID of IVectorView`1
+
+    /** Concrete IID of IVectorView<String> (implemented by the view StringVector.GetView returns). */
+    val IID_IVectorView_String: String by lazy {
+        Pinterface.iid("pinterface({$IID_IVectorView_OPEN};string)")
+    }
+
     // ---- Windows.Foundation.Collections.IMap<K, V> (OS-side, FoundationContract.winmd) ----
     // Lookup=6 get_Size=7 HasKey=8 GetView=9 Insert=10 Remove=11 Clear=12
     const val IMap_Lookup = 6                          // Lookup(K, out V)
@@ -135,6 +151,16 @@ internal object FoundationInterop {
     /** Concrete IID of IIterator<Object>. */
     val IID_IIterator_Object: String by lazy {
         Pinterface.iid("pinterface({$IID_IIterator_OPEN};cinterface(IInspectable))")
+    }
+
+    /** Concrete IID of IIterable<String> (implemented by StringVector). */
+    val IID_IIterable_String: String by lazy {
+        Pinterface.iid("pinterface({$IID_IIterable_OPEN};string)")
+    }
+
+    /** Concrete IID of IIterator<String>. */
+    val IID_IIterator_String: String by lazy {
+        Pinterface.iid("pinterface({$IID_IIterator_OPEN};string)")
     }
 
     // ---- Windows.Foundation async ----

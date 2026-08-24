@@ -18,6 +18,9 @@ import com.appkitbox.winui4k.WTitleBar
 import com.appkitbox.winui4k.WinUiUtilities
 import java.io.File
 
+/** The Gallery's own window. Demo pages reference it, e.g. to specify a picker's owner. */
+internal lateinit var galleryFrame: WFrame
+
 /**
  * A WinUI 3 Gallery-style component gallery.
  * Shows a page navigation list on the left and the selected component's demo page on the right.
@@ -27,6 +30,7 @@ import java.io.File
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K Gallery")
+        galleryFrame = frame
 
         // The root that hosts the title bar and navigation. Settings' App theme is set here as
         // RequestedTheme and applies to every element in the window

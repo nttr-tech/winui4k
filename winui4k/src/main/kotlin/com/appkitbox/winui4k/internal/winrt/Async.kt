@@ -126,6 +126,41 @@ internal object Async {
         }
     }
 
+    /**
+     * Calls [onResult] with the GetResults pointer (or null when there is no result) when the
+     * IAsyncOperation<T> completes (the non-blocking variant). Use it for operations like file
+     * pickers that don't complete until the user finishes interacting, where a blocking wait
+     * would lead to timeouts or a frozen UI.
+     *
+     * This function takes ownership of [operation]'s reference and releases it on completion.
+     * The receiver takes ownership of the pointer passed to [onResult] (and must release it).
+     * [onResult] is called on the completion-notification thread (not necessarily the UI
+     * thread), so dispatch on the caller's side if it needs to touch W* APIs.
+     * [handlerIid] is the actual IID of AsyncOperationCompletedHandler<T> (a pinterface-computed value).
+     */
+    fun onPtrResult(operation: ComPtr, handlerIid: String, what: String, onResult: (ComPtr?) -> Unit) {
+        val handler = KComObject("WinUI4K.AsyncPtrResultHandler", inspectable = false)
+            .addInterface(
+                handlerIid,
+                listOf(
+                    KComObject.Method(DESC_COMPLETED_HANDLER) {
+                        try {
+                            checkStatus(operation, what) // throws an HRESULT exception here on failure
+                            onResult(operation.getPtrOrNull(IAsyncOperation_GetResults))
+                        } finally {
+                            operation.release()
+                        }
+                        KComObject.S_OK
+                    },
+                ),
+            )
+        try {
+            operation.call(IAsyncOperation_put_Completed, handler.primary)
+        } finally {
+            handler.release() // put_Completed holds a reference to it; it's reclaimed by Release after completion fires
+        }
+    }
+
     /** The delegate that signals [completedEvent] on completion (Action and Operation<T> both have the same Invoke shape). */
     private fun completedHandler(handlerIid: String, completedEvent: Ptr): KComObject =
         KComObject("WinUI4K.AsyncCompletedHandler", inspectable = false)

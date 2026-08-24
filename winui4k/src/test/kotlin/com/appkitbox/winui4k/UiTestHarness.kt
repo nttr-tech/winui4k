@@ -34,6 +34,13 @@ object UiTestHarness {
         return created
     }
 
+    /**
+     * Hands out the shared window itself for tests that need it (e.g. to specify a picker's
+     * owner). Because this uses [onUiThread] internally, never call it from the UI thread
+     * (inside an [onUiThread] block) — that deadlocks waiting on itself.
+     */
+    fun sharedFrame(): WFrame = ensureFrame()
+
     /** Adds [component] to the shared window's contentPane. */
     fun attach(component: WComponent) {
         val frame = ensureFrame()
