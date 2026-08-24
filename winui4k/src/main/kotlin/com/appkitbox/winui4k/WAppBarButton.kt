@@ -19,6 +19,7 @@ enum class CommandBarLabelPosition(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): CommandBarLabelPosition = entries.first { it.native == native }
     }
 }

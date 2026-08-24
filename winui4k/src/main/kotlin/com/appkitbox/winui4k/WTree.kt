@@ -30,6 +30,7 @@ enum class TreeViewSelectionMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TreeViewSelectionMode = entries.first { it.native == native }
     }
 }

@@ -24,6 +24,7 @@ enum class PipsPagerButtonVisibility(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): PipsPagerButtonVisibility = entries.first { it.native == native }
     }
 }

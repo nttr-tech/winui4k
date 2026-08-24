@@ -181,6 +181,7 @@ enum class VirtualKey(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): VirtualKey = entries.first { it.native == native }
     }
 }

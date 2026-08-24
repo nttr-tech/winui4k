@@ -169,6 +169,7 @@ enum class StandardUICommandKind(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): StandardUICommandKind = entries.first { it.native == native }
     }
 }

@@ -27,6 +27,7 @@ enum class ScrollingScrollBarVisibility(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ScrollingScrollBarVisibility = entries.first { it.native == native }
     }
 }
@@ -50,6 +51,7 @@ enum class ScrollingContentOrientation(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ScrollingContentOrientation = entries.first { it.native == native }
     }
 }
@@ -67,6 +69,7 @@ enum class ScrollingZoomMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ScrollingZoomMode = entries.first { it.native == native }
     }
 }

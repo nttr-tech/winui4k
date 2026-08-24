@@ -34,6 +34,7 @@ enum class TeachingTipPlacement(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TeachingTipPlacement = entries.first { it.native == native }
     }
 }
@@ -54,6 +55,7 @@ enum class TeachingTipCloseReason(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TeachingTipCloseReason = entries.first { it.native == native }
     }
 }

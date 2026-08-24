@@ -26,6 +26,7 @@ enum class ContentDialogResult(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ContentDialogResult = entries.first { it.native == native }
     }
 }
@@ -49,6 +50,7 @@ enum class ContentDialogButton(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ContentDialogButton = entries.first { it.native == native }
     }
 }

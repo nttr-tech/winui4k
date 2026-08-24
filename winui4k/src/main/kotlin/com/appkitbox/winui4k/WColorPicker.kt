@@ -23,6 +23,7 @@ enum class ColorSpectrumShape(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ColorSpectrumShape = entries.first { it.native == native }
     }
 }

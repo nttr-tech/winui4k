@@ -17,7 +17,8 @@ enum class CalendarViewDisplayMode(internal val native: Int) {
     DECADE(2),
     ;
 
-    companion object {
+    internal companion object {
+        @JvmSynthetic
         fun of(native: Int): CalendarViewDisplayMode = entries.first { it.native == native }
     }
 }
@@ -29,7 +30,8 @@ enum class CalendarViewSelectionMode(internal val native: Int) {
     MULTIPLE(2),
     ;
 
-    companion object {
+    internal companion object {
+        @JvmSynthetic
         fun of(native: Int): CalendarViewSelectionMode = entries.first { it.native == native }
     }
 }

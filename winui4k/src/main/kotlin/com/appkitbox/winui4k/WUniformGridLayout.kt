@@ -31,6 +31,7 @@ enum class UniformGridLayoutItemsJustification(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): UniformGridLayoutItemsJustification = entries.first { it.native == native }
     }
 }
@@ -51,6 +52,7 @@ enum class UniformGridLayoutItemsStretch(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): UniformGridLayoutItemsStretch = entries.first { it.native == native }
     }
 }

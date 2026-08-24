@@ -31,6 +31,7 @@ enum class ScrollBarVisibility(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ScrollBarVisibility = entries.first { it.native == native }
     }
 }

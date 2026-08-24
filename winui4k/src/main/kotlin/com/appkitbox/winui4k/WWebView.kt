@@ -83,6 +83,7 @@ enum class WebErrorStatus(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): WebErrorStatus = entries.first { it.native == native }
     }
 }

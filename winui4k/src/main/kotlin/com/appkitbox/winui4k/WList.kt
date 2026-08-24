@@ -30,6 +30,7 @@ enum class ListViewSelectionMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): ListViewSelectionMode = entries.first { it.native == native }
     }
 }

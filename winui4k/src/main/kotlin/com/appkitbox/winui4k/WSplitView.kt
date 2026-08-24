@@ -22,6 +22,7 @@ enum class SplitViewDisplayMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): SplitViewDisplayMode = entries.first { it.native == native }
     }
 }
@@ -39,6 +40,7 @@ enum class SplitViewPanePlacement(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): SplitViewPanePlacement = entries.first { it.native == native }
     }
 }

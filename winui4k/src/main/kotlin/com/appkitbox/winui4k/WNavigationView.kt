@@ -30,6 +30,7 @@ enum class NavigationViewDisplayMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): NavigationViewDisplayMode = entries.first { it.native == native }
     }
 }
@@ -56,6 +57,7 @@ enum class NavigationViewPaneDisplayMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): NavigationViewPaneDisplayMode = entries.first { it.native == native }
     }
 }
@@ -76,6 +78,7 @@ enum class NavigationViewBackButtonVisible(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): NavigationViewBackButtonVisible = entries.first { it.native == native }
     }
 }

@@ -237,6 +237,7 @@ enum class Symbol(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): Symbol = entries.first { it.native == native }
     }
 }

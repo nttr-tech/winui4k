@@ -26,6 +26,7 @@ enum class SelectionMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): SelectionMode = entries.first { it.native == native }
     }
 }

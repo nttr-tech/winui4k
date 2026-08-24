@@ -24,6 +24,7 @@ enum class Stretch(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): Stretch = entries.first { it.native == native }
     }
 }

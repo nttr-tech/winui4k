@@ -27,6 +27,7 @@ enum class PasswordRevealMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): PasswordRevealMode = entries.first { it.native == native }
     }
 }

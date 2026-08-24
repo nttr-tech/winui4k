@@ -22,6 +22,7 @@ enum class TitleBarHeightOption(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TitleBarHeightOption = entries.first { it.native == native }
     }
 }
@@ -45,6 +46,7 @@ enum class TitleBarTheme(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TitleBarTheme = entries.first { it.native == native }
     }
 }

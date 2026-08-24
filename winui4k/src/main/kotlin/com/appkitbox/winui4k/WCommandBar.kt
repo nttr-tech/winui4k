@@ -21,6 +21,7 @@ enum class AppBarClosedDisplayMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): AppBarClosedDisplayMode = entries.first { it.native == native }
     }
 }
@@ -41,6 +42,7 @@ enum class CommandBarDefaultLabelPosition(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): CommandBarDefaultLabelPosition = entries.first { it.native == native }
     }
 }
@@ -61,6 +63,7 @@ enum class CommandBarOverflowButtonVisibility(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): CommandBarOverflowButtonVisibility =
             entries.first { it.native == native }
     }

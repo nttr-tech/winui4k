@@ -23,6 +23,7 @@ enum class SliderSnapsTo(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): SliderSnapsTo = entries.first { it.native == native }
     }
 }
@@ -49,6 +50,7 @@ enum class TickPlacement(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TickPlacement = entries.first { it.native == native }
     }
 }

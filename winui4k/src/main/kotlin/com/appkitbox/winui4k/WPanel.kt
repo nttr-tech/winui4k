@@ -16,6 +16,7 @@ enum class Orientation(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): Orientation = entries.first { it.native == native }
     }
 }

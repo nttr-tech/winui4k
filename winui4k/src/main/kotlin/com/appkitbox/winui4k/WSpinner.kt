@@ -27,6 +27,7 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): SpinButtonPlacementMode = entries.first { it.native == native }
     }
 }

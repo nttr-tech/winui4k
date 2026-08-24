@@ -25,6 +25,7 @@ enum class TextWrapping(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TextWrapping = entries.first { it.native == native }
     }
 }
@@ -52,6 +53,7 @@ enum class TextAlignment(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TextAlignment = entries.first { it.native == native }
     }
 }
@@ -76,6 +78,7 @@ enum class TextTrimming(internal val native: Int) {
     ;
 
     internal companion object {
+        @JvmSynthetic
         fun of(native: Int): TextTrimming = entries.first { it.native == native }
     }
 }
