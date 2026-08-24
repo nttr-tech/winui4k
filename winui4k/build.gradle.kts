@@ -205,7 +205,7 @@ tasks.register("downloadInstallers") {
                 logger.lifecycle("Already exists: $dest")
                 continue
             }
-            val url = "https://aka.ms/windowsappsdk/2.2/$version/windowsappruntimeinstall-$arch.exe"
+            val url = "https://aka.ms/windowsappsdk/2.4/$version/windowsappruntimeinstall-$arch.exe"
             logger.lifecycle("Downloading $fileName ...")
             URI(url).toURL().openStream().use { input ->
                 dest.outputStream().use { input.copyTo(it) }

@@ -1,6 +1,6 @@
 # 検証状況
 
-Windows 11 x64 + Windows App SDK 2.2 ランタイムで動作検証済みである
+Windows 11 x64 + Windows App SDK 2.4 ランタイムで動作検証済みである
 (起動 → ウィンドウ表示 → ボタンクリック → クローズ → 正常終了 exit code 0)。
 
 実行以外の検証:

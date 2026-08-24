@@ -8,8 +8,8 @@ ktlint = "1.8.0"
 detekt = "1.23.8"
 nmcp = "1.6.1"
 # NuGet package versions (referenced by winui4k core's fetch tasks)
-windowsAppSdk = "2.2.0"
-windowsAppSdkFoundation = "2.1.0"
+windowsAppSdk = "2.4.0"
+windowsAppSdkFoundation = "2.3.9"
 webView2 = "1.0.3719.77"
 
 [libraries]

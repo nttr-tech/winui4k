@@ -7,8 +7,9 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * (Microsoft.Windows.Storage.Pickers, WinAppSDK).
  *
  * All values were mechanically extracted from Microsoft.Windows.Storage.Pickers.winmd
- * (WinAppSDK Foundation 2.1.0) via tools/dump_winmd.py. Not a single value is
+ * (WinAppSDK Foundation 2.3.9) via tools/dump_winmd.py. Not a single value is
  * hand-written or guessed.
+ * (Cross-checked against the Foundation 2.1.0 winmd — all IIDs / slots match.)
  *
  * Slot-number convention: IUnknown = 0..2, IInspectable = 3..5, and the interface body
  * starts at 6 in the winmd's method-declaration order.

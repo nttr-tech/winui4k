@@ -26,8 +26,8 @@ internal object WinAppSdkBootstrap {
      */
     private const val WINAPPSDK_MAJOR_MINOR = 0x0002_0000
 
-    /** Minimum runtime version 2.2.0.0 (PACKAGE_VERSION: Major<<48 | Minor<<32 | Build<<16 | Revision). */
-    private const val WINAPPSDK_MIN_VERSION = 0x0002_0002_0000_0000L
+    /** Minimum runtime version 2.4.0.0 (PACKAGE_VERSION: Major<<48 | Minor<<32 | Build<<16 | Revision). */
+    private const val WINAPPSDK_MIN_VERSION = 0x0002_0004_0000_0000L
 
     /** MddBootstrapInitializeOptions_OnNoMatch_ShowUI: prompts the user to install the runtime if it's missing. */
     private const val BOOTSTRAP_ON_NO_MATCH_SHOW_UI = 0x08
@@ -107,7 +107,7 @@ internal object WinAppSdkBootstrap {
                 WINAPPSDK_MIN_VERSION,
                 BOOTSTRAP_ON_NO_MATCH_SHOW_UI,
             ) as Int
-            checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.2 runtime installed?)")
+            checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.4 runtime installed?)")
         }
     }
 

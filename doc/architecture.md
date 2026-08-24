@@ -31,8 +31,8 @@ Java 8 での動作は `.\gradlew :winui4k-sample-gallery:runJna` / `runJnr` (JD
 
 ## 起動シーケンス
 
-1. `MddBootstrapInitialize2(0x00020000, L"", 2.2.0.0, OnNoMatch_ShowUI)` で Windows App SDK 2.x ランタイムをプロセスに結び付ける
-   (2.0 以降 majorMinorVersion の minor 部は無視されるため、欲しい 2.2 は minVersion = PACKAGE_VERSION 2.2.0.0 で指定する)
+1. `MddBootstrapInitialize2(0x00020000, L"", 2.4.0.0, OnNoMatch_ShowUI)` で Windows App SDK 2.x ランタイムをプロセスに結び付ける
+   (2.0 以降 majorMinorVersion の minor 部は無視されるため、欲しい 2.4 は minVersion = PACKAGE_VERSION 2.4.0.0 で指定する)
 2. `RoInitialize(RO_INIT_SINGLETHREADED)` を呼ぶ。このスレッド (JVM の main) が UI スレッドになる
 3. `Application.Start(callback)` を呼ぶ。callback は Kotlin 実装の WinRT デリゲート (upcall スタブ) で、この呼び出しはメッセージループとしてブロックする
 4. callback 内で COM 集約により `Application` の「サブクラス」を合成する。
@@ -76,7 +76,7 @@ W* ラッパー (WComponent 派生と WFlyoutBase / WXamlUICommand / WSwipeItems
 ## ABI 定数の出所 (tools/dump_winmd.py)
 
 `winui/` の `*Interop.kt` (XamlInterop など) の IID とスロット番号は手書きではない。
-Microsoft.WindowsAppSDK.WinUI 2.2.1 の `metadata/Microsoft.UI.Xaml.winmd`、WinAppSDK ランタイムの `Microsoft.Windows.ApplicationModel.Resources.winmd`、Windows SDK の `Windows.Foundation.FoundationContract.winmd` から、同梱の `tools/dump_winmd.py` で抽出した値である。
+Microsoft.WindowsAppSDK.WinUI 2.3.6 の `metadata/Microsoft.UI.Xaml.winmd`、WinAppSDK ランタイムの `Microsoft.Windows.ApplicationModel.Resources.winmd`、Windows SDK の `Windows.Foundation.FoundationContract.winmd` から、同梱の `tools/dump_winmd.py` で抽出した値である。
 再現するには:
 
 ```bash

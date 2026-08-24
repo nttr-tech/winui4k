@@ -242,7 +242,7 @@ The building blocks follow the same thinking as Swing.
 
 ### 2.4 Automatic Setup of the Windows App SDK Runtime
 
-Running a WinUI app requires the Windows App SDK 2.2 runtime.
+Running a WinUI app requires the Windows App SDK 2.4 runtime.
 So that neither developers nor end users have to think about this, [WinUI4K](https://github.com/nttr-tech/winui4k) performs a two-stage automatic setup at startup.
 
 **Extracting the bootstrap DLL.**
@@ -271,7 +271,7 @@ Detailed configurations for each distribution form are covered in Chapter 15.
 Here is a summary of the points that commonly trip people up on first launch.
 In every case the symptom is printed to the console with an HRESULT (a COM error code), so check the console output first.
 
-- **`MddBootstrapInitialize2 failed` (e.g., HRESULT=0x80670016)**: The Windows App SDK 2.2 runtime is not installed, or the major version does not match. Install a 2.2-series runtime from https://aka.ms/windowsappsdk.
+- **`MddBootstrapInitialize2 failed` (e.g., HRESULT=0x80670016)**: The Windows App SDK 2.4 runtime is not installed, or the major version does not match. Install a 2.4-series runtime from https://aka.ms/windowsappsdk.
 - **`REGDB_E_CLASSNOTREG` (0x80040154) appears**: WinUI type resolution was attempted while the bootstrap had not succeeded. As above, check whether the runtime is installed.
 - **The window appears but controls are not shown**: Applying the controls' default styles (`XamlControlsResources`) failed. Check the HRESULT on the console.
 - **A warning or error about `--enable-native-access` appears**: When using the Panama backend and running a jar directly, `java --enable-native-access=ALL-UNNAMED` must be supplied (Section 2.2). Running via Gradle's `run` task adds it automatically.
@@ -390,7 +390,7 @@ The first call to `WinUiUtilities.invokeLater` is the startup trigger.
 At that point a dedicated UI thread (thread name `WinUI4K-UI`, non-daemon) starts, and initialization proceeds in the following order.
 
 1. **DPI declaration**: Declares Per-Monitor v2 DPI awareness for the process via `SetProcessDpiAwarenessContext`. Because java.exe carries no DPI-awareness manifest, the declaration must be made in code (Section 9.4).
-2. **Windows App SDK bootstrap**: Extracts the JAR-embedded bootstrap DLL to a temporary directory and binds the Windows App SDK 2.2 runtime to the process via `MddBootstrapInitialize2`. On failure, it attempts to run the installer automatically (Section 2.4).
+2. **Windows App SDK bootstrap**: Extracts the JAR-embedded bootstrap DLL to a temporary directory and binds the Windows App SDK 2.4 runtime to the process via `MddBootstrapInitialize2`. On failure, it attempts to run the installer automatically (Section 2.4).
 3. **Joining COM**: Calls `RoInitialize(RO_INIT_SINGLETHREADED)`. This thread becomes an STA, and from then on all XAML objects are bound to this thread (Chapter 5).
 4. **`Application.Start`**: Called with a callback. This call blocks as the message loop and does not return until the app exits.
 5. **Synthesizing the `Application` subclass**: Inside the callback, a "subclass" of `Application` is synthesized via COM aggregation. The equivalent of C#'s `class App : Application` is built by fusing a Kotlin-implemented COM object with the native-side base implementation (the mechanism is in Section 16.5). At the same time, the `ResourceManagerRequested` handler needed to resolve theme resources is registered (Section 11.3).
@@ -1398,7 +1398,7 @@ Versions are managed centrally in `gradle/libs.versions.toml`, and including the
 | Item | Supported range | Notes |
 |---|---|---|
 | OS | Windows 11 (expected to work on Windows 10 version 1809 or later as well) | A requirement of WinUI itself |
-| Windows App SDK runtime | The 2.2 series | If absent, set up automatically at startup (Section 2.4) |
+| Windows App SDK runtime | The 2.4 series | If absent, set up automatically at startup (Section 2.4) |
 | Java (x64) | 8 or later | 8-21 use JNA / JNR; 22 and later use Panama (Chapter 7) |
 | Java (ARM64) | 8 or later | 8-21: JNR only; 22 and later: Panama / JNR. The JDK itself must be an ARM64 build |
 | Java (x86) | 8 or later | JNR only |
@@ -1407,7 +1407,7 @@ What CI verifies continuously is JDK 8 / 9 / 22 / 25 on x64 and JDK 25 on ARM64 
 Other combinations are expected to work per the table above by design, but are verified less frequently.
 For production adoption, it is recommended to exercise your target combinations directly in your own app's CI.
 
-The version of the Windows App SDK depended on is embedded as a constant on the library side (currently the 2.2 series).
+The version of the Windows App SDK depended on is embedded as a constant on the library side (currently the 2.4 series).
 Since startup fails if the runtime's major version does not match (Section 2.5), when bumping the [WinUI4K](https://github.com/nttr-tech/winui4k) version, also align the bundled runtime installer (Section 15.2) to the corresponding release.
 
 ### 20.2 Versioning Policy and How to Read the Change History

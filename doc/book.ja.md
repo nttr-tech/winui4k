@@ -242,7 +242,7 @@ fun main() {
 
 ### 2.4 Windows App SDK ランタイムの自動セットアップ
 
-WinUI アプリの実行には Windows App SDK 2.2 ランタイムが必要です。
+WinUI アプリの実行には Windows App SDK 2.4 ランタイムが必要です。
 [WinUI4K](https://github.com/nttr-tech/winui4k) は、開発者とエンドユーザーの双方がこれを意識しなくて済むよう、起動時に 2 段階の自動セットアップを行います。
 
 **ブートストラップ DLL の展開。**
@@ -271,7 +271,7 @@ Windows App SDK の初期化に必要なブートストラップ DLL (`Microsoft
 最初の起動でつまずきやすいポイントをまとめます。
 いずれも症状はコンソールに HRESULT (COM のエラーコード) 付きで出力されるため、まずコンソール出力を確認してください。
 
-- **`MddBootstrapInitialize2 failed` (HRESULT=0x80670016 など)**：Windows App SDK 2.2 ランタイムが未インストールか、メジャーバージョンが不一致です。https://aka.ms/windowsappsdk から 2.2 系のランタイムをインストールしてください。
+- **`MddBootstrapInitialize2 failed` (HRESULT=0x80670016 など)**：Windows App SDK 2.4 ランタイムが未インストールか、メジャーバージョンが不一致です。https://aka.ms/windowsappsdk から 2.4 系のランタイムをインストールしてください。
 - **`REGDB_E_CLASSNOTREG` (0x80040154) が出る**：ブートストラップが成功していない状態で WinUI の型を解決しようとしています。上と同じく、ランタイムの導入状況を確認してください。
 - **ウィンドウは出るがコントロールが表示されない**：コントロールの既定スタイル (`XamlControlsResources`) の適用に失敗しています。コンソールの HRESULT を確認してください。
 - **`--enable-native-access` の警告またはエラーが出る**：Panama バックエンド使用時、jar 直接実行では `java --enable-native-access=ALL-UNNAMED` の付与が必要です (2.2 節)。Gradle の `run` タスク経由なら自動付与されます。
@@ -390,7 +390,7 @@ JDK バージョンに依存するコード (Panama の `java.lang.foreign` は 
 このとき専用の UI スレッド (スレッド名 `WinUI4K-UI`、非デーモン) が起動し、次の順で初期化が進みます。
 
 1. **DPI 宣言**：`SetProcessDpiAwarenessContext` で Per-Monitor v2 の DPI 対応をプロセスに宣言します。java.exe は DPI 対応のマニフェストを持たないため、コードで宣言する必要があります (9.4 節)。
-2. **Windows App SDK のブートストラップ**：JAR 内蔵のブートストラップ DLL を一時ディレクトリへ展開し、`MddBootstrapInitialize2` で Windows App SDK 2.2 ランタイムをプロセスに結び付けます。失敗した場合はインストーラーの自動実行を試みます (2.4 節)。
+2. **Windows App SDK のブートストラップ**：JAR 内蔵のブートストラップ DLL を一時ディレクトリへ展開し、`MddBootstrapInitialize2` で Windows App SDK 2.4 ランタイムをプロセスに結び付けます。失敗した場合はインストーラーの自動実行を試みます (2.4 節)。
 3. **COM への参加**：`RoInitialize(RO_INIT_SINGLETHREADED)` を呼びます。このスレッドが STA となり、以後すべての XAML オブジェクトがこのスレッドに束縛されます (第5章)。
 4. **`Application.Start`**：コールバックを渡して呼び出します。この呼び出しはメッセージループとしてブロックし、アプリ終了まで戻りません。
 5. **`Application` サブクラスの合成**：コールバック内で、COM 集約により `Application` の「サブクラス」を合成します。C# の `class App : Application` に相当するものを、Kotlin 実装の COM オブジェクトとネイティブ側の基底実装の合体で作ります (仕組みは 16.5 節)。合わせて、テーマリソースの解決に必要な `ResourceManagerRequested` ハンドラを登録します (11.3 節)。
@@ -1398,7 +1398,7 @@ detekt 1.23 は JDK 25 上で動かないため、Gradle プラグインのイ�
 | 項目 | 対応範囲 | 備考 |
 |---|---|---|
 | OS | Windows 11 (Windows 10 バージョン 1809 以降でも動く想定) | WinUI 自体の要件 |
-| Windows App SDK ランタイム | 2.2 系 | 未導入なら起動時に自動セットアップ (2.4 節) |
+| Windows App SDK ランタイム | 2.4 系 | 未導入なら起動時に自動セットアップ (2.4 節) |
 | Java (x64) | 8 以降 | 8〜21 は JNA / JNR、22 以降は Panama (第7章) |
 | Java (ARM64) | 8 以降 | 8〜21 は JNR のみ、22 以降は Panama / JNR。JDK 自体が ARM64 版であること |
 | Java (x86) | 8 以降 | JNR のみ |
@@ -1407,7 +1407,7 @@ CI で常時検証しているのは、x64 の JDK 8 / 9 / 22 / 25 と、ARM64 �
 それ以外の組み合わせは、設計上は上表のとおり動く想定ですが、検証頻度が下がります。
 本番採用時は、自アプリの CI で対象の組み合わせを直接回すことを推奨します。
 
-依存する Windows App SDK のバージョンは、ライブラリ側に定数として埋め込まれています (現在は 2.2 系)。
+依存する Windows App SDK のバージョンは、ライブラリ側に定数として埋め込まれています (現在は 2.4 系)。
 ランタイムのメジャーバージョンが一致しないと起動に失敗するため (2.5 節)、[WinUI4K](https://github.com/nttr-tech/winui4k) のバージョンを上げる際は、同梱するランタイムインストーラー (15.2 節) も対応する版に揃えてください。
 
 ### 20.2 バージョニングポリシーと変更履歴の読み方

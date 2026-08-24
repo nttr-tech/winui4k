@@ -1,8 +1,8 @@
 # トラブルシューティング
 
 - **`MddBootstrapInitialize2 failed` (HRESULT=0x80670016 など)**
-  Windows App SDK 2.2 ランタイムが未インストール、またはメジャーバージョン不一致である。
-  https://aka.ms/windowsappsdk から 2.2 系の Runtime インストーラを実行する。
+  Windows App SDK 2.4 ランタイムが未インストール、またはメジャーバージョン不一致である。
+  https://aka.ms/windowsappsdk から 2.4 系の Runtime インストーラを実行する。
   別バージョンを使う場合は `Toolkit.kt` の `WINAPPSDK_MAJOR_MINOR` / `WINAPPSDK_MIN_VERSION` を変更する
   (2.0 以降は major のみで解決され、minor は minVersion で指定する)。
 - **`REGDB_E_CLASSNOTREG (0x80040154)` が RoGetActivationFactory で出る**
