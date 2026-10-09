@@ -549,6 +549,9 @@ class WRibbonMenuBar @JvmOverloads constructor(
         val menu = WMenuFlyout()
         RibbonMenus.applyMenuStyle(menu)
         menu.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT
+        // Keep receiving pointer enter/exit on the headers while open, and switch menus when the pointer moves to an
+        // adjacent header
+        menu.overlayInputPassThroughElement = this
         RibbonMenus.createMenuItems(item.items.toList(), host).forEach { menu.add(it) }
         RibbonMenus.onClosed(menu) { if (openMenu?.second === menu) openMenu = null }
         openMenu = item to menu

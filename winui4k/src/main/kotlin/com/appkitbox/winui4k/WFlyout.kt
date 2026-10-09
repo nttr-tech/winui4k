@@ -59,6 +59,17 @@ abstract class WFlyoutBase internal constructor(
     val isOpen: Boolean
         get() = flyoutBase.getBool(XamlInterop.IFlyoutBase_get_IsOpen)
 
+    /**
+     * An element that keeps receiving outside clicks and pointer enter/exit while the flyout is open
+     * (FlyoutBase.OverlayInputPassThroughElement). In a menu bar, the headers' parent is specified here so that moving
+     * the pointer to an adjacent header switches menus while one is open.
+     */
+    var overlayInputPassThroughElement: WComponent? = null
+        set(value) {
+            field = value
+            flyoutBase.call(XamlInterop.IFlyoutBase_put_OverlayInputPassThroughElement, value?.dependencyObject)
+        }
+
     /** Opens relative to [anchor] (FlyoutBase.ShowAt). Only usable on an already-visible element. */
     fun showAt(anchor: WComponent) {
         flyoutBase.call(XamlInterop.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr)
