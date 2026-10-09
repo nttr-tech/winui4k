@@ -11,8 +11,7 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  *   The types are experimental (MUX_PREVIEW) and may change before the stable release, so they are kept separate
  *   from XamlInterop
  * - Windows.UI.Input.Inking / Windows.UI.Core / Windows.UI.Input / Windows.Devices.Input /
- *   Windows.Storage.Streams are extracted from the Windows SDK's Windows.Foundation.UniversalApiContract.winmd,
- *   and Windows.Foundation.IClosable from Windows.Foundation.FoundationContract.winmd
+ *   Windows.Storage.Streams are extracted from the Windows SDK's Windows.Foundation.UniversalApiContract.winmd
  *
  * All values are mechanically extracted with tools/dump_winmd.py. Not a single value is handwritten or guessed.
  * The concrete IIDs of generic types are computed at runtime with SHA-1 from their WinRT signatures ([Pinterface]).
@@ -647,10 +646,6 @@ internal object InkInterop {
     const val IDataWriter_DetachStream = 32   // DetachStream(out IOutputStream)
     const val IID_IDataWriterFactory = "338c67c2-8b84-4c2b-9c50-7b8767847a1f"
     const val IDataWriterFactory_CreateDataWriter = 6   // CreateDataWriter(IOutputStream, out DataWriter)
-
-    // ---- Windows.Foundation.IClosable ----
-    const val IID_IClosable = "30d5a829-7fa4-4026-83bb-d75bae4ea99e"
-    const val IClosable_Close = 6   // Close()
 
     /** Runtime class name of PointerEventArgs (used in the signature of the handlers' concrete IIDs). */
     const val CLS_PointerEventArgs = "Windows.UI.Core.PointerEventArgs"

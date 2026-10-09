@@ -245,15 +245,25 @@ class WInkCanvasTest : FunSpec() {
         }
 
         test("copying the selection to the clipboard and pasting it appends the pasted strokes to the end of the model") {
-            val (canPaste, model, native) = onUiThreadGet {
-                val canvas = WInkCanvas(DefaultInkStrokeModel(listOf(stroke(10.0), stroke(100.0))))
-                canvas.setStrokeSelected(0, true)
-                canvas.copySelectedToClipboard()
-                val canPaste = canvas.canPasteFromClipboard()
-                canvas.pasteFromClipboard(300.0, 300.0)
-                Triple(canPaste, canvas.model.getStrokeCount(), nativeStrokes(canvas).size)
+            val canvas = onUiThreadGet {
+                WInkCanvas(DefaultInkStrokeModel(listOf(stroke(10.0), stroke(100.0)))).also { it.setStrokeSelected(0, true) }
+            }
+            // Other processes (such as clipboard history) may have the clipboard open temporarily,
+            // so retry a few times until the copy takes effect
+            var canPaste = false
+            var attempts = 0
+            while (!canPaste && attempts++ < CLIPBOARD_ATTEMPTS) {
+                canPaste = onUiThreadGet {
+                    runCatching { canvas.copySelectedToClipboard() }
+                    canvas.canPasteFromClipboard()
+                }
+                if (!canPaste) Thread.sleep(CLIPBOARD_RETRY_MILLIS)
             }
             canPaste shouldBe true
+            val (model, native) = onUiThreadGet {
+                canvas.pasteFromClipboard(300.0, 300.0)
+                canvas.model.getStrokeCount() to nativeStrokes(canvas).size
+            }
             model shouldBe 3
             native shouldBe 3
         }
@@ -412,5 +422,10 @@ class WInkCanvasTest : FunSpec() {
             } shouldBe 0
             received shouldBe listOf(listOf(30.0))
         }
+    }
+
+    private companion object {
+        const val CLIPBOARD_ATTEMPTS = 20
+        const val CLIPBOARD_RETRY_MILLIS = 250L
     }
 }

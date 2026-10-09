@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.ink.InkPoint
+import com.appkitbox.winui4k.ink.InkRect
 import com.appkitbox.winui4k.ink.InkStroke
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
@@ -61,6 +62,51 @@ enum class PointerDeviceType(internal val native: Int) {
 }
 
 /**
+ * Windows.UI.Input.PointerUpdateKind (the change in the state of the pointer's buttons).
+ * Values extracted from Windows.Foundation.UniversalApiContract.winmd.
+ */
+enum class PointerUpdateKind(internal val native: Int) {
+    /** No button change (such as a move). */
+    OTHER(0),
+
+    /** The left button was pressed. */
+    LEFT_BUTTON_PRESSED(1),
+
+    /** The left button was released. */
+    LEFT_BUTTON_RELEASED(2),
+
+    /** The right button was pressed. */
+    RIGHT_BUTTON_PRESSED(3),
+
+    /** The right button was released. */
+    RIGHT_BUTTON_RELEASED(4),
+
+    /** The middle button was pressed. */
+    MIDDLE_BUTTON_PRESSED(5),
+
+    /** The middle button was released. */
+    MIDDLE_BUTTON_RELEASED(6),
+
+    /** The X1 button was pressed. */
+    X_BUTTON1_PRESSED(7),
+
+    /** The X1 button was released. */
+    X_BUTTON1_RELEASED(8),
+
+    /** The X2 button was pressed. */
+    X_BUTTON2_PRESSED(9),
+
+    /** The X2 button was released. */
+    X_BUTTON2_RELEASED(10),
+    ;
+
+    internal companion object {
+        @JvmSynthetic
+        fun of(native: Int): PointerUpdateKind = entries.first { it.native == native }
+    }
+}
+
+/**
  * A snapshot of Windows.UI.Input.PointerPoint: the position and state of the pointer for ink input
  * ([InkPointerEvent.pointerPoint]). Positions use the top-left of the canvas as the origin (DIP).
  */
@@ -105,6 +151,28 @@ data class InkPointerPoint(
     val isInRange: Boolean,
     /** Whether the input was canceled. */
     val isCanceled: Boolean,
+    /** The X coordinate before prediction and correction (RawPosition.X). */
+    val rawX: Double,
+    /** The Y coordinate before prediction and correction (RawPosition.Y). */
+    val rawY: Double,
+    /** The ID of the input frame (FrameId; the same value for multiple pointers that arrived at the same time). */
+    val frameId: Int,
+    /** The contact area (ContactRect; such as the size of a finger for touch). */
+    val contactRect: InkRect,
+    /** The contact area before correction (ContactRectRaw). */
+    val contactRectRaw: InkRect,
+    /** Whether the touch was judged to be an intended contact (TouchConfidence). */
+    val touchConfidence: Boolean,
+    /** The wheel rotation amount (MouseWheelDelta; positive = away / right). */
+    val mouseWheelDelta: Int,
+    /** Whether this is a horizontal wheel (IsHorizontalMouseWheel). */
+    val isHorizontalMouseWheel: Boolean,
+    /** Whether the X1 button is pressed. */
+    val isXButton1Pressed: Boolean,
+    /** Whether the X2 button is pressed. */
+    val isXButton2Pressed: Boolean,
+    /** The change in the state of the buttons (PointerUpdateKind). */
+    val updateKind: PointerUpdateKind,
 ) {
     /** The position, pressure, tilt, and time as an [InkPoint]. */
     fun toInkPoint(): InkPoint = InkPoint(
@@ -231,6 +299,7 @@ class InkPointerEvent internal constructor(source: WInkPresenter, private val ar
 /** Takes a snapshot of a Windows.UI.Input.PointerPoint (IPointerPoint). */
 private fun readPointerPoint(point: ComPtr): InkPointerPoint {
     val position = Xaml.readPoint(point, InkInterop.IPointerPoint_get_Position)
+    val raw = Xaml.readPoint(point, InkInterop.IPointerPoint_get_RawPosition)
     val timestamp = Ffi.backend.withScope { scope ->
         val out = scope.allocate(8)
         point.call(InkInterop.IPointerPoint_get_Timestamp, out)
@@ -265,6 +334,17 @@ private fun readPointerPoint(point: ComPtr): InkPointerPoint {
             isPrimary = properties.getBool(InkInterop.IPointerPointProperties_get_IsPrimary),
             isInRange = properties.getBool(InkInterop.IPointerPointProperties_get_IsInRange),
             isCanceled = properties.getBool(InkInterop.IPointerPointProperties_get_IsCanceled),
+            rawX = raw[0],
+            rawY = raw[1],
+            frameId = point.getInt(InkInterop.IPointerPoint_get_FrameId),
+            contactRect = InkNative.callForRect(properties, InkInterop.IPointerPointProperties_get_ContactRect),
+            contactRectRaw = InkNative.callForRect(properties, InkInterop.IPointerPointProperties_get_ContactRectRaw),
+            touchConfidence = properties.getBool(InkInterop.IPointerPointProperties_get_TouchConfidence),
+            mouseWheelDelta = properties.getInt(InkInterop.IPointerPointProperties_get_MouseWheelDelta),
+            isHorizontalMouseWheel = properties.getBool(InkInterop.IPointerPointProperties_get_IsHorizontalMouseWheel),
+            isXButton1Pressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsXButton1Pressed),
+            isXButton2Pressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsXButton2Pressed),
+            updateKind = PointerUpdateKind.of(properties.getInt(InkInterop.IPointerPointProperties_get_PointerUpdateKind)),
         )
     } finally {
         properties.release()
