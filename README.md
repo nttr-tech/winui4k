@@ -134,6 +134,11 @@ They all exist to demonstrate that real applications can be built with WinUI4K.
 | [Filer](winui4k-sample-filer) | Fluent Design file manager with tabs, details/icon view switching, breadcrumbs, sidebar, and filtering | `.\gradlew :winui4k-sample-filer:run` |
 | [Notes](winui4k-sample-notes) | Simple notepad app | `.\gradlew :winui4k-sample-notes:run` |
 | [Form with MigLayout](winui4k-sample-form-with-miglayout) | Input form using the MigLayout layout library | `.\gradlew :winui4k-sample-form-with-miglayout:run` |
+| [Ribbon: Word](winui4k-sample-ribbon-word) | Word-style ribbon (style gallery, table picker, backstage, title bar with search) | `.\gradlew :winui4k-sample-ribbon-word:run` |
+| [Ribbon: Excel](winui4k-sample-ribbon-excel) | Excel-style ribbon wired to an MVVM view model by command IDs, with a formula bar and a sheet | `.\gradlew :winui4k-sample-ribbon-excel:run` |
+| [Ribbon: PowerPoint](winui4k-sample-ribbon-powerpoint) | PowerPoint-style simplified ribbon with live theme preview | `.\gradlew :winui4k-sample-ribbon-powerpoint:run` |
+| [Ribbon: CAD](winui4k-sample-ribbon-cad) | AutoCAD-style dark ribbon with layers, slide-out panels, application menu, and command line | `.\gradlew :winui4k-sample-ribbon-cad:run` |
+| [Ribbon: Tools](winui4k-sample-ribbon-tools) | Bars without a ribbon (menu bar, option bars, tool palette, status bar) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
 ## Modules
 
@@ -150,6 +155,7 @@ They all exist to demonstrate that real applications can be built with WinUI4K.
 | `winui4k-sample-filer` | Fluent Design file manager sample |
 | `winui4k-sample-notes` | Notepad app sample |
 | `winui4k-sample-form-with-miglayout` | Input form sample using MigLayout |
+| `winui4k-sample-ribbon-*` | Ribbon demo apps (Word / Excel / PowerPoint / CAD / Tools) and their shared window frame (`-shell`). See [doc/ribbon.md](doc/ribbon.md) |
 
 ## Architecture
 

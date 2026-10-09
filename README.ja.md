@@ -134,6 +134,11 @@ Gallery に加えて、実用に近いサンプルアプリを複数同梱して
 | [Filer](winui4k-sample-filer) | Fluent Design のファイラー。タブ、詳細表示とアイコン表示の切り替え、ブレッドクラム、サイドバー、フィルターを備える | `.\gradlew :winui4k-sample-filer:run` |
 | [Notes](winui4k-sample-notes) | シンプルなメモ帳アプリ | `.\gradlew :winui4k-sample-notes:run` |
 | [Form with MigLayout](winui4k-sample-form-with-miglayout) | レイアウトライブラリ MigLayout を使った入力フォーム | `.\gradlew :winui4k-sample-form-with-miglayout:run` |
+| [リボン: Word](winui4k-sample-ribbon-word) | Word 風のリボン (スタイル ギャラリー・表の挿入・バックステージ・検索付きタイトル バー) | `.\gradlew :winui4k-sample-ribbon-word:run` |
+| [リボン: Excel](winui4k-sample-ribbon-excel) | コマンド ID で MVVM のビュー モデルにつなぐ Excel 風のリボン (数式バー・シート付き) | `.\gradlew :winui4k-sample-ribbon-excel:run` |
+| [リボン: PowerPoint](winui4k-sample-ribbon-powerpoint) | シンプル表示とテーマのライブ プレビューを持つ PowerPoint 風のリボン | `.\gradlew :winui4k-sample-ribbon-powerpoint:run` |
+| [リボン: CAD](winui4k-sample-ribbon-cad) | 画層・展開パネル・アプリケーション メニュー・コマンド ラインを持つ AutoCAD 風のダークなリボン | `.\gradlew :winui4k-sample-ribbon-cad:run` |
+| [リボン: ツール](winui4k-sample-ribbon-tools) | リボンを使わないバー (メニュー バー・オプション バー・ツール パレット・ステータス バー) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
 ## モジュール構成
 
@@ -150,6 +155,7 @@ Gallery に加えて、実用に近いサンプルアプリを複数同梱して
 | `winui4k-sample-filer` | Fluent Design のファイラーサンプル |
 | `winui4k-sample-notes` | メモ帳アプリのサンプル |
 | `winui4k-sample-form-with-miglayout` | MigLayout を使った入力フォームのサンプル |
+| `winui4k-sample-ribbon-*` | リボンのデモアプリ (Word / Excel / PowerPoint / CAD / ツール) と共通の外枠 (`-shell`)。[doc/ribbon.md](doc/ribbon.md) 参照 |
 
 ## アーキテクチャ
 
