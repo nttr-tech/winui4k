@@ -16,14 +16,17 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
+import com.appkitbox.winui4k.internal.winui.BindableXamlTypes
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.TabularInterop
 import com.appkitbox.winui4k.internal.winui.WinAppSdkBootstrap
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.jvm.JvmSynthetic
 
 /**
  * WinUI 3's equivalent of SwingUtilities. Handles lazily starting the UI thread and
@@ -235,6 +238,13 @@ object WinUiUtilities {
                 .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
         }
 
+        // The types of TableView (Microsoft.UI.Xaml.Controls.Tabular) are owned by a dedicated provider in a separate DLL.
+        // Only types the real provider could not resolve are queried here
+        val tabularProvider: Lazy<ComPtr> = lazy {
+            Activation.activate(TabularInterop.CLS_XamlControlsTabularXamlMetaDataProvider)
+                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
+        }
+
         val outer = KComObject("WinUI4K.App")
         outer.addInterface(
             XamlInterop.IID_IApplicationOverrides,
@@ -255,20 +265,26 @@ object WinUiUtilities {
             XamlInterop.IID_IXamlMetadataProvider,
             listOf(
                 KComObject.Method(DESC_GET_XAML_TYPE) { args ->
-                    realProvider.rawCall(
-                        XamlInterop.IXamlMetadataProvider_GetXamlType,
-                        DESC_GET_XAML_TYPE,
-                        args[1] as StructValue,
-                        args[2] as Ptr,
-                    )
+                    val out = args[2] as Ptr
+                    resolveXamlType(out, realProvider, tabularProvider) { provider ->
+                        provider.rawCall(
+                            XamlInterop.IXamlMetadataProvider_GetXamlType,
+                            DESC_GET_XAML_TYPE,
+                            args[1] as StructValue,
+                            out,
+                        )
+                    }
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
-                    realProvider.rawCall(
-                        XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName,
-                        DESC_THIS_PTR_PTR,
-                        args[1] as Ptr,
-                        args[2] as Ptr,
-                    )
+                    val out = args[2] as Ptr
+                    resolveXamlType(out, realProvider, tabularProvider) { provider ->
+                        provider.rawCall(
+                            XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName,
+                            DESC_THIS_PTR_PTR,
+                            args[1] as Ptr,
+                            out,
+                        )
+                    }
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     realProvider.rawCall(
@@ -313,21 +329,67 @@ object WinUiUtilities {
     }
 
     /**
+     * Performs IXamlMetadataProvider.GetXamlType queries in the order [primary], then [fallback].
+     * [fallback] is queried only when [primary] returned no type (out is NULL).
+     * If creating [fallback] (RoGetActivationFactory) fails, the result of [primary] is returned.
+     */
+    private inline fun resolveXamlType(
+        out: Ptr,
+        primary: ComPtr,
+        fallback: Lazy<ComPtr>,
+        query: (ComPtr) -> Int,
+    ): Int {
+        val hr = query(primary)
+        if (hr >= 0 && !Ffi.backend.memory.getPtr(out, 0).isNull) return hr
+        // A provider that does not know a type may return a failure HRESULT, not just NULL
+        val provider = runCatching { fallback.value }.getOrNull() ?: return hr
+        Ffi.backend.memory.putPtr(out, 0, Ptr.NULL)
+        val fallbackHr = query(provider)
+        if (fallbackHr < 0 || Ffi.backend.memory.getPtr(out, 0).isNull) return hr
+        // Supply the IsBindable missing from the type information of the experimental Tabular (TableViewGroupInfo)
+        BindableXamlTypes.fixUp(out)
+        return fallbackHr
+    }
+
+    /**
      * Wires the default control styles (generic.xaml) into Application.Resources.
      * Without this, controls like Button don't render. Just like a template app's
      * App.xaml, this appends XamlControlsResources to Resources.MergedDictionaries.
      */
     private fun installControlStyles() {
+        mergeApplicationResources(XamlInterop.CLS_XamlControlsResources)
+    }
+
+    /** Whether TabularControlsResources has been merged by [ensureTabularControlsResources]. */
+    private var tabularResourcesInstalled = false
+
+    /**
+     * Merges the theme resources of TableView (Microsoft.UI.Xaml.Controls.Tabular) (brushes such as TabularSurface*)
+     * into Application.Resources (equivalent to `<tabular:TabularControlsResources />` in App.xaml).
+     * TableView's default style references them via ThemeResource, so without them drawing group headers and the like
+     * raises the XAML exception "Cannot find a Resource with the Name/Key TabularSurface..." and the process terminates.
+     * They are not included in XamlControlsResources, so they are merged only once, when the first WTableView is created
+     * (so as not to slow the startup of apps that do not use the experimental Tabular DLL). Call from the UI thread.
+     */
+    @JvmSynthetic
+    internal fun ensureTabularControlsResources() {
+        if (tabularResourcesInstalled) return
+        mergeApplicationResources(TabularInterop.CLS_TabularControlsResources)
+        tabularResourcesInstalled = true
+    }
+
+    /** Adds the activatable ResourceDictionary subclass [runtimeClass] to Application.Resources.MergedDictionaries. */
+    private fun mergeApplicationResources(runtimeClass: String) {
         val app = checkNotNull(currentApp) { "Application has not been created yet" }
-        val xcr = Activation.activate(XamlInterop.CLS_XamlControlsResources)
-        val xcrDict = xcr.queryInterface(XamlInterop.IID_IResourceDictionary)
+        val resources = Activation.activate(runtimeClass)
+        val dictionary = resources.queryInterface(XamlInterop.IID_IResourceDictionary)
         val appResources = app.getPtr(XamlInterop.IApplication_get_Resources)
         val merged = appResources.getPtr(XamlInterop.IResourceDictionary_get_MergedDictionaries)
-        merged.call(FoundationInterop.IVector_Append, xcrDict)
+        merged.call(FoundationInterop.IVector_Append, dictionary)
         merged.release()
         appResources.release()
-        xcrDict.release()
-        xcr.release()
+        dictionary.release()
+        resources.release()
     }
 
     /**
