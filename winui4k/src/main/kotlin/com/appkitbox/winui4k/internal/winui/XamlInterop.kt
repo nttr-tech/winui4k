@@ -476,6 +476,7 @@ internal object XamlInterop {
     const val IControl_put_HorizontalContentAlignment = 37 // put_HorizontalContentAlignment(HorizontalAlignment)
     const val IControl_get_VerticalContentAlignment = 38 // get_VerticalContentAlignment(out VerticalAlignment)
     const val IControl_put_VerticalContentAlignment = 39 // put_VerticalContentAlignment(VerticalAlignment)
+    const val IControl_get_Background = 40             // get_Background(out Brush)
     const val IControl_put_Background = 41             // put_Background(Brush)
     const val IControl_put_BorderThickness = 45        // put_BorderThickness(Thickness) — struct passed by value
     const val IControl_put_BorderBrush = 47            // put_BorderBrush(Brush)
@@ -2195,6 +2196,7 @@ internal object XamlInterop {
     const val IControl_put_FontSize = 13
     const val IControl_put_FontFamily = 15
     const val IControl_put_FontStyle = 19              // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
+    const val IControl_get_Foreground = 24             // get_Foreground(out Brush)
     const val IControl_put_Foreground = 25             // put_Foreground(Brush)
     const val IControl_put_IsTextScaleFactorEnabled = 27
     const val IControl_put_TabNavigation = 31          // put_TabNavigation(KeyboardNavigationMode: Local=0, Cycle=1, Once=2)

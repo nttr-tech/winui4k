@@ -17,6 +17,7 @@ import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
 import com.appkitbox.winui4k.internal.winui.BindableXamlTypes
+import com.appkitbox.winui4k.internal.winui.ChartsInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.TabularInterop
@@ -245,6 +246,13 @@ object WinUiUtilities {
                 .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
         }
 
+        // The types of Chart (Microsoft.UI.Xaml.Controls.Charts) are also owned by a dedicated provider in a separate DLL
+        val chartsProvider: Lazy<ComPtr> = lazy {
+            Activation.activate(ChartsInterop.CLS_XamlControlsChartsXamlMetaDataProvider)
+                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
+        }
+        val fallbackProviders = listOf(tabularProvider, chartsProvider)
+
         val outer = KComObject("WinUI4K.App")
         outer.addInterface(
             XamlInterop.IID_IApplicationOverrides,
@@ -266,7 +274,7 @@ object WinUiUtilities {
             listOf(
                 KComObject.Method(DESC_GET_XAML_TYPE) { args ->
                     val out = args[2] as Ptr
-                    resolveXamlType(out, realProvider, tabularProvider) { provider ->
+                    resolveXamlType(out, realProvider, fallbackProviders) { provider ->
                         provider.rawCall(
                             XamlInterop.IXamlMetadataProvider_GetXamlType,
                             DESC_GET_XAML_TYPE,
@@ -277,7 +285,7 @@ object WinUiUtilities {
                 },
                 KComObject.Method(DESC_THIS_PTR_PTR) { args ->
                     val out = args[2] as Ptr
-                    resolveXamlType(out, realProvider, tabularProvider) { provider ->
+                    resolveXamlType(out, realProvider, fallbackProviders) { provider ->
                         provider.rawCall(
                             XamlInterop.IXamlMetadataProvider_GetXamlTypeByFullName,
                             DESC_THIS_PTR_PTR,
@@ -329,26 +337,32 @@ object WinUiUtilities {
     }
 
     /**
-     * Performs IXamlMetadataProvider.GetXamlType queries in the order [primary], then [fallback].
-     * [fallback] is queried only when [primary] returned no type (out is NULL).
-     * If creating [fallback] (RoGetActivationFactory) fails, the result of [primary] is returned.
+     * Performs IXamlMetadataProvider.GetXamlType queries in the order [primary], then [fallbacks].
+     * The next provider is queried only when the previous one returned no type (out is NULL).
+     * Providers that fail to be created (RoGetActivationFactory) are skipped, and if none returns a type, the result of
+     * [primary] is returned.
      */
     private inline fun resolveXamlType(
         out: Ptr,
         primary: ComPtr,
-        fallback: Lazy<ComPtr>,
+        fallbacks: List<Lazy<ComPtr>>,
         query: (ComPtr) -> Int,
     ): Int {
         val hr = query(primary)
         if (hr >= 0 && !Ffi.backend.memory.getPtr(out, 0).isNull) return hr
-        // A provider that does not know a type may return a failure HRESULT, not just NULL
-        val provider = runCatching { fallback.value }.getOrNull() ?: return hr
+        // Skip providers that failed to be created (later providers are not created until needed)
+        for (provider in fallbacks.asSequence().mapNotNull { runCatching { it.value }.getOrNull() }) {
+            Ffi.backend.memory.putPtr(out, 0, Ptr.NULL)
+            val fallbackHr = query(provider)
+            // A provider that does not know a type may return a failure HRESULT, not just NULL
+            if (fallbackHr >= 0 && !Ffi.backend.memory.getPtr(out, 0).isNull) {
+                // Supply the IsBindable missing from the type information of the experimental Tabular (TableViewGroupInfo)
+                BindableXamlTypes.fixUp(out)
+                return fallbackHr
+            }
+        }
         Ffi.backend.memory.putPtr(out, 0, Ptr.NULL)
-        val fallbackHr = query(provider)
-        if (fallbackHr < 0 || Ffi.backend.memory.getPtr(out, 0).isNull) return hr
-        // Supply the IsBindable missing from the type information of the experimental Tabular (TableViewGroupInfo)
-        BindableXamlTypes.fixUp(out)
-        return fallbackHr
+        return hr
     }
 
     /**
@@ -376,6 +390,22 @@ object WinUiUtilities {
         if (tabularResourcesInstalled) return
         mergeApplicationResources(TabularInterop.CLS_TabularControlsResources)
         tabularResourcesInstalled = true
+    }
+
+    /** Whether XamlChartsResources has been merged by [ensureChartsResources]. */
+    private var chartsResourcesInstalled = false
+
+    /**
+     * Merges the default style and theme resources of Chart (Microsoft.UI.Xaml.Controls.Charts) (such as
+     * ChartsControlBackgroundBrush) into Application.Resources (equivalent to `<charts:XamlChartsResources />` in App.xaml).
+     * They are not included in XamlControlsResources, so they are merged only once, when the first WChart is created
+     * (so as not to slow the startup of apps that do not use the experimental Charts DLL). Call from the UI thread.
+     */
+    @JvmSynthetic
+    internal fun ensureChartsResources() {
+        if (chartsResourcesInstalled) return
+        mergeApplicationResources(ChartsInterop.CLS_XamlChartsResources)
+        chartsResourcesInstalled = true
     }
 
     /**
