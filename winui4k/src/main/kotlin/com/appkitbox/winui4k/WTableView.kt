@@ -34,6 +34,7 @@ import com.appkitbox.winui4k.table.TableModelEvent
 import com.appkitbox.winui4k.table.TableModelListener
 import com.appkitbox.winui4k.table.TableRowSorter
 import com.appkitbox.winui4k.table.escape
+import java.util.function.IntConsumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -51,6 +52,7 @@ import kotlin.jvm.JvmSynthetic
  * - Editing: starts with double-click / F2, Enter commits, Esc cancels. Committed values are written back to [TableModel.setValueAt].
  *   [isEditing] / [stopCellEditing] / [cancelCellEditing] / [addBeginningEditListener] / [addCellEditEndingListener]
  * - Selection: single selection ([selectionMode] / [selectedRow] / [selectRow] / [clearSelection] / [addRowSelectionListener])
+ * - Row double-click: [addRowInvokedListener]
  * - Sorting: clicking column headers (enabled when [rowSorter] is set) / [TableRowSorter.setSortKeys] /
  *   [addSortingListener] (cancelable) / [addSortedListener]
  * - Filtering: [TableRowSorter.setRowFilter] (TableViewSource.Filter)
@@ -139,6 +141,9 @@ class WTableView @JvmOverloads constructor(
     private val sortingListeners = mutableListOf<TableSortListener>()
     private val sortedListeners = mutableListOf<TableSortListener>()
     private val selectionTokens = ListenerTokens<Runnable>()
+
+    /** Notifications of row double-clicks (addRowInvokedListener). */
+    internal val rowInvoker = TableViewRowInvoker(uiElement, { itemOf(it) }, { convertRowIndexToView(it) })
 
     /** The grouping key function (no grouping if null). */
     private var groupKey: TableGroupKey? = null
@@ -358,6 +363,34 @@ class WTableView @JvmOverloads constructor(
     fun removeRowSelectionListenerForJava(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         tableView.removeEventHandler(TabularInterop.ITableView_remove_SelectionChanged, token)
+    }
+
+    /**
+     * Subscribes to row double-clicks (double-taps) (UIElement.DoubleTapped).
+     * The listener receives the view index of the double-clicked row
+     * (not called for double-clicks on column headers, group header rows or areas without rows).
+     * Use this for actions that commit a row, such as double-click-to-open in the Filer sample.
+     * In editable cells a double-click also starts editing, so set [isReadOnly] to true for this use.
+     */
+    @JvmSynthetic
+    fun addRowInvokedListener(listener: (Int) -> Unit) {
+        rowInvoker.add(listener)
+    }
+
+    @JvmName("addRowInvokedListener")
+    fun addRowInvokedListenerForJava(listener: IntConsumer) {
+        rowInvoker.add(listener)
+    }
+
+    /** Unsubscribes a listener registered via [addRowInvokedListener]. */
+    @JvmSynthetic
+    fun removeRowInvokedListener(listener: (Int) -> Unit) {
+        rowInvoker.remove(listener)
+    }
+
+    @JvmName("removeRowInvokedListener")
+    fun removeRowInvokedListenerForJava(listener: IntConsumer) {
+        rowInvoker.remove(listener)
     }
 
     // ------------------------------------------------------------------
@@ -942,7 +975,7 @@ class WTableView @JvmOverloads constructor(
                         // Invoke(this, Object item, out Object key) — vtbl[3]
                         KComObject.Method(DESC_PTR_PTR) { args ->
                             val item = rows.itemOf(args[1] as Ptr)
-                            val boxed = item?.let { PropertyValues.boxAny(groupKeyOf(key, it.modelRow)) }
+                            val boxed = item?.let { PropertyValues.boxAny(groupKeyOf(key, model, it.modelRow)) }
                             Ffi.backend.memory.putPtr(args[2] as Ptr, 0, boxed?.ptr ?: Ptr.NULL)
                             KComObject.S_OK
                         },
@@ -955,21 +988,6 @@ class WTableView @JvmOverloads constructor(
             }
         }
         result.release()
-    }
-
-    /**
-     * The group key passed to TableViewSource. TableViewSource determines identity by value-type keys, and TableView can
-     * only turn String / Int32 / Int64 / Double keys into header text (others are shown as "(group)"), so integers and
-     * decimals are widened to those types, and everything else (Boolean or arbitrary objects) becomes its toString()
-     * string. Rows with a null key become an empty string so that they also form a single group.
-     */
-    private fun groupKeyOf(key: TableGroupKey, modelRow: Int): Any = when (val value = key.groupKey(model, modelRow)) {
-        null -> ""
-        is String, is Int, is Long, is Double -> value
-        is Byte -> value.toInt()
-        is Short -> value.toInt()
-        is Float -> value.toDouble()
-        else -> value.toString()
     }
 
     // ------------------------------------------------------------------
@@ -1008,26 +1026,11 @@ class WTableView @JvmOverloads constructor(
         template.release()
     }
 
-    private fun directionOf(order: SortOrder): Int = if (order == SortOrder.DESCENDING) {
-        TabularInterop.SortDirection_Descending
-    } else {
-        TabularInterop.SortDirection_Ascending
-    }
-
     /** Calls a method that returns a boolean (taking an out boolean as its last argument). */
     private fun callBool(slot: Int, vararg args: Any?): Boolean = Ffi.backend.withScope { scope ->
         val out = scope.allocate(1, 1)
         tableView.call(slot, *args, out)
         Ffi.backend.memory.getByte(out, 0).toInt() != 0
-    }
-
-    private fun <T> lookupByClass(map: Map<Class<*>, T>, columnClass: Class<*>): T? {
-        var current: Class<*>? = columnClass
-        while (current != null) {
-            map[current]?.let { return it }
-            current = current.superclass
-        }
-        return null
     }
 
     /** The access point through which columns ([TableViewColumnPeer]) read the table's state. */
@@ -1076,4 +1079,36 @@ class WTableView @JvmOverloads constructor(
 
         private val DESC_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
     }
+}
+
+/** Converts a sort direction to TableView's SortDirection (the winmd value). */
+private fun directionOf(order: SortOrder): Int = if (order == SortOrder.DESCENDING) {
+    TabularInterop.SortDirection_Descending
+} else {
+    TabularInterop.SortDirection_Ascending
+}
+
+/** The value for [columnClass] (superclasses are also searched). null if none. */
+private fun <T> lookupByClass(map: Map<Class<*>, T>, columnClass: Class<*>): T? {
+    var current: Class<*>? = columnClass
+    while (current != null) {
+        map[current]?.let { return it }
+        current = current.superclass
+    }
+    return null
+}
+
+/**
+ * The group key passed to TableViewSource. TableViewSource determines identity by value-type keys, and TableView can
+ * only turn String / Int32 / Int64 / Double keys into header text (others are shown as "(group)"), so integers and
+ * decimals are widened to those types, and everything else (Boolean or arbitrary objects) becomes its toString()
+ * string. Rows with a null key become an empty string so that they also form a single group.
+ */
+private fun groupKeyOf(key: TableGroupKey, model: TableModel, modelRow: Int): Any = when (val value = key.groupKey(model, modelRow)) {
+    null -> ""
+    is String, is Int, is Long, is Double -> value
+    is Byte -> value.toInt()
+    is Short -> value.toInt()
+    is Float -> value.toDouble()
+    else -> value.toString()
 }

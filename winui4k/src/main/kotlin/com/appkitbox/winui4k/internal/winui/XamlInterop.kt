@@ -72,6 +72,11 @@ internal object XamlInterop {
 
     /** delegate Input.DoubleTappedEventHandler(sender, DoubleTappedRoutedEventArgs) — Invoke is vtbl[3] */
     const val IID_DoubleTappedEventHandler = "f7a501b9-e277-5611-87b0-0e0607622183"
+
+    // ---- Microsoft.UI.Xaml.RoutedEventArgs (base of DoubleTappedRoutedEventArgs and others) ----
+    const val IID_IRoutedEventArgs = "0908c407-1c7d-5de3-9c50-d971c62ec8ec"
+    const val IRoutedEventArgs_get_OriginalSource = 6  // get_OriginalSource(out Object)
+
     const val IID_IFrameworkElement = "fe08f13d-dc6a-5495-ad44-c2d8d21863b0"
     const val IFrameworkElement_get_ActualWidth = 13   // get_ActualWidth(out DOUBLE)
     const val IFrameworkElement_get_ActualHeight = 14  // get_ActualHeight(out DOUBLE)
@@ -2084,6 +2089,7 @@ internal object XamlInterop {
     const val IID_IVisualTreeHelperStatics = "5aece43c-7651-5bb5-855c-2198496e455e"
     const val IVisualTreeHelperStatics_GetChild = 10          // GetChild(DependencyObject, i4, out DependencyObject)
     const val IVisualTreeHelperStatics_GetChildrenCount = 11  // GetChildrenCount(DependencyObject, out i4)
+    const val IVisualTreeHelperStatics_GetParent = 12         // GetParent(DependencyObject, out DependencyObject)
 
     // ---- Microsoft.UI.Xaml.Controls.ItemsRepeater / ItemsSourceView ----
     const val IID_IItemsRepeater = "9dabac84-fe81-53d1-a041-7a3befea505f"

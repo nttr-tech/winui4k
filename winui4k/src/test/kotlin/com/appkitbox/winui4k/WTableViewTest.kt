@@ -95,6 +95,34 @@ class WTableViewTest : FunSpec() {
         return listOfNotNull(own?.takeIf { it.isNotEmpty() }) + children(node).flatMap { child -> texts(child).also { child.release() } }
     }
 
+    /** The first TextBlock under [node] whose text is [text] (an owned reference). Null if none is found. */
+    private fun findTextBlock(node: ComPtr, text: String): ComPtr? {
+        val matched = node.queryInterfaceOrNull(XamlInterop.IID_ITextBlock)?.let { textBlock ->
+            try {
+                textBlock.getString(XamlInterop.ITextBlock_get_Text) == text
+            } finally {
+                textBlock.release()
+            }
+        } == true
+        if (matched) return node.also { it.addRef() }
+        val children = children(node)
+        try {
+            return children.firstNotNullOfOrNull { findTextBlock(it, text) }
+        } finally {
+            children.forEach { it.release() }
+        }
+    }
+
+    /** The row of the TextBlock whose text is [text] in [table] (TableViewRowInvoker.viewRowOf; identifies the row on a double-click). */
+    private fun viewRowOfText(table: WTableView, text: String): Int {
+        val textBlock = checkNotNull(findTextBlock(table.dependencyObject, text)) { "TextBlock not found: $text" }
+        return try {
+            table.rowInvoker.viewRowOf(textBlock)
+        } finally {
+            textBlock.release()
+        }
+    }
+
     /** The display strings of each group header (TableViewGroupHeader) being shown. */
     private fun groupHeaderTexts(node: ComPtr): List<List<String>> {
         if (runtimeClassName(node) == "Microsoft.UI.Xaml.Controls.Tabular.TableViewGroupHeader") return listOf(texts(node))
@@ -147,6 +175,39 @@ class WTableViewTest : FunSpec() {
                 it.selectRow(1)
                 it.selectionMode to it.selectedRow
             } shouldBe (TableSelectionMode.NONE to -1)
+        }
+
+        test("the view index of the row is found from the element of a double-clicked cell, and is -1 for a column header element") {
+            val model = productModel()
+            val table = onUiThreadGet { WTableView(model) }
+            withShownTable(table) {
+                val unsorted = listOf(viewRowOfText(it, "Grape"), viewRowOfText(it, "Orange"), viewRowOfText(it, "Product"))
+                it.rowSorter = TableRowSorter(model).apply { setSortKeys(listOf(RowSorter.SortKey(1, SortOrder.DESCENDING))) }
+                it.updateLayout()
+                unsorted + listOf(viewRowOfText(it, "Grape"), viewRowOfText(it, "Orange"))
+            } shouldBe listOf(
+                2, // Grape (model row 2)
+                1, // Orange (model row 1)
+                -1, // Column header
+                0, // Price descending: Grape (480) comes first
+                3, // Orange (80) comes last
+            )
+        }
+
+        test("no model row is found from the element of a group header row, so it is -1") {
+            val table = onUiThreadGet { WTableView(productModel()) }
+            UiTestHarness.attachAndAwaitLoaded(table)
+            try {
+                onUiThread {
+                    table.groupBy(2)
+                    table.updateLayout()
+                }
+                // The bindings in the header template are evaluated after layout, so wait a little before reading
+                Thread.sleep(500)
+                onUiThreadGet { viewRowOfText(table, "(2)") }
+            } finally {
+                UiTestHarness.detach(table)
+            } shouldBe -1
         }
 
         test("TableRowSorter's setSortKeys sorts by price in descending order, and view and model row indices can be converted") {
