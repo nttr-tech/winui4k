@@ -334,8 +334,12 @@ internal object RibbonThemeColors {
         put("SystemColorHighlightColor", 0.3, "RibbonItemHoverBrush", "RibbonTabHoverBrush", "RibbonTitleBarHoverBrush", "RibbonBackstagePaneHoverBrush")
         put("SystemColorHighlightColor", 0.4, "RibbonAccentSubtleBrush", "RibbonItemCheckedBrush")
         put(
-            "SystemColorHighlightColor", 0.5, "RibbonAccentSubtleStrongBrush", "RibbonItemPressedBrush",
-            "RibbonItemCheckedHoverBrush", "RibbonBackstagePaneSelectedBrush",
+            "SystemColorHighlightColor",
+            0.5,
+            "RibbonAccentSubtleStrongBrush",
+            "RibbonItemPressedBrush",
+            "RibbonItemCheckedHoverBrush",
+            "RibbonBackstagePaneSelectedBrush",
         )
         put("", 0.0, "RibbonShadowBrush")
         put("SystemColorWindowTextColor", 1.0, "RibbonKeyTipBorderBrush", "RibbonSwatchBorderBrush")

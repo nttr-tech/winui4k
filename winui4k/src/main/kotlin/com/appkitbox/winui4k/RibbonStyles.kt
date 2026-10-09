@@ -11,7 +11,7 @@ package com.appkitbox.winui4k
 @Suppress("LargeClass") // The body is the theme's declarative XAML literals
 internal object RibbonStyles {
     /** The same styles as RibbonSpace's Shared.xaml (they target native types, so they can be used as is). */
-    private val SHARED = """
+    private const val SHARED = """
   <Style x:Key="RibbonChromeButtonStyle" TargetType="Button">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{ThemeResource RibbonForegroundBrush}" />
@@ -346,7 +346,7 @@ internal object RibbonStyles {
      * A flyout without a border or padding (popups for collapsed groups and the minimized ribbon; the content draws its
      * own border).
      */
-    private val BARE_FLYOUT = """
+    private const val BARE_FLYOUT = """
   <Style x:Key="RibbonBareFlyoutPresenterStyle" TargetType="FlyoutPresenter">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
@@ -367,7 +367,7 @@ internal object RibbonStyles {
      * The disabled text color applies to TextBlocks that inherit the ContentPresenter's Foreground (Kotlin changes the
      * icon colors).
      */
-    private val ITEMS = """
+    private const val ITEMS = """
   <Style x:Key="RibbonItemButtonStyle" TargetType="Button">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{ThemeResource RibbonForegroundBrush}" />
@@ -741,7 +741,7 @@ internal object RibbonStyles {
      * Templates for inputs (combo boxes, spinners, text boxes, sliders) (equivalent to Inputs.xaml in RibbonSpace).
      * Kotlin finds the parts (PART_*) by name from the template root to operate them, and switches the InputStates.
      */
-    private val INPUTS = """
+    private const val INPUTS = """
   <Style x:Key="RibbonComboBoxHostStyle" TargetType="ContentControl">
     <Setter Property="Foreground" Value="{ThemeResource RibbonForegroundBrush}" />
     <Setter Property="FontSize" Value="12" />
