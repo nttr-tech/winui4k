@@ -172,6 +172,7 @@ internal class RibbonComboBoxView(override val model: RibbonComboBoxModel, host:
     private val selectionBox: XamlElement by lazy { element.templatePart("PART_SelectionBox") }
     private val dropDownButton: XamlElement by lazy { element.templatePart("PART_DropDownButton") }
     private val flyout = WFlyout()
+    override val dropDown: WFlyoutBase get() = flyout
     private var listButtons: List<Pair<Any, XamlElement>> = emptyList()
     private var syncing = false
 
@@ -283,6 +284,7 @@ internal class RibbonComboBoxView(override val model: RibbonComboBoxModel, host:
         }
         textBox.textBoxText = model.text.orEmpty()
         updateSelectionBox()
+        model.fireCommitted(item, model.text.orEmpty())
         execute(item)
     }
 
@@ -301,11 +303,12 @@ internal class RibbonComboBoxView(override val model: RibbonComboBoxModel, host:
             syncing = false
         }
         updateSelectionBox()
+        model.fireCommitted(null, text)
         execute(text)
     }
 
     /** Opens the drop-down (stacks the item buttons vertically and puts the focus on the selected item). */
-    fun openDropDown() {
+    override fun openDropDown() {
         if (!isEffectivelyEnabled) return
         val list = XamlElement.load("<StackPanel Padding=\"2\" />")
         val buttons = mutableListOf<Pair<Any, XamlElement>>()

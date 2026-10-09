@@ -287,6 +287,14 @@ internal abstract class RibbonItemView(open val model: RibbonItemModel, val host
         host.itemInvoked(model, model.commandId, notifyParameter)
     }
 
+    /** The drop-down (a menu, palette, or expanded gallery). null for items without one. */
+    open val dropDown: WFlyoutBase? get() = null
+
+    /** Opens the drop-down (does nothing for items without one). */
+    open fun openDropDown() {
+        // An item without a drop-down
+    }
+
     /** Runs the primary action (command search, KeyTips). Returns false if it cannot be run. */
     open fun invoke(): Boolean {
         if (!isEffectivelyEnabled) return false

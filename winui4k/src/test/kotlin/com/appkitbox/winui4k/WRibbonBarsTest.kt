@@ -5,6 +5,8 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.ribbon.RibbonApplicationMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonApplicationMenuModel
 import com.appkitbox.winui4k.ribbon.RibbonButtonModel
+import com.appkitbox.winui4k.ribbon.RibbonColorPickerModel
+import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupModel
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonMenuBarItemModel
@@ -186,6 +188,29 @@ class WRibbonBarsTest : FunSpec() {
             onUiThreadGet { menu.shownItem } shouldBe null
         }
 
+        test("the color palette can be placed on its own, and setting showThemeColors to false hides the theme colors section") {
+            val model = onUiThreadGet { RibbonColorPickerModel("fill", "Fill Color") }
+            val palette = onUiThreadGet { WRibbonColorPalette(model) }
+            show(palette)
+            val withTheme = onUiThreadGet { palette.swatchCount }
+            onUiThread { model.showThemeColors = false }
+            onUiThreadGet { palette.swatchCount } shouldBe withTheme - THEME_SWATCHES
+        }
+
+        test("committing a combo box reports both the item and the text (if it is editable and nothing matches, the item is null)") {
+            val combo = onUiThreadGet { RibbonComboBoxModel("size", "Size", listOf("10", "12")).also { it.isEditable = true } }
+            val toolBar = onUiThreadGet { WRibbonToolBar(RibbonToolBarModel().also { it.items.add(combo) }) }
+            show(toolBar)
+            val commits = mutableListOf<Pair<Any?, String>>()
+            onUiThread {
+                combo.addCommitListener { commits += it.item to it.text }
+                val view = toolBar.itemViews().first() as RibbonComboBoxView
+                view.commit("12")
+                view.commitText("14")
+            }
+            commits shouldBe listOf<Pair<Any?, String>>("12" to "12", null to "14")
+        }
+
         test("the search box searches the ribbon, invokes a result, and clears the search text") {
             val model = onUiThreadGet {
                 RibbonModel().also { m ->
@@ -246,5 +271,8 @@ class WRibbonBarsTest : FunSpec() {
         const val NARROW = 200.0
         const val WIDE = 3000.0
         const val BOX_WIDTH = 300.0
+
+        /** The 10 theme colors and their 5 shades. */
+        const val THEME_SWATCHES = 60
     }
 }

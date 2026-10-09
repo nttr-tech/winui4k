@@ -6,7 +6,10 @@ import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
 import com.appkitbox.winui4k.ribbon.RibbonCustomization
 import com.appkitbox.winui4k.ribbon.RibbonCustomizePage
 import com.appkitbox.winui4k.ribbon.RibbonDisplayMode
+import com.appkitbox.winui4k.ribbon.RibbonGalleryItemModel
+import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupModel
+import com.appkitbox.winui4k.ribbon.RibbonGroupState
 import com.appkitbox.winui4k.ribbon.RibbonItemModel
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonListListener
@@ -936,6 +939,99 @@ class WRibbon @JvmOverloads constructor(
 
     /** The groups that are floating panels. */
     fun floatingGroups(): List<RibbonGroupModel> = host.allGroupViews().filter { it.isFloating }.map { it.model }
+
+    // ---------------------------------------------------------------- Operations from code (public methods of RibbonSpace's RibbonGroup / items)
+
+    private fun groupView(group: RibbonGroupModel): RibbonGroupView? = host.allGroupViews().firstOrNull { it.model === group }
+
+    /** The group's current size (large, medium, small, collapsed). null if it is not shown. */
+    fun groupState(group: RibbonGroupModel): RibbonGroupState? = groupView(group)?.state
+
+    /** Opens the popup of a collapsed group. Returns false if the group is not collapsed. */
+    fun openGroupPopup(group: RibbonGroupModel): Boolean {
+        val view = groupView(group)?.takeIf { it.state == RibbonGroupState.COLLAPSED } ?: return false
+        view.openPopup()
+        return true
+    }
+
+    /** Closes the popup of a collapsed group. */
+    fun closeGroupPopup(group: RibbonGroupModel) {
+        groupView(group)?.closePopup()
+    }
+
+    /** Whether the popup of a collapsed group is open. */
+    fun isGroupPopupOpen(group: RibbonGroupModel): Boolean = groupView(group)?.isPopupOpen == true
+
+    /** Opens the group's expanded panel ([RibbonGroupModel.slideOutItems]). Returns false if it has no expanded panel. */
+    fun openSlideOut(group: RibbonGroupModel): Boolean {
+        if (group.slideOutItems.isEmpty()) return false
+        val view = groupView(group) ?: return false
+        view.openSlideOut()
+        return true
+    }
+
+    /** Closes the group's expanded panel (even if it is pinned). */
+    fun closeSlideOut(group: RibbonGroupModel) {
+        groupView(group)?.closeSlideOut()
+    }
+
+    /** Whether the group's expanded panel is open. */
+    fun isSlideOutOpen(group: RibbonGroupModel): Boolean = groupView(group)?.isSlideOutOpen == true
+
+    /** Whether the group's expanded panel is pinned. */
+    fun isSlideOutPinned(group: RibbonGroupModel): Boolean = groupView(group)?.isSlideOutPinned == true
+
+    /** Pins (keeps open) or unpins the group's expanded panel. */
+    fun setSlideOutPinned(group: RibbonGroupModel, pinned: Boolean) {
+        groupView(group)?.isSlideOutPinned = pinned
+    }
+
+    /** Runs the group's dialog launcher. Returns false if it has no dialog launcher. */
+    fun openDialogLauncher(group: RibbonGroupModel): Boolean {
+        if (!group.hasDialogLauncher) return false
+        val view = groupView(group) ?: return false
+        view.openDialogLauncher()
+        return true
+    }
+
+    /** Items that do not fit in the group's row in the simplified ribbon and have moved to the overflow menu. */
+    fun overflowItems(group: RibbonGroupModel): List<RibbonItemModel> = groupView(group)?.overflowViews()?.map { it.model }.orEmpty()
+
+    /** Does the same as clicking the item (opens it if it is a drop-down; RibbonSpace's PerformClick). Returns false if it cannot be run. */
+    fun performClick(item: RibbonItemModel): Boolean = host.findView(item)?.invoke() == true
+
+    /** Opens the item's drop-down (menu, palette, expanded gallery, combo box list). Returns false if it has none. */
+    fun openDropDown(item: RibbonItemModel): Boolean {
+        val view = host.findView(item)?.takeIf { it.dropDown != null } ?: return false
+        view.openDropDown()
+        return true
+    }
+
+    /** Closes the item's drop-down. */
+    fun closeDropDown(item: RibbonItemModel) {
+        host.findView(item)?.dropDown?.hide()
+    }
+
+    /** Whether the item's drop-down is open. */
+    fun isDropDownOpen(item: RibbonItemModel): Boolean = host.findView(item)?.dropDown?.isOpen == true
+
+    private fun galleryView(gallery: RibbonGalleryModel): RibbonGalleryView? = host.findView(gallery) as? RibbonGalleryView
+
+    /** Selects and runs a gallery item (same as clicking it; RibbonSpace's RibbonGallery.Pick). */
+    fun pickGalleryItem(gallery: RibbonGalleryModel, item: RibbonGalleryItemModel) {
+        galleryView(gallery)?.pick(item)
+    }
+
+    /** Scrolls the in-ribbon gallery forward by [rows] rows (backward if negative). */
+    fun scrollGalleryRows(gallery: RibbonGalleryModel, rows: Int) {
+        galleryView(gallery)?.scrollRows(rows)
+    }
+
+    /** The first visible row of the in-ribbon gallery. */
+    fun galleryFirstRow(gallery: RibbonGalleryModel): Int = galleryView(gallery)?.firstVisibleRow ?: 0
+
+    /** Whether the gallery lays out its items inside the ribbon (if false, only a drop-down button). */
+    fun isGalleryInline(gallery: RibbonGalleryModel): Boolean = galleryView(gallery)?.isInline == true
 
     /** Makes a group a floating panel ([x], [y] are window coordinates; if null, just below its position in the ribbon). */
     @JvmOverloads

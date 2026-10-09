@@ -23,6 +23,7 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
     private val flyout: WFlyoutBase? = (model as? RibbonDropDownButtonModel)?.let { dropDown ->
         RibbonMenus.createFlyout({ dropDown.menuItems.toList() }, { dropDown.dropDownContent }, host)
     }
+    override val dropDown: WFlyoutBase? get() = flyout
 
     init {
         element.onClick { onClick() }
@@ -86,7 +87,7 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
     }
 
     /** Opens the drop-down. */
-    fun openDropDown() {
+    override fun openDropDown() {
         flyout?.showAt(element)
     }
 
@@ -291,6 +292,7 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
         host,
         onChosen = { choice -> if (model.followLastChoice) model.lastChoice = choice },
     )
+    override val dropDown: WFlyoutBase get() = flyout
 
     init {
         primary.onClick { invokePrimary() }
@@ -423,7 +425,7 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
     }
 
     /** Opens the drop-down. */
-    fun openDropDown() {
+    override fun openDropDown() {
         if (model.isEnabled) flyout.showAt(element)
     }
 

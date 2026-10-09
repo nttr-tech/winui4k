@@ -143,6 +143,7 @@ internal class RibbonGridPickerView(override val model: RibbonGridPickerModel, h
         XamlElement.load("<Button Style=\"{StaticResource RibbonItemButtonStyle}\" />")
     }
     private val flyout: WFlyout? = if (embedded) null else WFlyout()
+    override val dropDown: WFlyoutBase? get() = flyout
     private var picker: GridPanel? = null
 
     init {
@@ -204,6 +205,10 @@ internal class RibbonGridPickerView(override val model: RibbonGridPickerModel, h
     }
 
     /** Commits the size (runs the command with a [RibbonGridSize] and closes the drop-down). */
+    override fun openDropDown() {
+        if (isEffectivelyEnabled) flyout?.showAt(element)
+    }
+
     fun pick(size: RibbonGridSize) {
         flyout?.hide()
         execute(size)
@@ -335,17 +340,25 @@ internal class RibbonColorPaletteView(
         build()
     }
 
+    /** Rebuilds when the model's display settings or the recent colors change. */
+    fun rebuild() = build()
+
+    /** The number of swatches (for tests). */
+    val swatchCount: Int get() = swatches.size
+
     private fun build() {
         val strings = RibbonStrings.current
         element.clearChildren()
         swatches.clear()
         if (model.showAutomatic) element.addChild(commandRow(strings.automatic, model.automaticColor, null) { select(model.automaticColor) })
-        element.addChild(header(strings.themeColors))
-        val grid = RibbonColorPalette.buildThemeGrid(model.themeColors.toList().ifEmpty { null })
-        element.addChild(swatchRow(grid[0]))
-        val shades = XamlElement.load("<StackPanel />")
-        for (row in grid.drop(1)) shades.addChild(swatchRow(row))
-        element.addChild(shades)
+        if (model.showThemeColors) {
+            element.addChild(header(strings.themeColors))
+            val grid = RibbonColorPalette.buildThemeGrid(model.themeColors.toList().ifEmpty { null })
+            element.addChild(swatchRow(grid[0]))
+            val shades = XamlElement.load("<StackPanel />")
+            for (row in grid.drop(1)) shades.addChild(swatchRow(row))
+            element.addChild(shades)
+        }
         element.addChild(header(strings.standardColors))
         element.addChild(swatchRow(model.standardColors.toList().ifEmpty { RibbonColorPalette.STANDARD_COLORS }))
         if (model.recentColors.isNotEmpty()) {
@@ -451,7 +464,11 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
     private val primary: XamlElement? by lazy { if (embedded) null else element.templatePart("PART_PrimaryButton") }
     private val secondary: XamlElement? by lazy { if (embedded) null else element.templatePart("PART_SecondaryButton") }
     private val flyout: WFlyout? = if (embedded) null else WFlyout()
+    override val dropDown: WFlyoutBase? get() = flyout
     private var palette: RibbonColorPaletteView? = null
+
+    /** The number of swatches in the palette (for tests). */
+    internal val swatchCount: Int get() = palette?.swatchCount ?: 0
 
     override fun attach() {
         if (embedded) {
@@ -537,7 +554,11 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
 
     override fun onModelChanged(name: String) {
         super.onModelChanged(name)
-        if (name == "selectedColor") applyLayoutCore()
+        when (name) {
+            "selectedColor" -> applyLayoutCore()
+            // When the palette is always shown (in a menu or standalone), apply changes to the set of sections immediately
+            "showAutomatic", "showThemeColors", "showNoColor", "showMoreColors", "automaticColor" -> if (embedded) palette?.rebuild()
+        }
     }
 
     private fun chosen(color: RibbonColor?) {
@@ -556,7 +577,7 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
     }
 
     /** Opens the palette. */
-    fun openDropDown() {
+    override fun openDropDown() {
         if (model.isEnabled) flyout?.showAt(element)
     }
 

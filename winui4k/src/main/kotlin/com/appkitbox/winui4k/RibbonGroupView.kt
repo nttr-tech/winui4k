@@ -546,7 +546,10 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
 
     /** Closes the collapsed popup. */
     fun closePopup() {
-        if (popupOpen) collapsedFlyout.hide()
+        if (!popupOpen) return
+        collapsedFlyout.hide()
+        // Closed arrives asynchronously, so put the items back into the ribbon here (Closed does nothing)
+        restoreFromPopup()
     }
 
     /** Whether the popup is open. */

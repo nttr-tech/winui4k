@@ -41,6 +41,7 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
     private val moreButton = inlineRoot.part("PART_MoreButton")
     private val dropDownButton = XamlElement.load("<Button Style=\"{StaticResource RibbonItemButtonStyle}\" Visibility=\"Collapsed\" />")
     private val flyout = WFlyout()
+    override val dropDown: WFlyoutBase get() = flyout
     private var inlineItems: List<Pair<RibbonGalleryItemModel, XamlElement>> = emptyList()
     private var popupItems: List<Pair<RibbonGalleryItemModel, XamlElement>> = emptyList()
     private var firstRow = 0
@@ -224,6 +225,12 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
         downButton.isControlEnabled = firstRow < max(0, rowCount - max(1, model.rows))
     }
 
+    /** The first visible row in the ribbon. */
+    val firstVisibleRow: Int get() = firstRow
+
+    /** Whether the items are laid out in the ribbon (only the drop-down button when shrunk or drop-down only). */
+    val isInline: Boolean get() = inlineRoot.isVisible
+
     /** Scrolls the items in the ribbon by [delta] rows. */
     fun scrollRows(delta: Int) {
         firstRow += delta
@@ -336,7 +343,7 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
     }
 
     /** Opens the expanded gallery (a grid per category, a filter, and a footer menu). */
-    fun openDropDown() {
+    override fun openDropDown() {
         if (!isEffectivelyEnabled || flyout.isOpen) return
         val cols = if (model.dropDownColumns > 0) model.dropDownColumns else max(model.maxColumns, MIN_DROP_DOWN_COLUMNS)
         val root = XamlElement.load("<StackPanel Spacing=\"4\" Padding=\"0\" />")

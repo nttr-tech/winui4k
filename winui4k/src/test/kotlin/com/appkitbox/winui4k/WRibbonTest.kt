@@ -151,6 +151,55 @@ class WRibbonTest : FunSpec() {
             wide.toSet() shouldBe setOf(RibbonGroupState.LARGE)
         }
 
+        test("the popup of a collapsed group can be opened and closed from code, and the group's size can be obtained") {
+            onUiThread { ribbon.width = NARROW }
+            settle()
+            val collapsed = onUiThreadGet { model.findTab("home")!!.groups.first { ribbon.groupState(it) == RibbonGroupState.COLLAPSED } }
+            onUiThreadGet { ribbon.openGroupPopup(collapsed) } shouldBe true
+            settle()
+            onUiThreadGet { ribbon.isGroupPopupOpen(collapsed) } shouldBe true
+            onUiThread { ribbon.closeGroupPopup(collapsed) }
+            onUiThreadGet { ribbon.isGroupPopupOpen(collapsed) } shouldBe false
+            onUiThread { ribbon.width = WIDE }
+            settle()
+            onUiThreadGet { ribbon.openGroupPopup(collapsed) } shouldBe false
+        }
+
+        test("the expanded panel can be opened and pinned from code, and the dialog launcher can be invoked") {
+            val clipboard = onUiThreadGet { model.findGroup("clipboard")!! }
+            val invoked = mutableListOf<String?>()
+            onUiThread {
+                clipboard.slideOutItems.add(button("pasteSpecial", "Paste Special"))
+                clipboard.isDialogLauncherVisible = true
+                ribbon.addItemInvokedListener { invoked += it.item.id }
+            }
+            settle()
+            onUiThreadGet { ribbon.openSlideOut(clipboard) } shouldBe true
+            settle()
+            onUiThreadGet { ribbon.isSlideOutOpen(clipboard) } shouldBe true
+            onUiThread { ribbon.setSlideOutPinned(clipboard, true) }
+            onUiThreadGet { ribbon.isSlideOutPinned(clipboard) } shouldBe true
+            onUiThread { ribbon.closeSlideOut(clipboard) }
+            onUiThreadGet { ribbon.isSlideOutOpen(clipboard) } shouldBe false
+            onUiThreadGet { ribbon.openDialogLauncher(clipboard) } shouldBe true
+            invoked shouldBe listOf("clipboard")
+        }
+
+        test("items can be clicked and split button drop-downs opened and closed from code") {
+            val invoked = mutableListOf<String?>()
+            onUiThread { ribbon.addItemInvokedListener { invoked += it.item.id } }
+            onUiThreadGet { ribbon.performClick(model.findItem("cut")!!) } shouldBe true
+            invoked shouldBe listOf("cut")
+            val paste = onUiThreadGet { model.findItem("paste")!! }
+            onUiThreadGet { ribbon.openDropDown(paste) } shouldBe true
+            settle()
+            onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe true
+            onUiThread { ribbon.closeDropDown(paste) }
+            settle()
+            onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe false
+            onUiThreadGet { ribbon.openDropDown(model.findItem("cut")!!) } shouldBe false
+        }
+
         test("showing a contextual group that is selected on show makes its tab appear and be selected") {
             onUiThread { model.setActiveContextualGroups("tableTools") }
             settle()

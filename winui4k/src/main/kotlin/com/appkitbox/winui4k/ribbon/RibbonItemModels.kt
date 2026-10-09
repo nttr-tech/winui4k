@@ -232,6 +232,42 @@ open class RibbonComboBoxModel @JvmOverloads constructor(
         is RibbonNodeModel -> item.label ?: item.id
         else -> item.toString()
     }
+
+    private val commitListeners = java.util.concurrent.CopyOnWriteArrayList<RibbonComboBoxCommitListener>()
+
+    /** Subscribes to commits (choosing an item or committing text) (RibbonSpace's RibbonComboBox.Committed). */
+    fun addCommitListener(listener: RibbonComboBoxCommitListener) {
+        commitListeners += listener
+    }
+
+    /** Removes a listener registered with [addCommitListener]. */
+    fun removeCommitListener(listener: RibbonComboBoxCommitListener) {
+        commitListeners -= listener
+    }
+
+    /** Notifies a commit ([item] is the matching item; null if editable and no item matches). */
+    fun fireCommitted(item: Any?, text: String) {
+        if (commitListeners.isEmpty()) return
+        val event = RibbonComboBoxCommitEvent(this, item, text)
+        commitListeners.forEach { it.committed(event) }
+    }
+}
+
+/** A commit of a combo box. Holds both the item and the text. */
+class RibbonComboBoxCommitEvent(
+    source: RibbonComboBoxModel,
+    /** The committed item (null if editable and no item matches). */
+    val item: Any?,
+    /** The committed text. */
+    val text: String,
+) : java.util.EventObject(source) {
+    override fun getSource(): RibbonComboBoxModel = super.getSource() as RibbonComboBoxModel
+}
+
+/** Receives commits of a combo box. */
+fun interface RibbonComboBoxCommitListener {
+    /** An item was chosen or text was committed. */
+    fun committed(event: RibbonComboBoxCommitEvent)
 }
 
 /** A font name combo box (draws each item in its own font; Office's [Font]). */

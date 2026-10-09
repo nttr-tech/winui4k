@@ -198,6 +198,9 @@ open class RibbonColorPickerModel @JvmOverloads constructor(
     /** Whether to show "More Colors...". */
     var showMoreColors: Boolean by observable(true)
 
+    /** Whether to show the theme colors (and their tints and shades) section (RibbonSpace's ShowThemeColors). */
+    var showThemeColors: Boolean by observable(true)
+
     /** Whether to make it a split button (clicking applies the current color). If false, clicking opens the palette. */
     var isSplit: Boolean by observable(true)
 
