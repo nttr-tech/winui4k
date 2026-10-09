@@ -167,61 +167,90 @@ class WRibbonToolBar @JvmOverloads constructor(
         }
     }
 
-    @Suppress("CyclomaticComplexMethod") // Handles horizontal and vertical (1 / 2 column) flow and overflow in a single loop
     private fun arrange() {
         val layout = itemLayout()
         val vertical = isVertical
-        val columns = if (vertical) model.columns else 1
         for (view in views) {
             if (view is RibbonSeparatorView) view.isHorizontal = vertical
             view.applyLayout(layout)
         }
         val shown = views.filter { it.isShown }
         val sizes = shown.map { it.measure(layout) }
-        val cell = WSize(sizes.maxOfOrNull { it.width } ?: 0.0, sizes.maxOfOrNull { it.height } ?: 0.0)
+        // Separators do not occupy a cell, so the cell size is determined by the items other than separators
+        val flow = Flow(vertical, if (vertical) model.columns else 1, cellSize(shown, sizes))
         val available = if (vertical) actualHeight else actualWidth
         val overflowSize = layout.metrics.simplifiedItemHeight
         val hidden = mutableListOf<RibbonItemView>()
-        var main = 0.0
-        var cross = 0.0
-        var column = 0
         for ((index, view) in shown.withIndex()) {
-            val size = sizes[index]
-            val extent = if (vertical) size.height else size.width
-            val remaining = shown.size - index - 1
-            val reserve = if (remaining > 0 && model.isOverflowEnabled) overflowSize else 0.0
-            val fits = available <= 0 || !model.isOverflowEnabled || main + extent + reserve <= available || hidden.isEmpty() && remaining == 0 && main + extent <= available
-            if (!fits || hidden.isNotEmpty()) {
-                hidden += view
-                view.element.isVisible = false
-                continue
-            }
-            view.element.isVisible = true
-            if (vertical) {
-                view.element.setCanvasPosition(column * cell.width + (cell.width - size.width) / 2, main)
-                cross = max(cross, (column + 1) * cell.width)
-                column++
-                if (column >= columns) {
-                    column = 0
-                    main += cell.height + SPACING
-                }
-            } else {
-                view.element.setCanvasPosition(main, (cell.height - size.height) / 2)
-                main += size.width + SPACING
-                cross = max(cross, cell.height)
-            }
+            val extent = if (vertical) sizes[index].height else sizes[index].width
+            val reserve = if (index < shown.size - 1 && model.isOverflowEnabled) overflowSize else 0.0
+            val fits = available <= 0 || !model.isOverflowEnabled || flow.main + extent + reserve <= available
+            view.element.isVisible = fits && hidden.isEmpty()
+            if (view.element.isVisible) flow.place(view, sizes[index]) else hidden += view
         }
-        if (column != 0) main += cell.height + SPACING
+        flow.finishRow()
+        finishArrange(flow, hidden, overflowSize)
+    }
+
+    private fun cellSize(shown: List<RibbonItemView>, sizes: List<WSize>): WSize {
+        val cells = sizes.filterIndexed { i, _ -> shown[i] !is RibbonSeparatorView }
+        return WSize(cells.maxOfOrNull { it.width } ?: 0.0, cells.maxOfOrNull { it.height } ?: 0.0)
+    }
+
+    /** Places the overflow button at the end and determines the toolbar's size. */
+    private fun finishArrange(flow: Flow, hidden: List<RibbonItemView>, overflowSize: Double) {
+        val vertical = isVertical
         overflowed = hidden
         overflowButton.isVisible = hidden.isNotEmpty()
         if (hidden.isNotEmpty()) {
             overflowButton.setSize(overflowSize, overflowSize)
-            overflowButton.setCanvasPosition(if (vertical) 0.0 else main, if (vertical) main else 0.0)
-            main += overflowSize
+            if (vertical) overflowButton.setCanvasPosition(0.0, flow.main) else overflowButton.setCanvasPosition(flow.main, 0.0)
+            flow.main += overflowSize
         }
-        canvas.setSize(if (vertical) cross else main, if (vertical) main else cross)
-        root.setMinHeight(if (vertical) 0.0 else cross)
-        root.setMinWidth(if (vertical) cross else 0.0)
+        if (vertical) {
+            canvas.setSize(flow.cross, flow.main)
+            root.setMinWidth(flow.cross)
+        } else {
+            canvas.setSize(flow.main, flow.cross)
+            root.setMinHeight(flow.cross)
+        }
+    }
+
+    /** Where items are flowed (one row horizontally, a grid of [columns] columns vertically; vertical separators span the whole row). */
+    private class Flow(private val vertical: Boolean, private val columns: Int, private val cell: WSize) {
+        var main = 0.0
+        var cross = 0.0
+        private var column = 0
+
+        fun place(view: RibbonItemView, size: WSize) {
+            when {
+                vertical && view is RibbonSeparatorView -> {
+                    finishRow()
+                    view.element.setSize(columns * cell.width - SEPARATOR_INSET * 2, 1.0)
+                    view.element.setCanvasPosition(SEPARATOR_INSET, main + SEPARATOR_GAP)
+                    main += SEPARATOR_GAP * 2 + 1
+                    cross = max(cross, columns * cell.width)
+                }
+                vertical -> {
+                    view.element.setCanvasPosition(column * cell.width + (cell.width - size.width) / 2, main)
+                    cross = max(cross, (column + 1) * cell.width)
+                    column++
+                    if (column >= columns) finishRow()
+                }
+                else -> {
+                    view.element.setCanvasPosition(main, (cell.height - size.height) / 2)
+                    main += size.width + SPACING
+                    cross = max(cross, cell.height)
+                }
+            }
+        }
+
+        /** Closes the current row partway when vertical. */
+        fun finishRow() {
+            if (column == 0) return
+            column = 0
+            main += cell.height + SPACING
+        }
     }
 
     /** Opens the overflow menu. */
@@ -249,6 +278,8 @@ class WRibbonToolBar @JvmOverloads constructor(
 
     private companion object {
         const val SPACING = 1.0
+        const val SEPARATOR_INSET = 4.0
+        const val SEPARATOR_GAP = 4.0
     }
 }
 
