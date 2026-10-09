@@ -8,12 +8,12 @@ import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.dropDown
-import com.appkitbox.winui4k.sample.ribbon.shell.group
-import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
-import com.appkitbox.winui4k.sample.ribbon.shell.split
-import com.appkitbox.winui4k.sample.ribbon.shell.tab
+import com.appkitbox.winui4k.sample.ribbon.common.button
+import com.appkitbox.winui4k.sample.ribbon.common.dropDown
+import com.appkitbox.winui4k.sample.ribbon.common.group
+import com.appkitbox.winui4k.sample.ribbon.common.menuItem
+import com.appkitbox.winui4k.sample.ribbon.common.split
+import com.appkitbox.winui4k.sample.ribbon.common.tab
 
 // Word's contextual tabs: [Table Design] and [Layout] under [Table Tools] (same layout as WordPage.xaml), and
 // [Picture Format] under [Picture Tools] (the RibbonSpace demo only declares the group without a tab, so this was added to match Word)

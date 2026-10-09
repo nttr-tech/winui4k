@@ -14,14 +14,14 @@ import com.appkitbox.winui4k.ribbon.RibbonLabelModel
 import com.appkitbox.winui4k.ribbon.RibbonMenuSeparatorModel
 import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.dropDown
-import com.appkitbox.winui4k.sample.ribbon.shell.group
-import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
-import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
-import com.appkitbox.winui4k.sample.ribbon.shell.split
-import com.appkitbox.winui4k.sample.ribbon.shell.tab
-import com.appkitbox.winui4k.sample.ribbon.shell.toggle
+import com.appkitbox.winui4k.sample.ribbon.common.button
+import com.appkitbox.winui4k.sample.ribbon.common.dropDown
+import com.appkitbox.winui4k.sample.ribbon.common.group
+import com.appkitbox.winui4k.sample.ribbon.common.menuItem
+import com.appkitbox.winui4k.sample.ribbon.common.radioItem
+import com.appkitbox.winui4k.sample.ribbon.common.split
+import com.appkitbox.winui4k.sample.ribbon.common.tab
+import com.appkitbox.winui4k.sample.ribbon.common.toggle
 
 // Word's [Insert] [Design] [Layout] [Review] [View] [Help] tabs (same layout as WordPage.xaml)
 

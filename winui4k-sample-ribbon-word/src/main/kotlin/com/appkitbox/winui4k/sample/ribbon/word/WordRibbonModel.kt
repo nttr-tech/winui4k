@@ -19,11 +19,11 @@ import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonModel
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.dropDown
-import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
-import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
-import com.appkitbox.winui4k.sample.ribbon.shell.split
+import com.appkitbox.winui4k.sample.ribbon.common.button
+import com.appkitbox.winui4k.sample.ribbon.common.dropDown
+import com.appkitbox.winui4k.sample.ribbon.common.menuItem
+import com.appkitbox.winui4k.sample.ribbon.common.radioItem
+import com.appkitbox.winui4k.sample.ribbon.common.split
 
 /** An icon from a Segoe Fluent Icons glyph (the same character as Icon="&#x....;" in the RibbonSpace demos). */
 internal fun glyph(code: Char): RibbonIcon = RibbonIcon.glyph(code.toString())

@@ -42,11 +42,11 @@ import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
 import com.appkitbox.winui4k.ribbon.RibbonToolBarOrientation
 import com.appkitbox.winui4k.ribbon.RibbonZoomModel
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoApp
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
-import com.appkitbox.winui4k.sample.ribbon.shell.toggle
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoApp
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
+import com.appkitbox.winui4k.sample.ribbon.common.button
+import com.appkitbox.winui4k.sample.ribbon.common.menuItem
+import com.appkitbox.winui4k.sample.ribbon.common.toggle
 
 /** The kinds of options bar contents (RibbonContextualToolBar.Context in the RibbonSpace demo). */
 private enum class ToolContext { MOVE, BRUSH, TEXT }

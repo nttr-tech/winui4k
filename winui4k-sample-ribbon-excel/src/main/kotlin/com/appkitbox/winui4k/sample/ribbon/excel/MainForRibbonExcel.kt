@@ -20,8 +20,8 @@ import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonZoomModel
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoApp
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoApp
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
 
 /**
  * Excel-style ribbon demo (same layout as the RibbonSpace Excel demo; the ribbon is 100% MVVM: all content is in

@@ -40,9 +40,9 @@ import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
 import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoApp
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
-import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoApp
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
+import com.appkitbox.winui4k.sample.ribbon.common.radioItem
 
 /**
  * An AutoCAD-style ribbon demo (same layout as the RibbonSpace CAD demo): the CAD theme (dark), the application menu

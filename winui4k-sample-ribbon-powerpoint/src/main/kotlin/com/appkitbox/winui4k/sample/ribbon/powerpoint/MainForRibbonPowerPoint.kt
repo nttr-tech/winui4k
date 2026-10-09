@@ -22,9 +22,9 @@ import com.appkitbox.winui4k.ribbon.RibbonLabelModel
 import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonZoomModel
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoApp
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
-import com.appkitbox.winui4k.sample.ribbon.shell.button
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoApp
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
+import com.appkitbox.winui4k.sample.ribbon.common.button
 
 /**
  * PowerPoint-style ribbon demo (same layout as the RibbonSpace PowerPoint demo): simplified ribbon, slide list on the

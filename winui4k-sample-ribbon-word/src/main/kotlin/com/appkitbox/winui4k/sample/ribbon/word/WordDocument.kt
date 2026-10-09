@@ -20,7 +20,7 @@ import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
 import com.appkitbox.winui4k.ribbon.RibbonGridSize
 import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
-import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
+import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
 
 /**
  * The document of the Word demo (same as PageSheet in WordPage.xaml: heading, body, buttons for the table and dark mode,

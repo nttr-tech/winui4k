@@ -1,4 +1,4 @@
-package com.appkitbox.winui4k.sample.ribbon.shell
+package com.appkitbox.winui4k.sample.ribbon.common
 
 import com.appkitbox.winui4k.ribbon.RibbonButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel

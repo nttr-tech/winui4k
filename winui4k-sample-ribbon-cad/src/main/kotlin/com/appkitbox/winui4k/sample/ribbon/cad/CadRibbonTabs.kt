@@ -6,9 +6,9 @@ import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
-import com.appkitbox.winui4k.sample.ribbon.shell.group
-import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
-import com.appkitbox.winui4k.sample.ribbon.shell.tab
+import com.appkitbox.winui4k.sample.ribbon.common.group
+import com.appkitbox.winui4k.sample.ribbon.common.radioItem
+import com.appkitbox.winui4k.sample.ribbon.common.tab
 
 // The ribbon tabs of the RibbonSpace CAD demo (samples/RibbonSpace.Demo/Pages/CadPage.xaml, MIT License),
 // converted by tools/gen_cad_ribbon.py into code that builds the WinUI4K model.

@@ -17,14 +17,14 @@ import com.appkitbox.winui4k.ribbon.RibbonRowModel
 import com.appkitbox.winui4k.ribbon.RibbonScreenTip
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.dropDown
-import com.appkitbox.winui4k.sample.ribbon.shell.group
-import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
-import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
-import com.appkitbox.winui4k.sample.ribbon.shell.split
-import com.appkitbox.winui4k.sample.ribbon.shell.tab
-import com.appkitbox.winui4k.sample.ribbon.shell.toggle
+import com.appkitbox.winui4k.sample.ribbon.common.button
+import com.appkitbox.winui4k.sample.ribbon.common.dropDown
+import com.appkitbox.winui4k.sample.ribbon.common.group
+import com.appkitbox.winui4k.sample.ribbon.common.menuItem
+import com.appkitbox.winui4k.sample.ribbon.common.radioItem
+import com.appkitbox.winui4k.sample.ribbon.common.split
+import com.appkitbox.winui4k.sample.ribbon.common.tab
+import com.appkitbox.winui4k.sample.ribbon.common.toggle
 
 /** Word's [Home] tab (same layout as HOME in WordPage.xaml). */
 internal fun createHomeTab(): RibbonTabModel =
