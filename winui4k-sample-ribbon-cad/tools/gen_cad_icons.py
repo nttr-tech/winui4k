@@ -58,7 +58,7 @@ for m in token.finditer(text):
 
 header = '''package com.appkitbox.winui4k.sample.ribbon.cad
 
-import com.appkitbox.winui4k.ribbon.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
 
 /**
  * Line-art icons for the CAD commands (ported from CadIcons in the RibbonSpace demo. MIT License, THIRD-PARTY-NOTICES.md).

@@ -3,8 +3,8 @@ package com.appkitbox.winui4k.sample.ribbon.cad
 import com.appkitbox.winui4k.WCanvas
 import com.appkitbox.winui4k.WColor
 import com.appkitbox.winui4k.WLabel
-import com.appkitbox.winui4k.WRibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.WRibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos

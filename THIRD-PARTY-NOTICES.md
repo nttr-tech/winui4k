@@ -2,7 +2,7 @@
 
 ## RibbonSpace
 
-The ribbon of WinUI4K (`com.appkitbox.winui4k.ribbon` and the `WRibbon*` / `Ribbon*` classes of `com.appkitbox.winui4k`) and the ribbon demo apps (`winui4k-sample-ribbon-*`) are a Pure Kotlin reimplementation of
+The ribbon of WinUI4K (`com.appkitbox.winui4k.extension.ribbon` and `com.appkitbox.winui4k.extension.ribbon.model`) and the ribbon demo apps (`winui4k-sample-ribbon-*`) are a Pure Kotlin reimplementation of
 [RibbonSpace](https://github.com/wieslawsoltes/RibbonSpace), licensed under the MIT License:
 
 ```text

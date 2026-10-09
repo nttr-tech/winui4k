@@ -3,7 +3,6 @@ package com.appkitbox.winui4k.sample.ribbon.word
 import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.Orientation
-import com.appkitbox.winui4k.RibbonItemInvokedEvent
 import com.appkitbox.winui4k.TextAlignment
 import com.appkitbox.winui4k.TextWrapping
 import com.appkitbox.winui4k.WBorder
@@ -14,12 +13,13 @@ import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WScrollPane
-import com.appkitbox.winui4k.ribbon.RibbonColor
-import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
-import com.appkitbox.winui4k.ribbon.RibbonGridSize
-import com.appkitbox.winui4k.ribbon.RibbonModel
-import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
+import com.appkitbox.winui4k.extension.ribbon.RibbonItemInvokedEvent
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonColor
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonComboBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGalleryModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGridSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonToggleButtonModel
 import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
 
 /**

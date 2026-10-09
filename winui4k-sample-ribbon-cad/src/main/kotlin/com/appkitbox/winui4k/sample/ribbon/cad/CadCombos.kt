@@ -7,11 +7,11 @@ import com.appkitbox.winui4k.WColor
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
-import com.appkitbox.winui4k.WRibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonItemRenderer
-import com.appkitbox.winui4k.ribbon.RibbonItemTextProvider
+import com.appkitbox.winui4k.extension.ribbon.WRibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonComboBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemRenderer
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemTextProvider
 
 /** A drawing layer (name and color, on/freeze/lock state). */
 data class CadLayer(val name: String, val color: WColor, val isOn: Boolean = true, val isFrozen: Boolean = false, val isLocked: Boolean = false) {

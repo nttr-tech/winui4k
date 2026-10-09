@@ -9,24 +9,25 @@ import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
-import com.appkitbox.winui4k.WRibbon
-import com.appkitbox.winui4k.WRibbonStatusBar
-import com.appkitbox.winui4k.WRibbonTheme
 import com.appkitbox.winui4k.WScrollPane
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WinUiUtilities
-import com.appkitbox.winui4k.ribbon.RibbonLabelModel
-import com.appkitbox.winui4k.ribbon.RibbonModel
-import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
-import com.appkitbox.winui4k.ribbon.RibbonThemePalette
-import com.appkitbox.winui4k.ribbon.RibbonZoomModel
+import com.appkitbox.winui4k.extension.ribbon.WRibbon
+import com.appkitbox.winui4k.extension.ribbon.WRibbonStatusBar
+import com.appkitbox.winui4k.extension.ribbon.WRibbonTheme
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonLabelModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonStatusBarModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemePalette
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonZoomModel
 import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoApp
 import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
 
 /**
  * Excel-style ribbon demo (same layout as the RibbonSpace Excel demo; the ribbon is 100% MVVM: all content is in
- * [com.appkitbox.winui4k.ribbon.RibbonModel], and commands are referenced by id from the command catalog of [ExcelViewModel]).
- * Formula bar, sheet, a sample chart (selecting it shows [Chart Tools]), and a status bar with summary values.
+ * [com.appkitbox.winui4k.extension.ribbon.model.RibbonModel], and commands are referenced by id from the command catalog of
+ * [ExcelViewModel]). Formula bar, sheet, a sample chart (selecting it shows [Chart Tools]), and a status bar with summary
+ * values.
  */
 fun main() {
     WinUiUtilities.invokeLater {

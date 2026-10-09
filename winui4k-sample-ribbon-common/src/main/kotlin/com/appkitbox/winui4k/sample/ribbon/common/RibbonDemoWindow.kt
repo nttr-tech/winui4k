@@ -11,11 +11,11 @@ import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WFrame
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
-import com.appkitbox.winui4k.WRibbon
-import com.appkitbox.winui4k.WRibbonTheme
-import com.appkitbox.winui4k.WRibbonTitleBar
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonIcons
+import com.appkitbox.winui4k.extension.ribbon.WRibbon
+import com.appkitbox.winui4k.extension.ribbon.WRibbonTheme
+import com.appkitbox.winui4k.extension.ribbon.WRibbonTitleBar
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcons
 
 /** The kind of demo app (the app icon in the title bar). */
 enum class RibbonDemoApp(internal val icon: RibbonIcon) {

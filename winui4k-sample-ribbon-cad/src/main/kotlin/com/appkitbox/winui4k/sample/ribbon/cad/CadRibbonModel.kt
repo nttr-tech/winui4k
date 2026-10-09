@@ -1,15 +1,15 @@
 package com.appkitbox.winui4k.sample.ribbon.cad
 
-import com.appkitbox.winui4k.ribbon.RibbonColor
-import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonContextualActivation
-import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
-import com.appkitbox.winui4k.ribbon.RibbonDensity
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonIcons
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonMinimizeBehavior
-import com.appkitbox.winui4k.ribbon.RibbonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonColor
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonComboBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualActivation
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualGroupModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonDensity
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcons
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonMinimizeBehavior
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonModel
 
 /** Workspaces (the same three as the RibbonSpace CAD demo) and the tabs shown in each. */
 enum class CadWorkspace(val label: String, val tabIds: Set<String>) {

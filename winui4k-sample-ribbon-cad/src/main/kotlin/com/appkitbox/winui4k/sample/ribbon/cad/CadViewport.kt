@@ -10,15 +10,15 @@ import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
-import com.appkitbox.winui4k.WRibbon
-import com.appkitbox.winui4k.WRibbonIcon
-import com.appkitbox.winui4k.WRibbonTheme
-import com.appkitbox.winui4k.WRibbonToolBar
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonTextBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
-import com.appkitbox.winui4k.ribbon.RibbonToolBarOrientation
+import com.appkitbox.winui4k.extension.ribbon.WRibbon
+import com.appkitbox.winui4k.extension.ribbon.WRibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.WRibbonTheme
+import com.appkitbox.winui4k.extension.ribbon.WRibbonToolBar
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonTextBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarOrientation
 
 /**
  * The drawing area (same as the RibbonSpace CAD demo): the floor plan, the viewport caption, the UCS icon, the ViewCube,

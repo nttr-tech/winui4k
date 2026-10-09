@@ -1,13 +1,13 @@
 package com.appkitbox.winui4k.sample.ribbon.word
 
-import com.appkitbox.winui4k.ribbon.RibbonCheckBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonColor
-import com.appkitbox.winui4k.ribbon.RibbonColorPickerModel
-import com.appkitbox.winui4k.ribbon.RibbonGalleryItemModel
-import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
-import com.appkitbox.winui4k.ribbon.RibbonIcons
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonTabModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonCheckBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonColor
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonColorPickerModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGalleryItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGalleryModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcons
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
 import com.appkitbox.winui4k.sample.ribbon.common.button
 import com.appkitbox.winui4k.sample.ribbon.common.dropDown
 import com.appkitbox.winui4k.sample.ribbon.common.group

@@ -1,10 +1,10 @@
 package com.appkitbox.winui4k.sample.ribbon.excel
 
-import com.appkitbox.winui4k.ribbon.RibbonColor
-import com.appkitbox.winui4k.ribbon.RibbonCommandCatalog
-import com.appkitbox.winui4k.ribbon.RibbonContextualActivation
-import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
-import com.appkitbox.winui4k.ribbon.RibbonRelayCommand
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonColor
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonCommandCatalog
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualActivation
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualGroupModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonRelayCommand
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale

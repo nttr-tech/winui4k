@@ -1,11 +1,11 @@
 package com.appkitbox.winui4k.sample.ribbon.cad
 
-import com.appkitbox.winui4k.ribbon.RibbonButtonGroupModel
-import com.appkitbox.winui4k.ribbon.RibbonGroupItemsLayout
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel
-import com.appkitbox.winui4k.ribbon.RibbonTabModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonButtonGroupModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupItemsLayout
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonSeparatorModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
 import com.appkitbox.winui4k.sample.ribbon.common.group
 import com.appkitbox.winui4k.sample.ribbon.common.radioItem
 import com.appkitbox.winui4k.sample.ribbon.common.tab

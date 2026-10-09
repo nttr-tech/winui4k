@@ -1,26 +1,26 @@
 package com.appkitbox.winui4k.sample.ribbon.cad
 
 import com.appkitbox.winui4k.Orientation
-import com.appkitbox.winui4k.ribbon.RibbonButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonFontComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonGalleryItemModel
-import com.appkitbox.winui4k.ribbon.RibbonGalleryModel
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonIconLayer
-import com.appkitbox.winui4k.ribbon.RibbonItemModel
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
-import com.appkitbox.winui4k.ribbon.RibbonMenuSeparatorModel
-import com.appkitbox.winui4k.ribbon.RibbonNodeModel
-import com.appkitbox.winui4k.ribbon.RibbonRowModel
-import com.appkitbox.winui4k.ribbon.RibbonScreenTip
-import com.appkitbox.winui4k.ribbon.RibbonSliderModel
-import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel
-import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonTextBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonComboBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonDropDownButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonFontComboBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGalleryItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGalleryModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIconLayer
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuSeparatorModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonNodeModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonRowModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonScreenTip
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonSliderModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonSpinnerModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonSplitButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonTextBoxModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonToggleButtonModel
 
 // Short builder functions for CAD ribbon items, used by CadRibbonTabs.kt (generated from XAML).
 

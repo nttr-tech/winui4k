@@ -1,16 +1,16 @@
 package com.appkitbox.winui4k.sample.ribbon.common
 
-import com.appkitbox.winui4k.ribbon.RibbonButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonGroupModel
-import com.appkitbox.winui4k.ribbon.RibbonIcon
-import com.appkitbox.winui4k.ribbon.RibbonItemModel
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
-import com.appkitbox.winui4k.ribbon.RibbonNodeModel
-import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
-import com.appkitbox.winui4k.ribbon.RibbonTabModel
-import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonDropDownButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuItemModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonNodeModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonSplitButtonModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonToggleButtonModel
 
 // Helpers shared by the demo apps for building ribbon models concisely
 

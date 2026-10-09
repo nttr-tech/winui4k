@@ -7,8 +7,8 @@ Pure Kotlin で再実装したもので、ブリッジ DLL も C# も使わな�
 
 ## 構成: モデルとビュー
 
-Swing の MVC と同じく、データと状態はモデル (`com.appkitbox.winui4k.ribbon` パッケージ) が持ち、
-ビュー (`com.appkitbox.winui4k` の `WRibbon*`) はモデルを購読して表示する。
+Swing の MVC と同じく、データと状態はモデル (`com.appkitbox.winui4k.extension.ribbon.model` パッケージ) が持ち、
+ビュー (`com.appkitbox.winui4k.extension.ribbon` の `WRibbon*`) はモデルを購読して表示する。
 
 - **モデル**: `RibbonModel` を根に、`RibbonTabModel` → `RibbonGroupModel` → 項目 (`RibbonItemModel` の派生) の木。
   プロパティは `RibbonObservable` で変更を通知し、子の並びは `RibbonList` (追加・削除・移動を通知するリスト) で持つ。
