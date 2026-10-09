@@ -59,11 +59,32 @@ internal class KComObject(
     @Volatile
     var innerUnknown: ComPtr? = null
 
+    /** Whether the reference count has reached 0 and the object has been reclaimed (weak reference Resolve returns null). */
+    @Volatile
+    private var reclaimed = false
+
+    /** The weak reference (IWeakReference) to this object, created by [enableWeakReferences]. */
+    private var weakReference: KComObject? = null
+
     /** The pointer of the first interface added via addInterface (the actual IUnknown/IInspectable). */
     val primary: Ptr
         get() = interfaces.values.first()
 
-    fun addInterface(iid: String, methods: List<Method>): KComObject {
+    /** The pointer of the [iid] interface (does not increase the reference count). Used for the sender argument of events, etc. */
+    fun pointerFor(iid: String): Ptr = checkNotNull(interfaces[Guid.bitsOf(iid)]) { "interface not implemented: $iid" }
+
+    /** Increments the reference count by 1. Used when handing an existing reference through an out parameter (under the contract that the caller releases it). */
+    fun addRef() {
+        refCount.incrementAndGet()
+    }
+
+    fun addInterface(iid: String, methods: List<Method>): KComObject = addInterface(iid, methods, inspectable)
+
+    /**
+     * Adds the [iid] interface. If [withInspectable] is false, it does not have the 3 IInspectable slots
+     * (an interface deriving directly from IUnknown, such as IWeakReferenceSource).
+     */
+    private fun addInterface(iid: String, methods: List<Method>, withInspectable: Boolean): KComObject {
         val memory = Ffi.backend.memory
         val vtableMethods = buildList {
             // --- IUnknown ---
@@ -75,7 +96,7 @@ internal class KComObject(
             add(Method(ComPtr.UNKNOWN_DESC) { _ -> refCount.incrementAndGet() })
             add(Method(ComPtr.UNKNOWN_DESC) { _ -> releaseRef() })
             // --- IInspectable ---
-            if (inspectable) {
+            if (withInspectable) {
                 add(
                     Method(GET_IIDS_DESC) { args ->
                         memory.putInt(args[1] as Ptr, 0, 0)
@@ -112,6 +133,44 @@ internal class KComObject(
     }
 
     /**
+     * Implements IWeakReferenceSource so that weak references (such as winrt::weak_ref in C++/WinRT) can be created.
+     * A weak reference holds no strong reference; on Resolve it returns the result of QueryInterface if the object is
+     * still alive, or null if it has been reclaimed. WinUI controls (such as TableViewSource) track collections and
+     * rows passed by the app through weak references, so enable this on objects passed to ItemsSource.
+     * Call this after all interfaces have been added with addInterface.
+     */
+    fun enableWeakReferences(): KComObject = addInterface(
+        IID_IWEAK_REFERENCE_SOURCE,
+        listOf(
+            // GetWeakReference(this, out IWeakReference)
+            Method(OUT_PTR_DESC) { args ->
+                val weak = weakReference ?: createWeakReference().also { weakReference = it }
+                weak.addRef()
+                Ffi.backend.memory.putPtr(args[1] as Ptr, 0, weak.primary)
+                S_OK
+            },
+        ),
+        withInspectable = false,
+    )
+
+    /** An IWeakReference pointing to this object (Resolve(this, REFIID, out IInspectable)). */
+    private fun createWeakReference(): KComObject = KComObject("WinUI4K.WeakReference", inspectable = false)
+        .addInterface(
+            IID_IWEAK_REFERENCE,
+            listOf(
+                Method(QI_DESC) { args ->
+                    val out = args[2] as Ptr
+                    if (reclaimed || refCount.get() <= 0) {
+                        Ffi.backend.memory.putPtr(out, 0, Ptr.NULL)
+                        S_OK
+                    } else {
+                        queryInterface(args[1] as Ptr, out)
+                    }
+                },
+            ),
+        )
+
+    /**
      * Gives up the creation reference (initial count 1) held on the Kotlin side. Call this
      * on a temporary object once it has been handed off to the native side; it will then
      * be reclaimed on the native side's final Release.
@@ -129,6 +188,9 @@ internal class KComObject(
 
     /** Reference count reached 0: removes the registration so the Kotlin side becomes GC-eligible, and returns the obj block to the pool. */
     private fun reclaim() {
+        reclaimed = true
+        weakReference?.release()
+        weakReference = null
         registrationKeys.forEach { REGISTRY.remove(it) }
         interfaces.values.forEach { OBJ_POOL.add(it) }
         innerUnknown?.release()
@@ -167,6 +229,12 @@ internal class KComObject(
         const val IID_IUNKNOWN = "00000000-0000-0000-c000-000000000046"
         const val IID_IINSPECTABLE = "af86e2e0-b12d-4c6a-9c5a-d7aa65101e90"
         const val IID_IAGILE_OBJECT = "94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90"
+
+        /** IWeakReferenceSource (weakreference.h). GetWeakReference is vtbl[3]. */
+        private const val IID_IWEAK_REFERENCE_SOURCE = "00000038-0000-0000-c000-000000000046"
+
+        /** IWeakReference (weakreference.h). Resolve(REFIID, IInspectable**) is vtbl[3]. */
+        private const val IID_IWEAK_REFERENCE = "00000037-0000-0000-c000-000000000046"
 
         private val BITS_IUNKNOWN = Guid.bitsOf(IID_IUNKNOWN)
         private val BITS_IINSPECTABLE = Guid.bitsOf(IID_IINSPECTABLE)
