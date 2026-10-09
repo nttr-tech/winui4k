@@ -174,9 +174,17 @@ private fun buildInkCanvasBasicExample(): WComponent {
     val enabled = WToggleSwitch().also { it.isOn = true }
     enabled.addItemListener { canvas.inkPresenter.isInputEnabled = it }
 
-    val mode = WComboBox(listOf("Draw (INKING)", "Erase (ERASING)", "No processing (NONE)"))
+    // The display order differs from the enum's declaration order (NONE, INKING, ERASING), so keep display names paired with values
+    val modes = listOf(
+        "Draw (INKING)" to InkInputProcessingMode.INKING,
+        "Erase (ERASING)" to InkInputProcessingMode.ERASING,
+        "No processing (NONE)" to InkInputProcessingMode.NONE,
+    )
+    val mode = WComboBox(modes.map { it.first })
     mode.selectedIndex = 0
-    mode.addListSelectionListener { canvas.inkPresenter.inputProcessingMode = InkInputProcessingMode.entries[mode.selectedIndex] }
+    mode.addListSelectionListener {
+        canvas.inkPresenter.inputProcessingMode = modes[mode.selectedIndex.coerceAtLeast(0)].second
+    }
 
     val highContrast = WComboBox(InkHighContrastAdjustment.entries.map { it.name })
     highContrast.selectedIndex = 0
