@@ -153,6 +153,9 @@ class WRibbonSearchBox(
     private val dismissLayer = RibbonDismissLayer { close() }
     private var lastText = ""
     private var ignoredText: String? = null
+
+    /** Whether the box has been pressed with the pointer but has not yet received focus (to identify focus gained by a click). */
+    private var isPointerPressed = false
     private val queryListeners = CopyOnWriteArrayList<Consumer<RibbonSearchQueryEvent>>()
     private val executedListeners = CopyOnWriteArrayList<Consumer<RibbonSearchEntry>>()
 
@@ -190,11 +193,21 @@ class WRibbonSearchBox(
         }
         results.announcer = textBox
         textBox.onTextChanged { onTextChanged() }
-        textBox.onFocus(true) {
-            // Do not show results on the automatic focus when the window opens (only when entered by a click or the Tab key)
-            val state = textBox.uiElement.getInt(XamlInterop.IUIElement_get_FocusState)
-            if (state == XamlInterop.FocusState_Pointer || Xaml.isKeyDown(VK_TAB) || Xaml.isKeyDown(VK_LBUTTON)) showResults()
+        // Do not show results on the automatic focus when the window opens (only when the box was pressed or entered
+        // with the Tab key). FocusState can be Pointer even for automatic focus, so FocusState is not used to tell them apart
+        textBox.onPointerHandledToo(XamlInterop.IUIElementStatics_get_PointerPressedEvent) {
+            if (textBox.hasFocus) {
+                if (!isResultsOpen) showResults()
+            } else {
+                isPointerPressed = true
+            }
         }
+        textBox.onFocus(true) {
+            val byPointer = isPointerPressed
+            isPointerPressed = false
+            if (byPointer || Xaml.isKeyDown(VK_TAB)) showResults()
+        }
+        textBox.onFocus(false) { isPointerPressed = false }
         textBox.onPreviewKeyDown { e -> onKeyDown(e) }
         ribbon.addSearchRequestListener { onSearchRequested() }
     }
@@ -333,7 +346,6 @@ class WRibbonSearchBox(
     private companion object {
         const val DEFAULT_MAX_RESULTS = 12
         const val MIN_POPUP_WIDTH = 360.0
-        const val VK_LBUTTON = 1
         const val VK_TAB = 9
     }
 }

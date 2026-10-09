@@ -70,3 +70,8 @@
   日本語環境の既定の UI フォントでは、FontWeight=SemiBold (600) の TextBlock の Ω がキリル文字のような別の字形で
   描かれる (Normal では正しく Ω になる)。リボンの文字のアイコン (`RibbonIcon.text`) は RibbonSpace と同じく SemiBold で
   描くため、Ω のような記号はパスのアイコンにする (Word のサンプルの [記号と特殊文字])。
+- **ウィンドウを開いたときの自動のフォーカスでも FocusState が Pointer になることがある**
+  PowerPoint のサンプル (シンプル リボンで始める) では、起動直後に検索ボックスが受け取る自動のフォーカスの
+  FocusState が Pointer (1) で、「クリックで入ったときだけ結果を出す」判定が誤って結果を開いていた。
+  クリックかどうかは FocusState ではなく、ボックスの PointerPressed (handledEventsToo) を受けたかで見分ける
+  (`WRibbonSearchBox`)。
