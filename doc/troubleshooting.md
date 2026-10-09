@@ -66,3 +66,7 @@
 - **ウィンドウの下端の要素から BottomEdgeAlignedLeft で開いたメニューが表示されない**
   画面の下端近くにあるウィンドウでは、下向きに開いたメニューがモニターの外に置かれて見えないことがある
   (例外も出ない)。ステータス バーのドロップダウンは TopEdgeAlignedLeft で上に開く (`WRibbonBar.dropDownPlacement`)。
+- **既定のフォントの SemiBold で「Ω」(U+03A9) が「и」のような字形になる**
+  日本語環境の既定の UI フォントでは、FontWeight=SemiBold (600) の TextBlock の Ω がキリル文字のような別の字形で
+  描かれる (Normal では正しく Ω になる)。リボンの文字のアイコン (`RibbonIcon.text`) は RibbonSpace と同じく SemiBold で
+  描くため、Ω のような記号はパスのアイコンにする (Word のサンプルの [記号と特殊文字])。
