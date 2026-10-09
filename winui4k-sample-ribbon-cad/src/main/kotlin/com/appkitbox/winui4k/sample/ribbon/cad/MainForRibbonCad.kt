@@ -1,281 +1,480 @@
 package com.appkitbox.winui4k.sample.ribbon.cad
 
 import com.appkitbox.winui4k.GridLength
-import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.Orientation
-import com.appkitbox.winui4k.VerticalAlignment
-import com.appkitbox.winui4k.WBorder
+import com.appkitbox.winui4k.RibbonItemInvokedEvent
+import com.appkitbox.winui4k.RibbonMenuIconConverter
+import com.appkitbox.winui4k.VirtualKey
+import com.appkitbox.winui4k.VirtualKeyModifier
 import com.appkitbox.winui4k.WButton
-import com.appkitbox.winui4k.WCanvas
-import com.appkitbox.winui4k.WColor
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WGrid
-import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WRibbon
 import com.appkitbox.winui4k.WRibbonApplicationMenu
+import com.appkitbox.winui4k.WRibbonIcon
 import com.appkitbox.winui4k.WRibbonStatusBar
 import com.appkitbox.winui4k.WRibbonTheme
 import com.appkitbox.winui4k.WRibbonToolBar
-import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WinUiUtilities
 import com.appkitbox.winui4k.ribbon.RibbonApplicationMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonApplicationMenuModel
 import com.appkitbox.winui4k.ribbon.RibbonChromeStyle
 import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
-import com.appkitbox.winui4k.ribbon.RibbonIcons
+import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel
+import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonLabelModel
+import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
+import com.appkitbox.winui4k.ribbon.RibbonMinimizeBehavior
 import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonRecentItemModel
 import com.appkitbox.winui4k.ribbon.RibbonReductionStrategy
 import com.appkitbox.winui4k.ribbon.RibbonSegmentModel
 import com.appkitbox.winui4k.ribbon.RibbonSegmentedModel
+import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel
+import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
+import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
+import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
 import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoApp
 import com.appkitbox.winui4k.sample.ribbon.shell.RibbonDemoWindow
-import com.appkitbox.winui4k.sample.ribbon.shell.button
-import com.appkitbox.winui4k.sample.ribbon.shell.toggle
+import com.appkitbox.winui4k.sample.ribbon.shell.radioItem
 
 /**
- * An AutoCAD-style ribbon demo (same layout as cad.png in the RibbonSpace README): the CAD theme (dark), the
- * application menu opened from the app icon, a QAT with a workspace combo box, cycling through the expanded panel,
- * floating panel and minimized states, document tabs, a drawing, a command line, and an icon-only status bar.
+ * An AutoCAD-style ribbon demo (same layout as the RibbonSpace CAD demo): the CAD theme (dark), the application menu
+ * opened from the app icon, a QAT with a workspace combo box, line-art command icons, split buttons that remember the
+ * last chosen method, cycling through the expanded panel, floating panel and minimized states, the [Text Editor] and
+ * [Hatch Creation] contextual tabs, document tabs, a floor plan, the ViewCube and navigation bar, a command line that
+ * runs commands by alias, and a status bar with drafting aid toggles.
  */
 fun main() {
     WinUiUtilities.invokeLater {
         WRibbonTheme.apply(RibbonThemePalette.CAD, RibbonChromeStyle.NEUTRAL, RibbonThemeStyle.CAD)
-        val model = createCadModel()
-        model.quickAccessItems.add(button("qat.new", "New", RibbonIcons.NEW_DOCUMENT))
-        model.quickAccessItems.add(button("qat.open", "Open", RibbonIcons.OPEN))
-        model.quickAccessItems.add(button("qat.save", "Save", RibbonIcons.SAVE))
-        model.quickAccessItems.add(button("qat.undo", "Undo", RibbonIcons.UNDO))
-        model.quickAccessItems.add(button("qat.redo", "Redo", RibbonIcons.REDO))
-        model.quickAccessItems.add(button("qat.plot", "Plot", RibbonIcons.PRINT))
-        model.quickAccessItems.add(
-            RibbonComboBoxModel("qat.workspace", "Workspace", listOf("Drafting & Annotation", "3D Basics", "3D Modeling")).also {
-                it.selectedItem = "Drafting & Annotation"
-                it.inputWidth = WORKSPACE_WIDTH
-            },
-        )
-        val ribbon = WRibbon(model)
-        ribbon.isMinimizeButtonVisible = true
-        ribbon.canFloatGroups = true
-        ribbon.isVisibilityMenuEnabled = true
-        ribbon.reductionStrategy = RibbonReductionStrategy.GROUP_BY_GROUP
-        ribbon.applicationMenu = applicationMenu(ribbon).createFlyout()
-        val commandLine = CommandLine()
-        ribbon.addItemInvokedListener { event -> commandLine.echo("_" + (event.item.id ?: event.item.label.orEmpty()).uppercase()) }
-        val window = RibbonDemoWindow("Drawing1.dwg - CAD (WinUI4K Ribbon)", RibbonDemoApp.CAD, ribbon)
+        // Menu items cannot show line-art icons, so use the closest glyph instead
+        WRibbonTheme.menuIconConverter = RibbonMenuIconConverter { cadMenuIcon(it) }
+        CadApp(createCadModel()).show()
+    }
+}
+
+/** The screens of the CAD demo and its command handling. */
+private class CadApp(private val model: RibbonModel) {
+    private val ribbon = WRibbon(model).also {
+        it.isMinimizeButtonVisible = true
+        it.isDisplayOptionsButtonVisible = false
+        it.canFloatGroups = true
+        it.isVisibilityMenuEnabled = true
+        it.reductionStrategy = RibbonReductionStrategy.GROUP_BY_GROUP
+    }
+    private val window = RibbonDemoWindow("Drawing1.dwg - CAD (WinUI4K Ribbon)", RibbonDemoApp.CAD, ribbon)
+    private val viewport = CadViewport(ribbon)
+    private val fileTabs = fileTabs()
+    private val statusBarModel = statusBarModel()
+    private var dark = true
+
+    fun show() {
+        addMenus()
+        ribbon.applicationMenu = applicationMenu().createFlyout()
+        ribbon.addItemInvokedListener { onItemInvoked(it) }
+        (model.quickAccessItems.first { it.id == "qat.workspace" } as RibbonComboBoxModel).addCommitListener { e -> (e.item as? CadWorkspace)?.let { applyWorkspace(it) } }
+        (model.findItem("layerCombo") as RibbonComboBoxModel).addCommitListener { e -> echo("Command: Current layer: \"${e.text}\"") }
         val titleBar = window.titleBar!!
+        titleBar.appIcon = ic(CadIcons.APP_LOGO)
         titleBar.isAppIconMenuEnabled = true
         titleBar.subtitle = "WinUI4K CAD"
-        titleBar.endContent = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL).also {
+        titleBar.endContent = WPanel(spacing = 2.0, orientation = Orientation.HORIZONTAL).also {
             it.add(WButton("Sign In"))
-            it.add(WButton("Hatch").also { b -> b.addActionListener { model.setContextualGroupVisible("hatchEditor", !model.findContextualGroup("hatchEditor")!!.isVisible) } })
+            it.add(WButton().also { help -> help.content = WRibbonIcon(ic(CadIcons.HELP), HELP_ICON) })
         }
+        val area = WGrid()
+        area.addRow(GridLength.AUTO)
+        area.addRow(GridLength.star())
+        area.add(fileTabs, row = 0, column = 0)
+        area.add(viewport.element, row = 1, column = 0)
         window.setTop(ribbon)
-        window.setContent(drawingArea(commandLine))
-        window.setStatusBar(statusBar(ribbon))
+        window.setContent(area)
+        window.setStatusBar(WRibbonStatusBar(statusBarModel).also { it.ribbon = ribbon })
         window.setDark(true)
+        // Ctrl+0 toggles Clean Screen (same as the status bar toggle)
+        area.addKeyboardAccelerator(VirtualKey.NUMBER_0, VirtualKeyModifier.CONTROL) { toggleCleanScreen() }
         window.show()
     }
-}
 
-/** The AutoCAD menu browser (search, commands and subcommands, recent documents, options and exit). */
-private fun applicationMenu(ribbon: WRibbon): WRibbonApplicationMenu {
-    val model = RibbonApplicationMenuModel()
-    fun item(id: String, label: String, icon: com.appkitbox.winui4k.ribbon.RibbonIcon, vararg subs: Pair<String, String>) =
-        RibbonApplicationMenuItemModel(id, label, icon).also { item ->
-            subs.forEach { (subLabel, description) ->
-                item.items.add(RibbonApplicationMenuItemModel("$id.$subLabel", subLabel, icon).also { it.description = description })
-            }
+    // ---------------------------------------------------------------- Commands
+
+    private fun onItemInvoked(event: RibbonItemInvokedEvent) {
+        val id = event.item.id
+        val choice = (event.item as? RibbonSplitButtonModel)?.lastChoice?.label
+        val checked = (event.item as? RibbonToggleButtonModel)?.isChecked == true
+        val handlers = listOf({ handleView(id, checked) }, { handleRibbonFeature(id) }, { handleStatus(id, checked) }, { handleMenus(id, event.parameter) })
+        if (handlers.any { it() }) return
+        handleDrawing(id, choice)
+        if (!isSilent(id)) echoCommand(id, event.item.label, choice)
+    }
+
+    /** Items that are not echoed to the command line (status bar, the command line itself, navigation bar). */
+    private fun isSilent(id: String): Boolean =
+        id.startsWith("status.") || id.startsWith("command.") || (id.startsWith("nav.") && id != "nav.zoomExtents")
+
+    /** The command line and the menus of drop-downs that have no content. Returns true if handled. */
+    private fun handleMenus(id: String, parameter: Any?): Boolean {
+        when {
+            id == "command.input" -> (parameter as? String)?.let { runCommand(it) }
+            id == "command.close" -> setCommandLineVisible(false)
+            id.startsWith("minimizeBehavior.") -> model.minimizeBehavior = RibbonMinimizeBehavior.valueOf(id.removePrefix("minimizeBehavior."))
+            id.startsWith("workspace.") -> applyWorkspace(CadWorkspace.valueOf(id.removePrefix("workspace.")))
+            else -> return false
         }
-    model.items.add(item("new", "New", RibbonIcons.NEW_DOCUMENT, "Drawing" to "Creates a new drawing from a template.", "Sheet Set" to "Creates a new sheet set."))
-    model.items.add(item("open", "Open", RibbonIcons.OPEN, "Drawing" to "Opens an existing drawing file.", "DGN" to "Imports a MicroStation DGN file."))
-    model.items.add(item("save", "Save", RibbonIcons.SAVE))
-    model.items.add(
-        item(
-            "saveAs",
-            "Save As",
-            RibbonIcons.SAVE_AS,
-            "Drawing" to "Saves the current drawing as a DWG file.",
-            "Drawing Template" to "Creates a drawing template (DWT) file from which new drawings can be created.",
-            "Drawing Standards" to "Creates a drawing standards (DWS) file for checking drawings.",
-            "Other Formats" to "Saves in DWG, DWT, DWS, or DXF format.",
-        ),
-    )
-    model.items.add(item("import", "Import", RibbonIcons.IMPORT, "PDF" to "Imports geometry from a PDF.").also { it.hasSeparatorBefore = true })
-    model.items.add(item("export", "Export", RibbonIcons.EXPORT, "PDF" to "Exports to PDF."))
-    model.items.add(item("publish", "Publish", RibbonIcons.SHARE, "Batch Plot" to "Plots multiple sheets."))
-    model.items.add(item("print", "Print", RibbonIcons.PRINT, "Plot" to "Plots the drawing."))
-    model.items.add(item("utilities", "Drawing Utilities", RibbonIcons.MEASURE, "Purge" to "Removes unused named items.").also { it.hasSeparatorBefore = true })
-    model.items.add(item("close", "Close", RibbonIcons.CLOSE, "Current Drawing" to "Closes the current drawing."))
-    model.recentItems.add(RibbonRecentItemModel("r1", "Floor Plan.dwg", "C:\\Projects\\House").also { it.isPinned = true })
-    model.recentItems.add(RibbonRecentItemModel("r2", "Site Layout.dwg", "C:\\Projects\\House"))
-    model.recentItems.add(RibbonRecentItemModel("r3", "Details.dwg", "C:\\Projects\\Office"))
-    model.footerItems.add(button("appmenu.options", "Options", RibbonIcons.SETTINGS))
-    model.footerItems.add(button("appmenu.exit", "Exit WinUI4K CAD", RibbonIcons.CLOSE))
-    return WRibbonApplicationMenu(model, ribbon)
-}
-
-/** The command line (history and input). */
-private class CommandLine {
-    private val history = WLabel("Command: _.OPEN \"Drawing1.dwg\"\nRegenerating model.\nCommand:")
-    private val input = WTextField("Type a command")
-    val element: WComponent
-
-    init {
-        history.foreground = WColor(0xDD, 0xDD, 0xDD)
-        val panel = WPanel(spacing = 6.0)
-        panel.add(history)
-        panel.add(input)
-        val border = WBorder(panel)
-        border.background = WColor(0x2B, 0x31, 0x3B, 0xE6)
-        border.padding = 10.0
-        border.cornerRadius = 4.0
-        border.margin = COMMAND_MARGIN
-        border.verticalAlignment = VerticalAlignment.BOTTOM
-        border.horizontalAlignment = HorizontalAlignment.STRETCH
-        element = border
+        return true
     }
 
-    fun echo(command: String) {
-        val lines = (history.text.split('\n') + "Command: $command").takeLast(HISTORY_LINES)
-        history.text = lines.joinToString("\n")
+    /** Drawing commands that change the screen state (contextual tabs, zoom). */
+    private fun handleDrawing(id: String, choice: String?) {
+        val isText = id == "text" || id == "annotateMText"
+        val isHatch = id == "hatch" || id == "gradient"
+        when {
+            isText && (choice == null || choice == "Multiline Text") -> showTextEditor()
+            isHatch && (choice == null || choice == "Hatch" || id == "gradient") -> showHatchCreation()
+            id == "closeTextEditor" -> closeContextual("Text Editor")
+            id == "closeHatchCreation" -> closeContextual("Hatch Creation")
+            id == "nav.zoomExtents" || id == "zoomExtents" -> viewport.drawing.zoomExtents()
+        }
     }
-}
 
-/** The document tabs, the drawing (floor plan) and the command line. */
-private fun drawingArea(commandLine: CommandLine): WComponent {
-    val tabsModel = RibbonToolBarModel("documents")
-    tabsModel.showLabels = true
-    for ((id, label) in listOf("start" to "Start", "drawing1" to "Drawing1*", "floorPlan" to "Floor Plan")) {
-        tabsModel.items.add(
-            toggle(id, label, RibbonIcons.DOCUMENT, RibbonItemSize.MEDIUM).also {
-                it.groupName = "documents"
-                it.showLabelInSimplified = true
-                it.isChecked = id == "drawing1"
+    /** The toggles and buttons on the [View] tab. Returns true if handled. */
+    private fun handleView(id: String, checked: Boolean): Boolean {
+        when (id) {
+            "ucsIcon" -> viewport.setUcsIconVisible(checked)
+            "viewCube" -> viewport.setViewCubeVisible(checked)
+            "navBar" -> viewport.setNavBarVisible(checked)
+            "commandLine" -> setCommandLineVisible(checked)
+            "fileTabs" -> fileTabs.isVisible = checked
+            "layoutTabs" -> (statusBarModel.items.first() as RibbonSegmentedModel).isVisible = checked
+            "lightTheme" -> setDark(!checked)
+            "panelTitles" -> model.showGroupCaptions = checked
+            else -> return false
+        }
+        return true
+    }
+
+    /** The [Ribbon] panel on the [View] tab (buttons for trying out ribbon features). Returns true if handled. */
+    private fun handleRibbonFeature(id: String): Boolean {
+        when (id) {
+            "cycleMinimize" -> ribbon.toggleMinimized()
+            "floatLayers" -> model.findGroup("layers")?.let { ribbon.floatGroup(it) }
+            "returnPanels" -> ribbon.returnAllPanelsToRibbon()
+            "showTextEditor" -> showTextEditor()
+            "showHatch" -> showHatchCreation()
+            else -> return false
+        }
+        return true
+    }
+
+    /** The status bar toggles. Returns true if handled. */
+    private fun handleStatus(id: String, checked: Boolean): Boolean {
+        when (id) {
+            "status.grid" -> viewport.drawing.isGridVisible = checked
+            "status.lwt" -> viewport.drawing.showLineweights = checked
+            "status.model" -> (model.findItem(id) ?: statusItem(id))?.label = if (checked) "MODEL" else "PAPER"
+            "status.cleanScreen" -> setCleanScreen(checked)
+            else -> return false
+        }
+        return true
+    }
+
+    private fun statusItem(id: String) = (statusBarModel.items + statusBarModel.endItems).firstOrNull { it.id == id }
+
+    /** Runs a typed command: an alias runs its item; anything else runs the first result of the ribbon search. */
+    private fun runCommand(text: String) {
+        val typed = text.trim()
+        viewport.commandLine.clearInput()
+        if (typed.isEmpty()) return
+        val item = CAD_ALIASES[typed.lowercase()]?.let { model.findItem(it) }
+        if (item != null) {
+            ribbon.performClick(item)
+            return
+        }
+        val result = ribbon.search(typed, 1).firstOrNull()
+        if (result != null && result.score > 0) {
+            echo("Command: ${typed.uppercase()}")
+            ribbon.executeSearchEntry(result.entry)
+            return
+        }
+        echo("Unknown command \"${typed.uppercase()}\".  Press F1 for help.")
+    }
+
+    private fun echoCommand(id: String, label: String?, choice: String?) {
+        val command = CAD_COMMANDS[id]
+        if (command != null) {
+            echo("Command: _" + if (choice != null) "${command.first} ($choice)" else command.first)
+            echo(command.second)
+        } else if (!label.isNullOrEmpty()) {
+            echo("Command: " + label.replace('\n', ' '))
+        }
+    }
+
+    private fun echo(line: String) = viewport.commandLine.echo(line)
+
+    // ---------------------------------------------------------------- State
+
+    private fun applyWorkspace(workspace: CadWorkspace) {
+        applyWorkspace(model, workspace)
+        model.selectedTabId = "home"
+        echo("Command: Workspace: ${workspace.label}")
+    }
+
+    private fun showTextEditor() {
+        model.setActiveContextualGroups("textEditor")
+        viewport.showTextEditor(true)
+        echo("Command: _MTEXT  Current text style:  \"Standard\"  Text height: 2.5  Annotative: No")
+    }
+
+    private fun showHatchCreation() {
+        model.setActiveContextualGroups("hatchCreation")
+        echo("Command: _HATCH")
+        echo("Pick internal point or [Select objects/Undo/seTtings]:")
+    }
+
+    private fun closeContextual(name: String) {
+        viewport.showTextEditor(false)
+        model.setActiveContextualGroups()
+        model.selectedTabId = "home"
+        echo("$name closed.")
+    }
+
+    private fun setCommandLineVisible(visible: Boolean) {
+        viewport.commandLine.element.isVisible = visible
+        (model.findItem("commandLine") as? RibbonToggleButtonModel)?.isChecked = visible
+    }
+
+    private fun setDark(value: Boolean) {
+        dark = value
+        window.setDark(value)
+        viewport.applyTheme(value)
+    }
+
+    private fun toggleCleanScreen() {
+        val toggle = statusItem("status.cleanScreen") as RibbonToggleButtonModel
+        toggle.isChecked = !toggle.isChecked
+        setCleanScreen(toggle.isChecked)
+    }
+
+    /** Clean Screen: hides the ribbon (full-screen mode), the title bar and the document tabs to enlarge the drawing area. */
+    private fun setCleanScreen(clean: Boolean) {
+        model.visibilityMode = if (clean) RibbonVisibilityMode.FULL_SCREEN else RibbonVisibilityMode.ALWAYS_SHOW
+        window.titleBar?.isVisible = !clean
+        fileTabs.isVisible = !clean && (model.findItem("fileTabs") as? RibbonToggleButtonModel)?.isChecked != false
+    }
+
+    // ---------------------------------------------------------------- Assembly
+
+    /** Menus of the drop-downs that have no content in XAML (minimize behavior, workspace). */
+    private fun addMenus() {
+        val behaviors = (model.findItem("minimizeBehavior") as RibbonDropDownButtonModel).menuItems
+        for (behavior in RibbonMinimizeBehavior.entries) {
+            behaviors += radioItem("minimizeBehavior.${behavior.name}", MINIMIZE_LABELS.getValue(behavior), "minimizeBehavior", behavior == model.minimizeBehavior)
+        }
+    }
+
+    /** The document tabs (Start, drawings, New). */
+    private fun fileTabs(): WComponent {
+        val tabs = RibbonToolBarModel("documents")
+        tabs.showLabels = true
+        for ((id, label) in listOf("start" to "Start", "drawing1" to "Drawing1*", "floorPlan" to "Floor Plan")) {
+            tabs.items.add(
+                tgl("file.$id", label, ic(if (id == "start") CadIcons.APP_LOGO else CadIcons.FILE_TABS), RibbonItemSize.MEDIUM).also {
+                    it.groupName = "documents"
+                    it.showLabelInSimplified = true
+                    it.isChecked = id == "drawing1"
+                },
+            )
+        }
+        tabs.items.add(cmd("file.new", "New Drawing", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+        return WRibbonToolBar(tabs).also { it.ribbon = ribbon }
+    }
+
+    /** The AutoCAD menu browser (search, commands and subcommands, recent documents, options and exit). */
+    private fun applicationMenu(): WRibbonApplicationMenu {
+        val menu = RibbonApplicationMenuModel()
+        menu.recentHeader = "Recent Documents"
+        for (entry in APP_MENU) {
+            menu.items.add(
+                RibbonApplicationMenuItemModel(entry.id, entry.label, ic(entry.icon)).also { item ->
+                    item.hasSeparatorBefore = entry.separator
+                    for ((index, sub) in entry.subs.withIndex()) {
+                        item.items.add(RibbonApplicationMenuItemModel("${entry.id}.$index", sub.first, ic(entry.icon)).also { it.description = sub.second })
+                    }
+                },
+            )
+        }
+        menu.recentItems.add(RibbonRecentItemModel("r1", "Floor Plan.dwg", "Projects › Riverside House").also { it.isPinned = true })
+        menu.recentItems.add(RibbonRecentItemModel("r2", "Gearbox Housing.dwg", "Projects › Mechanical").also { it.isPinned = true })
+        menu.recentItems.add(RibbonRecentItemModel("r3", "Site Layout.dwg", "Projects › Riverside House"))
+        menu.recentItems.add(RibbonRecentItemModel("r4", "Bracket Detail.dwg", "Projects › Mechanical"))
+        menu.recentItems.add(RibbonRecentItemModel("r5", "Electrical Plan.dwg", "Documents"))
+        menu.footerItems.add(cmd("appmenu.options", "Options", ic(CadIcons.OPTIONS), RibbonItemSize.MEDIUM))
+        menu.footerItems.add(cmd("appmenu.exit", "Exit WinUI4K CAD", ic(CadIcons.EXIT), RibbonItemSize.MEDIUM))
+        return WRibbonApplicationMenu(menu, ribbon).also { app ->
+            app.addItemInvokedListener { e -> echo("Command: Application Menu: ${e.item.label}") }
+        }
+    }
+
+    /** The CAD status bar (layout tabs, coordinates, model / paper, drafting aid toggles, annotation scale, workspace). */
+    private fun statusBarModel(): RibbonStatusBarModel {
+        val bar = RibbonStatusBarModel()
+        bar.items.add(
+            RibbonSegmentedModel("status.layout", "Layout").also { segmented ->
+                listOf("Model", "Layout1", "Layout2").forEach { segmented.segments.add(RibbonSegmentModel(it, it)) }
+                segmented.selectedSegment = segmented.segments[0]
             },
         )
-    }
-    tabsModel.items.add(button("newDrawing", "New Drawing", RibbonIcons.ADD, RibbonItemSize.SMALL))
-    val documentTabs = WRibbonToolBar(tabsModel)
-
-    val canvas = WCanvas()
-    val plan = FloorPlan(canvas)
-    plan.draw()
-    val area = WGrid()
-    area.addRow(GridLength.AUTO)
-    area.addRow(GridLength.star())
-    area.add(documentTabs, row = 0, column = 0)
-    val drawing = WGrid()
-    drawing.add(WBorder(canvas).also { it.background = WColor(0x21, 0x26, 0x30) }, row = 0, column = 0)
-    drawing.add(
-        WLabel("[-][Top][2D Wireframe]").also {
-            it.foreground = WColor(0xDD, 0xDD, 0xDD)
-            it.margin = 8.0
-        },
-        row = 0,
-        column = 0,
-    )
-    drawing.add(commandLine.element, row = 0, column = 0)
-    area.add(drawing, row = 1, column = 0)
-    return area
-}
-
-/** Draws the floor plan (walls, rooms, furniture, dimensions) with Border lines. */
-private class FloorPlan(private val canvas: WCanvas) {
-    @Suppress("LongParameterList") // The parameters map 1:1 to the position, size, color and thickness of the rectangle drawn with lines
-    private fun rect(x: Double, y: Double, w: Double, h: Double, color: WColor, thickness: Double = 1.0) {
-        val border = WBorder()
-        border.width = w
-        border.height = h
-        border.borderColor = color
-        border.borderThickness = thickness
-        canvas.add(border, x, y)
-    }
-
-    private fun text(x: Double, y: Double, value: String, color: WColor = WHITE, size: Double = 12.0) {
-        canvas.add(
-            WLabel(value).also {
-                it.foreground = color
-                it.fontSize = size
-            },
-            x,
-            y,
+        bar.endItems.add(RibbonLabelModel("status.coords", "6215.7290, 3820.4106, 0.0000"))
+        bar.endItems.add(tgl("status.model", "MODEL", null, RibbonItemSize.SMALL).also { it.isChecked = true })
+        bar.endItems.add(statusToggle("status.grid", "Grid Display", CadIcons.GRID, checked = true, shortcut = "F7"))
+        bar.endItems.add(statusToggle("status.snap", "Snap Mode", CadIcons.SNAP, shortcut = "F9"))
+        bar.endItems.add(RibbonSeparatorModel())
+        bar.endItems.add(statusToggle("status.ortho", "Ortho Mode", CadIcons.ORTHO, shortcut = "F8"))
+        bar.endItems.add(statusToggle("status.polar", "Polar Tracking", CadIcons.POLAR, checked = true, shortcut = "F10"))
+        bar.endItems.add(statusToggle("status.otrack", "Object Snap Tracking", CadIcons.OBJECT_SNAP_TRACKING, checked = true, shortcut = "F11"))
+        bar.endItems.add(objectSnap())
+        bar.endItems.add(RibbonSeparatorModel())
+        bar.endItems.add(statusToggle("status.lwt", "Show/Hide Lineweight", CadIcons.SHOW_LINEWEIGHT))
+        bar.endItems.add(statusToggle("status.transparency", "Show/Hide Transparency", CadIcons.SHOW_TRANSPARENCY))
+        bar.endItems.add(statusToggle("status.selectionCycling", "Selection Cycling", CadIcons.SELECTION_CYCLING))
+        bar.endItems.add(RibbonSeparatorModel())
+        bar.endItems.add(
+            ddn(
+                "status.annoScale",
+                "1:1",
+                ic(CadIcons.ANNOTATION_SCALE),
+                RibbonItemSize.SMALL,
+                *listOf("1:1", "1:2", "1:5", "1:10", "1:50", "1:100").mapIndexed { i, s -> radioItem("status.annoScale.$i", s, "annoScale", i == 0) }.toTypedArray(),
+                sep(),
+                mi("status.annoScale.custom", "Custom...", null),
+            ).also { it.screenTip = tip("Annotation scale of the current view") },
         )
+        bar.endItems.add(
+            ddn(
+                "status.workspace",
+                "Workspace Switching",
+                ic(CadIcons.WORKSPACE),
+                RibbonItemSize.SMALL,
+                *CadWorkspace.entries.map { radioItem("workspace.${it.name}", it.label, "workspace", it == CadWorkspace.DRAFTING) }.toTypedArray(),
+                sep(),
+                mi("status.workspace.save", "Save Current As...", null),
+                mi("status.workspace.settings", "Workspace Settings...", null),
+            ).also { it.showLabel = false },
+        )
+        bar.endItems.add(statusToggle("status.cleanScreen", "Clean Screen", CadIcons.CLEAN_SCREEN, shortcut = "Ctrl+0"))
+        bar.endItems.add(cmd("status.customize", "Customization", RibbonIcon.glyph(""), RibbonItemSize.SMALL).also { it.showLabel = false })
+        return bar
     }
 
-    fun draw() {
-        rect(OX, OY, 640.0, 420.0, WALL, 8.0)
-        rect(OX + 260, OY, 8.0, 170.0, WALL, 4.0)
-        rect(OX + 400, OY, 8.0, 170.0, WALL, 4.0)
-        rect(OX, OY + 166, 640.0, 8.0, WALL, 4.0)
-        rect(OX + 340, OY + 166, 8.0, 254.0, WALL, 4.0)
-        text(OX + 100, OY + 85, "Bedroom")
-        text(OX + 100, OY + 103, "14.9 m²", WHITE, 9.0)
-        text(OX + 315, OY + 70, "Bath", WHITE, 10.0)
-        text(OX + 490, OY + 105, "Bedroom 2", WHITE, 11.0)
-        text(OX + 130, OY + 255, "Living")
-        text(OX + 130, OY + 273, "30.1 m²", WHITE, 9.0)
-        text(OX + 440, OY + 225, "Kitchen / Dining")
-        rect(OX + 30, OY + 30, 120.0, 70.0, FURNITURE)
-        rect(OX + 430, OY + 30, 100.0, 90.0, FURNITURE)
-        rect(OX + 60, OY + 320, 140.0, 50.0, FURNITURE)
-        rect(OX + 220, OY + 280, 50.0, 50.0, FURNITURE)
-        val table = WBorder()
-        table.width = 60.0
-        table.height = 60.0
-        table.cornerRadius = 30.0
-        table.borderColor = SELECTED
-        table.borderThickness = 2.0
-        canvas.add(table, OX + 450, OY + 280)
-        rect(OX + 590, OY + 200, 30.0, 150.0, FURNITURE)
-        rect(OX, OY + 460, 640.0, 1.0, DIMENSION)
-        text(OX + 300, OY + 440, "12000", DIMENSION, 10.0)
-        rect(OX - 50, OY, 1.0, 420.0, DIMENSION)
-        text(OX - 80, OY + 200, "8000", DIMENSION, 10.0)
-        text(OX + 250, OY + 500, "Floor Plan  1:100", WHITE, 14.0)
+    private fun statusToggle(id: String, label: String, icon: String, checked: Boolean = false, shortcut: String? = null) =
+        tgl(id, label, ic(icon), RibbonItemSize.SMALL).also {
+            it.showLabel = false
+            it.isChecked = checked
+            it.shortcut = shortcut
+        }
+
+    /** Object snap (on / off, and check items for the snap types). */
+    private fun objectSnap(): RibbonSplitButtonModel {
+        val snaps = listOf("Endpoint" to true, "Midpoint" to true, "Center" to true, "Geometric Center" to false, "Node" to false, "Quadrant" to false, "Intersection" to true, "Extension" to true, "Perpendicular" to false, "Tangent" to false, "Nearest" to false)
+        return spl(
+            "status.osnap",
+            "Object Snap",
+            ic(CadIcons.OBJECT_SNAP),
+            RibbonItemSize.SMALL,
+            false,
+            *snaps.mapIndexed { i, (label, on) ->
+                RibbonMenuItemModel("status.osnap.$i", label).also {
+                    it.isCheckable = true
+                    it.isChecked = on
+                }
+            }.toTypedArray(),
+            sep(),
+            mi("status.osnap.settings", "Object Snap Settings...", null),
+        ).also {
+            it.showLabel = false
+            it.isCheckable = true
+            it.isChecked = true
+            it.shortcut = "F3"
+        }
     }
+
+    private class AppMenuEntry(val id: String, val label: String, val icon: String, val separator: Boolean, val subs: List<Pair<String, String>>)
 
     private companion object {
-        const val OX = 260.0
-        const val OY = 60.0
-        val WALL = WColor(0xC8, 0xCC, 0xD2)
-        val FURNITURE = WColor(0x9C, 0xCC, 0x65)
-        val DIMENSION = WColor(0xE5, 0x53, 0x4B)
-        val SELECTED = WColor(0x4F, 0xC3, 0xD9)
-        val WHITE = WColor(0xEE, 0xEE, 0xEE)
+        const val HELP_ICON = 18.0
+
+        val MINIMIZE_LABELS = mapOf(
+            RibbonMinimizeBehavior.TABS to "Minimize to Tabs",
+            RibbonMinimizeBehavior.PANEL_TITLES to "Minimize to Panel Titles",
+            RibbonMinimizeBehavior.PANEL_BUTTONS to "Minimize to Panel Buttons",
+            RibbonMinimizeBehavior.CYCLE_ALL to "Cycle Through All",
+        )
+
+        val APP_MENU = listOf(
+            AppMenuEntry("new", "New", CadIcons.NEW, false, listOf("Drawing" to "Creates a new drawing from a template.", "Sheet Set" to "Creates a new sheet set to organize layouts.")),
+            AppMenuEntry(
+                "open",
+                "Open",
+                CadIcons.OPEN,
+                false,
+                listOf("Drawing" to "Opens an existing drawing file.", "From Web & Mobile" to "Opens a drawing saved in the cloud.", "Sheet Set" to "Opens a sheet set data file.", "DGN" to "Imports the data from a DGN file into a new drawing."),
+            ),
+            AppMenuEntry("save", "Save", CadIcons.SAVE, false, emptyList()),
+            AppMenuEntry(
+                "saveAs",
+                "Save As",
+                CadIcons.SAVE_AS,
+                false,
+                listOf(
+                    "Drawing" to "Saves the current drawing as a DWG file.",
+                    "Drawing Template" to "Creates a drawing template (DWT) file from which new drawings can be created.",
+                    "Drawing Standards" to "Creates a drawing standards (DWS) file for checking drawings.",
+                    "Other Formats" to "Saves the current drawing in DWG, DWT, DWS, or DXF format.",
+                ),
+            ),
+            AppMenuEntry(
+                "import",
+                "Import",
+                CadIcons.IMPORT_PDF,
+                true,
+                listOf("PDF" to "Imports geometry, fills, raster images, and text from a PDF file.", "DGN" to "Imports the data from a DGN file into the current drawing.", "Other Formats" to "Imports files of various formats into the current drawing."),
+            ),
+            AppMenuEntry(
+                "export",
+                "Export",
+                CadIcons.EXPORT_PDF,
+                false,
+                listOf("PDF" to "Exports the current drawing or layout to a PDF file.", "DWF" to "Creates a DWF file and lets you set individual page setup overrides.", "DGN" to "Exports the current drawing to a DGN file.", "FBX" to "Exports 3D objects, cameras, and lights to an FBX file."),
+            ),
+            AppMenuEntry(
+                "publish",
+                "Publish",
+                CadIcons.PUBLISH,
+                false,
+                listOf("Shared Views" to "Publishes design views of the drawing to a web browser.", "Send to 3D Print Service" to "Sends a 3D model to a 3D print service.", "Archive" to "Packages the files of the current sheet set for archiving.", "eTransmit" to "Creates a package of a drawing and its dependent files."),
+            ),
+            AppMenuEntry(
+                "print",
+                "Print",
+                CadIcons.PLOT,
+                false,
+                listOf("Plot" to "Plots a drawing to a plotter, printer or file.", "Batch Plot" to "Publishes drawings to DWF, DWFx, and PDF files, or to printers and plotters.", "Page Setup Manager" to "Manages the page layout, plotting device, paper size, and other settings for each new layout.", "Plot Preview" to "Displays the drawing as it will be plotted."),
+            ),
+            AppMenuEntry(
+                "utilities",
+                "Drawing Utilities",
+                CadIcons.UNITS,
+                true,
+                listOf("Units" to "Controls the display format and precision of coordinates and angles.", "Audit" to "Evaluates the integrity of a drawing and corrects some errors.", "Drawing Status" to "Displays drawing statistics, modes, and extents.", "Purge" to "Removes unused items, such as block definitions and layers, from the drawing.", "Recover" to "Repairs a damaged drawing file and then opens it."),
+            ),
+            AppMenuEntry("close", "Close", CadIcons.CLOSE, false, listOf("Current Drawing" to "Closes the current drawing.", "All Drawings" to "Closes all open drawings.")),
+        )
     }
 }
-
-/** The CAD status bar (model / layout switching, coordinates, drafting aid toggles; icons only). */
-private fun statusBar(ribbon: WRibbon): WComponent {
-    val model = RibbonStatusBarModel()
-    model.showLabels = false
-    model.items.add(
-        RibbonSegmentedModel("space", "Space").also { segmented ->
-            listOf("Model", "Layout1", "Layout2").forEach { segmented.segments.add(RibbonSegmentModel(it, it)) }
-            segmented.selectedSegment = segmented.segments[0]
-        },
-    )
-    model.endItems.add(RibbonLabelModel("coords", "6215.7290, 3820.4106, 0.0000").also { it.showLabel = true })
-    model.endItems.add(toggle("status.grid", "Grid Display", RibbonIcons.GRID).also { it.isChecked = true })
-    model.endItems.add(toggle("status.snap", "Snap", RibbonIcons.MAP))
-    model.endItems.add(toggle("status.ortho", "Ortho Mode", RibbonIcons.ALIGN).also { it.isChecked = true })
-    model.endItems.add(toggle("status.polar", "Polar Tracking", RibbonIcons.ROTATE).also { it.isChecked = true })
-    model.endItems.add(toggle("status.osnap", "Object Snap", RibbonIcons.MEASURE).also { it.isChecked = true })
-    model.endItems.add(button("status.scale", "Annotation Scale 1:1", RibbonIcons.ZOOM))
-    model.endItems.add(button("status.customize", "Customization", RibbonIcons.MENU))
-    val bar = WRibbonStatusBar(model)
-    bar.ribbon = ribbon
-    return bar
-}
-
-private const val WORKSPACE_WIDTH = 170.0
-private const val HISTORY_LINES = 4
-private const val COMMAND_MARGIN = 24.0
