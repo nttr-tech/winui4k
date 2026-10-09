@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.ribbon.RibbonStrings
  * Views are rebuilt incrementally as models are added or removed, and the layout is determined by [layoutOf].
  */
 internal class RibbonItemStrip(
-    private val items: RibbonList<RibbonItemModel>,
+    private var items: RibbonList<RibbonItemModel>,
     private val host: RibbonItemHost,
     private val layoutOf: (RibbonItemView) -> RibbonItemLayout,
     vertical: Boolean = false,
@@ -44,6 +44,13 @@ internal class RibbonItemStrip(
         views.forEach { it.dispose() }
         views.clear()
         element.clearChildren()
+    }
+
+    /** Lays out the items of another list (when the ribbon's model is replaced). */
+    fun rebind(newItems: RibbonList<RibbonItemModel>) {
+        dispose()
+        items = newItems
+        attach()
     }
 
     /** Changes the layout orientation. */

@@ -20,7 +20,12 @@ internal object RibbonItemViews {
      * Creates the view for [model] (not yet [RibbonItemView.attach]ed). Returns null for an unsupported model.
      * [embedded] is for placing it inside a drop-down (stretched to the full width).
      */
-    fun create(model: RibbonItemModel, host: RibbonItemHost, embedded: Boolean = false): RibbonItemView? = when (model) {
+    fun create(model: RibbonItemModel, host: RibbonItemHost, embedded: Boolean = false): RibbonItemView? {
+        host.ribbon?.itemFactory?.createItem(model)?.let { return RibbonFactoryItemView(model, it, host) }
+        return createDefault(model, host, embedded)
+    }
+
+    private fun createDefault(model: RibbonItemModel, host: RibbonItemHost, embedded: Boolean): RibbonItemView? = when (model) {
         is RibbonSplitButtonModel -> RibbonSplitButtonView(model, host)
         is RibbonToggleButtonModel -> RibbonToggleButtonView(model, host, embedded)
         is RibbonButtonModel -> RibbonButtonView(model, host, embedded)

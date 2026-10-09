@@ -70,6 +70,13 @@ internal class RibbonBackstageView(private val ribbon: WRibbon) {
         refreshHeader()
     }
 
+    /** Stops observing the model (when the ribbon's model is replaced). */
+    fun dispose() {
+        if (isOpen) close()
+        model.items.removeListListener(itemsListener)
+        model.removePropertyChangeListener(modelListener)
+    }
+
     private fun onModelChanged(name: String) {
         when (name) {
             "selectedItem" -> showPage()

@@ -47,9 +47,22 @@ import java.util.concurrent.CopyOnWriteArrayList
 // RibbonKeyboard, RibbonMenuBuilder and RibbonCustomizer
 @Suppress("LargeClass")
 class WRibbon @JvmOverloads constructor(
-    /** The ribbon's model. */
-    val model: RibbonModel = RibbonModel(),
+    model: RibbonModel = RibbonModel(),
 ) : WComponent(createRoot()) {
+    /**
+     * The ribbon's model. Replacing it rebuilds the views of the tabs, QAT, tab row items and Backstage from the new
+     * model (RibbonSpace's Ribbon.Model; customization reverts to its initial state with the new model).
+     */
+    var model: RibbonModel = model
+        set(value) {
+            if (value === field) return
+            val old = field
+            detachModel(old)
+            field = value
+            attachModel()
+            modelReplacedListeners.forEach { it(old, value) }
+        }
+
     internal val root: XamlElement = XamlElement(inspectable.also { it.addRef() })
     private val quickAccessAboveHost = root.part("PART_QuickAccessAboveHost")
     private val quickAccessBelowHost = root.part("PART_QuickAccessBelowHost")
@@ -71,7 +84,8 @@ class WRibbon @JvmOverloads constructor(
 
     internal val textMeasurer = RibbonTextMeasurer(measureHost)
     internal val host = RibbonViewHost(this)
-    internal val customizer = RibbonCustomizer(model)
+    internal var customizer = RibbonCustomizer(model)
+        private set
     internal val menus = RibbonMenuBuilder(this)
     internal val keyTips = RibbonKeyTipController(host)
     private val keyboard = RibbonKeyboard(this)
@@ -238,6 +252,7 @@ class WRibbon @JvmOverloads constructor(
     private val groupsListeners = HashMap<RibbonTabModel, RibbonListListener<RibbonGroupModel>>()
     private val subscribedContextual = mutableListOf<RibbonContextualGroupModel>()
     private val stringsListener = Runnable { WinUiUtilities.invokeLater { onStringsChanged() } }
+    private val modelReplacedListeners = CopyOnWriteArrayList<(RibbonModel, RibbonModel) -> Unit>()
 
     init {
         tabStripHost.setChild(tabStrip.element)
@@ -266,16 +281,60 @@ class WRibbon @JvmOverloads constructor(
             refreshTabStrip()
             invalidateLayout()
         }
+        RibbonStrings.addCurrentChangedListener(stringsListener)
+        quickAccessBar.strip.attach()
+        tabStripItems.attach()
+        subscribeModel()
+    }
+
+    private fun subscribeModel() {
         model.addPropertyChangeListener(modelListener)
         model.tabs.addListListener(tabsListener)
         model.contextualGroups.addListListener(contextualListener)
         model.quickAccessItems.addListListener(qatListener)
-        RibbonStrings.addCurrentChangedListener(stringsListener)
-        quickAccessBar.strip.attach()
-        tabStripItems.attach()
         syncContextualGroups()
         syncTabs()
         updateChrome()
+    }
+
+    /** Stops subscribing to the model being replaced and discards its views. */
+    private fun detachModel(old: RibbonModel) {
+        keyTips.cancel()
+        closeMinimizedPopup()
+        backstageView?.dispose()
+        backstageView = null
+        old.removePropertyChangeListener(modelListener)
+        old.tabs.removeListListener(tabsListener)
+        old.contextualGroups.removeListListener(contextualListener)
+        old.quickAccessItems.removeListListener(qatListener)
+        subscribedContextual.forEach { it.removePropertyChangeListener(nodeListener) }
+        subscribedContextual.clear()
+        disposeTabViews()
+    }
+
+    /** Subscribes to the new model and rebuilds the views. */
+    private fun attachModel() {
+        customizer = RibbonCustomizer(model)
+        quickAccessBar.strip.rebind(model.quickAccessItems)
+        tabStripItems.rebind(model.tabStripItems)
+        defaultQuickAccessIds = null
+        lastRegularTab = null
+        visibleContextualIds = emptySet()
+        subscribeModel()
+        onQuickAccessOptionsChanged()
+        invalidateShortcuts()
+        if (loaded) {
+            defaultQuickAccessIds = quickAccessItemIds()
+            defaultQuickAccessPlacement = model.quickAccessPosition
+            if (selectedTab == null) selectFirstTab()
+            if (model.backstage.isOpen) openBackstage()
+        }
+        invalidateLayout()
+    }
+
+    /** Notifies that the model was replaced (so that title bars and others can re-subscribe). */
+    internal fun addModelReplacedListener(listener: (old: RibbonModel, new: RibbonModel) -> Unit) {
+        modelReplacedListeners += listener
     }
 
     private fun onLoaded() {
@@ -299,6 +358,39 @@ class WRibbon @JvmOverloads constructor(
     }
 
     // ---------------------------------------------------------------- Tabs
+
+    /**
+     * Replaces how items are displayed (RibbonSpace's ItemFactory). The default display if null. Changing it rebuilds
+     * the views of all items.
+     */
+    var itemFactory: RibbonItemFactory? = null
+        set(value) {
+            field = value
+            regenerateViews()
+        }
+
+    /** Discards all views of the tabs, QAT and tab row items and rebuilds them from the model. */
+    private fun regenerateViews() {
+        quickAccessBar.strip.dispose()
+        quickAccessBar.strip.attach()
+        tabStripItems.dispose()
+        tabStripItems.attach()
+        disposeTabViews()
+        syncTabs()
+        updateQuickAccessPlacement()
+        invalidateShortcuts()
+        invalidateLayout()
+    }
+
+    private fun disposeTabViews() {
+        for ((tab, view) in tabViews.toList()) {
+            view.dispose()
+            tabContentHost.removeChild(view.element)
+            groupsListeners.remove(tab)?.let { tab.groups.removeListListener(it) }
+            tab.removePropertyChangeListener(nodeListener)
+        }
+        tabViews.clear()
+    }
 
     private fun syncTabs() {
         val wanted = model.tabs.toList() + customizer.customTabs()

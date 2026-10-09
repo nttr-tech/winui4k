@@ -111,6 +111,11 @@ class WRibbonTitleBar(
         ribbon.isQuickAccessHostedExternally = true
         ribbon.addQuickAccessListener { hostQuickAccess() }
         ribbon.model.addPropertyChangeListener(modelListener)
+        ribbon.addModelReplacedListener { old, new ->
+            old.removePropertyChangeListener(modelListener)
+            new.addPropertyChangeListener(modelListener)
+            updateTitle()
+        }
         addSizeChangedListener {
             updateAdaptive()
             WinUiUtilities.invokeLater { updateAdaptive() }

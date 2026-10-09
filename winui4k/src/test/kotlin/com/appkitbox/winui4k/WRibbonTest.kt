@@ -305,6 +305,37 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.defaultQuickAccessPosition } shouldBe RibbonQuickAccessPosition.ABOVE_RIBBON
         }
 
+        test("an item for which itemFactory returns a component displays it, and setting it back to null restores the default display") {
+            val copyView = { ribbon.tabViews[model.findTab("home")]!!.groupViews().flatMap { it.itemViews() }.first { it.model.id == "copy" } }
+            val custom = mutableListOf<WButton>()
+            onUiThread { ribbon.itemFactory = RibbonItemFactory { item -> if (item.id == "copy") WButton("Custom Copy").also { custom += it } else null } }
+            settle()
+            onUiThreadGet { copyView() is RibbonFactoryItemView } shouldBe true
+            custom.size shouldBe 1
+            onUiThreadGet { ribbon.tabViews[model.findTab("home")]!!.groupViews().flatMap { it.itemViews() }.count { it is RibbonFactoryItemView } } shouldBe 1
+            onUiThread { ribbon.itemFactory = null }
+            settle()
+            onUiThreadGet { copyView() is RibbonButtonView } shouldBe true
+        }
+
+        test("replacing the model displays the new model's tabs and QAT and no longer reacts to changes to the old model") {
+            val old = model
+            val replacement = onUiThreadGet {
+                RibbonModel().also { m ->
+                    m.tabs.add(RibbonTabModel("review", "Review").also { tab -> tab.groups.add(RibbonGroupModel("proofing", "Proofing").also { it.items.add(button("spell", "Spelling")) }) })
+                    m.quickAccessItems.add(button("save", "Save"))
+                }
+            }
+            onUiThread { ribbon.model = replacement }
+            settle()
+            onUiThreadGet { ribbon.visibleTabs.map { it.id } } shouldBe listOf("review")
+            onUiThreadGet { ribbon.selectedTab?.id } shouldBe "review"
+            onUiThreadGet { ribbon.quickAccessViews().map { it.model.id } } shouldBe listOf("save")
+            onUiThread { old.tabs.add(RibbonTabModel("stale", "Old Tab")) }
+            settle()
+            onUiThreadGet { ribbon.visibleTabs.map { it.id } } shouldBe listOf("review")
+        }
+
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
             onUiThread { model.visibilityMode = RibbonVisibilityMode.TABS_ONLY }
             settle()
