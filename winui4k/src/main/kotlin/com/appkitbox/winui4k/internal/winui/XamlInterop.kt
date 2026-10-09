@@ -94,6 +94,29 @@ internal object XamlInterop {
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
     const val IFrameworkElement_FindName = 77          // FindName(HSTRING, out Object) — finds an element in the XAML name scope
+    const val IFrameworkElement_get_Tag = 9            // get_Tag(out Object)
+    const val IFrameworkElement_put_Tag = 10           // put_Tag(Object)
+    const val IFrameworkElement_get_Name = 33          // get_Name(out HSTRING)
+    const val IFrameworkElement_get_DataContext = 36   // get_DataContext(out Object)
+    const val IFrameworkElement_add_Unloaded = 63      // add_Unloaded(RoutedEventHandler, out token)
+    const val IFrameworkElement_add_DataContextChanged = 65 // add_DataContextChanged(TypedEventHandler<FrameworkElement, DataContextChangedEventArgs>, out token)
+
+    // ---- Microsoft.UI.Xaml.IFrameworkElementStatics (dependency property identifiers) ----
+    const val CLS_FrameworkElement = "Microsoft.UI.Xaml.FrameworkElement"
+    const val IID_IFrameworkElementStatics = "894e2704-14e7-569a-b21e-afc7df7145a1"
+    const val IFrameworkElementStatics_get_TagProperty = 6 // get_TagProperty(out DependencyProperty)
+
+    const val IID_IDataContextChangedEventArgs = "a1be80f4-cf83-5022-b113-9233f1d4fafa"
+    const val IDataContextChangedEventArgs_get_NewValue = 6 // get_NewValue(out Object)
+
+    /** Concrete IID of TypedEventHandler<FrameworkElement, DataContextChangedEventArgs> (computed at runtime). */
+    val IID_DataContextChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.FrameworkElement;{$IID_IFrameworkElement});" +
+                "rc(Microsoft.UI.Xaml.DataContextChangedEventArgs;{$IID_IDataContextChangedEventArgs}))",
+        )
+    }
 
     /** IID of Microsoft.UI.Xaml.SizeChangedEventHandler (a delegate). */
     const val IID_SizeChangedEventHandler = "8d7b1a58-14c6-51c9-892c-9fcce368e77d"
@@ -1603,6 +1626,10 @@ internal object XamlInterop {
 
     // ---- Microsoft.UI.Xaml.IDependencyObject (target of attached properties) ----
     const val IID_IDependencyObject = "e7beaee7-160e-50f7-8789-d63463f979fa"
+    const val IDependencyObject_RegisterPropertyChangedCallback = 11 // (DependencyProperty, DependencyPropertyChangedCallback, out i8 token)
+
+    /** delegate DependencyPropertyChangedCallback(DependencyObject sender, DependencyProperty dp) — Invoke is vtbl[3] */
+    const val IID_DependencyPropertyChangedCallback = "f055bb21-219b-5b0c-805d-bcaedae15458"
 
     // ---- Microsoft.UI.Xaml.Controls.InfoBadge ----
     const val CLS_InfoBadge = "Microsoft.UI.Xaml.Controls.InfoBadge"
@@ -2022,4 +2049,46 @@ internal object XamlInterop {
                 "{$IID_ISelectorBarSelectionChangedEventArgs}))",
         )
     }
+
+    // ---- Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs (argument of TableView.SelectionChanged) ----
+    const val IID_ISelectionChangedEventArgs = "b6c18076-4b76-5416-ad29-e2dc20c46246"
+    const val ISelectionChangedEventArgs_get_AddedItems = 6   // get_AddedItems(out IVector<Object>)
+    const val ISelectionChangedEventArgs_get_RemovedItems = 7 // get_RemovedItems(out IVector<Object>)
+
+    // ---- Microsoft.UI.Xaml.Data.Binding (base: BindingBase / composable factory: IBindingFactory) ----
+    const val CLS_Binding = "Microsoft.UI.Xaml.Data.Binding"
+    const val IID_IBinding = "501ea0e8-edd4-59de-8845-76af2eabbe00"
+    const val IID_IBindingFactory = "cb2de749-b115-5f67-b64a-797d54885d5c"
+    const val IBinding_put_Path = 7                    // put_Path(PropertyPath)
+    const val IBinding_put_Mode = 9                    // put_Mode(BindingMode)
+
+    // BindingMode: OneWay = 1, OneTime = 2, TwoWay = 3
+    const val BindingMode_OneWay = 1
+
+    // ---- Microsoft.UI.Xaml.Data.BindingOperations (statics) ----
+    const val CLS_BindingOperations = "Microsoft.UI.Xaml.Data.BindingOperations"
+    const val IID_IBindingOperationsStatics = "1e1bdbd3-fca5-5c85-b87d-b504cd8fa8ac"
+    const val IBindingOperationsStatics_SetBinding = 6 // SetBinding(DependencyObject, DependencyProperty, BindingBase)
+    const val IID_IBindingBase = "91ddd141-5944-50ef-b85e-218e463f7a73"
+
+    // ---- Microsoft.UI.Xaml.PropertyPath (activatable factory: IPropertyPathFactory) ----
+    const val CLS_PropertyPath = "Microsoft.UI.Xaml.PropertyPath"
+    const val IID_IPropertyPathFactory = "08a8ccab-7ff8-5cec-bd3c-72c98804d989"
+    const val IPropertyPathFactory_CreateInstance = 6  // CreateInstance(HSTRING, out PropertyPath)
+
+    // ---- Microsoft.UI.Xaml.DataTemplate (created with XamlReader.Load) ----
+    const val IID_IDataTemplate = "08fa70fa-ee75-5e92-a101-f52d0e1e9fab"
+
+    // ---- Microsoft.UI.Xaml.Media.VisualTreeHelper (statics) ----
+    const val CLS_VisualTreeHelper = "Microsoft.UI.Xaml.Media.VisualTreeHelper"
+    const val IID_IVisualTreeHelperStatics = "5aece43c-7651-5bb5-855c-2198496e455e"
+    const val IVisualTreeHelperStatics_GetChild = 10          // GetChild(DependencyObject, i4, out DependencyObject)
+    const val IVisualTreeHelperStatics_GetChildrenCount = 11  // GetChildrenCount(DependencyObject, out i4)
+
+    // ---- Microsoft.UI.Xaml.Controls.ItemsRepeater / ItemsSourceView ----
+    const val IID_IItemsRepeater = "9dabac84-fe81-53d1-a041-7a3befea505f"
+    const val IItemsRepeater_get_ItemsSourceView = 8   // get_ItemsSourceView(out ItemsSourceView)
+    const val IID_IItemsSourceView = "f7f802de-e79c-5c5f-abf8-ccbd486b89d6"
+    const val IItemsSourceView_get_Count = 6           // get_Count(out i4)
+    const val IItemsSourceView_GetAt = 7               // GetAt(i4, out Object)
 }
