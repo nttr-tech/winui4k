@@ -8,47 +8,41 @@ import com.appkitbox.winui4k.VerticalAlignment
 import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WColor
 import com.appkitbox.winui4k.WComponent
-import com.appkitbox.winui4k.WContentDialog
 import com.appkitbox.winui4k.WFrame
 import com.appkitbox.winui4k.WGrid
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WRibbon
 import com.appkitbox.winui4k.WRibbonTheme
 import com.appkitbox.winui4k.WRibbonTitleBar
-import com.appkitbox.winui4k.WRibbonToolBar
 import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonIcons
-import com.appkitbox.winui4k.ribbon.RibbonItemSize
-import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
-import com.appkitbox.winui4k.ribbon.RibbonToolBarOrientation
 
-/** The kind of demo app (the items in the rail on the left). */
-enum class RibbonDemoApp(internal val label: String, internal val icon: RibbonIcon, internal val module: String) {
+/** The kind of demo app (the app icon in the title bar). */
+enum class RibbonDemoApp(internal val icon: RibbonIcon) {
     /** Word style. */
-    WORD("Word", RibbonIcons.DOCUMENT, "winui4k-sample-ribbon-word"),
+    WORD(RibbonIcons.DOCUMENT),
 
     /** Excel style. */
-    EXCEL("Excel", RibbonIcons.TABLE, "winui4k-sample-ribbon-excel"),
+    EXCEL(RibbonIcons.TABLE),
 
     /** PowerPoint style. */
-    POWER_POINT("PowerPoint", RibbonIcons.PRESENT, "winui4k-sample-ribbon-powerpoint"),
+    POWER_POINT(RibbonIcons.PRESENT),
 
     /** Tools (menu bar, options bar, and tool palette). */
-    TOOLS("Tools", RibbonIcons.PEN, "winui4k-sample-ribbon-tools"),
+    TOOLS(RibbonIcons.PEN),
 
     /** CAD. */
-    CAD("CAD", RibbonIcons.LAYERS, "winui4k-sample-ribbon-cad"),
+    CAD(RibbonIcons.LAYERS),
 }
 
 /**
- * The window frame of the ribbon demo apps (same layout as the RibbonSpace demos): a title bar at the top (a
- * [WRibbonTitleBar] if there is a ribbon), a rail on the left for switching demo apps, [top] (the ribbon or menu bar) and
- * [content] in the middle, and [statusBar] at the bottom.
+ * The window frame of the ribbon demo apps: a title bar at the top (a [WRibbonTitleBar] if there is a ribbon),
+ * [top] (the ribbon or menu bar) and [content] below it, and [statusBar] at the bottom.
  */
 class RibbonDemoWindow(
     /** The window title. */
     title: String,
-    /** This app (shown as selected in the rail). */
+    /** This app (used for the title bar icon). */
     private val app: RibbonDemoApp,
     /** The ribbon to connect to the title bar (if null, no title bar is created). */
     val ribbon: WRibbon?,
@@ -66,24 +60,21 @@ class RibbonDemoWindow(
         root.addRow(GridLength.AUTO)
         root.addRow(GridLength.star())
         root.addRow(GridLength.AUTO)
-        root.addColumn(GridLength.AUTO)
-        root.addColumn(GridLength.star())
         titleBar?.let {
             it.appIcon = app.icon
-            root.add(it, row = 0, column = 0, columnSpan = 2)
+            root.add(it, row = 0, column = 0)
         }
-        root.add(appRail(), row = 1, column = 0, rowSpan = 3)
     }
 
-    /** The top area next to the rail (ribbon, menu bar, or options bar). */
-    fun setTop(component: WComponent) = root.add(component, row = 1, column = 1)
+    /** The top area below the title bar (ribbon, menu bar, or options bar). */
+    fun setTop(component: WComponent) = root.add(component, row = 1, column = 0)
 
     /** The content in the middle (placed on the theme's window background surface). */
     fun setContent(component: WComponent, brushKey: String = "RibbonWindowBackgroundBrush") =
-        root.add(WRibbonTheme.surface(component, brushKey), row = 2, column = 1)
+        root.add(WRibbonTheme.surface(component, brushKey), row = 2, column = 0)
 
     /** The status bar at the bottom. */
-    fun setStatusBar(component: WComponent) = root.add(component, row = 3, column = 1)
+    fun setStatusBar(component: WComponent) = root.add(component, row = 3, column = 0)
 
     /** Switches between light and dark. */
     fun setDark(dark: Boolean) {
@@ -99,44 +90,9 @@ class RibbonDemoWindow(
         frame.isVisible = true
     }
 
-    /** The rail for switching demo apps (a vertical, icon-only toolbar). */
-    private fun appRail(): WComponent {
-        val model = RibbonToolBarModel("rail")
-        model.orientation = RibbonToolBarOrientation.VERTICAL
-        model.showLabels = false
-        for (entry in RibbonDemoApp.entries) {
-            model.items.add(
-                toggle("rail.${entry.name}", entry.label, entry.icon, RibbonItemSize.SMALL).also { item ->
-                    item.groupName = "rail"
-                    item.isChecked = entry == app
-                    item.addActionListener {
-                        if (entry != app) {
-                            item.isChecked = false
-                            model.items.filterIsInstance<com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel>().first { it.id == "rail.${app.name}" }.isChecked = true
-                            showOtherApp(entry)
-                        }
-                    }
-                },
-            )
-        }
-        model.items.add(button("rail.settings", "Settings", RibbonIcons.SETTINGS, RibbonItemSize.SMALL))
-        val rail = WRibbonToolBar(model)
-        rail.ribbon = ribbon
-        rail.margin = RAIL_MARGIN
-        return rail
-    }
-
-    private fun showOtherApp(entry: RibbonDemoApp) {
-        val text = WLabel("The ${entry.label} demo is a separate app. Launch it with gradlew :${entry.module}:run.")
-        val dialog = WContentDialog(entry.label, text)
-        dialog.closeButtonText = "OK"
-        dialog.show(root)
-    }
-
     companion object {
         private const val DEFAULT_WIDTH = 2400
         private const val DEFAULT_HEIGHT = 1350
-        private const val RAIL_MARGIN = 4.0
         private const val AVATAR_SIZE = 32.0
         private const val SEMI_BOLD = 600
 

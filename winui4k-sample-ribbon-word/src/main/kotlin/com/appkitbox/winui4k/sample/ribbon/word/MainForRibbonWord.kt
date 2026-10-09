@@ -22,8 +22,8 @@ import com.appkitbox.winui4k.sample.ribbon.shell.toggle
 
 /**
  * Word-style ribbon demo (same layout as the RibbonSpace Word demo).
- * Title bar (AutoSave, QAT, title, search, and account), app rail on the left, ribbon, document, and status bar (view
- * switching and zoom). The ribbon's formatting commands apply to the document's body and heading.
+ * Title bar (AutoSave, QAT, title, search, and account), ribbon, document, and status bar (view switching and zoom).
+ * The ribbon's formatting commands apply to the document's body and heading.
  */
 fun main() {
     WinUiUtilities.invokeLater {

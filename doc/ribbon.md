@@ -127,4 +127,4 @@ Java からも同じモデルを組み立てられる (`winui4k-sample-gallery-i
 | `winui4k-sample-ribbon-cad` | AutoCAD 風 (線画のアイコン・ワークスペース・テキスト エディタ / ハッチング作成のコンテキスト タブ・図面・ビュー キューブ・コマンド ライン) | `.\gradlew :winui4k-sample-ribbon-cad:run` |
 | `winui4k-sample-ribbon-tools` | リボンを使わないバー (メニュー バー・ツールに追従するオプション バー・最後の選択に追従する分割ボタン・ステータス バー) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
-`winui4k-sample-ribbon-shell` はこれらのデモに共通の外枠 (タイトル バー・アプリを切り替える左のレール) である。
+`winui4k-sample-ribbon-shell` はこれらのデモに共通の外枠 (タイトル バー・ステータス バーの配置) である。
