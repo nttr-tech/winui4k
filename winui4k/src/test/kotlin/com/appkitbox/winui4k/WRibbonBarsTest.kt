@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.ribbon.RibbonButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonColorPickerModel
 import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupModel
+import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonMenuBarItemModel
 import com.appkitbox.winui4k.ribbon.RibbonMenuBarModel
@@ -209,6 +210,15 @@ class WRibbonBarsTest : FunSpec() {
                 view.commitText("14")
             }
             commits shouldBe listOf<Pair<Any?, String>>("12" to "12", null to "14")
+        }
+
+        test("WRibbonIcon draws a layered line-art icon at the given size and redraws it when the size changes") {
+            val icon = onUiThreadGet { WRibbonIcon(RibbonIcon.path("[viewbox=32;stroke=1.8]M6,26 L26,6|[color=#3DA9F5]M4,24 L8,24 L8,28 L4,28 Z", 32.0), 24.0) }
+            show(icon)
+            onUiThreadGet { icon.preferredSize().width } shouldBe 24.0
+            onUiThread { icon.iconSize = 40.0 }
+            settle(icon)
+            onUiThreadGet { icon.preferredSize().width } shouldBe 40.0
         }
 
         test("the search box searches the ribbon, invokes a result, and clears the search text") {
