@@ -297,8 +297,9 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
         secondary.onClick { openDropDown() }
         RibbonMenus.onOpened(flyout) { element.goToState("DropDownOpen") }
         RibbonMenus.onClosed(flyout) { element.goToState("DropDownClosed") }
-        secondary.onKeyDown { e ->
-            if (e.key == VK_F4 || (e.key == VK_DOWN && Xaml.isKeyDown(VK_MENU))) {
+        // Open the drop-down with Alt+Down / F4 whether the focus is on the primary action or the arrow
+        element.onKeyDown { e ->
+            if (RibbonInputViews.isDropDownKey(e.key)) {
                 openDropDown()
                 e.handled = true
             }
@@ -448,11 +449,5 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
         sub.add(WMenuFlyoutSeparator())
         RibbonMenus.createMenuItems(model.menuItems, host, onChosen = { if (model.followLastChoice) model.lastChoice = it }).forEach { sub.add(it) }
         return listOf(sub)
-    }
-
-    private companion object {
-        const val VK_DOWN = 40
-        const val VK_MENU = 18
-        const val VK_F4 = 115
     }
 }

@@ -477,6 +477,13 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
             }
             primary!!.onClick { invokePrimary() }
             secondary!!.onClick { openDropDown() }
+            // Open the palette with Alt+Down / F4 whether the focus is on the primary action or the arrow
+            element.onKeyDown { e ->
+                if (RibbonInputViews.isDropDownKey(e.key)) {
+                    openDropDown()
+                    e.handled = true
+                }
+            }
         }
         super.attach()
     }

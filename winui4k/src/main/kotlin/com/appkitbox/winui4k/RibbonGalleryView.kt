@@ -341,11 +341,14 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
         val cols = if (model.dropDownColumns > 0) model.dropDownColumns else max(model.maxColumns, MIN_DROP_DOWN_COLUMNS)
         val root = XamlElement.load("<StackPanel Spacing=\"4\" Padding=\"0\" />")
         val itemsHost = XamlElement.load("<StackPanel Spacing=\"2\" XYFocusKeyboardNavigation=\"Enabled\" TabFocusNavigation=\"Once\" />")
-        if (model.isFilterEnabled) {
-            val filter = XamlElement.load("<TextBox Margin=\"2,2,2,4\" />")
-            filter.setPlaceholderText(RibbonStrings.current.galleryFilter)
-            filter.onTextChanged { fill(itemsHost, cols, filter.textBoxText) }
-            root.addChild(filter)
+        val filter = if (model.isFilterEnabled) {
+            XamlElement.load("<TextBox Margin=\"2,2,2,4\" />").also { box ->
+                box.setPlaceholderText(RibbonStrings.current.galleryFilter)
+                box.onTextChanged { fill(itemsHost, cols, box.textBoxText) }
+                root.addChild(box)
+            }
+        } else {
+            null
         }
         fill(itemsHost, cols, null)
         val scroll = XamlElement.load(
@@ -361,9 +364,20 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
             }
         }
         flyout.content = root
-        flyout.showAt(if (inlineRoot.isVisible) inlineRoot else dropDownButton)
+        if (inlineRoot.isVisible) {
+            // Open it over the inline gallery (PlaceBelow(overlapAnchor: IsInline) in RibbonSpace)
+            RibbonMenus.showAtPoint(flyout, inlineRoot, 0.0, -1.0)
+        } else {
+            flyout.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT
+            flyout.showAt(dropDownButton)
+        }
+        // Start from the selected item (or the first one), and put the focus on the filter box if there are no items
         val initial = popupItems.firstOrNull { it.first === model.selectedItem } ?: popupItems.firstOrNull()
-        WinUiUtilities.invokeLater { initial?.second?.focus(XamlInterop.FocusState_Programmatic) }
+        WinUiUtilities.invokeLater {
+            if (flyout.isOpen && initial?.second?.focus(XamlInterop.FocusState_Programmatic) != true) {
+                filter?.focus(XamlInterop.FocusState_Programmatic)
+            }
+        }
     }
 
     private fun fill(itemsHost: XamlElement, cols: Int, query: String?) {

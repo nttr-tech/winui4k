@@ -45,6 +45,9 @@ internal object RibbonInputViews {
     const val VK_DOWN = 40
     const val VK_MENU = 18
     const val VK_F4 = 115
+
+    /** Whether the key opens a drop-down (F4 or Alt+Down). */
+    fun isDropDownKey(key: Int): Boolean = key == VK_F4 || (key == VK_DOWN && Xaml.isKeyDown(VK_MENU))
 }
 
 /**
