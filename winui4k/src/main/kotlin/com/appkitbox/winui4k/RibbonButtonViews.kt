@@ -69,7 +69,7 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
     /** Click: opens the drop-down if there is one; otherwise runs the command. */
     protected open fun onClick() {
         val f = flyout
-        if (f != null) f.showAt(element) else execute()
+        if (f != null) showDropDown(f) else execute()
     }
 
     override fun invoke(): Boolean {
@@ -82,13 +82,13 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
         val menu = flyout as? WMenuFlyout
         if (menu == null || !isEffectivelyEnabled) return super.onKeyTip()
         // For a menu, proceed to the KeyTips of its items (as Office does)
-        menu.showAt(element)
+        showDropDown(menu)
         return RibbonKeyTipResult.Menu(menu)
     }
 
     /** Opens the drop-down. */
     override fun openDropDown() {
-        flyout?.showAt(element)
+        flyout?.let { showDropDown(it) }
     }
 
     override fun overflowMenuItems(): List<WMenuFlyoutItemBase> {
@@ -426,7 +426,7 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
 
     /** Opens the drop-down. */
     override fun openDropDown() {
-        if (model.isEnabled) flyout.showAt(element)
+        if (model.isEnabled) showDropDown(flyout)
     }
 
     override fun invoke(): Boolean {

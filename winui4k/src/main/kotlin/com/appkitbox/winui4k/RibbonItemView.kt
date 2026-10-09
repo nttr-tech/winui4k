@@ -89,6 +89,9 @@ internal interface RibbonItemHost {
     /** The size of an item changed, so lay out again. */
     fun invalidateItemsLayout()
 
+    /** The direction in which drop-downs open (upward in a status bar at the bottom edge of the window). */
+    val dropDownPlacement: FlyoutPlacement get() = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT
+
     /** Shows the item's right-click menu. Returns false if it cannot be shown. */
     fun showItemContextMenu(view: RibbonItemView, x: Double, y: Double): Boolean = ribbon?.showItemContextMenu(view, x, y) ?: false
 
@@ -289,6 +292,12 @@ internal abstract class RibbonItemView(open val model: RibbonItemModel, val host
 
     /** The drop-down (a menu, palette, or expanded gallery). null for items without one. */
     open val dropDown: WFlyoutBase? get() = null
+
+    /** Opens [flyout] below the item (above it in a status bar). */
+    protected fun showDropDown(flyout: WFlyoutBase) {
+        flyout.placement = host.dropDownPlacement
+        flyout.showAt(element)
+    }
 
     /** Opens the drop-down (does nothing for items without one). */
     open fun openDropDown() {

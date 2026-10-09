@@ -57,6 +57,9 @@ internal class RibbonTabHeaderView(val tab: RibbonTabModel, private val strip: R
                 ),
             )
         }
+        // Header widths are measured with the density's font size, so display with the same font size (with the style's
+        // default of 12, the text is truncated in compact density)
+        element.view(com.appkitbox.winui4k.internal.winui.XamlInterop.IID_IControl).call(com.appkitbox.winui4k.internal.winui.XamlInterop.IControl_put_FontSize, strip.metrics.fontSize)
         element.setAutomationName(label)
         element.setAutomationId(tab.automationId ?: "RibbonTab_${tab.id}")
         element.setAutomationAccessKey(explicitKeyTip)

@@ -2191,6 +2191,7 @@ internal object XamlInterop {
     const val FlowDirection_RightToLeft = 1
 
     // ---- Microsoft.UI.Xaml.Controls.Control (additions to IControl) ----
+    const val IControl_get_FontSize = 12
     const val IControl_put_FontSize = 13
     const val IControl_put_FontFamily = 15
     const val IControl_put_FontStyle = 19              // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)

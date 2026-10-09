@@ -153,7 +153,7 @@ internal class RibbonGridPickerView(override val model: RibbonGridPickerModel, h
             RibbonMenus.onOpening(flyout) { flyout.content = GridPanel(null).root }
             RibbonMenus.onOpened(flyout) { element.goToState("Active") }
             RibbonMenus.onClosed(flyout) { element.goToState("Inactive") }
-            element.onClick { if (isEffectivelyEnabled) flyout.showAt(element) }
+            element.onClick { if (isEffectivelyEnabled) showDropDown(flyout) }
         }
     }
 
@@ -206,7 +206,7 @@ internal class RibbonGridPickerView(override val model: RibbonGridPickerModel, h
 
     /** Commits the size (runs the command with a [RibbonGridSize] and closes the drop-down). */
     override fun openDropDown() {
-        if (isEffectivelyEnabled) flyout?.showAt(element)
+        if (isEffectivelyEnabled) flyout?.let { showDropDown(it) }
     }
 
     fun pick(size: RibbonGridSize) {
@@ -216,7 +216,7 @@ internal class RibbonGridPickerView(override val model: RibbonGridPickerModel, h
 
     override fun invoke(): Boolean {
         if (!isEffectivelyEnabled) return false
-        if (flyout != null) flyout.showAt(element) else element.focus()
+        if (flyout != null) showDropDown(flyout) else element.focus()
         return true
     }
 
@@ -578,7 +578,7 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
 
     /** Opens the palette. */
     override fun openDropDown() {
-        if (model.isEnabled) flyout?.showAt(element)
+        if (model.isEnabled) flyout?.let { showDropDown(it) }
     }
 
     /** Shows the "More Colors" dialog (color selection and hex input), and selects the color on OK. */

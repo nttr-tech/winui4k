@@ -32,6 +32,7 @@ internal class RibbonStandaloneHost(private val bar: WRibbonBar) : RibbonItemHos
     override val textWidths: RibbonTextWidths get() = measurer
     override val commandCatalog: RibbonCommandCatalog? get() = bar.barCatalog() ?: bar.ribbon?.model?.commandCatalog
     override val ribbon: WRibbon? get() = bar.ribbon
+    override val dropDownPlacement: FlyoutPlacement get() = bar.dropDownPlacement
 
     override fun itemInvoked(model: RibbonNodeModel, commandId: String?, parameter: Any?) {
         bar.fireItemInvoked(model, commandId, parameter)
@@ -66,6 +67,9 @@ abstract class WRibbonBar internal constructor(xaml: String) : WComponent(Ribbon
 
     /** The catalog that resolves item commands (the ribbon's if null). */
     internal open fun barCatalog(): RibbonCommandCatalog? = null
+
+    /** The direction in which item drop-downs open. */
+    internal open val dropDownPlacement: FlyoutPlacement get() = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT
 
     /** The item metrics. */
     internal open fun barMetrics(): RibbonMetrics = RibbonMetrics.COMFORTABLE
@@ -310,6 +314,9 @@ class WRibbonStatusBar @JvmOverloads constructor(
     override fun barCatalog(): RibbonCommandCatalog? = model.commandCatalog
 
     override fun barMetrics(): RibbonMetrics = STATUS_METRICS
+
+    // It is at the bottom edge of the window, so drop-downs open upward (opening downward would go off screen)
+    override val dropDownPlacement: FlyoutPlacement get() = FlyoutPlacement.TOP_EDGE_ALIGNED_LEFT
 
     override fun onBarLayout() = applyLayouts()
 

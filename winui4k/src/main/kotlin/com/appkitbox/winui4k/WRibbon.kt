@@ -666,6 +666,8 @@ class WRibbon @JvmOverloads constructor(
 
     private fun onMetricsChanged() {
         tabViews.values.forEach { it.invalidateWidths() }
+        // Also readjust the tab headers' font size and width to the density
+        refreshTabStrip()
         quickAccessBar.strip.applyLayouts()
         tabStripItems.applyLayouts()
         invalidateLayout()

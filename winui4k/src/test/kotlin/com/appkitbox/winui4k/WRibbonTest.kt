@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.ribbon.RibbonButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonContextualActivation
 import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
+import com.appkitbox.winui4k.ribbon.RibbonDensity
 import com.appkitbox.winui4k.ribbon.RibbonDisplayMode
 import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupModel
@@ -12,6 +13,7 @@ import com.appkitbox.winui4k.ribbon.RibbonGroupState
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
+import com.appkitbox.winui4k.ribbon.RibbonMetrics
 import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonQuickAccessPosition
 import com.appkitbox.winui4k.ribbon.RibbonSimplifiedVisibility
@@ -396,6 +398,18 @@ class WRibbonTest : FunSpec() {
             } finally {
                 UiTestHarness.detach(presetRibbon)
             }
+        }
+
+        test("tab headers are displayed at the font size of the same density their width was measured with (long headers are not clipped even in compact)") {
+            val home = onUiThreadGet { model.findTab("home")!! }
+            val fontSize = {
+                ribbon.tabStrip.headerOf(home)!!.element.view(com.appkitbox.winui4k.internal.winui.XamlInterop.IID_IControl)
+                    .getDouble(com.appkitbox.winui4k.internal.winui.XamlInterop.IControl_get_FontSize)
+            }
+            onUiThreadGet { fontSize() } shouldBe ribbon.metrics.fontSize
+            onUiThread { model.density = RibbonDensity.COMPACT }
+            settle()
+            onUiThreadGet { fontSize() } shouldBe RibbonMetrics.COMPACT.fontSize
         }
 
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
