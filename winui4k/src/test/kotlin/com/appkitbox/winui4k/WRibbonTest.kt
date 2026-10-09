@@ -23,6 +23,7 @@ import com.appkitbox.winui4k.ribbon.RibbonStrings
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
@@ -30,6 +31,7 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * E2E test that places a [WRibbon] in an actual WinUI window and verifies synchronization with the model, item
@@ -196,11 +198,10 @@ class WRibbonTest : FunSpec() {
             invoked shouldBe listOf("cut")
             val paste = onUiThreadGet { model.findItem("paste")!! }
             onUiThreadGet { ribbon.openDropDown(paste) } shouldBe true
-            settle()
-            onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe true
+            // Opening and closing the flyout is asynchronous, so wait until the state changes (it can be delayed when all tests run in a row)
+            eventually(POPUP_TIMEOUT) { onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe true }
             onUiThread { ribbon.closeDropDown(paste) }
-            settle()
-            onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe false
+            eventually(POPUP_TIMEOUT) { onUiThreadGet { ribbon.isDropDownOpen(paste) } shouldBe false }
             onUiThreadGet { ribbon.openDropDown(model.findItem("cut")!!) } shouldBe false
         }
 
@@ -545,6 +546,7 @@ class WRibbonTest : FunSpec() {
 
     private companion object {
         const val SETTLE_ROUNDS = 4
+        val POPUP_TIMEOUT = 5.seconds
         const val EXTRA_GROUPS = 4
         const val EXTRA_ITEMS = 4
         const val NARROW = 360.0
