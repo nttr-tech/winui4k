@@ -20,6 +20,7 @@ import com.appkitbox.winui4k.ribbon.RibbonRelayCommand
 import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
+import com.appkitbox.winui4k.ribbon.RibbonToolBarOrientation
 import com.appkitbox.winui4k.ribbon.RibbonZoomModel
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -62,6 +63,20 @@ class WRibbonBarsTest : FunSpec() {
             onUiThread { toolBar.width = WIDE }
             settle(toolBar)
             onUiThreadGet { toolBar.overflowItems.size } shouldBe 0
+        }
+
+        test("a vertical toolbar whose height fits its contents does not move items to overflow when all items fit") {
+            val model = onUiThreadGet {
+                RibbonToolBarModel().also { m ->
+                    m.orientation = RibbonToolBarOrientation.VERTICAL
+                    m.columns = 2
+                    repeat(PALETTE_ITEMS) { m.items.add(RibbonButtonModel("tool$it", "Tool $it", RibbonIcons.PEN)) }
+                }
+            }
+            // Because it is top-aligned, the toolbar's height is the content height it decides itself (no height constraint comes from outside)
+            val toolBar = onUiThreadGet { WRibbonToolBar(model).also { it.verticalAlignment = VerticalAlignment.TOP } }
+            show(toolBar)
+            onUiThreadGet { toolBar.overflowItems.map { it.id } } shouldBe emptyList()
         }
 
         test("invoking a toolbar item is notified as a ribbon item invocation") {
@@ -278,6 +293,7 @@ class WRibbonBarsTest : FunSpec() {
     private companion object {
         const val SETTLE_ROUNDS = 4
         const val ITEMS = 12
+        const val PALETTE_ITEMS = 6
         const val NARROW = 200.0
         const val WIDE = 3000.0
         const val BOX_WIDTH = 300.0

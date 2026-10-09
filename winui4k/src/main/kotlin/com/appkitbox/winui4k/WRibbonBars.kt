@@ -180,19 +180,37 @@ class WRibbonToolBar @JvmOverloads constructor(
         val shown = views.filter { it.isShown }
         val sizes = shown.map { it.measure(layout) }
         // Separators do not occupy a cell, so the cell size is determined by the items other than separators
-        val flow = Flow(vertical, if (vertical) model.columns else 1, cellSize(shown, sizes))
+        val columns = if (vertical) model.columns else 1
+        val cell = cellSize(shown, sizes)
         val available = if (vertical) actualHeight else actualWidth
         val overflowSize = layout.metrics.simplifiedItemHeight
-        val hidden = mutableListOf<RibbonItemView>()
-        for ((index, view) in shown.withIndex()) {
-            val extent = if (vertical) sizes[index].height else sizes[index].width
-            val reserve = if (index < shown.size - 1 && model.isOverflowEnabled) overflowSize else 0.0
-            val fits = available <= 0 || !model.isOverflowEnabled || flow.main + extent + reserve <= available
-            view.element.isVisible = fits && hidden.isEmpty()
-            if (view.element.isVisible) flow.place(view, sizes[index]) else hidden += view
+        // If all items fit, show them all without reserving space for the overflow button. For a toolbar sized to its
+        // content, its own size (= the size of the previous content) is exactly the width that fits, so reserving space
+        // would make the last row overflow
+        val all = Flow(vertical, columns, cell)
+        for ((index, view) in shown.withIndex()) all.place(view, sizes[index])
+        all.finishRow()
+        if (available <= 0 || !model.isOverflowEnabled || all.main <= available + FIT_TOLERANCE) {
+            shown.forEach { it.element.isVisible = true }
+            finishArrange(all, emptyList(), overflowSize)
+            return
         }
+        val flow = Flow(vertical, columns, cell)
+        val hidden = placeUntilFull(flow, shown, sizes, available, overflowSize)
         flow.finishRow()
         finishArrange(flow, hidden, overflowSize)
+    }
+
+    /** Places items as far as they fit while reserving space for the overflow button, and returns the items that did not fit. */
+    private fun placeUntilFull(flow: Flow, shown: List<RibbonItemView>, sizes: List<WSize>, available: Double, overflowSize: Double): List<RibbonItemView> {
+        val hidden = mutableListOf<RibbonItemView>()
+        for ((index, view) in shown.withIndex()) {
+            val extent = if (isVertical) sizes[index].height else sizes[index].width
+            val reserve = if (index < shown.size - 1) overflowSize else 0.0
+            view.element.isVisible = hidden.isEmpty() && flow.main + extent + reserve <= available
+            if (view.element.isVisible) flow.place(view, sizes[index]) else hidden += view
+        }
+        return hidden
     }
 
     private fun cellSize(shown: List<RibbonItemView>, sizes: List<WSize>): WSize {
@@ -283,6 +301,9 @@ class WRibbonToolBar @JvmOverloads constructor(
         const val SPACING = 1.0
         const val SEPARATOR_INSET = 4.0
         const val SEPARATOR_GAP = 4.0
+
+        /** The tolerance for checking whether all items fit (layout rounding makes the same size as the content slightly smaller). */
+        const val FIT_TOLERANCE = 0.5
     }
 }
 
