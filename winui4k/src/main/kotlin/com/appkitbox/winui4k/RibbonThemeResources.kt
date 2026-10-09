@@ -9,8 +9,10 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import com.appkitbox.winui4k.ribbon.RibbonChromeStyle
 import com.appkitbox.winui4k.ribbon.RibbonColor
+import com.appkitbox.winui4k.ribbon.RibbonNotifications
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
+import java.util.concurrent.Executor
 
 /**
  * The ribbon theme's resources (RibbonThemeResources in RibbonSpace).
@@ -56,6 +58,12 @@ internal object RibbonThemeResources {
 
     /** Merges the resources into Application.Resources (does nothing if already merged). */
     fun ensure() {
+        if (RibbonNotifications.dispatcher == null) {
+            // Even if the model is changed on another thread, views and listeners receive notifications on the UI thread
+            RibbonNotifications.dispatcher = Executor { notification ->
+                if (WinUiUtilities.isDispatchThread) notification.run() else WinUiUtilities.invokeLater(notification)
+            }
+        }
         if (dictionary != null) return
         val loaded = Xaml.load(RibbonStyles.dictionaryXaml(themeBodies()))
         val view = loaded.queryInterface(XamlInterop.IID_IResourceDictionary)

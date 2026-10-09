@@ -11,6 +11,8 @@ import java.util.concurrent.Executor
 /** Tests for commands (RibbonRelayCommand / RibbonAsyncCommand), the catalog, and keyboard shortcuts. */
 class RibbonCommandTest : FunSpec() {
     init {
+        synchronousModelNotifications()
+
         test("RibbonRelayCommand does not execute while canExecute is false") {
             var count = 0
             var enabled = false

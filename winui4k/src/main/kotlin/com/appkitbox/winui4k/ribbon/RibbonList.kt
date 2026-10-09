@@ -51,13 +51,13 @@ fun interface RibbonListListener<E> {
  * It can be used as an ordinary java.util.List (`tab.groups += group` / `groups.add(group)`) and notifies
  * [RibbonListListener]s with a [RibbonListEvent] on every change. Views apply only the differences from these
  * notifications. [addAll] and [clear] notify only once for the whole operation.
- * Modify it only on the UI thread.
+ * Notifications are delivered through [RibbonNotifications.dispatcher] (on the UI thread when there is a view).
  */
 class RibbonList<E> @JvmOverloads constructor(initial: Collection<E> = emptyList()) :
     AbstractMutableList<E>(),
     RandomAccess {
     private val items = ArrayList(initial)
-    private val listeners = mutableListOf<RibbonListListener<E>>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<RibbonListListener<E>>()
 
     override val size: Int get() = items.size
 
@@ -135,6 +135,7 @@ class RibbonList<E> @JvmOverloads constructor(initial: Collection<E> = emptyList
 
     private fun fire(event: RibbonListEvent<E>) {
         modCount++
-        for (listener in listeners.toList()) listener.listChanged(event)
+        if (listeners.isEmpty()) return
+        RibbonNotifications.deliver { for (listener in listeners) listener.listChanged(event) }
     }
 }

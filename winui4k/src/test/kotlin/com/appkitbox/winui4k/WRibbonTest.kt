@@ -279,6 +279,19 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.selectedTab?.id } shouldBe "home"
         }
 
+        test("changing the model on a background thread delivers the change notifications on the UI thread and updates the display") {
+            val notifiedOnUiThread = mutableListOf<Boolean>()
+            val label = onUiThreadGet { model.findItem("copy")!! }
+            onUiThread { label.addPropertyChangeListener { notifiedOnUiThread += WinUiUtilities.isDispatchThread } }
+            val worker = Thread { label.label = "Duplicate" }
+            worker.start()
+            worker.join()
+            settle()
+            notifiedOnUiThread shouldBe listOf(true)
+            val copyView = { ribbon.tabViews[model.findTab("home")]!!.groupViews().flatMap { it.itemViews() }.first { it.model.id == "copy" } }
+            onUiThreadGet { copyView().element.automationName } shouldBe "Duplicate"
+        }
+
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
             onUiThread { model.visibilityMode = RibbonVisibilityMode.TABS_ONLY }
             settle()

@@ -46,6 +46,8 @@ class RibbonModelTest : FunSpec() {
     }
 
     init {
+        synchronousModelNotifications()
+
         test("items inside nested containers are found by id, and enumeration includes nested items") {
             val model = createModel()
             model.findItem("bold").shouldBeInstanceOf<RibbonToggleButtonModel>()

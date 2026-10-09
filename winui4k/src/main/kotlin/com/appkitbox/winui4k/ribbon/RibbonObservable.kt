@@ -1,6 +1,8 @@
 package com.appkitbox.winui4k.ribbon
 
 import java.util.EventObject
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -29,6 +31,26 @@ fun interface RibbonPropertyChangeListener {
 }
 
 /**
+ * Switches the thread that delivers model change notifications (the Dispatcher of RibbonSpace's RibbonModelBindings).
+ *
+ * If [dispatcher] is null, notifications are delivered directly on the thread that made the change. When a ribbon view
+ * ([com.appkitbox.winui4k.WRibbon] and others) is created, it sets a dispatcher that notifies directly on the UI thread
+ * and forwards to the UI thread from other threads. So even if the model is changed on a background thread, views and
+ * listeners receive notifications on the UI thread.
+ */
+object RibbonNotifications {
+    /** The outlet that delivers notifications (null means delivering them on the thread that made the change). */
+    @JvmStatic
+    @Volatile
+    var dispatcher: Executor? = null
+
+    internal fun deliver(notification: Runnable) {
+        val target = dispatcher
+        if (target == null) notification.run() else target.execute(notification)
+    }
+}
+
+/**
  * The common base of ribbon models (the equivalent of RibbonSpace's ObservableObject and Swing's bean property change
  * notifications).
  *
@@ -36,10 +58,10 @@ fun interface RibbonPropertyChangeListener {
  * Views ([com.appkitbox.winui4k.WRibbon] and others) subscribe to these notifications to update what they show, and
  * write the results of user operations (the selected tab, check states, input values, and so on) back to the model
  * (two-way sync).
- * Modify it only on the UI thread.
+ * Notifications are delivered through [RibbonNotifications.dispatcher] (on the UI thread when there is a view).
  */
 abstract class RibbonObservable {
-    private val listeners = mutableListOf<RibbonPropertyChangeListener>()
+    private val listeners = CopyOnWriteArrayList<RibbonPropertyChangeListener>()
 
     /** Subscribes to property change notifications. */
     fun addPropertyChangeListener(listener: RibbonPropertyChangeListener) {
@@ -58,7 +80,7 @@ abstract class RibbonObservable {
     protected fun firePropertyChange(propertyName: String, oldValue: Any?, newValue: Any?) {
         if (oldValue == newValue || listeners.isEmpty()) return
         val event = RibbonPropertyChangeEvent(this, propertyName, oldValue, newValue)
-        for (listener in listeners.toList()) listener.propertyChange(event)
+        RibbonNotifications.deliver { for (listener in listeners) listener.propertyChange(event) }
     }
 
     /**

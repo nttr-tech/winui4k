@@ -15,6 +15,8 @@ class RibbonListTest : FunSpec() {
     }
 
     init {
+        synchronousModelNotifications()
+
         test("add, insert, remove, and replace are each notified with position and elements") {
             val list = RibbonList<String>()
             val events = record(list)
