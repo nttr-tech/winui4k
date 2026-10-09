@@ -107,8 +107,17 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         clickTokens.addKotlinAdapter(listener, adapter)
     }
 
+    /** The registered listeners (called by [performClick]). */
+    private val actionListeners = mutableListOf<Runnable>()
+
+    /** Calls the listeners as if clicked (when a menu item is selected with a KeyTip). */
+    internal fun performClick() {
+        actionListeners.toList().forEach { it.run() }
+    }
+
     @JvmName("addActionListener")
     fun addActionListenerForJava(listener: Runnable) {
+        actionListeners += listener
         val token = menuFlyoutItem.addEventHandler(
             "WinUI4K.MenuClickHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -126,6 +135,7 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
 
     @JvmName("removeActionListener")
     fun removeActionListenerForJava(listener: Runnable) {
+        actionListeners -= listener
         val token = clickTokens.remove(listener) ?: return
         menuFlyoutItem.removeEventHandler(XamlInterop.IMenuFlyoutItem_remove_Click, token)
     }

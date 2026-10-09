@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
@@ -155,6 +156,43 @@ internal object Xaml {
         }
     }
 
+    /**
+     * Detaches [component] from its current parent (a Panel's children, a Border's child, or a ContentControl's
+     * content), since an element can have only one parent; call this before moving it elsewhere. Does nothing if it
+     * has no parent.
+     */
+    fun detach(component: WComponent) {
+        val parent = parentOf(component.uiElement) ?: return
+        try {
+            val panel = parent.queryInterfaceOrNull(XamlInterop.IID_IPanel)
+            if (panel != null) {
+                val children = panel.getPtr(XamlInterop.IPanel_get_Children)
+                Ffi.backend.withScope { scope ->
+                    val memory = Ffi.backend.memory
+                    val index = scope.allocate(4)
+                    val found = scope.allocate(1)
+                    children.call(FoundationInterop.IVector_IndexOf, component.uiElement.ptr, index, found)
+                    if (memory.getByte(found, 0) != 0.toByte()) children.call(FoundationInterop.IVector_RemoveAt, memory.getInt(index, 0))
+                }
+                children.release()
+                panel.release()
+                return
+            }
+            parent.queryInterfaceOrNull(XamlInterop.IID_IBorder)?.let { border ->
+                border.call(XamlInterop.IBorder_put_Child, null)
+                border.release()
+                return
+            }
+            // The content of a ContentControl sits in the visual tree as a child of a ContentPresenter
+            parent.queryInterfaceOrNull(XamlInterop.IID_IContentPresenter)?.let { presenter ->
+                presenter.call(XamlInterop.IContentPresenter_put_Content, null)
+                presenter.release()
+            }
+        } finally {
+            parent.release()
+        }
+    }
+
     /** The element that has focus in [xamlRoot] (FocusManager.GetFocusedElement). The caller owns the returned reference. */
     fun focusedElement(xamlRoot: ComPtr): ComPtr? = focusStatics.getPtrOrNull(XamlInterop.IFocusManagerStatics_GetFocusedElement, xamlRoot.ptr)
 
@@ -249,6 +287,16 @@ internal object Xaml {
         DoubleArray(count) { Float.fromBits(memory.getInt(out, it * 4L)).toDouble() }
     }
 
+    /** The size [width, height] of the window (XamlRoot) that [component] is in, or null if it is not in a tree. */
+    fun rootSize(component: WComponent): DoubleArray? {
+        val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return null
+        return try {
+            readFloats(root, XamlInterop.IXamlRoot_get_Size, 2)
+        } finally {
+            root.release()
+        }
+    }
+
     /** The top-left position of the element relative to the root of its visual tree (the window content or the popup child). */
     fun positionInRoot(element: ComPtr): DoubleArray {
         var x = 0.0
@@ -333,6 +381,19 @@ internal class XamlPointerEvent(private val args: ComPtr) {
 
     /** The modifier keys that were pressed (VirtualKeyModifiers). */
     val modifiers: Int get() = args.getInt(XamlInterop.IPointerRoutedEventArgs_get_KeyModifiers)
+
+    /** Whether the event originated from a button (ButtonBase) (pressing a button on a drag handle does not start a drag). */
+    val isFromButton: Boolean
+        get() {
+            val source = Xaml.originalSource(args.ptr) ?: return false
+            return try {
+                val button = source.queryInterfaceOrNull(XamlInterop.IID_IButtonBase)
+                button?.release()
+                button != null
+            } finally {
+                source.release()
+            }
+        }
 
     /** The pointer position [x, y] relative to [relativeTo] (the window content if null). */
     fun position(relativeTo: WComponent?): DoubleArray = withPoint(relativeTo) { point ->
@@ -428,6 +489,34 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
         parts[name] = element
         return element
     }
+
+    /**
+     * Finds a part of the Control's template by name (applies the template, then calls FindName in the namescope of
+     * the template root). Throws if not found.
+     */
+    fun templatePart(name: String): XamlElement {
+        parts["template:$name"]?.let { return it }
+        applyTemplate()
+        val root = Xaml.childAt(inspectable, 0) ?: error("Template has not been applied")
+        val rootElement = XamlElement(root)
+        val found = rootElement.partOrNull(name) ?: error("Template part '$name' not found")
+        parts["template:$name"] = found
+        return found
+    }
+
+    /** Applies the Control's template (for switching visual states before the element enters the visual tree). */
+    fun applyTemplate() {
+        Ffi.backend.withScope { scope ->
+            val out = scope.allocate(1, 1)
+            view(XamlInterop.IID_IControl).call(XamlInterop.IControl_ApplyTemplate, out)
+        }
+    }
+
+    /** Sets FrameworkElement.MinHeight. */
+    fun setMinHeight(value: Double) = frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, value)
+
+    /** Sets FrameworkElement.MinWidth. */
+    fun setMinWidth(value: Double) = frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, value)
 
     /** The text of a TextBlock. */
     fun setText(value: String?) {
@@ -592,6 +681,47 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
                 boxed.release()
             }
         }
+
+    /** TextBox.Text. */
+    var textBoxText: String
+        get() = view(XamlInterop.IID_ITextBox).getString(XamlInterop.ITextBox_get_Text)
+        set(value) {
+            Hstring.use(value) { h -> view(XamlInterop.IID_ITextBox).call(XamlInterop.ITextBox_put_Text, h) }
+        }
+
+    /** Sets TextBox.PlaceholderText. */
+    fun setPlaceholderText(text: String?) {
+        Hstring.use(text.orEmpty()) { h -> view(XamlInterop.IID_ITextBox).call(XamlInterop.ITextBox_put_PlaceholderText, h) }
+    }
+
+    /** Selects all text in the TextBox. */
+    fun selectAllText() = view(XamlInterop.IID_ITextBox).call(XamlInterop.ITextBox_SelectAll)
+
+    /** Subscribes to TextBox.TextChanged. */
+    fun onTextChanged(handler: () -> Unit): Long = view(XamlInterop.IID_ITextBox).addEventHandler(
+        "WinUI4K.XamlTextChanged",
+        XamlInterop.IID_TextChangedEventHandler,
+        XamlInterop.ITextBox_add_TextChanged,
+    ) { _, _ -> handler() }
+
+    /** RangeBase.Value. */
+    var rangeValue: Double
+        get() = view(XamlInterop.IID_IRangeBase).getDouble(XamlInterop.IRangeBase_get_Value)
+        set(value) = view(XamlInterop.IID_IRangeBase).call(XamlInterop.IRangeBase_put_Value, value)
+
+    /** Sets the minimum and maximum of the RangeBase. */
+    fun setRange(minimum: Double, maximum: Double) {
+        val range = view(XamlInterop.IID_IRangeBase)
+        range.call(XamlInterop.IRangeBase_put_Minimum, minimum)
+        range.call(XamlInterop.IRangeBase_put_Maximum, maximum)
+    }
+
+    /** Subscribes to RangeBase.ValueChanged (the argument is the new value). */
+    fun onValueChanged(handler: (Double) -> Unit): Long = view(XamlInterop.IID_IRangeBase).addEventHandler(
+        "WinUI4K.XamlValueChanged",
+        XamlInterop.IID_RangeBaseValueChangedEventHandler,
+        XamlInterop.IRangeBase_add_ValueChanged,
+    ) { _, args -> handler(ComPtr(args).getDouble(XamlInterop.IRangeBaseValueChangedEventArgs_get_NewValue)) }
 
     /** Subscribes to KeyDown of the UIElement. */
     fun onKeyDown(handler: (XamlKeyEvent) -> Unit): Long = addKey(XamlInterop.IUIElement_add_KeyDown, handler)

@@ -2104,6 +2104,7 @@ internal object XamlInterop {
     // ======================================================================
 
     // ---- Microsoft.UI.Xaml.UIElement (additions to IUIElement) ----
+    const val IUIElement_put_Clip = 12                 // put_Clip(RectangleGeometry)
     const val IUIElement_get_RenderSize = 25           // get_RenderSize(out Size) — out of r4×2
     const val IUIElement_get_IsHitTestVisible = 21     // get_IsHitTestVisible(out boolean)
     const val IUIElement_put_IsHitTestVisible = 22     // put_IsHitTestVisible(boolean)
@@ -2303,6 +2304,14 @@ internal object XamlInterop {
     const val IPopup_get_Child = 6
     const val IPopup_put_LightDismissOverlayMode = 19
     const val IPopup_put_ShouldConstrainToRootBounds = 21
+
+    // ---- Microsoft.UI.Xaml.Controls.ContentPresenter ----
+    const val IID_IContentPresenter = "075e6ca8-da46-5ec6-8c64-03b3ddeaf74f"
+    const val IContentPresenter_put_Content = 7        // put_Content(Object)
+
+    // ---- Microsoft.UI.Xaml.Controls.IViewbox (default interface of Viewbox) ----
+    const val IID_IViewbox = "510683e8-d0fe-5ef4-85bd-e1131076ac22"
+    const val IViewbox_put_Child = 7                   // put_Child(UIElement)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBlock (additions to ITextBlock) ----
     const val ITextBlock_put_FontStyle = 13            // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)

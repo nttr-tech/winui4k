@@ -17,13 +17,18 @@ class WMenuFlyout : WFlyoutBase(
         own(inspectable.getPtr(XamlInterop.IMenuFlyout_get_Items)) // IVector<MenuFlyoutItemBase>
     }
 
+    /** The items added with [add] (used when selecting menu items with KeyTips). */
+    internal val addedItems = mutableListOf<WMenuFlyoutItemBase>()
+
     /** Appends a menu item (Append onto MenuFlyout.Items). */
     fun add(item: WMenuFlyoutItemBase) {
         items.call(FoundationInterop.IVector_Append, item.menuFlyoutItemBase.ptr)
+        addedItems += item
     }
 
     /** Removes all menu items (IVector.Clear). */
     fun removeAll() {
         items.call(FoundationInterop.IVector_Clear)
+        addedItems.clear()
     }
 }
