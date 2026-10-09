@@ -517,29 +517,50 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
             colorBar = model.selectedColor ?: RibbonColor.TRANSPARENT,
             iconForeground = iconBrush,
         )
-        val primarySpec = base.copy(showLabel = showsLabel(layout))
-        val secondarySpec = base.copy(label = null, icon = null, largeIcon = null, showChevron = true, colorBar = null)
+        // The large size is split vertically like a split button (the icon and color bar on top; the label and arrow
+        // below. RibbonColorPicker in RibbonSpace derives from RibbonSplitButton)
+        val primarySpec = if (isVertical(layout)) base.copy(part = RibbonContentPart.ICON_ONLY) else base.copy(showLabel = showsLabel(layout))
+        val secondarySpec = if (isVertical(layout)) {
+            base.copy(icon = null, largeIcon = null, part = RibbonContentPart.LABEL_AND_CHEVRON, showChevron = true, colorBar = null)
+        } else {
+            base.copy(label = null, icon = null, largeIcon = null, showChevron = true, colorBar = null)
+        }
         return RibbonItemContent.layout(primarySpec, host.textWidths) to RibbonItemContent.layout(secondarySpec, host.textWidths)
     }
+
+    private fun isVertical(layout: RibbonItemLayout): Boolean = layout.size == RibbonItemSize.LARGE && !layout.isSimplified
 
     override fun measure(layout: RibbonItemLayout): WSize {
         if (embedded) return WSize(PALETTE_WIDTH, PALETTE_HEIGHT)
         val (p, s) = parts(layout)
+        if (isVertical(layout)) return WSize(maxOf(p.width, s.width) + 2, p.height + s.height + 2)
         return WSize(p.width + s.width + 2, maxOf(p.height, s.height) + 2)
     }
 
     override fun applyLayoutCore() {
         if (embedded) return
         val (p, s) = parts(layout)
-        val height = maxOf(p.height, s.height)
         primary!!.setContent(XamlElement.load(p.xaml))
         secondary!!.setContent(XamlElement.load(s.xaml))
-        primary!!.setSize(p.width, height)
-        secondary!!.setSize(s.width, height)
         primary!!.horizontalAlignment = HorizontalAlignment.LEFT
         secondary!!.horizontalAlignment = HorizontalAlignment.LEFT
-        secondary!!.setMargin(p.width, 0.0, 0.0, 0.0)
-        element.setSize(p.width + s.width + 2, height + 2)
+        if (isVertical(layout)) {
+            val width = maxOf(p.width, s.width)
+            primary!!.verticalAlignment = VerticalAlignment.TOP
+            secondary!!.verticalAlignment = VerticalAlignment.TOP
+            primary!!.setSize(width, p.height)
+            secondary!!.setSize(width, s.height)
+            primary!!.setMargin(0.0, 0.0, 0.0, 0.0)
+            secondary!!.setMargin(0.0, p.height, 0.0, 0.0)
+            element.setSize(width + 2, p.height + s.height + 2)
+        } else {
+            val height = maxOf(p.height, s.height)
+            primary!!.setSize(p.width, height)
+            secondary!!.setSize(s.width, height)
+            primary!!.setMargin(0.0, 0.0, 0.0, 0.0)
+            secondary!!.setMargin(p.width, 0.0, 0.0, 0.0)
+            element.setSize(p.width + s.width + 2, height + 2)
+        }
         val name = model.label?.replace('\n', ' ').orEmpty()
         primary!!.setAutomationName(name)
         secondary!!.setAutomationName(RibbonStrings.current.splitButtonOptions(name).trim())

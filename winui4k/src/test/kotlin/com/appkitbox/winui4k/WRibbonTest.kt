@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.ribbon.RibbonButtonModel
+import com.appkitbox.winui4k.ribbon.RibbonColorPickerModel
 import com.appkitbox.winui4k.ribbon.RibbonContextualActivation
 import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
 import com.appkitbox.winui4k.ribbon.RibbonDensity
@@ -489,6 +490,31 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.host.allGroupViews().first { it.model === clipboard }.isFloatingPanelOpen } shouldBe true
             onUiThread { ribbon.returnAllPanelsToRibbon() }
             onUiThreadGet { ribbon.floatingGroups() } shouldBe emptyList()
+        }
+
+        test("a large color picker splits vertically like a split button and is the same size as a large split button with the same label") {
+            val (picker, split) = onUiThreadGet {
+                val group = model.findGroup("tables")!!
+                val picker = RibbonColorPickerModel("pageColor", "Page Color", RibbonIcons.SHADING).also { it.size = RibbonItemSize.LARGE }
+                val split = RibbonSplitButtonModel("borders", "Page Color").also {
+                    it.icon = RibbonIcons.SHADING
+                    it.size = RibbonItemSize.LARGE
+                }
+                group.items.add(picker)
+                group.items.add(split)
+                model.selectedTabId = "insert"
+                ribbon.width = WIDE
+                picker to split
+            }
+            settle()
+            val sizes = onUiThreadGet {
+                listOf(picker, split).map { item ->
+                    val view = ribbon.host.findView(item)!!
+                    view.layout.size to view.measure(view.layout)
+                }
+            }
+            sizes.map { it.first } shouldBe listOf(RibbonItemSize.LARGE, RibbonItemSize.LARGE)
+            sizes[0].second shouldBe sizes[1].second
         }
 
         test("item size calculation follows model changes (changing the label changes the width of a large item)") {
