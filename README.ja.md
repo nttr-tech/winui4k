@@ -197,7 +197,7 @@ CsWinRT は .NET GC と WinUI ランタイムの参照グラフ相互照会で�
 - UI スレッドは 1 本が前提で、`W*` API はこのスレッド上でのみ使う契約です。
 - ウィンドウや Shell 系のラッパー (`WFrame`、`WAppWindow` など) は自動解放の対象外で、参照を保持し続けます。
 - エラー処理は HRESULT の例外化のみです。
-- Windows App SDK 2.5 実験版 (2.5.4-experimental) に依存しています。`WTable` (TableView) は実験版の API で、安定版までに仕様が変わる可能性があります。
+- Windows App SDK 2.5 実験版 (2.5.4-experimental) に依存しています。`WTable` (TableView) と `WChart` (Chart) は実験版の API で、安定版までに仕様が変わる可能性があります。
 
 IID (インターフェース識別子) と vtable のスロット番号は手書きの推測値ではなく、Windows の型情報ファイル (winmd) から `tools/dump_winmd.py` で機械抽出した値です。
 
@@ -212,7 +212,7 @@ Windows App SDK の初期化に必要なブートストラップ DLL (`Microsoft
 
 ### ランタイムのインストール
 
-Windows App SDK 2.5 実験版 (2.5.4-experimental) ランタイムが必要です (TableView を含む実験版チャネル。安定版の 2.x ランタイムとは別パッケージです)。未インストールの場合は以下の順に対応します。
+Windows App SDK 2.5 実験版 (2.5.4-experimental) ランタイムが必要です (TableView と Chart を含む実験版チャネル。安定版の 2.x ランタイムとは別パッケージです)。未インストールの場合は以下の順に対応します。
 
 1. **インストーラーの自動実行**：カレントディレクトリ (または `winui4k.installer.dir` で指定したディレクトリ) に `WindowsAppRuntimeInstall-x64.exe` 等のインストーラーがあれば、`--quiet` オプションでサイレントインストールを実行し、アプリをそのまま起動します
 2. **インストールダイアログの表示**：インストーラーが見つからない場合は、Microsoft のダイアログが表示され、ユーザーにランタイムのダウンロードを促します

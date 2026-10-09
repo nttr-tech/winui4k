@@ -38,6 +38,13 @@
   `TabularControlsResources` (App.xaml の `<tabular:TabularControlsResources />` 相当) を Application.Resources に
   マージする必要がある (microsoft-ui-xaml Issue #12115 と同じ問題)。WTable は最初の生成時に
   `WinUiUtilities.ensureTabularControlsResources()` で自動的にマージする。
+- **Chart: 系列の追加 (WChart.addSeries) が E_INVALIDARG「An axis cannot be shared across different data dimensions or physical layouts.」で失敗する**
+  軸を共有する系列どうしの向きがそろっていない。BarSeries の既定の向きは横 (Horizontal) なので、
+  縦向きの LineSeries / AreaSeries と軸を共有するときは `orientation = BarOrientation.VERTICAL` にする (WChartTest 参照)。
+- **Chart: DateTimeAxis のラベルが 1 区切りぶん (1 週間・1 日など) ずれて、データ点の位置と合わない**
+  Chart は DateTime を UTC で扱う。範囲 (Minimum / Maximum) やデータをローカル時刻の 0 時の絶対時刻
+  (Instant / ZonedDateTime など) で渡すと UTC では前日になり、目盛りの区切りがずれる。日付を表示したいだけなら
+  LocalDate / LocalDateTime で渡す (WinUI4K は UTC の日時として渡すので、指定した日付がそのまま表示される)。
 - **TableView: TableViewSource.From に Kotlin 実装のコレクションを渡すと Tabular DLL 内でアクセス違反になる**
   TableViewSource (と TableView) はアプリから渡されたコレクションを弱参照で追跡するため、
   コレクションが IWeakReferenceSource を実装していないと null を参照して落ちる。

@@ -6,7 +6,7 @@ Java の FFI (Panama または JNA) で WinRT の COM ABI (`RoGetActivationFacto
 ## レイヤ構成
 
 技術スタック 1 層 = 1 パッケージで、`com.appkitbox.winui4k → internal.winui → internal.winrt → internal.com → internal.ffi.api` の一方向に依存する。
-公開 API はルートパッケージ `com.appkitbox.winui4k` と、表 (`WTable`) のモデル層 `com.appkitbox.winui4k.table` (Swing の `javax.swing.table` 相当)、リボン (`WRibbon`) のビュー `com.appkitbox.winui4k.extension.ribbon` とモデル層 `com.appkitbox.winui4k.extension.ribbon.model` で、他は `internal` 配下にある。
+公開 API はルートパッケージ `com.appkitbox.winui4k` と、表 (`WTable`) のモデル層 `com.appkitbox.winui4k.table` (Swing の `javax.swing.table` 相当)、チャート (`WChart`) のモデル層 `com.appkitbox.winui4k.chart`、リボン (`WRibbon`) のビュー `com.appkitbox.winui4k.extension.ribbon` とモデル層 `com.appkitbox.winui4k.extension.ribbon.model` で、他は `internal` 配下にある。
 
 | レイヤ | パッケージ | 役割 |
 |---|---|---|
@@ -15,9 +15,10 @@ Java の FFI (Panama または JNA) で WinRT の COM ABI (`RoGetActivationFacto
 | Win32 | `internal/win32/Win32.kt` | DPI 宣言、`GetModuleFileNameW` |
 | COM | `internal/com/` | `ComPtr` (`ptr → vtable → vtable[slot]` の呼び出し)、`Guid`、`checkHr` (HRESULT 例外 + IRestrictedErrorInfo 診断) |
 | WinRT | `internal/winrt/` | `Hstring`、`KComObject` (upcall で vtable を構築し delegate、overrides、集約 outer になる)、`Activation`、`PropertyValues` (box 化)、`Pinterface` (`IVector<T>` 実体 IID の SHA-1 計算)、`Async` |
-| WinUI | `internal/winui/` | ABI 定数の `*Interop` オブジェクト (`XamlInterop` / `WindowingInterop` / `FoundationInterop` / `NotificationInterop` / `WebView2Interop` / `TabularInterop`。IID / vtable スロット、すべて winmd から機械抽出)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
+| WinUI | `internal/winui/` | ABI 定数の `*Interop` オブジェクト (`XamlInterop` / `WindowingInterop` / `FoundationInterop` / `NotificationInterop` / `WebView2Interop` / `TabularInterop` / `ChartsInterop`。IID / vtable スロット、すべて winmd から機械抽出)、`Dispatcher`、`WinAppSdkBootstrap`、`XamlStructs` |
 | API | ルート (`com/appkitbox/winui4k/`) | `WinUiUtilities` と `W*` クラス (`WFrame` / `WButton` / ...) |
 | API (表のモデル) | `table/` | `WTable` の MVC のモデル側 (`TableModel` / `TableColumnModel` / `TableColumn` / `TableRowSorter` / `RowFilter` / `TableCellRenderer` / `DefaultCellEditor`)。Swing の `javax.swing.table` と同じ構成 |
+| API (チャートのモデル) | `chart/` | `WChart` の MVC のモデル側 (`SampleModel` / `DefaultSampleModel` (Swing の `ListModel` 相当のデータ列)、系列の `LineSeries` / `AreaSeries` / `BarSeries`、軸の `LinearAxis` / `CategoryAxis` / `DateTimeAxis`) |
 | API (リボン) | `extension/ribbon/` (winui4k-extension-ribbon) | `WRibbon` と周辺のバー (`WRibbonToolBar` / `WRibbonMenuBar` / `WRibbonStatusBar` / ...)、`WRibbonTitleBar`、`WRibbonTheme` と、それらを組み立てる `Ribbon*` のビュー |
 | API (リボンのモデル) | `extension/ribbon/model/` (winui4k-extension-ribbon) | `WRibbon` と周辺のバーの MVC のモデル側 (`RibbonModel` / `RibbonTabModel` / `RibbonGroupModel` / 項目の `Ribbon*Model`、コマンド、状態、テーマのパレット、文字列)。WinUI に依存しない。詳細は `doc/ribbon.md` |
 

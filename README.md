@@ -197,7 +197,7 @@ CsWinRT solves this through mutual reference-graph queries between the .NET GC a
 - A single UI thread is assumed, and the `W*` API is contractually usable only on that thread.
 - Window and Shell wrappers (`WFrame`, `WAppWindow`, etc.) are excluded from automatic release and hold their references indefinitely.
 - Error handling is limited to converting HRESULTs into exceptions.
-- It depends on the Windows App SDK 2.5 experimental release (2.5.4-experimental). `WTable` (TableView) is an experimental API and may change before it reaches a stable release.
+- It depends on the Windows App SDK 2.5 experimental release (2.5.4-experimental). `WTable` (TableView) and `WChart` (Chart) are experimental APIs and may change before they reach a stable release.
 
 IIDs (interface identifiers) and vtable slot numbers are not hand-written guesses — they are machine-extracted from Windows type-information files (winmd) with `tools/dump_winmd.py`.
 
@@ -212,7 +212,7 @@ On the first call to `WinUiUtilities`, the DLL matching the running PC's archite
 
 ### Runtime Installation
 
-The Windows App SDK 2.5 experimental (2.5.4-experimental) runtime is required (the experimental channel that includes TableView; it is a separate package from the stable 2.x runtime). If it is not installed, the following steps are taken in order:
+The Windows App SDK 2.5 experimental (2.5.4-experimental) runtime is required (the experimental channel that includes TableView and Chart; it is a separate package from the stable 2.x runtime). If it is not installed, the following steps are taken in order:
 
 1. **Automatic installer execution**: If an installer such as `WindowsAppRuntimeInstall-x64.exe` exists in the current directory (or the directory specified by `winui4k.installer.dir`), it is run silently with the `--quiet` option and the app then starts normally
 2. **Installation dialog**: If no installer is found, Microsoft's dialog is shown, prompting the user to download the runtime
