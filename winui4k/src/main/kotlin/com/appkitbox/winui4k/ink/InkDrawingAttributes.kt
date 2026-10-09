@@ -80,7 +80,10 @@ data class InkModelerAttributes @JvmOverloads constructor(
  * ```
  */
 class InkDrawingAttributes private constructor(builder: Builder) {
-    /** The kind (pen or pencil). A pencil is created with [pencilBuilder] (InkDrawingAttributes.CreateForPencil). */
+    /**
+     * The kind (pen or pencil). A pencil is created with [pencilBuilder] (InkDrawingAttributes.CreateForPencil).
+     * For a pencil, [penTip] / [penTipTransform] / [drawAsHighlighter] stay at their defaults and cannot be changed.
+     */
     val kind: InkDrawingAttributesKind = builder.kind
 
     /** The line color (Color). */
@@ -200,7 +203,19 @@ class InkDrawingAttributes private constructor(builder: Builder) {
         /** The settings of the input modeler. */
         fun modelerAttributes(attributes: InkModelerAttributes): Builder = apply { this.modelerAttributes = attributes }
 
-        fun build(): InkDrawingAttributes = InkDrawingAttributes(this)
+        /**
+         * Creates the drawing attributes. For a pencil ([pencilBuilder]), the pen tip shape, pen tip transform, and
+         * highlighter cannot be changed (because WinUI's pencil InkDrawingAttributes does not accept these settings),
+         * so an exception is thrown if they are not at their defaults.
+         */
+        fun build(): InkDrawingAttributes {
+            if (kind == InkDrawingAttributesKind.PENCIL) {
+                require(penTip == PenTipShape.CIRCLE) { "Pencil pen tip shape must be CIRCLE: $penTip" }
+                require(penTipTransform.isIdentity) { "Pen tip transform cannot be specified for a pencil: $penTipTransform" }
+                require(!drawAsHighlighter) { "A pencil cannot be a highlighter" }
+            }
+            return InkDrawingAttributes(this)
+        }
     }
 
     companion object {

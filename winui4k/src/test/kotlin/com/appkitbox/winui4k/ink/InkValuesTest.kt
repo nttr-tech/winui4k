@@ -88,6 +88,16 @@ class InkValuesTest : FunSpec() {
             pencil.toBuilder().build().kind shouldBe InkDrawingAttributesKind.PENCIL
         }
 
+        test("for the pencil, the pen tip shape, pen tip transform, and highlighter cannot be changed from their defaults (because WinUI's pencil does not accept them)") {
+            shouldThrow<IllegalArgumentException> { InkDrawingAttributes.pencilBuilder().penTip(PenTipShape.RECTANGLE).build() }
+            shouldThrow<IllegalArgumentException> {
+                InkDrawingAttributes.pencilBuilder().penTipTransform(InkTransform.rotation(1.0)).build()
+            }
+            shouldThrow<IllegalArgumentException> { InkDrawingAttributes.pencilBuilder().drawAsHighlighter(true).build() }
+            val pen = InkDrawingAttributes.builder().penTip(PenTipShape.RECTANGLE).drawAsHighlighter(true).build()
+            pen.penTip shouldBe PenTipShape.RECTANGLE
+        }
+
         test("the pen tip size must be positive, and the pencil opacity must be 0.01 to 5.0 (boundary values are accepted)") {
             InkDrawingAttributes.pencilBuilder().pencilOpacity(0.01).pencilOpacity(5.0).build().pencilOpacity shouldBe 5.0
             shouldThrow<IllegalArgumentException> { InkDrawingAttributes.builder().size(0.0) }
