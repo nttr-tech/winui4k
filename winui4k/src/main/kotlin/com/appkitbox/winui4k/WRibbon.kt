@@ -894,6 +894,10 @@ class WRibbon @JvmOverloads constructor(
     /** The strings of the KeyTips currently shown. */
     val activeKeyTips: List<String> get() = keyTips.activeKeyTips
 
+    /** The KeyTips currently shown and their targets (labels and models). Used by automation and tests. */
+    val currentKeyTips: List<RibbonActiveKeyTip>
+        get() = keyTips.currentKeyTips.map { (tip, target) -> RibbonActiveKeyTip(tip, target.keyTipLabel, target.keyTipModel) }
+
     /** Shows the top-level KeyTips (application button, QAT, tabs, tab row items). */
     fun showKeyTips() {
         if (!isKeyTipsEnabled) return

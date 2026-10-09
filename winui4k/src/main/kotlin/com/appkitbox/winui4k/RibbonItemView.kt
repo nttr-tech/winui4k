@@ -62,6 +62,9 @@ internal interface RibbonKeyTipTarget {
 
     /** What happens when it is selected with a KeyTip. */
     fun onKeyTip(): RibbonKeyTipResult
+
+    /** The target's model (an item, tab, group, or menu item; null if none). */
+    val keyTipModel: com.appkitbox.winui4k.ribbon.RibbonNodeModel? get() = null
 }
 
 /**
@@ -288,6 +291,7 @@ internal abstract class RibbonItemView(open val model: RibbonItemModel, val host
     override val keyTipLabel: String? get() = model.label
     override val explicitKeyTip: String? get() = model.keyTip
     override val keyTipAnchor: XamlElement get() = element
+    override val keyTipModel: com.appkitbox.winui4k.ribbon.RibbonNodeModel get() = model
 
     override val isLargeKeyTip: Boolean get() = layout.size == RibbonItemSize.LARGE && !layout.isSimplified
 

@@ -6,10 +6,12 @@ import com.appkitbox.winui4k.ribbon.RibbonButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonContextualActivation
 import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
 import com.appkitbox.winui4k.ribbon.RibbonDisplayMode
+import com.appkitbox.winui4k.ribbon.RibbonDropDownButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupModel
 import com.appkitbox.winui4k.ribbon.RibbonGroupState
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
+import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
@@ -174,6 +176,49 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.isKeyTipMode } shouldBe true
             onUiThreadGet { ribbon.popKeyTipLevel() } shouldBe true
             onUiThread { ribbon.cancelKeyTips() }
+            onUiThreadGet { ribbon.isKeyTipMode } shouldBe false
+        }
+
+        test("a contextual tab's KeyTip is the group's KeyTip followed by the first character of the tab header") {
+            onUiThread {
+                model.contextualGroups.add(RibbonContextualGroupModel("chartTools", "Chart Tools").also { it.keyTip = "J" })
+                model.tabs.add(RibbonTabModel("chartDesign", "Chart Design").also { it.contextualGroupId = "chartTools" })
+                model.setContextualGroupVisible("chartTools", true)
+            }
+            settle()
+            onUiThread { ribbon.showKeyTips() }
+            settle()
+            val chartTip = onUiThreadGet { ribbon.currentKeyTips.firstOrNull { it.model?.id == "chartDesign" }?.keyTip }
+            chartTip shouldBe "JC"
+            onUiThread { ribbon.cancelKeyTips() }
+        }
+
+        test("opening a drop-down menu with a KeyTip advances to the menu items' KeyTips, and an item can be invoked") {
+            val invoked = mutableListOf<String?>()
+            onUiThread {
+                val insert = model.tabs.first { it.id == "insert" }
+                insert.groups.first().items.add(
+                    RibbonDropDownButtonModel("shapes", "Shapes").also { drop ->
+                        drop.keyTip = "SH"
+                        drop.menuItems.add(RibbonMenuItemModel("line", "Line").also { it.keyTip = "L" })
+                        drop.menuItems.add(RibbonMenuItemModel("arrow", "Arrow"))
+                    },
+                )
+                ribbon.addItemInvokedListener { invoked += it.item.id }
+                ribbon.showKeyTips()
+            }
+            settle()
+            onUiThread { ribbon.processKeyTipInput('I') }
+            settle()
+            onUiThread {
+                ribbon.processKeyTipInput('S')
+                ribbon.processKeyTipInput('H')
+            }
+            settle()
+            onUiThreadGet { ribbon.currentKeyTips.map { it.keyTip to it.model?.id } } shouldContainAll listOf("L" to "line")
+            onUiThread { ribbon.processKeyTipInput('L') }
+            settle()
+            invoked shouldBe listOf("line")
             onUiThreadGet { ribbon.isKeyTipMode } shouldBe false
         }
 

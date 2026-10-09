@@ -14,6 +14,8 @@ import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
  * ("Ctrl+B") runs that item wherever the focus is (keys without modifiers are not routed inside text input).
  *
  * Keys during KeyTip mode are received in PreviewKeyDown (parents first) and handled before the focused control.
+ * Pressing anywhere in the window (even on a button) dismisses the KeyTips, and a ribbon temporarily revealed in full-screen
+ * mode is hidden when the user presses outside the ribbon (on the document).
  */
 internal class RibbonKeyboard(private val ribbon: WRibbon) {
     private var root: XamlElement? = null
@@ -21,6 +23,7 @@ internal class RibbonKeyboard(private val ribbon: WRibbon) {
     private val popupRoots = mutableListOf<XamlElement>()
     private var altAlone = false
     private var shortcuts: List<Pair<RibbonKeyGesture, com.appkitbox.winui4k.ribbon.RibbonItemModel>>? = null
+    private var removePointerHandler: (() -> Unit)? = null
 
     /** Starts watching key input on the window content (on load). */
     fun attach() {
@@ -41,6 +44,7 @@ internal class RibbonKeyboard(private val ribbon: WRibbon) {
         tokens += XamlInterop.IUIElement_remove_PreviewKeyDown to element.onPreviewKeyDown { onPreviewKeyDown(it) }
         tokens += XamlInterop.IUIElement_remove_KeyDown to element.onKeyDown { onKeyDown(it) }
         tokens += XamlInterop.IUIElement_remove_PreviewKeyUp to element.onPreviewKeyUp { onPreviewKeyUp(it) }
+        removePointerHandler = element.onPointerHandledToo(XamlInterop.IUIElementStatics_get_PointerPressedEvent) { onRootPointerPressed(it) }
     }
 
     /** Stops watching key input (on unload). */
@@ -48,6 +52,8 @@ internal class RibbonKeyboard(private val ribbon: WRibbon) {
         val element = root ?: return
         tokens.forEach { (slot, token) -> element.removeUiHandler(slot, token) }
         tokens.clear()
+        removePointerHandler?.invoke()
+        removePointerHandler = null
         root = null
         popupRoots.clear()
     }
@@ -59,6 +65,18 @@ internal class RibbonKeyboard(private val ribbon: WRibbon) {
         element.onPreviewKeyDown { onPreviewKeyDown(it) }
         element.onKeyDown { onKeyDown(it) }
         element.onPreviewKeyUp { onPreviewKeyUp(it) }
+    }
+
+    /** Something in the window was pressed (events that a child marked handled also arrive). */
+    private fun onRootPointerPressed(e: XamlPointerEvent) {
+        altAlone = false
+        if (ribbon.keyTips.isActive) ribbon.cancelKeyTips()
+        if (ribbon.isFullScreenRevealed && !isWithin(e, ribbon)) ribbon.isFullScreenRevealed = false
+    }
+
+    private fun isWithin(e: XamlPointerEvent, component: WComponent): Boolean {
+        val (x, y) = e.position(component).let { it[0] to it[1] }
+        return x >= 0 && y >= 0 && x < component.actualWidth && y < component.actualHeight
     }
 
     private fun onPreviewKeyDown(e: XamlKeyEvent) {

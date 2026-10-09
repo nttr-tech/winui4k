@@ -36,7 +36,7 @@ internal object FoundationInterop {
     }
 
     /** Base IID of Windows.Foundation.IReference`1 (from FoundationContract.winmd). */
-    private const val IID_IReference_OPEN = "61c17706-2d65-11e0-9ae8-d48564015472"
+    const val IID_IReference_OPEN = "61c17706-2d65-11e0-9ae8-d48564015472"
 
     /**
      * Concrete IID of IReference<Boolean> (computed at runtime). boolean's signature is b1.
@@ -44,6 +44,14 @@ internal object FoundationInterop {
      */
     val IID_IReference_Boolean: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};b1)")
+    }
+
+    /**
+     * Concrete IID of IReference<Microsoft.UI.Xaml.Input.PointerEventHandler>. The delegate's signature is delegate({IID}).
+     * Since UIElement.AddHandler takes the handler as an object, the delegate is wrapped in this IReference.
+     */
+    val IID_IReference_PointerEventHandler: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};delegate({${XamlInterop.IID_PointerEventHandler}}))")
     }
 
     /** Concrete IID of IReference<DateTime>. DateTime's signature is struct(Windows.Foundation.DateTime;i8). */

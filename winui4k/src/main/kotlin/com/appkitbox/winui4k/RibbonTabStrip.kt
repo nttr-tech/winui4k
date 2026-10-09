@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.ribbon.RibbonColor
 import com.appkitbox.winui4k.ribbon.RibbonContextualGroupModel
+import com.appkitbox.winui4k.ribbon.RibbonKeyTipAssigner
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 
 /**
@@ -67,8 +68,16 @@ internal class RibbonTabHeaderView(val tab: RibbonTabModel, private val strip: R
     }
 
     override val keyTipLabel: String? get() = strip.labelOf(tab)
-    override val explicitKeyTip: String? get() = tab.keyTip
+    override val explicitKeyTip: String? get() = tab.keyTip ?: contextualKeyTip()
     override val keyTipAnchor: XamlElement get() = element
+    override val keyTipModel: RibbonTabModel get() = tab
+
+    /** A contextual tab's KeyTip is the group's KeyTip (e.g. "J") + the first letter of the header (e.g. "T") = "JT". */
+    private fun contextualKeyTip(): String? {
+        val prefix = contextual?.keyTip?.takeIf { it.isNotEmpty() } ?: return null
+        val letters = RibbonKeyTipAssigner.normalize(strip.labelOf(tab))
+        return if (letters.isNotEmpty()) prefix + letters[0] else null
+    }
 
     override fun onKeyTip(): RibbonKeyTipResult = strip.headerKeyTip(this)
 

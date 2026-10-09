@@ -60,6 +60,12 @@ internal object RibbonMenus {
         return flyout
     }
 
+    /** Menu items created from models (used when proceeding into a menu with KeyTips). */
+    private val menuModels = java.util.WeakHashMap<WMenuFlyoutItemBase, RibbonMenuItemModel>()
+
+    /** The model of a menu item (only for items created by [createMenuItems]). */
+    fun modelOf(item: WMenuFlyoutItemBase): RibbonMenuItemModel? = menuModels[item]
+
     /** Creates menu items (MenuFlyoutItem / Toggle / Radio / SubItem / Separator). */
     fun createMenuItems(
         entries: List<RibbonNodeModel>,
@@ -77,6 +83,7 @@ internal object RibbonMenus {
                     sub.isEnabled = entry.isEnabled
                     setIcon(sub.inspectable, XamlInterop.IMenuFlyoutSubItem_put_Icon, entry.icon)
                     decorate(sub, entry)
+                    menuModels[sub] = entry
                     createMenuItems(entry.items, host, onChosen).forEach { sub.add(it) }
                 }
             } else {
@@ -101,6 +108,7 @@ internal object RibbonMenus {
         setIcon(item.inspectable, XamlInterop.IMenuFlyoutItem_put_Icon, entry.icon)
         entry.shortcut?.let { item.keyboardAcceleratorText = it }
         decorate(item, entry)
+        menuModels[item] = entry
         item.addActionListener {
             invokeMenuItem(entry, siblings, host)
             onChosen?.invoke(entry)

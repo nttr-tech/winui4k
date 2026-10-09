@@ -22,6 +22,18 @@ class RibbonItemInvokedEvent @JvmOverloads constructor(
     override fun getSource(): WComponent = super.getSource() as WComponent
 }
 
+/** One KeyTip currently shown ([WRibbon.currentKeyTips]). */
+class RibbonActiveKeyTip(
+    /** The KeyTip string. */
+    val keyTip: String,
+    /** The target's label. */
+    val label: String?,
+    /** The target's model (an item, tab, group or menu item; null for targets without a model, such as the application button). */
+    val model: RibbonNodeModel?,
+) {
+    override fun toString(): String = "$keyTip: ${label.orEmpty()}"
+}
+
 /** Receives item invocations (suited to handling commands in one place by string id). */
 fun interface RibbonItemInvokedListener {
     /** An item was invoked. */

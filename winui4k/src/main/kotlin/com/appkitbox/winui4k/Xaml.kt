@@ -1,11 +1,15 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.ArgKind
+import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
+import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
+import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
@@ -129,6 +133,16 @@ internal object Xaml {
             visualTreeStatics.getPtrOrNull(XamlInterop.IVisualTreeHelperStatics_GetParent, dependency.ptr)
         } finally {
             dependency.release()
+        }
+    }
+
+    /** The root of the visual tree (reached by following parents), or null if there is no parent. The caller owns the returned reference. */
+    fun visualRoot(element: ComPtr): ComPtr? {
+        var current = parentOf(element) ?: return null
+        while (true) {
+            val parent = parentOf(current) ?: return current
+            current.release()
+            current = parent
         }
     }
 
@@ -743,6 +757,54 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
         uiElement.addEventHandler("WinUI4K.XamlPointer", XamlInterop.IID_PointerEventHandler, addSlot) { _, args ->
             handler(XamlPointerEvent(ComPtr(args)))
         }
+
+    /**
+     * Subscribes to a routed pointer event ([eventSlot] is a get_XxxEvent of IUIElementStatics), including events that
+     * a child has marked as handled (UIElement.AddHandler(XxxEvent, handler, handledEventsToo = true)).
+     * This also receives clicks on buttons. Calling the returned function unsubscribes.
+     * Since AddHandler takes the handler as an object, the delegate is wrapped in an IReference<PointerEventHandler>
+     * (the same as box_value in C++/WinRT).
+     */
+    fun onPointerHandledToo(eventSlot: Int, handler: (XamlPointerEvent) -> Unit): () -> Unit {
+        val statics = Activation.factory(XamlInterop.CLS_UIElement, XamlInterop.IID_IUIElementStatics)
+        val routedEvent = try {
+            statics.getPtr(eventSlot)
+        } finally {
+            statics.release()
+        }
+        val delegate = KComObject("WinUI4K.XamlPointerHandledToo", inspectable = false).addInterface(
+            XamlInterop.IID_PointerEventHandler,
+            listOf(
+                // Invoke(this, sender, args)
+                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)) { args ->
+                    handler(XamlPointerEvent(ComPtr(args[2] as Ptr)))
+                    KComObject.S_OK
+                },
+            ),
+        )
+        val boxed = KComObject("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Input.PointerEventHandler>").addInterface(
+            FoundationInterop.IID_IReference_PointerEventHandler,
+            listOf(
+                // get_Value(this, out PointerEventHandler): hands over a reference that the caller releases
+                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)) { args ->
+                    delegate.addRef()
+                    Ffi.backend.memory.putPtr(args[1] as Ptr, 0, delegate.primary)
+                    KComObject.S_OK
+                },
+            ),
+        )
+        uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed.primary, 1)
+        var removed = false
+        return {
+            if (!removed) {
+                removed = true
+                uiElement.call(XamlInterop.IUIElement_RemoveHandler, routedEvent, boxed.primary)
+                routedEvent.release()
+                boxed.release()
+                delegate.release()
+            }
+        }
+    }
 
     /** Subscribes to Tapped. */
     fun onTapped(handler: (XamlTapEvent) -> Unit): Long =

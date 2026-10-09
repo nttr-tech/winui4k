@@ -22,6 +22,9 @@ internal interface RibbonKeyTipOwner {
 
     /** Notifies a change of KeyTip mode. */
     fun keyTipModeChanged(active: Boolean)
+
+    /** Also watch key input in popups (menus) with the ribbon's keyboard handling. */
+    fun attachPopupKeyboard(element: XamlElement)
 }
 
 /**
@@ -50,6 +53,9 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
 
     /** The text of the badges currently shown (for tests and automation). */
     val activeKeyTips: List<String> get() = navigator.current?.entries?.map { it.tip }.orEmpty()
+
+    /** The KeyTips currently shown and their targets. */
+    val currentKeyTips: List<Pair<String, RibbonKeyTipTarget>> get() = navigator.current?.entries?.map { it.tip to it.target }.orEmpty()
 
     /** Shows the top level. */
     fun show(targets: List<RibbonKeyTipTarget>? = null) {
@@ -136,24 +142,41 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
         }
     }
 
-    /** When the menu opens, proceeds to the KeyTip level of its items. */
+    /**
+     * When the menu opens, proceeds to the KeyTip level of its items (including submenus). A menu is a separate popup, so
+     * its key input is also watched by the ribbon. When the user closes the menu (click or Esc), KeyTip mode is exited.
+     */
     private fun continueInMenu(menu: WMenuFlyout) {
-        val push = {
-            val entries = menu.addedItems.filterIsInstance<WMenuFlyoutItem>().map { MenuEntryTarget(it) }
-            if (navigator.isActive && entries.isNotEmpty()) pushScope(entries, { menu.hide() }, emptySet()) else hide()
+        val entries = menu.addedItems.filter { it is WMenuFlyoutItem || it is WMenuFlyoutSubItem }
+        if (entries.isEmpty()) {
+            hide()
+            return
+        }
+        clearBadges()
+        val push = push@{
+            if (!navigator.isActive) return@push
+            Xaml.visualRoot(entries.first().inspectable)?.let { owner.attachPopupKeyboard(XamlElement(it)) }
+            val depth = navigator.depth
+            RibbonMenus.onClosed(menu) { if (navigator.isActive && navigator.depth == depth + 1) hide() }
+            pushScope(entries.filter { it.isVisible }.map { MenuEntryTarget(it) }, { menu.hide() }, emptySet())
         }
         if (menu.isOpen) WinUiUtilities.invokeLater(push) else RibbonMenus.onOpened(menu) { WinUiUtilities.invokeLater(push) }
     }
 
-    /** The KeyTip of a menu item. */
-    private class MenuEntryTarget(private val item: WMenuFlyoutItem) : RibbonKeyTipTarget {
-        override val keyTipLabel: String? get() = item.text
-        override val explicitKeyTip: String? get() = null
+    /** The KeyTip of a menu item (a submenu gets the focus so that it can be opened with Right / Enter). */
+    private class MenuEntryTarget(private val item: WMenuFlyoutItemBase) : RibbonKeyTipTarget {
+        override val keyTipLabel: String? get() = (item as? WMenuFlyoutItem)?.text ?: (item as? WMenuFlyoutSubItem)?.text
+        override val explicitKeyTip: String? get() = RibbonMenus.modelOf(item)?.keyTip
         override val keyTipAnchor: XamlElement = XamlElement(item.inspectable.also { it.addRef() })
         override val isKeyTipEnabled: Boolean get() = item.isEnabled
+        override val keyTipModel: com.appkitbox.winui4k.ribbon.RibbonNodeModel? get() = RibbonMenus.modelOf(item)
 
         override fun onKeyTip(): RibbonKeyTipResult {
-            item.performClick()
+            if (item is WMenuFlyoutItem) {
+                item.performClick()
+            } else {
+                keyTipAnchor.focus(com.appkitbox.winui4k.internal.winui.XamlInterop.FocusState_Keyboard)
+            }
             return RibbonKeyTipResult.Close
         }
     }

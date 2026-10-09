@@ -77,6 +77,14 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
         return true
     }
 
+    override fun onKeyTip(): RibbonKeyTipResult {
+        val menu = flyout as? WMenuFlyout
+        if (menu == null || !isEffectivelyEnabled) return super.onKeyTip()
+        // For a menu, proceed to the KeyTips of its items (as Office does)
+        menu.showAt(element)
+        return RibbonKeyTipResult.Menu(menu)
+    }
+
     /** Opens the drop-down. */
     fun openDropDown() {
         flyout?.showAt(element)
@@ -426,7 +434,8 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
 
     override fun onKeyTip(): RibbonKeyTipResult {
         openDropDown()
-        return RibbonKeyTipResult.Close
+        // For a menu, proceed to the KeyTips of its items (as Office does)
+        return (flyout as? WMenuFlyout)?.takeIf { model.isEnabled }?.let { RibbonKeyTipResult.Menu(it) } ?: RibbonKeyTipResult.Close
     }
 
     override fun overflowMenuItems(): List<WMenuFlyoutItemBase> {
