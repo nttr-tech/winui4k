@@ -14,8 +14,13 @@ import com.appkitbox.winui4k.WRibbonStatusBar
 import com.appkitbox.winui4k.WRibbonTheme
 import com.appkitbox.winui4k.WRibbonToolBar
 import com.appkitbox.winui4k.WinUiUtilities
+import com.appkitbox.winui4k.ribbon.RibbonButtonGroupModel
+import com.appkitbox.winui4k.ribbon.RibbonCheckBoxModel
+import com.appkitbox.winui4k.ribbon.RibbonColor
 import com.appkitbox.winui4k.ribbon.RibbonColorPickerModel
 import com.appkitbox.winui4k.ribbon.RibbonComboBoxModel
+import com.appkitbox.winui4k.ribbon.RibbonFontComboBoxModel
+import com.appkitbox.winui4k.ribbon.RibbonFontSizeComboBoxModel
 import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemModel
@@ -23,10 +28,15 @@ import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonLabelModel
 import com.appkitbox.winui4k.ribbon.RibbonMenuBarItemModel
 import com.appkitbox.winui4k.ribbon.RibbonMenuBarModel
+import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonMenuSeparatorModel
+import com.appkitbox.winui4k.ribbon.RibbonNodeModel
+import com.appkitbox.winui4k.ribbon.RibbonSegmentModel
+import com.appkitbox.winui4k.ribbon.RibbonSegmentedModel
 import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel
 import com.appkitbox.winui4k.ribbon.RibbonSliderModel
 import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel
+import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonStatusBarModel
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
@@ -38,36 +48,41 @@ import com.appkitbox.winui4k.sample.ribbon.shell.button
 import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
 import com.appkitbox.winui4k.sample.ribbon.shell.toggle
 
-/** A tool (an item in the tool palette and the contents of the options bar). */
-private enum class Tool(val label: String, val icon: RibbonIcon) {
-    MOVE("Move", RibbonIcons.MOVE),
-    SELECT("Select", RibbonIcons.SELECT_ALL),
-    BRUSH("Brush", RibbonIcons.PEN),
-    PEN("Pen", RibbonIcons.HIGHLIGHTER),
-    ERASER("Eraser", RibbonIcons.ERASER),
-    TEXT("Text", RibbonIcons.TEXT),
-    SHAPE("Shape", RibbonIcons.RECTANGLE),
-    CROP("Crop", RibbonIcons.CROP),
-    ZOOM("Zoom", RibbonIcons.ZOOM),
-    HAND("Hand", RibbonIcons.POINTER),
+/** The kinds of options bar contents (RibbonContextualToolBar.Context in the RibbonSpace demo). */
+private enum class ToolContext { MOVE, BRUSH, TEXT }
+
+/** The radio tools of the tool palette, and the options bar each tool shows. */
+private enum class Tool(val label: String, val icon: RibbonIcon, val context: ToolContext) {
+    MOVE("Move (V)", RibbonIcon.glyph(""), ToolContext.MOVE),
+    SELECT("Select (M)", RibbonIcon.glyph(""), ToolContext.MOVE),
+    BRUSH("Brush (B)", RibbonIcon.glyph(""), ToolContext.BRUSH),
+    PEN("Pen (P)", RibbonIcon.glyph(""), ToolContext.BRUSH),
+    ERASER("Eraser (E)", RibbonIcon.glyph(""), ToolContext.BRUSH),
+    TYPE("Text (T)", RibbonIcon.glyph(""), ToolContext.TEXT),
 }
 
 /**
- * Tools demo (same layout as tools.png in the RibbonSpace README): a menu bar, an options bar that switches with the
- * active tool, a two-column tool palette, a panel rail on the right, a command bar floating above the canvas, and a
- * status bar. Built only from toolbars made with ribbon item models, without a ribbon.
+ * Tools demo (same layout as ToolsPage.xaml in the RibbonSpace demo): a menu bar, an options bar that switches with the
+ * active tool, a two-column tool palette (with a split button that follows the last chosen shape), a panel rail on the
+ * right, a command bar floating above the canvas, and a status bar. Built only from toolbars made with ribbon item
+ * models, without a ribbon.
  */
 fun main() {
     WinUiUtilities.invokeLater {
         WRibbonTheme.applyPalette(RibbonThemePalette.WORD)
         val window = RibbonDemoWindow("Tools - WinUI4K Ribbon", RibbonDemoApp.TOOLS, null)
-        val status = RibbonLabelModel("status.tool", "Brush Tool")
+        val status = RibbonLabelModel("status.tool", Tool.BRUSH.label)
+        val canvasText = WLabel("Choose a tool and the options bar follows the active tool")
         val options = WRibbonContextualToolBar()
-        Tool.entries.forEach { options.setContent(it.name, optionBar(it)) }
-        options.activeContext = Tool.BRUSH.name
+        options.setContent(ToolContext.MOVE.name, moveOptions())
+        options.setContent(ToolContext.BRUSH.name, brushOptions())
+        options.setContent(ToolContext.TEXT.name, textOptions())
+        options.activeContext = ToolContext.BRUSH.name
+        options.margin = OPTIONS_MARGIN
         val palette = toolPalette { tool ->
-            options.activeContext = tool.name
-            status.label = "${tool.label} Tool"
+            options.activeContext = tool.context.name
+            status.label = tool.label
+            canvasText.text = "Using ${tool.label}"
         }
         val top = WGrid()
         top.addRow(GridLength.AUTO)
@@ -80,7 +95,7 @@ fun main() {
         body.addColumn(GridLength.star())
         body.addColumn(GridLength.AUTO)
         body.add(palette, row = 0, column = 0)
-        body.add(canvas(), row = 0, column = 1)
+        body.add(canvas(canvasText), row = 0, column = 1)
         body.add(panelRail(), row = 0, column = 2)
         window.setContent(body)
         window.setStatusBar(statusBar(status))
@@ -90,92 +105,170 @@ fun main() {
 
 /** A classic menu bar. */
 private fun menuBarModel(): RibbonMenuBarModel = RibbonMenuBarModel().also { model ->
-    fun menu(id: String, label: String, vararg items: com.appkitbox.winui4k.ribbon.RibbonNodeModel) =
-        RibbonMenuBarItemModel(id, label).also { m -> items.forEach { m.items.add(it) } }
-    model.items.add(menu("file", "File", menuItem("file.new", "New...", RibbonIcons.NEW).also { it.shortcut = "Ctrl+N" }, menuItem("file.open", "Open...", RibbonIcons.OPEN).also { it.shortcut = "Ctrl+O" }, RibbonMenuSeparatorModel(), menuItem("file.export", "Export", RibbonIcons.EXPORT)))
-    model.items.add(menu("edit", "Edit", menuItem("edit.undo", "Undo", RibbonIcons.UNDO).also { it.shortcut = "Ctrl+Z" }, menuItem("edit.redo", "Redo", RibbonIcons.REDO).also { it.shortcut = "Ctrl+Y" }))
-    model.items.add(menu("image", "Image", menuItem("image.size", "Image Size..."), menuItem("image.canvas", "Canvas Size...")))
-    model.items.add(menu("layer", "Layer", menuItem("layer.new", "New Layer", RibbonIcons.LAYERS), menuItem("layer.duplicate", "Duplicate Layer")))
-    model.items.add(menu("view", "View", menuItem("view.zoomIn", "Zoom In", RibbonIcons.ZOOM_IN), menuItem("view.zoomOut", "Zoom Out", RibbonIcons.ZOOM_OUT)))
-    model.items.add(menu("window", "Window", menuItem("window.layers", "Layers"), menuItem("window.history", "History")))
-    model.items.add(menu("help", "Help", menuItem("help.about", "About")))
+    fun menu(id: String, label: String, vararg items: RibbonNodeModel) = RibbonMenuBarItemModel(id, label).also { m -> items.forEach { m.items.add(it) } }
+    fun item(id: String, label: String, shortcut: String? = null) = menuItem(id, label).also { it.shortcut = shortcut }
+    fun check(id: String, label: String, checked: Boolean, shortcut: String? = null) = item(id, label, shortcut).also {
+        it.isCheckable = true
+        it.isChecked = checked
+    }
+    val recent = item("file.recent", "Open Recent").also {
+        it.items.add(item("file.recent.poster", "poster.psd"))
+        it.items.add(item("file.recent.logo", "logo.svg"))
+    }
+    model.items.add(
+        menu(
+            "file",
+            "File",
+            item("file.new", "New...", "Ctrl+N"),
+            item("file.open", "Open...", "Ctrl+O"),
+            recent,
+            RibbonMenuSeparatorModel(),
+            item("file.save", "Save", "Ctrl+S"),
+            item("file.export", "Export As...", "Alt+Shift+Ctrl+W"),
+        ),
+    )
+    model.items.add(
+        menu(
+            "edit",
+            "Edit",
+            item("edit.undo", "Undo", "Ctrl+Z"),
+            item("edit.redo", "Redo", "Shift+Ctrl+Z"),
+            RibbonMenuSeparatorModel(),
+            item("edit.cut", "Cut", "Ctrl+X"),
+            item("edit.copy", "Copy", "Ctrl+C"),
+            item("edit.paste", "Paste", "Ctrl+V"),
+        ),
+    )
+    model.items.add(menu("image", "Image", item("image.size", "Image Size..."), item("image.canvas", "Canvas Size..."), check("image.aspect", "Pixel Aspect Ratio Correction", true)))
+    model.items.add(menu("layer", "Layer", item("layer.new", "New Layer", "Shift+Ctrl+N"), item("layer.duplicate", "Duplicate Layer")))
+    model.items.add(menu("view", "View", check("view.rulers", "Rulers", true, "Ctrl+R"), check("view.grid", "Grid", false), check("view.snap", "Snap", true)))
+    model.items.add(menu("window", "Window", check("window.layers", "Layers", true), check("window.properties", "Properties", true)))
+    model.items.add(menu("help", "Help", item("help.shortcuts", "Keyboard Shortcuts"), item("help.about", "About")))
 }
 
-/** The options bar of a tool (its contents differ per tool). */
-private fun optionBar(tool: Tool): WComponent {
-    val model = RibbonToolBarModel("options.${tool.name}")
+/** An options bar (starts with the tool's label and a separator). */
+private fun optionBar(id: String, label: String, icon: RibbonIcon, vararg items: RibbonItemModel): WComponent {
+    val model = RibbonToolBarModel(id)
     model.showLabels = true
-    model.items.add(button("options.tool", tool.label, tool.icon).also { it.showLabelInSimplified = true })
+    model.items.add(RibbonLabelModel("$id.label", label).also { it.icon = icon })
     model.items.add(RibbonSeparatorModel())
-    val items: List<RibbonItemModel> = when (tool) {
-        Tool.BRUSH, Tool.PEN, Tool.ERASER -> listOf(
-            RibbonSpinnerModel("brush.size", "Size:", BRUSH_SIZE).also {
-                it.unit = "px"
-                it.maximum = MAX_SIZE
-            },
-            RibbonSpinnerModel("brush.hardness", "Hardness:", HARDNESS).also { it.unit = "%" },
-            RibbonComboBoxModel("brush.mode", "Mode", listOf("Normal", "Multiply", "Screen", "Overlay")).also {
-                it.selectedItem = "Normal"
-                it.showLabel = true
-            },
-            RibbonSliderModel("brush.opacity", "Opacity").also { it.value = OPACITY },
-            button("brush.flow", "Flow", RibbonIcons.LIGHT, RibbonItemSize.SMALL),
-            button("brush.pressure", "Pressure", RibbonIcons.PEN, RibbonItemSize.SMALL),
-            RibbonColorPickerModel("brush.color", "Foreground Color", RibbonIcons.PALETTE),
-        )
-        Tool.TEXT -> listOf(
-            RibbonComboBoxModel("text.font", "Font", listOf("Segoe UI", "Yu Gothic UI", "Meiryo UI")).also {
-                it.selectedItem = "Segoe UI"
-                it.showLabel = true
-            },
-            RibbonSpinnerModel("text.size", "Size:", TEXT_SIZE).also { it.unit = "pt" },
-            RibbonColorPickerModel("text.color", "Text Color", RibbonIcons.FONT_COLOR),
-        )
-        Tool.SHAPE -> listOf(
-            RibbonColorPickerModel("shape.fill", "Fill", RibbonIcons.FILL),
-            RibbonSpinnerModel("shape.stroke", "Stroke:", 2.0).also { it.unit = "px" },
-        )
-        else -> listOf(RibbonLabelModel("options.none", "This tool has no options"))
-    }
     items.forEach { model.items.add(it) }
     return WRibbonToolBar(model)
 }
 
-/** A two-column tool palette (radio toggles). */
+/** The options for [Move] and [Select]. */
+private fun moveOptions(): WComponent = optionBar(
+    "move",
+    "Move",
+    Tool.MOVE.icon,
+    RibbonCheckBoxModel("move.autoSelect", "Auto-Select", isChecked = true),
+    RibbonCheckBoxModel("move.transform", "Show Transform Controls"),
+    RibbonSeparatorModel(),
+    button("move.alignLeft", "Align Left", RibbonIcons.ALIGN_LEFT, RibbonItemSize.SMALL),
+    button("move.alignCenter", "Align Center", RibbonIcons.ALIGN_CENTER, RibbonItemSize.SMALL),
+    button("move.alignRight", "Align Right", RibbonIcons.ALIGN_RIGHT, RibbonItemSize.SMALL),
+)
+
+/** The options for [Brush], [Pen], and [Eraser]. */
+private fun brushOptions(): WComponent = optionBar(
+    "brush",
+    "Brush",
+    Tool.BRUSH.icon,
+    RibbonSpinnerModel("brush.size", "Size:", BRUSH_SIZE).also {
+        it.minimum = 1.0
+        it.maximum = MAX_SIZE
+        it.unit = "px"
+        it.inputWidth = SIZE_WIDTH
+    },
+    RibbonSpinnerModel("brush.hardness", "Hardness:", HARDNESS).also {
+        it.maximum = PERCENT
+        it.unit = "%"
+        it.inputWidth = HARDNESS_WIDTH
+    },
+    RibbonComboBoxModel("brush.mode", "Mode", listOf("Normal", "Multiply", "Screen", "Overlay")).also {
+        it.selectedItem = "Normal"
+        it.text = "Normal"
+        it.showLabel = true
+        it.inputWidth = MODE_WIDTH
+    },
+    RibbonSliderModel("brush.opacity", "Opacity").also {
+        it.value = PERCENT
+        it.maximum = PERCENT
+        it.sliderWidth = OPACITY_WIDTH
+    },
+    toggle("brush.airbrush", "Airbrush", RibbonIcon.glyph("")),
+    toggle("brush.pressure", "Use Pressure for Size", RibbonIcon.glyph("")),
+    RibbonColorPickerModel("brush.color", "Brush Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.parse("#1473E6") },
+)
+
+/** The options for [Text] (alignment is a segmented switch). */
+private fun textOptions(): WComponent = optionBar(
+    "text",
+    "Text",
+    Tool.TYPE.icon,
+    RibbonFontComboBoxModel("text.font").also { it.selectedItem = "Segoe UI" },
+    RibbonFontSizeComboBoxModel("text.size").also { it.selectedItem = TEXT_SIZE },
+    RibbonButtonGroupModel(
+        toggle("text.bold", "Bold", RibbonIcons.BOLD),
+        toggle("text.italic", "Italic", RibbonIcons.ITALIC),
+    ),
+    RibbonSegmentedModel("text.alignment", "Alignment").also { segmented ->
+        segmented.segments.add(RibbonSegmentModel("left", "Left", RibbonIcons.ALIGN_LEFT))
+        segmented.segments.add(RibbonSegmentModel("center", "Center", RibbonIcons.ALIGN_CENTER))
+        segmented.segments.add(RibbonSegmentModel("right", "Right", RibbonIcons.ALIGN_RIGHT))
+        segmented.selectedSegment = segmented.segments[0]
+    },
+)
+
+/** A two-column tool palette (radio tools, and a split button that follows the last chosen shape). */
 private fun toolPalette(onTool: (Tool) -> Unit): WComponent {
     val model = RibbonToolBarModel("palette")
     model.orientation = RibbonToolBarOrientation.VERTICAL
     model.columns = 2
     model.showLabels = false
     for (tool in Tool.entries) {
-        if (tool == Tool.SHAPE || tool == Tool.ZOOM) model.items.add(RibbonSeparatorModel())
         model.items.add(
-            toggle("tool.${tool.name}", tool.label, tool.icon, RibbonItemSize.SMALL).also { item ->
+            toggle("tool.${tool.name}", tool.label, tool.icon).also { item ->
                 item.groupName = "tool"
                 item.isChecked = tool == Tool.BRUSH
-                item.addActionListener { onTool(tool) }
+                item.addActionListener { if (item.isChecked) onTool(tool) }
             },
         )
     }
     model.items.add(RibbonSeparatorModel())
-    model.items.add(RibbonColorPickerModel("palette.foreground", "Foreground Color", RibbonIcons.PALETTE))
-    model.items.add(RibbonColorPickerModel("palette.background", "Background Color", RibbonIcons.FILL))
+    model.items.add(
+        RibbonSplitButtonModel("tool.shape", "Rectangle").also { shape ->
+            shape.icon = RibbonIcon.glyph("\uE739")
+            shape.size = RibbonItemSize.SMALL
+            shape.followLastChoice = true
+            shape.menuItems.add(RibbonMenuItemModel("shape.rectangle", "Rectangle", RibbonIcon.glyph("")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.ellipse", "Ellipse", RibbonIcon.glyph("")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.polygon", "Polygon", RibbonIcon.glyph("")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.line", "Line", RibbonIcon.glyph("")))
+        },
+    )
+    model.items.add(button("tool.crop", "Crop", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+    model.items.add(button("tool.zoom", "Zoom", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+    model.items.add(button("tool.hand", "Hand", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+    model.items.add(RibbonSeparatorModel())
+    model.items.add(RibbonColorPickerModel("palette.foreground", "Foreground Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.parse("#1473E6") })
+    model.items.add(RibbonColorPickerModel("palette.background", "Background Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.WHITE })
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
+    bar.verticalAlignment = VerticalAlignment.TOP
     return WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
 }
 
-/** The canvas (a white image in a dark work area) and the command bar floating above it. */
-private fun canvas(): WComponent {
-    val page = WBorder(
-        WLabel("Choose a tool and the options bar follows the active tool").also {
-            it.horizontalAlignment = HorizontalAlignment.CENTER
-            it.verticalAlignment = VerticalAlignment.CENTER
-        },
-    )
+/** The canvas (a white image in a dark work area) and the command bar floating above it (overflows into "…" when too narrow). */
+private fun canvas(text: WLabel): WComponent {
+    text.horizontalAlignment = HorizontalAlignment.CENTER
+    text.verticalAlignment = VerticalAlignment.CENTER
+    text.foreground = WColor(0x55, 0x55, 0x55)
+    val page = WBorder(text)
     page.width = PAGE_WIDTH
     page.height = PAGE_HEIGHT
-    page.background = WColor(255, 255, 255)
+    page.background = WColor.WHITE
+    page.cornerRadius = 2.0
     page.horizontalAlignment = HorizontalAlignment.CENTER
     page.verticalAlignment = VerticalAlignment.CENTER
     val floatingModel = RibbonToolBarModel("floating")
@@ -184,53 +277,53 @@ private fun canvas(): WComponent {
         button("float.undo", "Undo", RibbonIcons.UNDO, RibbonItemSize.SMALL),
         button("float.redo", "Redo", RibbonIcons.REDO, RibbonItemSize.SMALL),
         RibbonSeparatorModel(),
-        button("float.zoomIn", "Zoom In", RibbonIcons.ZOOM_IN, RibbonItemSize.SMALL),
-        button("float.zoomOut", "Zoom Out", RibbonIcons.ZOOM_OUT, RibbonItemSize.SMALL),
-        button("float.fit", "Fit on Screen", RibbonIcons.FULL_SCREEN, RibbonItemSize.SMALL),
+        button("float.zoomIn", "Zoom In", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        button("float.zoomOut", "Zoom Out", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        button("float.fit", "Fit on Screen", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
         RibbonSeparatorModel(),
-        toggle("float.grid", "Grid", RibbonIcons.GRID),
-        toggle("float.snap", "Snap", RibbonIcons.MOVE).also { it.isChecked = true },
-        toggle("float.rulers", "Rulers", RibbonIcons.RULER),
-        button("float.more1", "Transform", RibbonIcons.ROTATE, RibbonItemSize.SMALL),
-        button("float.more2", "Flip", RibbonIcons.SPLIT, RibbonItemSize.SMALL),
+        toggle("float.grid", "Grid", RibbonIcon.glyph("")),
+        toggle("float.snap", "Snap", RibbonIcon.glyph("")).also { it.isChecked = true },
+        toggle("float.rulers", "Rulers", RibbonIcon.glyph("")),
+        button("float.rotate", "Rotate", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        button("float.flip", "Flip", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        button("float.export", "Export", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
     ).forEach { floatingModel.items.add(it) }
-    val floating = WRibbonToolBar(floatingModel)
-    floating.width = FLOATING_WIDTH
-    val floatingBorder = WBorder(floating)
-    floatingBorder.background = WColor(255, 255, 255)
-    floatingBorder.borderColor = WColor(0xD0, 0xD0, 0xD0)
-    floatingBorder.borderThickness = 1.0
-    floatingBorder.cornerRadius = 8.0
-    floatingBorder.padding = 4.0
-    floatingBorder.horizontalAlignment = HorizontalAlignment.CENTER
-    floatingBorder.verticalAlignment = VerticalAlignment.BOTTOM
-    floatingBorder.margin = 18.0
+    val floating = WBorder(WRibbonToolBar(floatingModel))
+    floating.maxWidth = FLOATING_WIDTH
+    floating.cornerRadius = BAR_RADIUS
+    floating.padding = FLOATING_PADDING
+    floating.horizontalAlignment = HorizontalAlignment.CENTER
+    floating.verticalAlignment = VerticalAlignment.BOTTOM
+    floating.margin = FLOATING_MARGIN
+    WRibbonTheme.setThemeBrush(floating, "RibbonCommandBarBackgroundBrush") { floating.background = it }
+    WRibbonTheme.setThemeBrush(floating, "RibbonCommandBarBorderBrush") { floating.borderColor = it }
+    floating.borderThickness = 1.0
     val grid = WGrid()
     grid.add(page, row = 0, column = 0)
-    grid.add(floatingBorder, row = 0, column = 0)
+    grid.add(floating, row = 0, column = 0)
     val area = WBorder(grid)
     area.background = WColor(0x3A, 0x3A, 0x3A)
-    area.cornerRadius = 6.0
-    area.margin = 8.0
+    area.cornerRadius = BAR_RADIUS
+    area.margin = 6.0
     return area
 }
 
-/** The panel rail on the right (Layers, Properties, History, and Libraries). */
+/** The panel rail on the right (Layers, Properties, History, and Libraries, with labels). */
 private fun panelRail(): WComponent {
     val model = RibbonToolBarModel("panels")
     model.orientation = RibbonToolBarOrientation.VERTICAL
-    model.showLabels = false
-    model.items.add(
-        toggle("panel.layers", "Layers", RibbonIcons.LAYERS).also {
-            it.groupName = "panel"
-            it.isChecked = true
-        },
-    )
-    model.items.add(toggle("panel.properties", "Properties", RibbonIcons.SETTINGS).also { it.groupName = "panel" })
-    model.items.add(toggle("panel.history", "History", RibbonIcons.HISTORY).also { it.groupName = "panel" })
-    model.items.add(toggle("panel.library", "Libraries", RibbonIcons.LIBRARY).also { it.groupName = "panel" })
+    model.showLabels = true
+    fun panel(id: String, label: String, icon: RibbonIcon) = toggle(id, label, icon).also {
+        it.groupName = "panel"
+        it.showLabelInSimplified = true
+    }
+    model.items.add(panel("panel.layers", "Layers", RibbonIcon.glyph("")).also { it.isChecked = true })
+    model.items.add(panel("panel.properties", "Properties", RibbonIcon.glyph("")))
+    model.items.add(panel("panel.history", "History", RibbonIcon.glyph("")))
+    model.items.add(panel("panel.library", "Libraries", RibbonIcon.glyph("")))
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
+    bar.verticalAlignment = VerticalAlignment.TOP
     return WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
 }
 
@@ -244,11 +337,19 @@ private fun statusBar(status: RibbonLabelModel): WComponent {
 }
 
 private const val BRUSH_SIZE = 24.0
-private const val MAX_SIZE = 500.0
+private const val MAX_SIZE = 5000.0
 private const val HARDNESS = 80.0
-private const val OPACITY = 90.0
-private const val TEXT_SIZE = 18.0
-private const val PAGE_WIDTH = 720.0
-private const val PAGE_HEIGHT = 420.0
-private const val FLOATING_WIDTH = 380.0
+private const val PERCENT = 100.0
+private const val TEXT_SIZE = 24.0
+private const val SIZE_WIDTH = 70.0
+private const val HARDNESS_WIDTH = 62.0
+private const val MODE_WIDTH = 110.0
+private const val OPACITY_WIDTH = 100.0
+private const val BAR_RADIUS = 6.0
+private const val OPTIONS_MARGIN = 4.0
+private const val PAGE_WIDTH = 480.0
+private const val PAGE_HEIGHT = 320.0
+private const val FLOATING_WIDTH = 360.0
+private const val FLOATING_MARGIN = 16.0
+private const val FLOATING_PADDING = 4.0
 private const val ZOOM = 66.0
