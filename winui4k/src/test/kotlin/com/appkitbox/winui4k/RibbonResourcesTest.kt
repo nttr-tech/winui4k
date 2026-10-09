@@ -47,6 +47,37 @@ class RibbonResourcesTest : FunSpec() {
             dark shouldBe RibbonColor.parse("#5CC689")
         }
 
+        test("brush colors are taken according to the element's theme, and setThemeBrush follows switching between light and dark") {
+            onUiThread { WRibbonTheme.apply(RibbonThemePalette.WORD, RibbonChromeStyle.NEUTRAL, RibbonThemeStyle.OFFICE) }
+            val border = onUiThreadGet { WBorder() }
+            UiTestHarness.attachAndAwaitLoaded(border)
+            val applied = mutableListOf<WColor>()
+            onUiThread {
+                border.requestedTheme = ElementTheme.LIGHT
+                WRibbonTheme.setThemeBrush(border, "RibbonAccentBrush") { applied += it }
+            }
+            val light = onUiThreadGet { WRibbonTheme.getBrushColor("RibbonAccentBrush", "Light")!! }
+            val dark = onUiThreadGet { WRibbonTheme.getBrushColor("RibbonAccentBrush", "Dark")!! }
+            onUiThreadGet { WRibbonTheme.getBrushColor(border, "RibbonAccentBrush") } shouldBe light
+            onUiThread { border.requestedTheme = ElementTheme.DARK }
+            onUiThreadGet { WRibbonTheme.getBrushColor(border, "RibbonAccentBrush") } shouldBe dark
+            applied.map { RibbonColor(it.alpha, it.red, it.green, it.blue) } shouldBe listOf(light, dark)
+            UiTestHarness.detach(border)
+        }
+
+        test("corner radius resources follow the surface style and are returned in top-left, top-right, bottom-right, bottom-left order") {
+            onUiThreadGet {
+                WRibbonTheme.applyStyle(RibbonThemeStyle.OFFICE)
+                WRibbonTheme.getCornerRadius("RibbonPopupCornerRadius").toList()
+            } shouldBe listOf(6.0, 6.0, 6.0, 6.0)
+            onUiThreadGet {
+                WRibbonTheme.applyStyle(RibbonThemeStyle.CAD)
+                WRibbonTheme.getCornerRadius("RibbonTabCornerRadius").toList()
+            } shouldBe listOf(2.0, 2.0, 0.0, 0.0)
+            onUiThreadGet { WRibbonTheme.getCornerRadius("Unknown", 3.0).toList() } shouldBe listOf(3.0, 3.0, 3.0, 3.0)
+            onUiThread { WRibbonTheme.applyStyle(RibbonThemeStyle.OFFICE) }
+        }
+
         test("the color of a single brush can be overridden") {
             onUiThreadGet {
                 WRibbonTheme.setBrushColor("RibbonItemHoverBrush", RibbonColor.parse("#123456"))

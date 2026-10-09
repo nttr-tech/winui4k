@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.ribbon.RibbonChromeStyle
 import com.appkitbox.winui4k.ribbon.RibbonColor
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
+import java.util.function.Consumer
 
 /**
  * Runtime theme settings for ribbon controls ([WRibbon] and others; RibbonSpace's RibbonTheme).
@@ -82,6 +83,46 @@ object WRibbonTheme {
     @JvmStatic
     @JvmOverloads
     fun getBrushColor(key: String, theme: String = RibbonThemeResources.THEME_LIGHT): RibbonColor? = RibbonThemeResources.getColor(key, theme)
+
+    /**
+     * The color of the [key] brush in the theme of [scope] (ActualTheme; light if null) (RibbonSpace's RibbonTheme.GetBrush).
+     * Instead of the app-wide color, this gives the color for elements or popups partially made dark with [setTheme] or
+     * requestedTheme. null for an unknown key.
+     */
+    @JvmStatic
+    fun getBrushColor(scope: WComponent?, key: String): RibbonColor? =
+        RibbonThemeResources.getColor(key, if (scope?.actualTheme == ElementTheme.DARK) RibbonThemeResources.THEME_DARK else RibbonThemeResources.THEME_LIGHT)
+
+    /**
+     * Sets the color of the [key] brush in the theme of [target] with [apply], and sets it again whenever the light / dark
+     * theme of [target] or the palette changes (RibbonSpace's RibbonTheme.SetThemeBrush). Use it to match the colors of
+     * surfaces and text created in code to the ribbon's theme.
+     * Example: `WRibbonTheme.setThemeBrush(border, "RibbonPopupBackgroundBrush") { border.background = it }`
+     */
+    @JvmStatic
+    fun setThemeBrush(target: WComponent, key: String, apply: Consumer<WColor>) {
+        require(key in RibbonThemeColors.BRUSH_KEYS) { "Not a ribbon brush key: $key" }
+        val update = Runnable { getBrushColor(target, key)?.let { apply.accept(WColor(it.r, it.g, it.b, it.a)) } }
+        update.run()
+        target.addActualThemeChangedListener { update.run() }
+        addChangedListener(update)
+    }
+
+    /**
+     * The value of the corner radius resource [key] that changes with the surface style (e.g. "RibbonPopupCornerRadius")
+     * (RibbonSpace's RibbonTheme.GetCornerRadius). In the order top-left, top-right, bottom-right, bottom-left. Four
+     * [fallback] values for an unknown key.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun getCornerRadius(key: String, fallback: Double = 0.0): DoubleArray {
+        val value = RibbonThemeColors.shapes(style)[key]?.takeIf { it.first == "CornerRadius" }?.second
+            ?: return doubleArrayOf(fallback, fallback, fallback, fallback)
+        val parts = value.split(',').map { it.trim().toDouble() }
+        return if (parts.size == CORNERS) parts.toDoubleArray() else DoubleArray(CORNERS) { parts[0] }
+    }
+
+    private const val CORNERS = 4
 
     /** Sets light / dark for [root] and its descendants (usually the window's content). */
     @JvmStatic
