@@ -36,6 +36,8 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "HyperlinkButton" to ::buildHyperlinkButtonPage,
     "InfoBadge" to ::buildInfoBadgePage,
     "InfoBar" to ::buildInfoBarPage,
+    "InkCanvas" to ::buildInkCanvasPage,
+    "InkToolbar" to ::buildInkToolbarPage,
     "JumpList" to ::buildJumpListPage,
     "ItemsView" to ::buildItemsViewPage,
     "LayoutPanel" to ::buildLayoutPanelPage,
@@ -128,6 +130,10 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "Popup",
         "TeachingTip",
     ),
+    "Ink" to listOf(
+        "InkCanvas",
+        "InkToolbar",
+    ),
     "Layout" to listOf(
         "Border",
         "Canvas",
@@ -210,6 +216,7 @@ private val categoryIcons: Map<String, Symbol> = mapOf(
     "Date & time" to Symbol.CALENDAR,
     "Collections" to Symbol.LIST,
     "Dialogs & flyouts" to Symbol.COMMENT,
+    "Ink" to Symbol.EDIT,
     "Layout" to Symbol.VIEW_ALL,
     "Media" to Symbol.GLOBE,
     "Menus & toolbars" to Symbol.SAVE,

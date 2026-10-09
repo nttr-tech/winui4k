@@ -89,6 +89,8 @@ private val HEADER_BACKGROUND: WColor
 
 /** Recently added/updated pages (equivalent to the real Gallery's IsNew / IsUpdated). Swap these out with each release. */
 private val recentlyAddedOrUpdatedPages = listOf(
+    "InkCanvas",
+    "InkToolbar",
     "ListBox",
     "AppWindow",
     "AppWindowTitleBar",
@@ -122,6 +124,8 @@ internal val pageDescriptions: Map<String, String> = mapOf(
     "HyperlinkButton" to "A button styled as a link that responds to clicks.",
     "InfoBadge" to "A small badge that unobtrusively shows an unread count or draws attention.",
     "InfoBar" to "An inline notification bar that reports an in-app state change.",
+    "InkCanvas" to "A canvas for drawing handwritten strokes with a pen, mouse, or touch.",
+    "InkToolbar" to "A toolbar for choosing InkCanvas's pen, pencil, highlighter, eraser, or ruler.",
     "JumpList" to "Adds items to the taskbar's right-click menu.",
     "ListBox" to "A control for selecting an item from an always-visible list.",
     "ListView" to "A list that lines items up vertically for selection.",
