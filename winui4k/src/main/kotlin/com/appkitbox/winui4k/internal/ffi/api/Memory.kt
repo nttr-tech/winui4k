@@ -27,6 +27,13 @@ interface MemoryAccess {
     fun putLong(pointer: Ptr, offset: Long, value: Long)
     fun getDouble(pointer: Ptr, offset: Long): Double
     fun putDouble(pointer: Ptr, offset: Long, value: Double)
+
+    /** Reads a float (WinRT r4). Its bit representation is 4 bytes like an int, so it is read with [getInt]. */
+    fun getFloat(pointer: Ptr, offset: Long): Float = Float.fromBits(getInt(pointer, offset))
+
+    /** Writes a float (WinRT r4). */
+    fun putFloat(pointer: Ptr, offset: Long, value: Float) = putInt(pointer, offset, value.toRawBits())
+
     fun getPtr(pointer: Ptr, offset: Long): Ptr
     fun putPtr(pointer: Ptr, offset: Long, value: Ptr)
 

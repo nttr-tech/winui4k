@@ -28,6 +28,7 @@ enum class ValueKind(val byteSize: Long) {
     I32(4),
     I64(8),
     F64(8),
+    F32(4),
     U8(1),
     U16(2),
     VOID(0),
@@ -83,6 +84,7 @@ sealed interface ArgKind {
         val I32 = Scalar(ValueKind.I32)
         val I64 = Scalar(ValueKind.I64)
         val F64 = Scalar(ValueKind.F64)
+        val F32 = Scalar(ValueKind.F32)
         val U8 = Scalar(ValueKind.U8)
         val U16 = Scalar(ValueKind.U16)
     }

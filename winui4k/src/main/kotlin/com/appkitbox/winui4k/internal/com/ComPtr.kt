@@ -36,9 +36,9 @@ internal class ComPtr(val ptr: Ptr) {
         invokeWith(Ffi.backend.downcallHandle(descriptor), slot, args)
 
     /**
-     * Calls a method that returns an HRESULT, throwing on failure. The descriptor is
-     * inferred automatically from the Kotlin types of the arguments
-     * (Ptr/ComPtr/null -> pointer, Int -> I32, Long -> I64, Double -> F64, StructValue -> struct by value).
+     * Calls a method that returns an HRESULT, throwing on failure. The descriptor is inferred automatically from the
+     * Kotlin types of the arguments (Ptr/ComPtr/null→pointer, Int→I32, Long→I64, Double→F64, Float→F32,
+     * StructValue→struct passed by value).
      */
     fun call(slot: Int, vararg args: Any?) {
         // This is the hot path every property get/put goes through, so calls with only
@@ -113,6 +113,13 @@ internal class ComPtr(val ptr: Ptr) {
         Ffi.backend.memory.getDouble(out, 0)
     }
 
+    /** The `HRESULT f(FLOAT* out)` pattern (WinRT r4; e.g. the getter of InkPoint.Pressure). */
+    fun getFloat(slot: Int): Float = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(4)
+        call(slot, out)
+        Ffi.backend.memory.getFloat(out, 0)
+    }
+
     fun queryInterface(iid: String): ComPtr = getPtr(0, Guid.of(iid)) // IUnknown::QueryInterface
 
     /** Null-tolerant version of [queryInterface]. Returns null if the interface isn't implemented. */
@@ -154,6 +161,7 @@ internal class ComPtr(val ptr: Ptr) {
                     is Int -> 2L
                     is Long -> 3L
                     is Double -> 4L
+                    is Float -> 5L
                     else -> return -1 // e.g. StructValue (unsupported types are reported by inferDescriptor)
                 }
                 signature = signature shl 3 or code
@@ -171,6 +179,7 @@ internal class ComPtr(val ptr: Ptr) {
                             is Int -> ArgKind.I32
                             is Long -> ArgKind.I64
                             is Double -> ArgKind.F64
+                            is Float -> ArgKind.F32
                             is StructValue -> ArgKind.Struct(it.type)
                             else -> error("unsupported argument for auto descriptor: $it")
                         },

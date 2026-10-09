@@ -111,6 +111,7 @@ internal object PanamaBackend : FfiBackend {
         ValueKind.I32 -> ValueLayout.JAVA_INT
         ValueKind.I64 -> ValueLayout.JAVA_LONG
         ValueKind.F64 -> ValueLayout.JAVA_DOUBLE
+        ValueKind.F32 -> ValueLayout.JAVA_FLOAT
         ValueKind.U8 -> JAVA_BYTE
         ValueKind.U16 -> ValueLayout.JAVA_SHORT
         ValueKind.VOID -> error("VOID cannot become a scalar layout")

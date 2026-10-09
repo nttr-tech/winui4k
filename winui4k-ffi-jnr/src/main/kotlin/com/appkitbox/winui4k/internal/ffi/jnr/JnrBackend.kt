@@ -90,6 +90,7 @@ internal object JnrBackend : FfiBackend {
                 ValueKind.I32 -> buffer.setIntReturn(result as Int)
                 ValueKind.I64 -> buffer.setLongReturn(result as Long)
                 ValueKind.F64 -> buffer.setDoubleReturn(result as Double)
+                ValueKind.F32 -> buffer.setFloatReturn(result as Float)
                 ValueKind.U8 -> buffer.setByteReturn(result as Byte)
                 ValueKind.U16 -> buffer.setShortReturn(result as Short)
             }
@@ -107,6 +108,7 @@ internal object JnrBackend : FfiBackend {
             ValueKind.I32 -> buffer.getInt(index)
             ValueKind.I64 -> buffer.getLong(index)
             ValueKind.F64 -> buffer.getDouble(index)
+            ValueKind.F32 -> buffer.getFloat(index)
             ValueKind.U8 -> buffer.getByte(index)
             ValueKind.U16 -> buffer.getShort(index)
             ValueKind.VOID -> error("a VOID argument can't exist")
@@ -147,6 +149,7 @@ internal object JnrBackend : FfiBackend {
                 ValueKind.I32 -> invoker.invokeInt(context, fn.address, buffer)
                 ValueKind.I64 -> invoker.invokeLong(context, fn.address, buffer)
                 ValueKind.F64 -> invoker.invokeDouble(context, fn.address, buffer)
+                ValueKind.F32 -> invoker.invokeFloat(context, fn.address, buffer)
                 ValueKind.U8 -> invoker.invokeInt(context, fn.address, buffer).toByte()
                 ValueKind.U16 -> invoker.invokeInt(context, fn.address, buffer).toShort()
             }
@@ -165,6 +168,7 @@ internal object JnrBackend : FfiBackend {
                     ValueKind.I32 -> buffer.putInt(value as Int)
                     ValueKind.I64 -> buffer.putLong(value as Long)
                     ValueKind.F64 -> buffer.putDouble(value as Double)
+                    ValueKind.F32 -> buffer.putFloat(value as Float)
                     ValueKind.U8 -> buffer.putByte((value as Byte).toInt())
                     ValueKind.U16 -> buffer.putShort((value as Short).toInt())
                     ValueKind.VOID -> error("a VOID argument can't exist")
@@ -204,6 +208,7 @@ internal object JnrBackend : FfiBackend {
         ValueKind.I32 -> Type.SINT32
         ValueKind.I64 -> Type.SINT64
         ValueKind.F64 -> Type.DOUBLE
+        ValueKind.F32 -> Type.FLOAT
         ValueKind.U8 -> Type.UINT8
         ValueKind.U16 -> Type.UINT16
     }

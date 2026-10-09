@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.MemoryScope
 import com.appkitbox.winui4k.internal.ffi.api.StructType
 import com.appkitbox.winui4k.internal.ffi.api.StructType.Field
 import com.appkitbox.winui4k.internal.ffi.api.StructValue
+import com.appkitbox.winui4k.internal.ffi.api.ValueKind.F32
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind.F64
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind.I32
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind.I64
@@ -55,15 +56,10 @@ internal object XamlStructs {
         listOf(Field("Name", PTR), Field("Kind", I32)),
     )
 
-    /**
-     * Windows.Foundation.Size { FLOAT Width, Height } (FoundationContract.winmd).
-     * There's no F32 in [ValueKind], so this is out-argument-only: its bit pattern is read as an
-     * I32 and decoded with Float.intBitsToFloat ([getSizeFloat]). Can't be passed by value (e.g. to
-     * Measure).
-     */
+    /** Windows.Foundation.Size { FLOAT Width, Height } (FoundationContract.winmd) */
     val SIZE_FLOAT = StructType(
         "Windows.Foundation.Size",
-        listOf(Field("Width", I32), Field("Height", I32)),
+        listOf(Field("Width", F32), Field("Height", F32)),
     )
 
     /** Windows.Graphics.PointInt32 { INT32 X, Y } (Windows.Graphics.winmd) */
@@ -181,10 +177,7 @@ internal object XamlStructs {
         val size = scope.allocate(SIZE_FLOAT)
         target.call(slot, size.ptr) // an out argument, so it's passed as a pointer
         val memory = Ffi.backend.memory
-        doubleArrayOf(
-            Float.fromBits(memory.getInt(size.ptr, 0)).toDouble(),
-            Float.fromBits(memory.getInt(size.ptr, 4)).toDouble(),
-        )
+        doubleArrayOf(memory.getFloat(size.ptr, 0).toDouble(), memory.getFloat(size.ptr, 4).toDouble())
     }
 
     /** Gets a PointInt32 (i4×2) via an out argument (AppWindow.Position). Returned in [x, y] order. */

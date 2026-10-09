@@ -118,7 +118,7 @@ internal object JnaBackend : FfiBackend {
             return when (descriptor.ret) {
                 ValueKind.VOID -> null
                 ValueKind.PTR -> Ptr(Pointer.nativeValue(result as Pointer?))
-                else -> result // Int / Long / Double / Byte / Short
+                else -> result // Int / Long / Double / Float / Byte / Short
             }
         }
 
@@ -173,6 +173,7 @@ internal object JnaBackend : FfiBackend {
         ValueKind.I32 -> Integer.TYPE
         ValueKind.I64 -> java.lang.Long.TYPE
         ValueKind.F64 -> java.lang.Double.TYPE
+        ValueKind.F32 -> java.lang.Float.TYPE
         ValueKind.U8 -> java.lang.Byte.TYPE
         ValueKind.U16 -> java.lang.Short.TYPE
     }
