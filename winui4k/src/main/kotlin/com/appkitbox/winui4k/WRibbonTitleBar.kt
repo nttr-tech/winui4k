@@ -210,8 +210,12 @@ class WRibbonTitleBar(
         val target = frame ?: return
         val scale = rasterizationScale()
         val titleBar = target.appWindow.titleBar
+        // Padding is mirrored left-right in right-to-left layout, but the caption buttons are not, so swap them beforehand
+        val rtl = flowDirection == FlowDirection.RIGHT_TO_LEFT
+        val left = (if (rtl) titleBar.rightInset else titleBar.leftInset) / scale
+        val right = (if (rtl) titleBar.leftInset else titleBar.rightInset) / scale
         root.view(XamlInterop.IID_IGrid).let { grid ->
-            XamlStructs.putThickness(grid, XamlInterop.IGrid_put_Padding, titleBar.leftInset / scale, 0.0, titleBar.rightInset / scale, 0.0)
+            XamlStructs.putThickness(grid, XamlInterop.IGrid_put_Padding, left, 0.0, right, 0.0)
         }
         schedulePassthrough()
     }

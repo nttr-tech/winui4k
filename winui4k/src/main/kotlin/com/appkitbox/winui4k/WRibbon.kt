@@ -803,7 +803,7 @@ class WRibbon @JvmOverloads constructor(
         if (minimizedPopup.isOpen) closeMinimizedPopup()
         selectedTab?.let { tab -> tabViews[tab]?.groupViews()?.filter { it.isPopupOpen }?.forEach { it.closePopup() } }
         if (model.visibilityMode == RibbonVisibilityMode.FULL_SCREEN) isFullScreenRevealed = false
-        item.id?.let { searchEngine.markUsed(it) }
+        searchEngine.markUsed(item.id)
         val event = RibbonItemInvokedEvent(this, item, commandId, parameter)
         itemInvokedListeners.forEach { it.itemInvoked(event) }
     }

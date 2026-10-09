@@ -267,6 +267,18 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { paste().automationId } shouldBe "PasteButton"
         }
 
+        test("in right-to-left layout, the ← key on a tab header moves to the next tab (visually to the left)") {
+            val home = onUiThreadGet { model.findTab("home")!! }
+            onUiThread { ribbon.flowDirection = FlowDirection.RIGHT_TO_LEFT }
+            settle()
+            onUiThread { ribbon.tabStrip.headerKeyDown(ribbon.tabStrip.headerOf(home)!!, RibbonInputViews.VK_LEFT) }
+            onUiThreadGet { ribbon.selectedTab?.id } shouldBe "insert"
+            onUiThread { ribbon.flowDirection = FlowDirection.LEFT_TO_RIGHT }
+            settle()
+            onUiThread { ribbon.tabStrip.headerKeyDown(ribbon.tabStrip.headerOf(model.findTab("insert"))!!, RibbonInputViews.VK_LEFT) }
+            onUiThreadGet { ribbon.selectedTab?.id } shouldBe "home"
+        }
+
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
             onUiThread { model.visibilityMode = RibbonVisibilityMode.TABS_ONLY }
             settle()

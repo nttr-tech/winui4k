@@ -36,6 +36,21 @@ enum class HorizontalAlignment(internal val native: Int) {
     }
 }
 
+/** Microsoft.UI.Xaml.FlowDirection (the direction of text and layout; inherited by children). */
+enum class FlowDirection(internal val native: Int) {
+    /** Left to right (the default). */
+    LEFT_TO_RIGHT(0),
+
+    /** Right to left (Arabic, Hebrew, and so on; the layout is mirrored horizontally). */
+    RIGHT_TO_LEFT(1),
+    ;
+
+    internal companion object {
+        @JvmSynthetic
+        fun of(native: Int): FlowDirection = entries.first { it.native == native }
+    }
+}
+
 /**
  * Microsoft.UI.Xaml.VerticalAlignment (vertical position within the space the parent allots).
  * Values extracted from the winmd (Top=0, Center=1, Bottom=2, Stretch=3).
@@ -234,6 +249,11 @@ abstract class WComponent internal constructor(
     var horizontalAlignment: HorizontalAlignment
         get() = HorizontalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_HorizontalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_HorizontalAlignment, value.native)
+
+    /** The direction of text and layout (FrameworkElement.FlowDirection). Inherited from the parent unless set. */
+    var flowDirection: FlowDirection
+        get() = FlowDirection.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_FlowDirection))
+        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_FlowDirection, value.native)
 
     /** Vertical position within the space the parent allots (FrameworkElement.VerticalAlignment). */
     var verticalAlignment: VerticalAlignment

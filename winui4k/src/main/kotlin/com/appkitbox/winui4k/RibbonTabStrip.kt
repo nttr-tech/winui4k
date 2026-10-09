@@ -224,9 +224,11 @@ internal class RibbonTabStrip(private val owner: RibbonTabStripOwner) {
     fun headerKeyDown(header: RibbonTabHeaderView, key: Int): Boolean {
         val index = headers.indexOf(header)
         if (index < 0 || headers.isEmpty()) return false
+        // In a right-to-left layout, the visual left is the next tab
+        val step = if (header.element.flowDirection == FlowDirection.RIGHT_TO_LEFT) -1 else 1
         val target = when (key) {
-            RibbonInputViews.VK_LEFT -> index - 1
-            RibbonInputViews.VK_RIGHT -> index + 1
+            RibbonInputViews.VK_LEFT -> index - step
+            RibbonInputViews.VK_RIGHT -> index + step
             RibbonInputViews.VK_HOME -> 0
             RibbonInputViews.VK_END -> headers.size - 1
             RibbonInputViews.VK_DOWN -> return owner.focusCommands()
