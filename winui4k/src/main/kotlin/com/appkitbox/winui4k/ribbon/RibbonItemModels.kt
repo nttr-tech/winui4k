@@ -189,6 +189,8 @@ open class RibbonComboBoxModel @JvmOverloads constructor(
 ) : RibbonItemModel(id, label) {
     init {
         size = RibbonItemSize.SMALL
+        // A combo box's label is shown to the left of the input box only when specified (Office's [Font] has no label)
+        showLabel = false
     }
 
     /** Selectable values. */

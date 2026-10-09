@@ -247,6 +247,7 @@ internal object RibbonItemContent {
         }
 
         fun toXaml(width: Double, height: Double): String =
-            "<Canvas Width=\"${Xaml.num(width)}\" Height=\"${Xaml.num(height)}\" IsHitTestVisible=\"False\">$children</Canvas>"
+            "<Canvas Width=\"${Xaml.num(width)}\" Height=\"${Xaml.num(height)}\" HorizontalAlignment=\"Left\" VerticalAlignment=\"Top\" " +
+                "IsHitTestVisible=\"False\">$children</Canvas>"
     }
 }
