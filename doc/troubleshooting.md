@@ -1,10 +1,13 @@
 # トラブルシューティング
 
 - **`MddBootstrapInitialize2 failed` (HRESULT=0x80670016 など)**
-  Windows App SDK 2.4 ランタイムが未インストール、またはメジャーバージョン不一致である。
-  https://aka.ms/windowsappsdk から 2.4 系の Runtime インストーラを実行する。
-  別バージョンを使う場合は `Toolkit.kt` の `WINAPPSDK_MAJOR_MINOR` / `WINAPPSDK_MIN_VERSION` を変更する
-  (2.0 以降は major のみで解決され、minor は minVersion で指定する)。
+  Windows App SDK 2.5 実験版 (2.5.4-experimental) ランタイムが未インストール、またはメジャーバージョン不一致である。
+  実験版のランタイムは https://aka.ms/windowsappsdk の安定版とは別パッケージ (`Microsoft.WindowsAppRuntime.2-experimentalF`) なので、
+  https://aka.ms/windowsappsdk/2.5/2.5.4-experimental/windowsappruntimeinstall-x64.exe (x86 / arm64 は末尾を置き換える) のインストーラを実行する
+  (`.\gradlew :winui4k:downloadInstallers` で winui4k/installer/ にも取得できる)。
+  別バージョンを使う場合は `internal/winui/Bootstrap.kt` の `WINAPPSDK_VERSION_TAG` / `WINAPPSDK_MIN_VERSION` を変更する
+  (2.0 以降は major のみで解決され、minor は minVersion で指定する。安定版はバージョンタグが空文字列、
+  実験版・プレビュー版はリリースごとのタグ (2.5.4-experimental は `experimentalF`) を指定する)。
 - **`REGDB_E_CLASSNOTREG (0x80040154)` が RoGetActivationFactory で出る**
   ブートストラップが成功していない状態で WinUI 型を解決しようとしている。
   上と同じくランタイムの導入状況を確認する。

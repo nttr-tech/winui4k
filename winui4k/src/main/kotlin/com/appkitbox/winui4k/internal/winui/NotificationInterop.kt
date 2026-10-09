@@ -15,7 +15,7 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  */
 internal object NotificationInterop {
     // ---- Microsoft.Windows.AppNotifications.AppNotificationManager ----
-    // (Microsoft.Windows.AppNotifications.winmd — WinAppSDK Foundation 2.3.9)
+    // (Microsoft.Windows.AppNotifications.winmd — WinAppSDK Foundation 2.3.13-experimental)
     const val CLS_AppNotificationManager = "Microsoft.Windows.AppNotifications.AppNotificationManager"
     const val IID_IAppNotificationManagerStatics = "6cfc0d8d-84a3-5592-b4c6-e3e7e7c680e4"
     const val IAppNotificationManagerStatics_get_Default = 6 // get_Default(out AppNotificationManager)

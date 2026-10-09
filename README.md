@@ -204,7 +204,7 @@ On the first call to `WinUiUtilities`, the DLL matching the running PC's archite
 
 ### Runtime Installation
 
-The Windows App SDK 2.4 runtime is required. If it is not installed, the following steps are taken in order:
+The Windows App SDK 2.5 experimental (2.5.4-experimental) runtime is required (the experimental channel that includes TableView; it is a separate package from the stable 2.x runtime). If it is not installed, the following steps are taken in order:
 
 1. **Automatic installer execution**: If an installer such as `WindowsAppRuntimeInstall-x64.exe` exists in the current directory (or the directory specified by `winui4k.installer.dir`), it is run silently with the `--quiet` option and the app then starts normally
 2. **Installation dialog**: If no installer is found, Microsoft's dialog is shown, prompting the user to download the runtime

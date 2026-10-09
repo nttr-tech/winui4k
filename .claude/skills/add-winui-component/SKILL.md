@@ -26,7 +26,7 @@ Microsoft.UI.Xaml.Controls 配下のコントロールを、Swing 風の `W*` �
 
 ```bash
 mkdir -p build/winmd && cd build/winmd
-curl -sL -o winui.nupkg "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk.winui/2.3.6/microsoft.windowsappsdk.winui.2.3.6.nupkg"
+curl -sL -o winui.nupkg "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk.winui/2.3.10-experimental/microsoft.windowsappsdk.winui.2.3.10-experimental.nupkg"
 python -c "import zipfile; zipfile.ZipFile('winui.nupkg').extract('metadata/Microsoft.UI.Xaml.winmd')"
 ```
 

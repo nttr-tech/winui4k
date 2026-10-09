@@ -6,11 +6,11 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * WinRT ABI constants (IIDs / vtable slot numbers) for Microsoft.UI.Xaml (WinUI 3).
  * Also includes constants from Microsoft.UI.Text (Microsoft.UI.Text.winmd), used by RichEditBox.
  *
- * All values were mechanically extracted with tools/dump_winmd.py from
+ * All values come from metadata/Microsoft.UI.Xaml.winmd in Microsoft.WindowsAppSDK.WinUI 2.3.10-experimental (a dependency of Microsoft.WindowsAppSDK 2.5.4-experimental)
  * metadata/Microsoft.UI.Xaml.winmd in Microsoft.WindowsAppSDK.WinUI 2.3.6 (a dependency
  * of Microsoft.WindowsAppSDK 2.4.0), and Microsoft.Windows.ApplicationModel.Resources.winmd
  * from the WinAppSDK runtime. None of these values are hand-written or guessed.
- * (Cross-checked against the 1.7.260224002 / WinUI 2.2.1 winmds — all existing IIDs / slots match.)
+ * (Cross-checked against the 1.7.260224002 / WinUI 2.2.1 / 2.3.6 winmd files: all existing IIDs / slots match)
  *
  * Slot numbering convention: IUnknown = 0..2, IInspectable = 3..5, and the interface
  * body starts at 6, following the winmd's method declaration order.
