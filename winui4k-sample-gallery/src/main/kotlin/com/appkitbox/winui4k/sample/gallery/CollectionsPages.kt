@@ -43,7 +43,7 @@ import com.appkitbox.winui4k.table.TableModelEvent
 import com.appkitbox.winui4k.table.TableRowSorter
 
 /*
- * Collections category: demo pages for ItemsView / ListBox / ListView / Table / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / Table / Tree.
  */
 
 // region ItemsView
@@ -750,11 +750,11 @@ private fun buildTableColumnsExample(): WComponent {
 
 // endregion
 
-// region TreeView
+// region Tree page
 
-/** TreeView page: lines up demos for trying out WTree's various features. */
-internal fun buildTreeViewPage(): WComponent {
-    val page = buildPage("TreeView", "A tree that can expand and collapse hierarchical data. Try out WTree's various features.")
+/** The Tree page: lines up demos for trying out WTree's various features. */
+internal fun buildTreePage(): WComponent {
+    val page = buildPage("Tree", "A tree whose hierarchical data can be expanded and collapsed. Try out WTree's various features.")
 
     page.add(buildSimpleTreeExample())
     page.add(buildTreeMultiSelectExample())

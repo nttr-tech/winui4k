@@ -126,7 +126,7 @@ final class HomePage {
         descriptions.put("ToggleSplitButton", "A button that combines an on/off toggle with a menu.");
         descriptions.put("ToggleSwitch", "A switch that toggles between on and off.");
         descriptions.put("ToolTip", "Shows a floating explanation of an element on hover.");
-        descriptions.put("TreeView", "A tree that can expand and collapse hierarchical data.");
+        descriptions.put("Tree", "A tree whose hierarchical data can be expanded and collapsed.");
         descriptions.put("VariableSizedWrapGrid", "A panel that wraps children in cell-sized units.");
         descriptions.put("XamlUICommand", "A reusable command that carries a label and an icon.");
         descriptions.put("AppWindow", "Controls a window's size, position, and presenter.");

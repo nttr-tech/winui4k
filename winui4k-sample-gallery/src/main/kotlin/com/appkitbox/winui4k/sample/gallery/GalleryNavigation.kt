@@ -78,7 +78,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "ToolTip" to ::buildToolTipPage,
     "ToggleSplitButton" to ::buildToggleSplitButtonPage,
     "ToggleSwitch" to ::buildToggleSwitchPage,
-    "TreeView" to ::buildTreeViewPage,
+    "Tree" to ::buildTreePage,
     "WebView2" to ::buildWebView2Page,
     "VariableSizedWrapGrid" to ::buildVariableSizedWrapGridPage,
     "XamlUICommand" to ::buildXamlUICommandPage,
@@ -118,7 +118,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ListBox",
         "ListView",
         "Table",
-        "TreeView",
+        "Tree",
     ),
     "Dialogs & flyouts" to listOf(
         "ContentDialog",

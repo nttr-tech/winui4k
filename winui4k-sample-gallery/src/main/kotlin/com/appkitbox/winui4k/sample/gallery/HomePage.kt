@@ -160,7 +160,7 @@ internal val pageDescriptions: Map<String, String> = mapOf(
     "ToggleSplitButton" to "A button that combines an on/off toggle with a menu.",
     "ToggleSwitch" to "A switch that toggles between on and off.",
     "ToolTip" to "Shows a floating explanation of an element on hover.",
-    "TreeView" to "A tree that can expand and collapse hierarchical data.",
+    "Tree" to "A tree whose hierarchical data can be expanded and collapsed.",
     "VariableSizedWrapGrid" to "A panel that wraps children in cell-sized units.",
     "XamlUICommand" to "A reusable command that carries a label and an icon.",
     "AppWindow" to "Controls a window's size, position, and presenter.",

@@ -106,7 +106,7 @@ class GalleryNavigation {
         pages.put("ToolTip", StatusInfoPages::buildToolTipPage);
         pages.put("ToggleSplitButton", BasicInputPages::buildToggleSplitButtonPage);
         pages.put("ToggleSwitch", BasicInputPages::buildToggleSwitchPage);
-        pages.put("TreeView", CollectionsPages::buildTreeViewPage);
+        pages.put("Tree", CollectionsPages::buildTreePage);
         pages.put("WebView2", MediaPages::buildWebView2Page);
         pages.put("VariableSizedWrapGrid", LayoutPages::buildVariableSizedWrapGridPage);
         pages.put("XamlUICommand", MenusToolbarsPages::buildXamlUICommandPage);
@@ -146,7 +146,7 @@ class GalleryNavigation {
                 "ListBox",
                 "ListView",
                 "Table",
-                "TreeView"));
+                "Tree"));
         categories.put("Dialogs & flyouts", Arrays.asList(
                 "ContentDialog",
                 "Flyout",

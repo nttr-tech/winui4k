@@ -51,7 +51,7 @@ import java.util.function.Consumer;
 
 
 /*
- * Collections category: demo pages for ItemsView / ListBox / ListView / Table / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / Table / Tree.
  */
 final class CollectionsPages {
     private CollectionsPages() {
@@ -791,12 +791,12 @@ final class CollectionsPages {
 
     // endregion
 
-    // region TreeView
+    // region Tree page
 
-    /** TreeView page: lines up demos for trying out WTree's various features. */
-    static WComponent buildTreeViewPage() {
+    /** The Tree page: lines up demos for trying out WTree's various features. */
+    static WComponent buildTreePage() {
         WPanel page = GalleryScaffold.buildPage(
-                "TreeView", "A tree that can expand and collapse hierarchical data. Try out WTree's various features.");
+                "Tree", "A tree whose hierarchical data can be expanded and collapsed. Try out WTree's various features.");
 
         page.add(buildSimpleTreeExample());
         page.add(buildTreeMultiSelectExample());
