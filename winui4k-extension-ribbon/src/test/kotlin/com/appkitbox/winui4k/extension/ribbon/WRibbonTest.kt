@@ -559,7 +559,11 @@ class WRibbonTest : FunSpec() {
         }
 
         test("item size calculation follows model changes (changing the label changes the width of a large item)") {
+            // The shared window's width depends on the screen size (it is narrow on CI), so fix it to a width where items are shown large
+            onUiThread { ribbon.width = WIDE }
+            settle()
             val view = onUiThreadGet { ribbon.host.findView(model.findItem("extra0.0")!!)!! }
+            onUiThreadGet { view.layout.size } shouldBe RibbonItemSize.LARGE
             val before = onUiThreadGet { view.measure(view.layout).width }
             onUiThread { model.findItem("extra0.0")!!.label = "This is a command with a very long label" }
             val after = onUiThreadGet { view.measure(view.layout).width }
