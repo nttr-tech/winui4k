@@ -6,7 +6,6 @@ import com.appkitbox.winui4k.ContentDialogResult
 import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.ItemsViewSelectionMode
-import com.appkitbox.winui4k.ListViewSelectionMode
 import com.appkitbox.winui4k.NavigationViewBackButtonVisible
 import com.appkitbox.winui4k.NavigationViewPaneDisplayMode
 import com.appkitbox.winui4k.Orientation
@@ -40,13 +39,13 @@ import com.appkitbox.winui4k.WSelectorBar
 import com.appkitbox.winui4k.WSelectorBarItem
 import com.appkitbox.winui4k.WTabView
 import com.appkitbox.winui4k.WTabViewItem
-import com.appkitbox.winui4k.WTable
-import com.appkitbox.winui4k.WTableColumn
+import com.appkitbox.winui4k.WTableView
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTitleBar
 import com.appkitbox.winui4k.WUniformGridLayout
 import com.appkitbox.winui4k.WinUiUtilities
 import com.appkitbox.winui4k.extension.miglayout.MigLayoutManager
+import com.appkitbox.winui4k.table.TableRowSorter
 import java.io.File
 import java.io.IOException
 
@@ -61,7 +60,7 @@ internal class FilerTab(var directory: File) {
  * The Fluent Design filer's main window.
  * Composed of a title-bar-integrated TabView, a navigation toolbar + BreadcrumbBar, a CommandBar,
  * a NavigationView sidebar, a SelectorBar for switching the view,
- * a details (WTable) / icon (WItemsView) listing, and a status bar.
+ * a details (WTableView) / icons (WItemsView) list, and a status bar.
  */
 @Suppress("TooManyFunctions") // Acts as the controller for the whole window, so it naturally has one method per feature
 internal class FilerWindow {
@@ -92,15 +91,9 @@ internal class FilerWindow {
     /** The File corresponding to each level of BreadcrumbBar (looks up the destination from ItemClicked's index). */
     private var breadcrumbParts: List<File> = emptyList()
 
-    // The file listing (details = WTable / icons = WItemsView)
-    private val table = WTable(
-        listOf(
-            WTableColumn("Name", width = 320.0, comparator = NAME_COMPARATOR),
-            WTableColumn("Date modified", width = 150.0),
-            WTableColumn("Type", width = 150.0),
-            WTableColumn("Size", width = 110.0, comparator = SIZE_COMPARATOR),
-        ),
-    )
+    // The file list (details = WTableView / icons = WItemsView)
+    private val tableModel = FileTableModel()
+    private val table = WTableView(tableModel)
     private val itemsView = WItemsView()
     private val contentHost = WGrid()
     private val navigationView = WNavigationView()
@@ -292,8 +285,14 @@ internal class FilerWindow {
     }
 
     private fun buildFileViews() {
-        table.selectionMode = ListViewSelectionMode.EXTENDED
-        table.addRowInvokedListener { index -> displayedEntries.getOrNull(index)?.let(::open) }
+        // Read-only (double-click is used to open, not to edit)
+        table.isReadOnly = true
+        val sorter = TableRowSorter(tableModel)
+        sorter.setComparator(FileTableModel.NAME_COLUMN, NAME_COMPARATOR)
+        sorter.setComparator(FileTableModel.SIZE_COLUMN, SIZE_COMPARATOR)
+        table.rowSorter = sorter
+        TABLE_COLUMN_WIDTHS.forEachIndexed { index, width -> table.columnModel.getColumn(index).preferredWidth = width }
+        table.addRowInvokedListener { row -> fileAtViewRow(row)?.let(::open) }
         table.addRowSelectionListener { updateSelectionLabel() }
         table.contextFlyout = buildContextMenu()
 
@@ -426,10 +425,7 @@ internal class FilerWindow {
             itemsView.setItems(displayedEntries.map(::buildIconCard))
             contentHost.add(itemsView, row = 0, column = 0)
         } else {
-            table.removeAllRows()
-            table.addRows(
-                displayedEntries.map { listOf(it.name, formatDate(it), formatKind(it), formatSize(it)) },
-            )
+            tableModel.setEntries(displayedEntries)
             contentHost.add(table, row = 0, column = 0)
         }
         itemCountLabel.text = "${displayedEntries.size} items"
@@ -541,8 +537,11 @@ internal class FilerWindow {
     /** The currently selected files. Returns empty in icon view, since it's browse-only for now (MVP). */
     private fun selectedFiles(): List<File> {
         if (activeTab.isIconView) return emptyList()
-        return table.selectedRows.mapNotNull { displayedEntries.getOrNull(it) }
+        return table.selectedRows.asList().mapNotNull(::fileAtViewRow)
     }
+
+    /** The file at row [row] of the details view (the position in the view, i.e. the row after sorting). */
+    private fun fileAtViewRow(row: Int): File? = tableModel.entries.getOrNull(table.convertRowIndexToModel(row))
 
     private fun copySelection() {
         val files = selectedFiles()
@@ -704,6 +703,9 @@ internal class FilerWindow {
         const val ICON_ITEM_WIDTH = 120.0
         const val ICON_GLYPH_SIZE = 40.0
         const val STATUS_FONT_SIZE = 12.0
+
+        /** Column widths of the details view (Name / Date modified / Type / Size). */
+        val TABLE_COLUMN_WIDTHS = listOf(320.0, 150.0, 150.0, 110.0)
 
         fun defaultDirectory(): File = File(System.getProperty("user.home"))
     }
