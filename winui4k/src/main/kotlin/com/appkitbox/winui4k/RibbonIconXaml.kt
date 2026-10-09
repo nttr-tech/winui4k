@@ -70,9 +70,11 @@ internal object RibbonIconXaml {
     /**
      * The XAML of an IconElement for a menu item (MenuFlyoutItem.Icon). Returns null if it cannot be represented
      * (anything other than line art or images).
+     * [WRibbonTheme.menuIconConverter] is applied first if set.
      */
-    fun menuIcon(icon: RibbonIcon?): String? {
-        if (icon == null || icon.value.isEmpty()) return null
+    fun menuIcon(original: RibbonIcon?): String? {
+        if (original == null || original.value.isEmpty()) return null
+        val icon = WRibbonTheme.menuIconConverter?.convert(original) ?: original
         return when (icon.kind) {
             RibbonIconKind.GLYPH -> if (icon.fontFamily == null && classify(icon.value) == RibbonIconKind.TEXT) {
                 null

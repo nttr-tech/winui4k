@@ -2,9 +2,19 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.ribbon.RibbonChromeStyle
 import com.appkitbox.winui4k.ribbon.RibbonColor
+import com.appkitbox.winui4k.ribbon.RibbonIcon
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
 import java.util.function.Consumer
+
+/**
+ * Replaces icons that cannot be shown in menu items (line art, multicolor layers, text) with icons that can
+ * (RibbonSpace's RibbonItemHelper.MenuIconConverter).
+ */
+fun interface RibbonMenuIconConverter {
+    /** The icon to show in menus instead of [icon] (a glyph, a filled path or an image). null to keep it as is. */
+    fun convert(icon: RibbonIcon): RibbonIcon?
+}
 
 /**
  * Runtime theme settings for ribbon controls ([WRibbon] and others; RibbonSpace's RibbonTheme).
@@ -123,6 +133,15 @@ object WRibbonTheme {
     }
 
     private const val CORNERS = 4
+
+    /**
+     * Converts the icons of drop-down menu items (RibbonSpace's RibbonItemHelper.MenuIconConverter).
+     * Menu items can only hold a single-color IconElement, so line art and multicolor layered icons cannot be shown as is.
+     * When set, it is applied first to the icons of all menu items, and the returned icon (a glyph, a filled path or an
+     * image) is shown.
+     */
+    @JvmStatic
+    var menuIconConverter: RibbonMenuIconConverter? = null
 
     /** Sets light / dark for [root] and its descendants (usually the window's content). */
     @JvmStatic

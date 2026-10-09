@@ -140,6 +140,17 @@ class RibbonViewLogicTest : FunSpec() {
             RibbonIconXaml.menuIcon(null).shouldBeNull()
         }
 
+        test("setting a menu icon converter lets line-art icons also appear in menus as the substituted icon") {
+            val line = RibbonIcon.stroke("M0,0 L1,1")
+            WRibbonTheme.menuIconConverter = RibbonMenuIconConverter { icon -> if (icon == line) RibbonIcons.PEN else null }
+            try {
+                RibbonIconXaml.menuIcon(line)!! shouldContain "<FontIcon"
+                RibbonIconXaml.menuIcon(RibbonIcon.text("A")).shouldBeNull()
+            } finally {
+                WRibbonTheme.menuIconConverter = null
+            }
+        }
+
         test("an image path without a scheme becomes a file URI") {
             RibbonIconXaml.imageUri("ms-appx:///a.png") shouldBe "ms-appx:///a.png"
             RibbonIconXaml.imageUri("C:/icons/a.png").startsWith("file:/") shouldBe true
