@@ -378,6 +378,25 @@ object WinUiUtilities {
         tabularResourcesInstalled = true
     }
 
+    /**
+     * Adds an already created ResourceDictionary [dictionary] (any view) to Application.Resources.MergedDictionaries
+     * (to merge a dictionary created with XamlReader, such as the ribbon's theme). Call from the UI thread.
+     */
+    @JvmSynthetic
+    internal fun mergeApplicationDictionary(dictionary: ComPtr) {
+        val app = checkNotNull(currentApp) { "Application has not been created yet" }
+        val view = dictionary.queryInterface(XamlInterop.IID_IResourceDictionary)
+        val appResources = app.getPtr(XamlInterop.IApplication_get_Resources)
+        val merged = appResources.getPtr(XamlInterop.IResourceDictionary_get_MergedDictionaries)
+        try {
+            merged.call(FoundationInterop.IVector_Append, view)
+        } finally {
+            merged.release()
+            appResources.release()
+            view.release()
+        }
+    }
+
     /** Adds the activatable ResourceDictionary subclass [runtimeClass] to Application.Resources.MergedDictionaries. */
     private fun mergeApplicationResources(runtimeClass: String) {
         val app = checkNotNull(currentApp) { "Application has not been created yet" }

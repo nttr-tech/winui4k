@@ -151,6 +151,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Media.SolidColorBrush ----
     const val CLS_SolidColorBrush = "Microsoft.UI.Xaml.Media.SolidColorBrush"
     const val IID_ISolidColorBrush = "b3865c31-37c8-55c1-8a72-d41c67642e2a"
+    const val ISolidColorBrush_get_Color = 6           // get_Color(out Windows.UI.Color)
     const val ISolidColorBrush_put_Color = 7           // put_Color(Windows.UI.Color) — struct (u8x4: A,R,G,B) passed by value
 
     // ---- Microsoft.UI.Xaml.Media.LinearGradientBrush / GradientStop ----

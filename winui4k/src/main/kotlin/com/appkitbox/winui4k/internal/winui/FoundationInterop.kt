@@ -132,6 +132,7 @@ internal object FoundationInterop {
     // ---- Windows.Foundation.Collections.IMap<K, V> (OS-side, FoundationContract.winmd) ----
     // Lookup=6 get_Size=7 HasKey=8 GetView=9 Insert=10 Remove=11 Clear=12
     const val IMap_Lookup = 6                          // Lookup(K, out V)
+    const val IMap_HasKey = 8                          // HasKey(K, out boolean)
     const val IMap_Insert = 10                         // Insert(K, V, out boolean replaced)
     private const val IID_IMap_OPEN = "3c2925fe-8519-45c1-aa79-197b6718c1c1" // Base IID of IMap`2
 
