@@ -45,12 +45,29 @@ internal class RibbonTabHeaderView(val tab: RibbonTabModel, private val strip: R
             element = build(color)
         }
         val label = strip.labelOf(tab)
-        element.setContentText(label)
+        val icon = RibbonIconXaml.build(tab.icon, ICON_SIZE, "{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}")
+        if (icon == null) {
+            element.setContentText(label)
+        } else {
+            // The icon goes before the header text (PART_Icon in RibbonSpace)
+            element.setContent(
+                XamlElement.load(
+                    "<StackPanel Orientation=\"Horizontal\" Spacing=\"${Xaml.num(ICON_SPACING)}\">$icon" +
+                        "<TextBlock Text=\"${Xaml.escape(label)}\" VerticalAlignment=\"Center\" /></StackPanel>",
+                ),
+            )
+        }
         element.setAutomationName(label)
-        element.setToolTipValue(group?.label?.let { "$it - $label" })
+        // The tooltip is group name › header for a contextual tab, and the ScreenTip (description) for a regular tab
+        if (group?.label != null) {
+            element.setToolTipValue("${group.label} › $label")
+        } else {
+            element.setToolTipValue(RibbonScreenTips.create(label, tab.screenTip, tab.description, null, tab.isEnabled)?.takeIf { tab.screenTip != null || tab.description != null })
+        }
+        element.setAutomationHelpText(tab.screenTip?.description ?: tab.description)
         element.isControlEnabled = tab.isEnabled && (group?.isEnabled ?: true)
         val widths = strip.textWidths.widths(listOf(label), strip.metrics.fontSize, true)
-        headerWidth = widths[0] + PADDING * 2 + MARGIN
+        headerWidth = widths[0] + PADDING * 2 + MARGIN + if (icon != null) ICON_SIZE + ICON_SPACING else 0.0
         element.applyTemplate()
         element.goToState(if (group != null) "Contextual" else "Regular")
     }
@@ -84,6 +101,8 @@ internal class RibbonTabHeaderView(val tab: RibbonTabModel, private val strip: R
     private companion object {
         const val PADDING = 10.0
         const val MARGIN = 2.0
+        const val ICON_SIZE = 16.0
+        const val ICON_SPACING = 6.0
         const val DARK_LIGHTEN = 0.35
     }
 }

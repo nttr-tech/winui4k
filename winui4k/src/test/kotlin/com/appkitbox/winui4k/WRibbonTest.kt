@@ -13,6 +13,7 @@ import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonModel
+import com.appkitbox.winui4k.ribbon.RibbonSimplifiedVisibility
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
@@ -227,6 +228,28 @@ class WRibbonTest : FunSpec() {
             settle()
             val height = onUiThreadGet { ribbon.tabViews[model.findTab("home")]!!.contentHeight }
             height shouldBe ribbon.metrics.simplifiedHeight
+        }
+
+        test("in the simplified ribbon, setting a group's simplifiedVisibility to OVERFLOW moves all of its items to the overflow") {
+            onUiThread { model.displayMode = RibbonDisplayMode.SIMPLIFIED }
+            settle()
+            val fontGroup = { ribbon.tabViews[model.findTab("home")]!!.groupViews().first { it.model.id == "font" } }
+            onUiThreadGet { fontGroup().overflowViews().map { it.model.id } } shouldBe emptyList()
+            onUiThread { model.findGroup("font")!!.simplifiedVisibility = RibbonSimplifiedVisibility.OVERFLOW }
+            settle()
+            onUiThreadGet { fontGroup().overflowViews().map { it.model.id } } shouldBe listOf("bold", "light")
+        }
+
+        test("a tab header widens by the width of its icon, and its description becomes the automation help text") {
+            val home = onUiThreadGet { model.findTab("home")!! }
+            val before = onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.headerWidth }
+            onUiThread {
+                home.icon = RibbonIcons.HOME
+                home.description = "Frequently used commands"
+            }
+            settle()
+            onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.headerWidth } shouldBeGreaterThan before
+            onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.element.automationHelpText } shouldBe "Frequently used commands"
         }
 
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {

@@ -206,7 +206,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
                 refreshHeader()
                 invalidateItemsLayout()
             }
-            "itemsLayout", "rowCount", "reductionOrder", "canCollapse", "simplifiedVisibility", "isVisible" -> invalidateItemsLayout()
+            "itemsLayout", "rowCount", "reductionOrder", "canCollapse", "simplifiedVisibility", "isVisible", "screenTip", "description" -> invalidateItemsLayout()
         }
     }
 
@@ -357,9 +357,16 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
         return max(itemsWidth + ITEMS_MARGIN * 2, captionWidth(metrics)) + SEPARATOR_WIDTH
     }
 
+    /**
+     * How an item is handled in the simplified ribbon (if the group's value is not AUTO, it takes precedence over all
+     * its items).
+     */
+    private fun simplifiedVisibilityOf(view: RibbonItemView): RibbonSimplifiedVisibility =
+        model.simplifiedVisibility.takeIf { it != RibbonSimplifiedVisibility.AUTO } ?: view.model.simplifiedVisibility
+
     /** The width of each item in the simplified ribbon (including spacing). */
     fun measureSimplifiedItemWidths(metrics: RibbonMetrics): List<Double> = views.map { view ->
-        if (!view.isShown || view.model.simplifiedVisibility == RibbonSimplifiedVisibility.HIDDEN) {
+        if (!view.isShown || simplifiedVisibilityOf(view) == RibbonSimplifiedVisibility.HIDDEN) {
             0.0
         } else {
             view.measure(itemLayout(view, RibbonGroupState.LARGE, true, metrics)).width + SIMPLIFIED_SPACING
@@ -368,7 +375,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
 
     /** How each item is handled in the simplified ribbon (in the same order as the measurement). */
     fun simplifiedVisibilities(): List<RibbonSimplifiedVisibility> = views.map { view ->
-        if (!view.isShown) RibbonSimplifiedVisibility.HIDDEN else view.model.simplifiedVisibility
+        if (!view.isShown) RibbonSimplifiedVisibility.HIDDEN else simplifiedVisibilityOf(view)
     }
 
     /**
@@ -404,6 +411,12 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
             collapsedButton.setContent(XamlElement.load(content.xaml))
             collapsedButton.setSize(content.width + 2, content.height + 2)
             collapsedButton.setAutomationName(label)
+            // Use the group's ScreenTip (or its description) as the collapsed button's tooltip and automation help text
+            collapsedButton.setToolTipValue(
+                RibbonScreenTips.create(label, model.screenTip, model.description, null, model.isEnabled)
+                    ?.takeIf { model.screenTip != null || model.description != null },
+            )
+            collapsedButton.setAutomationHelpText(model.screenTip?.description ?: model.description)
             content.width + 2 + COLLAPSED_MARGIN * 2 + SEPARATOR_WIDTH
         } else {
             placeClassic(itemState, metrics)
@@ -435,8 +448,8 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
         var x = 0.0
         var count = 0
         for ((index, view) in views.withIndex()) {
-            val inLine = view.isShown && view.model.simplifiedVisibility != RibbonSimplifiedVisibility.HIDDEN &&
-                view.model.simplifiedVisibility != RibbonSimplifiedVisibility.OVERFLOW && (inLineMask?.getOrNull(index) ?: true)
+            val inLine = view.isShown && simplifiedVisibilityOf(view) != RibbonSimplifiedVisibility.HIDDEN &&
+                simplifiedVisibilityOf(view) != RibbonSimplifiedVisibility.OVERFLOW && (inLineMask?.getOrNull(index) ?: true)
             view.element.isVisible = inLine
             if (!inLine) continue
             val size = view.measure(view.layout)
@@ -454,8 +467,8 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
 
     /** The items not shown in the row in the simplified ribbon (moved to the overflow menu). */
     fun overflowViews(): List<RibbonItemView> = views.filterIndexed { index, view ->
-        view.isShown && view.model.simplifiedVisibility != RibbonSimplifiedVisibility.HIDDEN &&
-            (view.model.simplifiedVisibility == RibbonSimplifiedVisibility.OVERFLOW || inLineMask?.getOrNull(index) == false)
+        view.isShown && simplifiedVisibilityOf(view) != RibbonSimplifiedVisibility.HIDDEN &&
+            (simplifiedVisibilityOf(view) == RibbonSimplifiedVisibility.OVERFLOW || inLineMask?.getOrNull(index) == false)
     } + slideOutViews.filter { it.isShown }
 
     /** The item views (including the expanded panel). */

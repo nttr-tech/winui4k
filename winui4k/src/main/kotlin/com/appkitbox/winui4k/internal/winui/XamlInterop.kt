@@ -2346,9 +2346,13 @@ internal object XamlInterop {
     const val CLS_AutomationProperties = "Microsoft.UI.Xaml.Automation.AutomationProperties"
     const val IID_IAutomationPropertiesStatics = "b1e3e0f3-112f-5966-87dc-7862d4ad50e5"
     const val IAutomationPropertiesStatics_SetAcceleratorKey = 8 // (DependencyObject, HSTRING)
+    const val IAutomationPropertiesStatics_GetAccessKey = 10 // (DependencyObject) -> HSTRING
     const val IAutomationPropertiesStatics_SetAccessKey = 11
+    const val IAutomationPropertiesStatics_GetAutomationId = 13
     const val IAutomationPropertiesStatics_SetAutomationId = 14
+    const val IAutomationPropertiesStatics_GetHelpText = 16
     const val IAutomationPropertiesStatics_SetHelpText = 17
+    const val IAutomationPropertiesStatics_GetName = 31
     const val IAutomationPropertiesStatics_SetName = 32
 
     // ---- Microsoft.UI.Xaml.Media.Animation.Storyboard ----

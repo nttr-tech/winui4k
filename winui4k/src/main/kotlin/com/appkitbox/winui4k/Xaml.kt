@@ -258,6 +258,16 @@ internal object Xaml {
         }
     }
 
+    /** Reads a UI Automation name, id, help text, etc. ([slot] is a GetXxx of AutomationProperties). */
+    fun getAutomation(target: ComPtr, slot: Int): String {
+        val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)
+        return try {
+            automationStatics.getString(slot, dependency.ptr)
+        } finally {
+            dependency.release()
+        }
+    }
+
     /** Sets ToolTipService.ToolTip ([tip] is a string, an element, or null). */
     fun setToolTip(target: ComPtr, tip: Any?) {
         val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)
@@ -598,6 +608,15 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
 
     /** The UI Automation help text. */
     fun setAutomationHelpText(text: String?) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetHelpText, text)
+
+    /** The UI Automation name, id, help text, and access key (an empty string if not set). */
+    val automationName: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetName)
+    val automationId: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetAutomationId)
+    val automationHelpText: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
+    val automationAccessKey: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetAccessKey)
+
+    /** The UI Automation access key (the KeyTip; read aloud by Narrator). */
+    fun setAutomationAccessKey(key: String?) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetAccessKey, key)
 
     /** The UI Automation accelerator key. */
     fun setAutomationAcceleratorKey(text: String?) =

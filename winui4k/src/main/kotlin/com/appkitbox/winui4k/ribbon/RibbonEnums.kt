@@ -105,18 +105,6 @@ enum class RibbonSimplifiedVisibility {
     HIDDEN,
 }
 
-/** How labels are shown in the simplified ribbon. */
-enum class RibbonSimplifiedLabel {
-    /** Shows labels only for items whose preferred size is [RibbonItemSize.LARGE]. */
-    AUTO,
-
-    /** Always shows labels. */
-    SHOW,
-
-    /** Shows icons only. */
-    HIDE,
-}
-
 /** How the items of a classic group are arranged. */
 enum class RibbonGroupItemsLayout {
     /** Large items take up a column, and medium and small items are stacked in columns (Office's default). */
