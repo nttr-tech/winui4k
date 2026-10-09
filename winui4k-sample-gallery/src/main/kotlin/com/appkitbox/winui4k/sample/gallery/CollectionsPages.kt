@@ -6,11 +6,17 @@ import com.appkitbox.winui4k.ListViewSelectionMode
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SelectionMode
 import com.appkitbox.winui4k.SortDirection
+import com.appkitbox.winui4k.SpinButtonPlacementMode
+import com.appkitbox.winui4k.TableDensity
+import com.appkitbox.winui4k.TableSelectionMode
 import com.appkitbox.winui4k.TextWrapping
 import com.appkitbox.winui4k.TreeViewSelectionMode
+import com.appkitbox.winui4k.VerticalAlignment
 import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WButton
+import com.appkitbox.winui4k.WCheckBox
 import com.appkitbox.winui4k.WColor
+import com.appkitbox.winui4k.WComboBox
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WItemContainer
 import com.appkitbox.winui4k.WItemsView
@@ -18,15 +24,29 @@ import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WList
 import com.appkitbox.winui4k.WListBox
 import com.appkitbox.winui4k.WPanel
+import com.appkitbox.winui4k.WProgressBar
+import com.appkitbox.winui4k.WSpinner
 import com.appkitbox.winui4k.WTable
 import com.appkitbox.winui4k.WTableColumn
+import com.appkitbox.winui4k.WTableView
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTree
 import com.appkitbox.winui4k.WTreeNode
 import com.appkitbox.winui4k.WUniformGridLayout
+import com.appkitbox.winui4k.table.DefaultCellEditor
+import com.appkitbox.winui4k.table.DefaultTableCellRenderer
+import com.appkitbox.winui4k.table.DefaultTableModel
+import com.appkitbox.winui4k.table.RowFilter
+import com.appkitbox.winui4k.table.RowSorter
+import com.appkitbox.winui4k.table.SortOrder
+import com.appkitbox.winui4k.table.TableCellRenderer
+import com.appkitbox.winui4k.table.TableColumn
+import com.appkitbox.winui4k.table.TableModel
+import com.appkitbox.winui4k.table.TableModelEvent
+import com.appkitbox.winui4k.table.TableRowSorter
 
 /*
- * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TableView (ListView) / TreeView.
  */
 
 // region ItemsView
@@ -317,10 +337,428 @@ private fun buildListItemClickExample(): WComponent {
 
 // region TableView
 
-/** The TableView page: lines up demos for trying out WTable's various features. */
+/** The TableView page: lines up demos for trying out WTableView's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
 internal fun buildTableViewPage(): WComponent {
     val page = buildPage(
         "TableView",
+        "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). " +
+            "Like Swing's JTable, try out the various features of WTableView, built from TableModel / TableColumnModel / TableRowSorter.",
+    )
+
+    page.add(buildTableViewBasicExample())
+    page.add(buildTableViewSortFilterExample())
+    page.add(buildTableViewEditingExample())
+    page.add(buildTableViewGroupingExample())
+    page.add(buildTableViewCellsExample())
+    page.add(buildTableViewAppearanceExample())
+    page.add(buildTableViewColumnsExample())
+    return page
+}
+
+/** Product data (product / category / price / stock / in stock). Returns column types to distinguish numeric and boolean columns. */
+private class ProductTableModel : DefaultTableModel(
+    listOf(
+        listOf("Apple", "Fruit", 150, 12, true),
+        listOf("Orange", "Fruit", 80, 30, true),
+        listOf("Grape", "Fruit", 480, 0, false),
+        listOf("Cabbage", "Vegetable", 200, 8, true),
+        listOf("Carrot", "Vegetable", 60, 25, true),
+        listOf("Tomato", "Vegetable", 120, 0, false),
+        listOf("Milk", "Dairy", 230, 15, true),
+        listOf("Cheese", "Dairy", 380, 4, true),
+    ),
+    listOf("Product", "Category", "Price", "Stock", "In stock"),
+) {
+    override fun getColumnClass(columnIndex: Int): Class<*> = when (columnIndex) {
+        2, 3 -> Integer::class.java
+        4 -> java.lang.Boolean::class.java
+        else -> String::class.java
+    }
+}
+
+/** The table for the demos. Its height is fixed so it does not get lost in the page's scrolling. */
+private fun buildProductTableView(model: TableModel = ProductTableModel()): WTableView {
+    val table = WTableView(model)
+    table.width = 620.0
+    table.height = 300.0
+    table.horizontalAlignment = HorizontalAlignment.LEFT
+    return table
+}
+
+/** Creates a check box together with its change handler (for the Options panel). */
+private fun optionCheckBox(text: String, checked: Boolean, onChanged: (Boolean) -> Unit): WCheckBox {
+    val checkBox = WCheckBox(text)
+    checkBox.isChecked = checked
+    checkBox.addItemListener { onChanged(it == true) }
+    return checkBox
+}
+
+/** Basics: displaying a TableModel and selecting rows (SelectionMode / Select / SelectionChanged / view-model conversion). */
+private fun buildTableViewBasicExample(): WComponent {
+    val table = buildProductTableView()
+    val result = WLabel("Selected: none")
+    table.addRowSelectionListener {
+        val row = table.selectedRow
+        result.text = if (row < 0) {
+            "Selection: none"
+        } else {
+            val modelRow = table.convertRowIndexToModel(row)
+            "Selection: ${table.model.getValueAt(modelRow, 0)} (view row = $row / model row = $modelRow)"
+        }
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(table)
+    body.add(result)
+
+    val selectionMode = WComboBox(listOf("SINGLE (select one row)", "NONE (no selection)"))
+    selectionMode.selectedIndex = 0
+    selectionMode.addListSelectionListener {
+        table.selectionMode = if (selectionMode.selectedIndex == 1) TableSelectionMode.NONE else TableSelectionMode.SINGLE
+    }
+    val selectThird = WButton("Select the third row")
+    selectThird.addActionListener { table.selectRow(2) }
+    val clear = WButton("Clear selection")
+    clear.addActionListener { table.clearSelection() }
+
+    val options = WPanel(spacing = 8.0)
+    options.add(optionsLabel("Selection mode (SelectionMode)"))
+    options.add(selectionMode)
+    options.add(selectThird)
+    options.add(clear)
+    return buildExample("Basics (TableModel / row selection / SelectionChanged)", body, options)
+}
+
+/** Sorting and filtering: TableRowSorter (header click / SortKeys / Comparator / RowFilter) and Sorting / Sorted. */
+private fun buildTableViewSortFilterExample(): WComponent {
+    val model = ProductTableModel()
+    val table = buildProductTableView(model)
+    val sorter = TableRowSorter(model)
+    // Sort product names shortest first (alphabetically when the lengths are equal)
+    sorter.setComparator(0, compareBy<String> { it.length }.thenBy { it })
+    table.rowSorter = sorter
+
+    val status = WLabel("Click a column header to sort.")
+    status.textWrapping = TextWrapping.WRAP
+    var cancelSorting = false
+    table.addSortingListener { event ->
+        event.isCanceled = cancelSorting
+        status.text = if (cancelSorting) {
+            "Canceled sorting by \"${table.getColumnName(event.column)}\" (Cancel in Sorting)"
+        } else {
+            "Sorting: ${table.getColumnName(event.column)} → ${event.sortOrder}"
+        }
+    }
+    table.addSortedListener { event ->
+        status.text = "Sorted: ${table.getColumnName(event.column)} (${event.sortOrder}) / showing ${table.rowCount} rows"
+    }
+
+    val filterText = WTextField("Filter by product (regular expression)")
+    filterText.width = 240.0
+    filterText.addTextChangedListener { text ->
+        sorter.setRowFilter(if (text.isBlank()) null else RowFilter.regexFilter(text, 0))
+        status.text = "Filtered: showing ${table.rowCount} of ${model.getRowCount()} rows"
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(filterText)
+    body.add(table)
+    body.add(status)
+
+    val byPrice = WButton("Highest price first")
+    byPrice.addActionListener { sorter.setSortKeys(listOf(RowSorter.SortKey(2, SortOrder.DESCENDING))) }
+    val clearSort = WButton("Clear sort")
+    clearSort.addActionListener { sorter.setSortKeys(null) }
+    val inStock = optionCheckBox("Only rows in stock", false) { only ->
+        sorter.setRowFilter(if (only) RowFilter.regexFilter("true", 4) else null)
+    }
+    val cancel = optionCheckBox("Cancel sorting (Sorting)", false) { cancelSorting = it }
+    val sortable = optionCheckBox("Category column is sortable", true) { sorter.setSortable(1, it) }
+
+    val options = WPanel(spacing = 8.0)
+    options.add(optionsLabel("TableRowSorter"))
+    options.add(byPrice)
+    options.add(clearSort)
+    options.add(inStock)
+    options.add(sortable)
+    options.add(cancel)
+    return buildExample("Sorting and filtering (TableRowSorter / RowFilter / Sorting / Sorted)", body, options)
+}
+
+/** Editing: TableModel.isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding / writing back to the model. */
+private fun buildTableViewEditingExample(): WComponent {
+    val model = object : DefaultTableModel(
+        listOf(
+            listOf(1, "Hanako Sato", "Development", 34, true),
+            listOf(2, "Ichiro Suzuki", "Sales", 41, true),
+            listOf(3, "Misaki Takahashi", "Design", 28, false),
+            listOf(4, "Ken Tanaka", "Development", 45, true),
+        ),
+        listOf("ID", "Name", "Department", "Age", "Employed"),
+    ) {
+        override fun getColumnClass(columnIndex: Int): Class<*> = when (columnIndex) {
+            0, 3 -> Integer::class.java
+            4 -> java.lang.Boolean::class.java
+            else -> String::class.java
+        }
+
+        // The ID cannot be edited
+        override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean = columnIndex != 0
+    }
+    val table = buildProductTableView(model)
+    table.height = 220.0
+    // Edit the department with a combo box and the age with a number box (the same idea as Swing's DefaultCellEditor)
+    table.columnModel.getColumn(2).cellEditor = DefaultCellEditor(WComboBox(listOf("Development", "Sales", "Design", "Admin")))
+    table.columnModel.getColumn(3).cellEditor = DefaultCellEditor(
+        WSpinner().also {
+            it.minimum = 18.0
+            it.maximum = 70.0
+            it.spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
+        },
+    )
+
+    val log = WLabel("Double-click or press F2 to start editing, Enter to commit, and Esc to cancel.")
+    log.textWrapping = TextWrapping.WRAP
+    table.addBeginningEditListener { event ->
+        log.text = "Edit started: ${table.getColumnName(event.column)} (row ${event.modelRow + 1})"
+    }
+    table.addCellEditEndingListener { event ->
+        log.text = "Edit ended: ${table.getColumnName(event.column)} → ${event.action}"
+    }
+    // The committed value is written back via TableModel.setValueAt, converted to the column type (getColumnClass)
+    model.addTableModelListener { event ->
+        if (event.type == TableModelEvent.UPDATE && event.firstRow == event.lastRow && event.column >= 0) {
+            val value = model.getValueAt(event.firstRow, event.column)
+            log.text = "Model updated: ${model.getColumnName(event.column)} (row ${event.firstRow + 1}) = $value " +
+                "(${value?.javaClass?.simpleName})"
+        }
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(table)
+    body.add(log)
+
+    val readOnly = optionCheckBox("Make the whole table read-only (IsReadOnly)", false) { table.isReadOnly = it }
+    val ageEditable = optionCheckBox("Age column is editable (column IsReadOnly)", true) {
+        table.columnModel.getColumn(3).isEditable = it
+    }
+    val commit = WButton("Commit edit (CommitEdit)")
+    commit.addActionListener { log.text = "CommitEdit → ${table.stopCellEditing()}" }
+    val cancel = WButton("Cancel edit (CancelEdit)")
+    cancel.addActionListener { log.text = "CancelEdit → ${table.cancelCellEditing()}" }
+
+    val options = WPanel(spacing = 8.0)
+    options.add(optionsLabel("Editing"))
+    options.add(readOnly)
+    options.add(ageEditable)
+    options.add(commit)
+    options.add(cancel)
+    return buildExample("Editing (isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding)", body, options)
+}
+
+/** Grouping: groupBy / clearGrouping / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate. */
+private fun buildTableViewGroupingExample(): WComponent {
+    val table = buildProductTableView()
+    table.groupBy(1) // Group by category
+
+    val groupBy = WComboBox(listOf("Category", "In stock", "Price range (300 yen or more / less)", "No grouping"))
+    groupBy.selectedIndex = 0
+    groupBy.addListSelectionListener {
+        when (groupBy.selectedIndex) {
+            0 -> table.groupBy(1)
+            1 -> table.groupBy(4)
+            2 -> table.groupBy { model, row -> if ((model.getValueAt(row, 2) as Int) >= 300) "300 yen or more" else "Under 300 yen" }
+            else -> table.clearGrouping()
+        }
+    }
+    val expand = WButton("Expand all")
+    expand.addActionListener { table.expandAllGroups() }
+    val collapse = WButton("Collapse all")
+    collapse.addActionListener { table.collapseAllGroups() }
+    val customHeader = optionCheckBox("Show headers with a template", false) { custom ->
+        table.groupHeaderTemplate = if (custom) {
+            "<StackPanel Orientation=\"Horizontal\" Spacing=\"8\" Padding=\"8,4\">" +
+                "<TextBlock Text=\"{Binding KeyText}\" FontWeight=\"SemiBold\" Foreground=\"{ThemeResource AccentTextFillColorPrimaryBrush}\" />" +
+                "<TextBlock Text=\"{Binding ItemCount}\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />" +
+                "<TextBlock Text=\"items\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />" +
+                "</StackPanel>"
+        } else {
+            null
+        }
+    }
+
+    val options = WPanel(spacing = 8.0)
+    options.add(optionsLabel("Key to group by (GroupBy)"))
+    options.add(groupBy)
+    options.add(expand)
+    options.add(collapse)
+    options.add(customHeader)
+    return buildExample("Grouping (GroupBy / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate)", table, options)
+}
+
+/** Cell display: TableCellRenderer / XAML cell templates / frozen columns / header and cell tooltips. */
+private fun buildTableViewCellsExample(): WComponent {
+    val model = object : DefaultTableModel(
+        listOf(
+            listOf("Review the design document", "In progress", 60, "Check the spec differences and sort out the review comments."),
+            listOf("Automate the tests", "Done", 100, "Add the E2E tests to CI and run them every night."),
+            listOf("Translate the documentation", "Not started", 0, "Translate the README and the API reference into English."),
+            listOf("Measure performance", "In progress", 35, "Measure display speed with a large data set (100,000 rows)."),
+        ),
+        listOf("Task", "Status", "Progress (%)", "Notes"),
+    ) {
+        override fun getColumnClass(columnIndex: Int): Class<*> = if (columnIndex == 2) Integer::class.java else String::class.java
+    }
+    val table = buildProductTableView(model)
+    table.height = 220.0
+
+    val task = table.columnModel.getColumn(0)
+    task.isFrozen = true // The task name stays visible even when scrolling horizontally
+    task.preferredWidth = 180.0
+    task.headerToolTip = "This column is frozen at the left edge (FrozenEdge = Leading)"
+
+    // Show the status as a colored label with a XAML template ({Binding} is the cell value)
+    val state = table.columnModel.getColumn(1)
+    state.cellTemplate = "<Border Background=\"{ThemeResource AccentFillColorDefaultBrush}\" CornerRadius=\"10\" " +
+        "Padding=\"10,2\" Margin=\"8,0\" HorizontalAlignment=\"Left\">" +
+        "<TextBlock Text=\"{Binding}\" Foreground=\"{ThemeResource TextOnAccentFillColorPrimaryBrush}\" /></Border>"
+    state.headerToolTip = "Displayed with a XAML DataTemplate (TableViewTemplateColumn)"
+
+    // Show the progress with a Kotlin component (a progress bar) via a renderer
+    val progress = table.columnModel.getColumn(2)
+    progress.preferredWidth = 160.0
+    progress.cellRenderer = TableCellRenderer { _, value, _, _, _, _ ->
+        val bar = WProgressBar(value = (value as Int).toDouble())
+        bar.setMargin(8.0, 0.0, 8.0, 0.0)
+        bar.verticalAlignment = VerticalAlignment.CENTER
+        bar
+    }
+    progress.headerToolTip = "Displays a WProgressBar via TableCellRenderer (GenerateElementCore)"
+
+    // The notes are long, so show the full text in a cell tooltip
+    val memo = table.columnModel.getColumn(3)
+    memo.preferredWidth = 240.0
+    memo.cellToolTipColumn = 3
+
+    val note = optionsLabel("Hover over a column header or a notes cell to show a tooltip. Columns beyond the table's width can be scrolled horizontally.")
+    val body = WPanel(spacing = 8.0)
+    body.add(table)
+    body.add(note)
+    table.width = 520.0
+    return buildExample("Cell display (TableCellRenderer / cell templates / frozen columns / tooltips)", body)
+}
+
+/** Appearance: grid lines / header / density / row background / stripes / display when there are no rows. */
+private fun buildTableViewAppearanceExample(): WComponent {
+    val model = ProductTableModel()
+    val table = buildProductTableView(model)
+    table.emptyText = "No products to show"
+    val removedRows = mutableListOf<List<Any?>>()
+
+    val horizontal = optionCheckBox("Horizontal grid lines", table.showHorizontalLines) { table.showHorizontalLines = it }
+    val vertical = optionCheckBox("Vertical grid lines", table.showVerticalLines) { table.showVerticalLines = it }
+    val header = optionCheckBox("Show column headers", table.isHeaderVisible) { table.isHeaderVisible = it }
+    val striped = optionCheckBox("Stripes (AlternatingRowBackground)", false) {
+        table.alternatingRowBackground = if (it) WColor(0x20, 0x80, 0x80, 0x80) else null
+    }
+    val resizable = optionCheckBox("Resize columns by dragging (CanUserResizeColumns)", table.canUserResizeColumns) {
+        table.canUserResizeColumns = it
+    }
+    val density = WComboBox(listOf("COMPACT", "STANDARD", "COMFORTABLE"))
+    density.selectedIndex = table.density.ordinal
+    density.addListSelectionListener { table.density = TableDensity.entries[density.selectedIndex] }
+    val clearRows = WButton("Remove all rows (EmptyTemplate)")
+    clearRows.addActionListener {
+        while (model.getRowCount() > 0) {
+            removedRows += (0 until model.getColumnCount()).map { model.getValueAt(0, it) }
+            model.removeRow(0)
+        }
+    }
+    val restoreRows = WButton("Restore rows")
+    restoreRows.addActionListener {
+        for (row in removedRows) model.addRow(row)
+        removedRows.clear()
+    }
+
+    val options = WPanel(spacing = 8.0)
+    options.add(horizontal)
+    options.add(vertical)
+    options.add(header)
+    options.add(striped)
+    options.add(resizable)
+    options.add(optionsLabel("Density (Density)"))
+    options.add(density)
+    options.add(clearRows)
+    options.add(restoreRows)
+    return buildExample("Appearance (GridLinesVisibility / HeadersVisibility / Density / stripes / empty display)", table, options)
+}
+
+/** Column operations: TableColumnModel (move / show and hide / add and remove) and column widths. */
+private fun buildTableViewColumnsExample(): WComponent {
+    val model = ProductTableModel()
+    val table = buildProductTableView(model)
+    val status = WLabel("")
+    val updateStatus = {
+        val names = (0 until table.columnCount).map { table.getColumnName(it) }
+        status.text = "Column order: ${names.joinToString(" / ")}"
+    }
+    updateStatus()
+
+    val moveLast = WButton("Move the first column to the end")
+    moveLast.addActionListener {
+        table.moveColumn(0, table.columnCount - 1)
+        updateStatus()
+    }
+    val hideCategory = optionCheckBox("Show the category column", true) { visible ->
+        table.columnModel.getColumns().first { it.modelIndex == 1 }.isVisible = visible
+    }
+    var taxColumn: TableColumn? = null
+    val addTax = WButton("Add / remove the price-with-tax column")
+    addTax.addActionListener {
+        val existing = taxColumn
+        if (existing == null) {
+            val column = TableColumn(2)
+            column.headerValue = "Price with tax"
+            column.cellRenderer = DefaultTableCellRenderer().also { it.horizontalAlignment = HorizontalAlignment.RIGHT }
+                .let { base ->
+                    TableCellRenderer { view, value, selected, focus, row, col ->
+                        base.getTableCellRendererComponent(view, "${((value as Int) * 1.08).toInt()} yen", selected, focus, row, col)
+                    }
+                }
+            table.addColumn(column)
+            taxColumn = column
+        } else {
+            table.removeColumn(existing)
+            taxColumn = null
+        }
+        updateStatus()
+    }
+    val widen = WButton("Set the product column width to 200")
+    widen.addActionListener {
+        table.columnModel.getColumns().first { it.modelIndex == 0 }.preferredWidth = 200.0
+    }
+
+    val body = WPanel(spacing = 8.0)
+    body.add(table)
+    body.add(status)
+
+    val options = WPanel(spacing = 8.0)
+    options.add(optionsLabel("TableColumnModel"))
+    options.add(moveLast)
+    options.add(hideCategory)
+    options.add(addTax)
+    options.add(widen)
+    return buildExample("Column operations (TableColumnModel / TableColumn)", body, options)
+}
+
+// endregion
+
+// region TableView (ListView) page
+
+/** The TableView (ListView) page: lines up demos for trying out the various features of WTable, a custom implementation built on ListView. */
+internal fun buildListViewTablePage(): WComponent {
+    val page = buildPage(
+        "TableView (ListView)",
         "A table that displays data in rows and columns. Try out WTable's various " +
             "features, implemented on top of ListView based on the design of WinUI.TableView.",
     )
