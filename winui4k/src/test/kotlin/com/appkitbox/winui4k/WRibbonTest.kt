@@ -19,6 +19,7 @@ import com.appkitbox.winui4k.ribbon.RibbonModel
 import com.appkitbox.winui4k.ribbon.RibbonQuickAccessPosition
 import com.appkitbox.winui4k.ribbon.RibbonSimplifiedVisibility
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
+import com.appkitbox.winui4k.ribbon.RibbonStrings
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
@@ -490,6 +491,21 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.host.allGroupViews().first { it.model === clipboard }.isFloatingPanelOpen } shouldBe true
             onUiThread { ribbon.returnAllPanelsToRibbon() }
             onUiThreadGet { ribbon.floatingGroups() } shouldBe emptyList()
+        }
+
+        test("changing RibbonStrings.current switches the strings the displayed ribbon produces itself (such as [File]) to the new language") {
+            val previous = RibbonStrings.current
+            try {
+                onUiThread { RibbonStrings.current = RibbonStrings.forCulture("en") }
+                settle()
+                onUiThreadGet { ribbon.applicationButton.automationName } shouldBe "File"
+                onUiThread { RibbonStrings.current = RibbonStrings.forCulture("de") }
+                settle()
+                onUiThreadGet { ribbon.applicationButton.automationName } shouldBe "Datei"
+            } finally {
+                onUiThread { RibbonStrings.current = previous }
+                settle()
+            }
         }
 
         test("a large color picker splits vertically like a split button and is the same size as a large split button with the same label") {
