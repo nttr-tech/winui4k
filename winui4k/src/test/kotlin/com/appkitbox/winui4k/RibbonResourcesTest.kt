@@ -9,9 +9,11 @@ import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonMetrics
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * E2E test verifying that the ribbon's theme resources, shared styles, and text-width measurement work in actual WinUI.
@@ -61,9 +63,13 @@ class RibbonResourcesTest : FunSpec() {
             onUiThreadGet { WRibbonTheme.getBrushColor(border, "RibbonAccentBrush") } shouldBe light
             onUiThread { border.requestedTheme = ElementTheme.DARK }
             onUiThreadGet { WRibbonTheme.getBrushColor(border, "RibbonAccentBrush") } shouldBe dark
-            // ActualThemeChanged can arrive after the next layout, so spin the UI thread a few times and wait
-            repeat(SETTLE_ROUNDS) { onUiThread { border.updateLayout() } }
-            applied.map { RibbonColor(it.alpha, it.red, it.green, it.blue) } shouldBe listOf(light, dark)
+            // ActualThemeChanged arrives asynchronously (after several layouts when all tests run in a row), so wait until it arrives
+            eventually(THEME_TIMEOUT) {
+                onUiThreadGet {
+                    border.updateLayout()
+                    applied.map { RibbonColor(it.alpha, it.red, it.green, it.blue) }
+                } shouldBe listOf(light, dark)
+            }
             UiTestHarness.detach(border)
         }
 
@@ -143,6 +149,6 @@ class RibbonResourcesTest : FunSpec() {
     }
 
     private companion object {
-        const val SETTLE_ROUNDS = 4
+        val THEME_TIMEOUT = 5.seconds
     }
 }
