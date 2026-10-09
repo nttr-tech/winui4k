@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":winui4k-all"))
+    implementation(project(":winui4k-sample-ribbon-shell"))
 }
 
 application {

@@ -30,22 +30,10 @@ import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
-
-// ---------------------------------------------------------------- Builder helpers
-
-internal fun button(id: String, label: String, icon: RibbonIcon, size: RibbonItemSize = RibbonItemSize.MEDIUM) =
-    RibbonButtonModel(id, label, icon).also { it.size = size }
-
-internal fun toggle(id: String, label: String, icon: RibbonIcon, size: RibbonItemSize = RibbonItemSize.SMALL) =
-    RibbonToggleButtonModel(id, label).also {
-        it.icon = icon
-        it.size = size
-    }
-
-internal fun group(id: String, label: String, vararg items: RibbonItemModel) =
-    RibbonGroupModel(id, label).also { g -> items.forEach { g.items.add(it) } }
-
-internal fun menuItem(id: String, label: String, icon: RibbonIcon? = null) = RibbonMenuItemModel(id, label, icon)
+import com.appkitbox.winui4k.sample.ribbon.shell.button
+import com.appkitbox.winui4k.sample.ribbon.shell.group
+import com.appkitbox.winui4k.sample.ribbon.shell.menuItem
+import com.appkitbox.winui4k.sample.ribbon.shell.toggle
 
 /**
  * The Word ribbon model (same layout as word.png in the RibbonSpace README): [File] [Home] [Insert] [Design] [Layout]
