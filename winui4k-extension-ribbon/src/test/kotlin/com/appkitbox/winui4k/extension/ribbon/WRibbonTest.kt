@@ -175,6 +175,26 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.openGroupPopup(collapsed) } shouldBe false
         }
 
+        test("a popup opened before the previous one finished closing (and so never shown) can still be closed, and its items return to the ribbon") {
+            onUiThread { ribbon.width = ALL_COLLAPSED }
+            settle()
+            val (first, second) = onUiThreadGet { model.findGroup("extra0")!! to model.findGroup("extra1")!! }
+            onUiThreadGet { ribbon.groupState(first) to ribbon.groupState(second) } shouldBe (RibbonGroupState.COLLAPSED to RibbonGroupState.COLLAPSED)
+            // Closed of a closed flyout arrives asynchronously, so the next popup opened right after it is not shown
+            onUiThread {
+                ribbon.openGroupPopup(first)
+                ribbon.closeGroupPopup(first)
+                ribbon.openGroupPopup(second)
+            }
+            settle()
+            onUiThread { ribbon.closeGroupPopup(second) }
+            onUiThreadGet { ribbon.isGroupPopupOpen(second) } shouldBe false
+            onUiThread { ribbon.width = WIDE }
+            settle()
+            onUiThreadGet { ribbon.groupState(second) } shouldBe RibbonGroupState.LARGE
+            onUiThreadGet { ribbon.host.findView(model.findItem("extra1.0")!!)!!.element.actualWidth } shouldNotBe 0.0
+        }
+
         test("the expanded panel can be opened and pinned from code, and the dialog launcher can be invoked") {
             val clipboard = onUiThreadGet { model.findGroup("clipboard")!! }
             val invoked = mutableListOf<String?>()
@@ -554,6 +574,7 @@ class WRibbonTest : FunSpec() {
         const val EXTRA_GROUPS = 4
         const val EXTRA_ITEMS = 4
         const val NARROW = 360.0
+        const val ALL_COLLAPSED = 50.0
         const val WIDE = 4000.0
         const val FLOAT_X = 100.0
         const val FLOAT_Y = 200.0

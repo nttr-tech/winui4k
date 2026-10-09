@@ -131,6 +131,14 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
     private val collapsedFlyout = WFlyout()
     private var popupOpen = false
 
+    /**
+     * The parent that holds the item Canvas and the expanded panel in the popup. While the flyout has not been shown (for example when it
+     * was opened before the previous flyout finished closing), its content is not in the live tree and [Xaml.detach] cannot find the
+     * parent, so they are removed from here when restoring.
+     */
+    private var popupContent: XamlElement? = null
+    private var popupSlideOutHost: XamlElement? = null
+
     /** The display name (reflecting a rename by customization). */
     val label: String? get() = container.groupLabel(model)
 
@@ -510,6 +518,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
         val width = placeForPopup()
         val content = XamlElement.load("<StackPanel Padding=\"4,3,4,0\" />")
         content.addChild(itemsPanel)
+        popupContent = content
         if (hasSlideOut) {
             closeSlideOut()
             Xaml.detach(slideOutPanel)
@@ -517,6 +526,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
             val host = XamlElement.load("<Border BorderThickness=\"0,1,0,0\" Padding=\"0,3,0,0\" Margin=\"0,2,0,0\" BorderBrush=\"{ThemeResource RibbonSeparatorBrush}\" />")
             host.setChild(slideOutPanel)
             content.addChild(host)
+            popupSlideOutHost = host
         }
         content.addChild(popupCaption())
         val chrome = XamlElement.load(
@@ -565,8 +575,10 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
     private fun restoreFromPopup() {
         if (!popupOpen) return
         popupOpen = false
-        Xaml.detach(itemsPanel)
-        Xaml.detach(slideOutPanel)
+        popupContent?.removeChild(itemsPanel)
+        popupSlideOutHost?.setChild(null)
+        popupContent = null
+        popupSlideOutHost = null
         itemsPresenter.setChild(itemsPanel)
         applyState(state, isSimplified, currentMetrics, inLineMask)
     }
