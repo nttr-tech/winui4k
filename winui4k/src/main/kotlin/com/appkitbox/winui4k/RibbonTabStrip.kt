@@ -58,6 +58,8 @@ internal class RibbonTabHeaderView(val tab: RibbonTabModel, private val strip: R
             )
         }
         element.setAutomationName(label)
+        element.setAutomationId(tab.automationId ?: "RibbonTab_${tab.id}")
+        element.setAutomationAccessKey(explicitKeyTip)
         // The tooltip is group name › header for a contextual tab, and the ScreenTip (description) for a regular tab
         if (group?.label != null) {
             element.setToolTipValue("${group.label} › $label")

@@ -258,6 +258,42 @@ internal object Xaml {
         }
     }
 
+    /**
+     * Raises a notification for screen readers from the automation peer of [target] (AutomationPeer.RaiseNotificationEvent).
+     * Narrator and similar tools read [text] aloud. Does nothing in environments that do not support notifications.
+     */
+    fun announce(target: ComPtr, text: String, activityId: String) {
+        val ui = target.queryInterfaceOrNull(XamlInterop.IID_IUIElement) ?: return
+        try {
+            val statics = Activation.factory(XamlInterop.CLS_FrameworkElementAutomationPeer, XamlInterop.IID_IFrameworkElementAutomationPeerStatics)
+            val peer = try {
+                statics.getPtrOrNull(XamlInterop.IFrameworkElementAutomationPeerStatics_CreatePeerForElement, ui.ptr)
+            } finally {
+                statics.release()
+            } ?: return
+            try {
+                Hstring.use(text) { t ->
+                    Hstring.use(activityId) { a ->
+                        peer.call(
+                            XamlInterop.IAutomationPeer_RaiseNotificationEvent,
+                            XamlInterop.AutomationNotificationKind_ItemAdded,
+                            XamlInterop.AutomationNotificationProcessing_MostRecent,
+                            t,
+                            a,
+                        )
+                    }
+                }
+            } finally {
+                peer.release()
+            }
+        } catch (e: com.appkitbox.winui4k.internal.com.WindowsRuntimeException) {
+            // Notifications for screen readers are only an aid, so give up in environments that do not support them
+            System.err.println("ribbon: automation notification is not available: ${e.message}")
+        } finally {
+            ui.release()
+        }
+    }
+
     /** Reads a UI Automation name, id, help text, etc. ([slot] is a GetXxx of AutomationProperties). */
     fun getAutomation(target: ComPtr, slot: Int): String {
         val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)

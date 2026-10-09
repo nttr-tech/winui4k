@@ -83,6 +83,10 @@ Java からも同じモデルを組み立てられる (`winui4k-sample-gallery-i
 - ウィンドウの要素の子ではない Popup のライト ディスミスは入力を奪うため、外側のクリックで閉じるポップアップは
   ウィンドウ全体を覆う透明な層 (`RibbonDismissLayer`) で閉じる (`doc/troubleshooting.md`)。
 - XAML のマークアップで組み立てる API (RibbonSpace の `<Ribbon>` 要素など) は持たず、モデルをコードで組み立てる。
+- 独自の AutomationPeer (RibbonSpace のタブ見出しの TabItem 役割やグループのピアなど) は持たない。ピアを差し替えるには
+  コントロールとピアの両方を COM 集約で合成して overrides を実装する必要があるため。代わりに AutomationProperties の
+  名前・AutomationId (タブは `RibbonTab_{id}`、項目は id、アプリケーション メニューは `AppMenu_{id}`)・ヘルプ (説明)・
+  アクセス キー (KeyTip) を付け、検索で強調した候補は RaiseNotificationEvent で読み上げさせる。
 
 ## サンプル
 

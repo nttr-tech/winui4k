@@ -20,6 +20,9 @@ internal class RibbonSearchResultsList(private val onInvoked: (RibbonSearchEntry
     private var rows: List<Pair<XamlElement, RibbonSearchEntry>> = emptyList()
     private var highlight = -1
 
+    /** The element that announces the highlighted result (the search box; notified when the highlight moves by keyboard). */
+    var announcer: XamlElement? = null
+
     /** The highlighted (enabled) item. */
     val highlighted: RibbonSearchEntry? get() = rows.getOrNull(highlight)?.second?.takeIf { it.isEnabled }
 
@@ -87,10 +90,17 @@ internal class RibbonSearchResultsList(private val onInvoked: (RibbonSearchEntry
         while (index in rows.indices) {
             if (rows[index].second.isEnabled) {
                 setHighlight(index)
+                announce(rows[index].second)
                 return
             }
             index += step
         }
+    }
+
+    private fun announce(entry: RibbonSearchEntry) {
+        val target = announcer ?: return
+        val text = if (entry.path.isNullOrEmpty()) entry.label else "${entry.label}, ${entry.path}"
+        Xaml.announce(target.inspectable, text, "RibbonSearchHighlight")
     }
 
     private fun setHighlight(index: Int) {
@@ -178,6 +188,7 @@ class WRibbonSearchBox(
             removeQueryEntries()
             dismissLayer.hide()
         }
+        results.announcer = textBox
         textBox.onTextChanged { onTextChanged() }
         textBox.onFocus(true) {
             // Do not show results on the automatic focus when the window opens (only when entered by a click or the Tab key)
@@ -364,6 +375,7 @@ object WRibbonCommandPalette {
             }
         }
         val results = RibbonSearchResultsList(run)
+        results.announcer = box
         val panel = XamlElement.load("<StackPanel />")
         panel.addChild(box)
         panel.addChild(results.root)

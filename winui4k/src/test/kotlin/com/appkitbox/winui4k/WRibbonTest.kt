@@ -252,6 +252,21 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.element.automationHelpText } shouldBe "Frequently used commands"
         }
 
+        test("UI Automation: tabs use RibbonTab_{id} and items use their id as the AutomationId, with the KeyTip as the access key") {
+            onUiThread { model.findItem("paste")!!.keyTip = "V" }
+            settle()
+            val home = onUiThreadGet { model.findTab("home")!! }
+            onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.element.automationId } shouldBe "RibbonTab_home"
+            onUiThreadGet { ribbon.tabStrip.headerOf(home)!!.element.automationAccessKey } shouldBe "H"
+            val paste = {
+                ribbon.tabViews[home]!!.groupViews().flatMap { it.itemViews() }.first { it.model.id == "paste" }.element
+            }
+            onUiThreadGet { paste().automationId to paste().automationAccessKey } shouldBe ("paste" to "V")
+            onUiThread { model.findItem("paste")!!.automationId = "PasteButton" }
+            settle()
+            onUiThreadGet { paste().automationId } shouldBe "PasteButton"
+        }
+
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
             onUiThread { model.visibilityMode = RibbonVisibilityMode.TABS_ONLY }
             settle()

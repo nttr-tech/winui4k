@@ -179,7 +179,12 @@ internal abstract class RibbonItemView(open val model: RibbonItemModel, val host
     protected open fun onModelChanged(name: String) {
         when (name) {
             "command", "commandId" -> resubscribeCommand()
-            "screenTip", "description", "shortcut", "keyTip" -> refreshToolTip()
+            "screenTip", "description", "shortcut" -> refreshToolTip()
+            "keyTip" -> {
+                refreshToolTip()
+                element.setAutomationAccessKey(model.keyTip)
+            }
+            "automationId" -> element.setAutomationId(model.automationId ?: model.id)
             "isEnabled" -> refreshEnabled()
             "isVisible" -> {
                 element.isVisible = model.isVisible
@@ -206,6 +211,7 @@ internal abstract class RibbonItemView(open val model: RibbonItemModel, val host
         refreshEnabled()
         refreshToolTip()
         element.setAutomationId(model.automationId ?: model.id)
+        element.setAutomationAccessKey(model.keyTip)
     }
 
     /** The command used for execution (the model's command, or the catalog's command if there is none). */

@@ -2346,6 +2346,15 @@ internal object XamlInterop {
     const val CLS_AutomationProperties = "Microsoft.UI.Xaml.Automation.AutomationProperties"
     const val IID_IAutomationPropertiesStatics = "b1e3e0f3-112f-5966-87dc-7862d4ad50e5"
     const val IAutomationPropertiesStatics_SetAcceleratorKey = 8 // (DependencyObject, HSTRING)
+
+    // ---- Microsoft.UI.Xaml.Automation.Peers (screen reader notifications) ----
+    const val CLS_FrameworkElementAutomationPeer = "Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer"
+    const val IID_IFrameworkElementAutomationPeerStatics = "081f6fbe-6500-528a-a506-f5a4d41ddf6c"
+    const val IFrameworkElementAutomationPeerStatics_CreatePeerForElement = 7 // (UIElement) -> AutomationPeer
+    const val IAutomationPeer_RaiseNotificationEvent = 57 // (AutomationNotificationKind, AutomationNotificationProcessing, HSTRING, HSTRING)
+    const val AutomationNotificationKind_ItemAdded = 0
+    const val AutomationNotificationProcessing_MostRecent = 3
+
     const val IAutomationPropertiesStatics_GetAccessKey = 10 // (DependencyObject) -> HSTRING
     const val IAutomationPropertiesStatics_SetAccessKey = 11
     const val IAutomationPropertiesStatics_GetAutomationId = 13

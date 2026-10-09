@@ -103,6 +103,7 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
         )
         button.isControlEnabled = item.isEnabled
         button.setAutomationName(item.label)
+        button.setAutomationId("AppMenu_" + item.id)
         button.onClick { invoke(item) }
         button.onPointer(XamlInterop.IUIElement_add_PointerEntered) { if (item.items.isNotEmpty() && search.textBoxText.isBlank()) showSubItems(item) }
         button.onFocus(true) { if (item.items.isNotEmpty() && search.textBoxText.isBlank()) showSubItems(item) }

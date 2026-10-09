@@ -195,6 +195,8 @@ class WRibbonBarsTest : FunSpec() {
             onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (false to false)
             onUiThread { box.focusSearch() }
             onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (true to true)
+            // The screen reader notification for the highlighted result (AutomationPeer.RaiseNotificationEvent) can be raised without throwing
+            onUiThread { Xaml.announce(box.inspectable, "Test", "RibbonSearchHighlight") }
             onUiThread { box.close() }
             onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (false to false)
         }

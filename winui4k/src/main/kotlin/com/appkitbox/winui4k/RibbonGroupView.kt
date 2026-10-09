@@ -202,7 +202,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
 
     private fun onModelChanged(name: String) {
         when (name) {
-            "label", "icon", "dialogLauncherCommand", "dialogLauncherCommandId", "isDialogLauncherVisible", "dialogLauncherScreenTip" -> {
+            "label", "icon", "automationId", "dialogLauncherCommand", "dialogLauncherCommandId", "isDialogLauncherVisible", "dialogLauncherScreenTip" -> {
                 refreshHeader()
                 invalidateItemsLayout()
             }
@@ -252,6 +252,8 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
     private fun refreshHeader() {
         header.setText(label)
         element.setAutomationName(label)
+        element.setAutomationId(model.automationId)
+        element.setAutomationHelpText(model.screenTip?.description ?: model.description)
         val strings = RibbonStrings.current
         launcher.isVisible = model.hasDialogLauncher
         val launcherName = strings.dialogLauncher(label.orEmpty())
