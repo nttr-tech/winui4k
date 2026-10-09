@@ -43,7 +43,7 @@ import com.appkitbox.winui4k.table.TableModelEvent
 import com.appkitbox.winui4k.table.TableRowSorter
 
 /*
- * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / Table / TreeView.
  */
 
 // region ItemsView
@@ -332,23 +332,23 @@ private fun buildListItemClickExample(): WComponent {
 
 // endregion
 
-// region TableView
+// region Table page
 
-/** The TableView page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
-internal fun buildTableViewPage(): WComponent {
+/** The Table page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
+internal fun buildTablePage(): WComponent {
     val page = buildPage(
-        "TableView",
+        "Table",
         "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). " +
             "Like Swing's JTable, try out the various features of WTable, built from TableModel / TableColumnModel / TableRowSorter.",
     )
 
-    page.add(buildTableViewBasicExample())
-    page.add(buildTableViewSortFilterExample())
-    page.add(buildTableViewEditingExample())
-    page.add(buildTableViewGroupingExample())
-    page.add(buildTableViewCellsExample())
-    page.add(buildTableViewAppearanceExample())
-    page.add(buildTableViewColumnsExample())
+    page.add(buildTableBasicExample())
+    page.add(buildTableSortFilterExample())
+    page.add(buildTableEditingExample())
+    page.add(buildTableGroupingExample())
+    page.add(buildTableCellsExample())
+    page.add(buildTableAppearanceExample())
+    page.add(buildTableColumnsExample())
     return page
 }
 
@@ -374,7 +374,7 @@ private class ProductTableModel : DefaultTableModel(
 }
 
 /** The table for the demos. Its height is fixed so it does not get lost in the page's scrolling. */
-private fun buildProductTableView(model: TableModel = ProductTableModel()): WTable {
+private fun buildProductTable(model: TableModel = ProductTableModel()): WTable {
     val table = WTable(model)
     table.width = 620.0
     table.height = 300.0
@@ -391,8 +391,8 @@ private fun optionCheckBox(text: String, checked: Boolean, onChanged: (Boolean) 
 }
 
 /** Basics: displaying a TableModel and selecting rows (SelectionMode / Select / SelectionChanged / view-model conversion). */
-private fun buildTableViewBasicExample(): WComponent {
-    val table = buildProductTableView()
+private fun buildTableBasicExample(): WComponent {
+    val table = buildProductTable()
     val result = WLabel("Selected: none")
     table.addRowSelectionListener {
         val row = table.selectedRow
@@ -427,9 +427,9 @@ private fun buildTableViewBasicExample(): WComponent {
 }
 
 /** Sorting and filtering: TableRowSorter (header click / SortKeys / Comparator / RowFilter) and Sorting / Sorted. */
-private fun buildTableViewSortFilterExample(): WComponent {
+private fun buildTableSortFilterExample(): WComponent {
     val model = ProductTableModel()
-    val table = buildProductTableView(model)
+    val table = buildProductTable(model)
     val sorter = TableRowSorter(model)
     // Sort product names shortest first (alphabetically when the lengths are equal)
     sorter.setComparator(0, compareBy<String> { it.length }.thenBy { it })
@@ -483,7 +483,7 @@ private fun buildTableViewSortFilterExample(): WComponent {
 }
 
 /** Editing: TableModel.isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding / writing back to the model. */
-private fun buildTableViewEditingExample(): WComponent {
+private fun buildTableEditingExample(): WComponent {
     val model = object : DefaultTableModel(
         listOf(
             listOf(1, "Hanako Sato", "Development", 34, true),
@@ -502,7 +502,7 @@ private fun buildTableViewEditingExample(): WComponent {
         // The ID cannot be edited
         override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean = columnIndex != 0
     }
-    val table = buildProductTableView(model)
+    val table = buildProductTable(model)
     table.height = 220.0
     // Edit the department with a combo box and the age with a number box (the same idea as Swing's DefaultCellEditor)
     table.columnModel.getColumn(2).cellEditor = DefaultCellEditor(WComboBox(listOf("Development", "Sales", "Design", "Admin")))
@@ -554,8 +554,8 @@ private fun buildTableViewEditingExample(): WComponent {
 }
 
 /** Grouping: groupBy / clearGrouping / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate. */
-private fun buildTableViewGroupingExample(): WComponent {
-    val table = buildProductTableView()
+private fun buildTableGroupingExample(): WComponent {
+    val table = buildProductTable()
     table.groupBy(1) // Group by category
 
     val groupBy = WComboBox(listOf("Category", "In stock", "Price range (300 yen or more / less)", "No grouping"))
@@ -594,7 +594,7 @@ private fun buildTableViewGroupingExample(): WComponent {
 }
 
 /** Cell display: TableCellRenderer / XAML cell templates / frozen columns / header and cell tooltips. */
-private fun buildTableViewCellsExample(): WComponent {
+private fun buildTableCellsExample(): WComponent {
     val model = object : DefaultTableModel(
         listOf(
             listOf("Review the design document", "In progress", 60, "Check the spec differences and sort out the review comments."),
@@ -606,7 +606,7 @@ private fun buildTableViewCellsExample(): WComponent {
     ) {
         override fun getColumnClass(columnIndex: Int): Class<*> = if (columnIndex == 2) Integer::class.java else String::class.java
     }
-    val table = buildProductTableView(model)
+    val table = buildProductTable(model)
     table.height = 220.0
 
     val task = table.columnModel.getColumn(0)
@@ -646,9 +646,9 @@ private fun buildTableViewCellsExample(): WComponent {
 }
 
 /** Appearance: grid lines / header / density / row background / stripes / display when there are no rows. */
-private fun buildTableViewAppearanceExample(): WComponent {
+private fun buildTableAppearanceExample(): WComponent {
     val model = ProductTableModel()
-    val table = buildProductTableView(model)
+    val table = buildProductTable(model)
     table.emptyText = "No products to show"
     val removedRows = mutableListOf<List<Any?>>()
 
@@ -691,9 +691,9 @@ private fun buildTableViewAppearanceExample(): WComponent {
 }
 
 /** Column operations: TableColumnModel (move / show and hide / add and remove) and column widths. */
-private fun buildTableViewColumnsExample(): WComponent {
+private fun buildTableColumnsExample(): WComponent {
     val model = ProductTableModel()
-    val table = buildProductTableView(model)
+    val table = buildProductTable(model)
     val status = WLabel("")
     val updateStatus = {
         val names = (0 until table.columnCount).map { table.getColumnName(it) }

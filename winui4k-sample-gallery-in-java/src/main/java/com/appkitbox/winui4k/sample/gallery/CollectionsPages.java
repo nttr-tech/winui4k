@@ -51,7 +51,7 @@ import java.util.function.Consumer;
 
 
 /*
- * Collections category: demo pages for ItemsView / ListBox / ListView / TableView / TreeView.
+ * Collections category: demo pages for ItemsView / ListBox / ListView / Table / TreeView.
  */
 final class CollectionsPages {
     private CollectionsPages() {
@@ -354,22 +354,22 @@ final class CollectionsPages {
 
     // endregion
 
-    // region TableView
+    // region Table page
 
-    /** The TableView page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
-    static WComponent buildTableViewPage() {
+    /** The Table page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
+    static WComponent buildTablePage() {
         WPanel page = GalleryScaffold.buildPage(
-                "TableView",
+                "Table",
                 "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). "
                         + "Like Swing's JTable, try out the various features of WTable, built from TableModel / TableColumnModel / TableRowSorter.");
 
-        page.add(buildTableViewBasicExample());
-        page.add(buildTableViewSortFilterExample());
-        page.add(buildTableViewEditingExample());
-        page.add(buildTableViewGroupingExample());
-        page.add(buildTableViewCellsExample());
-        page.add(buildTableViewAppearanceExample());
-        page.add(buildTableViewColumnsExample());
+        page.add(buildTableBasicExample());
+        page.add(buildTableSortFilterExample());
+        page.add(buildTableEditingExample());
+        page.add(buildTableGroupingExample());
+        page.add(buildTableCellsExample());
+        page.add(buildTableAppearanceExample());
+        page.add(buildTableColumnsExample());
         return page;
     }
 
@@ -404,7 +404,7 @@ final class CollectionsPages {
     }
 
     /** The table for the demos. Its height is fixed so it does not get lost in the page's scrolling. */
-    private static WTable buildProductTableView(TableModel model) {
+    private static WTable buildProductTable(TableModel model) {
         WTable table = new WTable(model);
         table.setWidth(620.0);
         table.setHeight(300.0);
@@ -421,8 +421,8 @@ final class CollectionsPages {
     }
 
     /** Basics: displaying a TableModel and selecting rows (SelectionMode / Select / SelectionChanged / view-model conversion). */
-    private static WComponent buildTableViewBasicExample() {
-        WTable table = buildProductTableView(new ProductTableModel());
+    private static WComponent buildTableBasicExample() {
+        WTable table = buildProductTable(new ProductTableModel());
         WLabel result = new WLabel("Selected: none");
         table.addRowSelectionListener(() -> {
             int row = table.getSelectedRow();
@@ -457,9 +457,9 @@ final class CollectionsPages {
     }
 
     /** Sorting and filtering: TableRowSorter (header click / SortKeys / Comparator / RowFilter) and Sorting / Sorted. */
-    private static WComponent buildTableViewSortFilterExample() {
+    private static WComponent buildTableSortFilterExample() {
         ProductTableModel model = new ProductTableModel();
-        WTable table = buildProductTableView(model);
+        WTable table = buildProductTable(model);
         TableRowSorter<TableModel> sorter = new TableRowSorter<>(model);
         // Sort product names shortest first (alphabetically when the lengths are equal)
         sorter.setComparator(0, Comparator.comparingInt(String::length).thenComparing(Comparator.<String>naturalOrder()));
@@ -510,7 +510,7 @@ final class CollectionsPages {
     }
 
     /** Editing: TableModel.isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding / writing back to the model. */
-    private static WComponent buildTableViewEditingExample() {
+    private static WComponent buildTableEditingExample() {
         DefaultTableModel model = new DefaultTableModel(
                 Arrays.asList(
                         Arrays.<Object>asList(1, "Hanako Sato", "Development", 34, true),
@@ -532,7 +532,7 @@ final class CollectionsPages {
                 return columnIndex != 0;
             }
         };
-        WTable table = buildProductTableView(model);
+        WTable table = buildProductTable(model);
         table.setHeight(220.0);
         // Edit the department with a combo box and the age with a number box (the same idea as Swing's DefaultCellEditor)
         table.getColumnModel().getColumn(2).setCellEditor(
@@ -580,8 +580,8 @@ final class CollectionsPages {
     }
 
     /** Grouping: groupBy / clearGrouping / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate. */
-    private static WComponent buildTableViewGroupingExample() {
-        WTable table = buildProductTableView(new ProductTableModel());
+    private static WComponent buildTableGroupingExample() {
+        WTable table = buildProductTable(new ProductTableModel());
         table.groupBy(1); // Group by category
 
         WComboBox groupBy = new WComboBox(Arrays.asList("Category", "In stock", "Price range (300 yen or more / less)", "No grouping"));
@@ -624,7 +624,7 @@ final class CollectionsPages {
     }
 
     /** Cell display: TableCellRenderer / XAML cell templates / frozen columns / header and cell tooltips. */
-    private static WComponent buildTableViewCellsExample() {
+    private static WComponent buildTableCellsExample() {
         DefaultTableModel model = new DefaultTableModel(
                 Arrays.asList(
                         Arrays.<Object>asList("Review the design document", "In progress", 60, "Check the spec differences and sort out the review comments."),
@@ -637,7 +637,7 @@ final class CollectionsPages {
                 return columnIndex == 2 ? Integer.class : String.class;
             }
         };
-        WTable table = buildProductTableView(model);
+        WTable table = buildProductTable(model);
         table.setHeight(220.0);
         table.setWidth(520.0);
 
@@ -676,9 +676,9 @@ final class CollectionsPages {
     }
 
     /** Appearance: grid lines / header / density / row background / stripes / display when there are no rows. */
-    private static WComponent buildTableViewAppearanceExample() {
+    private static WComponent buildTableAppearanceExample() {
         ProductTableModel model = new ProductTableModel();
-        WTable table = buildProductTableView(model);
+        WTable table = buildProductTable(model);
         table.setEmptyText("No products to show");
         List<List<Object>> removedRows = new ArrayList<>();
 
@@ -725,8 +725,8 @@ final class CollectionsPages {
     }
 
     /** Column operations: TableColumnModel (move / show and hide / add and remove) and column widths. */
-    private static WComponent buildTableViewColumnsExample() {
-        WTable table = buildProductTableView(new ProductTableModel());
+    private static WComponent buildTableColumnsExample() {
+        WTable table = buildProductTable(new ProductTableModel());
         WLabel status = new WLabel("");
         Runnable updateStatus = () -> {
             List<String> names = new ArrayList<>();

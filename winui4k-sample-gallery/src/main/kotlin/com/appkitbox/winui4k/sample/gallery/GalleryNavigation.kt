@@ -68,7 +68,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "Storage pickers" to ::buildStoragePickersPage,
     "StandardUICommand" to ::buildStandardUICommandPage,
     "SwipeControl" to ::buildSwipeControlPage,
-    "TableView" to ::buildTableViewPage,
+    "Table" to ::buildTablePage,
     "TabView" to ::buildTabViewPage,
     "TeachingTip" to ::buildTeachingTipPage,
     "TextBlock" to ::buildTextBlockPage,
@@ -117,7 +117,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
         "ItemsView",
         "ListBox",
         "ListView",
-        "TableView",
+        "Table",
         "TreeView",
     ),
     "Dialogs & flyouts" to listOf(
