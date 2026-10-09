@@ -166,6 +166,26 @@ class WRibbonBarsTest : FunSpec() {
             onUiThreadGet { menu.searchMenu("Drawing").map { it.entry.label } } shouldBe listOf("Drawing")
         }
 
+        test("the application menu shows the subcommands of the command under the pointer and reverts to the default view for a command without subcommands") {
+            val model = onUiThreadGet {
+                RibbonApplicationMenuModel().also { m ->
+                    m.items.add(
+                        RibbonApplicationMenuItemModel("saveAs", "Save As", RibbonIcons.SAVE_AS).also {
+                            it.items.add(RibbonApplicationMenuItemModel("saveDrawing", "Drawing"))
+                        },
+                    )
+                    m.items.add(RibbonApplicationMenuItemModel("print", "Print", RibbonIcons.PRINT))
+                }
+            }
+            val menu = onUiThreadGet { WRibbonApplicationMenu(model) }
+            show(menu)
+            // What happens when the pointer enters or focus arrives
+            onUiThread { menu.onCommandHovered(model.items[0]) }
+            onUiThreadGet { menu.shownItem?.id } shouldBe "saveAs"
+            onUiThread { menu.onCommandHovered(model.items[1]) }
+            onUiThreadGet { menu.shownItem } shouldBe null
+        }
+
         test("the search box searches the ribbon, invokes a result, and clears the search text") {
             val model = onUiThreadGet {
                 RibbonModel().also { m ->

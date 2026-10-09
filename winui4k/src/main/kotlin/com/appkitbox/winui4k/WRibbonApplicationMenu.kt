@@ -37,6 +37,8 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
     private val itemsListener = RibbonListListener<RibbonApplicationMenuItemModel> { rebuild() }
     private val recentListener = RibbonListListener<RibbonRecentItemModel> { rebuild() }
     private var flyout: WFlyout? = null
+    private val commandButtons = LinkedHashMap<RibbonApplicationMenuItemModel, XamlElement>()
+    private val paneButtons = mutableListOf<XamlElement>()
 
     /** The item whose subcommands are shown (null while recent documents or search results are shown). */
     var shownItem: RibbonApplicationMenuItemModel? = null
@@ -49,12 +51,7 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
         search.setPlaceholderText(RibbonStrings.current.searchCommands)
         search.setAutomationName(RibbonStrings.current.searchCommands)
         search.onTextChanged { onSearchChanged() }
-        search.onPreviewKeyDown { e ->
-            if (e.key == RibbonInputViews.VK_ENTER) {
-                searchMenu(search.textBoxText).firstOrNull()?.let { execute(it.entry) }
-                e.handled = true
-            }
-        }
+        search.onPreviewKeyDown { e -> onSearchKey(e) }
         model.items.addListListener(itemsListener)
         model.recentItems.addListListener(recentListener)
         model.addPropertyChangeListener { rebuild() }
@@ -80,12 +77,28 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
         return created
     }
 
+    /** Search box: Enter runs the first result, and Down moves to the first result (or the first command if there is no query). */
+    private fun onSearchKey(e: XamlKeyEvent) {
+        when (e.key) {
+            RibbonInputViews.VK_ENTER -> searchMenu(search.textBoxText).firstOrNull()?.let { execute(it.entry) }
+            RibbonInputViews.VK_DOWN -> {
+                val first = if (search.textBoxText.isNotEmpty()) paneButtons.firstOrNull() else commandButtons.values.firstOrNull()
+                first?.focus(XamlInterop.FocusState_Keyboard)
+            }
+            else -> return
+        }
+        e.handled = true
+    }
+
     private fun rebuild() {
         search.isVisible = model.isSearchVisible
         itemsPanel.clearChildren()
+        commandButtons.clear()
         for (item in model.items.filter { it.isVisible }) {
             if (item.hasSeparatorBefore) itemsPanel.addChild(RibbonMenus.separator())
-            itemsPanel.addChild(createItemButton(item))
+            val button = createItemButton(item)
+            commandButtons[item] = button
+            itemsPanel.addChild(button)
         }
         val current = shownItem
         if (current != null && current in model.items) showSubItems(current) else showRecent()
@@ -105,26 +118,79 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
         button.setAutomationName(item.label)
         button.setAutomationId("AppMenu_" + item.id)
         button.onClick { invoke(item) }
-        button.onPointer(XamlInterop.IUIElement_add_PointerEntered) { if (item.items.isNotEmpty() && search.textBoxText.isBlank()) showSubItems(item) }
-        button.onFocus(true) { if (item.items.isNotEmpty() && search.textBoxText.isBlank()) showSubItems(item) }
+        button.onPointer(XamlInterop.IUIElement_add_PointerEntered) { onCommandHovered(item) }
+        button.onFocus(true) { onCommandHovered(item) }
+        button.onKeyDown { e ->
+            // Right opens the subcommands and moves to the first one
+            if (e.key == RibbonInputViews.VK_RIGHT && item.items.isNotEmpty()) {
+                showSubItems(item)
+                paneButtons.firstOrNull()?.focus(XamlInterop.FocusState_Keyboard)
+                e.handled = true
+            }
+        }
         return button
+    }
+
+    /** A command received the pointer or focus: shows its subcommands on the right if any, otherwise reverts to the default (recent documents). */
+    internal fun onCommandHovered(item: RibbonApplicationMenuItemModel) {
+        if (search.textBoxText.isNotEmpty()) return
+        if (item.items.isNotEmpty()) {
+            showSubItems(item)
+        } else if (shownItem != null) {
+            showRecent()
+        }
+    }
+
+    /** Clears the content on the right. */
+    private fun clearPane() {
+        panePanel.clearChildren()
+        paneButtons.clear()
+    }
+
+    private fun addPaneButton(button: XamlElement) {
+        paneButtons += button
+        panePanel.addChild(button)
+    }
+
+    /** Gives the button of the item whose subcommands are shown the selected look. */
+    private fun markShown() {
+        val brush = WinUiUtilities.lookupApplicationResource("RibbonItemHoverBrush")
+        try {
+            for ((item, button) in commandButtons) {
+                button.view(XamlInterop.IID_IControl).call(XamlInterop.IControl_put_Background, if (item === shownItem) brush.ptr else null)
+            }
+        } finally {
+            brush.release()
+        }
     }
 
     /** Shows subcommands on the right. */
     private fun showSubItems(item: RibbonApplicationMenuItemModel) {
         shownItem = item
         paneHeader.setText(item.label)
-        panePanel.clearChildren()
-        for (sub in item.items.filter { it.isVisible }) panePanel.addChild(createDetailButton(sub.label, sub.description, sub.icon, sub.isEnabled) { invoke(sub) })
+        clearPane()
+        for (sub in item.items.filter { it.isVisible }) {
+            val button = createDetailButton(sub.label, sub.description, sub.icon ?: item.icon, sub.isEnabled) { invoke(sub) }
+            // Left returns to the original command
+            button.onKeyDown { e ->
+                if (e.key == RibbonInputViews.VK_LEFT) {
+                    commandButtons[item]?.focus(XamlInterop.FocusState_Keyboard)
+                    e.handled = true
+                }
+            }
+            addPaneButton(button)
+        }
+        markShown()
     }
 
     /** Shows recent documents on the right (pinned ones first). */
     private fun showRecent() {
         shownItem = null
         paneHeader.setText(model.recentHeader ?: RibbonStrings.current.recentDocuments)
-        panePanel.clearChildren()
+        clearPane()
         val ordered = model.recentItems.filter { it.isPinned } + model.recentItems.filter { !it.isPinned }
         for (recent in ordered) panePanel.addChild(createRecentRow(recent))
+        markShown()
     }
 
     private fun createDetailButton(label: String?, description: String?, icon: com.appkitbox.winui4k.ribbon.RibbonIcon?, enabled: Boolean, action: () -> Unit): XamlElement {
@@ -149,6 +215,7 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
             "<Grid><Grid.ColumnDefinitions><ColumnDefinition Width=\"*\" /><ColumnDefinition Width=\"Auto\" /></Grid.ColumnDefinitions></Grid>",
         )
         val open = createDetailButton(recent.label, recent.path, RibbonIcons.DOCUMENT, recent.isEnabled) { openRecent(recent) }
+        paneButtons += open
         row.addChild(open)
         val pin = XamlElement.load(
             "<ToggleButton Style=\"{StaticResource RibbonItemToggleButtonStyle}\" Width=\"28\" Height=\"28\" VerticalAlignment=\"Center\">" +
@@ -206,12 +273,19 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
             return
         }
         shownItem = null
+        markShown()
         paneHeader.setText(RibbonStrings.current.searchActions)
-        panePanel.clearChildren()
-        for (result in searchMenu(query)) {
+        clearPane()
+        val results = searchMenu(query)
+        for (result in results) {
             val entry = result.entry
             val icon = (entry.target as? RibbonNodeModel)?.icon
-            panePanel.addChild(createDetailButton(entry.label, entry.path, icon, entry.isEnabled) { execute(entry) })
+            addPaneButton(createDetailButton(entry.label, entry.path, icon, entry.isEnabled) { execute(entry) })
+        }
+        if (results.isEmpty()) {
+            panePanel.addChild(
+                XamlElement.load("<TextBlock Text=\"${Xaml.escape(RibbonStrings.current.searchNoResults)}\" Margin=\"10,4,10,4\" Opacity=\"0.7\" />"),
+            )
         }
     }
 
@@ -222,7 +296,7 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
         fun collect(items: List<RibbonApplicationMenuItemModel>, path: String?) {
             for (item in items.filter { it.isVisible }) {
                 val label = item.label ?: continue
-                entries += RibbonSearchEntry("appmenu/" + (item.id ?: label), label, path, item.description, target = item, isEnabled = item.isEnabled)
+                entries += RibbonSearchEntry("appmenu/" + item.id, label, path, item.description, target = item, isEnabled = item.isEnabled)
                 collect(item.items, label)
             }
         }
@@ -251,10 +325,11 @@ class WRibbonApplicationMenu @JvmOverloads constructor(
             "<Grid.ColumnDefinitions><ColumnDefinition Width=\"250\" /><ColumnDefinition Width=\"*\" /></Grid.ColumnDefinitions>" +
             "<TextBox x:Name=\"PART_Search\" Grid.ColumnSpan=\"2\" Margin=\"10,10,10,6\" />" +
             "<ScrollViewer Grid.Row=\"1\" VerticalScrollBarVisibility=\"Auto\" Background=\"{ThemeResource RibbonCommandBarBackgroundBrush}\">" +
-            "<StackPanel x:Name=\"PART_Items\" Padding=\"4\" /></ScrollViewer>" +
+            "<StackPanel x:Name=\"PART_Items\" Padding=\"4\" XYFocusKeyboardNavigation=\"Enabled\" /></ScrollViewer>" +
             "<Grid Grid.Row=\"1\" Grid.Column=\"1\"><Grid.RowDefinitions><RowDefinition Height=\"Auto\" /><RowDefinition Height=\"*\" /></Grid.RowDefinitions>" +
             "<TextBlock x:Name=\"PART_PaneHeader\" FontWeight=\"SemiBold\" FontSize=\"14\" Margin=\"12,8,12,4\" />" +
-            "<ScrollViewer Grid.Row=\"1\" VerticalScrollBarVisibility=\"Auto\"><StackPanel x:Name=\"PART_Pane\" Padding=\"4\" /></ScrollViewer></Grid>" +
+            "<ScrollViewer Grid.Row=\"1\" VerticalScrollBarVisibility=\"Auto\"><StackPanel x:Name=\"PART_Pane\" Padding=\"4\" XYFocusKeyboardNavigation=\"Enabled\" />" +
+            "</ScrollViewer></Grid>" +
             "<Border x:Name=\"PART_Footer\" Grid.Row=\"2\" Grid.ColumnSpan=\"2\" HorizontalAlignment=\"Right\" Margin=\"10\" /></Grid>"
     }
 }
