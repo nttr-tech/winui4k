@@ -33,3 +33,23 @@
   `File.createTempFile().absolutePath` は環境によって 8.3 短縮形式 (例: `RUNNER~1`) を含む
   (GitHub Actions の Windows ランナーで発生)。パスを比較する場合は
   `toPath().toRealPath()` で短縮名を展開してから比較すること (ClipboardTest 参照)。
+- **TableView: 表示やグループ化の直後に「Cannot find a Resource with the Name/Key TabularSurface...」(または `SortIndicatorForeground`) で落ちる (終了コード 0xC000027B = STATUS_STOWED_EXCEPTION)**
+  TableView の既定スタイルが参照するテーマリソースは `XamlControlsResources` に含まれず、
+  `TabularControlsResources` (App.xaml の `<tabular:TabularControlsResources />` 相当) を Application.Resources に
+  マージする必要がある (microsoft-ui-xaml Issue #12115 と同じ問題)。WTableView は最初の生成時に
+  `WinUiUtilities.ensureTabularControlsResources()` で自動的にマージする。
+- **TableView: TableViewSource.From に Kotlin 実装のコレクションを渡すと Tabular DLL 内でアクセス違反になる**
+  TableViewSource (と TableView) はアプリから渡されたコレクションを弱参照で追跡するため、
+  コレクションが IWeakReferenceSource を実装していないと null を参照して落ちる。
+  Kotlin 実装の COM オブジェクトを ItemsSource に渡すときは `KComObject.enableWeakReferences()` を呼ぶ
+  (TableRowCollection / TableRowItem 参照)。
+- **TableView: グループの見出しにキーの文字列と件数が表示されない (見出しの帯と展開ボタンだけになる)**
+  既定の見出しテンプレートは TableViewGroupInfo の KeyText / ItemCountText に `{Binding}` しているが、
+  WinUI のバインディングはソースの型情報が IsBindable でないとプロパティを解決しない (PropertyInfoPropertyAccess)。
+  2.5.4-experimental の Tabular DLL の型情報 (XamlControlsTabularXamlMetaDataProvider) では TableViewGroupInfo に
+  [Bindable] が付いていないため、アプリの IXamlMetadataProvider で IsBindable だけ true を返すラッパーに
+  差し替えている (`internal/winui/BindableXamlTypes.kt`)。また、Tabular の型はアプリのプロバイダが
+  `XamlControlsXamlMetaDataProvider` で解決できないため、`XamlControlsTabularXamlMetaDataProvider` へも問い合わせる。
+- **TableView: グループの見出しが "(group)" になる**
+  TableView がキーを見出しの文字列にできるのは String / Int32 / Int64 / UInt32 / Double (と IStringable) だけで、
+  Boolean などは "(group)" と表示される。WTableView.groupBy はそれ以外のキーを toString() の文字列にして渡す。

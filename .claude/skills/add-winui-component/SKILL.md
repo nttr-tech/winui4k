@@ -72,6 +72,7 @@ ABI 定数は `src/main/kotlin/com/appkitbox/winui4k/internal/winui/` に winmd 
 | `FoundationInterop.kt` | Windows.Foundation (コレクション / IReference / ジェネリック delegate のベース IID) |
 | `NotificationInterop.kt` | AppNotifications / BadgeNotifications / JumpList |
 | `WebView2Interop.kt` | WebView2 (Controls.WebView2 + Microsoft.Web.WebView2.Core) |
+| `TabularInterop.kt` | TableView (Microsoft.UI.Xaml.Controls.Tabular。Microsoft.UI.Xaml.winmd 内の実験版の型) |
 
 - `// ---- Microsoft.UI.Xaml.Controls.CheckBox ----` のセクションコメント
 - `CLS_CheckBox` / `IID_ICheckBoxFactory` / `IID_ICheckBox` / スロット定数
