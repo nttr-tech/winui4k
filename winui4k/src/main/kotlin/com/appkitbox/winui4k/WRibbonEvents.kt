@@ -7,17 +7,19 @@ import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import java.util.EventObject
 
 /** A ribbon item (button, menu item, gallery, group dialog launcher, etc.) was invoked. */
-class RibbonItemInvokedEvent(
-    source: WRibbon,
+class RibbonItemInvokedEvent @JvmOverloads constructor(
+    source: WComponent,
     /** The model of the invoked item. */
     val item: RibbonNodeModel,
     /** The id of the item in the command catalog. */
     val commandId: String?,
     /** The invocation argument (a toggle's checked state, a combo selection, a color, etc.). */
     val parameter: Any?,
+    /** The ribbon the item is connected to (null for a bar not connected to a ribbon). */
+    val ribbon: WRibbon? = source as? WRibbon,
 ) : EventObject(source) {
-    /** The ribbon the event originated from. */
-    override fun getSource(): WRibbon = super.getSource() as WRibbon
+    /** The origin (the ribbon, or a bar such as a toolbar or status bar). */
+    override fun getSource(): WComponent = super.getSource() as WComponent
 }
 
 /** Receives item invocations (suited to handling commands in one place by string id). */

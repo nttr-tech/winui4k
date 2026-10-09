@@ -17,8 +17,11 @@ open class RibbonToolBarModel @JvmOverloads constructor(
     /** Number of columns of a vertical toolbar (tool palette: 1 or 2). */
     var columns: Int by observable(1, coerce = { it.coerceIn(1, 2) })
 
-    /** Whether to show labels next to the icons. */
-    var showLabels: Boolean by observable(true)
+    /**
+     * Whether item labels can be shown. If false, all items become small icon-only items. If true, they become
+     * medium and show labels next to their icons according to each item's [RibbonItemModel.showLabelInSimplified].
+     */
+    var showLabels: Boolean by observable(false)
 
     /** Whether to move items that do not fit to the overflow menu (if false, they are clipped). */
     var isOverflowEnabled: Boolean by observable(true)

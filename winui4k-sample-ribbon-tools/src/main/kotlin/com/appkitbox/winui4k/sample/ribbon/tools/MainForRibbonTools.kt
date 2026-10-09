@@ -104,6 +104,7 @@ private fun menuBarModel(): RibbonMenuBarModel = RibbonMenuBarModel().also { mod
 /** The options bar of a tool (its contents differ per tool). */
 private fun optionBar(tool: Tool): WComponent {
     val model = RibbonToolBarModel("options.${tool.name}")
+    model.showLabels = true
     model.items.add(button("options.tool", tool.label, tool.icon).also { it.showLabelInSimplified = true })
     model.items.add(RibbonSeparatorModel())
     val items: List<RibbonItemModel> = when (tool) {

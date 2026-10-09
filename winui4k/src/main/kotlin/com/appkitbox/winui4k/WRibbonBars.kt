@@ -54,7 +54,7 @@ abstract class WRibbonBar internal constructor(xaml: String) : WComponent(Ribbon
     /** The ribbon that shares command state and invocation notifications (optional). */
     var ribbon: WRibbon? = null
 
-    /** Subscribes to item invocations ([RibbonItemInvokedEvent.getSource] is [ribbon]; not called without a ribbon). */
+    /** Subscribes to item invocations ([RibbonItemInvokedEvent.getSource] is this bar; called even when not connected to a ribbon). */
     fun addItemInvokedListener(listener: RibbonItemInvokedListener) {
         itemInvokedListeners += listener
     }
@@ -79,8 +79,7 @@ abstract class WRibbonBar internal constructor(xaml: String) : WComponent(Ribbon
     internal open fun barScope(): List<RibbonItemModel> = emptyList()
 
     internal fun fireItemInvoked(model: RibbonNodeModel, commandId: String?, parameter: Any?) {
-        val source = ribbon ?: return
-        val event = RibbonItemInvokedEvent(source, model, commandId, parameter)
+        val event = RibbonItemInvokedEvent(this, model, commandId, parameter, ribbon)
         itemInvokedListeners.forEach { it.itemInvoked(event) }
     }
 }

@@ -152,6 +152,7 @@ private class CommandLine {
 /** The document tabs, the drawing (floor plan) and the command line. */
 private fun drawingArea(commandLine: CommandLine): WComponent {
     val tabsModel = RibbonToolBarModel("documents")
+    tabsModel.showLabels = true
     for ((id, label) in listOf("start" to "Start", "drawing1" to "Drawing1*", "floorPlan" to "Floor Plan")) {
         tabsModel.items.add(
             toggle(id, label, RibbonIcons.DOCUMENT, RibbonItemSize.MEDIUM).also {

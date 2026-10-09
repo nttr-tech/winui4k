@@ -20,6 +20,7 @@ import com.appkitbox.winui4k.ribbon.RibbonToolBarModel
 import com.appkitbox.winui4k.ribbon.RibbonZoomModel
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
@@ -46,7 +47,10 @@ class WRibbonBarsTest : FunSpec() {
 
         test("the toolbar moves items that do not fit its width to the overflow menu and brings them back when widened") {
             val model = onUiThreadGet {
-                RibbonToolBarModel().also { m -> repeat(ITEMS) { m.items.add(RibbonButtonModel("tool$it", "Tool $it", RibbonIcons.PEN)) } }
+                RibbonToolBarModel().also { m ->
+                    m.showLabels = true
+                    repeat(ITEMS) { m.items.add(RibbonButtonModel("tool$it", "Tool $it", RibbonIcons.PEN)) }
+                }
             }
             val toolBar = onUiThreadGet { WRibbonToolBar(model).also { it.width = NARROW } }
             show(toolBar)
@@ -69,6 +73,31 @@ class WRibbonBarsTest : FunSpec() {
                 toolBar.itemViews().first().invoke()
             }
             invoked shouldBe listOf("draw")
+        }
+
+        test("a toolbar not attached to a ribbon also notifies item invocations, with the bar itself as the source") {
+            val toolModel = onUiThreadGet { RibbonToolBarModel().also { it.items.add(RibbonButtonModel("draw", "Draw", RibbonIcons.PEN)) } }
+            val toolBar = onUiThreadGet { WRibbonToolBar(toolModel) }
+            show(toolBar)
+            val invoked = mutableListOf<Triple<String?, Any, WRibbon?>>()
+            onUiThread {
+                toolBar.addItemInvokedListener { invoked += Triple(it.item.id, it.source, it.ribbon) }
+                toolBar.itemViews().first().invoke()
+            }
+            invoked shouldBe listOf(Triple("draw", toolBar, null))
+        }
+
+        test("the toolbar shows no labels by default, and showLabels shows the item labels (showLabelInSimplified)") {
+            val toolModel = onUiThreadGet {
+                RibbonToolBarModel().also { m -> m.items.add(RibbonButtonModel("draw", "Draw", RibbonIcons.PEN).also { it.showLabelInSimplified = true }) }
+            }
+            toolModel.showLabels shouldBe false
+            val toolBar = onUiThreadGet { WRibbonToolBar(toolModel) }
+            show(toolBar)
+            val iconOnly = onUiThreadGet { toolBar.itemViews().first().element.desiredSize()[0] }
+            onUiThread { toolModel.showLabels = true }
+            settle(toolBar)
+            onUiThreadGet { toolBar.itemViews().first().element.desiredSize()[0] } shouldBeGreaterThan iconOnly
         }
 
         test("zoom fires only for user operations on the buttons and slider, not for changes made in code (values are clamped to the range)") {
