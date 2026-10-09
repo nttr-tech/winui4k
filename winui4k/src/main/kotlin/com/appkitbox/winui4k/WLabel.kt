@@ -122,6 +122,28 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             XamlStructs.putFontWeight(inspectable, XamlInterop.ITextBlock_put_FontWeight, value)
         }
 
+    /** Whether the text is italic (TextBlock.FontStyle is Italic). */
+    var isItalic: Boolean
+        get() = inspectable.getInt(XamlInterop.ITextBlock_get_FontStyle) == FONT_STYLE_ITALIC
+        set(value) = inspectable.call(XamlInterop.ITextBlock_put_FontStyle, if (value) FONT_STYLE_ITALIC else FONT_STYLE_NORMAL)
+
+    /** Whether the text is underlined (Underline in TextBlock.TextDecorations). */
+    var isUnderline: Boolean
+        get() = hasDecoration(DECORATION_UNDERLINE)
+        set(value) = setDecoration(DECORATION_UNDERLINE, value)
+
+    /** Whether the text is struck through (Strikethrough in TextBlock.TextDecorations). */
+    var isStrikethrough: Boolean
+        get() = hasDecoration(DECORATION_STRIKETHROUGH)
+        set(value) = setDecoration(DECORATION_STRIKETHROUGH, value)
+
+    private fun hasDecoration(flag: Int): Boolean = inspectable.getInt(XamlInterop.ITextBlock_get_TextDecorations) and flag != 0
+
+    private fun setDecoration(flag: Int, on: Boolean) {
+        val current = inspectable.getInt(XamlInterop.ITextBlock_get_TextDecorations)
+        inspectable.call(XamlInterop.ITextBlock_put_TextDecorations, if (on) current or flag else current and flag.inv())
+    }
+
     /** Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null restores the default color. */
     var foreground: WColor? = null
         set(value) {
@@ -175,3 +197,9 @@ private fun createFontFamily(name: String): ComPtr = Ffi.backend.withScope { sco
     factory.release()
     ComPtr(Ffi.backend.memory.getPtr(instance, 0))
 }
+
+// Values of Windows.UI.Text.FontStyle and TextDecorations (extracted from winmd)
+private const val FONT_STYLE_NORMAL = 0
+private const val FONT_STYLE_ITALIC = 2
+private const val DECORATION_UNDERLINE = 1
+private const val DECORATION_STRIKETHROUGH = 2

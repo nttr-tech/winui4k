@@ -2316,7 +2316,10 @@ internal object XamlInterop {
     const val IViewbox_put_Child = 7                   // put_Child(UIElement)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBlock (additions to ITextBlock) ----
+    const val ITextBlock_get_FontStyle = 12
     const val ITextBlock_put_FontStyle = 13            // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
+    const val ITextBlock_get_TextDecorations = 57
+    const val ITextBlock_put_TextDecorations = 58      // put_TextDecorations(TextDecorations flags: None=0, Underline=1, Strikethrough=2)
     const val ITextBlock_put_LineHeight = 32
     const val ITextBlock_put_MaxLines = 46
     const val ITextBlock_put_TextLineBounds = 48
