@@ -62,6 +62,31 @@ internal object XamlStructs {
         listOf(Field("Width", F32), Field("Height", F32)),
     )
 
+    /** Windows.Foundation.Point { FLOAT X, Y } (FoundationContract.winmd) */
+    val POINT_FLOAT = StructType(
+        "Windows.Foundation.Point",
+        listOf(Field("X", F32), Field("Y", F32)),
+    )
+
+    /** Windows.Foundation.Rect { FLOAT X, Y, Width, Height } (FoundationContract.winmd) */
+    val RECT_FLOAT = StructType(
+        "Windows.Foundation.Rect",
+        listOf(Field("X", F32), Field("Y", F32), Field("Width", F32), Field("Height", F32)),
+    )
+
+    /** Windows.Foundation.Numerics.Matrix3x2 { FLOAT M11, M12, M21, M22, M31, M32 } (FoundationContract.winmd) */
+    val MATRIX3X2 = StructType(
+        "Windows.Foundation.Numerics.Matrix3x2",
+        listOf(
+            Field("M11", F32),
+            Field("M12", F32),
+            Field("M21", F32),
+            Field("M22", F32),
+            Field("M31", F32),
+            Field("M32", F32),
+        ),
+    )
+
     /** Windows.Graphics.PointInt32 { INT32 X, Y } (Windows.Graphics.winmd) */
     val POINT_INT32 = StructType(
         "Windows.Graphics.PointInt32",

@@ -81,6 +81,22 @@ internal object Async {
      * [handlerIid] is the actual IID of AsyncOperationCompletedHandler<T> (a pinterface-computed value).
      */
     fun awaitResult(operation: ComPtr, handlerIid: String, what: String): ComPtr {
+        awaitOperation(operation, handlerIid, what)
+        return operation.getPtr(IAsyncOperation_GetResults)
+    }
+
+    /**
+     * Waits for an IAsyncOperation<T> whose result is a 32-bit value type (UInt32 / Int32, etc.; DataReader.LoadAsync)
+     * to complete, and returns the value of GetResults. [handlerIid] is the concrete IID of
+     * AsyncOperationCompletedHandler<T> (computed from the pinterface).
+     */
+    fun awaitIntResult(operation: ComPtr, handlerIid: String, what: String): Int {
+        awaitOperation(operation, handlerIid, what)
+        return operation.getInt(IAsyncOperation_GetResults)
+    }
+
+    /** Waits for an IAsyncOperation<T> to complete. Throws an HRESULT exception if it failed. */
+    private fun awaitOperation(operation: ComPtr, handlerIid: String, what: String) {
         val completedEvent = Win32.newAutoResetEvent()
         val handler = completedHandler(handlerIid, completedEvent)
         try {
@@ -90,7 +106,6 @@ internal object Async {
         }
         awaitEvent(completedEvent, what)
         checkStatus(operation, what)
-        return operation.getPtr(IAsyncOperation_GetResults)
     }
 
     /**
