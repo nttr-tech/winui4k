@@ -385,6 +385,19 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.visibleTabs.map { it.id } } shouldBe listOf("review")
         }
 
+        test("a tab selected in the model beforehand has its content shown when displayed") {
+            val preset = onUiThreadGet { createModel().also { it.selectedTabId = "insert" } }
+            val presetRibbon = onUiThreadGet { WRibbon(preset) }
+            UiTestHarness.attachAndAwaitLoaded(presetRibbon)
+            try {
+                onUiThreadGet { presetRibbon.tabViews[preset.findTab("insert")]!!.element.isVisible } shouldBe true
+                onUiThread { presetRibbon.itemFactory = RibbonItemFactory { null } }
+                onUiThreadGet { presetRibbon.tabViews[preset.findTab("insert")]!!.element.isVisible } shouldBe true
+            } finally {
+                UiTestHarness.detach(presetRibbon)
+            }
+        }
+
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {
             onUiThread { model.visibilityMode = RibbonVisibilityMode.TABS_ONLY }
             settle()

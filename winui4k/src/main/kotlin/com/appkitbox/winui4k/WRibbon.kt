@@ -329,7 +329,7 @@ class WRibbon @JvmOverloads constructor(
         if (loaded) {
             defaultQuickAccessIds = quickAccessItemIds()
             defaultQuickAccessPlacement = model.quickAccessPosition
-            if (selectedTab == null) selectFirstTab()
+            if (selectedTab == null) selectFirstTab() else applySelection()
             if (model.backstage.isOpen) openBackstage()
         }
         invalidateLayout()
@@ -348,7 +348,8 @@ class WRibbon @JvmOverloads constructor(
             defaultQuickAccessPlacement = model.quickAccessPosition
         }
         refreshTabStrip()
-        if (selectedTab == null) selectFirstTab()
+        // Also show the view of a tab that was selected in the model beforehand
+        if (selectedTab == null) selectFirstTab() else applySelection()
         invalidateLayout()
         if (model.backstage.isOpen) openBackstage()
         resumePopups()
@@ -380,6 +381,7 @@ class WRibbon @JvmOverloads constructor(
         tabStripItems.attach()
         disposeTabViews()
         syncTabs()
+        applySelection()
         updateQuickAccessPlacement()
         invalidateShortcuts()
         invalidateLayout()
@@ -393,6 +395,7 @@ class WRibbon @JvmOverloads constructor(
             tab.removePropertyChangeListener(nodeListener)
         }
         tabViews.clear()
+        appliedTab = null
     }
 
     private fun syncTabs() {

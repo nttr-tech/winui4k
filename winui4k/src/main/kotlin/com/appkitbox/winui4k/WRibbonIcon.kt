@@ -41,7 +41,15 @@ class WRibbonIcon @JvmOverloads constructor(
     private fun rebuild() {
         val brush = foreground?.let { hex(it) } ?: RibbonIconXaml.ICON_BRUSH
         val xaml = RibbonIconXaml.build(icon, iconSize, brush)
-        root.setChild(xaml?.let { XamlElement.load(it) })
+        val element = try {
+            xaml?.let { XamlElement.load(it) }
+        } catch (e: com.appkitbox.winui4k.internal.com.WindowsRuntimeException) {
+            // Do not draw an icon whose path data is invalid (as with ribbon item icons, so it does not take down the
+            // whole screen)
+            System.err.println("WRibbonIcon: cannot draw the icon: ${e.message}")
+            null
+        }
+        root.setChild(element)
     }
 
     private companion object {

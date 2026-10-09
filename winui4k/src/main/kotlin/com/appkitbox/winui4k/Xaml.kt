@@ -136,6 +136,9 @@ internal object Xaml {
         }
     }
 
+    /** The logical parent (FrameworkElement.Parent), or null if none. The caller owns the returned reference. */
+    fun logicalParentOf(component: WComponent): ComPtr? = component.frameworkElement.getPtrOrNull(XamlInterop.IFrameworkElement_get_Parent)
+
     /** The root of the visual tree (reached by following parents), or null if there is no parent. The caller owns the returned reference. */
     fun visualRoot(element: ComPtr): ComPtr? {
         var current = parentOf(element) ?: return null
@@ -176,7 +179,8 @@ internal object Xaml {
      * has no parent.
      */
     fun detach(component: WComponent) {
-        val parent = parentOf(component.uiElement) ?: return
+        // Elements that are out of the visual tree, such as the content of a closed popup, are detached from their logical parent (FrameworkElement.Parent)
+        val parent = parentOf(component.uiElement) ?: logicalParentOf(component) ?: return
         try {
             val panel = parent.queryInterfaceOrNull(XamlInterop.IID_IPanel)
             if (panel != null) {
