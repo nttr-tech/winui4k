@@ -61,134 +61,52 @@ enum class PointerDeviceType(internal val native: Int) {
 }
 
 /**
- * Like java.awt.event.MouseEvent: a pointer event for ink input
- * (the event argument Windows.UI.Core.PointerEventArgs of InkStrokeInput / InkUnprocessedInput).
- *
- * Values are fetched from native code when read, so they are **valid only during the listener call**
- * (reading them after the call returns throws an exception). Positions use the top-left of the canvas as the
- * origin (DIP).
+ * A snapshot of Windows.UI.Input.PointerPoint: the position and state of the pointer for ink input
+ * ([InkPointerEvent.pointerPoint]). Positions use the top-left of the canvas as the origin (DIP).
  */
-class InkPointerEvent internal constructor(source: WInkPresenter, private val args: ComPtr) : EventObject(source) {
-    private var disposed = false
-    private var currentPoint: ComPtr? = null
-    private var properties: ComPtr? = null
-
-    /** The source of the event (the canvas's InkPresenter). */
-    override fun getSource(): WInkPresenter = super.getSource() as WInkPresenter
-
-    private fun point(): ComPtr {
-        check(!disposed) { "InkPointerEvent can only be used during the listener call" }
-        return currentPoint ?: args.getPtr(InkInterop.IPointerEventArgs_get_CurrentPoint).also { currentPoint = it }
-    }
-
-    private fun properties(): ComPtr =
-        properties ?: point().getPtr(InkInterop.IPointerPoint_get_Properties).also { properties = it }
-
-    /** The X coordinate of the pointer (PointerPoint.Position.X). */
-    val x: Double get() = position()[0]
-
-    /** The Y coordinate of the pointer (PointerPoint.Position.Y). */
-    val y: Double get() = position()[1]
-
-    private fun position(): DoubleArray = Xaml.readPoint(point(), InkInterop.IPointerPoint_get_Position)
-
+data class InkPointerPoint(
+    /** The X coordinate (Position.X). */
+    val x: Double,
+    /** The Y coordinate (Position.Y). */
+    val y: Double,
     /** The pointer ID (the same value for a series of input from the same finger or pen). */
-    val pointerId: Int get() = point().getInt(InkInterop.IPointerPoint_get_PointerId)
-
+    val pointerId: Int,
     /** The time of the input (microseconds; the same timeline as [InkPoint.timestamp]). */
-    val timestamp: Long
-        get() = Ffi.backend.withScope { scope ->
-            val out = scope.allocate(8)
-            point().call(InkInterop.IPointerPoint_get_Timestamp, out)
-            Ffi.backend.memory.getLong(out, 0)
-        }
-
+    val timestamp: Long,
     /** Whether the pointer is in contact with the screen (the pen tip is touching or a button is pressed). */
-    val isInContact: Boolean get() = point().getBool(InkInterop.IPointerPoint_get_IsInContact)
-
+    val isInContact: Boolean,
     /** The kind of input device. */
-    val deviceType: PointerDeviceType
-        get() {
-            val device = point().getPtr(InkInterop.IPointerPoint_get_PointerDevice)
-            return try {
-                PointerDeviceType.of(device.getInt(InkInterop.IPointerDevice_get_PointerDeviceType))
-            } finally {
-                device.release()
-            }
-        }
-
+    val deviceType: PointerDeviceType,
     /** The pressure (0.0 to 1.0; 0.5 for devices without pressure). */
-    val pressure: Float get() = properties().getFloat(InkInterop.IPointerPointProperties_get_Pressure)
-
+    val pressure: Float,
     /** The tilt along the X axis (degrees). */
-    val tiltX: Float get() = properties().getFloat(InkInterop.IPointerPointProperties_get_XTilt)
-
+    val tiltX: Float,
     /** The tilt along the Y axis (degrees). */
-    val tiltY: Float get() = properties().getFloat(InkInterop.IPointerPointProperties_get_YTilt)
-
+    val tiltY: Float,
     /** The rotation of the pen around its axis (degrees). */
-    val twist: Float get() = properties().getFloat(InkInterop.IPointerPointProperties_get_Twist)
-
+    val twist: Float,
     /** The orientation of the contact (degrees). */
-    val orientation: Float get() = properties().getFloat(InkInterop.IPointerPointProperties_get_Orientation)
-
+    val orientation: Float,
     /** Whether input is made with the eraser end of the pen. */
-    val isEraser: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsEraser)
-
+    val isEraser: Boolean,
     /** Whether the pen is held upside down. */
-    val isInverted: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsInverted)
-
+    val isInverted: Boolean,
     /** Whether the pen's barrel button is pressed. */
-    val isBarrelButtonPressed: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsBarrelButtonPressed)
-
+    val isBarrelButtonPressed: Boolean,
     /** Whether the left button (or pen tip or touch contact) is pressed. */
-    val isLeftButtonPressed: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsLeftButtonPressed)
-
+    val isLeftButtonPressed: Boolean,
     /** Whether the right button is pressed. */
-    val isRightButtonPressed: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsRightButtonPressed)
-
+    val isRightButtonPressed: Boolean,
     /** Whether the middle button is pressed. */
-    val isMiddleButtonPressed: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsMiddleButtonPressed)
-
+    val isMiddleButtonPressed: Boolean,
     /** Whether this is the primary pointer (such as the first finger in multi-touch). */
-    val isPrimary: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsPrimary)
-
+    val isPrimary: Boolean,
     /** Whether the pen is within detection range. */
-    val isInRange: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsInRange)
-
+    val isInRange: Boolean,
     /** Whether the input was canceled. */
-    val isCanceled: Boolean get() = properties().getBool(InkInterop.IPointerPointProperties_get_IsCanceled)
-
-    /** The modifier keys that were pressed (PointerEventArgs.KeyModifiers). */
-    val modifiers: Set<VirtualKeyModifier>
-        get() {
-            check(!disposed) { "InkPointerEvent can only be used during the listener call" }
-            val mask = args.getInt(InkInterop.IPointerEventArgs_get_KeyModifiers)
-            return VirtualKeyModifier.entries.filterTo(java.util.EnumSet.noneOf(VirtualKeyModifier::class.java)) {
-                mask and it.native != 0
-            }
-        }
-
-    /**
-     * Whether the event has been handled (ICoreWindowEventArgs.Handled). Ink input reaches the UI thread after it has
-     * been processed on a dedicated ink thread, so even if this is set to true, the OS-side processing may already
-     * have proceeded (a limitation of the WinUI implementation).
-     */
-    var isHandled: Boolean
-        get() = withCoreWindowEventArgs { it.getBool(InkInterop.ICoreWindowEventArgs_get_Handled) }
-        set(value) = withCoreWindowEventArgs { it.putBool(InkInterop.ICoreWindowEventArgs_put_Handled, value) }
-
-    private fun <T> withCoreWindowEventArgs(block: (ComPtr) -> T): T {
-        check(!disposed) { "InkPointerEvent can only be used during the listener call" }
-        val view = args.queryInterface(InkInterop.IID_ICoreWindowEventArgs)
-        return try {
-            block(view)
-        } finally {
-            view.release()
-        }
-    }
-
-    /** The current position, pressure, tilt, and time as an [InkPoint]. */
+    val isCanceled: Boolean,
+) {
+    /** The position, pressure, tilt, and time as an [InkPoint]. */
     fun toInkPoint(): InkPoint = InkPoint(
         x,
         y,
@@ -198,57 +116,158 @@ class InkPointerEvent internal constructor(source: WInkPresenter, private val ar
         timestamp,
     )
 
-    /**
-     * The input points that arrived between the previous event and this one (GetIntermediatePoints).
-     * The newest point comes first (the WinRT order as is).
-     */
-    fun getIntermediatePoints(): List<InkPoint> {
-        check(!disposed) { "InkPointerEvent can only be used during the listener call" }
-        val vector = args.getPtr(InkInterop.IPointerEventArgs_GetIntermediatePoints)
-        try {
-            val size = vector.getInt(FoundationInterop.IVector_get_Size)
-            return List(size) { index ->
-                val point = vector.getPtr(FoundationInterop.IVector_GetAt, index)
-                try {
-                    val position = Xaml.readPoint(point, InkInterop.IPointerPoint_get_Position)
-                    val pointProperties = point.getPtr(InkInterop.IPointerPoint_get_Properties)
-                    val timestamp = Ffi.backend.withScope { scope ->
-                        val out = scope.allocate(8)
-                        point.call(InkInterop.IPointerPoint_get_Timestamp, out)
-                        Ffi.backend.memory.getLong(out, 0)
-                    }
-                    try {
-                        InkPoint(
-                            position[0],
-                            position[1],
-                            pointProperties.getFloat(InkInterop.IPointerPointProperties_get_Pressure).coerceIn(0f, 1f),
-                            pointProperties.getFloat(InkInterop.IPointerPointProperties_get_XTilt).coerceIn(-MAX_TILT, MAX_TILT),
-                            pointProperties.getFloat(InkInterop.IPointerPointProperties_get_YTilt).coerceIn(-MAX_TILT, MAX_TILT),
-                            timestamp,
-                        )
-                    } finally {
-                        pointProperties.release()
-                    }
-                } finally {
-                    point.release()
-                }
-            }
-        } finally {
-            vector.release()
-        }
-    }
-
-    /** Called when the listener call is over. Releases the native references obtained. */
-    internal fun dispose() {
-        disposed = true
-        properties?.release()
-        currentPoint?.release()
-        properties = null
-        currentPoint = null
-    }
-
     private companion object {
         const val MAX_TILT = 90f
+    }
+}
+
+/**
+ * Like java.awt.event.MouseEvent: a pointer event for ink input
+ * (the event argument Windows.UI.Core.PointerEventArgs of InkStrokeInput / InkUnprocessedInput).
+ *
+ * WinUI (experimental in Windows App SDK 2.5) receives this event on a dedicated ink thread and then delivers it to
+ * the UI thread late, so by the time it arrives the original arguments may no longer be readable (reads fail with
+ * CO_E_NOT_SUPPORTED and the like). Therefore read failures do not throw; if values cannot be read, [pointerPoint] /
+ * [modifiers] are null and [intermediatePoints] is empty.
+ * Values are fetched together and kept the first time they are read during the listener call, so they can be used
+ * after the call as well (values never read during the call are null after the call).
+ */
+class InkPointerEvent internal constructor(source: WInkPresenter, private val args: ComPtr) : EventObject(source) {
+    private var disposed = false
+    private var pointCache: Lazy<InkPointerPoint?> = lazy { readPoint() }
+    private var modifiersCache: Lazy<Set<VirtualKeyModifier>?> = lazy { readModifiers() }
+    private var intermediateCache: Lazy<List<InkPoint>> = lazy { readIntermediatePoints() }
+
+    /** The source of the event (the canvas's InkPresenter). */
+    override fun getSource(): WInkPresenter = super.getSource() as WInkPresenter
+
+    /** The position and state of the pointer (PointerEventArgs.CurrentPoint), or null if it cannot be read. */
+    val pointerPoint: InkPointerPoint?
+        get() = pointCache.value
+
+    /** The modifier keys that were pressed (PointerEventArgs.KeyModifiers), or null if they cannot be read. */
+    val modifiers: Set<VirtualKeyModifier>?
+        get() = modifiersCache.value
+
+    /**
+     * The input points that arrived between the previous event and this one (GetIntermediatePoints).
+     * The newest point comes first (the WinRT order as is). Empty if they cannot be read.
+     */
+    val intermediatePoints: List<InkPoint>
+        get() = intermediateCache.value
+
+    /**
+     * Whether the event has been handled (ICoreWindowEventArgs.Handled). Ink input processing has already proceeded,
+     * so setting this to true is not guaranteed to have any effect (a limitation of the WinUI implementation).
+     * If it cannot be read or written, reads return false and writes do nothing.
+     */
+    var isHandled: Boolean
+        get() = withCoreWindowEventArgs { it.getBool(InkInterop.ICoreWindowEventArgs_get_Handled) } ?: false
+        set(value) {
+            withCoreWindowEventArgs { it.putBool(InkInterop.ICoreWindowEventArgs_put_Handled, value) }
+        }
+
+    private fun <T> withCoreWindowEventArgs(block: (ComPtr) -> T): T? {
+        if (disposed) return null
+        return runCatching {
+            val view = args.queryInterface(InkInterop.IID_ICoreWindowEventArgs)
+            try {
+                block(view)
+            } finally {
+                view.release()
+            }
+        }.getOrNull()
+    }
+
+    private fun readPoint(): InkPointerPoint? {
+        if (disposed) return null
+        return runCatching {
+            val point = args.getPtr(InkInterop.IPointerEventArgs_get_CurrentPoint)
+            try {
+                readPointerPoint(point)
+            } finally {
+                point.release()
+            }
+        }.getOrNull()
+    }
+
+    private fun readModifiers(): Set<VirtualKeyModifier>? {
+        if (disposed) return null
+        return runCatching {
+            val mask = args.getInt(InkInterop.IPointerEventArgs_get_KeyModifiers)
+            VirtualKeyModifier.entries.filterTo(java.util.EnumSet.noneOf(VirtualKeyModifier::class.java)) { mask and it.native != 0 }
+        }.getOrNull()
+    }
+
+    private fun readIntermediatePoints(): List<InkPoint> {
+        if (disposed) return emptyList()
+        return runCatching {
+            val vector = args.getPtr(InkInterop.IPointerEventArgs_GetIntermediatePoints)
+            try {
+                val size = vector.getInt(FoundationInterop.IVector_get_Size)
+                List(size) { index ->
+                    val point = vector.getPtr(FoundationInterop.IVector_GetAt, index)
+                    try {
+                        readPointerPoint(point).toInkPoint()
+                    } finally {
+                        point.release()
+                    }
+                }
+            } finally {
+                vector.release()
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /** Called when the listener call is over. Values not read yet become null (empty) from then on. */
+    internal fun dispose() {
+        disposed = true
+        if (!pointCache.isInitialized()) pointCache = lazyOf(null)
+        if (!modifiersCache.isInitialized()) modifiersCache = lazyOf(null)
+        if (!intermediateCache.isInitialized()) intermediateCache = lazyOf(emptyList())
+    }
+}
+
+/** Takes a snapshot of a Windows.UI.Input.PointerPoint (IPointerPoint). */
+private fun readPointerPoint(point: ComPtr): InkPointerPoint {
+    val position = Xaml.readPoint(point, InkInterop.IPointerPoint_get_Position)
+    val timestamp = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(8)
+        point.call(InkInterop.IPointerPoint_get_Timestamp, out)
+        Ffi.backend.memory.getLong(out, 0)
+    }
+    val device = point.getPtr(InkInterop.IPointerPoint_get_PointerDevice)
+    val deviceType = try {
+        PointerDeviceType.of(device.getInt(InkInterop.IPointerDevice_get_PointerDeviceType))
+    } finally {
+        device.release()
+    }
+    val properties = point.getPtr(InkInterop.IPointerPoint_get_Properties)
+    try {
+        return InkPointerPoint(
+            x = position[0],
+            y = position[1],
+            pointerId = point.getInt(InkInterop.IPointerPoint_get_PointerId),
+            timestamp = timestamp,
+            isInContact = point.getBool(InkInterop.IPointerPoint_get_IsInContact),
+            deviceType = deviceType,
+            pressure = properties.getFloat(InkInterop.IPointerPointProperties_get_Pressure),
+            tiltX = properties.getFloat(InkInterop.IPointerPointProperties_get_XTilt),
+            tiltY = properties.getFloat(InkInterop.IPointerPointProperties_get_YTilt),
+            twist = properties.getFloat(InkInterop.IPointerPointProperties_get_Twist),
+            orientation = properties.getFloat(InkInterop.IPointerPointProperties_get_Orientation),
+            isEraser = properties.getBool(InkInterop.IPointerPointProperties_get_IsEraser),
+            isInverted = properties.getBool(InkInterop.IPointerPointProperties_get_IsInverted),
+            isBarrelButtonPressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsBarrelButtonPressed),
+            isLeftButtonPressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsLeftButtonPressed),
+            isRightButtonPressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsRightButtonPressed),
+            isMiddleButtonPressed = properties.getBool(InkInterop.IPointerPointProperties_get_IsMiddleButtonPressed),
+            isPrimary = properties.getBool(InkInterop.IPointerPointProperties_get_IsPrimary),
+            isInRange = properties.getBool(InkInterop.IPointerPointProperties_get_IsInRange),
+            isCanceled = properties.getBool(InkInterop.IPointerPointProperties_get_IsCanceled),
+        )
+    } finally {
+        properties.release()
     }
 }
 
@@ -277,6 +296,8 @@ interface InkStrokeInputListener : EventListener {
  * [InkInputProcessingMode.NONE], and right-button input when right drags are set not to be processed
  * (used for implementing lasso selection and the like). Methods you do not use need not be implemented (they do
  * nothing by default).
+ * In the experimental Windows App SDK 2.5, the position and other values of the event arguments may not be readable
+ * (see [InkPointerEvent]).
  */
 interface InkUnprocessedInputListener : EventListener {
     /** The pointer entered the canvas (PointerEntered). */
