@@ -13,7 +13,7 @@ import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * Creates the XAML objects (Binding / DataTemplate) used by [WTableView] and registers
+ * Creates the XAML objects (Binding / DataTemplate) used by [WTable] and registers
  * dependency property change callbacks.
  */
 internal object TableViewXaml {

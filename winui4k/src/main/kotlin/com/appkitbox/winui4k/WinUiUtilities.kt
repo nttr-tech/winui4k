@@ -368,7 +368,7 @@ object WinUiUtilities {
      * into Application.Resources (equivalent to `<tabular:TabularControlsResources />` in App.xaml).
      * TableView's default style references them via ThemeResource, so without them drawing group headers and the like
      * raises the XAML exception "Cannot find a Resource with the Name/Key TabularSurface..." and the process terminates.
-     * They are not included in XamlControlsResources, so they are merged only once, when the first WTableView is created
+     * They are not included in XamlControlsResources, so they are merged only once, when the first WTable is created
      * (so as not to slow the startup of apps that do not use the experimental Tabular DLL). Call from the UI thread.
      */
     @JvmSynthetic

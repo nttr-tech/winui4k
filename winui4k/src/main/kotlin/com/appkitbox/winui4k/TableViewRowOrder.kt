@@ -13,7 +13,7 @@ import com.appkitbox.winui4k.table.TableModel
 import com.appkitbox.winui4k.table.TableRowSorter
 
 /**
- * Reads the row order in the view of a [WTableView] (the result of sorting, filtering, and grouping).
+ * Reads the row order in the view of a [WTable] (the result of sorting, filtering, and grouping).
  *
  * The order is projected by TableViewSource and passed to PART_RowsRepeater (an ItemsRepeater) in the TableView
  * template, so this reads its ItemsSourceView (while grouped, each group header row also counts as one row).

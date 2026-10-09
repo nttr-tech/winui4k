@@ -36,7 +36,7 @@
 - **TableView: 表示やグループ化の直後に「Cannot find a Resource with the Name/Key TabularSurface...」(または `SortIndicatorForeground`) で落ちる (終了コード 0xC000027B = STATUS_STOWED_EXCEPTION)**
   TableView の既定スタイルが参照するテーマリソースは `XamlControlsResources` に含まれず、
   `TabularControlsResources` (App.xaml の `<tabular:TabularControlsResources />` 相当) を Application.Resources に
-  マージする必要がある (microsoft-ui-xaml Issue #12115 と同じ問題)。WTableView は最初の生成時に
+  マージする必要がある (microsoft-ui-xaml Issue #12115 と同じ問題)。WTable は最初の生成時に
   `WinUiUtilities.ensureTabularControlsResources()` で自動的にマージする。
 - **TableView: TableViewSource.From に Kotlin 実装のコレクションを渡すと Tabular DLL 内でアクセス違反になる**
   TableViewSource (と TableView) はアプリから渡されたコレクションを弱参照で追跡するため、
@@ -52,4 +52,4 @@
   `XamlControlsXamlMetaDataProvider` で解決できないため、`XamlControlsTabularXamlMetaDataProvider` へも問い合わせる。
 - **TableView: グループの見出しが "(group)" になる**
   TableView がキーを見出しの文字列にできるのは String / Int32 / Int64 / UInt32 / Double (と IStringable) だけで、
-  Boolean などは "(group)" と表示される。WTableView.groupBy はそれ以外のキーを toString() の文字列にして渡す。
+  Boolean などは "(group)" と表示される。WTable.groupBy はそれ以外のキーを toString() の文字列にして渡す。

@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.table.TableModel
 import kotlin.jvm.JvmSynthetic
 
 /**
- * The row selection mode of [WTableView] (TableViewSelectionMode). Values are extracted from winmd.
+ * The row selection mode of [WTable] (TableViewSelectionMode). Values are extracted from winmd.
  * The experimental TableView supports only single selection (multiple selection is planned).
  */
 enum class TableSelectionMode(internal val native: Int) {
@@ -22,7 +22,7 @@ enum class TableSelectionMode(internal val native: Int) {
     }
 }
 
-/** The row density of [WTableView] (TableViewDensity). Values are extracted from winmd. */
+/** The row density of [WTable] (TableViewDensity). Values are extracted from winmd. */
 enum class TableDensity(internal val native: Int) {
     /** Compact display (row height 30px). */
     COMPACT(0),
@@ -110,7 +110,7 @@ fun interface TableSortListener {
 }
 
 /**
- * A function that determines the grouping key of a row ([WTableView.groupBy]).
+ * A function that determines the grouping key of a row ([WTable.groupBy]).
  * Rows that return the same key are gathered into one group. Keys are compared by value, such as strings, numbers and
  * booleans (other objects are compared by their toString() string).
  */

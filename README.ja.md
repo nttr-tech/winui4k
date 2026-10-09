@@ -190,7 +190,7 @@ CsWinRT は .NET GC と WinUI ランタイムの参照グラフ相互照会で�
 - UI スレッドは 1 本が前提で、`W*` API はこのスレッド上でのみ使う契約です。
 - ウィンドウや Shell 系のラッパー (`WFrame`、`WAppWindow` など) は自動解放の対象外で、参照を保持し続けます。
 - エラー処理は HRESULT の例外化のみです。
-- Windows App SDK 2.5 実験版 (2.5.4-experimental) に依存しています。`WTableView` (TableView) は実験版の API で、安定版までに仕様が変わる可能性があります。
+- Windows App SDK 2.5 実験版 (2.5.4-experimental) に依存しています。`WTable` (TableView) は実験版の API で、安定版までに仕様が変わる可能性があります。
 
 IID (インターフェース識別子) と vtable のスロット番号は手書きの推測値ではなく、Windows の型情報ファイル (winmd) から `tools/dump_winmd.py` で機械抽出した値です。
 

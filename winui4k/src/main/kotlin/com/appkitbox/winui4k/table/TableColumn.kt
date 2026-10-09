@@ -27,12 +27,12 @@ enum class SortCycle(internal val native: Int) {
 }
 
 /**
- * Like javax.swing.table.TableColumn: the display attributes of one column of a [com.appkitbox.winui4k.WTableView]
+ * Like javax.swing.table.TableColumn: the display attributes of one column of a [com.appkitbox.winui4k.WTable]
  * (corresponds to WinUI 3's TableViewColumn).
  *
  * [modelIndex] specifies which column of the [TableModel] to show. The display order is determined by the position in
  * the [TableColumnModel] and is independent of the model's column order. Property changes are applied immediately to
- * the WTableView showing the column.
+ * the WTable showing the column.
  *
  * How a cell is displayed is determined in this order of precedence:
  * 1. [cellRenderer] (a component built in Kotlin / Java; implements TableViewColumn's GenerateElementCore)
@@ -48,7 +48,7 @@ open class TableColumn @JvmOverloads constructor(
     cellRenderer: TableCellRenderer? = null,
     cellEditor: TableCellEditor? = null,
 ) {
-    /** The kind of column change (determines how much of the showing WTableView is updated). */
+    /** The kind of column change (determines how much of the showing WTable is updated). */
     internal enum class Change {
         /** Column attributes (header, width, freezing, and so on). Can be written directly to the native column. */
         PROPERTY,
@@ -57,7 +57,7 @@ open class TableColumn @JvmOverloads constructor(
         CELL,
     }
 
-    /** The change notification registered by the showing WTableView (applied to the native TableViewColumn). */
+    /** The change notification registered by the showing WTable (applied to the native TableViewColumn). */
     @get:JvmSynthetic
     @set:JvmSynthetic
     internal var changeListener: ((TableColumn, Change) -> Unit)? = null
@@ -70,8 +70,8 @@ open class TableColumn @JvmOverloads constructor(
         }
 
     /**
-     * The column identifier, used to find columns with [com.appkitbox.winui4k.WTableView.getColumn] and others. If
-     * unset, [headerValue].
+     * The column identifier, used to find columns with [com.appkitbox.winui4k.WTable.getColumn] and others. If unset,
+     * [headerValue].
      */
     var identifier: Any? = null
         get() = field ?: headerValue
@@ -134,7 +134,7 @@ open class TableColumn @JvmOverloads constructor(
             preferredWidth = value
         }
 
-    /** The showing WTableView returns the actual column width. */
+    /** The showing WTable returns the actual column width. */
     @get:JvmSynthetic
     @set:JvmSynthetic
     internal var actualWidthProvider: (() -> Double)? = null
@@ -195,7 +195,7 @@ open class TableColumn @JvmOverloads constructor(
             fireChanged(Change.PROPERTY)
         }
 
-    /** The showing WTableView returns the current sort direction. */
+    /** The showing WTable returns the current sort direction. */
     @get:JvmSynthetic
     @set:JvmSynthetic
     internal var sortOrderProvider: (() -> SortOrder)? = null

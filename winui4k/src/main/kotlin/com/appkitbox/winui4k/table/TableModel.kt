@@ -1,9 +1,9 @@
 package com.appkitbox.winui4k.table
 
 /**
- * javax.swing.table.TableModel-like: the model of the tabular data shown by a [com.appkitbox.winui4k.WTableView].
+ * javax.swing.table.TableModel-like: the model of the tabular data shown by a [com.appkitbox.winui4k.WTable].
  *
- * The view (WTableView) reads cell values from this model when it needs them and writes cell edits back with
+ * The view (WTable) reads cell values from this model when it needs them and writes cell edits back with
  * [setValueAt]. When the model's contents change, notify the [TableModelListener]s with a [TableModelEvent] (usually
  * through the fire methods of [AbstractTableModel]). Row and column indices are both model positions (0-based).
  */

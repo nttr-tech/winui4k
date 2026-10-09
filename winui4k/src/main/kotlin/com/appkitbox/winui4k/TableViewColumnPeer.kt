@@ -22,9 +22,9 @@ import com.appkitbox.winui4k.table.TableColumn
 import com.appkitbox.winui4k.table.TableModel
 import com.appkitbox.winui4k.table.TableRowSorter
 
-/** The interface through which [TableViewColumnPeer] reads the state of the table ([WTableView]). */
+/** The interface through which [TableViewColumnPeer] reads the state of the table ([WTable]). */
 internal interface TableViewColumnHost {
-    val table: WTableView
+    val table: WTable
     val model: TableModel
     val rows: TableRowCollection
     val sorter: TableRowSorter<*>?

@@ -8,8 +8,8 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.IntConsumer
 
 /**
- * Notifies listeners of a row double-click on a [WTableView] (UIElement.DoubleTapped), passing the view index of the
- * double-clicked row (the implementation of WTableView.addRowInvokedListener).
+ * Notifies listeners of a row double-click on a [WTable] (UIElement.DoubleTapped), passing the view index of the
+ * double-clicked row (the implementation of WTable.addRowInvokedListener).
  *
  * Because TableView itself has no row double-click event, this subscribes to DoubleTapped on the whole table and
  * walks up the parents from the double-clicked element (OriginalSource) to find the row object.

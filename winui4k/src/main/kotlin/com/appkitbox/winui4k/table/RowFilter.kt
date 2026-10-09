@@ -20,7 +20,7 @@ enum class SortOrder {
 /**
  * Like javax.swing.RowFilter: a filter that selects the rows to show.
  *
- * In [com.appkitbox.winui4k.WTableView], it works as the predicate of TableViewSource.Filter, and rows for which
+ * In [com.appkitbox.winui4k.WTable], it works as the predicate of TableViewSource.Filter, and rows for which
  * [include] returns false are not shown (they are not removed from the model).
  * Build one with [regexFilter] / [numberFilter] / [dateFilter] / [andFilter] / [orFilter] / [notFilter], or
  * implement [include].

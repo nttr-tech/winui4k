@@ -39,7 +39,7 @@ import com.appkitbox.winui4k.WSelectorBar
 import com.appkitbox.winui4k.WSelectorBarItem
 import com.appkitbox.winui4k.WTabView
 import com.appkitbox.winui4k.WTabViewItem
-import com.appkitbox.winui4k.WTableView
+import com.appkitbox.winui4k.WTable
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTitleBar
 import com.appkitbox.winui4k.WUniformGridLayout
@@ -60,7 +60,7 @@ internal class FilerTab(var directory: File) {
  * The Fluent Design filer's main window.
  * Composed of a title-bar-integrated TabView, a navigation toolbar + BreadcrumbBar, a CommandBar,
  * a NavigationView sidebar, a SelectorBar for switching the view,
- * a details (WTableView) / icons (WItemsView) list, and a status bar.
+ * a details (WTable) / icon (WItemsView) listing, and a status bar.
  */
 @Suppress("TooManyFunctions") // Acts as the controller for the whole window, so it naturally has one method per feature
 internal class FilerWindow {
@@ -91,9 +91,9 @@ internal class FilerWindow {
     /** The File corresponding to each level of BreadcrumbBar (looks up the destination from ItemClicked's index). */
     private var breadcrumbParts: List<File> = emptyList()
 
-    // The file list (details = WTableView / icons = WItemsView)
+    // The file listing (details = WTable / icons = WItemsView)
     private val tableModel = FileTableModel()
-    private val table = WTableView(tableModel)
+    private val table = WTable(tableModel)
     private val itemsView = WItemsView()
     private val contentHost = WGrid()
     private val navigationView = WNavigationView()

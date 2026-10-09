@@ -25,7 +25,7 @@ import com.appkitbox.winui4k.WListBox
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WProgressBar
 import com.appkitbox.winui4k.WSpinner
-import com.appkitbox.winui4k.WTableView
+import com.appkitbox.winui4k.WTable
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WTree
 import com.appkitbox.winui4k.WTreeNode
@@ -334,12 +334,12 @@ private fun buildListItemClickExample(): WComponent {
 
 // region TableView
 
-/** The TableView page: lines up demos for trying out WTableView's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
+/** The TableView page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
 internal fun buildTableViewPage(): WComponent {
     val page = buildPage(
         "TableView",
         "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). " +
-            "Like Swing's JTable, try out the various features of WTableView, built from TableModel / TableColumnModel / TableRowSorter.",
+            "Like Swing's JTable, try out the various features of WTable, built from TableModel / TableColumnModel / TableRowSorter.",
     )
 
     page.add(buildTableViewBasicExample())
@@ -374,8 +374,8 @@ private class ProductTableModel : DefaultTableModel(
 }
 
 /** The table for the demos. Its height is fixed so it does not get lost in the page's scrolling. */
-private fun buildProductTableView(model: TableModel = ProductTableModel()): WTableView {
-    val table = WTableView(model)
+private fun buildProductTableView(model: TableModel = ProductTableModel()): WTable {
+    val table = WTable(model)
     table.width = 620.0
     table.height = 300.0
     table.horizontalAlignment = HorizontalAlignment.LEFT

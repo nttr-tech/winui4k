@@ -190,7 +190,7 @@ CsWinRT solves this through mutual reference-graph queries between the .NET GC a
 - A single UI thread is assumed, and the `W*` API is contractually usable only on that thread.
 - Window and Shell wrappers (`WFrame`, `WAppWindow`, etc.) are excluded from automatic release and hold their references indefinitely.
 - Error handling is limited to converting HRESULTs into exceptions.
-- It depends on the Windows App SDK 2.5 experimental release (2.5.4-experimental). `WTableView` (TableView) is an experimental API and may change before it reaches a stable release.
+- It depends on the Windows App SDK 2.5 experimental release (2.5.4-experimental). `WTable` (TableView) is an experimental API and may change before it reaches a stable release.
 
 IIDs (interface identifiers) and vtable slot numbers are not hand-written guesses — they are machine-extracted from Windows type-information files (winmd) with `tools/dump_winmd.py`.
 

@@ -4,7 +4,7 @@ import com.appkitbox.winui4k.table.AbstractTableModel
 import java.io.File
 
 /**
- * The model for the file list's details view (WTableView).
+ * The model for the file list's details view (WTable).
  * Returns the four columns Name / Date modified / Type / Size as display strings.
  */
 internal class FileTableModel : AbstractTableModel() {

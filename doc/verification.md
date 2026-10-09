@@ -31,4 +31,4 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   (弱参照で追跡されるため。実装しないと Tabular DLL 内でアクセス違反)
 - XAML のバインディングは、ソースが `IMap<String, Object>` を実装していればパス名をキーとして Lookup / Insert する
   (MapPropertyAccess)。キーが存在するか (HasKey) で接続の可否を決め、`IObservableMap.MapChanged` は変化したキーと
-  一致するものだけを反映する (Reset は無視される)。WTableView の行アイテムはこれを使い、キー "c<列>" でモデルの値を返す
+  一致するものだけを反映する (Reset は無視される)。WTable の行アイテムはこれを使い、キー "c<列>" でモデルの値を返す

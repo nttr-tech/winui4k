@@ -26,10 +26,10 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 
 /**
- * Tests WTableView (TableView) by actually displaying it and verifying integration with the model, selection, sorting,
+ * Tests WTable (TableView) by actually displaying it and verifying integration with the model, selection, sorting,
  * filtering, grouping, column operations, and renderers.
  */
-class WTableViewTest : FunSpec() {
+class WTableTest : FunSpec() {
     /** A model of 3 columns (product name / price / in stock) × 4 rows. */
     private fun productModel(): DefaultTableModel = object : DefaultTableModel(
         listOf(
@@ -48,7 +48,7 @@ class WTableViewTest : FunSpec() {
     }
 
     /** Shows [table], waits for its template to be applied, runs [block] on the UI thread, and then removes it. */
-    private fun <T> withShownTable(table: WTableView, block: (WTableView) -> T): T {
+    private fun <T> withShownTable(table: WTable, block: (WTable) -> T): T {
         UiTestHarness.attachAndAwaitLoaded(table)
         try {
             return onUiThreadGet {
@@ -114,7 +114,7 @@ class WTableViewTest : FunSpec() {
     }
 
     /** The row of the TextBlock whose text is [text] in [table] (TableViewRowInvoker.viewRowOf; identifies the row on a double-click). */
-    private fun viewRowOfText(table: WTableView, text: String): Int {
+    private fun viewRowOfText(table: WTable, text: String): Int {
         val textBlock = checkNotNull(findTextBlock(table.dependencyObject, text)) { "TextBlock not found: $text" }
         return try {
             table.rowInvoker.viewRowOf(textBlock)
@@ -130,14 +130,14 @@ class WTableViewTest : FunSpec() {
     }
 
     /** Lists the values of column [column] (model) for all rows in the view from top to bottom (group header rows are "#"). */
-    private fun viewValues(table: WTableView, column: Int): List<Any?> = (0 until table.rowCount).map { row ->
+    private fun viewValues(table: WTable, column: Int): List<Any?> = (0 until table.rowCount).map { row ->
         val modelRow = table.convertRowIndexToModel(row)
         if (modelRow < 0) "#" else table.model.getValueAt(modelRow, column)
     }
 
     init {
         test("the shown table's row count, column count, cell values, and column names match the model") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 listOf(it.rowCount, it.columnCount, it.getValueAt(1, 0), it.getColumnName(2))
             } shouldBe listOf(4, 3, "Orange", "In Stock")
@@ -145,7 +145,7 @@ class WTableViewTest : FunSpec() {
 
         test("adding and removing rows and updating values in the model are reflected in the view's rows") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 model.addRow("Melon", 900, true)
                 model.removeRow(0)
@@ -155,7 +155,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("a row selected with selectRow is reflected in selectedRow and isRowSelected, and listeners are called") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             var notified = 0
             val result = withShownTable(table) {
                 it.addRowSelectionListener { notified++ }
@@ -169,7 +169,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("with selectionMode set to NONE, selectRow does not select anything") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 it.selectionMode = TableSelectionMode.NONE
                 it.selectRow(1)
@@ -179,7 +179,7 @@ class WTableViewTest : FunSpec() {
 
         test("the view index of the row is found from the element of a double-clicked cell, and is -1 for a column header element") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val unsorted = listOf(viewRowOfText(it, "Grape"), viewRowOfText(it, "Orange"), viewRowOfText(it, "Product"))
                 it.rowSorter = TableRowSorter(model).apply { setSortKeys(listOf(RowSorter.SortKey(1, SortOrder.DESCENDING))) }
@@ -195,7 +195,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("no model row is found from the element of a group header row, so it is -1") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             UiTestHarness.attachAndAwaitLoaded(table)
             try {
                 onUiThread {
@@ -212,7 +212,7 @@ class WTableViewTest : FunSpec() {
 
         test("TableRowSorter's setSortKeys sorts by price in descending order, and view and model row indices can be converted") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -235,7 +235,7 @@ class WTableViewTest : FunSpec() {
 
         test("passing multiple keys to setSortKeys orders rows with the same primary key by the secondary key") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -254,7 +254,7 @@ class WTableViewTest : FunSpec() {
 
         test("a column with a comparator set via setComparator is sorted with that comparator (ascending by length)") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 sorter.setComparator(0, compareBy<String> { name -> name.length }.thenBy { name -> name })
@@ -266,7 +266,7 @@ class WTableViewTest : FunSpec() {
 
         test("clearing sorting with setSortKeys(null) returns to the model order") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -283,7 +283,7 @@ class WTableViewTest : FunSpec() {
 
         test("filtering with a RowFilter shows only the matching rows, and clearing it shows all rows again") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -296,7 +296,7 @@ class WTableViewTest : FunSpec() {
 
         test("rows added while filtering are also filtered by the filter condition") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -309,7 +309,7 @@ class WTableViewTest : FunSpec() {
 
         test("updating a value while filtering re-evaluates that row against the filter condition") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 it.rowSorter = sorter
@@ -323,7 +323,7 @@ class WTableViewTest : FunSpec() {
 
         test("when sortsOnUpdates is true, a row whose value was updated is sorted again") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 val sorter = TableRowSorter(model)
                 sorter.sortsOnUpdates = true
@@ -336,7 +336,7 @@ class WTableViewTest : FunSpec() {
 
         test("groupBy groups rows with the same value, and header rows convert to model row -1") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 it.groupBy(2) // Group by in stock (true / false)
                 it.updateLayout() // Actually render the group header rows (including resolving theme resources)
@@ -353,7 +353,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("group headers show the key text and the count (the default template's {Binding KeyText} is resolved)") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             UiTestHarness.attachAndAwaitLoaded(table)
             try {
                 onUiThread {
@@ -369,7 +369,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("moving, removing, and adding columns are reflected in the column order and column names") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 it.moveColumn(2, 0)
                 val moved = (0 until it.columnCount).map { column -> it.getColumnName(column) }
@@ -393,7 +393,7 @@ class WTableViewTest : FunSpec() {
                 val columns = DefaultTableColumnModel()
                 columns.addColumn(TableColumn(2).also { it.headerValue = "Stock" })
                 columns.addColumn(TableColumn(0))
-                WTableView(productModel(), columns)
+                WTable(productModel(), columns)
             }
             withShownTable(table) {
                 listOf(it.autoCreateColumnsFromModel, it.columnCount, it.getColumnName(1), it.columnModel.getColumn(0).headerValue)
@@ -402,7 +402,7 @@ class WTableViewTest : FunSpec() {
 
         test("changing the model's column structure recreates the columns from the model") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 model.addColumn("Origin", listOf("Aomori", "Ehime", "Yamanashi", "Yamanashi"))
                 listOf(it.columnCount, it.getColumnName(3), it.getValueAt(2, 3))
@@ -410,7 +410,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("column properties are reflected in the displayed native columns, and actualWidth returns the actual width") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 val column = it.columnModel.getColumn(0)
                 column.preferredWidth = 200.0
@@ -422,7 +422,7 @@ class WTableViewTest : FunSpec() {
         test("for a column with a cellRenderer, the renderer is called with the values of the displayed rows") {
             val rendered = mutableListOf<Pair<Any?, Int>>()
             val table = onUiThreadGet {
-                val view = WTableView(productModel())
+                val view = WTable(productModel())
                 view.columnModel.getColumn(1).cellRenderer = TableCellRenderer { _, value, _, _, row, _ ->
                     rendered += value to row
                     WLabel("¥$value")
@@ -437,7 +437,7 @@ class WTableViewTest : FunSpec() {
             val model = productModel()
             val rendered = mutableListOf<Any?>()
             val table = onUiThreadGet {
-                val view = WTableView(model)
+                val view = WTable(model)
                 view.columnModel.getColumn(1).cellRenderer = TableCellRenderer { _, value, _, _, _, _ ->
                     rendered += value
                     WLabel(value.toString())
@@ -462,7 +462,7 @@ class WTableViewTest : FunSpec() {
         test("setDefaultRenderer is used as the renderer for the column's type") {
             val renderedValues = mutableListOf<Any?>()
             val table = onUiThreadGet {
-                val view = WTableView(productModel())
+                val view = WTable(productModel())
                 view.setDefaultRenderer(Integer::class.java) { _, value, _, _, _, _ ->
                     renderedValues += value
                     WLabel(value.toString())
@@ -476,7 +476,7 @@ class WTableViewTest : FunSpec() {
         test("the column header template and the display when there are no rows (emptyText) are rendered") {
             val model = DefaultTableModel(listOf("Product"), 0)
             val table = onUiThreadGet {
-                val view = WTableView(model)
+                val view = WTable(model)
                 view.columnModel.getColumn(0).headerTemplate =
                     "<StackPanel Orientation=\"Horizontal\"><TextBlock Text=\"★\" /><TextBlock Text=\"{Binding}\" /></StackPanel>"
                 view.emptyText = "No products"
@@ -493,7 +493,7 @@ class WTableViewTest : FunSpec() {
         }
 
         test("appearance properties return the values that were set") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 it.showVerticalLines = false
                 it.isHeaderVisible = false
@@ -506,10 +506,10 @@ class WTableViewTest : FunSpec() {
 
         test("values written by the binding when an edit is committed are converted to the column type and written back to the model, and inputs that cannot be converted are not written back") {
             val model = productModel()
-            val table = onUiThreadGet { WTableView(model) }
+            val table = onUiThreadGet { WTable(model) }
             withShownTable(table) {
                 // Insert into the displayed row object, just like a binding write-back (TwoWay UpdateSource)
-                val rowsField = WTableView::class.java.getDeclaredField("rows").also { field -> field.isAccessible = true }
+                val rowsField = WTable::class.java.getDeclaredField("rows").also { field -> field.isAccessible = true }
                 val rows = rowsField.get(it) as TableRowCollection
                 val map = ComPtr(rows[1].comObject.primary)
                 fun write(key: String, value: Any?) {
@@ -528,14 +528,14 @@ class WTableViewTest : FunSpec() {
         }
 
         test("when not editing, isEditing is false and committing and canceling return false") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 listOf(it.isEditing, it.stopCellEditing(), it.cancelCellEditing(), it.editingRow, it.editingColumn)
             } shouldBe listOf(false, false, false, -1, -1)
         }
 
         test("replacing the model shows the new model's rows and columns") {
-            val table = onUiThreadGet { WTableView(productModel()) }
+            val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
                 it.model = DefaultTableModel(listOf(listOf("Tokyo", 1400)), listOf("City", "Population (10k)"))
                 listOf(it.rowCount, it.columnCount, it.getValueAt(0, 0), it.getColumnName(1))
@@ -545,7 +545,7 @@ class WTableViewTest : FunSpec() {
         test("setting autoCreateRowSorter to true creates a TableRowSorter") {
             val model = productModel()
             onUiThreadGet {
-                val table = WTableView(model)
+                val table = WTable(model)
                 table.autoCreateRowSorter = true
                 (table.rowSorter as TableRowSorter<*>).getModel() === model
             } shouldBe true
@@ -554,7 +554,7 @@ class WTableViewTest : FunSpec() {
         test("view and model row indices can be converted with filtering and sorting taken into account even before display") {
             val model: TableModel = productModel()
             onUiThreadGet {
-                val table = WTableView(model)
+                val table = WTable(model)
                 val sorter = TableRowSorter(model)
                 table.rowSorter = sorter
                 sorter.setRowFilter(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 80, 1))

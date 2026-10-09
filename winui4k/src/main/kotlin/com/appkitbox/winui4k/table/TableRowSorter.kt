@@ -100,8 +100,8 @@ fun interface RowSorterListener {
 }
 
 /**
- * The entry point through which [TableRowSorter] delegates work to the WTableView that is showing it
- * (the computation lives on the WTableView side, because WinUI's TableView does the sorting and filtering).
+ * The entry point through which [TableRowSorter] delegates work to the WTable that is showing it
+ * (the computation lives on the WTable side, because WinUI's TableView does the sorting and filtering).
  */
 internal interface RowSorterHost {
     fun sortKeysChanged(keys: List<RowSorter.SortKey>)
@@ -126,7 +126,7 @@ internal interface RowSorterHost {
 /**
  * javax.swing.table.TableRowSorter-like: a [RowSorter] that sorts and filters the rows of a [TableModel].
  *
- * Setting it as [com.appkitbox.winui4k.WTableView.rowSorter] enables sorting by clicking column headers, and the
+ * Setting it as [com.appkitbox.winui4k.WTable.rowSorter] enables sorting by clicking column headers, and the
  * sorting and filtering are done by WinUI's TableView (TableViewSource).
  * - With a single key in [setSortKeys], it is a column sort (TableView.SortByColumn, same as clicking the column
  *   header), and columns given a comparator with [setComparator] are sorted with that comparator
@@ -145,7 +145,7 @@ class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
     /** The sort keys set before display (applied to the TableView when it is shown). */
     private var pendingSortKeys: List<SortKey> = emptyList()
 
-    /** The WTableView that is showing it. */
+    /** The WTable that is showing it. */
     @get:JvmSynthetic
     @set:JvmSynthetic
     internal var host: RowSorterHost? = null
@@ -227,7 +227,7 @@ class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
         return (filter as RowFilter<M, Int>).include(ModelEntry(model, modelRow))
     }
 
-    /** The sort keys set before display (WTableView applies them when it is shown). */
+    /** The sort keys set before display (WTable applies them when it is shown). */
     @JvmSynthetic
     internal fun pendingSortKeys(): List<SortKey> = pendingSortKeys
 

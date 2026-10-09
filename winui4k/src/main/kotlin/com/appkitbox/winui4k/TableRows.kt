@@ -55,7 +55,7 @@ internal object TableCellValues {
 }
 
 /**
- * The gateway through which [TableRowItem] reads and writes model values (implemented by WTableView).
+ * The gateway through which [TableRowItem] reads and writes model values (implemented by WTable).
  * Rows and columns are model indexes.
  */
 internal interface TableRowValues {

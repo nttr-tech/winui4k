@@ -5,7 +5,7 @@ import com.appkitbox.winui4k.TextTrimming
 import com.appkitbox.winui4k.VerticalAlignment
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WLabel
-import com.appkitbox.winui4k.WTableView
+import com.appkitbox.winui4k.WTable
 
 /**
  * Like javax.swing.table.TableCellRenderer: creates the component that displays a cell.
@@ -22,7 +22,7 @@ fun interface TableCellRenderer {
      */
     @Suppress("LongParameterList") // The parameters correspond 1:1 to Swing's TableCellRenderer
     fun getTableCellRendererComponent(
-        table: WTableView,
+        table: WTable,
         value: Any?,
         isSelected: Boolean,
         hasFocus: Boolean,
@@ -42,7 +42,7 @@ open class DefaultTableCellRenderer : TableCellRenderer {
     var horizontalAlignment: HorizontalAlignment = HorizontalAlignment.LEFT
 
     override fun getTableCellRendererComponent(
-        table: WTableView,
+        table: WTable,
         value: Any?,
         isSelected: Boolean,
         hasFocus: Boolean,

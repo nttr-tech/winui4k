@@ -64,7 +64,7 @@ import kotlin.jvm.JvmSynthetic
  * those whose names contain model. Conversion to and from the model is done with [convertRowIndexToModel] /
  * [convertColumnIndexToModel] and so on (as in Swing).
  */
-class WTableView @JvmOverloads constructor(
+class WTable @JvmOverloads constructor(
     model: TableModel = DefaultTableModel(),
     columnModel: TableColumnModel? = null,
 ) : WControl(
@@ -84,9 +84,9 @@ class WTableView @JvmOverloads constructor(
 
     /** The access point for reading and writing model values (used by row objects). */
     private val rowValues = object : TableRowValues {
-        override fun columnCount(): Int = this@WTableView.model.getColumnCount()
+        override fun columnCount(): Int = this@WTable.model.getColumnCount()
 
-        override fun valueAt(row: Int, column: Int): Any? = this@WTableView.model.getValueAt(row, column)
+        override fun valueAt(row: Int, column: Int): Any? = this@WTable.model.getValueAt(row, column)
 
         override fun valueWritten(item: TableRowItem, column: Int, value: Any?) {
             onValueWritten(item, column, value)
@@ -106,7 +106,7 @@ class WTableView @JvmOverloads constructor(
 
     private val columnModelListener = object : TableColumnModelListener {
         override fun columnAdded(event: TableColumnModelEvent) {
-            val peer = TableViewColumnPeer(this@WTableView.columnModel.getColumn(event.toIndex), columnHost)
+            val peer = TableViewColumnPeer(this@WTable.columnModel.getColumn(event.toIndex), columnHost)
             peers.add(event.toIndex, peer)
             nativeColumns.call(FoundationInterop.IVector_InsertAt, event.toIndex, peer.native.ptr)
         }
@@ -192,11 +192,11 @@ class WTableView @JvmOverloads constructor(
 
     /**
      * The [RowSorter] responsible for sorting and filtering (JTable.rowSorter). If null, no sorting (clicking column
-     * headers is also disabled). WTableView accepts only [TableRowSorter].
+     * headers is also disabled). WTable accepts only [TableRowSorter].
      */
     var rowSorter: RowSorter<out TableModel>? = null
         set(value) {
-            require(value == null || value is TableRowSorter<*>) { "WTableView supports TableRowSorter only" }
+            require(value == null || value is TableRowSorter<*>) { "WTable supports TableRowSorter only" }
             (field as? TableRowSorter<*>)?.host = null
             field = value
             val sorter = value as? TableRowSorter<*>
@@ -895,9 +895,9 @@ class WTableView @JvmOverloads constructor(
             for (peer in peers) if (peer.column.modelIndex == column) peer.applySortProperties()
         }
 
-        override fun convertRowIndexToModel(index: Int): Int = this@WTableView.convertRowIndexToModel(index)
+        override fun convertRowIndexToModel(index: Int): Int = this@WTable.convertRowIndexToModel(index)
 
-        override fun convertRowIndexToView(index: Int): Int = this@WTableView.convertRowIndexToView(index)
+        override fun convertRowIndexToView(index: Int): Int = this@WTable.convertRowIndexToView(index)
 
         override fun viewRowCount(): Int = rowOrder.count()
     }
@@ -1035,19 +1035,19 @@ class WTableView @JvmOverloads constructor(
 
     /** The access point through which columns ([TableViewColumnPeer]) read the table's state. */
     private val columnHost: TableViewColumnHost = object : TableViewColumnHost {
-        override val table: WTableView
-            get() = this@WTableView
+        override val table: WTable
+            get() = this@WTable
         override val model: TableModel
-            get() = this@WTableView.model
+            get() = this@WTable.model
         override val rows: TableRowCollection
-            get() = this@WTableView.rows
+            get() = this@WTable.rows
         override val sorter: TableRowSorter<*>?
-            get() = this@WTableView.sorter
+            get() = this@WTable.sorter
 
         override fun columnClassOf(modelIndex: Int): Class<*> =
             if (modelIndex in 0 until model.getColumnCount()) model.getColumnClass(modelIndex) else Any::class.java
 
-        override fun itemOf(pointer: ComPtr): TableRowItem? = this@WTableView.itemOf(pointer)
+        override fun itemOf(pointer: ComPtr): TableRowItem? = this@WTable.itemOf(pointer)
 
         override fun rebuild(peer: TableViewColumnPeer) {
             rebuildPeer(peer)

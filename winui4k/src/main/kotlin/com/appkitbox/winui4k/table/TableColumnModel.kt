@@ -3,7 +3,7 @@ package com.appkitbox.winui4k.table
 import java.util.EventObject
 
 /**
- * javax.swing.table.TableColumnModel-like: the sequence of columns ([TableColumn]) shown in a [com.appkitbox.winui4k.WTableView].
+ * javax.swing.table.TableColumnModel-like: the sequence of columns ([TableColumn]) shown in a [com.appkitbox.winui4k.WTable].
  *
  * A column's position (its column index in the view) is independent of [TableColumn.modelIndex] (the model column).
  * Swing's column margin and column selection model are not provided, because WinUI's TableView has no corresponding
