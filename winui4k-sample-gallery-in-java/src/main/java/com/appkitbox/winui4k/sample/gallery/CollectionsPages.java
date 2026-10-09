@@ -6,11 +6,17 @@ import com.appkitbox.winui4k.ListViewSelectionMode;
 import com.appkitbox.winui4k.Orientation;
 import com.appkitbox.winui4k.SelectionMode;
 import com.appkitbox.winui4k.SortDirection;
+import com.appkitbox.winui4k.SpinButtonPlacementMode;
+import com.appkitbox.winui4k.TableDensity;
+import com.appkitbox.winui4k.TableSelectionMode;
 import com.appkitbox.winui4k.TextWrapping;
 import com.appkitbox.winui4k.TreeViewSelectionMode;
+import com.appkitbox.winui4k.VerticalAlignment;
 import com.appkitbox.winui4k.WBorder;
 import com.appkitbox.winui4k.WButton;
+import com.appkitbox.winui4k.WCheckBox;
 import com.appkitbox.winui4k.WColor;
+import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WItemContainer;
 import com.appkitbox.winui4k.WItemsView;
@@ -18,18 +24,33 @@ import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WList;
 import com.appkitbox.winui4k.WListBox;
 import com.appkitbox.winui4k.WPanel;
+import com.appkitbox.winui4k.WProgressBar;
+import com.appkitbox.winui4k.WSpinner;
 import com.appkitbox.winui4k.WTable;
 import com.appkitbox.winui4k.WTableColumn;
+import com.appkitbox.winui4k.WTableView;
 import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WTree;
 import com.appkitbox.winui4k.WTreeNode;
 import com.appkitbox.winui4k.WUniformGridLayout;
-
+import com.appkitbox.winui4k.table.DefaultCellEditor;
+import com.appkitbox.winui4k.table.DefaultTableCellRenderer;
+import com.appkitbox.winui4k.table.DefaultTableModel;
+import com.appkitbox.winui4k.table.RowFilter;
+import com.appkitbox.winui4k.table.RowSorter;
+import com.appkitbox.winui4k.table.SortOrder;
+import com.appkitbox.winui4k.table.TableColumn;
+import com.appkitbox.winui4k.table.TableModel;
+import com.appkitbox.winui4k.table.TableModelEvent;
+import com.appkitbox.winui4k.table.TableRowSorter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 
 /*
@@ -338,10 +359,447 @@ final class CollectionsPages {
 
     // region TableView
 
-    /** The TableView page: lines up demos for trying out WTable's various features. */
+    /** The TableView page: lines up demos for trying out WTableView's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
     static WComponent buildTableViewPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "TableView",
+                "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). "
+                        + "Like Swing's JTable, try out the various features of WTableView, built from TableModel / TableColumnModel / TableRowSorter.");
+
+        page.add(buildTableViewBasicExample());
+        page.add(buildTableViewSortFilterExample());
+        page.add(buildTableViewEditingExample());
+        page.add(buildTableViewGroupingExample());
+        page.add(buildTableViewCellsExample());
+        page.add(buildTableViewAppearanceExample());
+        page.add(buildTableViewColumnsExample());
+        return page;
+    }
+
+    /** Product data (product / category / price / stock / in stock). Returns column types to distinguish numeric and boolean columns. */
+    private static final class ProductTableModel extends DefaultTableModel {
+        ProductTableModel() {
+            super(
+                    Arrays.asList(
+                            Arrays.<Object>asList("Apple", "Fruit", 150, 12, true),
+                            Arrays.<Object>asList("Orange", "Fruit", 80, 30, true),
+                            Arrays.<Object>asList("Grape", "Fruit", 480, 0, false),
+                            Arrays.<Object>asList("Cabbage", "Vegetable", 200, 8, true),
+                            Arrays.<Object>asList("Carrot", "Vegetable", 60, 25, true),
+                            Arrays.<Object>asList("Tomato", "Vegetable", 120, 0, false),
+                            Arrays.<Object>asList("Milk", "Dairy", 230, 15, true),
+                            Arrays.<Object>asList("Cheese", "Dairy", 380, 4, true)),
+                    Arrays.<Object>asList("Product", "Category", "Price", "Stock", "In stock"));
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            switch (columnIndex) {
+                case 2:
+                case 3:
+                    return Integer.class;
+                case 4:
+                    return Boolean.class;
+                default:
+                    return String.class;
+            }
+        }
+    }
+
+    /** The table for the demos. Its height is fixed so it does not get lost in the page's scrolling. */
+    private static WTableView buildProductTableView(TableModel model) {
+        WTableView table = new WTableView(model);
+        table.setWidth(620.0);
+        table.setHeight(300.0);
+        table.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        return table;
+    }
+
+    /** Creates a check box together with its change handler (for the Options panel). */
+    private static WCheckBox optionCheckBox(String text, boolean checked, Consumer<Boolean> onChanged) {
+        WCheckBox checkBox = new WCheckBox(text);
+        checkBox.setChecked(checked);
+        checkBox.addItemListener((value) -> onChanged.accept(Boolean.TRUE.equals(value)));
+        return checkBox;
+    }
+
+    /** Basics: displaying a TableModel and selecting rows (SelectionMode / Select / SelectionChanged / view-model conversion). */
+    private static WComponent buildTableViewBasicExample() {
+        WTableView table = buildProductTableView(new ProductTableModel());
+        WLabel result = new WLabel("Selected: none");
+        table.addRowSelectionListener(() -> {
+            int row = table.getSelectedRow();
+            if (row < 0) {
+                result.setText("Selection: none");
+            } else {
+                int modelRow = table.convertRowIndexToModel(row);
+                result.setText("Selection: " + table.getModel().getValueAt(modelRow, 0)
+                        + " (view row = " + row + " / model row = " + modelRow + ")");
+            }
+        });
+
+        WPanel body = new WPanel(8.0);
+        body.add(table);
+        body.add(result);
+
+        WComboBox selectionMode = new WComboBox(Arrays.asList("SINGLE (select one row)", "NONE (no selection)"));
+        selectionMode.setSelectedIndex(0);
+        selectionMode.addListSelectionListener(() -> table.setSelectionMode(
+                selectionMode.getSelectedIndex() == 1 ? TableSelectionMode.NONE : TableSelectionMode.SINGLE));
+        WButton selectThird = new WButton("Select the third row");
+        selectThird.addActionListener(() -> table.selectRow(2));
+        WButton clear = new WButton("Clear selection");
+        clear.addActionListener(table::clearSelection);
+
+        WPanel options = new WPanel(8.0);
+        options.add(GalleryScaffold.optionsLabel("Selection mode (SelectionMode)"));
+        options.add(selectionMode);
+        options.add(selectThird);
+        options.add(clear);
+        return GalleryScaffold.buildExample("Basics (TableModel / row selection / SelectionChanged)", body, options);
+    }
+
+    /** Sorting and filtering: TableRowSorter (header click / SortKeys / Comparator / RowFilter) and Sorting / Sorted. */
+    private static WComponent buildTableViewSortFilterExample() {
+        ProductTableModel model = new ProductTableModel();
+        WTableView table = buildProductTableView(model);
+        TableRowSorter<TableModel> sorter = new TableRowSorter<>(model);
+        // Sort product names shortest first (alphabetically when the lengths are equal)
+        sorter.setComparator(0, Comparator.comparingInt(String::length).thenComparing(Comparator.<String>naturalOrder()));
+        table.setRowSorter(sorter);
+
+        WLabel status = new WLabel("Click a column header to sort.");
+        status.setTextWrapping(TextWrapping.WRAP);
+        boolean[] cancelSorting = {false};
+        table.addSortingListener((event) -> {
+            event.setCanceled(cancelSorting[0]);
+            status.setText(cancelSorting[0]
+                    ? "Canceled sorting by \"" + table.getColumnName(event.getColumn()) + "\" (Cancel in Sorting)"
+                    : "Sorting: " + table.getColumnName(event.getColumn()) + " → " + event.getSortOrder());
+        });
+        table.addSortedListener((event) -> status.setText("Sorted: " + table.getColumnName(event.getColumn())
+                + " (" + event.getSortOrder() + ") / showing " + table.getRowCount() + " rows"));
+
+        WTextField filterText = new WTextField("Filter by product (regular expression)");
+        filterText.setWidth(240.0);
+        filterText.addTextChangedListener((text) -> {
+            sorter.setRowFilter(text.trim().isEmpty() ? null : RowFilter.regexFilter(text, 0));
+            status.setText("Filtered: showing " + table.getRowCount() + " of " + model.getRowCount() + " rows");
+        });
+
+        WPanel body = new WPanel(8.0);
+        body.add(filterText);
+        body.add(table);
+        body.add(status);
+
+        WButton byPrice = new WButton("Highest price first");
+        byPrice.addActionListener(() -> sorter.setSortKeys(
+                Collections.singletonList(new RowSorter.SortKey(2, SortOrder.DESCENDING))));
+        WButton clearSort = new WButton("Clear sort");
+        clearSort.addActionListener(() -> sorter.setSortKeys(null));
+        WCheckBox inStock = optionCheckBox("Only rows in stock", false,
+                (only) -> sorter.setRowFilter(only ? RowFilter.regexFilter("true", 4) : null));
+        WCheckBox cancel = optionCheckBox("Cancel sorting (Sorting)", false, (value) -> cancelSorting[0] = value);
+        WCheckBox sortable = optionCheckBox("Category column is sortable", true, (value) -> sorter.setSortable(1, value));
+
+        WPanel options = new WPanel(8.0);
+        options.add(GalleryScaffold.optionsLabel("TableRowSorter"));
+        options.add(byPrice);
+        options.add(clearSort);
+        options.add(inStock);
+        options.add(sortable);
+        options.add(cancel);
+        return GalleryScaffold.buildExample("Sorting and filtering (TableRowSorter / RowFilter / Sorting / Sorted)", body, options);
+    }
+
+    /** Editing: TableModel.isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding / writing back to the model. */
+    private static WComponent buildTableViewEditingExample() {
+        DefaultTableModel model = new DefaultTableModel(
+                Arrays.asList(
+                        Arrays.<Object>asList(1, "Hanako Sato", "Development", 34, true),
+                        Arrays.<Object>asList(2, "Ichiro Suzuki", "Sales", 41, true),
+                        Arrays.<Object>asList(3, "Misaki Takahashi", "Design", 28, false),
+                        Arrays.<Object>asList(4, "Ken Tanaka", "Development", 45, true)),
+                Arrays.<Object>asList("ID", "Name", "Department", "Age", "Employed")) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0 || columnIndex == 3) {
+                    return Integer.class;
+                }
+                return columnIndex == 4 ? Boolean.class : String.class;
+            }
+
+            // The ID cannot be edited
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return columnIndex != 0;
+            }
+        };
+        WTableView table = buildProductTableView(model);
+        table.setHeight(220.0);
+        // Edit the department with a combo box and the age with a number box (the same idea as Swing's DefaultCellEditor)
+        table.getColumnModel().getColumn(2).setCellEditor(
+                new DefaultCellEditor(new WComboBox(Arrays.asList("Development", "Sales", "Design", "Admin"))));
+        WSpinner ageSpinner = new WSpinner();
+        ageSpinner.setMinimum(18.0);
+        ageSpinner.setMaximum(70.0);
+        ageSpinner.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
+        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(ageSpinner));
+
+        WLabel log = new WLabel("Double-click or press F2 to start editing, Enter to commit, and Esc to cancel.");
+        log.setTextWrapping(TextWrapping.WRAP);
+        table.addBeginningEditListener((event) -> log.setText(
+                "Edit started: " + table.getColumnName(event.getColumn()) + " (row " + (event.getModelRow() + 1) + ")"));
+        table.addCellEditEndingListener((event) -> log.setText(
+                "Edit ended: " + table.getColumnName(event.getColumn()) + " → " + event.getAction()));
+        // The committed value is written back via TableModel.setValueAt, converted to the column type (getColumnClass)
+        model.addTableModelListener((event) -> {
+            if (event.getType() == TableModelEvent.UPDATE && event.getFirstRow() == event.getLastRow() && event.getColumn() >= 0) {
+                Object value = model.getValueAt(event.getFirstRow(), event.getColumn());
+                log.setText("Model updated: " + model.getColumnName(event.getColumn()) + " (row " + (event.getFirstRow() + 1)
+                        + ") = " + value + " (" + (value == null ? "null" : value.getClass().getSimpleName()) + ")");
+            }
+        });
+
+        WPanel body = new WPanel(8.0);
+        body.add(table);
+        body.add(log);
+
+        WCheckBox readOnly = optionCheckBox("Make the whole table read-only (IsReadOnly)", false, table::setReadOnly);
+        WCheckBox ageEditable = optionCheckBox("Age column is editable (column IsReadOnly)", true,
+                (value) -> table.getColumnModel().getColumn(3).setEditable(value));
+        WButton commit = new WButton("Commit edit (CommitEdit)");
+        commit.addActionListener(() -> log.setText("CommitEdit → " + table.stopCellEditing()));
+        WButton cancel = new WButton("Cancel edit (CancelEdit)");
+        cancel.addActionListener(() -> log.setText("CancelEdit → " + table.cancelCellEditing()));
+
+        WPanel options = new WPanel(8.0);
+        options.add(GalleryScaffold.optionsLabel("Editing"));
+        options.add(readOnly);
+        options.add(ageEditable);
+        options.add(commit);
+        options.add(cancel);
+        return GalleryScaffold.buildExample("Editing (isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding)", body, options);
+    }
+
+    /** Grouping: groupBy / clearGrouping / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate. */
+    private static WComponent buildTableViewGroupingExample() {
+        WTableView table = buildProductTableView(new ProductTableModel());
+        table.groupBy(1); // Group by category
+
+        WComboBox groupBy = new WComboBox(Arrays.asList("Category", "In stock", "Price range (300 yen or more / less)", "No grouping"));
+        groupBy.setSelectedIndex(0);
+        groupBy.addListSelectionListener(() -> {
+            switch (groupBy.getSelectedIndex()) {
+                case 0:
+                    table.groupBy(1);
+                    break;
+                case 1:
+                    table.groupBy(4);
+                    break;
+                case 2:
+                    table.groupBy((model, row) -> ((Integer) model.getValueAt(row, 2)) >= 300 ? "300 yen or more" : "Under 300 yen");
+                    break;
+                default:
+                    table.clearGrouping();
+                    break;
+            }
+        });
+        WButton expand = new WButton("Expand all");
+        expand.addActionListener(table::expandAllGroups);
+        WButton collapse = new WButton("Collapse all");
+        collapse.addActionListener(table::collapseAllGroups);
+        WCheckBox customHeader = optionCheckBox("Show headers with a template", false, (custom) -> table.setGroupHeaderTemplate(custom
+                ? "<StackPanel Orientation=\"Horizontal\" Spacing=\"8\" Padding=\"8,4\">"
+                        + "<TextBlock Text=\"{Binding KeyText}\" FontWeight=\"SemiBold\" Foreground=\"{ThemeResource AccentTextFillColorPrimaryBrush}\" />"
+                        + "<TextBlock Text=\"{Binding ItemCount}\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />"
+                        + "<TextBlock Text=\"items\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />"
+                        + "</StackPanel>"
+                : null));
+
+        WPanel options = new WPanel(8.0);
+        options.add(GalleryScaffold.optionsLabel("Key to group by (GroupBy)"));
+        options.add(groupBy);
+        options.add(expand);
+        options.add(collapse);
+        options.add(customHeader);
+        return GalleryScaffold.buildExample("Grouping (GroupBy / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate)", table, options);
+    }
+
+    /** Cell display: TableCellRenderer / XAML cell templates / frozen columns / header and cell tooltips. */
+    private static WComponent buildTableViewCellsExample() {
+        DefaultTableModel model = new DefaultTableModel(
+                Arrays.asList(
+                        Arrays.<Object>asList("Review the design document", "In progress", 60, "Check the spec differences and sort out the review comments."),
+                        Arrays.<Object>asList("Automate the tests", "Done", 100, "Add the E2E tests to CI and run them every night."),
+                        Arrays.<Object>asList("Translate the documentation", "Not started", 0, "Translate the README and the API reference into English."),
+                        Arrays.<Object>asList("Measure performance", "In progress", 35, "Measure display speed with a large data set (100,000 rows).")),
+                Arrays.<Object>asList("Task", "Status", "Progress (%)", "Notes")) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 2 ? Integer.class : String.class;
+            }
+        };
+        WTableView table = buildProductTableView(model);
+        table.setHeight(220.0);
+        table.setWidth(520.0);
+
+        TableColumn task = table.getColumnModel().getColumn(0);
+        task.setFrozen(true); // The task name stays visible even when scrolling horizontally
+        task.setPreferredWidth(180.0);
+        task.setHeaderToolTip("This column is frozen at the left edge (FrozenEdge = Leading)");
+
+        // Show the status as a colored label with a XAML template ({Binding} is the cell value)
+        TableColumn state = table.getColumnModel().getColumn(1);
+        state.setCellTemplate("<Border Background=\"{ThemeResource AccentFillColorDefaultBrush}\" CornerRadius=\"10\" "
+                + "Padding=\"10,2\" Margin=\"8,0\" HorizontalAlignment=\"Left\">"
+                + "<TextBlock Text=\"{Binding}\" Foreground=\"{ThemeResource TextOnAccentFillColorPrimaryBrush}\" /></Border>");
+        state.setHeaderToolTip("Displayed with a XAML DataTemplate (TableViewTemplateColumn)");
+
+        // Show the progress with a Java component (a progress bar) via a renderer
+        TableColumn progress = table.getColumnModel().getColumn(2);
+        progress.setPreferredWidth(160.0);
+        progress.setCellRenderer((view, value, isSelected, hasFocus, row, column) -> {
+            WProgressBar bar = new WProgressBar(0.0, 100.0, ((Integer) value).doubleValue());
+            bar.setMargin(8.0, 0.0, 8.0, 0.0);
+            bar.setVerticalAlignment(VerticalAlignment.CENTER);
+            return bar;
+        });
+        progress.setHeaderToolTip("Displays a WProgressBar via TableCellRenderer (GenerateElementCore)");
+
+        // The notes are long, so show the full text in a cell tooltip
+        TableColumn memo = table.getColumnModel().getColumn(3);
+        memo.setPreferredWidth(240.0);
+        memo.setCellToolTipColumn(3);
+
+        WPanel body = new WPanel(8.0);
+        body.add(table);
+        body.add(GalleryScaffold.optionsLabel("Hover over a column header or a notes cell to show a tooltip. Columns beyond the table's width can be scrolled horizontally."));
+        return GalleryScaffold.buildExample("Cell display (TableCellRenderer / cell templates / frozen columns / tooltips)", body);
+    }
+
+    /** Appearance: grid lines / header / density / row background / stripes / display when there are no rows. */
+    private static WComponent buildTableViewAppearanceExample() {
+        ProductTableModel model = new ProductTableModel();
+        WTableView table = buildProductTableView(model);
+        table.setEmptyText("No products to show");
+        List<List<Object>> removedRows = new ArrayList<>();
+
+        WCheckBox horizontal = optionCheckBox("Horizontal grid lines", table.getShowHorizontalLines(), table::setShowHorizontalLines);
+        WCheckBox vertical = optionCheckBox("Vertical grid lines", table.getShowVerticalLines(), table::setShowVerticalLines);
+        WCheckBox header = optionCheckBox("Show column headers", table.isHeaderVisible(), table::setHeaderVisible);
+        WCheckBox striped = optionCheckBox("Stripes (AlternatingRowBackground)", false,
+                (value) -> table.setAlternatingRowBackground(value ? new WColor(0x20, 0x80, 0x80, 0x80) : null));
+        WCheckBox resizable = optionCheckBox("Resize columns by dragging (CanUserResizeColumns)", table.getCanUserResizeColumns(),
+                table::setCanUserResizeColumns);
+        WComboBox density = new WComboBox(Arrays.asList("COMPACT", "STANDARD", "COMFORTABLE"));
+        density.setSelectedIndex(table.getDensity().ordinal());
+        density.addListSelectionListener(() -> table.setDensity(TableDensity.values()[density.getSelectedIndex()]));
+        WButton clearRows = new WButton("Remove all rows (EmptyTemplate)");
+        clearRows.addActionListener(() -> {
+            while (model.getRowCount() > 0) {
+                List<Object> row = new ArrayList<>();
+                for (int column = 0; column < model.getColumnCount(); column++) {
+                    row.add(model.getValueAt(0, column));
+                }
+                removedRows.add(row);
+                model.removeRow(0);
+            }
+        });
+        WButton restoreRows = new WButton("Restore rows");
+        restoreRows.addActionListener(() -> {
+            for (List<Object> row : removedRows) {
+                model.addRow(row);
+            }
+            removedRows.clear();
+        });
+
+        WPanel options = new WPanel(8.0);
+        options.add(horizontal);
+        options.add(vertical);
+        options.add(header);
+        options.add(striped);
+        options.add(resizable);
+        options.add(GalleryScaffold.optionsLabel("Density (Density)"));
+        options.add(density);
+        options.add(clearRows);
+        options.add(restoreRows);
+        return GalleryScaffold.buildExample("Appearance (GridLinesVisibility / HeadersVisibility / Density / stripes / empty display)", table, options);
+    }
+
+    /** Column operations: TableColumnModel (move / show and hide / add and remove) and column widths. */
+    private static WComponent buildTableViewColumnsExample() {
+        WTableView table = buildProductTableView(new ProductTableModel());
+        WLabel status = new WLabel("");
+        Runnable updateStatus = () -> {
+            List<String> names = new ArrayList<>();
+            for (int column = 0; column < table.getColumnCount(); column++) {
+                names.add(table.getColumnName(column));
+            }
+            status.setText("Column order: " + String.join(" / ", names));
+        };
+        updateStatus.run();
+
+        WButton moveLast = new WButton("Move the first column to the end");
+        moveLast.addActionListener(() -> {
+            table.moveColumn(0, table.getColumnCount() - 1);
+            updateStatus.run();
+        });
+        WCheckBox hideCategory = optionCheckBox("Show the category column", true, (visible) -> {
+            for (TableColumn column : table.getColumnModel().getColumns()) {
+                if (column.getModelIndex() == 1) {
+                    column.setVisible(visible);
+                }
+            }
+        });
+        TableColumn[] taxColumn = {null};
+        DefaultTableCellRenderer rightAligned = new DefaultTableCellRenderer();
+        rightAligned.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        WButton addTax = new WButton("Add / remove the price-with-tax column");
+        addTax.addActionListener(() -> {
+            if (taxColumn[0] == null) {
+                TableColumn column = new TableColumn(2);
+                column.setHeaderValue("Price with tax");
+                column.setCellRenderer((view, value, isSelected, hasFocus, row, col) -> rightAligned.getTableCellRendererComponent(
+                        view, (int) (((Integer) value) * 1.08) + " yen", isSelected, hasFocus, row, col));
+                table.addColumn(column);
+                taxColumn[0] = column;
+            } else {
+                table.removeColumn(taxColumn[0]);
+                taxColumn[0] = null;
+            }
+            updateStatus.run();
+        });
+        WButton widen = new WButton("Set the product column width to 200");
+        widen.addActionListener(() -> {
+            for (TableColumn column : table.getColumnModel().getColumns()) {
+                if (column.getModelIndex() == 0) {
+                    column.setPreferredWidth(200.0);
+                }
+            }
+        });
+
+        WPanel body = new WPanel(8.0);
+        body.add(table);
+        body.add(status);
+
+        WPanel options = new WPanel(8.0);
+        options.add(GalleryScaffold.optionsLabel("TableColumnModel"));
+        options.add(moveLast);
+        options.add(hideCategory);
+        options.add(addTax);
+        options.add(widen);
+        return GalleryScaffold.buildExample("Column operations (TableColumnModel / TableColumn)", body, options);
+    }
+
+    // endregion
+
+    // region TableView (ListView) page
+
+    /** The TableView (ListView) page: lines up demos for trying out the various features of WTable, a custom implementation built on ListView. */
+    static WComponent buildListViewTablePage() {
+        WPanel page = GalleryScaffold.buildPage(
+                "TableView (ListView)",
                 "A table that displays data in rows and columns. Try out WTable's various "
                         + "features, implemented on top of ListView based on the design of WinUI.TableView.");
 
