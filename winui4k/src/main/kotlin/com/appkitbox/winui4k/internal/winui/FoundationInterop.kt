@@ -62,6 +62,8 @@ internal object FoundationInterop {
     const val IVector_GetAt = 6                        // GetAt(UINT32, out T)
     const val IVector_get_Size = 7                     // get_Size(out UINT32)
     const val IVector_IndexOf = 9                      // IndexOf(T, out UINT32 index, out boolean found)
+    const val IVector_SetAt = 10                       // SetAt(UINT32, T)
+    const val IVector_InsertAt = 11                    // InsertAt(UINT32, T)
     const val IVector_RemoveAt = 12                    // RemoveAt(UINT32)
     const val IVector_Append = 13                      // Append(T)
     const val IVector_Clear = 15                       // Clear()
@@ -136,6 +138,63 @@ internal object FoundationInterop {
     /** Concrete IID of IMap<Object, Object> (the key->resource dictionary ResourceDictionary implements). */
     val IID_IMap_Object_Object: String by lazy {
         Pinterface.iid("pinterface({$IID_IMap_OPEN};cinterface(IInspectable);cinterface(IInspectable))")
+    }
+
+    /**
+     * Concrete IID of IMap<String, Object>. When a source has this interface, XAML bindings Lookup / Insert using the
+     * path name as the key (MapPropertyAccess). Implemented by TableView row items.
+     */
+    val IID_IMap_String_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IMap_OPEN};string;cinterface(IInspectable))")
+    }
+
+    // ---- Windows.Foundation.Collections.IObservableMap<K, V> (add_MapChanged=6 remove_MapChanged=7) ----
+    private const val IID_IObservableMap_OPEN = "65df2bf5-bf39-41b5-aebc-5a9d865e472b"
+    private const val IID_MapChangedEventHandler_OPEN = "179517f3-94ee-41f8-bddc-768a895544f3" // Invoke at vtbl[3]
+    private const val IID_IMapChangedEventArgs_OPEN = "9939f4df-050a-4c0f-aa60-77075f9c4777"
+    // IMapChangedEventArgs<K>: get_CollectionChange=6 get_Key=7
+
+    /** Concrete IID of IObservableMap<String, Object> (bindings learn of value changes through MapChanged). */
+    val IID_IObservableMap_String_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IObservableMap_OPEN};string;cinterface(IInspectable))")
+    }
+
+    /** Concrete IID of MapChangedEventHandler<String, Object>. Invoke(sender, IMapChangedEventArgs<String>). */
+    val IID_MapChangedEventHandler_String_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_MapChangedEventHandler_OPEN};string;cinterface(IInspectable))")
+    }
+
+    /** Concrete IID of IMapChangedEventArgs<String>. */
+    val IID_IMapChangedEventArgs_String: String by lazy {
+        Pinterface.iid("pinterface({$IID_IMapChangedEventArgs_OPEN};string)")
+    }
+
+    // ---- Windows.Foundation.Collections.IObservableVector<T> (add_VectorChanged=6 remove_VectorChanged=7) ----
+    private const val IID_IObservableVector_OPEN = "5917eb53-50b4-4a0d-b309-65862b3f1dbc"
+    private const val IID_VectorChangedEventHandler_OPEN = "0c051752-9fbf-4c70-aa0c-0e4c82d9a761" // Invoke at vtbl[3]
+
+    /** Concrete IID of IObservableVector<Object> (implemented by TableView row collections). */
+    val IID_IObservableVector_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IObservableVector_OPEN};cinterface(IInspectable))")
+    }
+
+    /** Concrete IID of VectorChangedEventHandler<Object>. Invoke(sender, IVectorChangedEventArgs). */
+    val IID_VectorChangedEventHandler_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_VectorChangedEventHandler_OPEN};cinterface(IInspectable))")
+    }
+
+    /** Windows.Foundation.Collections.IVectorChangedEventArgs (non-generic). get_CollectionChange=6 get_Index=7 */
+    const val IID_IVectorChangedEventArgs = "575933df-34fe-4480-af15-07691f3d5d9b"
+
+    // CollectionChange: Reset = 0, ItemInserted = 1, ItemRemoved = 2, ItemChanged = 3
+    const val CollectionChange_Reset = 0
+    const val CollectionChange_ItemInserted = 1
+    const val CollectionChange_ItemRemoved = 2
+    const val CollectionChange_ItemChanged = 3
+
+    /** Concrete IID of IVectorView<Object> (implemented by the view returned by GetView of row collections). */
+    val IID_IVectorView_Object: String by lazy {
+        Pinterface.iid("pinterface({$IID_IVectorView_OPEN};cinterface(IInspectable))")
     }
 
     // ---- Windows.Foundation.Collections.IIterable<T> / IIterator<T> (OS-side, FoundationContract.winmd) ----
