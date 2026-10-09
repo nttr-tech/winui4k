@@ -244,6 +244,7 @@ Windows App SDK 2.5 実験版 (2.5.4-experimental) ランタイムが必要で�
 ## ライセンス
 
 [Apache License 2.0](LICENSE.txt) です。商用か非商用かを問わず自由に利用できます。
+リボンは [RibbonSpace](https://github.com/wieslawsoltes/RibbonSpace) (MIT License) の再実装です。[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) を参照してください。
 
 ## 参考情報
 

@@ -244,6 +244,7 @@ Bug reports, feature requests, and pull requests are welcome via GitHub Issues.
 ## License
 
 [Apache License 2.0](LICENSE.txt). Free to use for both commercial and non-commercial purposes.
+The ribbon is a reimplementation of [RibbonSpace](https://github.com/wieslawsoltes/RibbonSpace) (MIT License); see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ## References
 

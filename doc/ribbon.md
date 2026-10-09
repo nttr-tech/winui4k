@@ -2,7 +2,8 @@
 
 Office / AutoCAD 風のリボンと、その周辺のバー (ツール バー・ステータス バー・メニュー バー・タイトル バー・検索・
 アプリケーション メニュー) を提供する。[RibbonSpace.WinUI](https://github.com/wieslawsoltes/RibbonSpace) (C#) を
-Pure Kotlin で再実装したもので、ブリッジ DLL も C# も使わない。
+Pure Kotlin で再実装したもので、ブリッジ DLL も C# も使わない。RibbonSpace は MIT License で、その著作権表示と
+ライセンス文は `THIRD-PARTY-NOTICES.md` と jar の `META-INF/LICENSE-RibbonSpace.txt` に収めている。
 
 ## 構成: モデルとビュー
 
