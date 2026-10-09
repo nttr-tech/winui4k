@@ -93,11 +93,18 @@ internal class RibbonQuickAccessBar(private val ribbon: WRibbon, host: RibbonIte
         val name = RibbonStrings.current.customizeQuickAccessToolbar
         customizeButton.setAutomationName(name)
         customizeButton.setToolTipValue(name)
+        customizeButton.isVisible = ribbon.model.showQuickAccessCustomizeButton
         customizeButton.onClick {
             val menu = ribbon.buildQuickAccessCustomizeMenu()
             menu.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT
             menu.showAt(customizeButton)
         }
+    }
+
+    /** Applies the model's QAT settings (labels and the customize button). */
+    fun applyOptions() {
+        customizeButton.isVisible = ribbon.model.showQuickAccessCustomizeButton
+        strip.applyLayouts()
     }
 
     /** The KeyTip targets (numbered 1, 2, 3... and 09, 08..., as in Office). */

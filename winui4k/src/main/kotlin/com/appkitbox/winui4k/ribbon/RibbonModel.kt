@@ -46,6 +46,9 @@ open class RibbonModel : RibbonObservable() {
     /** Whether to show the QAT. */
     var isQuickAccessVisible: Boolean by observable(true)
 
+    /** Whether to show the QAT customization drop-down button. */
+    var showQuickAccessCustomizeButton: Boolean by observable(true)
+
     /** Whether to show labels in the QAT (Office's "Show command labels"). */
     var showQuickAccessLabels: Boolean by observable(false)
 

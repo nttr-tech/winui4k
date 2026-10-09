@@ -38,11 +38,11 @@ internal object RibbonSearchIndex {
     private fun itemEntries(ribbon: WRibbon): List<RibbonSearchEntry> = ribbon.visibleTabs.flatMap { tab ->
         ribbon.customizer.groupsOf(tab).filter { it.isVisible }.flatMap { group ->
             RibbonModel.flatten(group.items + group.slideOutItems)
-                .filter { !it.label.isNullOrBlank() && it.isVisible }
+                .filter { !it.label.isNullOrBlank() && it.isVisible && it.isSearchable }
                 .map { item ->
                     val label = item.label!!
                     RibbonSearchEntry(
-                        id = item.id ?: "${tab.id}/${group.id}/$label",
+                        id = item.id,
                         label = label.replace('\n', ' '),
                         path = "${ribbon.tabLabel(tab)} › ${ribbon.customizer.labelOf(group).orEmpty()}",
                         description = item.screenTip?.description ?: item.description,
@@ -58,7 +58,7 @@ internal object RibbonSearchIndex {
     private fun backstageEntries(ribbon: WRibbon): List<RibbonSearchEntry> {
         val file = ribbon.model.applicationButtonLabel ?: RibbonStrings.current.file
         return ribbon.model.backstage.items.filter { it.isVisible && !it.label.isNullOrEmpty() }.map { item ->
-            RibbonSearchEntry("backstage/" + (item.id ?: item.label), item.label!!, file, target = item, isEnabled = item.isEnabled)
+            RibbonSearchEntry("backstage/" + item.id, item.label!!, file, target = item, isEnabled = item.isEnabled)
         }
     }
 
@@ -141,8 +141,8 @@ internal object RibbonStatePersistence {
             state.recentSearchIds = ribbon.searchEngine.recent.toMutableList()
             state.minimizeBehavior = model.minimizeBehavior
             state.showGroupCaptions = model.showGroupCaptions
-            state.floatingGroups = ribbon.host.allGroupViews().filter { it.isFloating && it.model.id != null }
-                .map { com.appkitbox.winui4k.ribbon.RibbonFloatingGroupState(it.model.id!!, it.floatingX, it.floatingY) }
+            state.floatingGroups = ribbon.host.allGroupViews().filter { it.isFloating }
+                .map { com.appkitbox.winui4k.ribbon.RibbonFloatingGroupState(it.model.id, it.floatingX, it.floatingY) }
                 .toMutableList()
             state.recentColors = ribbon.allItemModels().filterIsInstance<RibbonColorPickerModel>()
                 .flatMap { it.recentColors }.distinct().map { it.toHex() }.toMutableList()

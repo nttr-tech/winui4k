@@ -13,6 +13,7 @@ import com.appkitbox.winui4k.ribbon.RibbonIcons
 import com.appkitbox.winui4k.ribbon.RibbonItemSize
 import com.appkitbox.winui4k.ribbon.RibbonMenuItemModel
 import com.appkitbox.winui4k.ribbon.RibbonModel
+import com.appkitbox.winui4k.ribbon.RibbonQuickAccessPosition
 import com.appkitbox.winui4k.ribbon.RibbonSimplifiedVisibility
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
@@ -21,6 +22,7 @@ import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -290,6 +292,17 @@ class WRibbonTest : FunSpec() {
             notifiedOnUiThread shouldBe listOf(true)
             val copyView = { ribbon.tabViews[model.findTab("home")]!!.groupViews().flatMap { it.itemViews() }.first { it.model.id == "copy" } }
             onUiThreadGet { copyView().element.automationName } shouldBe "Duplicate"
+        }
+
+        test("items with isSearchable set to false do not appear in command search results") {
+            onUiThreadGet { ribbon.search("Copy").map { it.entry.id } } shouldContain "copy"
+            onUiThread { model.findItem("copy")!!.isSearchable = false }
+            onUiThreadGet { ribbon.search("Copy").map { it.entry.id } } shouldNotContain "copy"
+        }
+
+        test("the default QAT position is the one at the first load and does not change when the position is changed later") {
+            onUiThread { model.quickAccessPosition = RibbonQuickAccessPosition.BELOW_RIBBON }
+            onUiThreadGet { ribbon.defaultQuickAccessPosition } shouldBe RibbonQuickAccessPosition.ABOVE_RIBBON
         }
 
         test("in tabs-only mode the command area is hidden and can be shown temporarily in a popup") {

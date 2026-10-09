@@ -99,7 +99,7 @@ class WRibbon @JvmOverloads constructor(
     private var lastRegularTab: RibbonTabModel? = null
     private var visibleContextualIds: Set<String> = emptySet()
     private var defaultQuickAccessIds: List<String>? = null
-    private var defaultQuickAccessPosition = RibbonQuickAccessPosition.ABOVE_RIBBON
+    private var defaultQuickAccessPlacement = RibbonQuickAccessPosition.ABOVE_RIBBON
 
     // ---------------------------------------------------------------- Display settings (not held by the model)
 
@@ -283,7 +283,7 @@ class WRibbon @JvmOverloads constructor(
         keyboard.attach()
         if (defaultQuickAccessIds == null) {
             defaultQuickAccessIds = quickAccessItemIds()
-            defaultQuickAccessPosition = model.quickAccessPosition
+            defaultQuickAccessPlacement = model.quickAccessPosition
         }
         refreshTabStrip()
         if (selectedTab == null) selectFirstTab()
@@ -535,7 +535,7 @@ class WRibbon @JvmOverloads constructor(
             }
             "visibilityMode" -> onVisibilityModeChanged()
             "density" -> onMetricsChanged()
-            "quickAccessPosition", "isQuickAccessVisible", "showQuickAccessLabels" -> onQuickAccessOptionsChanged()
+            "quickAccessPosition", "isQuickAccessVisible", "showQuickAccessLabels", "showQuickAccessCustomizeButton" -> onQuickAccessOptionsChanged()
             "minimizeBehavior" -> {
                 updateChrome()
                 fireStateChanged()
@@ -664,7 +664,7 @@ class WRibbon @JvmOverloads constructor(
 
     private fun onQuickAccessOptionsChanged() {
         updateQuickAccessPlacement()
-        quickAccessBar.strip.applyLayouts()
+        quickAccessBar.applyOptions()
         fireStateChanged()
         fireQuickAccessChanged()
     }
@@ -714,11 +714,14 @@ class WRibbon @JvmOverloads constructor(
     /** The ids of the QAT items declared by the application (as of the first load, before the user's state is applied). */
     val defaultQuickAccessItemIds: List<String>? get() = defaultQuickAccessIds
 
+    /** The QAT position declared by the application (as of the first load, before the user's state is applied). */
+    val defaultQuickAccessPosition: RibbonQuickAccessPosition get() = defaultQuickAccessPlacement
+
     /** Restores the application's default QAT items and position. */
     fun resetQuickAccess() {
         val state = getState()
         state.quickAccessItemIds = (defaultQuickAccessIds ?: quickAccessItemIds()).toMutableList()
-        state.quickAccessPosition = defaultQuickAccessPosition
+        state.quickAccessPosition = defaultQuickAccessPlacement
         state.isQuickAccessVisible = true
         applyState(state)
     }

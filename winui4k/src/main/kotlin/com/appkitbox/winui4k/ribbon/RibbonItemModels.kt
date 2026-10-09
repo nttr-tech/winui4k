@@ -33,6 +33,9 @@ abstract class RibbonItemModel protected constructor(id: String?, label: String?
     /** How the item is handled in the simplified ribbon. */
     var simplifiedVisibility: RibbonSimplifiedVisibility by observable(RibbonSimplifiedVisibility.AUTO)
 
+    /** Whether it appears in command search results (the search box, the command palette) (RibbonSpace's RibbonSearch.IsSearchable). */
+    var isSearchable: Boolean by observable(true)
+
     /** Whether to show the label next to the icon in the simplified ribbon (if null, only items whose preferred size is large show it). */
     var showLabelInSimplified: Boolean? by observable(null)
 
