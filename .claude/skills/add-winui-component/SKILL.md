@@ -74,6 +74,7 @@ ABI 定数は `src/main/kotlin/com/appkitbox/winui4k/internal/winui/` に winmd 
 | `WebView2Interop.kt` | WebView2 (Controls.WebView2 + Microsoft.Web.WebView2.Core) |
 | `TabularInterop.kt` | TableView (Microsoft.UI.Xaml.Controls.Tabular。Microsoft.UI.Xaml.winmd 内の実験版の型) |
 | `ChartsInterop.kt` | Chart (Microsoft.UI.Xaml.Controls.Charts。Microsoft.UI.Xaml.winmd 内の実験版の型。enum の値は公開 API の enum class 側) |
+| `InkInterop.kt` | InkCanvas / InkToolbar (Microsoft.UI.Xaml.winmd 内の実験版の Ink* の型) と Windows.UI.Input.Inking などの OS 側の型 |
 
 - `// ---- Microsoft.UI.Xaml.Controls.CheckBox ----` のセクションコメント
 - `CLS_CheckBox` / `IID_ICheckBoxFactory` / `IID_ICheckBox` / スロット定数

@@ -82,3 +82,16 @@
   FocusState が Pointer (1) で、「クリックで入ったときだけ結果を出す」判定が誤って結果を開いていた。
   クリックかどうかは FocusState ではなく、ボックスの PointerPressed (handledEventsToo) を受けたかで見分ける
   (`WRibbonSearchBox`)。
+- **InkCanvas: マウスやタッチで線が描けない**
+  InkCanvas の既定の入力機器はペンだけである。`canvas.inkPresenter.inputDeviceTypes = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOUSE, CoreInputDeviceType.TOUCH)` のように設定する。
+- **InkCanvas: `activateCustomDrying` が E_ILLEGAL_METHOD_CALL (0x8000000E) で失敗する**
+  線を表示・操作した後 (モデルに線がある状態でキャンバスを作った、選択や保存を呼んだなど) は WinUI が拒否する。
+  モデルが空のうちに、キャンバスをウィンドウに載せる前に呼ぶ。
+- **InkPointerEvent の `pointerPoint` が null になる**
+  Windows App SDK 2.5 実験版はインクの入力のイベントを UI スレッドへ遅れて届けるため、引数が読めないことがある (WinUI の制約)。
+  線の内容は StrokesCollected (`addStrokesCollectedListener`) とモデルから得る。
+- **InkToolbar: カスタム ペンの描画属性が使われない / `getToolButton` が null を返す**
+  ボタンは読み込み後に作られるので `addLoadedListener` の中で取得する。カスタムのペン・ツール・トグルは
+  WinUI の仕様で `getToolButton` / `getToggleButton` では得られないので、追加したラッパーをそのまま使う (`getItems`)。
+  カスタム ペンは `WInkToolbar` に追加した `WInkToolbarCustomPenButton` の `customPen` に設定すると反映される
+  (2.5.4-experimental の InkToolbar の不具合を WInkToolbar が補っている)。
