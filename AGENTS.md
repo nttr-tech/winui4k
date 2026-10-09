@@ -1,8 +1,9 @@
 # プロジェクト概要
 
-winui4k は、ブリッジ DLL・C#・Visual Studio なしで WinUI 3 アプリを書ける Kotlin ライブラリ。
-Java の FFI (Panama / JNA / JNR) で WinRT の COM ABI (`RoGetActivationFactory`、HSTRING、vtable 呼び出し、upcall、COM 集約) を直接扱う。
-開発には JDK 25 (x64) と Windows 11 が必要 (ビルドは JDK 25、detekt 実行と一部テストは foojay resolver が JDK 21/8/9/22 を自動取得する)。
+- WinUI4KはKotlin/JavaからWinUIを使えるようにするライブラリ
+  - JavaのFFI(Panama/JNA/JNR)でWinRTを呼び出し
+  - 開発にはJDK 25(x64)とWindows 11が必要
+  - リンター実行と一部テストはfoojay resolverでJDK 21/8/9/22を自動取得
 
 # よく使うコマンド
 
@@ -20,11 +21,11 @@ Java の FFI (Panama / JNA / JNR) で WinRT の COM ABI (`RoGetActivationFactory
 
 - フォーマットは Spotless + ktlint、静的解析は detekt という役割分担。ルールの詳細と detekt 指摘への対応方針は `.claude/skills` の kotlin-lint-rules スキルを参照。
 - detekt 1.23 は JDK 25 で動かないため、Gradle プラグインではなく JDK 21 別プロセスの CLI 実行になっている (buildSrc の `winui4k.kotlin-common`)。
-- リポジトリ全体を LF で統一している (Spotless が強制)。
+- リポジトリ全体を LF で統一(Spotless が強制)。
 
 # アーキテクチャ
 
-詳細は `doc/architecture.md` (必読)。要点:
+詳細は`doc/architecture.md`を参照
 
 - **1 技術スタック = 1 パッケージのレイヤ構成**。依存は一方向:
   `com.appkitbox.winui4k` (公開 API、`W*` クラス) → `internal.winui` (ABI 定数の `*Interop`、Dispatcher、Bootstrap) → `internal.winrt` (HSTRING、KComObject、Activation) → `internal.com` (ComPtr、Guid、checkHr) → `internal.ffi.api` (バックエンド非依存の FFI SPI)
@@ -37,3 +38,7 @@ Java の FFI (Panama / JNA / JNR) で WinRT の COM ABI (`RoGetActivationFactory
 
 - テストは実際に WinUI ウィンドウを起動する E2E (`winui4k/src/test`、Kotest + `UiTestHarness`)。ヘッドレス環境では動かない。
 - WinUI 実体との相互作用で判明した落とし穴 (`Application.Resources` に触れるタイミング、`RoUninitialize` 省略時の abort 等) は `doc/verification.md` と `doc/troubleshooting.md` に記録されている。新たに判明したものも同様に記録すること。
+
+# 方針
+
+- レビュー時に把握しやすいように小さめの粒度でコミットを作成
