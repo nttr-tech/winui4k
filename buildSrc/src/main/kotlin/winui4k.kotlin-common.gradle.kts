@@ -7,7 +7,7 @@ plugins {
 
 group = "com.appkitbox.winui4k"
 // The release workflow overrides this with the tag's version via -Pwinui4kVersion
-version = providers.gradleProperty("winui4kVersion").getOrElse("0.1.0")
+version = providers.gradleProperty("winui4kVersion").getOrElse("0.2.0")
 
 val winui4k = extensions.create<Winui4kExtension>("winui4k").apply {
     targetJavaVersion.convention(8)

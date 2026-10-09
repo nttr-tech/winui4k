@@ -162,7 +162,7 @@ Visual Studio、C++ ビルドツール、.NET SDK は使いません。
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.appkitbox.winui4k:winui4k-all:0.1.0") // バージョンは最新版に読み替えてください
+    implementation("com.appkitbox.winui4k:winui4k-all:0.2.0") // バージョンは最新版に読み替えてください
 }
 ```
 
@@ -170,9 +170,9 @@ dependencies {
 
 ```kotlin
 dependencies {
-    implementation("com.appkitbox.winui4k:winui4k:0.1.0")
-    implementation("com.appkitbox.winui4k:winui4k-ffi-panama:0.1.0") // Java 22 以降の場合
-    // implementation("com.appkitbox.winui4k:winui4k-ffi-jna:0.1.0") // Java 8〜21 の場合
+    implementation("com.appkitbox.winui4k:winui4k:0.2.0")
+    implementation("com.appkitbox.winui4k:winui4k-ffi-panama:0.2.0") // Java 22 以降の場合
+    // implementation("com.appkitbox.winui4k:winui4k-ffi-jna:0.2.0") // Java 8〜21 の場合
 }
 ```
 

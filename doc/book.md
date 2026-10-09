@@ -162,7 +162,7 @@ When in doubt, the easy option is the all-in-one `winui4k-all`.
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.appkitbox.winui4k:winui4k-all:0.1.0") // substitute the latest version
+    implementation("com.appkitbox.winui4k:winui4k-all:0.2.0") // substitute the latest version
 }
 ```
 
@@ -170,9 +170,9 @@ If you want to trim the distribution size, pick just the core and the backends y
 
 ```kotlin
 dependencies {
-    implementation("com.appkitbox.winui4k:winui4k:0.1.0")
-    implementation("com.appkitbox.winui4k:winui4k-ffi-panama:0.1.0") // for Java 22 or later
-    // implementation("com.appkitbox.winui4k:winui4k-ffi-jna:0.1.0") // for Java 8-21
+    implementation("com.appkitbox.winui4k:winui4k:0.2.0")
+    implementation("com.appkitbox.winui4k:winui4k-ffi-panama:0.2.0") // for Java 22 or later
+    // implementation("com.appkitbox.winui4k:winui4k-ffi-jna:0.2.0") // for Java 8-21
 }
 ```
 

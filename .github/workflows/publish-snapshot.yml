@@ -15,7 +15,7 @@ on:
       version:
         description: 'Version to publish (must end in -SNAPSHOT)'
         required: true
-        default: '0.1.0-SNAPSHOT'
+        default: '0.2.0-SNAPSHOT'
 
 jobs:
   publish:
