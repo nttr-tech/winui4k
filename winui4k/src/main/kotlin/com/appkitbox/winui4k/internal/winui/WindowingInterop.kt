@@ -187,4 +187,33 @@ internal object WindowingInterop {
     const val IDisplayAreaStatics_get_Primary = 6
     const val IDisplayAreaStatics_GetFromWindowId = 9   // GetFromWindowId(WindowId, DisplayAreaFallback) -> DisplayArea
     const val DisplayAreaFallback_Nearest = 2           // enum Microsoft.UI.Windowing.DisplayAreaFallback.Nearest
+
+    // ---- Microsoft.UI.Input.PointerPoint (Microsoft.UI.winmd) ----
+    const val IID_IPointerPoint = "0d430ee6-252c-59a4-b2a2-d44264dc6a40"
+    const val IPointerPoint_get_Position = 10          // get_Position(out Point) — out of r4×2
+    const val IPointerPoint_get_Properties = 11        // get_Properties(out PointerPointProperties)
+    const val IID_IPointerPointProperties = "d760ed77-4b10-57a5-b3cc-d9bf3413e996"
+    const val IPointerPointProperties_get_IsHorizontalMouseWheel = 10
+    const val IPointerPointProperties_get_IsLeftButtonPressed = 13
+    const val IPointerPointProperties_get_IsRightButtonPressed = 16
+    const val IPointerPointProperties_get_MouseWheelDelta = 19 // get_MouseWheelDelta(out i4)
+
+    // ---- Microsoft.UI.Input.InputKeyboardSource (statics) ----
+    const val CLS_InputKeyboardSource = "Microsoft.UI.Input.InputKeyboardSource"
+    const val IID_IInputKeyboardSourceStatics = "f4e1563d-8c2e-5bcd-b784-47adeaa3cd7e"
+    const val IInputKeyboardSourceStatics_GetKeyStateForCurrentThread = 6 // (VirtualKey, out CoreVirtualKeyStates)
+
+    // enum Windows.UI.Core.CoreVirtualKeyStates (flags): None=0, Down=1, Locked=2
+    const val CoreVirtualKeyStates_Down = 1
+
+    // ---- Microsoft.UI.Input.InputNonClientPointerSource (input regions of the title bar) ----
+    const val CLS_InputNonClientPointerSource = "Microsoft.UI.Input.InputNonClientPointerSource"
+    const val IID_IInputNonClientPointerSourceStatics = "7d0b775c-1903-5dc7-bd2f-7a4b31f0cff2"
+    const val IInputNonClientPointerSourceStatics_GetForWindowId = 6 // GetForWindowId(WindowId, out InputNonClientPointerSource)
+    const val IID_IInputNonClientPointerSource = "471732b4-3d07-5104-b192-ebacf71e86df"
+    const val IInputNonClientPointerSource_ClearRegionRects = 8 // ClearRegionRects(NonClientRegionKind)
+    const val IInputNonClientPointerSource_SetRegionRects = 10  // SetRegionRects(NonClientRegionKind, u4 length, RectInt32* rects)
+
+    // enum Microsoft.UI.Input.NonClientRegionKind: Close=0, ..., Caption=4, ..., Passthrough=9
+    const val NonClientRegionKind_Passthrough = 9
 }

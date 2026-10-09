@@ -2097,4 +2097,251 @@ internal object XamlInterop {
     const val IID_IItemsSourceView = "f7f802de-e79c-5c5f-abf8-ccbd486b89d6"
     const val IItemsSourceView_get_Count = 6           // get_Count(out i4)
     const val IItemsSourceView_GetAt = 7               // GetAt(i4, out Object)
+
+    // ======================================================================
+    // Input, focus, layout and popups (used by custom-drawn controls such as WRibbon)
+    // ======================================================================
+
+    // ---- Microsoft.UI.Xaml.UIElement (additions to IUIElement) ----
+    const val IUIElement_get_RenderSize = 25           // get_RenderSize(out Size) — out of r4×2
+    const val IUIElement_get_IsHitTestVisible = 21     // get_IsHitTestVisible(out boolean)
+    const val IUIElement_put_IsHitTestVisible = 22     // put_IsHitTestVisible(boolean)
+    const val IUIElement_get_ActualOffset = 107        // get_ActualOffset(out Vector3) — position relative to the parent (out of r4×3)
+    const val IUIElement_get_ActualSize = 108          // get_ActualSize(out Vector2) — out of r4×2
+    const val IUIElement_get_FocusState = 115          // get_FocusState(out FocusState)
+    const val IUIElement_put_UseSystemFocusVisuals = 117 // put_UseSystemFocusVisuals(boolean)
+    const val IUIElement_get_IsTabStop = 126           // get_IsTabStop(out boolean)
+    const val IUIElement_put_IsTabStop = 127           // put_IsTabStop(boolean)
+    const val IUIElement_put_TabIndex = 129            // put_TabIndex(i4)
+    const val IUIElement_add_KeyUp = 130               // add_KeyUp(KeyEventHandler, out token)
+    const val IUIElement_remove_KeyUp = 131
+    const val IUIElement_add_KeyDown = 132             // add_KeyDown(KeyEventHandler, out token)
+    const val IUIElement_remove_KeyDown = 133
+    const val IUIElement_add_GotFocus = 134            // add_GotFocus(RoutedEventHandler, out token)
+    const val IUIElement_remove_GotFocus = 135
+    const val IUIElement_add_LostFocus = 136           // add_LostFocus(RoutedEventHandler, out token)
+    const val IUIElement_remove_LostFocus = 137
+    const val IUIElement_add_PointerPressed = 152      // add_PointerPressed(PointerEventHandler, out token)
+    const val IUIElement_remove_PointerPressed = 153
+    const val IUIElement_add_PointerMoved = 154
+    const val IUIElement_remove_PointerMoved = 155
+    const val IUIElement_add_PointerReleased = 156
+    const val IUIElement_remove_PointerReleased = 157
+    const val IUIElement_add_PointerEntered = 158
+    const val IUIElement_remove_PointerEntered = 159
+    const val IUIElement_add_PointerExited = 160
+    const val IUIElement_remove_PointerExited = 161
+    const val IUIElement_add_PointerCaptureLost = 162
+    const val IUIElement_remove_PointerCaptureLost = 163
+    const val IUIElement_add_PointerCanceled = 164
+    const val IUIElement_remove_PointerCanceled = 165
+    const val IUIElement_add_PointerWheelChanged = 166
+    const val IUIElement_remove_PointerWheelChanged = 167
+    const val IUIElement_add_Tapped = 168              // add_Tapped(TappedEventHandler, out token)
+    const val IUIElement_remove_Tapped = 169
+    const val IUIElement_add_RightTapped = 178         // add_RightTapped(RightTappedEventHandler, out token)
+    const val IUIElement_remove_RightTapped = 179
+    const val IUIElement_add_PreviewKeyDown = 204      // add_PreviewKeyDown(KeyEventHandler, out token) — tunneling (parent first)
+    const val IUIElement_remove_PreviewKeyDown = 205
+    const val IUIElement_add_PreviewKeyUp = 206
+    const val IUIElement_remove_PreviewKeyUp = 207
+    const val IUIElement_CapturePointer = 212          // CapturePointer(Pointer, out boolean)
+    const val IUIElement_ReleasePointerCapture = 213   // ReleasePointerCapture(Pointer)
+    const val IUIElement_ReleasePointerCaptures = 214  // ReleasePointerCaptures()
+    const val IUIElement_AddHandler = 215              // AddHandler(RoutedEvent, Object handler, boolean handledEventsToo)
+    const val IUIElement_RemoveHandler = 216           // RemoveHandler(RoutedEvent, Object handler)
+    const val IUIElement_InvalidateMeasure = 218       // InvalidateMeasure()
+    const val IUIElement_Focus = 226                   // Focus(FocusState, out boolean)
+
+    // ---- Microsoft.UI.Xaml.UIElement (statics: routed events) ----
+    const val CLS_UIElement = "Microsoft.UI.Xaml.UIElement"
+    const val IID_IUIElementStatics = "d2921d87-3584-5e22-8a3a-c2c78dab4f6e"
+    const val IUIElementStatics_get_KeyDownEvent = 6
+    const val IUIElementStatics_get_KeyUpEvent = 7
+    const val IUIElementStatics_get_PointerPressedEvent = 9
+    const val IUIElementStatics_get_PointerMovedEvent = 10
+    const val IUIElementStatics_get_PointerReleasedEvent = 11
+    const val IUIElementStatics_get_PointerWheelChangedEvent = 15
+    const val IUIElementStatics_get_TappedEvent = 16
+
+    // enum Microsoft.UI.Xaml.FocusState: Unfocused=0, Pointer=1, Keyboard=2, Programmatic=3
+    const val FocusState_Pointer = 1
+    const val FocusState_Keyboard = 2
+    const val FocusState_Programmatic = 3
+
+    // ---- Microsoft.UI.Xaml.FrameworkElement (additions to IFrameworkElement) ----
+    const val IFrameworkElement_get_Width = 15
+    const val IFrameworkElement_get_Height = 17
+    const val IFrameworkElement_put_MinWidth = 20
+    const val IFrameworkElement_put_MinHeight = 24
+    const val IFrameworkElement_put_MaxHeight = 26
+    const val IFrameworkElement_put_Name = 34
+    const val IFrameworkElement_put_AllowFocusOnInteraction = 39
+    const val IFrameworkElement_put_FocusVisualMargin = 41 // put_FocusVisualMargin(Thickness)
+    const val IFrameworkElement_get_Parent = 54        // get_Parent(out DependencyObject) — parent in the logical tree
+    const val IFrameworkElement_get_FlowDirection = 55 // get_FlowDirection(out FlowDirection)
+    const val IFrameworkElement_put_FlowDirection = 56
+    const val IFrameworkElement_get_IsLoaded = 59
+    const val IFrameworkElement_remove_Unloaded = 64
+
+    // enum Microsoft.UI.Xaml.FlowDirection: LeftToRight=0, RightToLeft=1
+    const val FlowDirection_RightToLeft = 1
+
+    // ---- Microsoft.UI.Xaml.Controls.Control (additions to IControl) ----
+    const val IControl_put_FontSize = 13
+    const val IControl_put_FontFamily = 15
+    const val IControl_put_FontStyle = 19              // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
+    const val IControl_put_Foreground = 25             // put_Foreground(Brush)
+    const val IControl_put_IsTextScaleFactorEnabled = 27
+    const val IControl_put_TabNavigation = 31          // put_TabNavigation(KeyboardNavigationMode: Local=0, Cycle=1, Once=2)
+    const val IControl_add_IsEnabledChanged = 58       // add_IsEnabledChanged(DependencyPropertyChangedEventHandler, out token)
+    const val IControl_remove_IsEnabledChanged = 59
+    const val IControl_ApplyTemplate = 61              // ApplyTemplate(out boolean)
+
+    // ---- Microsoft.UI.Xaml.VisualStateManager (statics) ----
+    const val CLS_VisualStateManager = "Microsoft.UI.Xaml.VisualStateManager"
+    const val IID_IVisualStateManagerStatics = "a4d5147d-88c3-57ed-ad83-245df5f6b50d"
+    const val IVisualStateManagerStatics_GoToState = 10 // GoToState(Control, HSTRING, boolean, out boolean)
+
+    // ---- Microsoft.UI.Xaml.Media.VisualTreeHelper (additions to the statics) ----
+    const val IVisualTreeHelperStatics_GetOpenPopupsForXamlRoot = 15 // (XamlRoot, out IVectorView<Popup>)
+
+    // ---- Microsoft.UI.Xaml.XamlRoot ----
+    const val IID_IXamlRoot = "60cb215a-ad15-520a-8b01-4416824f0441"
+    const val IXamlRoot_get_Content = 6                // get_Content(out UIElement)
+    const val IXamlRoot_get_Size = 7                   // get_Size(out Size) — out of r4×2
+    const val IXamlRoot_get_RasterizationScale = 8     // get_RasterizationScale(out r8)
+    const val IXamlRoot_add_Changed = 10               // add_Changed(TypedEventHandler<XamlRoot, XamlRootChangedEventArgs>, out token)
+    const val IXamlRoot_remove_Changed = 11
+
+    /** Concrete IID of TypedEventHandler<XamlRoot, XamlRootChangedEventArgs> (SHA-1 name-based). */
+    val IID_TypedEventHandler_XamlRoot_XamlRootChangedEventArgs: String by lazy {
+        Pinterface.iid(
+            "pinterface({9de1c534-6ae1-11e0-84e1-18a905bcc53f};" +
+                "rc(Microsoft.UI.Xaml.XamlRoot;{$IID_IXamlRoot});" +
+                "rc(Microsoft.UI.Xaml.XamlRootChangedEventArgs;{$IID_IXamlRootChangedEventArgs}))",
+        )
+    }
+    const val IID_IXamlRootChangedEventArgs = "61d2c719-f8a1-515a-902c-cfa498ba7a7f"
+
+    // ---- Event args and delegates of Microsoft.UI.Xaml.Input ----
+
+    /** delegate Input.KeyEventHandler(sender, KeyRoutedEventArgs) — Invoke is vtbl[3] */
+    const val IID_KeyEventHandler = "db68e7cc-9a2b-527d-9989-25284daccc03"
+
+    /** delegate Input.PointerEventHandler(sender, PointerRoutedEventArgs) — Invoke is vtbl[3] */
+    const val IID_PointerEventHandler = "a48a71e1-8bb4-5597-9e31-903a3f6a04fb"
+
+    /** delegate Input.TappedEventHandler(sender, TappedRoutedEventArgs) — Invoke is vtbl[3] */
+    const val IID_TappedEventHandler = "b60074f3-125b-534e-8f9c-9769bd3f0f64"
+
+    /** delegate Input.RightTappedEventHandler(sender, RightTappedRoutedEventArgs) — Invoke is vtbl[3] */
+    const val IID_RightTappedEventHandler = "5070e32f-3dc7-56cf-8fdd-de1b40d0b472"
+
+    /** delegate DependencyPropertyChangedEventHandler(sender, DependencyPropertyChangedEventArgs) — Invoke is vtbl[3] */
+    const val IID_DependencyPropertyChangedEventHandler = "4be8dc75-373d-5f4e-a0b4-54b9eeafb4a9"
+
+    const val IID_IKeyRoutedEventArgs = "ee357007-a2d6-5c75-9431-05fd66ec7915"
+    const val IKeyRoutedEventArgs_get_Key = 6          // get_Key(out VirtualKey)
+    const val IKeyRoutedEventArgs_get_Handled = 8
+    const val IKeyRoutedEventArgs_put_Handled = 9
+    const val IKeyRoutedEventArgs_get_OriginalKey = 10 // get_OriginalKey(out VirtualKey)
+
+    const val IID_IPointerRoutedEventArgs = "66e78a9a-1bec-5f92-b1a1-ea6334ee511c"
+    const val IPointerRoutedEventArgs_get_Pointer = 6  // get_Pointer(out Pointer)
+    const val IPointerRoutedEventArgs_get_KeyModifiers = 7 // get_KeyModifiers(out VirtualKeyModifiers)
+    const val IPointerRoutedEventArgs_get_Handled = 8
+    const val IPointerRoutedEventArgs_put_Handled = 9
+    const val IPointerRoutedEventArgs_GetCurrentPoint = 11 // GetCurrentPoint(UIElement relativeTo, out PointerPoint)
+
+    // The args of Tapped / DoubleTapped / RightTapped all have get_Handled=7 / put_Handled=8 / GetPosition=9
+    const val IID_ITappedRoutedEventArgs = "73f74b8c-3709-547e-8e0c-51c03c89126a"
+    const val IID_IDoubleTappedRoutedEventArgs = "32b9549d-11d8-53a5-a953-02409537a11f"
+    const val IID_IRightTappedRoutedEventArgs = "3972fafb-2915-5c62-bb6b-54ad84ff400d"
+    const val ITappedRoutedEventArgs_put_Handled = 8
+    const val ITappedRoutedEventArgs_GetPosition = 9   // GetPosition(UIElement relativeTo, out Point) — out of r4×2
+
+    // ---- Microsoft.UI.Xaml.Input.FocusManager (statics) ----
+    const val CLS_FocusManager = "Microsoft.UI.Xaml.Input.FocusManager"
+    const val IID_IFocusManagerStatics = "e73dce04-e23a-5fb3-96ab-7df04c51dff2"
+    const val IFocusManagerStatics_FindFirstFocusableElement = 19 // (DependencyObject searchScope, out DependencyObject)
+    const val IFocusManagerStatics_FindLastFocusableElement = 20
+    const val IFocusManagerStatics_TryMoveFocus = 24   // TryMoveFocus(FocusNavigationDirection, out boolean)
+    const val IFocusManagerStatics_GetFocusedElement = 26 // GetFocusedElement(XamlRoot, out Object)
+
+    // enum Microsoft.UI.Xaml.Input.FocusNavigationDirection: Next=0, Previous=1, Up=2, Down=3, Left=4, Right=5
+    const val FocusNavigationDirection_Next = 0
+    const val FocusNavigationDirection_Previous = 1
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase (additions to IFlyoutBase) ----
+    const val IFlyoutBase_get_Target = 8               // get_Target(out FrameworkElement)
+    const val IFlyoutBase_put_AllowFocusOnInteraction = 10
+    const val IFlyoutBase_put_LightDismissOverlayMode = 12
+    const val IFlyoutBase_put_ShowMode = 16            // put_ShowMode(FlyoutShowMode)
+    const val IFlyoutBase_put_AreOpenCloseAnimationsEnabled = 19
+    const val IFlyoutBase_put_ShouldConstrainToRootBounds = 21
+    const val IFlyoutBase_put_OverlayInputPassThroughElement = 26 // (DependencyObject) — element that keeps receiving input while open
+    const val IFlyoutBase_put_XamlRoot = 29
+    const val IFlyoutBase_add_Opened = 30              // add_Opened(EventHandler<Object>, out token)
+    const val IFlyoutBase_remove_Opened = 31
+    const val IFlyoutBase_add_Closed = 32              // add_Closed(EventHandler<Object>, out token)
+    const val IFlyoutBase_remove_Closed = 33
+    const val IFlyoutBase_add_Opening = 34             // add_Opening(EventHandler<Object>, out token)
+    const val IFlyoutBase_remove_Opening = 35
+
+    // enum Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode (same values as FlyoutPlacement)
+    // enum Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowMode: Auto=0, Standard=1, Transient=2, ...
+    // enum Microsoft.UI.Xaml.Controls.LightDismissOverlayMode: Auto=0, On=1, Off=2
+    const val LightDismissOverlayMode_Off = 2
+
+    const val IFlyout_get_Content = 6
+    const val IFlyout_put_FlyoutPresenterStyle = 9     // put_FlyoutPresenterStyle(Style)
+    const val IMenuFlyout_put_MenuFlyoutPresenterStyle = 8 // put_MenuFlyoutPresenterStyle(Style)
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.Popup (additions to IPopup) ----
+    const val IPopup_get_Child = 6
+    const val IPopup_put_LightDismissOverlayMode = 19
+    const val IPopup_put_ShouldConstrainToRootBounds = 21
+
+    // ---- Microsoft.UI.Xaml.Controls.TextBlock (additions to ITextBlock) ----
+    const val ITextBlock_put_FontStyle = 13            // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
+    const val ITextBlock_put_LineHeight = 32
+    const val ITextBlock_put_MaxLines = 46
+    const val ITextBlock_put_TextLineBounds = 48
+    const val ITextBlock_put_IsTextScaleFactorEnabled = 56
+
+    // ---- Microsoft.UI.Xaml.Controls.TextBox (additions to ITextBox) ----
+    const val ITextBox_put_SelectionLength = 11
+    const val ITextBox_put_SelectionStart = 13
+
+    // ---- Microsoft.UI.Xaml.Controls.ScrollViewer (additions to IScrollViewer) ----
+    const val IScrollViewer_get_ExtentWidth = 44
+    const val IScrollViewer_get_VerticalOffset = 45
+    const val IScrollViewer_get_ViewportHeight = 46
+    const val IScrollViewer_get_ScrollableHeight = 47
+    const val IScrollViewer_get_ExtentHeight = 49
+
+    // ---- Microsoft.UI.Xaml.ResourceDictionary (additions to IResourceDictionary) ----
+    const val IResourceDictionary_get_ThemeDictionaries = 9 // get_ThemeDictionaries(out IMap<Object, Object>)
+
+    // ---- Microsoft.UI.Xaml.Controls.ToolTip (additions to IToolTip) ----
+    const val IToolTip_put_IsOpen = 9
+    const val IToolTip_add_Closed = 19                 // add_Closed(RoutedEventHandler, out token)
+    const val IToolTip_remove_Closed = 20
+    const val IToolTip_add_Opened = 21                 // add_Opened(RoutedEventHandler, out token)
+    const val IToolTip_remove_Opened = 22
+
+    // ---- Microsoft.UI.Xaml.Automation.AutomationProperties (statics) ----
+    const val CLS_AutomationProperties = "Microsoft.UI.Xaml.Automation.AutomationProperties"
+    const val IID_IAutomationPropertiesStatics = "b1e3e0f3-112f-5966-87dc-7862d4ad50e5"
+    const val IAutomationPropertiesStatics_SetAcceleratorKey = 8 // (DependencyObject, HSTRING)
+    const val IAutomationPropertiesStatics_SetAccessKey = 11
+    const val IAutomationPropertiesStatics_SetAutomationId = 14
+    const val IAutomationPropertiesStatics_SetHelpText = 17
+    const val IAutomationPropertiesStatics_SetName = 32
+
+    // ---- Microsoft.UI.Xaml.Media.Animation.Storyboard ----
+    const val IID_IStoryboard = "04d41bb3-8721-519e-8e53-fb8b34920305"
+    const val IStoryboard_Stop = 8
+    const val IStoryboard_Begin = 9
 }
