@@ -338,7 +338,7 @@ private fun buildListItemClickExample(): WComponent {
 internal fun buildTablePage(): WComponent {
     val page = buildPage(
         "Table",
-        "A table that displays data in rows and columns (the TableView from Windows App SDK 2.5 experimental). " +
+        "A table that displays data in rows and columns. " +
             "Like Swing's JTable, try out the various features of WTable, built from TableModel / TableColumnModel / TableRowSorter.",
     )
 

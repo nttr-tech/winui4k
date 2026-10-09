@@ -117,7 +117,7 @@ final class HomePage {
         descriptions.put("StackPanel", "A panel that lines children up in a single vertical or horizontal row.");
         descriptions.put("StandardUICommand", "Provides standard commands such as copy or delete.");
         descriptions.put("SwipeControl", "A container that lets you run commands via a swipe gesture.");
-        descriptions.put("Table", "A table that displays data in rows and columns (Windows App SDK 2.5 experimental).");
+        descriptions.put("Table", "A table that displays data in rows and columns.");
         descriptions.put("TabView", "A control that switches between multiple pages via tabs.");
         descriptions.put("TeachingTip", "Shows a hint that points to and explains a specific piece of UI.");
         descriptions.put("TextBlock", "Displays read-only text.");
