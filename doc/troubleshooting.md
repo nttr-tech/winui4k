@@ -70,6 +70,12 @@
   外側のクリックで閉じたフライアウトの中身は、VisualTreeHelper.GetParent では親が取れなくなっても、
   論理上の親 (FrameworkElement.Parent。例: 中身の StackPanel の Children) には残っている。そのまま別の親に入れると
   「既に別の要素の子」として失敗するため、`Xaml.detach` はビジュアル ツリーの親が無ければ論理上の親から外す。
+- **前のフライアウトが閉じきる前に開いたフライアウトは表示されず、その中身は `Xaml.detach` で外せない**
+  Hide の後の Closed は非同期に届き、その前に別のフライアウトの ShowAt を呼んでも表示されない (例外も出ない)。
+  表示されなかった中身はライブ ツリーに載らず、VisualTreeHelper.GetParent も FrameworkElement.Parent も null を返すため
+  `Xaml.detach` は何もしないが、Panel の子としては残っているので別の親に入れると E_INVALIDARG (0x80070057) になる。
+  折りたたんだグループのポップアップは中身を入れた親を覚えておき、戻すときはそこから外す (`RibbonGroupView.restoreFromPopup`)。
+  CI (GitHub Actions) ではポップアップを 1 回開いて閉じるだけのテストでも同じ例外になった (表示されなかった理由は未確認)。
 - **ウィンドウの下端の要素から BottomEdgeAlignedLeft で開いたメニューが表示されない**
   画面の下端近くにあるウィンドウでは、下向きに開いたメニューがモニターの外に置かれて見えないことがある
   (例外も出ない)。ステータス バーのドロップダウンは TopEdgeAlignedLeft で上に開く (`WRibbonBar.dropDownPlacement`)。
