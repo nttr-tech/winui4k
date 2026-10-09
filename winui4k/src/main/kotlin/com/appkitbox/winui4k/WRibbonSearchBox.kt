@@ -376,17 +376,8 @@ object WRibbonCommandPalette {
         }
         val results = RibbonSearchResultsList(run)
         results.announcer = box
-        val panel = XamlElement.load("<StackPanel />")
-        panel.addChild(box)
-        panel.addChild(results.root)
         val width = maxOf(0.0, minOf(MAX_WIDTH, size[0] - MARGIN))
-        val chrome = XamlElement.load(
-            "<Border Width=\"${Xaml.num(width)}\" BorderThickness=\"1\" CornerRadius=\"8\" TabFocusNavigation=\"Cycle\" " +
-                "Background=\"{ThemeResource RibbonPopupBackgroundBrush}\" BorderBrush=\"{ThemeResource RibbonPopupBorderBrush}\" />",
-        )
-        chrome.setChild(panel)
-        chrome.requestedTheme = owner.actualTheme
-        popup = WPopup(chrome)
+        popup = WPopup(chrome(width, box, results).also { it.requestedTheme = owner.actualTheme })
         popup.isLightDismissEnabled = false
         popup.horizontalOffset = maxOf(0.0, (size[0] - width) / 2)
         popup.verticalOffset = TOP
@@ -417,6 +408,19 @@ object WRibbonCommandPalette {
         dismissLayer.show(owner)
         popup.show(owner)
         WinUiUtilities.invokeLater { box.focus() }
+    }
+
+    /** The palette's frame, stacking the search box and the results vertically. */
+    private fun chrome(width: Double, box: XamlElement, results: RibbonSearchResultsList): XamlElement {
+        val panel = XamlElement.load("<StackPanel />")
+        panel.addChild(box)
+        panel.addChild(results.root)
+        val chrome = XamlElement.load(
+            "<Border Width=\"${Xaml.num(width)}\" BorderThickness=\"1\" CornerRadius=\"8\" TabFocusNavigation=\"Cycle\" " +
+                "Background=\"{ThemeResource RibbonPopupBackgroundBrush}\" BorderBrush=\"{ThemeResource RibbonPopupBorderBrush}\" />",
+        )
+        chrome.setChild(panel)
+        return chrome
     }
 
     private const val MAX_RESULTS = 16

@@ -272,17 +272,7 @@ internal object Xaml {
                 statics.release()
             } ?: return
             try {
-                Hstring.use(text) { t ->
-                    Hstring.use(activityId) { a ->
-                        peer.call(
-                            XamlInterop.IAutomationPeer_RaiseNotificationEvent,
-                            XamlInterop.AutomationNotificationKind_ItemAdded,
-                            XamlInterop.AutomationNotificationProcessing_MostRecent,
-                            t,
-                            a,
-                        )
-                    }
-                }
+                raiseNotification(peer, text, activityId)
             } finally {
                 peer.release()
             }
@@ -291,6 +281,18 @@ internal object Xaml {
             System.err.println("ribbon: automation notification is not available: ${e.message}")
         } finally {
             ui.release()
+        }
+    }
+
+    private fun raiseNotification(peer: ComPtr, text: String, activityId: String) = Hstring.use(text) { t ->
+        Hstring.use(activityId) { a ->
+            peer.call(
+                XamlInterop.IAutomationPeer_RaiseNotificationEvent,
+                XamlInterop.AutomationNotificationKind_ItemAdded,
+                XamlInterop.AutomationNotificationProcessing_MostRecent,
+                t,
+                a,
+            )
         }
     }
 
