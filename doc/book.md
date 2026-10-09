@@ -154,6 +154,7 @@ The setup is the core `winui4k` plus at least one FFI backend (the native-call i
 | `winui4k-ffi-jnr` | JNR backend | Java 8 or later (x86 / x64 / ARM64) |
 | `winui4k-extension-coroutines` | `Dispatchers.WinUi` (optional) | - |
 | `winui4k-extension-miglayout` | MigLayout adapter (optional) | - |
+| `winui4k-extension-ribbon` | Office-style ribbon `WRibbon` (optional) | - |
 | `winui4k-all` | Aggregate reference to all of the above | - |
 
 When in doubt, the easy option is the all-in-one `winui4k-all`.
@@ -983,7 +984,7 @@ However, E2E requires a real desktop session and runs comparatively slowly, so f
 The first constraint you hit in E2E testing is the one stated in Chapter 4: "the message loop can only be started once per JVM process."
 You cannot open and close a window per test.
 
-`UiTestHarness`, winui4k's test infrastructure (winui4k/src/test), solves this with the following design.
+`UiTestHarness`, winui4k's test infrastructure (winui4k/src/testFixtures), solves this with the following design.
 
 - Lazily create a single shared `WFrame` and reuse it across all test classes. The window is shown with `activate = false`, so it does not steal focus from anyone using the PC while tests run.
 - Controls under test are swapped in and out of this shared frame via `attach` / `detach`. When exercising events that fire only after template application (such as TextChanged), use `attachAndAwaitLoaded` to wait for Loaded before operating.
@@ -1370,7 +1371,7 @@ Paths are relative to the core module, `winui4k/src/main/kotlin/com/appkitbox/wi
 | Automatic reference release | The `internal/com/lifetime/` set | Chapter 18 |
 | FFI abstraction and implementations | `internal/ffi/api/`, and the separate `winui4k-ffi-*` modules | Chapter 7 |
 | ABI constants | `internal/winui/*Interop.kt` | Chapter 17 |
-| E2E test infrastructure | `winui4k/src/test/.../UiTestHarness.kt` | Chapter 13 |
+| E2E test infrastructure | `winui4k/src/testFixtures/.../UiTestHarness.kt` | Chapter 13 |
 
 As for reading order, the efficient way is to pick one `W*` class and dive downward.
 Starting from `WButton`, for example, you pass through all the layers in a single stroke: creation (`Activation`) → properties (`ComPtr` + the constants in `XamlInterop`) → events (`Events` + `KComObject`) → release (`ComLifetime`).

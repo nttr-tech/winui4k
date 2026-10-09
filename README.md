@@ -150,6 +150,7 @@ They all exist to demonstrate that real applications can be built with WinUI4K.
 | `winui4k-ffi-jnr` | JNR (jffi) FFI backend. Java 8+ (x86 / x64 / arm64) |
 | `winui4k-extension-coroutines` | `Dispatchers.WinUi` (a WinUI counterpart of kotlinx-coroutines-swing) |
 | `winui4k-extension-miglayout` | Adapter for laying out `W*` controls with the MigLayout layout library |
+| `winui4k-extension-ribbon` | Office-style ribbon (`WRibbon`) and its bars (tool bar, status bar, menu bar, title bar) |
 | `winui4k-all` | Aggregate module that references all of the above (excluding samples) |
 | `winui4k-sample-gallery` | Demo app showcasing all controls |
 | `winui4k-sample-filer` | Fluent Design file manager sample |

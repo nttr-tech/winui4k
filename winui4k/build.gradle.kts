@@ -1,4 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.net.URI
 import java.util.zip.ZipFile
 
@@ -6,6 +5,8 @@ import java.util.zip.ZipFile
 // (the FFI implementations have been split out into winui4k-ffi-panama / winui4k-ffi-jna / winui4k-ffi-jnr, so the core has no JDK-specific dependency)
 plugins {
     id("winui4k.kotlin-library")
+    id("winui4k.ui-test")
+    `java-test-fixtures`
 }
 
 description = "WinUI4K is a Kotlin library for building WinUI applications"
@@ -127,63 +128,19 @@ tasks.named("processResources") {
 }
 
 // ---------------------------------------------------------------------------
-// Tests (real E2E that launches actual WinUI. Requires Windows + the WinAppSDK runtime)
+// Tests (E2E tests that actually launch WinUI; see winui4k.ui-test for the settings)
 // ---------------------------------------------------------------------------
 
+// UiTestHarness (and Kotest's ProjectConfig) live in testFixtures so that
+// E2E tests in other modules (such as winui4k-extension-ribbon) can use them too
 dependencies {
-    testImplementation(libs.kotest.runner.junit5)
-    testImplementation(libs.kotest.assertions.core)
-    testRuntimeOnly(libs.junit.platform.launcher)
-    // JDK 22+ selects the Panama backend; JDK 8/9, which can't load Panama, select JNA
-    testRuntimeOnly(project(":winui4k-ffi-panama"))
-    testRuntimeOnly(project(":winui4k-ffi-jna"))
+    testFixturesImplementation(libs.kotest.runner.junit5)
 }
 
-// Also include the Java 22-targeted winui4k-ffi-panama on the test runtime classpath
-// (the tests themselves target Java 8, but run on JDK 25)
-targetJvm25AtRuntime("testRuntimeClasspath")
-
-tasks.test {
-    useJUnitPlatform()
-    // Allow Panama's restricted methods (libraryLookup / reinterpret / upcallStub)
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
-}
-
-// Show per-test-case results in CI logs (applies to all Test tasks, including testOnJavaXX)
-tasks.withType<Test>().configureEach {
-    testLogging {
-        events("passed", "skipped", "failed")
-        exceptionFormat = TestExceptionFormat.FULL
-    }
-}
-
-// In addition to tasks.test (the toolchain's JDK 25), run the same tests on the minimum
-// supported JDK (8), the JDK right after the module system was introduced (9), and the JDK
-// where Panama was finalized (22). If a given JDK version isn't installed locally, the
-// foojay resolver downloads it automatically.
-val javaToolchains = extensions.getByType<JavaToolchainService>()
-val testOnJavaTasks = listOf(8, 9, 22).map { version ->
-    tasks.register<Test>("testOnJava$version") {
-        description = "Runs the tests on JDK $version"
-        group = "verification"
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = JavaLanguageVersion.of(version)
-        }
-        testClassesDirs = sourceSets.test.get().output.classesDirs
-        classpath = sourceSets.test.get().runtimeClasspath
-        useJUnitPlatform()
-        if (version >= 22) {
-            // --enable-native-access doesn't exist as a flag on JDK 8/9, so only pass it on Panama-capable JDKs
-            jvmArgs("--enable-native-access=ALL-UNNAMED")
-        }
-    }
-}
-
-tasks.register("testOnAllJavaVersions") {
-    description = "Runs the tests on every supported JDK version (8 / 9 / 22 / 25)"
-    group = "verification"
-    dependsOn(tasks.test)
-    dependsOn(testOnJavaTasks)
+// testFixtures are for tests only, so they are not published to Maven
+val javaComponent = components["java"] as AdhocComponentWithVariants
+for (name in listOf("testFixturesApiElements", "testFixturesRuntimeElements")) {
+    javaComponent.withVariantsFromConfiguration(configurations[name]) { skip() }
 }
 
 // ---------------------------------------------------------------------------

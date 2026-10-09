@@ -150,6 +150,7 @@ Gallery に加えて、実用に近いサンプルアプリを複数同梱して
 | `winui4k-ffi-jnr` | JNR (jffi) FFI バックエンド。Java 8 以降 (x86 / x64 / arm64) |
 | `winui4k-extension-coroutines` | `Dispatchers.WinUi` (kotlinx-coroutines-swing の WinUI 版) |
 | `winui4k-extension-miglayout` | レイアウトライブラリ MigLayout で `W*` コントロールを配置するためのアダプタ |
+| `winui4k-extension-ribbon` | Office 風のリボン (`WRibbon`) と周辺のバー (ツール バー・ステータス バー・メニュー バー・タイトル バー) |
 | `winui4k-all` | 上記モジュール (サンプルを除く) を一括参照する集約モジュール |
 | `winui4k-sample-gallery` | 全コントロールのデモアプリ |
 | `winui4k-sample-filer` | Fluent Design のファイラーサンプル |

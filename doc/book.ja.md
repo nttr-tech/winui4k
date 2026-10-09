@@ -154,6 +154,7 @@ Visual Studio、C++ ビルドツール、.NET SDK は使いません。
 | `winui4k-ffi-jnr` | JNR バックエンド | Java 8 以降 (x86 / x64 / ARM64) |
 | `winui4k-extension-coroutines` | `Dispatchers.WinUi` (任意) | - |
 | `winui4k-extension-miglayout` | MigLayout アダプタ (任意) | - |
+| `winui4k-extension-ribbon` | Office 風のリボン `WRibbon` (任意) | - |
 | `winui4k-all` | 上記すべての一括参照 | - |
 
 迷ったら、全部入りの `winui4k-all` を使うのが簡単です。
@@ -983,7 +984,7 @@ FFI・COM ABI・WinUI 実体という 3 層の境界を越えるライブラリ�
 E2E テストで最初にぶつかる制約は、第4章で述べた「メッセージループは JVM プロセス内で一度しか起動できない」です。
 テストごとにウィンドウを開閉することはできません。
 
-winui4k のテスト基盤 `UiTestHarness` (winui4k/src/test) は、これを次の設計で解決しています。
+winui4k のテスト基盤 `UiTestHarness` (winui4k/src/testFixtures) は、これを次の設計で解決しています。
 
 - 共有の `WFrame` を 1 つだけ遅延生成し、全テストクラスで使い回す。ウィンドウは `activate = false` で表示し、テスト実行中に PC を使っている人からフォーカスを奪わない。
 - テスト対象のコントロールは、この共有フレームへの `attach` / `detach` で出し入れする。テンプレート適用後でないと発火しないイベント (TextChanged など) を試すときは、`attachAndAwaitLoaded` で Loaded を待ってから操作する。
@@ -1370,7 +1371,7 @@ JVMTI エージェントで全ヒープを走査すれば理論上は可能で�
 | 参照の自動解放 | `internal/com/lifetime/` 一式 | 第18章 |
 | FFI の抽象と実装 | `internal/ffi/api/`、別モジュール `winui4k-ffi-*` | 第7章 |
 | ABI 定数 | `internal/winui/*Interop.kt` | 第17章 |
-| E2E テスト基盤 | `winui4k/src/test/.../UiTestHarness.kt` | 第13章 |
+| E2E テスト基盤 | `winui4k/src/testFixtures/.../UiTestHarness.kt` | 第13章 |
 
 読み進め方としては、まず `W*` クラスを 1 つ選んで下へ潜るのが効率的です。
 たとえば `WButton` から始めると、生成 (`Activation`) → プロパティ (`ComPtr` + `XamlInterop` の定数) → イベント (`Events` + `KComObject`) → 解放 (`ComLifetime`) の順に、全レイヤを一筆書きで通過できます。

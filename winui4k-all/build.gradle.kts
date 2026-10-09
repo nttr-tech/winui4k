@@ -11,6 +11,7 @@ dependencies {
     api(project(":winui4k"))
     api(project(":winui4k-extension-coroutines"))
     api(project(":winui4k-extension-miglayout"))
+    api(project(":winui4k-extension-ribbon"))
     runtimeOnly(project(":winui4k-ffi-panama"))
     runtimeOnly(project(":winui4k-ffi-jna"))
     runtimeOnly(project(":winui4k-ffi-jnr"))
