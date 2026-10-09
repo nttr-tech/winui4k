@@ -88,6 +88,7 @@ class GalleryNavigation {
         pages.put("SelectorBar", NavigationPages::buildSelectorBarPage);
         pages.put("SemanticZoom", ScrollingPages::buildSemanticZoomPage);
         pages.put("SettingsCard", LayoutPages::buildSettingsCardPage);
+        pages.put("Ribbon", RibbonPages::buildRibbonPage);
         pages.put("RichEditBox", TextPages::buildRichEditBoxPage);
         pages.put("RichTextBlock", TextPages::buildRichTextBlockPage);
         pages.put("Slider", BasicInputPages::buildSliderPage);
@@ -173,6 +174,7 @@ class GalleryNavigation {
                 "CommandBarFlyout",
                 "MenuBar",
                 "MenuFlyout",
+                "Ribbon",
                 "SwipeControl",
                 "StandardUICommand",
                 "XamlUICommand"));
