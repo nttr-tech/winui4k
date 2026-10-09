@@ -195,6 +195,7 @@ internal object XamlInterop {
     const val CLS_Grid = "Microsoft.UI.Xaml.Controls.Grid"
     const val IID_IGridFactory = "b16bf561-fc6c-57c6-8ebc-0b06ce4513aa"
     const val IID_IGrid = "c4496219-9014-58a1-b4ad-c5044913a5bb"
+    const val IGrid_put_Padding = 17                   // put_Padding(Thickness)
     const val IGrid_get_RowDefinitions = 6             // get_RowDefinitions(out IVector<RowDefinition>)
     const val IGrid_get_ColumnDefinitions = 7          // get_ColumnDefinitions(out IVector<ColumnDefinition>)
     const val IGrid_get_RowSpacing = 18                // get_RowSpacing(out DOUBLE)
