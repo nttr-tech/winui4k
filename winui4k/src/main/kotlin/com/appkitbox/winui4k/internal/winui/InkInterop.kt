@@ -184,6 +184,8 @@ internal object InkInterop {
     const val IInkToolbar_GetMenuButton = 34                          // GetMenuButton(InkToolbarMenuKind, out InkToolbarMenuButton)
     const val IID_IInkToolbarFactory = "af5298a5-ce4a-5108-bc03-da99ee76084e"
     const val IInkToolbarFactory_CreateInstance = 6   // CreateInstance(object, ref object, out InkToolbar)
+    const val IID_IInkToolbarStatics = "4e9af600-ec72-588d-9fe5-ca23802636de"
+    const val IInkToolbarStatics_get_InkDrawingAttributesProperty = 9   // get_InkDrawingAttributesProperty(out DependencyProperty)
 
     // ---- Microsoft.UI.Xaml.Controls.InkToolbarIsStencilButtonCheckedChangedEventArgs ----
     // base: System.Object
@@ -345,6 +347,10 @@ internal object InkInterop {
     // ---- Microsoft.UI.Xaml.Media.Brush (element type of IVector<Brush>; used to read and write the pen palette) ----
     const val IID_IBrush = "2de3cb83-1329-5679-88f8-c822bc5442cb"
 
+    // ---- Microsoft.UI.Xaml.Media.BrushCollection (the concrete IVector<Brush> passed to the pen palette) ----
+    // base: System.Object / activatable factory: <default IActivationFactory>
+    const val CLS_BrushCollection = "Microsoft.UI.Xaml.Media.BrushCollection"
+
     // ---- Concrete IIDs of generic types (XAML side) ----
 
     /** Concrete IID of IVector<Microsoft.UI.Xaml.DependencyObject> (InkToolbar.Children = DependencyObjectCollection). */
@@ -353,6 +359,11 @@ internal object InkInterop {
             "pinterface({${FoundationInterop.IID_IVector_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.DependencyObject;{${XamlInterop.IID_IDependencyObject}}))",
         )
+    }
+
+    /** Concrete IID of IVector<Microsoft.UI.Xaml.Media.Brush> (InkToolbarPenButton.Palette = BrushCollection). */
+    val IID_IVector_Brush: String by lazy {
+        Pinterface.iid("pinterface({${FoundationInterop.IID_IVector_OPEN}};rc(Microsoft.UI.Xaml.Media.Brush;{$IID_IBrush}))")
     }
 
     /** Handler for InkPresenter.StrokesCollected: TypedEventHandler<InkPresenter, InkStrokesCollectedEventArgs>. */

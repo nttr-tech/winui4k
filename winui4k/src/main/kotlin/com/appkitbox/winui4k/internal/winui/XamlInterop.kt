@@ -1634,6 +1634,7 @@ internal object XamlInterop {
 
     // ---- Microsoft.UI.Xaml.IDependencyObject (target of attached properties) ----
     const val IID_IDependencyObject = "e7beaee7-160e-50f7-8789-d63463f979fa"
+    const val IDependencyObject_SetValue = 7           // SetValue(DependencyProperty, object)
     const val IDependencyObject_RegisterPropertyChangedCallback = 11 // (DependencyProperty, DependencyPropertyChangedCallback, out i8 token)
 
     /** delegate DependencyPropertyChangedCallback(DependencyObject sender, DependencyProperty dp) — Invoke is vtbl[3] */
