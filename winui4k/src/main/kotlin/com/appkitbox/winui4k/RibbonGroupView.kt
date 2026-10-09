@@ -320,7 +320,8 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
         val buttons = (if (model.hasDialogLauncher) 1 else 0) + (if (hasSlideOut) 1 else 0)
         val extra = if (buttons > 1) LAUNCHER_WIDTH else 0.0
         val margin = if (WRibbonTheme.style == RibbonThemeStyle.CAD) 2.0 else 0.0
-        return textWidth + CAPTION_TEXT_MARGIN * 2 + extra + margin
+        // Add a little slack so that the end is not truncated due to rounding differences between measurement and rendering
+        return textWidth + CAPTION_TEXT_MARGIN * 2 + extra + margin + CAPTION_SLACK
     }
 
     internal val hasSlideOut: Boolean get() = model.slideOutItems.any { it.isVisible }
@@ -691,6 +692,7 @@ internal class RibbonGroupView(val model: RibbonGroupModel, val container: Ribbo
         const val FULL_HEIGHT_RATIO = 1.6
         const val CAPTION_TEXT_MARGIN = 16.0
         const val LAUNCHER_WIDTH = 16.0
+        const val CAPTION_SLACK = 2.0
 
         /** The icon of the collapsed button for a group without an icon. */
         val DEFAULT_GROUP_ICON = RibbonIcon.glyph("")

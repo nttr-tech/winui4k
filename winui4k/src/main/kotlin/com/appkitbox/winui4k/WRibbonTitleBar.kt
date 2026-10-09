@@ -113,6 +113,7 @@ class WRibbonTitleBar(
         ribbon.model.addPropertyChangeListener(modelListener)
         addSizeChangedListener {
             updateAdaptive()
+            WinUiUtilities.invokeLater { updateAdaptive() }
             schedulePassthrough()
         }
         addLoadedListener {
@@ -185,6 +186,12 @@ class WRibbonTitleBar(
         searchHost.isVisible = isSearchVisible && width > SEARCH_MIN_WINDOW
         searchBox.width = min(searchWidth, max(SEARCH_MIN_WIDTH, (width - SEARCH_RESERVED) / 2))
         titlePanel.isVisible = width == 0.0 || width > TITLE_MIN_WINDOW
+        // Truncate the title to the width that fits in the center (empty) column (so it does not overlap the search box)
+        val column = dragRegion.actualWidth
+        if (column > 0) {
+            val search = if (searchHost.isVisible) searchBox.width + TITLE_SPACING else 0.0
+            titleText.maxWidth = max(TITLE_MIN_WIDTH, min(TITLE_MAX_WIDTH, column - search - subtitleText.actualWidth - TITLE_SPACING * 2))
+        }
     }
 
     /**
@@ -268,6 +275,9 @@ class WRibbonTitleBar(
         const val SEARCH_RESERVED = 520.0
         const val SEARCH_MIN_WINDOW = 720.0
         const val TITLE_MIN_WINDOW = 480.0
+        const val TITLE_MIN_WIDTH = 60.0
+        const val TITLE_MAX_WIDTH = 320.0
+        const val TITLE_SPACING = 16.0
         const val APP_ICON_SIZE = 20.0
         const val APP_BUTTON_ICON_SIZE = 24.0
         const val RECT_BYTES = 16

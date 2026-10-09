@@ -89,6 +89,35 @@ object WRibbonTheme {
         root.requestedTheme = theme
     }
 
+    /**
+     * Wraps [content] in a surface (Border) whose background is the ribbon brush [brushKey] (equivalent to RibbonSpace's
+     * RibbonTheme.SetThemeBrush). Follows light / dark / high contrast and palette changes (window backgrounds, the
+     * surface next to the status bar, etc.).
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun surface(content: WComponent?, brushKey: String = "RibbonWindowBackgroundBrush"): WComponent {
+        require(brushKey in RibbonThemeColors.BRUSH_KEYS) { "Not a ribbon brush key: $brushKey" }
+        val border = XamlElement(RibbonThemeResources.load("<Border Background=\"{ThemeResource $brushKey}\" />"))
+        content?.let {
+            Xaml.detach(it)
+            border.setChild(it)
+        }
+        return border
+    }
+
+    /** Text whose foreground is the ribbon brush [brushKey] (follows the theme). */
+    @JvmStatic
+    @JvmOverloads
+    fun label(text: String, brushKey: String = "RibbonForegroundBrush", fontSize: Double = 12.0): WComponent {
+        require(brushKey in RibbonThemeColors.BRUSH_KEYS) { "Not a ribbon brush key: $brushKey" }
+        return XamlElement(
+            RibbonThemeResources.load(
+                "<TextBlock Text=\"${Xaml.escape(text)}\" FontSize=\"${Xaml.num(fontSize)}\" TextWrapping=\"Wrap\" Foreground=\"{ThemeResource $brushKey}\" />",
+            ),
+        )
+    }
+
     /** Subscribes to notifications when the palette, decoration color scheme or surface style changes. */
     @JvmStatic
     fun addChangedListener(listener: Runnable) {
