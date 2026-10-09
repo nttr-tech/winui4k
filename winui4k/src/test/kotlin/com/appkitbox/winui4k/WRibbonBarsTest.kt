@@ -158,6 +158,18 @@ class WRibbonBarsTest : FunSpec() {
             invoked shouldBe listOf("find")
         }
 
+        test("the search box shows no results right after it appears, opening the results also opens the layer covering the outside, and closing closes both") {
+            val ribbon = onUiThreadGet { WRibbon(RibbonModel()) }
+            show(ribbon)
+            val box = onUiThreadGet { WRibbonSearchBox(ribbon).also { it.width = BOX_WIDTH } }
+            show(box)
+            onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (false to false)
+            onUiThread { box.focusSearch() }
+            onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (true to true)
+            onUiThread { box.close() }
+            onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (false to false)
+        }
+
         test("the title bar hosts the QAT while it is above the ribbon and returns it to the ribbon when it moves below") {
             val model = onUiThreadGet { RibbonModel().also { it.quickAccessItems.add(RibbonButtonModel("save", "Save", RibbonIcons.SAVE)) } }
             val ribbon = onUiThreadGet { WRibbon(model) }

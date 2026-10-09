@@ -140,6 +140,8 @@ class WRibbonSearchBox(
     private val results = RibbonSearchResultsList { execute(it) }
     private val popup: WPopup
     private val queryEntries = mutableListOf<RibbonSearchEntry>()
+    private val dismissLayer = RibbonDismissLayer { close() }
+    private var lastText = ""
     private var ignoredText: String? = null
     private val queryListeners = CopyOnWriteArrayList<Consumer<RibbonSearchQueryEvent>>()
     private val executedListeners = CopyOnWriteArrayList<Consumer<RibbonSearchEntry>>()
@@ -171,16 +173,26 @@ class WRibbonSearchBox(
         )
         chrome.setChild(results.root)
         popup = WPopup(chrome)
-        popup.isLightDismissEnabled = true
-        popup.addCloseListener { removeQueryEntries() }
+        popup.isLightDismissEnabled = false
+        popup.addCloseListener {
+            removeQueryEntries()
+            dismissLayer.hide()
+        }
         textBox.onTextChanged { onTextChanged() }
-        textBox.onFocus(true) { showResults() }
+        textBox.onFocus(true) {
+            // Do not show results on the automatic focus when the window opens (only when entered by a click or the Tab key)
+            val state = textBox.uiElement.getInt(XamlInterop.IUIElement_get_FocusState)
+            if (state == XamlInterop.FocusState_Pointer || Xaml.isKeyDown(VK_TAB) || Xaml.isKeyDown(VK_LBUTTON)) showResults()
+        }
         textBox.onPreviewKeyDown { e -> onKeyDown(e) }
         ribbon.addSearchRequestListener { onSearchRequested() }
     }
 
     /** Whether results are shown. */
     val isResultsOpen: Boolean get() = popup.isOpen
+
+    /** Whether the layer that receives clicks outside the results is open. */
+    internal val isDismissLayerOpen: Boolean get() = dismissLayer.isOpen
 
     /** The query. */
     var text: String
@@ -207,6 +219,9 @@ class WRibbonSearchBox(
 
     private fun onTextChanged() {
         val current = textBox.textBoxText
+        // Do not show results on a TextChanged where the text has not changed (e.g. right after creation)
+        if (current == lastText) return
+        lastText = current
         if (ignoredText != null && current == ignoredText) {
             ignoredText = null
             return
@@ -256,7 +271,10 @@ class WRibbonSearchBox(
         val position = root.positionInRoot()
         popup.horizontalOffset = position[0]
         popup.verticalOffset = position[1] + actualHeight + 2
-        if (!popup.isOpen) popup.show(this)
+        if (!popup.isOpen) {
+            dismissLayer.show(this)
+            popup.show(this)
+        }
     }
 
     private fun removeQueryEntries() {
@@ -277,6 +295,7 @@ class WRibbonSearchBox(
 
     /** Closes the results. */
     fun close() {
+        dismissLayer.hide()
         if (popup.isOpen) popup.hide()
     }
 
@@ -303,6 +322,8 @@ class WRibbonSearchBox(
     private companion object {
         const val DEFAULT_MAX_RESULTS = 12
         const val MIN_POPUP_WIDTH = 360.0
+        const val VK_LBUTTON = 1
+        const val VK_TAB = 9
     }
 }
 
@@ -333,6 +354,7 @@ object WRibbonCommandPalette {
         box.setPlaceholderText(RibbonStrings.current.commandPalette)
         box.setAutomationName(RibbonStrings.current.commandPalette)
         lateinit var popup: WPopup
+        val dismissLayer = RibbonDismissLayer { popup.hide() }
         var executing = false
         val run: (RibbonSearchEntry) -> Unit = { entry ->
             if (entry.isEnabled) {
@@ -353,7 +375,7 @@ object WRibbonCommandPalette {
         chrome.setChild(panel)
         chrome.requestedTheme = owner.actualTheme
         popup = WPopup(chrome)
-        popup.isLightDismissEnabled = true
+        popup.isLightDismissEnabled = false
         popup.horizontalOffset = maxOf(0.0, (size[0] - width) / 2)
         popup.verticalOffset = TOP
         val previousFocus = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)?.let { root ->
@@ -364,6 +386,7 @@ object WRibbonCommandPalette {
             }
         }
         popup.addCloseListener {
+            dismissLayer.hide()
             if (!executing) previousFocus?.queryInterfaceOrNull(XamlInterop.IID_IUIElement)?.let { XamlElement(it).focus(XamlInterop.FocusState_Programmatic) }
             previousFocus?.release()
         }
@@ -379,6 +402,7 @@ object WRibbonCommandPalette {
             e.handled = true
         }
         results.show(search(""), "")
+        dismissLayer.show(owner)
         popup.show(owner)
         WinUiUtilities.invokeLater { box.focus() }
     }

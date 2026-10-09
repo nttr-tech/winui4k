@@ -53,3 +53,9 @@
 - **TableView: グループの見出しが "(group)" になる**
   TableView がキーを見出しの文字列にできるのは String / Int32 / Int64 / UInt32 / Double (と IStringable) だけで、
   Boolean などは "(group)" と表示される。WTable.groupBy はそれ以外のキーを toString() の文字列にして渡す。
+- **ウィンドウの要素の子ではない Popup を IsLightDismissEnabled で開くと、ウィンドウがクリックに一切反応しなくなる**
+  `WPopup.show(owner)` の Popup は XamlRoot だけを設定した親のない Popup で、IsLightDismissEnabled=true にすると
+  外側のクリックで閉じないまま、ウィンドウへのポインタ入力をすべて奪う (タブもボタンも反応しない)。
+  リボンの検索結果は起動時の自動フォーカスで開いてしまい、ウィンドウ全体が操作不能に見えた。
+  外側のクリックで閉じたいポップアップはライト ディスミスを使わず、先にウィンドウ全体を覆う透明な Popup
+  (`RibbonDismissLayer`) を開き、その層が押されたら閉じる。

@@ -11,6 +11,7 @@ import kotlin.math.max
  */
 internal class RibbonGroupSlideOut(private val group: RibbonGroupView) {
     private var popup: WPopup? = null
+    private val dismissLayer = RibbonDismissLayer { close() }
     private var host: XamlElement? = null
     private var pinButton: XamlElement? = null
 
@@ -18,7 +19,7 @@ internal class RibbonGroupSlideOut(private val group: RibbonGroupView) {
     var isPinned: Boolean = false
         set(value) {
             field = value
-            popup?.isLightDismissEnabled = !value
+            if (value) dismissLayer.hide()
             updatePinButton()
         }
 
@@ -31,7 +32,8 @@ internal class RibbonGroupSlideOut(private val group: RibbonGroupView) {
         Xaml.detach(group.slideOutPanel)
         host!!.setChild(group.slideOutPanel)
         group.applySlideOutLayouts()
-        p.isLightDismissEnabled = !isPinned
+        p.isLightDismissEnabled = false
+        if (!isPinned) dismissLayer.show(group.element)
         updatePinButton()
         val position = group.element.positionInRoot()
         p.horizontalOffset = position[0]
@@ -46,6 +48,7 @@ internal class RibbonGroupSlideOut(private val group: RibbonGroupView) {
 
     /** Closes it (the pinned setting is kept). */
     fun close() {
+        dismissLayer.hide()
         if (isOpen) popup?.hide()
     }
 

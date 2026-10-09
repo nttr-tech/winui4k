@@ -212,6 +212,7 @@ internal class RibbonViewHost(private val owner: WRibbon) : RibbonTabContainer, 
 internal class RibbonMinimizedPopup(private val ribbon: WRibbon) {
     private val chrome = XamlElement.load("<Border />")
     private val popup = WPopup(chrome)
+    private val dismissLayer = RibbonDismissLayer { close() }
     private var lastClosed = 0L
 
     /** Whether it is open. */
@@ -219,7 +220,7 @@ internal class RibbonMinimizedPopup(private val ribbon: WRibbon) {
         private set
 
     init {
-        popup.isLightDismissEnabled = true
+        popup.isLightDismissEnabled = false
         popup.addCloseListener { restore() }
         chrome.onKeyDown { e ->
             if (e.key == RibbonInputViews.VK_ESCAPE) {
@@ -249,6 +250,7 @@ internal class RibbonMinimizedPopup(private val ribbon: WRibbon) {
         popup.horizontalOffset = origin[0]
         popup.verticalOffset = rowPosition[1] + tabRow.actualHeight
         isOpen = true
+        dismissLayer.show(ribbon)
         popup.show(ribbon)
         ribbon.invalidateLayout()
     }
@@ -256,6 +258,7 @@ internal class RibbonMinimizedPopup(private val ribbon: WRibbon) {
     /** Closes the popup (Closed arrives asynchronously, so the switch to the closed state is done here). */
     fun close() {
         if (!isOpen) return
+        dismissLayer.hide()
         popup.hide()
         restore()
     }
