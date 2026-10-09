@@ -27,6 +27,7 @@ internal object RibbonInputViews {
         is RibbonGridPickerModel -> RibbonGridPickerView(model, host, embedded)
         is RibbonColorPickerModel -> RibbonColorPickerView(model, host, embedded)
         is RibbonGalleryModel -> RibbonGalleryView(model, host, embedded)
+        is com.appkitbox.winui4k.ribbon.RibbonZoomModel -> RibbonZoomView(model, host)
         else -> null
     }
 

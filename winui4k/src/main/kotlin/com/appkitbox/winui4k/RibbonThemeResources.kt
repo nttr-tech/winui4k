@@ -21,6 +21,12 @@ import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
  * and margins) apply to controls whose templates are applied afterward. Use only from the UI thread.
  */
 internal object RibbonThemeResources {
+    /** Merges the theme resources and then loads [xaml] (the root of a component that refers to the resources). */
+    fun load(xaml: String): com.appkitbox.winui4k.internal.com.ComPtr {
+        ensure()
+        return Xaml.load(xaml)
+    }
+
     /** The current palette. */
     var palette: RibbonThemePalette = RibbonThemePalette.WORD
         private set
