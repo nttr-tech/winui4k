@@ -76,6 +76,33 @@ Java からも同じモデルを組み立てられる (`winui4k-sample-gallery-i
 - **浮動パネル・展開パネル** (AutoCAD): グループのタイトルのドラッグで浮動、`slideOutItems` はタイトルの矢印で開く展開パネル (ピン留め可)。
 - **検索**: リボンの全項目 (メニューの中も) をラベル・KeyTip・ショートカット・説明から検索して実行する。
 - **テーマ**: `WRibbonTheme` のパレット・装飾・面の見た目は、アプリの XAML からも `{ThemeResource Ribbon...Brush}` で参照できる。
+- **右から左**: `WComponent.flowDirection = FlowDirection.RIGHT_TO_LEFT` でタブの ← / → キーとタイトル バーのキャプション
+  ボタンの余白が反転する。
+- **UI の言語**: リボンが自分で出す文字列 (スクリーン ヒント・メニュー・ユーザー設定など) は `RibbonStrings.current` に従い、
+  切り替えると表示中のリボンも追従する。
+
+## 拡張と操作の API
+
+- **モデルの差し替え**: `ribbon.model = 別のモデル` で、タブ・QAT・タブ行の項目を新しいモデルで作り直す
+  (古いモデルの購読は外れる)。
+- **項目の表示の差し替え**: `ribbon.itemFactory` (`RibbonItemFactory`) が項目のモデルに対してコンポーネントを返すと、
+  既定の表示の代わりにそれを置く (null を返した項目は既定の表示)。
+- **スレッド**: モデルの変更の通知は `RibbonNotifications.dispatcher` を通して配る。リボンのビューを最初に作ったときに (未設定なら) UI スレッドへ
+  配る口が入るので、バックグラウンドのスレッドでモデルを変えても、ビューとリスナーは UI スレッドで通知を受け取る。
+- **コードからの操作** (テストやスクリプトから UI を動かす): `performClick(item)`、`openDropDown` / `closeDropDown`、
+  `openGroupPopup` / `closeGroupPopup` (折りたたんだグループ)、`openSlideOut` / `setSlideOutPinned` (展開パネル)、
+  `openDialogLauncher`、`groupState`、`overflowItems`、`pickGalleryItem` / `scrollGalleryRows`、`floatGroup` /
+  `returnGroupToRibbon`、`showKeyTips` / `processKeyTipInput` / `currentKeyTips`。
+- **検索の対象外**: 項目の `isSearchable = false` でコマンド検索に出さない。
+- **QAT**: `model.showQuickAccessCustomizeButton` でカスタマイズ ボタンの表示、`ribbon.defaultQuickAccessPosition` で
+  最初のロード時点の位置 (リセットの戻り先) を得る。
+- **コンボボックスの確定**: `RibbonComboBoxModel.addCommitListener` は確定した項目と文字列の両方を知らせる。
+- **単独で置けるコンポーネント**: `WRibbonIcon` (リボンのアイコン (グリフ・パス・多色のレイヤー付き線画) を任意の
+  場所に描く)、`WRibbonColorPalette` (色の選択のパレットだけを置く。`showThemeColors` でテーマの色の欄を隠せる)。
+- **テーマの値**: `WRibbonTheme.getBrushColor(scope, key)` (要素のテーマでのブラシの色)、
+  `setThemeBrush(target, key) { ... }` (テーマが変わるたびに色を当て直す)、`getCornerRadius(key)`。
+- **メニューのアイコン**: メニュー項目は単色のアイコンしか持てないため、線画・多色のアイコンは
+  `WRibbonTheme.menuIconConverter` で近いグリフなどに変えて出す (CAD のサンプル)。
 
 ## WinUI の制約による RibbonSpace との違い
 
@@ -93,11 +120,11 @@ Java からも同じモデルを組み立てられる (`winui4k-sample-gallery-i
 
 | サンプル | 内容 | 起動 |
 |---|---|---|
-| Gallery の [Ribbon] ページ | Word 風・AutoCAD 風のリボンと、表示・テーマ・状態の Options | `.\gradlew run` |
-| `winui4k-sample-ribbon-word` | Word 風 (スタイル ギャラリー・表・バックステージ・検索付きタイトル バー) | `.\gradlew :winui4k-sample-ribbon-word:run` |
-| `winui4k-sample-ribbon-excel` | Excel 風 (コマンド ID で MVVM のビュー モデルにつなぐ・数式バー・シート) | `.\gradlew :winui4k-sample-ribbon-excel:run` |
-| `winui4k-sample-ribbon-powerpoint` | PowerPoint 風 (シンプル表示・テーマのライブ プレビュー) | `.\gradlew :winui4k-sample-ribbon-powerpoint:run` |
-| `winui4k-sample-ribbon-cad` | AutoCAD 風 (ダーク・画層・展開パネル・アプリケーション メニュー・コマンド ライン) | `.\gradlew :winui4k-sample-ribbon-cad:run` |
-| `winui4k-sample-ribbon-tools` | リボンを使わないバー (メニュー バー・オプション バー・ツール パレット・ステータス バー) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
+| Gallery の [Ribbon] ページ | Word 風・AutoCAD 風のリボンと、表示・テーマ・UI の言語・状態の Options | `.\gradlew run` |
+| `winui4k-sample-ribbon-word` | Word 風 (スタイル ギャラリー・書式を文書に反映・表 / 図のコンテキスト タブ・バックステージ・検索付きタイトル バー) | `.\gradlew :winui4k-sample-ribbon-word:run` |
+| `winui4k-sample-ribbon-excel` | Excel 風 (コマンド ID で MVVM のビュー モデルにつなぐ・数式バー・シート・グラフ ツール) | `.\gradlew :winui4k-sample-ribbon-excel:run` |
+| `winui4k-sample-ribbon-powerpoint` | PowerPoint 風 (シンプル表示・テーマのライブ プレビュー・画面切り替えのギャラリー) | `.\gradlew :winui4k-sample-ribbon-powerpoint:run` |
+| `winui4k-sample-ribbon-cad` | AutoCAD 風 (線画のアイコン・ワークスペース・テキスト エディタ / ハッチング作成のコンテキスト タブ・図面・ビュー キューブ・コマンド ライン) | `.\gradlew :winui4k-sample-ribbon-cad:run` |
+| `winui4k-sample-ribbon-tools` | リボンを使わないバー (メニュー バー・ツールに追従するオプション バー・最後の選択に追従する分割ボタン・ステータス バー) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
 `winui4k-sample-ribbon-shell` はこれらのデモに共通の外枠 (タイトル バー・アプリを切り替える左のレール) である。
