@@ -46,11 +46,13 @@ import com.appkitbox.winui4k.ribbon.RibbonScreenTip
 import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel
 import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel
+import com.appkitbox.winui4k.ribbon.RibbonStrings
 import com.appkitbox.winui4k.ribbon.RibbonTabModel
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle
 import com.appkitbox.winui4k.ribbon.RibbonToggleButtonModel
 import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode
+import java.util.Locale
 
 /** The ribbon page (a pure Kotlin version of RibbonSpace.WinUI; Office- and AutoCAD-style ribbons). */
 internal fun buildRibbonPage(): WComponent {
@@ -345,6 +347,15 @@ private fun buildOfficeRibbonExample(): WComponent {
         WComboBox(RibbonChromeStyle.entries.map { it.name }).also { combo ->
             combo.selectedIndex = RibbonChromeStyle.entries.indexOf(WRibbonTheme.chromeStyle)
             combo.addListSelectionListener { WRibbonTheme.applyChromeStyle(RibbonChromeStyle.entries[combo.selectedIndex.coerceAtLeast(0)]) }
+        },
+    )
+    // The language of the strings the ribbon shows itself (ScreenTips, menus, customization, etc.). Shared by all ribbons
+    options.add(optionsLabel("Ribbon UI language"))
+    val cultures = RibbonStrings.builtInCultures.toList()
+    options.add(
+        WComboBox(cultures.map { tag -> Locale.forLanguageTag(tag).let { "${it.getDisplayName(it)} ($tag)" } }).also { combo ->
+            combo.selectedIndex = cultures.indexOf(RibbonStrings.current.locale.language).coerceAtLeast(0)
+            combo.addListSelectionListener { RibbonStrings.current = RibbonStrings.forCulture(cultures[combo.selectedIndex.coerceAtLeast(0)]) }
         },
     )
     options.add(

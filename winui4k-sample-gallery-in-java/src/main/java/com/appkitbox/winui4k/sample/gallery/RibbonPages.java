@@ -46,6 +46,7 @@ import com.appkitbox.winui4k.ribbon.RibbonScreenTip;
 import com.appkitbox.winui4k.ribbon.RibbonSeparatorModel;
 import com.appkitbox.winui4k.ribbon.RibbonSpinnerModel;
 import com.appkitbox.winui4k.ribbon.RibbonSplitButtonModel;
+import com.appkitbox.winui4k.ribbon.RibbonStrings;
 import com.appkitbox.winui4k.ribbon.RibbonTabModel;
 import com.appkitbox.winui4k.ribbon.RibbonThemePalette;
 import com.appkitbox.winui4k.ribbon.RibbonThemeStyle;
@@ -54,6 +55,7 @@ import com.appkitbox.winui4k.ribbon.RibbonVisibilityMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /*
  * Menus & toolbars category: the demo page for Ribbon (a pure Kotlin version of RibbonSpace.WinUI; Office- and AutoCAD-style ribbons).
@@ -374,6 +376,21 @@ final class RibbonPages {
             WRibbonTheme.applyChromeStyle(RibbonChromeStyle.values()[Math.max(chrome.getSelectedIndex(), 0)]);
         });
         options.add(chrome);
+
+        // The language of the strings the ribbon shows itself (ScreenTips, menus, customization, etc.). Shared by all ribbons
+        options.add(GalleryScaffold.optionsLabel("Ribbon UI language"));
+        List<String> cultures = new ArrayList<>(RibbonStrings.getBuiltInCultures());
+        List<String> cultureNames = new ArrayList<>();
+        for (String tag : cultures) {
+            Locale locale = Locale.forLanguageTag(tag);
+            cultureNames.add(locale.getDisplayName(locale) + " (" + tag + ")");
+        }
+        WComboBox language = new WComboBox(cultureNames);
+        language.setSelectedIndex(Math.max(cultures.indexOf(RibbonStrings.getCurrent().getLocale().getLanguage()), 0));
+        language.addListSelectionListener(() -> {
+            RibbonStrings.setCurrent(RibbonStrings.forCulture(cultures.get(Math.max(language.getSelectedIndex(), 0))));
+        });
+        options.add(language);
 
         WCheckBox qatBelow = new WCheckBox("Show the QAT below the ribbon");
         qatBelow.addItemListener((checked) -> {
