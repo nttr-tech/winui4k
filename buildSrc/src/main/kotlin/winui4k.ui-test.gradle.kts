@@ -28,6 +28,14 @@ tasks.named<Test>("test") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
+// WinUI test processes compete for the clipboard, so run the Test tasks of all modules and all JDKs one at a time (UiTestLock)
+val uiTestLock = gradle.sharedServices.registerIfAbsent("uiTestLock", UiTestLock::class) {
+    maxParallelUsages = 1
+}
+tasks.withType<Test>().configureEach {
+    usesService(uiTestLock)
+}
+
 // Show per-test-case results in CI logs (applies to all Test tasks, including testOnJavaXX)
 tasks.withType<Test>().configureEach {
     testLogging {
