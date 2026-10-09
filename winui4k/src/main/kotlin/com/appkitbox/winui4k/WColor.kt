@@ -22,6 +22,14 @@ class WColor @JvmOverloads constructor(
         return brush
     }
 
+    /** Equal if all four components are equal (value comparison, like java.awt.Color.equals). */
+    override fun equals(other: Any?): Boolean =
+        other is WColor && red == other.red && green == other.green && blue == other.blue && alpha == other.alpha
+
+    override fun hashCode(): Int = (alpha shl 24) or (red shl 16) or (green shl 8) or blue
+
+    override fun toString(): String = "WColor(red=$red, green=$green, blue=$blue, alpha=$alpha)"
+
     companion object {
         @JvmField
         val BLACK = WColor(0, 0, 0)
