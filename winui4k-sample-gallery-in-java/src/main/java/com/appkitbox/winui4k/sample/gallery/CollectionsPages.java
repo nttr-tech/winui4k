@@ -5,7 +5,6 @@ import com.appkitbox.winui4k.ItemsViewSelectionMode;
 import com.appkitbox.winui4k.ListViewSelectionMode;
 import com.appkitbox.winui4k.Orientation;
 import com.appkitbox.winui4k.SelectionMode;
-import com.appkitbox.winui4k.SortDirection;
 import com.appkitbox.winui4k.SpinButtonPlacementMode;
 import com.appkitbox.winui4k.TableDensity;
 import com.appkitbox.winui4k.TableSelectionMode;
@@ -26,8 +25,6 @@ import com.appkitbox.winui4k.WListBox;
 import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WProgressBar;
 import com.appkitbox.winui4k.WSpinner;
-import com.appkitbox.winui4k.WTable;
-import com.appkitbox.winui4k.WTableColumn;
 import com.appkitbox.winui4k.WTableView;
 import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WTree;
@@ -790,144 +787,6 @@ final class CollectionsPages {
         options.add(addTax);
         options.add(widen);
         return GalleryScaffold.buildExample("Column operations (TableColumnModel / TableColumn)", body, options);
-    }
-
-    // endregion
-
-    // region TableView (ListView) page
-
-    /** The TableView (ListView) page: lines up demos for trying out the various features of WTable, a custom implementation built on ListView. */
-    static WComponent buildListViewTablePage() {
-        WPanel page = GalleryScaffold.buildPage(
-                "TableView (ListView)",
-                "A table that displays data in rows and columns. Try out WTable's various "
-                        + "features, implemented on top of ListView based on the design of WinUI.TableView.");
-
-        page.add(buildSimpleTableExample());
-        page.add(buildTableSortExample());
-        page.add(buildTableRowOperationsExample());
-        return page;
-    }
-
-    /** Sample data for the TableView demos (product name, price, quantity). */
-    private static WTable buildProductTable() {
-        WTable table = new WTable(Arrays.asList(
-                new WTableColumn("Product", 160.0),
-                new WTableColumn("Price", 100.0),
-                new WTableColumn("Quantity", 100.0)));
-        table.addRow("Apple", "150", "12");
-        table.addRow("Orange", "80", "30");
-        table.addRow("Grape", "480", "5");
-        table.addRow("Peach", "320", "8");
-        table.addRow("Cherry", "600", "3");
-        table.setWidth(400.0);
-        return table;
-    }
-
-    /** A basic table: responding to row selection (SelectionChanged). */
-    private static WComponent buildSimpleTableExample() {
-        WLabel result = new WLabel("Selected: none");
-
-        WTable table = buildProductTable();
-        table.addRowSelectionListener(() -> {
-            int row = table.getSelectedRow();
-            if (row < 0) {
-                result.setText("Selection: none");
-            } else {
-                result.setText("Selection: " + table.getValueAt(row, 0) + " (row = " + row + ")");
-            }
-        });
-
-        WPanel body = new WPanel(8.0);
-        body.add(table);
-        body.add(result);
-        return GalleryScaffold.buildExample("A basic table (row selection)", body);
-    }
-
-    /** Sorting columns: cycling through header clicks (ascending -> descending -> cleared) and sortBy / clearSort. */
-    private static WComponent buildTableSortExample() {
-        WTable table = buildProductTable();
-
-        WButton sortByPriceButton = new WButton("Sort by price descending");
-        sortByPriceButton.addActionListener(() -> {
-            table.sortBy(1, SortDirection.DESCENDING);
-        });
-
-        WButton clearButton = new WButton("Clear sort");
-        clearButton.addActionListener(() -> {
-            table.clearSort();
-        });
-
-        WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
-        buttons.add(sortByPriceButton);
-        buttons.add(clearButton);
-
-        WLabel note = new WLabel("Clicking a column header also cycles through ascending -> descending -> cleared.");
-        note.setForeground(GalleryTheme.TEXT_SECONDARY());
-        note.setTextWrapping(TextWrapping.WRAP);
-
-        WPanel body = new WPanel(8.0);
-        body.add(note);
-        body.add(buttons);
-        body.add(table);
-        return GalleryScaffold.buildExample("Sorting columns (header click / SortBy / ClearSort)", body);
-    }
-
-    /** Adding and removing rows: addRow / removeRow / removeAllRows / setValueAt / rowCount. */
-    private static WComponent buildTableRowOperationsExample() {
-        WTable table = buildProductTable();
-
-        WLabel count = new WLabel("Row count: " + table.getRowCount());
-        Runnable updateCount = () -> count.setText("Row count: " + table.getRowCount());
-
-        int[] nextItemNumber = {1};
-        WButton addButton = new WButton("Add row");
-        addButton.addActionListener(() -> {
-            table.addRow("New item " + nextItemNumber[0], String.valueOf(nextItemNumber[0] * 100), "1");
-            nextItemNumber[0]++;
-            updateCount.run();
-        });
-
-        WButton removeButton = new WButton("Remove selected row");
-        removeButton.addActionListener(() -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                table.removeRow(row);
-                updateCount.run();
-            }
-        });
-
-        WButton incrementButton = new WButton("Selected quantity +1");
-        incrementButton.addActionListener(() -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                int quantity;
-                try {
-                    quantity = Integer.parseInt(table.getValueAt(row, 2));
-                } catch (NumberFormatException e) {
-                    quantity = 0;
-                }
-                table.setValueAt(row, 2, String.valueOf(quantity + 1));
-            }
-        });
-
-        WButton clearButton = new WButton("Remove all");
-        clearButton.addActionListener(() -> {
-            table.removeAllRows();
-            updateCount.run();
-        });
-
-        WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
-        buttons.add(addButton);
-        buttons.add(removeButton);
-        buttons.add(incrementButton);
-        buttons.add(clearButton);
-
-        WPanel body = new WPanel(8.0);
-        body.add(buttons);
-        body.add(table);
-        body.add(count);
-        return GalleryScaffold.buildExample("Adding and removing rows (AddRow / RemoveRow / SetValueAt)", body);
     }
 
     // endregion

@@ -97,7 +97,6 @@ class GalleryNavigation {
         pages.put("StandardUICommand", MenusToolbarsPages::buildStandardUICommandPage);
         pages.put("SwipeControl", MenusToolbarsPages::buildSwipeControlPage);
         pages.put("TableView", CollectionsPages::buildTableViewPage);
-        pages.put("TableView (ListView)", CollectionsPages::buildListViewTablePage);
         pages.put("TabView", NavigationPages::buildTabViewPage);
         pages.put("TeachingTip", DialogsFlyoutsPages::buildTeachingTipPage);
         pages.put("TextBlock", TextPages::buildTextBlockPage);
@@ -147,7 +146,6 @@ class GalleryNavigation {
                 "ListBox",
                 "ListView",
                 "TableView",
-                "TableView (ListView)",
                 "TreeView"));
         categories.put("Dialogs & flyouts", Arrays.asList(
                 "ContentDialog",

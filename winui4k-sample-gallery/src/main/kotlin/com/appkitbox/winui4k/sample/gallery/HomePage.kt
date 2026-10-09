@@ -152,7 +152,6 @@ internal val pageDescriptions: Map<String, String> = mapOf(
     "StandardUICommand" to "Provides standard commands such as copy or delete.",
     "SwipeControl" to "A container that lets you run commands via a swipe gesture.",
     "TableView" to "A table that displays data in rows and columns (Windows App SDK 2.5 experimental).",
-    "TableView (ListView)" to "A custom table implementation built on ListView.",
     "TabView" to "A control that switches between multiple pages via tabs.",
     "TeachingTip" to "Shows a hint that points to and explains a specific piece of UI.",
     "TextBlock" to "Displays read-only text.",
