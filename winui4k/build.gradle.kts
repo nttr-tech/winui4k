@@ -30,10 +30,13 @@ val fetchBootstrap = tasks.register("fetchBootstrap") {
         val dir = outputDir.get().asFile
         val nupkg = dir.resolve("foundation.nupkg")
         val rids = listOf("win-x86", "win-x64", "win-arm64")
-        val alreadyExtracted = rids.all { rid ->
-            dir.resolve("native/$rid/Microsoft.WindowsAppRuntime.Bootstrap.dll").exists()
-        }
+        // Gradle does not clear the output directory when the version changes, so record and compare the extracted version
+        // (the output directory becomes JAR resources, so the record is kept in the task's temporary directory)
+        val versionMarker = temporaryDir.resolve("version")
+        val alreadyExtracted = versionMarker.isFile && versionMarker.readText().trim() == version &&
+            rids.all { rid -> dir.resolve("native/$rid/Microsoft.WindowsAppRuntime.Bootstrap.dll").exists() }
         if (alreadyExtracted) return@doLast
+        dir.mkdirs()
 
         val url = "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk.foundation/" +
             "$version/microsoft.windowsappsdk.foundation.$version.nupkg"
@@ -56,6 +59,7 @@ val fetchBootstrap = tasks.register("fetchBootstrap") {
             }
         }
         nupkg.delete()
+        versionMarker.writeText(version)
     }
 }
 
@@ -198,19 +202,28 @@ tasks.register("downloadInstallers") {
 
     doLast {
         val dir = outputDir.asFile.apply { mkdirs() }
+        // Re-download if the downloaded installers are for another version (the file names do not include the version)
+        val versionMarker = dir.resolve(".version")
+        if (versionMarker.isFile && versionMarker.readText().trim() != version) {
+            logger.lifecycle("Installer version changed (${versionMarker.readText().trim()} -> $version)")
+            dir.listFiles { file -> file.name.startsWith("WindowsAppRuntimeInstall-") }?.forEach { it.delete() }
+        }
+        // aka.ms paths have two levels: the channel (major.minor) and the version (e.g. 2.5 / 2.5.4-experimental)
+        val channel = version.split(".").take(2).joinToString(".")
         for (arch in listOf("x86", "x64", "arm64")) {
             val fileName = "WindowsAppRuntimeInstall-$arch.exe"
             val dest = dir.resolve(fileName)
-            if (dest.exists()) {
+            if (dest.exists() && versionMarker.isFile) {
                 logger.lifecycle("Already exists: $dest")
                 continue
             }
-            val url = "https://aka.ms/windowsappsdk/2.4/$version/windowsappruntimeinstall-$arch.exe"
+            val url = "https://aka.ms/windowsappsdk/$channel/$version/windowsappruntimeinstall-$arch.exe"
             logger.lifecycle("Downloading $fileName ...")
             URI(url).toURL().openStream().use { input ->
                 dest.outputStream().use { input.copyTo(it) }
             }
             logger.lifecycle("Downloaded: $dest")
         }
+        versionMarker.writeText(version)
     }
 }
