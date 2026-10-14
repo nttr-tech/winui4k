@@ -92,12 +92,20 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 ) {
     var text: String
         get() = inspectable.getString(XamlInterop.ITextBlock_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBlock_put_Text, h) }
+        set(value) {
+            if (value == text) return
+            Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBlock_put_Text, h) }
+            // Like JLabel.setText: the new text may need a different size
+            revalidate()
+        }
 
     /** Font size (TextBlock.FontSize). Used to emphasize headings and the like. */
     var fontSize: Double
         get() = inspectable.getDouble(XamlInterop.ITextBlock_get_FontSize)
-        set(value) = inspectable.call(XamlInterop.ITextBlock_put_FontSize, value)
+        set(value) {
+            inspectable.call(XamlInterop.ITextBlock_put_FontSize, value)
+            revalidate()
+        }
 
     /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
     var fontFamily: String
@@ -113,6 +121,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             val family = createFontFamily(value)
             inspectable.call(XamlInterop.ITextBlock_put_FontFamily, family.ptr)
             family.release()
+            revalidate()
         }
 
     /** Font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. */
@@ -120,6 +129,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         set(value) {
             field = value
             XamlStructs.putFontWeight(inspectable, XamlInterop.ITextBlock_put_FontWeight, value)
+            revalidate()
         }
 
     /** Whether the text is italic (TextBlock.FontStyle is Italic). */

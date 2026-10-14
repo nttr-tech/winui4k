@@ -237,6 +237,19 @@ abstract class WComponent internal constructor(
         naturalSize = null
     }
 
+    /** The [WLayoutPanel] that lays this component out (set by [WLayoutPanel.add]), or null. */
+    internal var layoutParent: WLayoutPanel? = null
+
+    /**
+     * Like JComponent.revalidate: re-measures this component and lays out the [WLayoutPanel]s above it again. Call it
+     * after changing something that changes the component's natural size; [WLabel] does so by itself when its text or
+     * font changes. Does nothing visible outside a [WLayoutPanel] (XAML panels measure their children on their own).
+     */
+    open fun revalidate() {
+        invalidateNaturalSize()
+        layoutParent?.revalidate()
+    }
+
     /**
      * Upper bound on the width (FrameworkElement.MaxWidth). Unlike [width], this is measured against the
      * content's natural width and only clamps it once it exceeds this value (unlimited by default).

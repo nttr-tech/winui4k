@@ -73,7 +73,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     init {
-        addSizeChangedListener { revalidate() }
+        // A new size only changes this panel's own layout, so it does not invalidate the panels above
+        addSizeChangedListener { scheduleLayout() }
         addLoadedListener {
             loaded = true
             // A measurement taken before joining the visual tree can incorrectly return 0, and once
@@ -86,6 +87,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     /** Adds a child with constraints (like Container.add(Component, Object)). */
     fun add(component: WComponent, constraints: Any?) {
         mutableLayoutChildren.add(component)
+        component.layoutParent = this
         layout?.addLayoutComponent(component, constraints)
         super.add(component)
         revalidate()
@@ -95,6 +97,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
 
     override fun remove(component: WComponent) {
         if (!mutableLayoutChildren.remove(component)) return
+        component.layoutParent = null
         layout?.removeLayoutComponent(component)
         super.remove(component)
         revalidate()
@@ -103,6 +106,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     override fun removeAll() {
         val manager = layout
         if (manager != null) mutableLayoutChildren.forEach { manager.removeLayoutComponent(it) }
+        mutableLayoutChildren.forEach { it.layoutParent = null }
         mutableLayoutChildren.clear()
         super.removeAll()
         revalidate()
@@ -131,10 +135,31 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     /**
-     * Schedules a re-layout (like Container.revalidate). Multiple calls within the same UI thread
-     * turn coalesce into a single run.
+     * Schedules a re-layout (like Container.revalidate) and, since this panel's natural size may change with its
+     * content, re-measures it in the panels above. Multiple calls within the same UI thread turn coalesce into a
+     * single run.
      */
-    fun revalidate() {
+    override fun revalidate() {
+        invalidateNaturalSize()
+        layoutParent?.revalidate()
+        scheduleLayout()
+    }
+
+    /**
+     * 1. Clears the explicit size of any child whose natural size is invalid, 2. runs a synchronous Measure to fix
+     * its preferred size, and 3. caches it (Canvas measures children with an infinite constraint, so this equals the
+     * natural size).
+     */
+    private fun measureChildren() {
+        val stale = mutableLayoutChildren.filter { it.naturalSize == null }
+        if (stale.isEmpty()) return
+        stale.forEach { it.clearLayoutSizeForMeasure() }
+        uiElement.call(XamlInterop.IUIElement_UpdateLayout)
+        stale.forEach { it.naturalSize = it.readDesiredSize() }
+    }
+
+    /** Schedules a layout of this panel only. */
+    private fun scheduleLayout() {
         if (layoutPending) return
         layoutPending = true
         if (inLayout) return // gets rescheduled when performLayout finishes
@@ -148,16 +173,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         val manager = layout ?: return
         inLayout = true
         try {
-            // 1. Clear the explicit size of any child whose natural size is invalid, 2. run a
-            //    synchronous Measure to fix its preferred size, and 3. cache it (Canvas measures
-            //    children with an infinite constraint, so this equals the natural size)
-            mutableLayoutChildren.forEach { child ->
-                if (child.naturalSize == null) child.clearLayoutSizeForMeasure()
-            }
-            uiElement.call(XamlInterop.IUIElement_UpdateLayout)
-            mutableLayoutChildren.forEach { child ->
-                if (child.naturalSize == null) child.naturalSize = child.readDesiredSize()
-            }
+            // 1-3. Measure the children whose natural size is unknown
+            measureChildren()
 
             // 4. Determine the layout area. Priority order: explicit user value > assignment from
             //    the parent WLayoutPanel > ActualWidth/Height (an assignment from a native parent,
