@@ -2,6 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
@@ -401,6 +403,27 @@ abstract class WComponent internal constructor(
     fun removeLoadedListenerForJava(listener: Runnable) {
         val token = loadedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_Loaded, token)
+    }
+
+    /**
+     * Whether this element itself has focus (UIElement.FocusState is anything other than Unfocused). A parent of the
+     * focused element returns false.
+     */
+    val hasFocus: Boolean
+        get() = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
+
+    /**
+     * Moves focus to this element (JComponent.requestFocus-like; UIElement.Focus with FocusState.Programmatic, so no
+     * keyboard focus rectangle is drawn). Returns false if the element cannot take focus: it is disabled, collapsed,
+     * not a tab stop, or not yet in a window's visual tree (call it after [addLoadedListener] fires).
+     */
+    fun requestFocus(): Boolean = focusWith(XamlInterop.FocusState_Programmatic)
+
+    /** UIElement.Focus with the given FocusState value. */
+    internal fun focusWith(state: Int): Boolean = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(1, 1)
+        uiElement.call(XamlInterop.IUIElement_Focus, state, out)
+        Ffi.backend.memory.getByte(out, 0) != 0.toByte()
     }
 
     /**

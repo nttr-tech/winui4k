@@ -603,14 +603,7 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
         set(value) = uiElement.putBool(XamlInterop.IUIElement_put_IsTabStop, value)
 
     /** Moves focus to the element. */
-    fun focus(state: Int = XamlInterop.FocusState_Keyboard): Boolean = Ffi.backend.withScope { scope ->
-        val out = scope.allocate(1, 1)
-        uiElement.call(XamlInterop.IUIElement_Focus, state, out)
-        Ffi.backend.memory.getByte(out, 0) != 0.toByte()
-    }
-
-    /** Whether the element has focus. */
-    val hasFocus: Boolean get() = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
+    fun focus(state: Int = XamlInterop.FocusState_Keyboard): Boolean = focusWith(state)
 
     /** The position as a child of a Canvas (Canvas.Left / Canvas.Top). */
     fun setCanvasPosition(x: Double, y: Double) {

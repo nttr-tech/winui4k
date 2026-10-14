@@ -113,5 +113,36 @@ class WComponentTest : FunSpec() {
                 UiTestHarness.detach(button)
             }
         }
+
+        test("requestFocus moves focus to a loaded control, and hasFocus follows the focus between two controls") {
+            val first = onUiThreadGet { WButton("First") }
+            val second = onUiThreadGet { WTextField("Second") }
+            UiTestHarness.attachAndAwaitLoaded(first)
+            UiTestHarness.attachAndAwaitLoaded(second)
+            try {
+                onUiThreadGet { first.hasFocus || second.hasFocus }.shouldBeFalse()
+
+                onUiThreadGet { first.requestFocus() }.shouldBeTrue()
+                onUiThreadGet { first.hasFocus to second.hasFocus } shouldBe (true to false)
+
+                onUiThreadGet { second.requestFocus() }.shouldBeTrue()
+                onUiThreadGet { first.hasFocus to second.hasFocus } shouldBe (false to true)
+            } finally {
+                UiTestHarness.detach(first)
+                UiTestHarness.detach(second)
+            }
+        }
+
+        test("requestFocus fails for a disabled control and for a control that is not in a window") {
+            val disabled = onUiThreadGet { WButton("Disabled").also { it.isEnabled = false } }
+            UiTestHarness.attachAndAwaitLoaded(disabled)
+            try {
+                onUiThreadGet { disabled.requestFocus() }.shouldBeFalse()
+                onUiThreadGet { disabled.hasFocus }.shouldBeFalse()
+            } finally {
+                UiTestHarness.detach(disabled)
+            }
+            onUiThreadGet { WButton("Detached").requestFocus() }.shouldBeFalse()
+        }
     }
 }
