@@ -115,6 +115,12 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     override fun preferredSize(): WSize {
         val manager = layout ?: return super.preferredSize()
         if (!width.isNaN() && !height.isNaN()) return WSize(width, height)
+        // The manager adds up the children's preferred sizes, so first measure the children whose natural size is
+        // unknown. A panel above asks for this size from its own layout pass, which can run before this panel's
+        // pending layout has measured them; the fallback (DesiredSize) still reflects the size this panel assigned
+        // them last time (0 before the first real measurement), so the panel above would size this one with it.
+        // Measuring clears those children's assigned sizes, so lay this panel out again to put them back
+        if (measureChildren()) scheduleLayout()
         val preferred = manager.preferredLayoutSize(this)
         return WSize(
             if (width.isNaN()) preferred.width else width,
@@ -148,14 +154,18 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     /**
      * 1. Clears the explicit size of any child whose natural size is invalid, 2. runs a synchronous Measure to fix
      * its preferred size, and 3. caches it (Canvas measures children with an infinite constraint, so this equals the
-     * natural size).
+     * natural size). Returns whether any child was measured.
+     *
+     * A nested WLayoutPanel with a manager is skipped: its preferred size comes from its manager, not from a Measure
+     * (a Canvas always measures as 0x0), and clearing its assigned size here would collapse it to 0 for nothing.
      */
-    private fun measureChildren() {
-        val stale = mutableLayoutChildren.filter { it.naturalSize == null }
-        if (stale.isEmpty()) return
+    private fun measureChildren(): Boolean {
+        val stale = mutableLayoutChildren.filter { it.naturalSize == null && !it.isManagedLayoutPanel() }
+        if (stale.isEmpty()) return false
         stale.forEach { it.clearLayoutSizeForMeasure() }
         uiElement.call(XamlInterop.IUIElement_UpdateLayout)
         stale.forEach { it.naturalSize = it.readDesiredSize() }
+        return true
     }
 
     /** Schedules a layout of this panel only. */
@@ -219,6 +229,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     private companion object {
+        fun WComponent.isManagedLayoutPanel(): Boolean = this is WLayoutPanel && layout != null
+
         /** Attached-property operations for Canvas (ICanvasStatics). */
         val statics: ComPtr by lazy { Activation.factory(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasStatics) }
     }
