@@ -45,6 +45,10 @@ enum class DateTimeIntervalType(internal val native: Int) {
  * (both data and range) are passed as UTC date-times as is, without attaching a time zone, and the specified date is
  * shown on the axis. Instant / OffsetDateTime / ZonedDateTime / java.util.Date are absolute times, so they are shown
  * with their UTC date (times before 9:00 Japan time fall on the previous day).
+ *
+ * Limitations of the WinUI Chart: the finest tick unit is a day ([DateTimeIntervalType] only has DAY / WEEK / MONTH /
+ * YEAR), so points that are seconds or minutes apart collapse into a single vertical line. This axis cannot show a
+ * seconds-level time series; use a web chart in a [com.appkitbox.winui4k.WWebView] for that.
  */
 class DateTimeAxis @JvmOverloads constructor(label: String = "") : CartesianAxis(
     Activation.activate(ChartsInterop.CLS_DateTimeAxis, ChartsInterop.IID_IDateTimeAxis), // default interface = IDateTimeAxis

@@ -40,6 +40,12 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * sales.addElement(21.0) // Reflected in the chart immediately
  * ```
  *
+ * Limitations of the WinUI Chart (experimental):
+ * - A [com.appkitbox.winui4k.chart.LineSeries] rejects a [com.appkitbox.winui4k.chart.LinearAxis] as its X axis
+ *   (E_INVALIDARG "The axis scale is incompatible with the series data slot"); use a
+ *   [com.appkitbox.winui4k.chart.CategoryAxis] or [com.appkitbox.winui4k.chart.DateTimeAxis] for X
+ * - [com.appkitbox.winui4k.chart.DateTimeAxis] cannot show seconds-level time series (its finest tick unit is a day)
+ *
  * Chart.Data (a container for declaring Samples in XAML markup) is not used by this API, which passes models
  * directly to series (Samples referenced by a series are drawn without being put in Data).
  */
