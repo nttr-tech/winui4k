@@ -33,6 +33,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThan
+import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlin.time.Duration.Companion.seconds
@@ -258,6 +259,29 @@ class WRibbonTest : FunSpec() {
             onUiThreadGet { ribbon.popKeyTipLevel() } shouldBe true
             onUiThread { ribbon.cancelKeyTips() }
             onUiThreadGet { ribbon.isKeyTipMode } shouldBe false
+        }
+
+        test("the KeyTip of a large button is under the button the first time its tab is opened through KeyTips") {
+            val firstLarge = button("pivot", "PivotTable", RibbonItemSize.LARGE).also { it.keyTip = "P" }
+            onUiThread { model.findTab("insert")!!.groups.first().items.add(0, firstLarge) }
+            // Deliberately no settle() (updateLayout) before the badges are placed: the tab's items are realized for the first time
+            onUiThread { ribbon.showKeyTips() }
+            onUiThread { ribbon.processKeyTipInput('I') }
+            eventually(POPUP_TIMEOUT) {
+                onUiThreadGet { ribbon.keyTips.badgePlacements.any { it.target.keyTipModel === firstLarge } } shouldBe true
+            }
+            settle()
+            val (badge, anchorX, anchorWidth, anchorBottom) = onUiThreadGet {
+                val placement = ribbon.keyTips.badgePlacements.first { it.target.keyTipModel === firstLarge }
+                val anchor = placement.target.keyTipAnchor
+                val position = anchor.positionInRoot()
+                listOf(placement.x + placement.width / 2, position[0], anchor.actualWidth, position[1] + anchor.actualHeight)
+            }
+            val anchorCenter = anchorX + anchorWidth / 2
+            kotlin.math.abs(badge - anchorCenter) shouldBeLessThan KEYTIP_TOLERANCE
+            val badgeY = onUiThreadGet { ribbon.keyTips.badgePlacements.first { it.target.keyTipModel === firstLarge }.let { it.y + it.height / 2 } }
+            kotlin.math.abs(badgeY - anchorBottom) shouldBeLessThan KEYTIP_TOLERANCE
+            onUiThread { ribbon.cancelKeyTips() }
         }
 
         test("a contextual tab's KeyTip is the group's KeyTip followed by the first character of the tab header") {
@@ -574,6 +598,7 @@ class WRibbonTest : FunSpec() {
 
     private companion object {
         const val SETTLE_ROUNDS = 4
+        const val KEYTIP_TOLERANCE = 6.0
         val POPUP_TIMEOUT = 5.seconds
         const val EXTRA_GROUPS = 4
         const val EXTRA_ITEMS = 4

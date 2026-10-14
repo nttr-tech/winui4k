@@ -145,3 +145,8 @@
   テストの移動では順序までは確認していない) ため、Unloaded では
   FrameworkElement.IsLoaded を見て、まだツリーにあれば登録を外さない。同じようにアプリ全体のイベントに
   コンポーネントごとのリスナーを登録する処理は、仮想化されたセルから呼ばれても溜まらないようにする。
+- **初めて開いたリボン タブの最初の大きいボタンの KeyTip が、ボタンの下ではなくリボンの途中に出る**
+  KeyTip の吹き出しは `ActualOffset` の合計でボタンの位置を求めるが、KeyTip で初めて開いたタブは項目が実体化された
+  直後でレイアウトが終わっておらず、最初の項目の `ActualOffset` / `ActualWidth` が古い値のまま (ずれは 900 DIP 超になった)
+  だった。2 回目以降はレイアウト済みなので正しく出る。`RibbonKeyTipController.render` が位置を読む前に
+  `keyTipRoot.updateLayout()` で同期的にレイアウトを終わらせる (WRibbonTest)。

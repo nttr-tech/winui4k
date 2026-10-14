@@ -36,6 +36,9 @@ internal interface RibbonKeyTipOwner {
     fun attachPopupKeyboard(element: XamlElement)
 }
 
+/** The position of one KeyTip badge: [x] / [y] is its top-left corner and [width] / [height] its size, in DIPs. */
+internal class KeyTipPlacement(val tip: String, val target: RibbonKeyTipTarget, val x: Double, val y: Double, val width: Double, val height: Double)
+
 /**
  * KeyTip mode (the KeyTip part of Ribbon.Keyboard in RibbonSpace).
  *
@@ -50,6 +53,7 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
     private val canvas = XamlElement.load("<Canvas IsHitTestVisible=\"False\" />")
     private val popup = WPopup(canvas)
     private val badges = mutableListOf<Pair<String, XamlElement>>()
+    private val placements = mutableListOf<KeyTipPlacement>()
     private var focusBefore: com.appkitbox.winui4k.internal.com.ComPtr? = null
 
     init {
@@ -65,6 +69,9 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
 
     /** The KeyTips currently shown and their targets. */
     val currentKeyTips: List<Pair<String, RibbonKeyTipTarget>> get() = navigator.current?.entries?.map { it.tip to it.target }.orEmpty()
+
+    /** Where each badge of the current level was placed (in the coordinates of the popup root). For tests and automation. */
+    val badgePlacements: List<KeyTipPlacement> get() = placements.toList()
 
     /** Shows the top level. */
     fun show(targets: List<RibbonKeyTipTarget>? = null) {
@@ -217,6 +224,7 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
     private fun clearBadges() {
         canvas.clearChildren()
         badges.clear()
+        placements.clear()
     }
 
     /**
@@ -227,6 +235,8 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
         val scope = navigator.current ?: return
         clearBadges()
         val root = owner.keyTipRoot
+        // A tab opened for the first time has just realized its items; finish their layout so that anchor positions are valid
+        root.updateLayout()
         val rootSize = Xaml.rootSize(root) ?: return
         canvas.setSize(rootSize[0], rootSize[1])
         canvas.requestedTheme = root.actualTheme
@@ -249,10 +259,10 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
             } else {
                 position[0] + 4 to position[1] + anchor.actualHeight / 2 - 1
             }
-            badge.setCanvasPosition(
-                x.coerceIn(0.0, maxOf(0.0, rootSize[0] - size[0])),
-                y.coerceIn(0.0, maxOf(0.0, rootSize[1] - size[1])),
-            )
+            val left = x.coerceIn(0.0, maxOf(0.0, rootSize[0] - size[0]))
+            val top = y.coerceIn(0.0, maxOf(0.0, rootSize[1] - size[1]))
+            badge.setCanvasPosition(left, top)
+            placements += KeyTipPlacement(tip, target, left, top, size[0], size[1])
             badges += RibbonKeyTipAssigner.normalize(tip) to badge
         }
         if (!popup.isOpen) popup.show(root)
