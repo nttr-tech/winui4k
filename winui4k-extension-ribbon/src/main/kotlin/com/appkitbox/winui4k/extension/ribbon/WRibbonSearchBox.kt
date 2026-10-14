@@ -162,6 +162,12 @@ class WRibbonSearchBox(
 
     /** Whether the box has been pressed with the pointer but has not yet received focus (to identify focus gained by a click). */
     private var isPointerPressed = false
+
+    /** Whether the focus was given to the box on purpose (pointer, Tab, or [focusSearch]) rather than by the window's initial focus. */
+    private var isInitialFocusHandled = false
+
+    /** Whether [focusSearch] is moving the focus to the box right now. */
+    private var isFocusRequested = false
     private val queryListeners = CopyOnWriteArrayList<Consumer<RibbonSearchQueryEvent>>()
     private val executedListeners = CopyOnWriteArrayList<Consumer<RibbonSearchEntry>>()
 
@@ -211,12 +217,26 @@ class WRibbonSearchBox(
         textBox.onFocus(true) {
             val byPointer = isPointerPressed
             isPointerPressed = false
-            if (byPointer || Xaml.isKeyDown(VK_TAB)) showResults()
+            val requested = byPointer || isFocusRequested || Xaml.isKeyDown(VK_TAB)
+            if (requested) {
+                isInitialFocusHandled = true
+                showResults()
+            } else if (!isInitialFocusHandled) {
+                // WinUI gives a newly activated window's first focusable element the focus, which is this box because
+                // it is first in the tab order. Office does not focus its search box on start (KeyTips and typing must
+                // reach the ribbon), so hand the focus on to the ribbon's tab header
+                isInitialFocusHandled = true
+                // (moving it inside the GotFocus handler itself does not take effect, so do it right after)
+                WinUiUtilities.invokeLater { ribbon.tabStrip.headerOf(ribbon.selectedTab)?.element?.focus(XamlInterop.FocusState_Programmatic) }
+            }
         }
         textBox.onFocus(false) { isPointerPressed = false }
         textBox.onPreviewKeyDown { e -> onKeyDown(e) }
         ribbon.addSearchRequestListener { onSearchRequested() }
     }
+
+    /** Whether the text box has keyboard focus. */
+    internal val hasTextFocus: Boolean get() = textBox.hasFocus
 
     /** Whether results are shown. */
     val isResultsOpen: Boolean get() = popup.isOpen
@@ -242,7 +262,12 @@ class WRibbonSearchBox(
 
     /** Puts the focus on the box and shows recently used commands. */
     fun focusSearch() {
-        textBox.focus()
+        isFocusRequested = true
+        try {
+            textBox.focus()
+        } finally {
+            isFocusRequested = false
+        }
         textBox.selectAllText()
         showResults()
     }

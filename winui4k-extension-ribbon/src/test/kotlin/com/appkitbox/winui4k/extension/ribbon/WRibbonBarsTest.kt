@@ -4,9 +4,11 @@ import com.appkitbox.winui4k.UiTestHarness
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.VerticalAlignment
+import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.Xaml
+import com.appkitbox.winui4k.XamlElement
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonApplicationMenuItemModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonApplicationMenuModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonButtonModel
@@ -27,6 +29,7 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarOrientation
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonZoomModel
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -276,6 +279,39 @@ class WRibbonBarsTest : FunSpec() {
             onUiThreadGet { box.isResultsOpen to box.isDismissLayerOpen } shouldBe (false to false)
         }
 
+        test("the title bar's search box does not take focus when a window with a ribbon opens, and only Alt+Q style requests focus it") {
+            val ribbon = onUiThreadGet {
+                WRibbon(
+                    RibbonModel().also {
+                        it.tabs.add(RibbonTabModel("home", "Home"))
+                        it.selectedTabId = "home"
+                    },
+                )
+            }
+            val titleBar = onUiThreadGet { WRibbonTitleBar(ribbon) }
+            val content = onUiThreadGet { WButton("Content") }
+            val panel = onUiThreadGet {
+                WPanel().also {
+                    it.add(titleBar)
+                    it.add(ribbon)
+                    it.add(content)
+                }
+            }
+            show(panel)
+            // Initial focus is assigned after the first layout, so give it a few UI-thread turns before asserting
+            Thread.sleep(FOCUS_SETTLE_MS)
+            onUiThreadGet { titleBar.searchBox.hasTextFocus } shouldBe false
+            // WinUI gives a newly activated window's first focusable element (the search box, first in tab order) the
+            // focus without any pointer / Tab / request; do the same thing here (focus the box's text box directly)
+            onUiThread { Xaml.firstFocusable(titleBar.searchBox.inspectable)?.let { XamlElement(it).focus(XamlInterop.FocusState_Programmatic) } }
+            Thread.sleep(FOCUS_SETTLE_MS)
+            onUiThreadGet { titleBar.searchBox.hasTextFocus } shouldBe false
+            onUiThreadGet { ribbon.tabStrip.headerOf(ribbon.selectedTab)?.element?.hasFocus } shouldBe true
+            onUiThread { titleBar.searchBox.focusSearch() }
+            onUiThreadGet { titleBar.searchBox.hasTextFocus } shouldBe true
+            onUiThread { titleBar.searchBox.close() }
+        }
+
         test("the title bar hosts the QAT while it is above the ribbon and returns it to the ribbon when it moves below") {
             val model = onUiThreadGet { RibbonModel().also { it.quickAccessItems.add(RibbonButtonModel("save", "Save", RibbonIcons.SAVE)) } }
             val ribbon = onUiThreadGet { WRibbon(model) }
@@ -302,6 +338,7 @@ class WRibbonBarsTest : FunSpec() {
         const val NARROW = 200.0
         const val WIDE = 3000.0
         const val BOX_WIDTH = 300.0
+        const val FOCUS_SETTLE_MS = 1000L
 
         /** The 10 theme colors and their 5 shades. */
         const val THEME_SWATCHES = 60
