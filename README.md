@@ -72,6 +72,7 @@ This short snippet opens a native Windows window, and pressing the button change
 - **Runs on Java 8**: FFI backends are pluggable. Three implementations are bundled: Panama (Java 22+, default), JNA (Java 8+), and JNR (Java 8+).
 - **Coroutines support**: `Dispatchers.WinUi` (winui4k-extension-coroutines) dispatches to the UI thread, and `delay` runs on a native timer (DispatcherQueueTimer).
 - **WebView2 support**: `WWebView` lets you embed the Microsoft Edge-based browser control in your app.
+- **SVG icons**: `SvgIcon.parse` reads the `<path>` elements of an SVG (such as Material Symbols) and `WSvgIcon` draws them at any size in light and dark themes. `RibbonIcon.svg` uses the same icons in the ribbon.
 - **Accessibility**: Because OS-standard controls are used as-is, assistive technologies such as screen readers work out of the box.
 - **E2E tests on real windows**: Tests launch actual WinUI windows for verification, and CI runs them on JDK 8 / 9 / 22 / 25.
 - **No bridge DLL**: Everything — object creation (`RoGetActivationFactory`), WinUI's string type HSTRING, method calls through function tables (vtables), upcalls that expose Kotlin objects as COM objects, and COM aggregation — is implemented purely with JVM FFI ([Architecture](#architecture)).

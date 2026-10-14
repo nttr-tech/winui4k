@@ -72,6 +72,7 @@ WinUiUtilities.invokeLater {
 - **Java 8 から動作**：FFI バックエンドは差し替え式です。Panama (Java 22 以降、既定)、JNA (Java 8 以降)、JNR (Java 8 以降) の 3 実装を同梱します。
 - **コルーチン対応**：`Dispatchers.WinUi` (winui4k-extension-coroutines) で UI スレッドへディスパッチでき、`delay` はネイティブのタイマー (DispatcherQueueTimer) で動きます。
 - **WebView2 対応**：`WWebView` で Microsoft Edge ベースのブラウザコントロールをアプリに埋め込めます。
+- **SVG アイコン**：`SvgIcon.parse` で SVG (Material Symbols など) の `<path>` を読み込み、`WSvgIcon` でライト / ダークのテーマに合わせて任意のサイズで描けます。リボンでは `RibbonIcon.svg` で同じアイコンを使えます。
 - **アクセシビリティ**：OS 標準のコントロールをそのまま使うため、スクリーンリーダーなどの支援技術がそのまま働きます。
 - **実機での E2E テスト**：テストは実際に WinUI ウィンドウを起動して検証し、CI では JDK 8 / 9 / 22 / 25 で実行しています。
 - **ブリッジ DLL 不要**：オブジェクト生成 (`RoGetActivationFactory`) から、WinUI の文字列型 HSTRING、関数テーブル (vtable) 経由のメソッド呼び出し、Kotlin オブジェクトを COM オブジェクトとして見せる upcall、COM 集約まで、JVM の FFI だけで実装しています ([アーキテクチャ](#アーキテクチャ))。

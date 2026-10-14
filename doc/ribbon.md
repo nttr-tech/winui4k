@@ -102,6 +102,11 @@ Java からも同じモデルを組み立てられる (`winui4k-sample-gallery-i
   場所に描く)、`WRibbonColorPalette` (色の選択のパレットだけを置く。`showThemeColors` でテーマの色の欄を隠せる)。
 - **テーマの値**: `WRibbonTheme.getBrushColor(scope, key)` (要素のテーマでのブラシの色)、
   `setThemeBrush(target, key) { ... }` (テーマが変わるたびに色を当て直す)、`getCornerRadius(key)`。
+- **SVG のアイコン**: `RibbonIcon.svg(svgText)` / `RibbonIcon.svg(SvgIcon)` は SVG の `<path>` をレイヤーに変換する
+  (塗りは塗りのレイヤー、線は線のレイヤー。固定の色と不透明度は保つ。設計グリッドは viewBox の長辺なので、
+  960 の Material Symbols もそのまま使える)。`foreground` を渡すと色指定のないパスをその色で描く。
+  メニューでは 1 つの `PathIcon` に連結するため、塗りつぶし規則 (`F0` / `F1`) は先頭のレイヤーのものだけが全体に
+  効き、色と不透明度は失われる。線を含むアイコンはメニューに出せない (下の `menuIconConverter` を参照)。
 - **メニューのアイコン**: メニュー項目は単色のアイコンしか持てないため、線画・多色のアイコンは
   `WRibbonTheme.menuIconConverter` で近いグリフなどに変えて出す (CAD のサンプル)。
 
