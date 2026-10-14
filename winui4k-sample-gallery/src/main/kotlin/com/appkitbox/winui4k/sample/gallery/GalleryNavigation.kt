@@ -70,6 +70,7 @@ internal val pages: Map<String, () -> WComponent> = linkedMapOf(
     "SplitView" to ::buildSplitViewPage,
     "StackPanel" to ::buildStackPanelPage,
     "Storage pickers" to ::buildStoragePickersPage,
+    "SvgIcon" to ::buildSvgIconPage,
     "StandardUICommand" to ::buildStandardUICommandPage,
     "SwipeControl" to ::buildSwipeControlPage,
     "Table" to ::buildTablePage,
@@ -148,6 +149,7 @@ private val categories: Map<String, List<String>> = linkedMapOf(
     ),
     "Media" to listOf(
         "Chart",
+        "SvgIcon",
         "WebView2",
     ),
     "Menus & toolbars" to listOf(

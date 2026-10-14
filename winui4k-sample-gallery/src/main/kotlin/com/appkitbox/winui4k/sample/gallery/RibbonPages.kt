@@ -82,6 +82,17 @@ private fun group(id: String, label: String, vararg items: RibbonItemModel) =
 
 private fun menuItem(id: String, label: String, icon: RibbonIcon? = null) = RibbonMenuItemModel(id, label, icon)
 
+/** A Material Symbols style house on a 960-unit grid with the viewBox origin at (0, -960). */
+private val SVG_HOME_ICON: RibbonIcon = RibbonIcon.svg(
+    """<svg viewBox="0 -960 960 960"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>""",
+)
+
+/** A multi-color icon: fixed fill colors and an even-odd ring. */
+private val SVG_BADGE_ICON: RibbonIcon = RibbonIcon.svg(
+    """<svg viewBox="0 0 24 24"><path fill="#2E86DE" d="M12 2L22 12L12 22L2 12Z"/>""" +
+        """<path fill="#F5C518" fill-rule="evenodd" d="M12 6A6 6 0 1 0 12 18A6 6 0 1 0 12 6ZM12 9A3 3 0 1 1 12 15A3 3 0 1 1 12 9Z"/></svg>""",
+)
+
 /** A model with Word's [Home] / [Insert] / [Design] tabs, the [Table Tools] contextual tabs, and a Backstage. */
 // A sample that builds the ribbon's content declaratively from top to bottom (splitting it would make it harder to map to Office's ribbon)
 @Suppress("LongMethod")
@@ -292,6 +303,13 @@ private fun createInsertTab(): RibbonTabModel = RibbonTabModel("insert", "Insert
             button("insert.shapes", "Shapes", RibbonIcons.SHAPES, RibbonItemSize.LARGE),
             button("insert.icons", "Icons", RibbonIcons.ICONS, RibbonItemSize.LARGE),
             button("insert.chart", "Chart", RibbonIcons.CHART, RibbonItemSize.LARGE),
+            RibbonDropDownButtonModel("insert.svg", "SVG Icon").also { svg ->
+                // RibbonIcon.svg turns SVG paths (here a 960-unit Material-style grid and a multi-color icon) into ribbon icons
+                svg.icon = SVG_BADGE_ICON
+                svg.size = RibbonItemSize.LARGE
+                svg.menuItems.add(menuItem("insert.svg.home", "Home (viewBox 0 -960 960 960)", SVG_HOME_ICON))
+                svg.menuItems.add(menuItem("insert.svg.badge", "Multi-color badge", SVG_BADGE_ICON))
+            },
         ),
     )
     tab.groups.add(group("links", "Links", button("insert.link", "Link", RibbonIcons.LINK, RibbonItemSize.LARGE)))

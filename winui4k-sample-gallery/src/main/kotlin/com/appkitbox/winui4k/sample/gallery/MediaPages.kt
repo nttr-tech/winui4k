@@ -2,7 +2,9 @@ package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.HorizontalAlignment
 import com.appkitbox.winui4k.Orientation
+import com.appkitbox.winui4k.SvgIcon
 import com.appkitbox.winui4k.TextWrapping
+import com.appkitbox.winui4k.VerticalAlignment
 import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WChart
@@ -13,6 +15,7 @@ import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.WSlider
+import com.appkitbox.winui4k.WSvgIcon
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WToggleSwitch
 import com.appkitbox.winui4k.WWebView
@@ -40,7 +43,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /*
- * Media category: demo pages for WebView2 and Chart.
+ * Media category: demo pages for WebView2, Chart and SvgIcon.
  */
 
 // region WebView2 page
@@ -725,6 +728,94 @@ private fun buildSeriesManagementExample(): WComponent {
     options.add(remove)
     options.add(status)
     return buildExample("Adding and removing series (addSeries / removeSeriesAt / automatic axis registration)", chart, options).also { stretchChart(chart) }
+}
+
+// endregion
+
+// region SvgIcon page
+
+/** The SvgIcon page: draws SVG paths with WSvgIcon (origin normalization, fixed colors, strokes, size and foreground). */
+internal fun buildSvgIconPage(): WComponent {
+    val page = buildPage(
+        "SvgIcon",
+        "Draws the <path> elements of an SVG document (such as a Material Symbols icon) as a vector icon. " +
+            "SvgIcon.parse reads the SVG into a UI-independent model, and WSvgIcon draws it at any size. " +
+            "Paths without a fixed color follow the foreground color or the theme.",
+    )
+    page.add(buildSvgIconBasicExample())
+    page.add(buildSvgIconColorsExample())
+    page.add(buildSvgIconSizesExample())
+    return page
+}
+
+/** A Material Symbols style house: viewBox `0 -960 960 960` (the origin is shifted to (0, 0) when parsed). */
+private const val SVG_MATERIAL_HOME =
+    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>"""
+
+/** A multi-color icon with fixed fill colors, an opacity, and an even-odd ring. */
+private const val SVG_MULTI_COLOR =
+    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">""" +
+        """<path fill="#E74C3C" d="M12 21L3 12A5 5 0 0 1 12 6A5 5 0 0 1 21 12Z"/>""" +
+        """<path fill="#F5C518" opacity="0.7" d="M12 2L14 6H10Z"/>""" +
+        """<path fill="#2E86DE" fill-rule="evenodd" d="M2 2h6v6H2ZM3.5 3.5h3v3h-3Z"/></svg>"""
+
+/** A stroked icon (no fill): a check mark inside a circle, drawn with the foreground color. */
+private const val SVG_STROKED =
+    """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">""" +
+        """<path d="M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3Z"/><path d="M7.5 12.5L10.5 15.5L16.5 9"/></svg>"""
+
+private val SVG_FOREGROUNDS: Map<String, WColor?> = linkedMapOf(
+    "Theme text color (null)" to null,
+    "Red" to WColor(0xC4, 0x2B, 0x1C),
+    "Blue" to WColor(0x00, 0x67, 0xC0),
+    "Green" to WColor(0x0F, 0x7B, 0x0F),
+)
+
+/** The three sample icons side by side, with size and foreground options. */
+private fun buildSvgIconBasicExample(): WComponent {
+    val icons = listOf(SVG_MATERIAL_HOME, SVG_MULTI_COLOR, SVG_STROKED).map { WSvgIcon(SvgIcon.parse(it), 48.0) }
+    val row = WPanel(spacing = 24.0, orientation = Orientation.HORIZONTAL)
+    icons.forEach { row.add(it) }
+
+    val options = WPanel(spacing = 12.0)
+    val sizeLabel = optionsLabel("Size (iconSize): 48")
+    options.add(sizeLabel)
+    val size = WSlider(minimum = 16.0, maximum = 96.0, value = 48.0)
+    size.width = 240.0
+    size.addChangeListener { value ->
+        icons.forEach { it.iconSize = value }
+        sizeLabel.text = "Size (iconSize): ${value.toInt()}"
+    }
+    options.add(size)
+    val names = SVG_FOREGROUNDS.keys.toList()
+    options.add(
+        WComboBox(names).also { combo ->
+            combo.header = "Foreground"
+            combo.selectedIndex = 0
+            combo.width = 240.0
+            combo.addListSelectionListener { icons.forEach { it.foreground = SVG_FOREGROUNDS[names[combo.selectedIndex]] } }
+        },
+    )
+    return buildExample("Material-style home (viewBox 0 -960 960 960), multi-color, and stroked icons", row, options)
+}
+
+/** Fixed colors win over the foreground; the stroked icon follows it. */
+private fun buildSvgIconColorsExample(): WComponent {
+    val row = WPanel(spacing = 24.0, orientation = Orientation.HORIZONTAL)
+    for (svg in listOf(SVG_MATERIAL_HOME, SVG_MULTI_COLOR, SVG_STROKED)) {
+        row.add(WSvgIcon(SvgIcon.parse(svg), 40.0).also { it.foreground = WColor(0x88, 0x17, 0x98) })
+    }
+    return buildExample("Foreground set to purple: only paths without a fixed color change", row)
+}
+
+/** The same icon from 16 to 64 DIP. */
+private fun buildSvgIconSizesExample(): WComponent {
+    val icon = SvgIcon.parse(SVG_MATERIAL_HOME)
+    val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
+    for (size in listOf(16.0, 24.0, 32.0, 48.0, 64.0)) {
+        row.add(WSvgIcon(icon, size).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    }
+    return buildExample("Sizes (iconSize): 16 / 24 / 32 / 48 / 64", row)
 }
 
 // endregion
