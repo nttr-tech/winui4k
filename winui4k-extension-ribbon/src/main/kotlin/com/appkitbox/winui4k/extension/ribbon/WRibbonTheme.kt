@@ -10,6 +10,8 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonColor
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonIcon
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemePalette
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemeStyle
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
 
 /**
@@ -113,6 +115,10 @@ object WRibbonTheme {
      * theme of [target] or the palette changes (RibbonSpace's RibbonTheme.SetThemeBrush). Use it to match the colors of
      * surfaces and text created in code to the ribbon's theme.
      * Example: `WRibbonTheme.setThemeBrush(border, "RibbonPopupBackgroundBrush") { border.background = it }`
+     *
+     * Palette changes are followed only while [target] is in the visual tree (from Loaded to Unloaded, catching up on a
+     * change made in between when it is shown again), so components that are styled and then thrown away, such as a
+     * virtualized table's cells, are not kept alive by the palette listeners.
      */
     @JvmStatic
     fun setThemeBrush(target: WComponent, key: String, apply: Consumer<WColor>) {
@@ -120,8 +126,25 @@ object WRibbonTheme {
         val update = Runnable { getBrushColor(target, key)?.let { apply.accept(WColor(it.r, it.g, it.b, it.a)) } }
         update.run()
         target.addActualThemeChangedListener { update.run() }
-        addChangedListener(update)
+        if (target.isInVisualTree()) addChangedListener(update)
+        target.addLoadedListener {
+            if (update !in changedListeners) {
+                addChangedListener(update)
+                update.run()
+            }
+        }
+        target.frameworkElement.addEventHandler(
+            "WinUI4K.ThemeBrushUnloaded",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Unloaded,
+        ) { _, _ ->
+            // When the element moves to another parent, Unloaded of the old place can arrive after Loaded of the new one
+            if (!target.isInVisualTree()) removeChangedListener(update)
+        }
     }
+
+    /** Whether [this] is in the live visual tree (FrameworkElement.IsLoaded). */
+    private fun WComponent.isInVisualTree(): Boolean = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
 
     /**
      * The value of the corner radius resource [key] that changes with the surface style (e.g. "RibbonPopupCornerRadius")
@@ -194,4 +217,7 @@ object WRibbonTheme {
     fun removeChangedListener(listener: Runnable) {
         changedListeners -= listener
     }
+
+    /** The number of listeners currently registered with [addChangedListener] (to check that registrations do not leak). */
+    internal val changedListenerCount: Int get() = changedListeners.size
 }

@@ -6,6 +6,8 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.WBorder
 import com.appkitbox.winui4k.WColor
+import com.appkitbox.winui4k.WComponent
+import com.appkitbox.winui4k.WPanel
 import com.appkitbox.winui4k.Xaml
 import com.appkitbox.winui4k.XamlElement
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonChromeStyle
@@ -15,10 +17,12 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonMetrics
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemePalette
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemeStyle
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -77,6 +81,75 @@ class RibbonResourcesTest : FunSpec() {
                 } shouldBe listOf(light, dark)
             }
             UiTestHarness.detach(border)
+        }
+
+        test("setThemeBrush follows palette changes only while the target is shown, so discarded targets do not pile up") {
+            val container = onUiThreadGet { WPanel() }
+            UiTestHarness.attachAndAwaitLoaded(container)
+            try {
+                val baseline = onUiThreadGet { WRibbonTheme.changedListenerCount }
+                // Like a virtualized table's cells: each realization creates a new component, styles it and shows it
+                val loadedCount = AtomicInteger()
+                val cells = onUiThreadGet {
+                    List(CELLS) {
+                        WBorder().also { cell ->
+                            WRibbonTheme.setThemeBrush(cell, "RibbonAccentBrush") { cell.background = it }
+                            cell.addLoadedListener { loadedCount.incrementAndGet() }
+                            container.add(cell)
+                        }
+                    }
+                }
+                eventually(THEME_TIMEOUT) { loadedCount.get() shouldBe CELLS }
+                onUiThreadGet { WRibbonTheme.changedListenerCount } shouldBe baseline + CELLS
+                onUiThread { cells.forEach { container.remove(it) } }
+                eventually(THEME_TIMEOUT) { onUiThreadGet { WRibbonTheme.changedListenerCount } shouldBe baseline }
+                // A component styled but never shown does not register either
+                onUiThreadGet {
+                    val unused = WBorder()
+                    WRibbonTheme.setThemeBrush(unused, "RibbonAccentBrush") { unused.background = it }
+                    WRibbonTheme.changedListenerCount
+                } shouldBe baseline
+            } finally {
+                UiTestHarness.detach(container)
+            }
+        }
+
+        test("a setThemeBrush target shown again, or moved to another parent, still follows palette changes") {
+            onUiThread { WRibbonTheme.apply(RibbonThemePalette.WORD, RibbonChromeStyle.NEUTRAL, RibbonThemeStyle.OFFICE) }
+            val (first, second) = onUiThreadGet { WPanel() to WPanel() }
+            UiTestHarness.attachAndAwaitLoaded(first)
+            UiTestHarness.attachAndAwaitLoaded(second)
+            try {
+                val baseline = onUiThreadGet { WRibbonTheme.changedListenerCount }
+                val applied = mutableListOf<WColor>()
+                val border = onUiThreadGet {
+                    WBorder().also {
+                        it.requestedTheme = ElementTheme.LIGHT
+                        first.add(it)
+                    }
+                }
+                eventually(THEME_TIMEOUT) { onUiThreadGet { border.isLoadedForTest() } shouldBe true }
+                onUiThread { WRibbonTheme.setThemeBrush(border, "RibbonAccentBrush") { applied += it } }
+                // Taken off the window, then shown again: picks up the palette applied in between
+                onUiThread { first.remove(border) }
+                eventually(THEME_TIMEOUT) { onUiThreadGet { WRibbonTheme.changedListenerCount } shouldBe baseline }
+                onUiThread { WRibbonTheme.applyPalette(RibbonThemePalette.EXCEL) }
+                onUiThread { first.add(border) }
+                eventually(THEME_TIMEOUT) { onUiThreadGet { applied.lastOrNull()?.toRibbonColor() } shouldBe accentLight() }
+                // Moved straight to another parent (Unloaded of the old place can arrive after Loaded of the new one)
+                onUiThread {
+                    first.remove(border)
+                    second.add(border)
+                }
+                repeat(SETTLE_TURNS) { onUiThread { } }
+                onUiThread { WRibbonTheme.applyPalette(RibbonThemePalette.OUTLOOK) }
+                eventually(THEME_TIMEOUT) { onUiThreadGet { applied.lastOrNull()?.toRibbonColor() } shouldBe accentLight() }
+                onUiThreadGet { WRibbonTheme.changedListenerCount } shouldBe baseline + 1
+            } finally {
+                UiTestHarness.detach(first)
+                UiTestHarness.detach(second)
+                onUiThread { WRibbonTheme.apply(RibbonThemePalette.WORD, RibbonChromeStyle.NEUTRAL, RibbonThemeStyle.OFFICE) }
+            }
         }
 
         test("corner radius resources follow the surface style and are returned in top-left, top-right, bottom-right, bottom-left order") {
@@ -154,7 +227,21 @@ class RibbonResourcesTest : FunSpec() {
         }
     }
 
+    private fun WColor.toRibbonColor() = RibbonColor(alpha, red, green, blue)
+
+    /** The light-theme color of the accent brush in the current palette. */
+    private fun accentLight(): RibbonColor? = onUiThreadGet { WRibbonTheme.getBrushColor("RibbonAccentBrush", "Light") }
+
+    /** Whether the element is in the live visual tree (FrameworkElement.IsLoaded). */
+    private fun WComponent.isLoadedForTest(): Boolean = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
+
     private companion object {
         val THEME_TIMEOUT = 5.seconds
+
+        /** How many components the virtualized-cells test styles and discards. */
+        const val CELLS = 50
+
+        /** UI thread turns to let Loaded / Unloaded of a move arrive. */
+        const val SETTLE_TURNS = 5
     }
 }
