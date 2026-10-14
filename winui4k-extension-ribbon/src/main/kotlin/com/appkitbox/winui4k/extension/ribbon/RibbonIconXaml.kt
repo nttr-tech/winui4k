@@ -89,13 +89,22 @@ internal object RibbonIconXaml {
                 if (layers.isEmpty() || layers.any { it.strokeThickness > 0 }) {
                     null
                 } else {
-                    "<PathIcon Data=\"${Xaml.escape(layers.joinToString(" ") { it.data })}\" />"
+                    "<PathIcon Data=\"${Xaml.escape(joinPathData(layers))}\" />"
                 }
             }
             RibbonIconKind.IMAGE -> "<ImageIcon Source=\"${Xaml.escape(imageUri(icon.value))}\" />"
             RibbonIconKind.TEXT -> null
         }
     }
+
+    private val FILL_RULE_PREFIX = Regex("^[Ff][01] *")
+
+    /**
+     * Joins the data of [layers] into one path. A fill rule prefix (`F0` / `F1`) is valid only at the start of path
+     * data, so the prefixes of the second and later layers are removed (the first layer's rule applies to all).
+     */
+    private fun joinPathData(layers: List<RibbonIconLayer>): String =
+        layers.mapIndexed { index, layer -> if (index == 0) layer.data else layer.data.replace(FILL_RULE_PREFIX, "") }.joinToString(" ")
 
     private fun text(value: String, size: Double, brush: String): String {
         val block = "<TextBlock Text=\"${Xaml.escape(value)}\" FontSize=\"${Xaml.num(size * TEXT_SCALE)}\" FontWeight=\"SemiBold\" " +

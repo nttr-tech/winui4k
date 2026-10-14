@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import com.appkitbox.winui4k.SvgIcon
 import com.appkitbox.winui4k.Symbol
 
 /** Kind of a [RibbonIcon]. */
@@ -71,6 +72,30 @@ data class RibbonIcon @JvmOverloads constructor(
         @JvmStatic
         fun layers(viewBoxSize: Double, vararg layers: RibbonIconLayer): RibbonIcon =
             RibbonIcon(RibbonIconKind.PATH, layers.joinToString("|"), null, null, viewBoxSize)
+
+        /**
+         * A vector icon from an [SvgIcon] (such as a Material Symbols icon). Each filled path becomes a filled layer and
+         * each stroked path a stroke layer, keeping fixed colors and opacity; paths without a color use the theme's icon
+         * color, or [foreground] if given. The design grid is the larger side of the SVG's viewBox.
+         * Throws [IllegalArgumentException] if the icon has nothing to draw.
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun svg(icon: SvgIcon, foreground: String? = null): RibbonIcon {
+            val layers = icon.paths.flatMap { path ->
+                listOfNotNull(
+                    if (path.isFilled) RibbonIconLayer(path.data, 0.0, path.fillColor, path.opacity) else null,
+                    if (path.isStroked && path.strokeWidth > 0) RibbonIconLayer(path.data, path.strokeWidth, path.strokeColor, path.opacity) else null,
+                )
+            }
+            require(layers.isNotEmpty()) { "The SVG has no filled or stroked path to draw" }
+            return layers(maxOf(icon.width, icon.height), *layers.toTypedArray()).withForeground(foreground)
+        }
+
+        /** A vector icon from an SVG document; see [svg] for [SvgIcon]. Throws [IllegalArgumentException] if it cannot be parsed. */
+        @JvmStatic
+        @JvmOverloads
+        fun svg(svg: String, foreground: String? = null): RibbonIcon = svg(SvgIcon.parse(svg), foreground)
 
         /** An image icon. */
         @JvmStatic
