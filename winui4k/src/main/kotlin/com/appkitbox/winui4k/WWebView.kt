@@ -427,7 +427,10 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     /**
      * Subscribes to messages from the page's JavaScript (WebView2.WebMessageReceived).
      * The page sends them via window.chrome.webview.postMessage(...).
-     * The listener receives the JSON representation of the message (quoted if a string was sent).
+     * The listener always receives WebMessageAsJson, the JSON text of the message, whatever the page sent:
+     * `postMessage({a: 1})` arrives as `{"a":1}`, and `postMessage("hi")` arrives as the quoted JSON string literal
+     * `"hi"` (with the double quotes; it is not unquoted to `hi`). The message is not parsed here, so parse it
+     * (and strip the quotes of a string) on the receiving side.
      */
     @JvmSynthetic
     fun addWebMessageReceivedListener(listener: (String) -> Unit) {
