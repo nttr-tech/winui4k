@@ -12,6 +12,7 @@
 .\gradlew build                                # 全モジュールのビルド + check (テスト + detekt)
 .\gradlew :winui4k:test                        # コアの E2E テスト (実際に WinUI を起動する。Windows + WinAppSDK ランタイム必須)
 .\gradlew :winui4k-extension-ribbon:test       # リボンの E2E テスト
+.\gradlew :winui4k-extension-miglayout:test     # MigLayout の E2E テスト
 .\gradlew :winui4k:test --tests "WButtonTest"  # 単一テストクラスの実行 (Kotest はワイルドカード不可。単純クラス名か完全修飾名で指定)
 .\gradlew testOnAllJavaVersions                # 全モジュールの E2E テストを JDK 8 / 9 / 22 / 25 で実行
 .\gradlew spotlessApply                        # ktlint によるフォーマット
@@ -38,7 +39,7 @@
 
 # 注意事項
 
-- テストは実際に WinUI ウィンドウを起動する E2E (`winui4k/src/test` と `winui4k-extension-ribbon/src/test`、Kotest + `UiTestHarness`)。`UiTestHarness` は winui4k の testFixtures (`winui4k/src/testFixtures`) にあり、E2E の設定は buildSrc の `winui4k.ui-test` で共有する。ヘッドレス環境では動かない。
+- テストは実際に WinUI ウィンドウを起動する E2E (`winui4k/src/test`・`winui4k-extension-ribbon/src/test`・`winui4k-extension-miglayout/src/test`、Kotest + `UiTestHarness`)。`UiTestHarness` は winui4k の testFixtures (`winui4k/src/testFixtures`) にあり、E2E の設定は buildSrc の `winui4k.ui-test` で共有する。ヘッドレス環境では動かない。
 - WinUI 実体との相互作用で判明した落とし穴 (`Application.Resources` に触れるタイミング、`RoUninitialize` 省略時の abort 等) は `doc/verification.md` と `doc/troubleshooting.md` に記録されている。新たに判明したものも同様に記録すること。
 
 # 方針
