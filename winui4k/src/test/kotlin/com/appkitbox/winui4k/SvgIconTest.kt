@@ -120,6 +120,30 @@ class SvgIconTest : FunSpec() {
             shouldThrow<IllegalArgumentException> { SvgIcon.parse(svg) }
         }
 
+        test("fill, stroke and stroke-width set on the svg root or a group are inherited by the paths inside") {
+            val icon = SvgIcon.parse(
+                """<svg viewBox="0 0 24 24" fill="none" stroke="#112233" stroke-width="2"><g><path d="M0 0h1"/></g></svg>""",
+            )
+            val path = icon.paths.single()
+            path.isFilled shouldBe false
+            path.isStroked shouldBe true
+            path.strokeColor shouldBe "#112233"
+            path.strokeWidth shouldBe 2.0
+        }
+
+        test("an attribute on the path overrides the inherited one, and a sibling group keeps its own values") {
+            val icon = SvgIcon.parse(
+                """<svg viewBox="0 0 24 24" fill="#FF0000"><g fill="#00FF00"><path d="M0 0h1"/><path fill="#0000FF" d="M1 1h1"/></g>""" +
+                    """<path d="M2 2h1"/></svg>""",
+            )
+            icon.paths.map { it.fillColor } shouldBe listOf("#00FF00", "#0000FF", "#FF0000")
+        }
+
+        test("fill-rule is inherited from the root or a group") {
+            val icon = SvgIcon.parse("""<svg viewBox="0 0 10 10" fill-rule="evenodd"><path d="M0 0h1"/></svg>""")
+            icon.paths.single().data shouldBe "F0 M0 0 h1"
+        }
+
         test("a document without any size information is rejected") {
             shouldThrow<IllegalArgumentException> { SvgIcon.parse("""<svg><path d="M0 0h1"/></svg>""") }
         }

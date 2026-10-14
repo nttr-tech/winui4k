@@ -38,7 +38,8 @@ data class SvgIconPath(
 /**
  * A UI-independent vector icon read from an SVG document (such as Material Symbols or Fluent System Icons).
  *
- * Only `<path>` elements are read (also inside `<g>`); shapes, transforms, gradients and CSS are not supported.
+ * Only `<path>` elements are read (also inside `<g>`); `fill`, `stroke`, `stroke-width`, `fill-rule` and `fill-opacity` set
+ * on `<svg>` or `<g>` are inherited. Shapes, transforms, gradients and CSS are not supported.
  * [width] / [height] are the size of the design grid (the viewBox). Draw it with [WSvgIcon].
  */
 data class SvgIcon(
@@ -71,7 +72,7 @@ data class SvgIcon(
             }
             require(box[2] > 0 && box[3] > 0) { "The viewBox size must be positive: $viewBox" }
             val paths = mutableListOf<SvgIconPath>()
-            collectPaths(root, -box[0], -box[1], paths)
+            collectPaths(root, -box[0], -box[1], Style().inherit(root), paths)
             return SvgIcon(box[2], box[3], paths)
         }
 
@@ -112,32 +113,50 @@ data class SvgIcon(
             }
         }
 
-        private fun collectPaths(element: Element, dx: Double, dy: Double, out: MutableList<SvgIconPath>) {
+        private fun collectPaths(element: Element, dx: Double, dy: Double, style: Style, out: MutableList<SvgIconPath>) {
             val children = element.childNodes
             for (i in 0 until children.length) {
                 val child = children.item(i) as? Element ?: continue
                 when (child.localNameOrTag()) {
-                    "g" -> collectPaths(child, dx, dy, out)
-                    "path" -> readPath(child, dx, dy)?.let { out += it }
+                    "g" -> collectPaths(child, dx, dy, style.inherit(child), out)
+                    "path" -> readPath(child, dx, dy, style.inherit(child))?.let { out += it }
                 }
             }
         }
 
-        private fun readPath(element: Element, dx: Double, dy: Double): SvgIconPath? {
+        private fun readPath(element: Element, dx: Double, dy: Double, style: Style): SvgIconPath? {
             val d = element.getAttribute("d").trim()
             if (d.isEmpty()) return null
-            val rule = if (element.getAttribute("fill-rule").trim() == "evenodd") "F0" else "F1"
-            val fill = element.getAttribute("fill").trim()
-            val stroke = element.getAttribute("stroke").trim()
-            val opacity = (parseOpacity(element.getAttribute("opacity")) * parseOpacity(element.getAttribute("fill-opacity")))
+            val rule = if (style.fillRule == "evenodd") "F0" else "F1"
+            val fill = style.fill
+            val stroke = style.stroke
+            val opacity = parseOpacity(element.getAttribute("opacity")) * parseOpacity(style.fillOpacity)
             return SvgIconPath(
                 data = rule + " " + SvgPathData.translate(d, dx, dy),
                 isFilled = fill != "none",
                 fillColor = parseColor(fill),
                 isStroked = stroke.isNotEmpty() && stroke != "none",
                 strokeColor = parseColor(stroke),
-                strokeWidth = parseLength(element.getAttribute("stroke-width")) ?: 1.0,
+                strokeWidth = parseLength(style.strokeWidth) ?: 1.0,
                 opacity = opacity,
+            )
+        }
+
+        /** The presentation attributes that child elements inherit from `<svg>` and `<g>` (empty = not set). */
+        private data class Style(
+            val fill: String = "",
+            val stroke: String = "",
+            val strokeWidth: String = "",
+            val fillRule: String = "",
+            val fillOpacity: String = "",
+        ) {
+            /** This style overridden by the attributes [element] sets itself. */
+            fun inherit(element: Element): Style = Style(
+                fill = element.getAttribute("fill").trim().ifEmpty { fill },
+                stroke = element.getAttribute("stroke").trim().ifEmpty { stroke },
+                strokeWidth = element.getAttribute("stroke-width").trim().ifEmpty { strokeWidth },
+                fillRule = element.getAttribute("fill-rule").trim().ifEmpty { fillRule },
+                fillOpacity = element.getAttribute("fill-opacity").trim().ifEmpty { fillOpacity },
             )
         }
 
