@@ -236,6 +236,18 @@ class WChartTest : FunSpec() {
             state shouldBe listOf(1, 1, 2)
         }
 
+        test("a LineSeries rejects a LinearAxis as its X axis with E_INVALIDARG, while CategoryAxis and DateTimeAxis are accepted") {
+            // The X data slot of a line series only accepts category / date-time scales (WinUI: "The axis scale is incompatible with the series data slot")
+            val error = onUiThreadGet { runCatching { LineSeries("Bad").xAxis = LinearAxis() }.exceptionOrNull() }
+            (error as WindowsRuntimeException).message!!.contains("0x80070057") shouldBe true
+            onUiThreadGet {
+                val chart = WChart()
+                chart.addSeries(LineSeries("Category").apply { xAxis = CategoryAxis() })
+                chart.addSeries(LineSeries("Time").apply { xAxis = DateTimeAxis() })
+                chart.nativeSeriesCount()
+            } shouldBe 2
+        }
+
         test("a vertical bar series can share axes with line and area series") {
             onUiThreadGet {
                 val chart = WChart()
