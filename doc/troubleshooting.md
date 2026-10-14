@@ -101,3 +101,29 @@
   WinUI の仕様で `getToolButton` / `getToggleButton` では得られないので、追加したラッパーをそのまま使う (`getItems`)。
   カスタム ペンは `WInkToolbar` に追加した `WInkToolbarCustomPenButton` の `customPen` に設定すると反映される
   (2.5.4-experimental の InkToolbar の不具合を WInkToolbar が補っている)。
+- **ウィンドウを開くと検索ボックスにフォーカスが入り、F10 / Alt の KeyTip が出ず、打ったキーが検索に入る**
+  ウィンドウがアクティブになると WinUI はタブ順で最初のフォーカス可能な要素にフォーカスを与える。
+  `WRibbonTitleBar` ではそれが検索ボックスだった。クリック・Tab・`focusSearch` のいずれでもない最初のフォーカスは、
+  選択中のリボン タブのヘッダーへ渡す (`WRibbonSearchBox`、f3f7f7d)。
+  GotFocus のハンドラの中でフォーカスを移しても効かないため、`WinUiUtilities.invokeLater` で投函して移す。
+  なお E2E の共有テスト ウィンドウはアクティブにならないので、WinUI 自身の初期フォーカスはテストでは再現できない
+  (テストはその割り当てと同じことをフォーカス呼び出しで行う)。
+- **Chart: LineSeries の X 軸に LinearAxis を設定すると E_INVALIDARG (0x80070057) "The axis scale is incompatible with the series data slot"**
+  折れ線の X のデータ スロットは LinearAxis を受け付けない (`series.xAxis = LinearAxis()` の時点で失敗する)。
+  X 軸には CategoryAxis か DateTimeAxis を使う (WChartTest で確認)。
+- **Chart: DateTimeAxis で数秒おきの点が 1 本の縦線に潰れる**
+  `DateTimeIntervalType` は Day / Week / Month / Year しかなく (Auto を除く)、目盛の最小単位が日である。
+  そのため秒単位の時系列は WChart では表示できない (縦線に潰れるのは実使用での報告で、描画は自動テストしていない)。
+  秒単位の時系列は `WWebView` で Web のチャートを表示する。
+- **`Windows.UI.ViewManagement.UISettings` (WSystemColors) などの OS の WinRT 型が CO_E_NOTINITIALIZED (0x800401F0) で失敗する**
+  これらの型は呼び出したスレッドで COM が初期化されている必要がある。UI スレッド (RoInitialize 済み) では動くが、
+  素の JVM スレッドから呼ぶと 0x800401F0 になる (実使用での報告)。
+  `WSystemColors.accentColor` / `accentPalette()` は UI スレッドから呼ぶ。
+  ただし E2E (テスト用の JVM スレッド) では素のスレッドからでも成功した。プロセス内のどこかのスレッドが
+  MTA を初期化していると (ReleasePump の cleaner スレッドが `RoInitialize(MTA)` する)、未初期化のスレッドは暗黙の MTA に入るためと考えられるが、
+  失敗する条件は再現できておらず未確認である。
+- **WWebView: ページの `chrome.webview.postMessage` で送った値が引用符付き (JSON) で届く**
+  `addWebMessageReceivedListener` のリスナーには、ページが何を送っても常に WebMessageAsJson (メッセージの JSON テキスト) が渡る。
+  `postMessage({a: 1})` は `{"a":1}`、`postMessage("hi")` は JSON の文字列リテラル `"hi"` (二重引用符付き) で届き、
+  引用符は外されない (TryGetWebMessageAsString は使っていない)。
+  文字列を受けたいときは受け側でパースして引用符を外す (WWebViewTest の `"echo:Hello"` 参照)。

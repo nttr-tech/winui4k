@@ -71,3 +71,12 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     UI スレッドへ遅れて届くため、CurrentPoint の読み取りが CO_E_NOT_SUPPORTED で失敗することがある
     (WinUI 自身のサンプル InkBugBash も投げ縄には使っていない)。InkPointerEvent は読めなければ null を返す
   - InkToolbarStencilButton.Ruler / Protractor は設定されず常に null (定規・分度器の表示は InkToolbar が InkPresenter 経由で行う)
+- Chart (WChart、2.5.4-experimental) は次の挙動に合わせて実装している (実機で確認)
+  - LineSeries の `xAxis` に LinearAxis を設定すると E_INVALIDARG (0x80070057、"The axis scale is incompatible with the series data slot")。
+    CategoryAxis / DateTimeAxis は受け付ける (WChartTest)
+  - DateTimeAxis の IntervalType は Auto / Day / Week / Month / Year だけで、秒単位の目盛は無い
+    (秒単位の点が縦線に潰れる描画は実使用での報告で、自動テストはしていない)
+- WWebView の WebMessageReceived は、ページが送ったオブジェクトも文字列も WebMessageAsJson で受ける。
+  オブジェクトは JSON テキスト、文字列は引用符付きの JSON 文字列リテラルになる (WWebViewTest)
+- 共有 E2E ウィンドウは一度もアクティブにならないため、ウィンドウ アクティブ化時の WinUI 自身の初期フォーカス
+  (タブ順で最初の要素に入る) はテストで再現できない。リボンの検索ボックスのテストは同じ割り当てをフォーカス呼び出しで再現している
