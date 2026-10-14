@@ -127,3 +127,21 @@
   `postMessage({a: 1})` は `{"a":1}`、`postMessage("hi")` は JSON の文字列リテラル `"hi"` (二重引用符付き) で届き、
   引用符は外されない (TryGetWebMessageAsString は使っていない)。
   文字列を受けたいときは受け側でパースして引用符を外す (WWebViewTest の `"echo:Hello"` 参照)。
+- **WLayoutPanel の中に入れた WLayoutPanel の幅が 0 になる (内側の preferredSize は正しいのに actualWidth が 0)**
+  WLayoutPanel は子に Width / Height を直接設定するため、子の DesiredSize はその値に縛られる (計測前は 0)。
+  外側のパネルのレイアウトが内側のパネルのレイアウトより先に走ると、内側の preferredSize は子をまだ計測し直していない
+  DesiredSize (前回割り当てた幅、初回は 0) から計算され、外側はその幅を内側に割り当てる。内側が後で子を計測しても
+  外側へは伝わらないため、内側は 0 (ラベルの文字が伸びた後も前の幅) のまま残っていた。
+  また Canvas の DesiredSize は常に 0x0 で、入れ子の WLayoutPanel を計測し直すために Width を一旦外す処理が加わると、
+  Width を戻した後も DesiredSize / ActualWidth が 0 のまま残ることがあった (MigLayout の入れ子で確認。WinUI 側の理由は未確認)。
+  `WLayoutPanel.preferredSize` は未計測の子をその場で計測してから集計し、レイアウト マネージャーを持つ子の
+  WLayoutPanel は計測しない (WLayoutPanelTest / MigLayoutManagerTest)。
+- **WTable のセルなどで `WRibbonTheme.setThemeBrush` を使うと、スクロールするほどパレット変更が重くなり、捨てたセルが解放されない**
+  以前の setThemeBrush はパレット変更のリスナーをアプリ全体のリストに登録したまま外さなかった。仮想化された表の
+  レンダラーは表示し直すたびに新しいコンポーネントを作るため、セル 1 個ごとにリスナーが 1 つずつ残り、
+  表示から外れたセルもリストから参照され続けていた。現在は対象がビジュアル ツリーにある間 (Loaded から Unloaded まで)
+  だけ登録し、再表示のときは外れていた間のパレット変更も反映する (RibbonResourcesTest)。
+  別の親へ移すと新しい場所の Loaded が古い場所の Unloaded より先に届くことがある (WinUI の既知の動作。
+  テストの移動では順序までは確認していない) ため、Unloaded では
+  FrameworkElement.IsLoaded を見て、まだツリーにあれば登録を外さない。同じようにアプリ全体のイベントに
+  コンポーネントごとのリスナーを登録する処理は、仮想化されたセルから呼ばれても溜まらないようにする。
