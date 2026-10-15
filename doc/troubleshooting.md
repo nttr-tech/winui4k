@@ -150,3 +150,11 @@
   直後でレイアウトが終わっておらず、最初の項目の `ActualOffset` / `ActualWidth` が古い値のまま (ずれは 900 DIP 超になった)
   だった。2 回目以降はレイアウト済みなので正しく出る。`RibbonKeyTipController.render` が位置を読む前に
   `keyTipRoot.updateLayout()` で同期的にレイアウトを終わらせる (WRibbonTest)。
+- **Backstage のナビゲーションで ↓ / ↑ キーを押すとアプリが落ちる (FocusManager.TryMoveFocus が E_UNEXPECTED (0x8000FFFF))**
+  デスクトップ アプリの WinUI では、オプションなしの `TryMoveFocus(direction)` は「FindNextElementOptions の SearchRoot に
+  読み込み済みの DependencyObject を渡すこと」というエラーで必ず失敗する。さらにオプション付きの TryMoveFocus は
+  Next / Previous を受け付けず E_INVALIDARG (0x80070057) になるため、方向 (Up / Down / Left / Right) で移動する。
+  親のない Popup の中身は XamlRoot.Content の下にないので、SearchRoot には候補を含む要素 (Popup の子など) を渡す
+  (`Xaml.moveFocusVertically`、WRibbonTest)。
+  キーのイベント ハンドラーが失敗の HRESULT を返すと XAML は未処理のエラーとしてプロセスごと終了させるため、
+  `XamlElement` のキーのハンドラーは例外を stderr に出すだけで XAML へは返さない。

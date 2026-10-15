@@ -106,7 +106,8 @@ class WRibbon @JvmOverloads constructor(
     private val tabStripItems = RibbonItemStrip(model.tabStripItems, host, { tabStripItemLayout() }, spacing = 4.0)
     internal val tabViews = LinkedHashMap<RibbonTabModel, RibbonTabView>()
     private val minimizedPopup = RibbonMinimizedPopup(this)
-    private var backstageView: RibbonBackstageView? = null
+    internal var backstageView: RibbonBackstageView? = null
+        private set
 
     private val itemInvokedListeners = CopyOnWriteArrayList<RibbonItemInvokedListener>()
     private val tabChangeListeners = CopyOnWriteArrayList<RibbonTabChangeListener>()

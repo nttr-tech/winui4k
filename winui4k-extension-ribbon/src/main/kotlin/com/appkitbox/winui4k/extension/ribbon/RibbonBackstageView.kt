@@ -207,15 +207,22 @@ internal class RibbonBackstageView(private val ribbon: WRibbon) {
     }
 
     private fun onKeyDown(e: XamlKeyEvent) {
-        when (e.key) {
-            RibbonInputViews.VK_ESCAPE -> {
-                ribbon.isBackstageOpen = false
-                e.handled = true
-            }
-            RibbonInputViews.VK_UP -> e.handled = Xaml.moveFocus(false)
-            RibbonInputViews.VK_DOWN -> e.handled = Xaml.moveFocus(true)
-        }
+        if (handleKey(e.key)) e.handled = true
     }
+
+    /** Handles a key pressed in the Backstage (Esc closes it, Up / Down move the focus). Returns whether it was handled. */
+    internal fun handleKey(key: Int): Boolean = when (key) {
+        RibbonInputViews.VK_ESCAPE -> {
+            ribbon.isBackstageOpen = false
+            true
+        }
+        RibbonInputViews.VK_UP -> Xaml.moveFocusVertically(false, root)
+        RibbonInputViews.VK_DOWN -> Xaml.moveFocusVertically(true, root)
+        else -> false
+    }
+
+    /** The navigation button of [item] (for tests). */
+    internal fun navigationButton(item: RibbonBackstageItemModel): XamlElement? = buttons[item]
 
     /** The KeyTip targets (the back button and the navigation items). */
     fun keyTipTargets(): List<RibbonKeyTipTarget> {

@@ -329,7 +329,7 @@ internal class RibbonComboBoxView(override val model: RibbonComboBoxModel, host:
             button.setContent(itemContent(item))
             button.setAutomationName(model.getItemText(item))
             button.onClick { commit(item) }
-            button.onKeyDown { e -> onListKeyDown(e) }
+            button.onKeyDown { e -> onListKeyDown(e, list) }
             list.addChild(button)
             buttons += item to button
         }
@@ -354,10 +354,10 @@ internal class RibbonComboBoxView(override val model: RibbonComboBoxModel, host:
         return XamlElement.load("<TextBlock Text=\"${Xaml.escape(text)}\" VerticalAlignment=\"Center\"$font />")
     }
 
-    private fun onListKeyDown(e: XamlKeyEvent) {
+    private fun onListKeyDown(e: XamlKeyEvent, list: XamlElement) {
         when (e.key) {
-            RibbonInputViews.VK_DOWN -> e.handled = Xaml.moveFocus(true)
-            RibbonInputViews.VK_UP -> e.handled = Xaml.moveFocus(false)
+            RibbonInputViews.VK_DOWN -> e.handled = Xaml.moveFocusVertically(true, list)
+            RibbonInputViews.VK_UP -> e.handled = Xaml.moveFocusVertically(false, list)
         }
     }
 

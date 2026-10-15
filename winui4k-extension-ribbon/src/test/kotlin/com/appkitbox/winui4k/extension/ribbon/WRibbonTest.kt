@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WinUiUtilities
+import com.appkitbox.winui4k.extension.ribbon.model.RibbonBackstageItemModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonButtonModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonColorPickerModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualActivation
@@ -580,6 +581,36 @@ class WRibbonTest : FunSpec() {
             }
             sizes.map { it.first } shouldBe listOf(RibbonItemSize.LARGE, RibbonItemSize.LARGE)
             sizes[0].second shouldBe sizes[1].second
+        }
+
+        test("Down and Up in the Backstage navigation move the focus to the next and previous items without failing") {
+            val items = onUiThreadGet {
+                val pages = listOf("info", "new", "open").map { id ->
+                    RibbonBackstageItemModel(id, id.replaceFirstChar { it.uppercase() }, RibbonIcons.COPY, WButton(id))
+                }
+                model.backstage.items.addAll(pages)
+                ribbon.isBackstageOpen = true
+                pages
+            }
+            settle()
+            try {
+                val view = onUiThreadGet { ribbon.backstageView!! }
+                eventually(POPUP_TIMEOUT) {
+                    onUiThreadGet { view.navigationButton(items[0])!!.focus() } shouldBe true
+                }
+                val afterDown = onUiThreadGet {
+                    val handled = view.handleKey(RibbonInputViews.VK_DOWN)
+                    handled to items.map { view.navigationButton(it)!!.hasFocus }
+                }
+                afterDown shouldBe (true to listOf(false, true, false))
+                val afterUp = onUiThreadGet {
+                    val handled = view.handleKey(RibbonInputViews.VK_UP)
+                    handled to items.map { view.navigationButton(it)!!.hasFocus }
+                }
+                afterUp shouldBe (true to listOf(true, false, false))
+            } finally {
+                onUiThread { ribbon.isBackstageOpen = false }
+            }
         }
 
         test("item size calculation follows model changes (changing the label changes the width of a large item)") {

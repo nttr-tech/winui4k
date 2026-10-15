@@ -224,15 +224,30 @@ internal object Xaml {
         }
     }
 
-    /** Moves focus to the next (true) / previous (false) element (FocusManager.TryMoveFocus). */
-    fun moveFocus(next: Boolean): Boolean = Ffi.backend.withScope { scope ->
-        val out = scope.allocate(1, 1)
-        focusStatics.call(
-            XamlInterop.IFocusManagerStatics_TryMoveFocus,
-            if (next) XamlInterop.FocusNavigationDirection_Next else XamlInterop.FocusNavigationDirection_Previous,
-            out,
-        )
-        Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+    /**
+     * Moves focus to the element below (true) / above (false) within [searchRoot] (FocusManager.TryMoveFocus with
+     * FindNextElementOptions.SearchRoot). In a desktop app the overload without options fails with E_UNEXPECTED
+     * (0x8000FFFF), and with options only directional navigation is accepted (Next / Previous fail with E_INVALIDARG).
+     * [searchRoot] must be loaded; the root of a popup's content is not under XamlRoot.Content, so pass the element
+     * that contains the candidates (for example, the popup's child). Returns whether focus moved.
+     */
+    fun moveFocusVertically(down: Boolean, searchRoot: WComponent): Boolean {
+        val options = Activation.activate(XamlInterop.CLS_FindNextElementOptions, XamlInterop.IID_IFindNextElementOptions)
+        return try {
+            options.call(XamlInterop.IFindNextElementOptions_put_SearchRoot, searchRoot.dependencyObject.ptr)
+            Ffi.backend.withScope { scope ->
+                val out = scope.allocate(1, 1)
+                focusStatics.call(
+                    XamlInterop.IFocusManagerStatics_TryMoveFocusWithOptions,
+                    if (down) XamlInterop.FocusNavigationDirection_Down else XamlInterop.FocusNavigationDirection_Up,
+                    options.ptr,
+                    out,
+                )
+                Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+            }
+        } finally {
+            options.release()
+        }
     }
 
     /** Whether [virtualKey] is pressed (InputKeyboardSource.GetKeyStateForCurrentThread). */
@@ -803,8 +818,20 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
     /** Subscribes to PreviewKeyUp of the UIElement. */
     fun onPreviewKeyUp(handler: (XamlKeyEvent) -> Unit): Long = addKey(XamlInterop.IUIElement_add_PreviewKeyUp, handler)
 
+    /**
+     * A key handler's exception is printed and not returned to XAML: a failure HRESULT from a key event handler is an
+     * unhandled error to XAML, which ends the whole process (one failing key such as Down in a popup closed the app).
+     */
+    @Suppress("TooGenericExceptionCaught", "PrintStackTrace") // the last resort before the native side; no logging framework
     private fun addKey(slot: Int, handler: (XamlKeyEvent) -> Unit): Long =
-        uiElement.addEventHandler("WinUI4K.XamlKey", XamlInterop.IID_KeyEventHandler, slot) { _, args -> handler(XamlKeyEvent(ComPtr(args))) }
+        uiElement.addEventHandler("WinUI4K.XamlKey", XamlInterop.IID_KeyEventHandler, slot) { _, args ->
+            try {
+                handler(XamlKeyEvent(ComPtr(args)))
+            } catch (e: RuntimeException) {
+                System.err.println("[winui4k] exception in a key handler:")
+                e.printStackTrace()
+            }
+        }
 
     /** Subscribes to a pointer event ([addSlot] is one of IUIElement_add_Pointer*). */
     fun onPointer(addSlot: Int, handler: (XamlPointerEvent) -> Unit): Long =

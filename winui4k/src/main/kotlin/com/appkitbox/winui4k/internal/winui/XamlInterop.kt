@@ -2273,12 +2273,21 @@ internal object XamlInterop {
     const val IID_IFocusManagerStatics = "e73dce04-e23a-5fb3-96ab-7df04c51dff2"
     const val IFocusManagerStatics_FindFirstFocusableElement = 19 // (DependencyObject searchScope, out DependencyObject)
     const val IFocusManagerStatics_FindLastFocusableElement = 20
-    const val IFocusManagerStatics_TryMoveFocus = 24   // TryMoveFocus(FocusNavigationDirection, out boolean)
+
+    // TryMoveFocus(FocusNavigationDirection, FindNextElementOptions, out boolean). The overload without options
+    // (vtbl[24]) fails with E_UNEXPECTED in a desktop app, which must pass a loaded SearchRoot; with options only the
+    // directional directions (Up / Down / Left / Right) are accepted (Next / Previous fail with E_INVALIDARG)
+    const val IFocusManagerStatics_TryMoveFocusWithOptions = 17
     const val IFocusManagerStatics_GetFocusedElement = 26 // GetFocusedElement(XamlRoot, out Object)
 
+    // ---- Microsoft.UI.Xaml.Input.FindNextElementOptions ----
+    const val CLS_FindNextElementOptions = "Microsoft.UI.Xaml.Input.FindNextElementOptions"
+    const val IID_IFindNextElementOptions = "7f88e76b-7417-5447-aed4-2fabd291bdc6"
+    const val IFindNextElementOptions_put_SearchRoot = 7 // put_SearchRoot(DependencyObject)
+
     // enum Microsoft.UI.Xaml.Input.FocusNavigationDirection: Next=0, Previous=1, Up=2, Down=3, Left=4, Right=5
-    const val FocusNavigationDirection_Next = 0
-    const val FocusNavigationDirection_Previous = 1
+    const val FocusNavigationDirection_Up = 2
+    const val FocusNavigationDirection_Down = 3
 
     // ---- Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase (additions to IFlyoutBase) ----
     const val IFlyoutBase_get_Target = 8               // get_Target(out FrameworkElement)
