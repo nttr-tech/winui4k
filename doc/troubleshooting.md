@@ -242,3 +242,8 @@
   (changeListener) まで外していたため、作り直した後の幅・見出し・表示などの変更がネイティブの列に届かず、`TableColumn.width` も
   ActualWidth ではなく preferredWidth (自動幅なら NaN) を返していた。WinUI 側の問題ではなく、列を作ってから
   レンダラーを設定し、その後で幅を設定する (自然な書き方) と必ず起きていた。現在は自分が登録した通知だけを外す (WTableTest)。
+- **TableView に ScrollIntoView がなく、プログラムで選択を動かすと選択行が画面外に出る**
+  2.5.4-experimental の TableView には ListView の ScrollIntoView に当たるメソッドがない。`WTable.scrollIntoView(row)`
+  (または `selectRow(row, scrollIntoView = true)`) は、テンプレート内の行の ItemsRepeater (PART_RowsRepeater) で
+  GetOrCreateElement によって行を実体化し、UpdateLayout の後で StartBringIntoView (アニメーションなし) を呼ぶ
+  (ItemsRepeater の文書にある方法。WTableCellsTest)。

@@ -72,6 +72,7 @@ internal object XamlInterop {
     const val IUIElement_remove_DoubleTapped = 171     // remove_DoubleTapped(token)
     const val IUIElement_Measure = 210                 // Measure(Size availableSize) — Size (r4×2) passed by value
     const val IUIElement_UpdateLayout = 220            // UpdateLayout() — a synchronous layout pass
+    const val IUIElement_StartBringIntoViewWithOptions = 224 // StartBringIntoView(BringIntoViewOptions)
 
     /** delegate Input.DoubleTappedEventHandler(sender, DoubleTappedRoutedEventArgs) — Invoke is vtbl[3] */
     const val IID_DoubleTappedEventHandler = "f7a501b9-e277-5611-87b0-0e0607622183"
@@ -2107,9 +2108,16 @@ internal object XamlInterop {
     const val IVisualTreeHelperStatics_GetChildrenCount = 11  // GetChildrenCount(DependencyObject, out i4)
     const val IVisualTreeHelperStatics_GetParent = 12         // GetParent(DependencyObject, out DependencyObject)
 
+    // ---- Microsoft.UI.Xaml.BringIntoViewOptions (activatable) ----
+    const val CLS_BringIntoViewOptions = "Microsoft.UI.Xaml.BringIntoViewOptions"
+    const val IID_IBringIntoViewOptions = "eeb4a447-eb9e-5003-a479-b9e3a886b708"
+    const val IBringIntoViewOptions_put_AnimationDesired = 7 // put_AnimationDesired(boolean)
+
     // ---- Microsoft.UI.Xaml.Controls.ItemsRepeater / ItemsSourceView ----
     const val IID_IItemsRepeater = "9dabac84-fe81-53d1-a041-7a3befea505f"
     const val IItemsRepeater_get_ItemsSourceView = 8   // get_ItemsSourceView(out ItemsSourceView)
+    const val IItemsRepeater_TryGetElement = 20        // TryGetElement(i4, out UIElement) — null if not realized
+    const val IItemsRepeater_GetOrCreateElement = 21   // GetOrCreateElement(i4, out UIElement)
     const val IID_IItemsSourceView = "f7f802de-e79c-5c5f-abf8-ccbd486b89d6"
     const val IItemsSourceView_get_Count = 6           // get_Count(out i4)
     const val IItemsSourceView_GetAt = 7               // GetAt(i4, out Object)

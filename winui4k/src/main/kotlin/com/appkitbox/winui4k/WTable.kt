@@ -316,9 +316,23 @@ class WTable @JvmOverloads constructor(
     val selectedRowCount: Int
         get() = if (selectedRow < 0) 0 else 1
 
-    /** Selects row [row] (view) (TableView.Select). A negative value clears the selection. */
-    fun selectRow(row: Int) {
+    /**
+     * Selects row [row] (view) (TableView.Select). A negative value clears the selection. With [scrollIntoView], the
+     * row is also scrolled into view ([scrollIntoView]), e.g. when moving the selection from the keyboard.
+     */
+    @JvmOverloads
+    fun selectRow(row: Int, scrollIntoView: Boolean = false) {
         tableView.call(TabularInterop.ITableView_Select, row)
+        if (scrollIntoView) scrollIntoView(row)
+    }
+
+    /**
+     * Scrolls the rows just enough to show row [row] (view) (like JTable.scrollRectToVisible for a row; TableView has
+     * no ScrollIntoView, so the row is brought into view through the ItemsRepeater of its rows). Does nothing for an
+     * index out of range or before the table is shown.
+     */
+    fun scrollIntoView(row: Int) {
+        rowOrder.bringIntoView(row)
     }
 
     /** Deselects row [row] (view) if it is selected (TableView.Deselect). */

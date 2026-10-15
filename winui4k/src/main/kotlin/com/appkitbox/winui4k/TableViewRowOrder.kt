@@ -18,7 +18,7 @@ import com.appkitbox.winui4k.table.TableRowSorter
  * The order is projected by TableViewSource and passed to PART_RowsRepeater (an ItemsRepeater) in the TableView
  * template, so this reads its ItemsSourceView (while grouped, each group header row also counts as one row).
  * When it cannot be read, such as before the template is applied, an order computed on the Kotlin side with filtering
- * and sorting (by one column) is used instead.
+ * and sorting (by one column) is used instead. The same ItemsRepeater also scrolls a row into view ([bringIntoView]).
  */
 internal class TableViewRowOrder(
     /** The DependencyObject view of the table (TableView). The starting point for searching inside the template. */
@@ -52,6 +52,26 @@ internal class TableViewRowOrder(
             return (0 until count).firstOrNull { modelRowAt(view, it) == modelRowIndex } ?: -1
         } finally {
             view.release()
+        }
+    }
+
+    /**
+     * Scrolls the ScrollViewer around the rows just enough to show view row [viewRowIndex] (does nothing before the
+     * template is applied or for an index out of range). The row is realized first (ItemsRepeater.GetOrCreateElement)
+     * and laid out, so a row far from the realized ones is placed before being brought into view without animation.
+     */
+    fun bringIntoView(viewRowIndex: Int) {
+        if (viewRowIndex !in 0 until count()) return
+        val repeater = rowsRepeater ?: findRowsRepeater()?.also { rowsRepeater = it } ?: return
+        val element = repeater.getPtr(XamlInterop.IItemsRepeater_GetOrCreateElement, viewRowIndex)
+        val options = Activation.activate(XamlInterop.CLS_BringIntoViewOptions, XamlInterop.IID_IBringIntoViewOptions)
+        try {
+            element.call(XamlInterop.IUIElement_UpdateLayout)
+            options.putBool(XamlInterop.IBringIntoViewOptions_put_AnimationDesired, false)
+            element.call(XamlInterop.IUIElement_StartBringIntoViewWithOptions, options.ptr)
+        } finally {
+            options.release()
+            element.release()
         }
     }
 

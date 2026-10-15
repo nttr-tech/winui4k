@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.TableTestSupport.awaitNotifications
 import com.appkitbox.winui4k.TableTestSupport.cellWidths
 import com.appkitbox.winui4k.TableTestSupport.findTextBlock
+import com.appkitbox.winui4k.TableTestSupport.isRowInViewport
 import com.appkitbox.winui4k.TableTestSupport.productModel
 import com.appkitbox.winui4k.TableTestSupport.rowTexts
 import com.appkitbox.winui4k.TableTestSupport.texts
@@ -19,6 +20,12 @@ import io.kotest.matchers.shouldBe
  * every kind of column, the values of reused template cells, and the widths of rebuilt columns.
  */
 class WTableCellsTest : FunSpec() {
+    private companion object {
+        /** Rows far more than a 240-epx-high table shows, and a row far below the first ones. */
+        const val ROW_COUNT = 60
+        const val FAR_ROW = 45
+    }
+
     init {
         test("a table removed and added again twice in one UI turn still shows its rows and keeps the selected row") {
             val table = onUiThreadGet { WTable(productModel()) }
@@ -140,6 +147,31 @@ class WTableCellsTest : FunSpec() {
             withShownTable(table) {
                 cellWidths(it.dependencyObject).map { cells -> cells.drop(1) }.distinct()
             } shouldBe listOf(listOf(200L, 150L)) // The same in the header and in every row
+        }
+
+        test("scrollIntoView scrolls a row below the visible rows into view, and selectRow scrolls when asked to") {
+            val table = onUiThreadGet {
+                WTable(DefaultTableModel((0 until ROW_COUNT).map { listOf("Row $it") }, listOf("Name"))).also { it.height = 240.0 }
+            }
+            UiTestHarness.attachAndAwaitLoaded(table)
+            fun shown(row: Int): Boolean {
+                Thread.sleep(200)
+                return onUiThreadGet {
+                    table.updateLayout()
+                    isRowInViewport(table, row)
+                }
+            }
+            try {
+                val before = shown(FAR_ROW)
+                onUiThread { table.scrollIntoView(FAR_ROW) }
+                val scrolled = shown(FAR_ROW)
+                onUiThread { table.selectRow(2) }
+                val selectedOnly = shown(2)
+                onUiThread { table.selectRow(2, scrollIntoView = true) }
+                listOf(before, scrolled, selectedOnly, shown(2), onUiThreadGet { table.selectedRow })
+            } finally {
+                UiTestHarness.detach(table)
+            } shouldBe listOf(false, true, false, true, 2)
         }
     }
 }

@@ -148,4 +148,90 @@ internal object TableTestSupport {
             Thread.sleep(50)
         }
     }
+
+    /** The first element under [node] whose Name is [name] (an owned reference). Null if none is found. */
+    fun findByName(node: ComPtr, name: String): ComPtr? {
+        val element = node.queryInterfaceOrNull(XamlInterop.IID_IFrameworkElement)
+        val matched = element?.let { it.getString(XamlInterop.IFrameworkElement_get_Name).also { _ -> it.release() } } == name
+        if (matched) return node.also { it.addRef() }
+        val children = children(node)
+        try {
+            return children.firstNotNullOfOrNull { findByName(it, name) }
+        } finally {
+            children.forEach { it.release() }
+        }
+    }
+
+    /**
+     * Whether view row [row] of [table] is realized and lies entirely within the viewport of the ScrollViewer that
+     * scrolls the rows (the row's position in PART_RowsRepeater against the viewer's VerticalOffset / ViewportHeight).
+     */
+    fun isRowInViewport(table: WTable, row: Int): Boolean {
+        val repeater = checkNotNull(findByName(table.dependencyObject, "PART_RowsRepeater")) { "PART_RowsRepeater not found" }
+        try {
+            val rows = repeater.queryInterface(XamlInterop.IID_IItemsRepeater)
+            val element = try {
+                rows.getPtrOrNull(XamlInterop.IItemsRepeater_TryGetElement, row)
+            } finally {
+                rows.release()
+            } ?: return false
+            // The row's top in the content of the ScrollViewer: its offset in the repeater plus the repeater's offset
+            val (top, height) = try {
+                (offsetY(element) + offsetY(repeater)) to heightOf(element)
+            } finally {
+                element.release()
+            }
+            val viewer = checkNotNull(scrollViewerAbove(repeater)) { "No ScrollViewer above PART_RowsRepeater" }
+            try {
+                val offset = viewer.getDouble(XamlInterop.IScrollViewer_get_VerticalOffset)
+                val viewport = viewer.getDouble(XamlInterop.IScrollViewer_get_ViewportHeight)
+                return top >= offset - PIXEL && top + height <= offset + viewport + PIXEL
+            } finally {
+                viewer.release()
+            }
+        } finally {
+            repeater.release()
+        }
+    }
+
+    /** The vertical position of [node] relative to its parent (UIElement.ActualOffset.Y). */
+    private fun offsetY(node: ComPtr): Double {
+        val element = node.queryInterface(XamlInterop.IID_IUIElement)
+        return try {
+            Xaml.readFloats(element, XamlInterop.IUIElement_get_ActualOffset, 3)[1] // A Vector3
+        } finally {
+            element.release()
+        }
+    }
+
+    /** The ActualHeight of [node]. */
+    private fun heightOf(node: ComPtr): Double {
+        val element = node.queryInterface(XamlInterop.IID_IFrameworkElement)
+        return try {
+            element.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight)
+        } finally {
+            element.release()
+        }
+    }
+
+    /** The nearest ScrollViewer above [node] (an owned IScrollViewer), or null. */
+    private fun scrollViewerAbove(node: ComPtr): ComPtr? {
+        val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
+        var current: ComPtr? = node.queryInterface(XamlInterop.IID_IDependencyObject)
+        try {
+            while (current != null) {
+                val parent = statics.getPtrOrNull(XamlInterop.IVisualTreeHelperStatics_GetParent, current.ptr)
+                current.release()
+                current = parent
+                current?.queryInterfaceOrNull(XamlInterop.IID_IScrollViewer)?.let { return it }
+            }
+            return null
+        } finally {
+            current?.release()
+            statics.release()
+        }
+    }
+
+    /** A tolerance for rounding to physical pixels. */
+    private const val PIXEL = 1.0
 }
