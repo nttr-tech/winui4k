@@ -3,8 +3,12 @@ package com.appkitbox.winui4k.extension.miglayout
 import com.appkitbox.winui4k.UiTestHarness
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.WComponent
+import com.appkitbox.winui4k.WContentDialog
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WLayoutPanel
+import com.appkitbox.winui4k.WScrollPane
+import com.appkitbox.winui4k.WTextField
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
@@ -33,6 +37,12 @@ class MigLayoutManagerTest : FunSpec() {
         repeat(3) { onUiThread { } }
         onUiThread { outer.updateLayout() }
         return onUiThreadGet { inner.preferredSize().width to inner.actualWidth }
+    }
+
+    /** Lets the queued layouts and the XAML layout pass under [root] run. */
+    private fun settle(root: WComponent) {
+        repeat(3) { onUiThread { } }
+        onUiThread { root.updateLayout() }
     }
 
     init {
@@ -77,10 +87,40 @@ class MigLayoutManagerTest : FunSpec() {
                 UiTestHarness.detach(outer)
             }
         }
+        test("a MigLayout form taller than a WContentDialog scrolls in a WScrollPane") {
+            val (panel, scroll) = onUiThreadGet {
+                val panel = WLayoutPanel(MigLayoutManager("wrap 2", "[right][grow, fill]"))
+                repeat(TALL_ROWS) {
+                    panel.add(WLabel("Field $it:"))
+                    panel.add(WTextField())
+                }
+                panel to WScrollPane(panel)
+            }
+            val owner = onUiThreadGet { WLabel("owner") }
+            UiTestHarness.attachAndAwaitLoaded(owner)
+            val dialog = onUiThreadGet { WContentDialog("Tall form", scroll).also { it.closeButtonText = "Close" } }
+            try {
+                onUiThread { dialog.show(owner) }
+                eventually(LAYOUT_TIMEOUT) {
+                    settle(dialog)
+                    val (preferred, actual) = onUiThreadGet { panel.preferredSize().height to panel.actualHeight }
+                    preferred shouldBeGreaterThan 0.0
+                    actual shouldBe (preferred plusOrMinus 1.0)
+                    onUiThreadGet { scroll.scrollableHeight } shouldBeGreaterThan 0.0
+                }
+            } finally {
+                onUiThread { dialog.hide() }
+                repeat(3) { onUiThread { } }
+                UiTestHarness.detach(owner)
+            }
+        }
     }
 
     private companion object {
         /** How long the nested layouts may take to settle (each level's layout is posted to the UI thread). */
         val LAYOUT_TIMEOUT = 5.seconds
+
+        /** Rows of a form far taller than any window. */
+        const val TALL_ROWS = 60
     }
 }

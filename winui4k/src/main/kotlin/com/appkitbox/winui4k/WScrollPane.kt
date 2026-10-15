@@ -85,6 +85,18 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) : WCont
     val scrollableWidth: Double
         get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ScrollableWidth)
 
+    /** The current vertical scroll position (ScrollViewer.VerticalOffset). */
+    val verticalOffset: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_VerticalOffset)
+
+    /** The viewport's height (ScrollViewer.ViewportHeight). */
+    val viewportHeight: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ViewportHeight)
+
+    /** The scrollable height = content height - viewport height (ScrollViewer.ScrollableHeight). 0 means no overflow. */
+    val scrollableHeight: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ScrollableHeight)
+
     /** Animates the horizontal scroll position to [offset] (ScrollViewer.ChangeView). */
     fun scrollToHorizontalOffset(offset: Double) {
         // Box it as an IReference<Double> to pass (vertical position and zoom are null = no change)
