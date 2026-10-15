@@ -415,6 +415,8 @@ private fun buildTableBasicExample(): WComponent {
     }
     val selectThird = WButton("Select the third row")
     selectThird.addActionListener { table.selectRow(2) }
+    val selectLast = WButton("Select the last row and scroll to it")
+    selectLast.addActionListener { table.selectRow(table.rowCount - 1, scrollIntoView = true) }
     val clear = WButton("Clear selection")
     clear.addActionListener { table.clearSelection() }
 
@@ -422,6 +424,7 @@ private fun buildTableBasicExample(): WComponent {
     options.add(optionsLabel("Selection mode (SelectionMode)"))
     options.add(selectionMode)
     options.add(selectThird)
+    options.add(selectLast)
     options.add(clear)
     return buildExample("Basics (TableModel / row selection / SelectionChanged)", body, options)
 }
