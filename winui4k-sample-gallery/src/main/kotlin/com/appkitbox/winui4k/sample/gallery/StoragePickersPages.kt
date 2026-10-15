@@ -266,6 +266,8 @@ private fun buildPickFolderExample(): WComponent {
     commitText.text = "Use this folder"
     val location = buildLocationComboBox()
     val viewMode = buildViewModeComboBox()
+    val startFolder = WTextField("An absolute path, e.g. C:\\Windows")
+    startFolder.fontFamily = "Consolas" // shows the backslashes of a path even with a Japanese UI font
 
     button.addActionListener {
         button.isEnabled = false
@@ -273,6 +275,7 @@ private fun buildPickFolderExample(): WComponent {
             val picker = WFolderPicker(galleryFrame)
             if (commitText.text.isNotEmpty()) picker.commitButtonText = commitText.text
             picker.suggestedStartLocation = PickerLocationId.entries[location.selectedIndex]
+            if (startFolder.text.isNotEmpty()) picker.suggestedFolder = startFolder.text
             picker.viewMode = PickerViewMode.entries[viewMode.selectedIndex]
             picker.pickSingleFolder { path ->
                 result.text = if (path != null) "Picked: $path" else "Canceled"
@@ -293,6 +296,8 @@ private fun buildPickFolderExample(): WComponent {
     options.add(commitText)
     options.add(optionsLabel("Folder shown first (SuggestedStartLocation)"))
     options.add(location)
+    options.add(optionsLabel("Folder to open in (SuggestedFolder; wins over SuggestedStartLocation)"))
+    options.add(startFolder)
     options.add(optionsLabel("View mode (ViewMode)"))
     options.add(viewMode)
     return buildExample("Selecting a folder (WFolderPicker.pickSingleFolder)", body, options)
