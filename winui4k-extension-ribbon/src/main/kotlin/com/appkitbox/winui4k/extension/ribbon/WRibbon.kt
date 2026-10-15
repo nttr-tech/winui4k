@@ -271,17 +271,9 @@ class WRibbon @JvmOverloads constructor(
         tabStripHost.setChild(tabStrip.element)
         tabStripItemsHost.addChild(tabStripItems.element)
         applicationButton.onClick { invokeApplicationButton() }
-        displayOptionsButton.onClick {
-            val menu = menus.displayOptionsMenu()
-            menu.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_RIGHT
-            menu.showAt(displayOptionsButton)
-        }
+        displayOptionsButton.onClick { showDisplayOptionsMenu() }
         minimizeButton.onClick { toggleMinimized() }
-        minimizeBehaviorButton.onClick {
-            val menu = menus.minimizeBehaviorMenu()
-            menu.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_RIGHT
-            menu.showAt(minimizeBehaviorButton)
-        }
+        minimizeBehaviorButton.onClick { showMinimizeBehaviorMenu() }
         revealButton.onClick { isFullScreenRevealed = !isFullScreenRevealed }
         root.onRightTapped { e ->
             val p = e.position(root)
@@ -853,6 +845,18 @@ class WRibbon @JvmOverloads constructor(
 
     /** Builds the menu for AutoCAD's minimize behavior. */
     fun buildMinimizeBehaviorMenu(): WMenuFlyout = menus.minimizeBehaviorMenu()
+
+    /** Opens the [Ribbon Display Options] menu under its button (what clicking the button does). */
+    internal fun showDisplayOptionsMenu(): WMenuFlyout = showMenuUnder(menus.displayOptionsMenu(), displayOptionsButton)
+
+    /** Opens the menu for AutoCAD's minimize behavior under its button (what clicking the button does). */
+    internal fun showMinimizeBehaviorMenu(): WMenuFlyout = showMenuUnder(menus.minimizeBehaviorMenu(), minimizeBehaviorButton)
+
+    private fun showMenuUnder(menu: WMenuFlyout, button: XamlElement): WMenuFlyout {
+        menu.placement = FlyoutPlacement.BOTTOM_EDGE_ALIGNED_RIGHT
+        menu.showAt(button)
+        return menu
+    }
 
     // ---------------------------------------------------------------- Application button and Backstage
 
