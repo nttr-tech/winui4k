@@ -109,18 +109,9 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
     var fontFamily: String
-        get() {
-            val family = inspectable.getPtrOrNull(XamlInterop.ITextBlock_get_FontFamily) ?: return ""
-            return try {
-                family.getString(XamlInterop.IFontFamily_get_Source)
-            } finally {
-                family.release()
-            }
-        }
+        get() = getFontFamily(inspectable, XamlInterop.ITextBlock_get_FontFamily)
         set(value) {
-            val family = createFontFamily(value)
-            inspectable.call(XamlInterop.ITextBlock_put_FontFamily, family.ptr)
-            family.release()
+            putFontFamily(inspectable, XamlInterop.ITextBlock_put_FontFamily, value)
             revalidate()
         }
 
@@ -199,6 +190,26 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     init {
         if (text.isNotEmpty()) this.text = text
+    }
+}
+
+/** The family name (FontFamily.Source) of the FontFamily property read by [slot] of [target], or "" if it has none. */
+internal fun getFontFamily(target: ComPtr, slot: Int): String {
+    val family = target.getPtrOrNull(slot) ?: return ""
+    return try {
+        family.getString(XamlInterop.IFontFamily_get_Source)
+    } finally {
+        family.release()
+    }
+}
+
+/** Sets a FontFamily created from the family [name] on the FontFamily property written by [slot] of [target]. */
+internal fun putFontFamily(target: ComPtr, slot: Int, name: String) {
+    val family = createFontFamily(name)
+    try {
+        target.call(slot, family.ptr)
+    } finally {
+        family.release()
     }
 }
 

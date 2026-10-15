@@ -10,6 +10,14 @@ import java.util.concurrent.TimeUnit
 /** Tests verifying WPasswordField (PasswordBox)'s password handling and PasswordChanged listener. */
 class WPasswordFieldTest : FunSpec() {
     init {
+        test("fontFamily returns the family that was set") {
+            onUiThreadGet {
+                val field = WPasswordField()
+                field.fontFamily = "Consolas"
+                field.fontFamily
+            } shouldBe "Consolas"
+        }
+
         test("password returns exactly the string that was set") {
             onUiThreadGet {
                 val passwordField = WPasswordField()

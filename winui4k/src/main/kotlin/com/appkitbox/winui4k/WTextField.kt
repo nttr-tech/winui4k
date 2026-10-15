@@ -81,6 +81,17 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         inspectable.call(XamlInterop.ITextBox_SelectAll)
     }
 
+    /**
+     * Font family name (Control.FontFamily), such as "Consolas". With a Japanese UI font the backslash in a Windows
+     * path is drawn as a yen sign (the same code point), so a field that shows paths can use a font that draws it.
+     */
+    var fontFamily: String
+        get() = controlFontFamily
+        set(value) {
+            controlFontFamily = value
+            revalidate()
+        }
+
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
     }

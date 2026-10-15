@@ -189,3 +189,7 @@
   折り返す WLabel の最小幅は 0 (列とともに狭まって折り返す) だが、WBorder に入れた場合などは `"w 300!"` や
   `"growx, wmin 0"` で幅を制約する。なお TextBlock の ActualHeight は Height で切られていても文字全体の高さを返すため、
   切れているかどうかはパネルや親の高さで確かめる (MigLayoutManagerTest)。
+- **WTextField に表示した Windows のパスの `\` が `¥` になる**
+  日本語環境の既定の UI フォント (Yu Gothic UI など) は U+005C (バックスラッシュ) を円記号の字形で描く。
+  パスを表示する欄は `WTextField.fontFamily` (`WLabel` / `WPasswordField` も同様) に `"Consolas"` や `"Segoe UI"` など
+  バックスラッシュの字形を持つフォントを指定する。

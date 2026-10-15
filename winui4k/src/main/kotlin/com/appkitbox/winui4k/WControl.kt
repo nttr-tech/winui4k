@@ -11,6 +11,11 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
 abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(inspectable) {
     private val control: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IControl)) }
 
+    /** Control.FontFamily as a family name (for the subclasses that expose it as `fontFamily`). */
+    internal var controlFontFamily: String
+        get() = getFontFamily(control, XamlInterop.IControl_get_FontFamily)
+        set(value) = putFontFamily(control, XamlInterop.IControl_put_FontFamily, value)
+
     /** setEnabled-like (Control.IsEnabled). */
     var isEnabled: Boolean
         get() = control.getBool(XamlInterop.IControl_get_IsEnabled)

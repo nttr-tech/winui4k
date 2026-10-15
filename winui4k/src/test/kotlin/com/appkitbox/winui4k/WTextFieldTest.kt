@@ -12,6 +12,14 @@ import java.util.concurrent.TimeUnit
 /** Tests verifying WTextField (TextBox)'s text handling and TextChanged listener. */
 class WTextFieldTest : FunSpec() {
     init {
+        test("fontFamily returns the family that was set, so paths can use a font that shows a backslash") {
+            onUiThreadGet {
+                val field = WTextField()
+                field.fontFamily = "Consolas"
+                field.fontFamily
+            } shouldBe "Consolas"
+        }
+
         test("text returns exactly the string that was set (including non-ASCII text)") {
             onUiThreadGet {
                 val textField = WTextField()

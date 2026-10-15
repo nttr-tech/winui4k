@@ -73,6 +73,14 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
         get() = PasswordRevealMode.of(inspectable.getInt(XamlInterop.IPasswordBox_get_PasswordRevealMode))
         set(value) = inspectable.call(XamlInterop.IPasswordBox_put_PasswordRevealMode, value.native)
 
+    /** Font family name (Control.FontFamily), such as "Consolas". */
+    var fontFamily: String
+        get() = controlFontFamily
+        set(value) {
+            controlFontFamily = value
+            revalidate()
+        }
+
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
     }

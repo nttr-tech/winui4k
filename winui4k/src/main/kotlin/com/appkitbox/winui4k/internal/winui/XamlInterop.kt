@@ -2205,7 +2205,8 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Controls.Control (additions to IControl) ----
     const val IControl_get_FontSize = 12
     const val IControl_put_FontSize = 13
-    const val IControl_put_FontFamily = 15
+    const val IControl_get_FontFamily = 14             // get_FontFamily(out FontFamily)
+    const val IControl_put_FontFamily = 15             // put_FontFamily(FontFamily)
     const val IControl_put_FontStyle = 19              // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
     const val IControl_get_Foreground = 24             // get_Foreground(out Brush)
     const val IControl_put_Foreground = 25             // put_Foreground(Brush)
