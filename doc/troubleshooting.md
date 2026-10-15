@@ -200,3 +200,7 @@
   `suggestedStartFolder` (3 つとも) は Windows がそのピッカーの前回のフォルダーを覚えていないときだけ使われる
   (以後は前回選んだフォルダーが優先)。どちらも絶対パスで指定し、`suggestedStartLocation` より優先される。
   優先順位は WinAppSDK のドキュメントに基づき、ダイアログを開く動作は自動テストしていない (値の設定と読み戻しのみ WStoragePickersTest で確認)。
+- **`addKeyboardAccelerator` を付けたテキスト ボックスや表に、ホバーやフォーカスで「Enter」などのツールチップが出る**
+  WinUI は既定 (KeyboardAcceleratorPlacementMode=Auto) で、要素の KeyboardAccelerators のキーをツールチップとして表示する。
+  Enter で確定する欄のように、ショートカットを独立したコマンドとして見せる必要がない要素では
+  `keyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.HIDDEN` にする (WComponentTest)。

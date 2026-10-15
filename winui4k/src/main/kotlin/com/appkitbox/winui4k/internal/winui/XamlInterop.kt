@@ -66,6 +66,8 @@ internal object XamlInterop {
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
     const val IUIElement_put_ContextFlyout = 46        // put_ContextFlyout(FlyoutBase)
     const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
+    const val IUIElement_get_KeyboardAcceleratorPlacementMode = 81 // (out KeyboardAcceleratorPlacementMode: Auto=0, Hidden=1)
+    const val IUIElement_put_KeyboardAcceleratorPlacementMode = 82 // (KeyboardAcceleratorPlacementMode)
     const val IUIElement_add_DoubleTapped = 170        // add_DoubleTapped(DoubleTappedEventHandler, out token)
     const val IUIElement_remove_DoubleTapped = 171     // remove_DoubleTapped(token)
     const val IUIElement_Measure = 210                 // Measure(Size availableSize) — Size (r4×2) passed by value

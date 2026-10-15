@@ -99,6 +99,24 @@ enum class ElementTheme(internal val native: Int) {
 }
 
 /**
+ * Microsoft.UI.Xaml.Input.KeyboardAcceleratorPlacementMode (whether the keys of an element's keyboard accelerators are
+ * shown in its tooltip). Values extracted from the winmd (Auto=0, Hidden=1).
+ */
+enum class KeyboardAcceleratorPlacementMode(internal val native: Int) {
+    /** WinUI shows the accelerator keys (e.g. "Enter") in a tooltip on hover and keyboard focus (the default). */
+    AUTO(0),
+
+    /** The accelerator keys are not shown. */
+    HIDDEN(1),
+    ;
+
+    internal companion object {
+        @JvmSynthetic
+        fun of(native: Int): KeyboardAcceleratorPlacementMode = entries.first { it.native == native }
+    }
+}
+
+/**
  * A thin Swing-like API layer. Everything underneath is a native WinUI 3 control.
  * (Use only inside the WinUiUtilities.invokeLater callback = on the UI thread)
  */
@@ -539,6 +557,16 @@ abstract class WComponent internal constructor(
                 value?.flyoutBase?.ptr,
             )
         }
+
+    /**
+     * Whether WinUI shows the keys of this element's keyboard accelerators ([addKeyboardAccelerator]) in a tooltip
+     * (UIElement.KeyboardAcceleratorPlacementMode). With [KeyboardAcceleratorPlacementMode.AUTO] (the default) an
+     * accelerator such as Enter on a text field shows an "Enter" tooltip over it on hover and focus; set
+     * [KeyboardAcceleratorPlacementMode.HIDDEN] for accelerators that are not commands of their own.
+     */
+    var keyboardAcceleratorPlacementMode: KeyboardAcceleratorPlacementMode
+        get() = KeyboardAcceleratorPlacementMode.of(uiElement.getInt(XamlInterop.IUIElement_get_KeyboardAcceleratorPlacementMode))
+        set(value) = uiElement.call(XamlInterop.IUIElement_put_KeyboardAcceleratorPlacementMode, value.native)
 
     /**
      * Adds a keyboard shortcut (UIElement.KeyboardAccelerators).

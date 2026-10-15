@@ -60,6 +60,18 @@ class WComponentTest : FunSpec() {
             vertical shouldBe VerticalAlignment.BOTTOM
         }
 
+        test("keyboardAcceleratorPlacementMode starts as AUTO and HIDDEN is written to the native element") {
+            val (initial, hidden) = onUiThreadGet {
+                val field = WTextField()
+                field.addKeyboardAccelerator(VirtualKey.ENTER) { }
+                val initial = field.keyboardAcceleratorPlacementMode
+                field.keyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.HIDDEN
+                initial to field.keyboardAcceleratorPlacementMode
+            }
+            initial shouldBe KeyboardAcceleratorPlacementMode.AUTO
+            hidden shouldBe KeyboardAcceleratorPlacementMode.HIDDEN
+        }
+
         test("explicitly setting requestedTheme also resolves actualTheme to the same theme") {
             val (requested, actual) = onUiThreadGet {
                 val button = WButton()
