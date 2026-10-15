@@ -57,15 +57,19 @@ internal class TableViewRowInvoker(
     }
 
     /**
-     * The view index of the row that the element [element] (a DependencyObject) in the table belongs to.
-     * Elements in a row's cells inherit the DataContext (the row object), so this walks up the parents to find an
+     * The view index of the row that the element [element] (any interface of a DependencyObject) in the table belongs
+     * to. Elements in a row's cells inherit the DataContext (the row object), so this walks up the parents to find an
      * element whose DataContext is a row object. Returns -1 for elements outside the table, in column headers, or in
      * group header rows.
+     *
+     * VisualTreeHelper.GetParent takes an IDependencyObject, so [element] is queried for it first: an `object` such as
+     * RoutedEventArgs.OriginalSource is an IInspectable whose vtable is not IDependencyObject's for most elements
+     * (passing it as is crashed in Microsoft.UI.Xaml.dll).
      */
     fun viewRowOf(element: ComPtr): Int {
+        var node: ComPtr? = element.queryInterfaceOrNull(XamlInterop.IID_IDependencyObject) ?: return -1
         val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
         val tableIdentity = identityOf(table)
-        var node: ComPtr? = element.also { it.addRef() }
         try {
             while (node != null) {
                 val current: ComPtr = node

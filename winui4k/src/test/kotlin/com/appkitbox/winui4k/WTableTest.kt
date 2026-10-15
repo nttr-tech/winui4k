@@ -24,6 +24,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.TimeUnit
 
 /**
  * Tests WTable (TableView) by actually displaying it and verifying integration with the model, selection, sorting,
@@ -123,6 +124,16 @@ class WTableTest : FunSpec() {
         }
     }
 
+    /** Reads [notifications] on the UI thread until it is not empty (or a few seconds have passed) and returns it. */
+    private fun <T> awaitNotifications(notifications: () -> List<T>): List<T> {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+        while (true) {
+            val current = onUiThreadGet(notifications)
+            if (current.isNotEmpty() || System.nanoTime() > deadline) return current
+            Thread.sleep(50)
+        }
+    }
+
     /** The display strings of each group header (TableViewGroupHeader) being shown. */
     private fun groupHeaderTexts(node: ComPtr): List<List<String>> {
         if (runtimeClassName(node) == "Microsoft.UI.Xaml.Controls.Tabular.TableViewGroupHeader") return listOf(texts(node))
@@ -216,6 +227,38 @@ class WTableTest : FunSpec() {
                 0, // Price descending: Grape (480) comes first
                 3, // Orange (80) comes last
             )
+        }
+
+        test("double-tapping a cell of a text, renderer, or XAML template column notifies the row the cell is in") {
+            val invoked = mutableListOf<Int>()
+            val table = onUiThreadGet {
+                val model = DefaultTableModel(
+                    listOf(listOf("Apple", "A-1", "apple note"), listOf("Grape", "G-2", "grape note")),
+                    listOf("Name", "Code", "Note"),
+                )
+                WTable(model).also {
+                    it.isReadOnly = true // A double-tap on an editable cell starts editing instead
+                    it.columnModel.getColumn(1).cellRenderer = TableCellRenderer { _, value, _, _, _, _ -> WLabel("code $value") }
+                    it.columnModel.getColumn(2).cellTemplate = "<TextBlock Text=\"{Binding}\" />"
+                    it.addRowInvokedListener { row -> invoked += row }
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(table)
+            try {
+                onUiThread { table.updateLayout() }
+                listOf("Grape", "code G-2", "grape note").associateWith { text ->
+                    onUiThread { invoked.clear() }
+                    val cell = checkNotNull(onUiThreadGet { findTextBlock(table.dependencyObject, text) }) { "TextBlock not found: $text" }
+                    try {
+                        TouchInput.doubleTap(cell)
+                    } finally {
+                        onUiThread { cell.release() }
+                    }
+                    awaitNotifications { invoked.toList() }
+                }
+            } finally {
+                UiTestHarness.detach(table)
+            } shouldBe mapOf("Grape" to listOf(1), "code G-2" to listOf(1), "grape note" to listOf(1))
         }
 
         test("no model row is found from the element of a group header row, so it is -1") {

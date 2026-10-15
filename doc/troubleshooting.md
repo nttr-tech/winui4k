@@ -219,3 +219,14 @@
   (GetLayoutSlot)・HorizontalAlignment / VerticalAlignment から毎回判断し直し、自己サイズ化をやめたら設定した
   Width / Height を外す。まだ大きさがないだけのとき (STRETCH で ActualWidth が 0) は、そのレイアウトだけ preferredSize で
   子を並べて Width は設定しない (WLayoutPanelTest)。
+- **WTable のレンダラー列・テンプレート列のセルをダブルクリックしても `addRowInvokedListener` が呼ばれない (落ちることもある)**
+  行の特定は DoubleTapped の OriginalSource から VisualTreeHelper.GetParent で親をたどるが、OriginalSource (`object`) の
+  IInspectable をそのまま GetParent (引数は IDependencyObject) に渡していた。多くの要素では IInspectable の vtable が
+  IDependencyObject のものではないため、別のメソッドが呼ばれて行が見つからないか、Microsoft.UI.Xaml.dll 内で
+  アクセス違反 (pc=0) になった (TextBlock だけのテキスト列ではたまたま動いていた)。`object` で受け取った要素を
+  VisualTreeHelper などに渡すときは、引数の型のインターフェイスを QueryInterface してから渡す (WTableTest)。
+  なお編集できるセルでは、ダブルクリックは編集の開始として処理され DoubleTapped はテーブルまで届かない。
+  ダブルクリックで行を開く表は `isReadOnly = true` にする。
+  E2E テストでは `TouchInput.doubleTap` (InjectTouchInput によるタッチの注入) で実際の DoubleTapped を起こしている。
+  タッチはマウス カーソルを動かさないが、注入した座標にあるウィンドウへ届くため、テスト ウィンドウを一時的に最前面にし、
+  その座標がテスト ウィンドウでなければ注入しない。
