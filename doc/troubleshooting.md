@@ -251,3 +251,13 @@
   out 引数の構造体より小さいバッファを渡すと、ネイティブ側が書き込んだ残りでヒープが壊れ、しばらく後 (終了時など) に落ちる。
   UIElement.ActualOffset は Vector3 (r4×3 = 12 バイト) なので、`Xaml.readFloats(..., IUIElement_get_ActualOffset, 3)` のように
   3 つ分を読む (2 つ分の 8 バイトで読んでいた `XamlElement.actualOffset` を修正した)。out 引数の大きさは winmd の型で確かめる。
+- **リボンの表示オプションのメニュー (右端の山形のボタン) を開くと Microsoft.UI.Xaml.Controls.dll 内のアクセス違反で落ちる**
+  ToggleMenuFlyoutItem / RadioMenuFlyoutItem の既定のインターフェイスは IToggleMenuFlyoutItem / IRadioMenuFlyoutItem で、
+  その vtable には基底の IMenuFlyoutItem のメソッドがない (IRadioMenuFlyoutItem はスロット 9 まで、IToggleMenuFlyoutItem は 7 まで)。
+  リボンはメニュー項目のアイコンを `inspectable` (既定のインターフェイス) に IMenuFlyoutItem の put_Icon (スロット 13) で設定していたため、
+  チェックやラジオの項目では vtable の外の値を関数として呼び、表示オプションのメニュー (表示モードがアイコン付きのラジオ項目) を
+  作った時点で Microsoft.UI.Xaml.Controls.dll / Microsoft.UI.Xaml.dll 内のアクセス違反になった。アイコン付きのチェック可能な
+  メニュー項目 (モデルの isCheckable) や簡略表示のオーバーフローのトグル ボタンでも同じだった。`RibbonMenus.setIcon` は
+  IMenuFlyoutItem (サブメニューは IMenuFlyoutSubItem) を QueryInterface してから put_Icon を呼ぶ (RibbonMenusTest)。
+  派生クラスの W* ラッパーの `inspectable` に基底クラスのインターフェイスのスロットを呼ばず、そのインターフェイスを QueryInterface する
+  (WMenuFlyoutItem の `menuFlyoutItem` と同じ)。
