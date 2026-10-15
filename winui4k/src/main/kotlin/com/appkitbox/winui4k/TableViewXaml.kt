@@ -85,12 +85,17 @@ internal object TableViewXaml {
     /**
      * Returns the content of a DataTemplate for a cell that takes the cell value from the binding path [valuePath] and
      * wraps the app's DataTemplate content [content] so that `{Binding}` becomes that value.
+     *
+     * The wrapper is a ContentControl, not a ContentPresenter: a ContentPresenter sets its own DataContext to its
+     * Content, so its `{Binding $valuePath}` lost the row as its source after the first value and kept showing that
+     * value when the row's values changed or the cell was reused for another row. A ContentControl hands its Content
+     * to the ContentPresenter in its template, which keeps the wrapper's DataContext inherited from the row.
      */
     fun valueTemplate(valuePath: String, content: String): String =
-        "<ContentPresenter Content=\"{Binding $valuePath}\" HorizontalAlignment=\"Stretch\" " +
+        "<ContentControl Content=\"{Binding $valuePath}\" IsTabStop=\"False\" HorizontalAlignment=\"Stretch\" " +
             "HorizontalContentAlignment=\"Stretch\" VerticalContentAlignment=\"Center\">" +
-            "<ContentPresenter.ContentTemplate><DataTemplate>$content</DataTemplate></ContentPresenter.ContentTemplate>" +
-            "</ContentPresenter>"
+            "<ContentControl.ContentTemplate><DataTemplate>$content</DataTemplate></ContentControl.ContentTemplate>" +
+            "</ContentControl>"
 
     /**
      * Calls [onChanged] whenever the [property] of [target] (a DependencyObject) changes

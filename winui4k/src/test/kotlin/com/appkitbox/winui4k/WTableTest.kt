@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.table.AbstractTableModel
 import com.appkitbox.winui4k.table.DefaultTableColumnModel
 import com.appkitbox.winui4k.table.DefaultTableModel
 import com.appkitbox.winui4k.table.RowFilter
@@ -122,6 +123,23 @@ class WTableTest : FunSpec() {
         } finally {
             textBlock.release()
         }
+    }
+
+    /**
+     * The non-empty strings of the TextBlocks under [node], grouped by the view row they are shown in
+     * (TableViewRowInvoker.viewRowOf). Elements outside rows (column headers and recycled elements) are left out.
+     */
+    private fun rowTexts(table: WTable, node: ComPtr = table.dependencyObject): Map<Int, List<String>> {
+        val own = node.queryInterfaceOrNull(XamlInterop.IID_ITextBlock)?.let { textBlock ->
+            textBlock.getString(XamlInterop.ITextBlock_get_Text).also { textBlock.release() }
+        }
+        val result = sortedMapOf<Int, MutableList<String>>()
+        if (!own.isNullOrEmpty()) table.rowInvoker.viewRowOf(node).takeIf { it >= 0 }?.let { result[it] = mutableListOf(own) }
+        for (child in children(node)) {
+            rowTexts(table, child).forEach { (row, texts) -> result.getOrPut(row) { mutableListOf() }.addAll(texts) }
+            child.release()
+        }
+        return result
     }
 
     /** Reads [notifications] on the UI thread until it is not empty (or a few seconds have passed) and returns it. */
@@ -484,6 +502,54 @@ class WTableTest : FunSpec() {
                 it.updateLayout()
                 column.width
             } shouldBe 200.0
+        }
+
+        test("a XAML template column shows the current values after rows are removed, inserted, and updated") {
+            val ids = mutableListOf(0, 1, 2, 3)
+            val model = object : AbstractTableModel() {
+                override fun getRowCount(): Int = ids.size
+
+                override fun getColumnCount(): Int = 2
+
+                override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? = (if (columnIndex == 0) "name " else "value ") + ids[rowIndex]
+            }
+            val table = onUiThreadGet {
+                WTable(model).also { it.columnModel.getColumn(1).cellTemplate = "<TextBlock Text=\"{Binding}\" />" }
+            }
+
+            // Runs change and returns the texts of each shown row, together with the texts each row should show
+            fun shownAfter(change: () -> Unit): Pair<Map<Int, List<String>>, Map<Int, List<String>>> {
+                onUiThread(change)
+                Thread.sleep(300)
+                return onUiThreadGet {
+                    table.updateLayout()
+                    rowTexts(table) to ids.indices.associateWith { listOf("name ${ids[it]}", "value ${ids[it]}") }
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(table)
+            try {
+                listOf(
+                    shownAfter { },
+                    shownAfter {
+                        ids.removeAt(0)
+                        model.fireTableRowsDeleted(0, 0)
+                    },
+                    shownAfter {
+                        ids.add(0, 9)
+                        model.fireTableRowsInserted(0, 0)
+                    },
+                    shownAfter {
+                        ids.replaceAll { it + 10 }
+                        model.fireTableRowsUpdated(0, ids.size - 1)
+                    },
+                    shownAfter {
+                        ids.replaceAll { it + 10 }
+                        model.fireTableDataChanged()
+                    },
+                )
+            } finally {
+                UiTestHarness.detach(table)
+            }.forEach { (shown, expected) -> shown shouldBe expected }
         }
 
         test("for a column with a cellRenderer, the renderer is called with the values of the displayed rows") {

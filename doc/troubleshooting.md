@@ -230,3 +230,9 @@
   E2E テストでは `TouchInput.doubleTap` (InjectTouchInput によるタッチの注入) で実際の DoubleTapped を起こしている。
   タッチはマウス カーソルを動かさないが、注入した座標にあるウィンドウへ届くため、テスト ウィンドウを一時的に最前面にし、
   その座標がテスト ウィンドウでなければ注入しない。
+- **WTable のテンプレート列 (`TableColumn.cellTemplate`、Boolean 列のチェック ボックス) が、行が変わっても古い値 (別の行の値) を表示し続ける**
+  テンプレート列のセルは、行の値を `{Binding c<列>}` で受けてアプリのテンプレートに `{Binding}` として渡す包みで作る。
+  この包みを ContentPresenter にしていたが、ContentPresenter は自分の DataContext を Content (セルの値) に置き換えるため、
+  最初の値を受けた後は `{Binding c<列>}` の参照元が行でなくなり、値の変更 (MapChanged) にもセルの再利用 (別の行への付け替え) にも
+  追従しなかった。包みを ContentControl にすると、Content はテンプレート内の ContentPresenter に渡され、包み自身の DataContext は
+  行のまま残る (WTableTest)。ContentPresenter の Content を DataContext からのバインディングで与えてはならない。
