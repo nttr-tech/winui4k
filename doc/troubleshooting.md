@@ -175,3 +175,8 @@
   なお ContentDialog のテンプレートの ScrollViewer は縦スクロールが無効 (VerticalScrollBarVisibility=Disabled) で、
   ネイティブのコンテンツでもダイアログ自体はスクロールしない。ウィンドウより高くなりうるフォームは WScrollPane に入れて
   `content` に設定する。
+- **WContentDialog の幅が 548 DIP より広がらない (`maxWidth` を設定しても変わらない)**
+  ContentDialog のテンプレートはダイアログ本体 (BackgroundElement) の MaxWidth にテーマ リソース `ContentDialogMaxWidth` (548) を使うため、
+  ContentDialog 自身の FrameworkElement.MaxWidth (`WComponent.maxWidth`) では広がらない。`WContentDialog.dialogMaxWidth` は
+  ダイアログ自身の Resources に `ContentDialogMaxWidth` を入れる。テンプレートは最初の表示のときにこのリソースを読むので、
+  `show` の前に設定する (WContentDialogTest)。

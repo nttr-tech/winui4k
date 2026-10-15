@@ -1,12 +1,15 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
 
@@ -119,6 +122,47 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         get() = ContentDialogButton.of(inspectable.getInt(XamlInterop.IContentDialog_get_DefaultButton))
         set(value) = inspectable.call(XamlInterop.IContentDialog_put_DefaultButton, value.native)
 
+    /**
+     * The maximum width of the dialog (DIP). NaN (the default) keeps the theme's ContentDialogMaxWidth (548); a wide
+     * form needs more. The dialog still sizes itself to its content up to this width, and never beyond the window.
+     *
+     * The inherited [maxWidth] (FrameworkElement.MaxWidth) cannot widen the dialog: its template reads the
+     * ContentDialogMaxWidth theme resource, so this puts that resource in the dialog's own Resources. The template
+     * reads it when the dialog is first shown, so set this before [show].
+     */
+    var dialogMaxWidth: Double = Double.NaN
+        set(value) {
+            field = value
+            putResource(MAX_WIDTH_RESOURCE, if (value.isNaN()) null else value)
+        }
+
+    /** Puts [value] (null removes the key) under [key] in the dialog's own Resources (FrameworkElement.Resources). */
+    private fun putResource(key: String, value: Double?) {
+        val resources = frameworkElement.getPtr(XamlInterop.IFrameworkElement_get_Resources)
+        val map = resources.queryInterface(FoundationInterop.IID_IMap_Object_Object)
+        resources.release()
+        val boxedKey = PropertyValues.boxString(key)
+        try {
+            Ffi.backend.withScope { scope ->
+                val flag = scope.allocate(1, 1)
+                if (value == null) {
+                    map.call(FoundationInterop.IMap_HasKey, boxedKey.ptr, flag)
+                    if (Ffi.backend.memory.getByte(flag, 0) != 0.toByte()) map.call(FoundationInterop.IMap_Remove, boxedKey.ptr)
+                } else {
+                    val boxed = PropertyValues.boxDouble(value)
+                    try {
+                        map.call(FoundationInterop.IMap_Insert, boxedKey.ptr, boxed.ptr, flag)
+                    } finally {
+                        boxed.release()
+                    }
+                }
+            }
+        } finally {
+            boxedKey.release()
+            map.release()
+        }
+    }
+
     init {
         if (title.isNotEmpty()) this.title = title
         if (content != null) this.content = content
@@ -155,5 +199,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     /** Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE]. */
     fun hide() {
         inspectable.call(XamlInterop.IContentDialog_Hide)
+    }
+
+    private companion object {
+        /** The theme resource that ContentDialog's template uses as the MaxWidth of the dialog. */
+        const val MAX_WIDTH_RESOURCE = "ContentDialogMaxWidth"
     }
 }

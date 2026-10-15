@@ -99,6 +99,7 @@ internal object XamlInterop {
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
     const val IFrameworkElement_FindName = 77          // FindName(HSTRING, out Object) — finds an element in the XAML name scope
+    const val IFrameworkElement_get_Resources = 7      // get_Resources(out ResourceDictionary) — the element's own resources
     const val IFrameworkElement_get_Tag = 9            // get_Tag(out Object)
     const val IFrameworkElement_put_Tag = 10           // put_Tag(Object)
     const val IFrameworkElement_get_Name = 33          // get_Name(out HSTRING)
