@@ -142,6 +142,22 @@ class WTableTest : FunSpec() {
         return result
     }
 
+    /** The widths of the cells in each TableViewCellsPanel under [node] (the column headers and every shown row), rounded. */
+    private fun cellWidths(node: ComPtr): List<List<Long>> {
+        if (runtimeClassName(node) == "Microsoft.UI.Xaml.Controls.Tabular.TableViewCellsPanel") {
+            return listOf(
+                children(node).map { cell ->
+                    val element = cell.queryInterface(XamlInterop.IID_IFrameworkElement)
+                    Math.round(element.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth)).also {
+                        element.release()
+                        cell.release()
+                    }
+                },
+            )
+        }
+        return children(node).flatMap { child -> cellWidths(child).also { child.release() } }
+    }
+
     /** Reads [notifications] on the UI thread until it is not empty (or a few seconds have passed) and returns it. */
     private fun <T> awaitNotifications(notifications: () -> List<T>): List<T> {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
@@ -550,6 +566,24 @@ class WTableTest : FunSpec() {
             } finally {
                 UiTestHarness.detach(table)
             }.forEach { (shown, expected) -> shown shouldBe expected }
+        }
+
+        test("the widths of columns given a renderer or a XAML template after they were added are laid out") {
+            val table = onUiThreadGet {
+                WTable(productModel()).also {
+                    it.columnModel.getColumn(1).apply {
+                        cellRenderer = TableCellRenderer { _, value, _, _, _, _ -> WLabel("¥$value") }
+                        preferredWidth = 200.0
+                    }
+                    it.columnModel.getColumn(2).apply {
+                        cellTemplate = "<TextBlock Text=\"{Binding}\" />"
+                        preferredWidth = 150.0
+                    }
+                }
+            }
+            withShownTable(table) {
+                cellWidths(it.dependencyObject).map { cells -> cells.drop(1) }.distinct()
+            } shouldBe listOf(listOf(200L, 150L)) // The same in the header and in every row
         }
 
         test("for a column with a cellRenderer, the renderer is called with the values of the displayed rows") {

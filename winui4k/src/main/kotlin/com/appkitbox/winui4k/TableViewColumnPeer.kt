@@ -55,6 +55,11 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
 
     private val renderer: TableCellRenderer?
 
+    /** Applies the changes of [column] to this native column (a change of how cells are shown rebuilds the column). */
+    private val changeListener: (TableColumn, TableColumn.Change) -> Unit = { _, change ->
+        if (change == TableColumn.Change.CELL) host.rebuild(this) else applyProperties()
+    }
+
     init {
         val modelIndex = column.modelIndex
         val columnClass = host.columnClassOf(modelIndex)
@@ -80,9 +85,7 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
         }
         applyProperties()
         applySortProperties()
-        column.changeListener = { _, change ->
-            if (change == TableColumn.Change.CELL) host.rebuild(this) else applyProperties()
-        }
+        column.changeListener = changeListener
         column.actualWidthProvider = { native.getDouble(TabularInterop.ITableViewColumn_get_ActualWidth) }
         column.sortOrderProvider = { sortOrder() }
     }
@@ -316,9 +319,13 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
     /** The current sort direction (TableViewColumn.SortDirection). */
     fun sortOrder(): SortOrder = sortOrderOf(native.getInt(TabularInterop.ITableViewColumn_get_SortDirection))
 
-    /** The column was removed from the table: detaches the change notification and releases the native reference. */
+    /**
+     * The column was removed from the table: detaches the change notification and releases the native reference.
+     * When the column was rebuilt, the replacement peer of the same [TableColumn] has already registered its own
+     * notification, so that one is left alone (clearing it left the replacement deaf to later changes such as widths).
+     */
     fun dispose() {
-        if (column.changeListener != null) {
+        if (column.changeListener === changeListener) {
             column.changeListener = null
             column.actualWidthProvider = null
             column.sortOrderProvider = null

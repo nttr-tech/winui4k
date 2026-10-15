@@ -236,3 +236,9 @@
   最初の値を受けた後は `{Binding c<列>}` の参照元が行でなくなり、値の変更 (MapChanged) にもセルの再利用 (別の行への付け替え) にも
   追従しなかった。包みを ContentControl にすると、Content はテンプレート内の ContentPresenter に渡され、包み自身の DataContext は
   行のまま残る (WTableTest)。ContentPresenter の Content を DataContext からのバインディングで与えてはならない。
+- **WTable でレンダラーやテンプレートを設定した列の幅 (`preferredWidth`) やその他の列の設定が反映されない**
+  `cellRenderer` / `cellTemplate` / `cellEditor` の変更や `setDefaultRenderer` / `setDefaultEditor` では、ネイティブの列を
+  作り直す (TableViewColumnPeer の rebuild)。古い列の破棄 (dispose) が、同じ TableColumn に先に登録された新しい列の変更通知
+  (changeListener) まで外していたため、作り直した後の幅・見出し・表示などの変更がネイティブの列に届かず、`TableColumn.width` も
+  ActualWidth ではなく preferredWidth (自動幅なら NaN) を返していた。WinUI 側の問題ではなく、列を作ってから
+  レンダラーを設定し、その後で幅を設定する (自然な書き方) と必ず起きていた。現在は自分が登録した通知だけを外す (WTableTest)。
