@@ -193,3 +193,10 @@
   日本語環境の既定の UI フォント (Yu Gothic UI など) は U+005C (バックスラッシュ) を円記号の字形で描く。
   パスを表示する欄は `WTextField.fontFamily` (`WLabel` / `WPasswordField` も同様) に `"Consolas"` や `"Segoe UI"` など
   バックスラッシュの字形を持つフォントを指定する。
+- **ファイル / フォルダーのピッカーを任意のフォルダーで開きたい (SuggestedStartLocation は既知のフォルダーしか選べない)**
+  `PickerLocationId` はドキュメントやダウンロードなどの既知のフォルダーだけである。任意のフォルダーは
+  WinAppSDK 2.x の IFolderPicker2 / IFileOpenPicker2 / IFileSavePicker2 のパス指定を使う:
+  `suggestedFolder` (WFolderPicker / WFileOpenPicker / WFileSavePicker) は毎回そのフォルダーで開き、
+  `suggestedStartFolder` (3 つとも) は Windows がそのピッカーの前回のフォルダーを覚えていないときだけ使われる
+  (以後は前回選んだフォルダーが優先)。どちらも絶対パスで指定し、`suggestedStartLocation` より優先される。
+  優先順位は WinAppSDK のドキュメントに基づき、ダイアログを開く動作は自動テストしていない (値の設定と読み戻しのみ WStoragePickersTest で確認)。

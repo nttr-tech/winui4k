@@ -23,10 +23,11 @@ class WFolderPicker(owner: WFrame) {
         owner,
     )
 
-    init {
-        // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
-        ComLifetime.adopt(this, picker)
-    }
+    // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
+    private val lifetime = ComLifetime.adopt(this, picker)
+
+    /** The IFolderPicker2 view (folders given as paths). */
+    private val picker2: ComPtr by lazy { lifetime.own(picker.queryInterface(StoragePickersInterop.IID_IFolderPicker2)) }
 
     /** How the dialog's list is displayed (FolderPicker.ViewMode). Only applies on the first showing. */
     var viewMode: PickerViewMode
@@ -44,6 +45,24 @@ class WFolderPicker(owner: WFrame) {
         set(value) = Hstring.use(value) { h ->
             picker.call(StoragePickersInterop.IFolderPicker_put_CommitButtonText, h)
         }
+
+    /**
+     * The absolute path of the folder the dialog opens in (FolderPicker.SuggestedFolder). It takes precedence over
+     * [suggestedStartFolder] and [suggestedStartLocation], so the dialog starts there every time. Empty means
+     * unspecified.
+     */
+    var suggestedFolder: String
+        get() = picker2.getString(StoragePickersInterop.IFolderPicker2_get_SuggestedFolder)
+        set(value) = Hstring.use(value) { h -> picker2.call(StoragePickersInterop.IFolderPicker2_put_SuggestedFolder, h) }
+
+    /**
+     * The absolute path of the folder the dialog opens in when Windows has no folder remembered for it yet
+     * (FolderPicker.SuggestedStartFolder); afterwards the folder the user last picked from wins. Takes precedence over
+     * [suggestedStartLocation]. Empty means unspecified.
+     */
+    var suggestedStartFolder: String
+        get() = picker2.getString(StoragePickersInterop.IFolderPicker2_get_SuggestedStartFolder)
+        set(value) = Hstring.use(value) { h -> picker2.call(StoragePickersInterop.IFolderPicker2_put_SuggestedStartFolder, h) }
 
     /**
      * Opens the folder-selection dialog (FolderPicker.PickSingleFolderAsync).

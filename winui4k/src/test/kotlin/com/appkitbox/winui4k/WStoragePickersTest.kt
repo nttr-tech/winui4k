@@ -76,6 +76,41 @@ class WStoragePickersTest : FunSpec() {
             } shouldBe folder
         }
 
+        test("WFolderPicker suggestedFolder and suggestedStartFolder read back the paths that were set") {
+            val folder = System.getProperty("java.io.tmpdir").trimEnd('\\')
+            val start = System.getProperty("user.home").trimEnd('\\')
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFolderPicker(frame)
+                val initial = picker.suggestedFolder to picker.suggestedStartFolder
+                picker.suggestedFolder = folder
+                picker.suggestedStartFolder = start
+                listOf(initial, picker.suggestedFolder to picker.suggestedStartFolder)
+            } shouldContainExactly listOf("" to "", folder to start)
+        }
+
+        test("WFileOpenPicker suggestedFolder and suggestedStartFolder read back the paths that were set") {
+            val folder = System.getProperty("java.io.tmpdir").trimEnd('\\')
+            val start = System.getProperty("user.home").trimEnd('\\')
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFileOpenPicker(frame)
+                picker.suggestedFolder = folder
+                picker.suggestedStartFolder = start
+                picker.suggestedFolder to picker.suggestedStartFolder
+            } shouldBe (folder to start)
+        }
+
+        test("WFileSavePicker suggestedStartFolder reads back the path that was set") {
+            val start = System.getProperty("user.home").trimEnd('\\')
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFileSavePicker(frame)
+                picker.suggestedStartFolder = start
+                picker.suggestedStartFolder
+            } shouldBe start
+        }
+
         test("WFileSavePicker accepts file type choices (display name + extension list)") {
             // FileTypeChoices has no read-back API, so verify that IMap.Insert (passing a
             // StringVector as the value) succeeds without an HRESULT exception

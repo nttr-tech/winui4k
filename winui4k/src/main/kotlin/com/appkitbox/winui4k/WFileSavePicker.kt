@@ -26,10 +26,11 @@ class WFileSavePicker(owner: WFrame) {
         owner,
     )
 
-    init {
-        // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
-        ComLifetime.adopt(this, picker)
-    }
+    // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
+    private val lifetime = ComLifetime.adopt(this, picker)
+
+    /** The IFileSavePicker2 view (folders given as paths). */
+    private val picker2: ComPtr by lazy { lifetime.own(picker.queryInterface(StoragePickersInterop.IID_IFileSavePicker2)) }
 
     /** The folder shown first (FileSavePicker.SuggestedStartLocation). Only applies on the first showing. */
     var suggestedStartLocation: PickerLocationId
@@ -42,6 +43,15 @@ class WFileSavePicker(owner: WFrame) {
         set(value) = Hstring.use(value) { h ->
             picker.call(StoragePickersInterop.IFileSavePicker_put_CommitButtonText, h)
         }
+
+    /**
+     * The absolute path of the folder the dialog opens in when Windows has no folder remembered for it yet
+     * (FileSavePicker.SuggestedStartFolder); afterwards the folder the user last picked from wins. Takes precedence over
+     * [suggestedStartLocation]. Empty means unspecified.
+     */
+    var suggestedStartFolder: String
+        get() = picker2.getString(StoragePickersInterop.IFileSavePicker2_get_SuggestedStartFolder)
+        set(value) = Hstring.use(value) { h -> picker2.call(StoragePickersInterop.IFileSavePicker2_put_SuggestedStartFolder, h) }
 
     /** The extension selected by default in "Save as type" (FileSavePicker.DefaultFileExtension). ".txt" form. */
     var defaultFileExtension: String

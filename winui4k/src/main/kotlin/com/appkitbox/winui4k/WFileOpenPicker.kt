@@ -32,10 +32,11 @@ class WFileOpenPicker(owner: WFrame) {
         owner,
     )
 
-    init {
-        // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
-        ComLifetime.adopt(this, picker)
-    }
+    // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
+    private val lifetime = ComLifetime.adopt(this, picker)
+
+    /** The IFileOpenPicker2 view (folders given as paths). */
+    private val picker2: ComPtr by lazy { lifetime.own(picker.queryInterface(StoragePickersInterop.IID_IFileOpenPicker2)) }
 
     /** How the dialog's file list is displayed (FileOpenPicker.ViewMode). */
     var viewMode: PickerViewMode
@@ -53,6 +54,24 @@ class WFileOpenPicker(owner: WFrame) {
         set(value) = Hstring.use(value) { h ->
             picker.call(StoragePickersInterop.IFileOpenPicker_put_CommitButtonText, h)
         }
+
+    /**
+     * The absolute path of the folder the dialog opens in (FileOpenPicker.SuggestedFolder). It takes precedence over
+     * [suggestedStartFolder] and [suggestedStartLocation], so the dialog starts there every time. Empty means
+     * unspecified.
+     */
+    var suggestedFolder: String
+        get() = picker2.getString(StoragePickersInterop.IFileOpenPicker2_get_SuggestedFolder)
+        set(value) = Hstring.use(value) { h -> picker2.call(StoragePickersInterop.IFileOpenPicker2_put_SuggestedFolder, h) }
+
+    /**
+     * The absolute path of the folder the dialog opens in when Windows has no folder remembered for it yet
+     * (FileOpenPicker.SuggestedStartFolder); afterwards the folder the user last picked from wins. Takes precedence over
+     * [suggestedStartLocation]. Empty means unspecified.
+     */
+    var suggestedStartFolder: String
+        get() = picker2.getString(StoragePickersInterop.IFileOpenPicker2_get_SuggestedStartFolder)
+        set(value) = Hstring.use(value) { h -> picker2.call(StoragePickersInterop.IFileOpenPicker2_put_SuggestedStartFolder, h) }
 
     /** The current list of file types (a snapshot of FileOpenPicker.FileTypeFilter). */
     val fileTypeFilter: List<String>
