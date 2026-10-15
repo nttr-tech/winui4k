@@ -211,3 +211,11 @@
   ItemsSource が null のまま残る (TableView の ItemsSource や行のコレクションはそのままで、行を追加しても表示されない)。
   WTable は IsLoaded が true のまま届いた Unloaded を古いものとみなし、次のターンで ItemsSource を一度 null にしてから
   設定し直す (同じ値の設定だけでは TableView は何もしない。選択行は保たれる。WTableTest)。
+- **ネイティブの親に入れた WLayoutPanel が、親の幅に広がらず希望の幅 (preferredSize) のまま固まる**
+  親が WLayoutPanel でないパネルは、ActualWidth が 0 のときのレイアウトを「親が大きさをくれない」と判断して
+  preferredSize を Width に設定していた (自己サイズ化)。この判断は一度で固定されていたため、親がまだ配置する前
+  (折りたたまれた親の中・開いたばかりのポップアップの中など) にレイアウトが走ると、その後に親が引き伸ばしても
+  希望の幅のまま残った (幅の広い表の列があると、ページが画面より広くなる)。現在は親の提示 (GetAvailableSize)・枠
+  (GetLayoutSlot)・HorizontalAlignment / VerticalAlignment から毎回判断し直し、自己サイズ化をやめたら設定した
+  Width / Height を外す。まだ大きさがないだけのとき (STRETCH で ActualWidth が 0) は、そのレイアウトだけ preferredSize で
+  子を並べて Width は設定しない (WLayoutPanelTest)。

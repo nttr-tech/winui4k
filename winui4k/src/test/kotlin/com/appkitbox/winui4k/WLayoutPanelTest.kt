@@ -239,6 +239,38 @@ class WLayoutPanelTest : FunSpec() {
             }
         }
 
+        test("a WLayoutPanel laid out while its native parent gave it no size takes the parent's size once it gives one") {
+            val panel = onUiThreadGet {
+                // A child with an explicit size (a collapsed subtree measures as 0x0, which this test is not about)
+                val wide = WLabel("Wide").also {
+                    it.width = NARROW * 3
+                    it.height = 20.0
+                }
+                WLayoutPanel(RowLayout()).also { it.add(wide) }
+            }
+            val grid = onUiThreadGet {
+                WGrid().also {
+                    it.width = NARROW
+                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.isVisible = false // A collapsed parent arranges the panel at 0x0
+                    it.add(panel)
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(grid)
+            try {
+                settle(grid)
+                onUiThread { grid.isVisible = true }
+                eventually(LAYOUT_TIMEOUT) {
+                    settle(grid)
+                    val (preferred, actual) = onUiThreadGet { panel.preferredSize().width to panel.actualWidth }
+                    preferred shouldBeGreaterThan NARROW
+                    actual shouldBe (NARROW plusOrMinus 1.0)
+                }
+            } finally {
+                UiTestHarness.detach(grid)
+            }
+        }
+
         test("setting the same text again does not schedule another layout") {
             val label = onUiThreadGet { WLabel("same") }
             onUiThreadGet {
@@ -258,5 +290,8 @@ class WLayoutPanelTest : FunSpec() {
 
         /** The size of the viewport of the ScrollViewer test. */
         const val VIEWPORT = 100.0
+
+        /** The width of a native parent narrower than the panel's preferred width. */
+        const val NARROW = 120.0
     }
 }
