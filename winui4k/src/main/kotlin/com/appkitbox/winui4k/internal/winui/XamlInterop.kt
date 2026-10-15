@@ -2276,6 +2276,12 @@ internal object XamlInterop {
     const val ITappedRoutedEventArgs_put_Handled = 8
     const val ITappedRoutedEventArgs_GetPosition = 9   // GetPosition(UIElement relativeTo, out Point) — out of r4×2
 
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.LayoutInformation (statics) ----
+    const val CLS_LayoutInformation = "Microsoft.UI.Xaml.Controls.Primitives.LayoutInformation"
+    const val IID_ILayoutInformationStatics = "8ddb192d-b7ff-5307-acf4-d4e547da5815"
+    const val ILayoutInformationStatics_GetLayoutSlot = 7 // GetLayoutSlot(FrameworkElement, out Rect) — the last arrange's slot (r4×4)
+    const val ILayoutInformationStatics_GetAvailableSize = 8 // GetAvailableSize(UIElement, out Size) — the last measure's constraint
+
     // ---- Microsoft.UI.Xaml.Input.FocusManager (statics) ----
     const val CLS_FocusManager = "Microsoft.UI.Xaml.Input.FocusManager"
     const val IID_IFocusManagerStatics = "e73dce04-e23a-5fb3-96ab-7df04c51dff2"

@@ -75,7 +75,11 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             boxed.release()
         }
 
-    /** The dialog's content (ContentControl.Content). */
+    /**
+     * The dialog's content (ContentControl.Content). The dialog does not scroll its content (the template's
+     * ScrollViewer has vertical scrolling disabled), so content that may be taller than the window, such as a long
+     * form, should be wrapped in a [WScrollPane].
+     */
     var content: WComponent? = null
         set(value) {
             field = value

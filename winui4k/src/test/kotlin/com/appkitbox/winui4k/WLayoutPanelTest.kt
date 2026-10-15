@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
@@ -32,6 +33,48 @@ class WLayoutPanelTest : FunSpec() {
                 parent.setBounds(child, x, 0.0, size.width, size.height)
                 x += size.width
             }
+        }
+    }
+
+    /** Stacks the children at their preferred sizes from the top, each stretched to the panel's width. */
+    private class ColumnLayout : WLayoutManager {
+        override fun preferredLayoutSize(parent: WLayoutPanel): WSize {
+            val sizes = parent.layoutChildren.map { it.preferredSize() }
+            return WSize(sizes.maxOfOrNull { it.width } ?: 0.0, sizes.sumOf { it.height })
+        }
+
+        override fun layoutContainer(parent: WLayoutPanel) {
+            var y = 0.0
+            for (child in parent.layoutChildren) {
+                val size = child.preferredSize()
+                parent.setBounds(child, 0.0, y, parent.layoutSize.width, size.height)
+                y += size.height
+            }
+        }
+    }
+
+    /** A panel of [rows] labels stacked by a [ColumnLayout]. */
+    private fun column(rows: Int): WLayoutPanel = onUiThreadGet {
+        WLayoutPanel(ColumnLayout()).also { panel ->
+            repeat(rows) { panel.add(WLabel("Row $it of a form that is laid out by a WLayoutPanel")) }
+        }
+    }
+
+    /** Shows [content] in a WContentDialog and runs [check] until it passes (each time after a layout pass), then hides it. */
+    private suspend fun showInDialog(content: WComponent, check: () -> Unit) {
+        val owner = onUiThreadGet { WLabel("owner") }
+        UiTestHarness.attachAndAwaitLoaded(owner)
+        val dialog = onUiThreadGet { WContentDialog("Form", content).also { it.closeButtonText = "Close" } }
+        try {
+            onUiThread { dialog.show(owner) }
+            eventually(LAYOUT_TIMEOUT) {
+                settle(dialog)
+                check()
+            }
+        } finally {
+            onUiThread { dialog.hide() }
+            settle()
+            UiTestHarness.detach(owner)
         }
     }
 
@@ -138,6 +181,64 @@ class WLayoutPanelTest : FunSpec() {
             }
         }
 
+        test("a WLayoutPanel in a ScrollViewer gets its preferred height, so the viewer can scroll it") {
+            val panel = column(TALL_ROWS)
+            val scroll = onUiThreadGet {
+                WScrollPane(panel).also {
+                    it.width = VIEWPORT
+                    it.height = VIEWPORT
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(scroll)
+            try {
+                eventually(LAYOUT_TIMEOUT) {
+                    settle(scroll)
+                    val (preferred, actual) = onUiThreadGet { panel.preferredSize().height to panel.actualHeight }
+                    preferred shouldBeGreaterThan VIEWPORT * 2
+                    actual shouldBe (preferred plusOrMinus 1.0)
+                    onUiThreadGet { scroll.inspectable.getDouble(XamlInterop.IScrollViewer_get_ScrollableHeight) } shouldBeGreaterThan VIEWPORT
+                }
+            } finally {
+                UiTestHarness.detach(scroll)
+            }
+        }
+
+        test("a WLayoutPanel in a vertical StackPanel keeps its preferred size") {
+            val panel = column(SHORT_ROWS)
+            val stack = onUiThreadGet { WPanel().also { it.add(panel) } }
+            UiTestHarness.attachAndAwaitLoaded(stack)
+            try {
+                eventually(LAYOUT_TIMEOUT) {
+                    settle(stack)
+                    val (preferred, actual) = onUiThreadGet { panel.preferredSize() to WSize(panel.actualWidth, panel.actualHeight) }
+                    preferred.height shouldBeGreaterThan 0.0
+                    actual.height shouldBe (preferred.height plusOrMinus 1.0)
+                }
+            } finally {
+                UiTestHarness.detach(stack)
+            }
+        }
+
+        test("a WLayoutPanel as the content of a WContentDialog gets its preferred size instead of being clipped") {
+            val panel = column(SHORT_ROWS)
+            showInDialog(panel) {
+                val (preferred, actual) = onUiThreadGet { panel.preferredSize() to WSize(panel.actualWidth, panel.actualHeight) }
+                preferred.height shouldBeGreaterThan 0.0
+                actual.height shouldBe (preferred.height plusOrMinus 1.0)
+                actual.width shouldBeGreaterThan preferred.width - 1.0
+            }
+        }
+
+        test("a WLayoutPanel taller than a WContentDialog scrolls in a WScrollPane (the dialog itself does not scroll)") {
+            val panel = column(TALL_ROWS)
+            val scroll = onUiThreadGet { WScrollPane(panel) }
+            showInDialog(scroll) {
+                val (preferred, actual) = onUiThreadGet { panel.preferredSize().height to panel.actualHeight }
+                actual shouldBe (preferred plusOrMinus 1.0)
+                onUiThreadGet { scroll.inspectable.getDouble(XamlInterop.IScrollViewer_get_ScrollableHeight) } shouldBeGreaterThan 0.0
+            }
+        }
+
         test("setting the same text again does not schedule another layout") {
             val label = onUiThreadGet { WLabel("same") }
             onUiThreadGet {
@@ -150,5 +251,12 @@ class WLayoutPanelTest : FunSpec() {
     private companion object {
         /** How long the nested layouts may take to settle (each level's layout is posted to the UI thread). */
         val LAYOUT_TIMEOUT = 5.seconds
+
+        /** Rows that fit in a dialog, and rows far taller than any window (and than [VIEWPORT]). */
+        const val SHORT_ROWS = 6
+        const val TALL_ROWS = 80
+
+        /** The size of the viewport of the ScrollViewer test. */
+        const val VIEWPORT = 100.0
     }
 }

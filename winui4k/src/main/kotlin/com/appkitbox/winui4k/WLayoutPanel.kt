@@ -1,6 +1,8 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
@@ -10,10 +12,14 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * its children) — the manager's computed position is applied to each child via Canvas.SetLeft/
  * SetTop, and its computed size via Width/Height.
  *
- * Canvas always reports its own DesiredSize as 0x0, so in contexts where the parent can't assign
- * it a size (e.g. inside a WPanel), [preferredSize] is applied to itself to determine its own
- * size. Once that happens, it keeps sizing itself this way going forward (it won't follow a
- * parent's STRETCH).
+ * Canvas always reports its own DesiredSize as 0x0, so a native (non-WLayoutPanel) parent that
+ * sizes its content by DesiredSize would not give it room. In a dimension where the parent
+ * measures without a limit (e.g. the vertical direction of a ScrollViewer or a vertical WPanel) or
+ * gives it nothing, [preferredSize] is applied to itself as Width/Height. In a dimension where the
+ * parent offers more than it gives (e.g. a ContentDialog sizing itself to its content), the
+ * preferred size, capped at the offered size, is set as MinWidth/MinHeight so it becomes the
+ * DesiredSize. Once either happens, it keeps sizing itself this way going forward (a self-sized
+ * dimension won't follow a parent's STRETCH).
  *
  * When a child's content (e.g. its text) changes and its natural size changes with it, call that
  * child's [WComponent.invalidateNaturalSize] and this panel's [revalidate].
@@ -59,6 +65,10 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     /** Records which dimensions were self-sized via preferredSize because the parent didn't assign a size. */
     private var selfSizedWidth = false
     private var selfSizedHeight = false
+
+    /** Records which dimensions request the preferred size from a native parent via MinWidth / MinHeight. */
+    private var minSizedWidth = false
+    private var minSizedHeight = false
 
     /**
      * The size assigned by the parent WLayoutPanel via [setBounds]. null means unassigned (a
@@ -192,8 +202,15 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
             //    down, e.g. inside a WPanel) applies self-sizing, and from then on that dimension
             //    keeps tracking the preferred size as the content changes
             val assigned = assignedSize
-            if (assigned != null || !width.isNaN()) selfSizedWidth = false
-            if (assigned != null || !height.isNaN()) selfSizedHeight = false
+            if (assigned != null || !width.isNaN()) {
+                selfSizedWidth = false
+                minSizedWidth = false
+            }
+            if (assigned != null || !height.isNaN()) {
+                selfSizedHeight = false
+                minSizedHeight = false
+            }
+            withdrawMinSizeRequests()
             var containerWidth = when {
                 !width.isNaN() -> width
                 assigned != null -> assigned.width
@@ -204,16 +221,21 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
                 assigned != null -> assigned.height
                 else -> actualHeight
             }
-            if (loaded && assigned == null) {
-                if (width.isNaN() && containerWidth <= 0.0) selfSizedWidth = true
-                if (height.isNaN() && containerHeight <= 0.0) selfSizedHeight = true
-            }
-            if (selfSizedWidth || selfSizedHeight || containerWidth <= 0.0 || containerHeight <= 0.0) {
+            //    A native parent's offer (LayoutInformation.GetAvailableSize) tells how it sizes this panel: an
+            //    unlimited offer means it sizes the content by DesiredSize (self-size), and an offer larger than
+            //    the slot it arranged this panel in means it would give more if asked (request it via MinWidth /
+            //    MinHeight). A parent that stretches this panel (e.g. a window) arranges it in the whole offer
+            val available = if (loaded && assigned == null) availableSize() else null
+            if (available != null) classifyNativeParent(available, containerWidth, containerHeight)
+            if (selfSizedWidth || selfSizedHeight || containerWidth <= 0.0 || containerHeight <= 0.0 ||
+                (available != null && (minSizedWidth || minSizedHeight))
+            ) {
                 val preferred = manager.preferredLayoutSize(this)
                 if (selfSizedWidth || containerWidth <= 0.0) containerWidth = preferred.width
                 if (selfSizedHeight || containerHeight <= 0.0) containerHeight = preferred.height
                 if (selfSizedWidth) applyWidth(containerWidth)
                 if (selfSizedHeight) applyHeight(containerHeight)
+                if (available != null) requestPreferredSize(preferred, available)
             }
             layoutSize = WSize(containerWidth, containerHeight)
 
@@ -228,7 +250,93 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         }
     }
 
+    /**
+     * Decides, per dimension, how a native parent sizes this panel from what it offered ([available]) and arranged:
+     * nothing given or an unlimited offer → self-size, an offer larger than the arranged slot → request via MinWidth /
+     * MinHeight. Both are sticky; a dimension with an explicit size is left alone.
+     */
+    private fun classifyNativeParent(available: WSize, containerWidth: Double, containerHeight: Double) {
+        val slot = layoutSlot()
+        if (width.isNaN() && !selfSizedWidth) {
+            if (containerWidth <= 0.0 || available.width.isInfinite()) {
+                selfSizedWidth = true
+            } else if (available.width > slot.width + SIZE_TOLERANCE) {
+                minSizedWidth = true
+            }
+        }
+        if (height.isNaN() && !selfSizedHeight) {
+            if (containerHeight <= 0.0 || available.height.isInfinite()) {
+                selfSizedHeight = true
+            } else if (available.height > slot.height + SIZE_TOLERANCE) {
+                minSizedHeight = true
+            }
+        }
+    }
+
+    /** The size the parent offered in its last measure (LayoutInformation.GetAvailableSize; infinite if unlimited). */
+    private fun availableSize(): WSize {
+        val size = Xaml.readPoint(layoutInformation, XamlInterop.ILayoutInformationStatics_GetAvailableSize, uiElement.ptr)
+        return WSize(size[0], size[1])
+    }
+
+    /** The size of the slot the parent arranged this panel in last time (LayoutInformation.GetLayoutSlot, margins included). */
+    private fun layoutSlot(): WSize = Ffi.backend.withScope { scope ->
+        val rect = scope.allocate(RECT_BYTES)
+        layoutInformation.call(XamlInterop.ILayoutInformationStatics_GetLayoutSlot, frameworkElement.ptr, rect)
+        val memory = Ffi.backend.memory
+        WSize(Float.fromBits(memory.getInt(rect, 8)).toDouble(), Float.fromBits(memory.getInt(rect, 12)).toDouble())
+    }
+
+    /** The MinWidth / MinHeight last written by [requestPreferredSize] (0 = not requested). */
+    private var requestedMinWidth = 0.0
+    private var requestedMinHeight = 0.0
+
+    /**
+     * Makes a native parent that sizes this panel by its DesiredSize give it the [preferred] size: a Canvas measures
+     * as 0x0, but FrameworkElement raises the DesiredSize to MinWidth / MinHeight. The request is capped at the size
+     * the parent offers ([available]), so the panel still gets no more than the parent can give.
+     */
+    private fun requestPreferredSize(preferred: WSize, available: WSize) {
+        if (minSizedWidth && !selfSizedWidth) {
+            val value = minOf(preferred.width, available.width)
+            if (value != requestedMinWidth) {
+                requestedMinWidth = value
+                frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, value)
+            }
+        }
+        if (minSizedHeight && !selfSizedHeight) {
+            val value = minOf(preferred.height, available.height)
+            if (value != requestedMinHeight) {
+                requestedMinHeight = value
+                frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, value)
+            }
+        }
+    }
+
+    /** Clears MinWidth / MinHeight written by [requestPreferredSize] in a dimension that no longer requests a size. */
+    private fun withdrawMinSizeRequests() {
+        if (!minSizedWidth && requestedMinWidth != 0.0) {
+            requestedMinWidth = 0.0
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, 0.0)
+        }
+        if (!minSizedHeight && requestedMinHeight != 0.0) {
+            requestedMinHeight = 0.0
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, 0.0)
+        }
+    }
+
     private companion object {
+        /** Differences below this (DIP) are rounding to physical pixels, not a parent that would give more. */
+        const val SIZE_TOLERANCE = 1.0
+
+        /** The size of Windows.Foundation.Rect (X, Y, Width, Height as r4). */
+        const val RECT_BYTES = 16L
+
+        /** LayoutInformation statics (the size a parent offered in its last measure). */
+        val layoutInformation: ComPtr by lazy {
+            Activation.factory(XamlInterop.CLS_LayoutInformation, XamlInterop.IID_ILayoutInformationStatics)
+        }
+
         fun WComponent.isManagedLayoutPanel(): Boolean = this is WLayoutPanel && layout != null
 
         /** Attached-property operations for Canvas (ICanvasStatics). */

@@ -164,3 +164,14 @@
   DependencyObject.ClearValue で `XxxProperty` のローカル値を消す (`WComponent.clearValue`、WLabelTest / WChartTest)。
   Border.Background・SwipeItem.Background・チャートの軸のブラシなど既定値が null でスタイルも設定しないプロパティは、
   null の put でも既定に戻る。
+- **WContentDialog や ScrollViewer に入れた WLayoutPanel が 2 行ほどに切れる / スクロールしない**
+  WLayoutPanel の土台の Canvas は常に DesiredSize 0x0 を報告するため、内容の DesiredSize で大きさを決めるネイティブの親
+  (ContentDialog・ScrollViewer・縦の StackPanel など) は最小の大きさしか与えず、ActualHeight が 0 でないので自分の
+  preferredSize を使う自己サイズ化も働かなかった。現在は LayoutInformation.GetAvailableSize (親が measure で提示した大きさ) と
+  GetLayoutSlot (実際に arrange された枠) で親の振る舞いを判定し、提示が無制限 (ScrollViewer の縦方向など) なら
+  preferredSize を Width / Height に設定し、提示が枠より大きい (ContentDialog の幅・高さなど) なら preferredSize を
+  提示の大きさで頭打ちにして MinWidth / MinHeight に設定する (FrameworkElement は DesiredSize を Min* まで引き上げる)。
+  ウィンドウのように提示どおりの枠に引き伸ばす親では何も設定しないので、ウィンドウを縮めればレイアウトも縮む (WLayoutPanelTest)。
+  なお ContentDialog のテンプレートの ScrollViewer は縦スクロールが無効 (VerticalScrollBarVisibility=Disabled) で、
+  ネイティブのコンテンツでもダイアログ自体はスクロールしない。ウィンドウより高くなりうるフォームは WScrollPane に入れて
+  `content` に設定する。
