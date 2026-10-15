@@ -158,3 +158,9 @@
   (`Xaml.moveFocusVertically`、WRibbonTest)。
   キーのイベント ハンドラーが失敗の HRESULT を返すと XAML は未処理のエラーとしてプロセスごと終了させるため、
   `XamlElement` のキーのハンドラーは例外を stderr に出すだけで XAML へは返さない。
+- **`WLabel.foreground = null` で文字が消える (既定の色に戻らない)**
+  Brush 型のプロパティに null を put すると「ローカル値 = null のブラシ」になり、親から継承する TextBlock.Foreground や
+  スタイルが設定する Control.Foreground / Background が効かなくなる (文字は描かれない)。既定 (テーマ) の値に戻すには
+  DependencyObject.ClearValue で `XxxProperty` のローカル値を消す (`WComponent.clearValue`、WLabelTest / WChartTest)。
+  Border.Background・SwipeItem.Background・チャートの軸のブラシなど既定値が null でスタイルも設定しないプロパティは、
+  null の put でも既定に戻る。

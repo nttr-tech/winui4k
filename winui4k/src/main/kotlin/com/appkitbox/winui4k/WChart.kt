@@ -95,24 +95,32 @@ class WChart : WControl(create()) {
     private val control: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IControl)) }
 
     /**
-     * The background color of the whole chart (Control.Background). Until it is set, the theme's default background
-     * is used; setting null draws no background (Background = null).
+     * The background color of the whole chart (Control.Background). Null (the initial value) uses the theme's default
+     * background; setting null clears the color again. For no background, set a transparent color (alpha 0).
      */
     var background: WColor? = null
         set(value) {
             field = value
-            control.putColor(XamlInterop.IControl_put_Background, value)
+            if (value == null) {
+                clearValue(XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics, XamlInterop.IControlStatics_get_BackgroundProperty)
+            } else {
+                control.putColor(XamlInterop.IControl_put_Background, value)
+            }
         }
 
     /**
      * The text color of the legend (title and series names) (Control.Foreground). Until it is set, the theme's default
      * color is used. The color of axis tick labels is specified per axis with [CartesianAxis.tickLabelColor] (this
-     * color does not apply to them).
+     * color does not apply to them). Setting null restores the theme's default color.
      */
     var foreground: WColor? = null
         set(value) {
             field = value
-            control.putColor(XamlInterop.IControl_put_Foreground, value)
+            if (value == null) {
+                clearValue(XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics, XamlInterop.IControlStatics_get_ForegroundProperty)
+            } else {
+                control.putColor(XamlInterop.IControl_put_Foreground, value)
+            }
         }
 
     /** The number of series. */

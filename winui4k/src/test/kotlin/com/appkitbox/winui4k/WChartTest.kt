@@ -31,6 +31,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -115,6 +116,34 @@ class WChartTest : FunSpec() {
                     control.release()
                 }
             } shouldBe listOf(listOf(255, 11, 26, 42), listOf(255, 255, 255, 255))
+        }
+
+        test("setting background and foreground to null restores the default brushes instead of removing them") {
+            onUiThreadGet {
+                val default = WChart().let { fresh ->
+                    val control = fresh.inspectable.queryInterface(XamlInterop.IID_IControl)
+                    try {
+                        listOf(control.brushColor(XamlInterop.IControl_get_Background), control.brushColor(XamlInterop.IControl_get_Foreground))
+                    } finally {
+                        control.release()
+                    }
+                }
+                val chart = WChart()
+                chart.background = WColor(11, 26, 42)
+                chart.foreground = WColor.WHITE
+                chart.background = null
+                chart.foreground = null
+                val control = chart.inspectable.queryInterface(XamlInterop.IID_IControl)
+                val restored = try {
+                    listOf(control.brushColor(XamlInterop.IControl_get_Background), control.brushColor(XamlInterop.IControl_get_Foreground))
+                } finally {
+                    control.release()
+                }
+                restored to default
+            }.let { (restored, default) ->
+                default[1] shouldNotBe null
+                restored shouldBe default
+            }
         }
 
         test("addSeries adds the series to Chart.Series and registers the axes it uses in Chart.Axes without duplicates") {

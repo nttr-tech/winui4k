@@ -276,6 +276,7 @@ internal object XamlInterop {
     const val ITextBlock_get_FontFamily = 8            // get_FontFamily(out FontFamily)
     const val ITextBlock_put_FontFamily = 9            // put_FontFamily(FontFamily)
     const val ITextBlock_put_FontWeight = 11           // put_FontWeight(FontWeight { u2 Weight } passed by value)
+    const val ITextBlock_get_Foreground = 18           // get_Foreground(out Brush)
     const val ITextBlock_put_Foreground = 19           // put_Foreground(Brush)
     const val ITextBlock_get_TextWrapping = 20         // get_TextWrapping(out TextWrapping)
     const val ITextBlock_put_TextWrapping = 21         // put_TextWrapping(TextWrapping)
@@ -288,6 +289,8 @@ internal object XamlInterop {
     const val ITextBlock_get_Inlines = 28              // get_Inlines(out InlineCollection)
     const val ITextBlock_get_IsTextSelectionEnabled = 35 // get_IsTextSelectionEnabled(out boolean)
     const val ITextBlock_put_IsTextSelectionEnabled = 36 // put_IsTextSelectionEnabled(boolean)
+    const val IID_ITextBlockStatics = "3187104b-65c2-5e53-b889-c8272b1314cd"
+    const val ITextBlockStatics_get_ForegroundProperty = 12 // get_ForegroundProperty(out DependencyProperty)
 
     // ---- Microsoft.UI.Xaml.Media.FontFamily ----
     const val CLS_FontFamily = "Microsoft.UI.Xaml.Media.FontFamily"
@@ -467,7 +470,11 @@ internal object XamlInterop {
     const val IID_IInline = "813d427a-8980-5a79-a8fa-f27919cfb24f"  // used to shape IVector<Inline>
 
     // ---- Microsoft.UI.Xaml.Controls.Control ----
+    const val CLS_Control = "Microsoft.UI.Xaml.Controls.Control"
     const val IID_IControl = "857d6e8a-d45a-5c69-a99c-bf6a5c54fb38"
+    const val IID_IControlStatics = "c3ae388d-aa36-5e10-acac-98415f47bcc7"
+    const val IControlStatics_get_ForegroundProperty = 15 // get_ForegroundProperty(out DependencyProperty)
+    const val IControlStatics_get_BackgroundProperty = 23 // get_BackgroundProperty(out DependencyProperty)
     const val IControl_get_IsEnabled = 28              // get_IsEnabled(out boolean)
     const val IControl_put_IsEnabled = 29              // put_IsEnabled(boolean)
     const val IControl_put_FontWeight = 17             // put_FontWeight(FontWeight) — struct passed by value
@@ -1635,6 +1642,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.IDependencyObject (target of attached properties) ----
     const val IID_IDependencyObject = "e7beaee7-160e-50f7-8789-d63463f979fa"
     const val IDependencyObject_SetValue = 7           // SetValue(DependencyProperty, object)
+    const val IDependencyObject_ClearValue = 8         // ClearValue(DependencyProperty) — back to the style / inherited / default value
     const val IDependencyObject_RegisterPropertyChangedCallback = 11 // (DependencyProperty, DependencyPropertyChangedCallback, out i8 token)
 
     /** delegate DependencyPropertyChangedCallback(DependencyObject sender, DependencyProperty dp) — Invoke is vtbl[3] */

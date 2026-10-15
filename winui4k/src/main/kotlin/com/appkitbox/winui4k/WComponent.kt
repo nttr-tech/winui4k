@@ -135,6 +135,26 @@ abstract class WComponent internal constructor(
         own(inspectable.queryInterface(XamlInterop.IID_IDependencyObject))
     }
 
+    /**
+     * Clears the local value of a dependency property (DependencyObject.ClearValue), so the value from the style, the
+     * parent (inherited properties such as Foreground), or the default applies again. Setting a null brush instead
+     * would keep a local value of null that hides text. [propertySlot] is a get_XxxProperty slot of [staticsIid] on the
+     * class [className].
+     */
+    internal fun clearValue(className: String, staticsIid: String, propertySlot: Int) {
+        val statics = Activation.factory(className, staticsIid)
+        val property = try {
+            statics.getPtr(propertySlot)
+        } finally {
+            statics.release()
+        }
+        try {
+            dependencyObject.call(XamlInterop.IDependencyObject_ClearValue, property.ptr)
+        } finally {
+            property.release()
+        }
+    }
+
     var width: Double = Double.NaN
         set(value) {
             field = value

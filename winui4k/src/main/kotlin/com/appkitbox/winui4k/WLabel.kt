@@ -154,12 +154,15 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         inspectable.call(XamlInterop.ITextBlock_put_TextDecorations, if (on) current or flag else current and flag.inv())
     }
 
-    /** Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null restores the default color. */
+    /**
+     * Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null clears the local value,
+     * so the text gets the inherited (theme) color again.
+     */
     var foreground: WColor? = null
         set(value) {
             field = value
             if (value == null) {
-                inspectable.call(XamlInterop.ITextBlock_put_Foreground, null)
+                clearValue(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlockStatics, XamlInterop.ITextBlockStatics_get_ForegroundProperty)
             } else {
                 val brush = value.createBrush()
                 inspectable.call(XamlInterop.ITextBlock_put_Foreground, brush.ptr)
