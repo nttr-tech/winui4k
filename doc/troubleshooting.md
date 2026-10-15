@@ -247,3 +247,7 @@
   (または `selectRow(row, scrollIntoView = true)`) は、テンプレート内の行の ItemsRepeater (PART_RowsRepeater) で
   GetOrCreateElement によって行を実体化し、UpdateLayout の後で StartBringIntoView (アニメーションなし) を呼ぶ
   (ItemsRepeater の文書にある方法。WTableCellsTest)。
+- **テストや操作の後でプロセスが 0xC0000374 (STATUS_HEAP_CORRUPTION) で落ちる**
+  out 引数の構造体より小さいバッファを渡すと、ネイティブ側が書き込んだ残りでヒープが壊れ、しばらく後 (終了時など) に落ちる。
+  UIElement.ActualOffset は Vector3 (r4×3 = 12 バイト) なので、`Xaml.readFloats(..., IUIElement_get_ActualOffset, 3)` のように
+  3 つ分を読む (2 つ分の 8 バイトで読んでいた `XamlElement.actualOffset` を修正した)。out 引数の大きさは winmd の型で確かめる。

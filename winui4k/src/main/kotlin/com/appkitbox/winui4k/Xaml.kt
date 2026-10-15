@@ -638,8 +638,11 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
     /** The desired size [width, height] from the most recent Measure. */
     fun desiredSize(): DoubleArray = XamlStructs.getSizeFloat(uiElement, XamlInterop.IUIElement_get_DesiredSize)
 
-    /** The position [x, y] relative to the parent (UIElement.ActualOffset). */
-    fun actualOffset(): DoubleArray = Xaml.readFloats(uiElement, XamlInterop.IUIElement_get_ActualOffset, 2)
+    /**
+     * The position [x, y] relative to the parent (UIElement.ActualOffset). ActualOffset is a Vector3, so all three r4
+     * values are read (a buffer for two would be overrun by the Z value).
+     */
+    fun actualOffset(): DoubleArray = Xaml.readFloats(uiElement, XamlInterop.IUIElement_get_ActualOffset, 3).copyOf(2)
 
     /** The top-left position [x, y] relative to the root of the visual tree. */
     fun positionInRoot(): DoubleArray = Xaml.positionInRoot(uiElement)
