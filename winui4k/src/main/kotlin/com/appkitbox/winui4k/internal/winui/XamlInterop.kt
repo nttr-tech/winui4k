@@ -1534,6 +1534,7 @@ internal object XamlInterop {
     const val IMenuFlyoutItem_put_Text = 7             // put_Text(HSTRING)
     const val IMenuFlyoutItem_put_Command = 9          // put_Command(ICommand)
     const val IMenuFlyoutItem_put_CommandParameter = 11 // put_CommandParameter(IInspectable)
+    const val IMenuFlyoutItem_get_Icon = 12            // get_Icon(out IconElement)
     const val IMenuFlyoutItem_put_Icon = 13            // put_Icon(IconElement)
     const val IMenuFlyoutItem_get_KeyboardAcceleratorTextOverride = 14 // (out HSTRING)
     const val IMenuFlyoutItem_put_KeyboardAcceleratorTextOverride = 15 // (HSTRING)
@@ -1546,6 +1547,7 @@ internal object XamlInterop {
     const val IMenuFlyoutSubItem_get_Items = 6         // get_Items(out IVector<MenuFlyoutItemBase>)
     const val IMenuFlyoutSubItem_get_Text = 7          // get_Text(out HSTRING)
     const val IMenuFlyoutSubItem_put_Text = 8          // put_Text(HSTRING)
+    const val IMenuFlyoutSubItem_get_Icon = 9          // get_Icon(out IconElement)
     const val IMenuFlyoutSubItem_put_Icon = 10         // put_Icon(IconElement)
 
     // ---- Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator ----

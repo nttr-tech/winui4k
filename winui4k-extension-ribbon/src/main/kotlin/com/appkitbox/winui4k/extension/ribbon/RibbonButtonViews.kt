@@ -104,7 +104,7 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
         val dropDown = model as? RibbonDropDownButtonModel ?: return super.overflowMenuItems()
         if (dropDown.dropDownContent != null || !RibbonMenus.isSimple(dropDown.menuItems)) return super.overflowMenuItems()
         val sub = WMenuFlyoutSubItem(model.label.orEmpty())
-        RibbonMenus.setIcon(sub.inspectable, com.appkitbox.winui4k.internal.winui.XamlInterop.IMenuFlyoutSubItem_put_Icon, model.icon)
+        RibbonMenus.setIcon(sub, model.icon)
         RibbonMenus.createMenuItems(dropDown.menuItems, host).forEach { sub.add(it) }
         return listOf(sub)
     }
@@ -455,7 +455,7 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
             return listOf(RibbonMenus.commandItem(this, if (model.isCheckable) model.isChecked else null))
         }
         val sub = WMenuFlyoutSubItem(model.label.orEmpty())
-        RibbonMenus.setIcon(sub.inspectable, com.appkitbox.winui4k.internal.winui.XamlInterop.IMenuFlyoutSubItem_put_Icon, model.icon)
+        RibbonMenus.setIcon(sub, model.icon)
         sub.add(RibbonMenus.commandItem(this))
         sub.add(WMenuFlyoutSeparator())
         RibbonMenus.createMenuItems(model.menuItems, host, onChosen = { if (model.followLastChoice) model.lastChoice = it }).forEach { sub.add(it) }

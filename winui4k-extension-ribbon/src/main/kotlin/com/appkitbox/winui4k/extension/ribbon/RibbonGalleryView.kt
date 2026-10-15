@@ -450,7 +450,7 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
     override fun overflowMenuItems(): List<WMenuFlyoutItemBase> {
         val item = WMenuFlyoutItem(model.label.orEmpty())
         item.isEnabled = isEffectivelyEnabled
-        RibbonMenus.setIcon(item.inspectable, XamlInterop.IMenuFlyoutItem_put_Icon, model.icon)
+        RibbonMenus.setIcon(item, model.icon)
         item.addActionListener { WinUiUtilities.invokeLater { openDropDown() } }
         return listOf(item)
     }

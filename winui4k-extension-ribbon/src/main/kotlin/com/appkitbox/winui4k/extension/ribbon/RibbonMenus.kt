@@ -24,7 +24,6 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuHeaderModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuItemModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonMenuSeparatorModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonNodeModel
-import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
@@ -96,7 +95,7 @@ internal object RibbonMenus {
             is RibbonMenuItemModel -> if (entry.items.isNotEmpty()) {
                 WMenuFlyoutSubItem(entry.label.orEmpty()).also { sub ->
                     sub.isEnabled = entry.isEnabled
-                    setIcon(sub.inspectable, XamlInterop.IMenuFlyoutSubItem_put_Icon, entry.icon)
+                    setIcon(sub, entry.icon)
                     decorate(sub, entry)
                     menuModels[sub] = entry
                     createMenuItems(entry.items, host, onChosen).forEach { sub.add(it) }
@@ -120,7 +119,7 @@ internal object RibbonMenus {
             else -> WMenuFlyoutItem(entry.label.orEmpty())
         }
         item.isEnabled = entry.isEnabled && isCommandEnabled(entry, host)
-        setIcon(item.inspectable, XamlInterop.IMenuFlyoutItem_put_Icon, entry.icon)
+        setIcon(item, entry.icon)
         entry.shortcut?.let { item.keyboardAcceleratorText = it }
         decorate(item, entry)
         menuModels[item] = entry
@@ -175,22 +174,38 @@ internal object RibbonMenus {
         val model = view.model
         val item = if (isChecked == null) WMenuFlyoutItem(model.label.orEmpty()) else WToggleMenuFlyoutItem(model.label.orEmpty()).also { it.isChecked = isChecked }
         item.isEnabled = view.isEffectivelyEnabled
-        setIcon(item.inspectable, XamlInterop.IMenuFlyoutItem_put_Icon, model.icon)
+        setIcon(item, model.icon)
         model.shortcut?.let { item.keyboardAcceleratorText = it }
         item.addActionListener { view.invoke() }
         return item
     }
 
-    /** Sets a menu item's icon ([slot] is put_Icon). Icons that cannot be represented (such as line art) are not set. */
-    fun setIcon(target: ComPtr, slot: Int, icon: RibbonIcon?) {
+    /**
+     * Sets a menu item's icon (MenuFlyoutItem.Icon / MenuFlyoutSubItem.Icon). Icons that cannot be represented (such as
+     * line art) are not set.
+     *
+     * put_Icon is called on the interface queried from the item: the default interface of a toggle or radio item is
+     * IToggleMenuFlyoutItem / IRadioMenuFlyoutItem, whose vtable does not have IMenuFlyoutItem's slots.
+     */
+    fun setIcon(item: WMenuFlyoutItemBase, icon: RibbonIcon?) {
+        val (iid, slot) = when (item) {
+            is WMenuFlyoutSubItem -> XamlInterop.IID_IMenuFlyoutSubItem to XamlInterop.IMenuFlyoutSubItem_put_Icon
+            is WMenuFlyoutItem -> XamlInterop.IID_IMenuFlyoutItem to XamlInterop.IMenuFlyoutItem_put_Icon
+            else -> return
+        }
         val xaml = RibbonIconXaml.menuIcon(icon) ?: return
+        val target = item.inspectable.queryInterface(iid)
         val element = Xaml.load(xaml)
         try {
             val iconElement = element.queryInterface(XamlInterop.IID_IIconElement)
-            target.call(slot, iconElement.ptr)
-            iconElement.release()
+            try {
+                target.call(slot, iconElement.ptr)
+            } finally {
+                iconElement.release()
+            }
         } finally {
             element.release()
+            target.release()
         }
     }
 
