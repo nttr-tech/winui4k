@@ -170,10 +170,17 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             }
         }
 
-    /** How text wraps (TextBlock.TextWrapping). */
+    /**
+     * How text wraps (TextBlock.TextWrapping). In a [WLayoutPanel], a wrapping label gets the height of its wrapped
+     * lines only from a layout manager that asks for [preferredHeight] at the width it gives (MigLayoutManager does).
+     */
     var textWrapping: TextWrapping
         get() = TextWrapping.of(inspectable.getInt(XamlInterop.ITextBlock_get_TextWrapping))
-        set(value) = inspectable.call(XamlInterop.ITextBlock_put_TextWrapping, value.native)
+        set(value) {
+            if (value == textWrapping) return
+            inspectable.call(XamlInterop.ITextBlock_put_TextWrapping, value.native)
+            revalidate()
+        }
 
     /** How text that doesn't fit is trimmed (TextBlock.TextTrimming). */
     var textTrimming: TextTrimming

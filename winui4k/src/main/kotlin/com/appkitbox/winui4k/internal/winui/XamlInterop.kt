@@ -68,6 +68,7 @@ internal object XamlInterop {
     const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
     const val IUIElement_add_DoubleTapped = 170        // add_DoubleTapped(DoubleTappedEventHandler, out token)
     const val IUIElement_remove_DoubleTapped = 171     // remove_DoubleTapped(token)
+    const val IUIElement_Measure = 210                 // Measure(Size availableSize) — Size (r4×2) passed by value
     const val IUIElement_UpdateLayout = 220            // UpdateLayout() — a synchronous layout pass
 
     /** delegate Input.DoubleTappedEventHandler(sender, DoubleTappedRoutedEventArgs) — Invoke is vtbl[3] */

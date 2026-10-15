@@ -249,12 +249,50 @@ abstract class WComponent internal constructor(
     }
 
     /**
+     * The preferred height when this component is laid out [forWidth] wide (like SWT's
+     * `computeSize(wHint, SWT.DEFAULT)`), for content whose height depends on its width: wrapped text such as a
+     * [WLabel] with [TextWrapping.WRAP], or a container of it. Given at least its preferred width (or a width that is
+     * not a positive finite value), this is the preferred height; narrower, the component is measured at that width
+     * (UIElement.Measure) and the result is cached until [invalidateNaturalSize]. An explicit [height] wins.
+     */
+    open fun preferredHeight(forWidth: Double): Double {
+        val preferred = preferredSize()
+        val narrower = forWidth > 0.0 && forWidth < preferred.width
+        if (!height.isNaN() || !narrower) return preferred.height
+        heightForWidth?.let { (cachedWidth, cachedHeight) -> if (cachedWidth == forWidth) return cachedHeight }
+        val measured = measureHeightAt(forWidth)
+        heightForWidth = forWidth to measured
+        return measured
+    }
+
+    /** The last result of [preferredHeight] that needed a measurement (width to height). */
+    private var heightForWidth: Pair<Double, Double>? = null
+
+    /**
+     * Measures the height at [width] with the size a layout manager assigned taken off for the measurement (it would
+     * pin the DesiredSize) and put back afterwards, so the next layout pass sees the same sizes as before.
+     */
+    private fun measureHeightAt(width: Double): Double {
+        val assignedWidth = Double.fromBits(appliedWidthBits)
+        val assignedHeight = Double.fromBits(appliedHeightBits)
+        clearLayoutSizeForMeasure()
+        return try {
+            XamlStructs.putSizeFloat(uiElement, XamlInterop.IUIElement_Measure, width, Double.POSITIVE_INFINITY)
+            readDesiredSize().height
+        } finally {
+            applyWidth(assignedWidth)
+            applyHeight(assignedHeight)
+        }
+    }
+
+    /**
      * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
      * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
      * change.
      */
     fun invalidateNaturalSize() {
         naturalSize = null
+        heightForWidth = null
     }
 
     /** The [WLayoutPanel] that lays this component out (set by [WLayoutPanel.add]), or null. */

@@ -180,3 +180,12 @@
   ContentDialog 自身の FrameworkElement.MaxWidth (`WComponent.maxWidth`) では広がらない。`WContentDialog.dialogMaxWidth` は
   ダイアログ自身の Resources に `ContentDialogMaxWidth` を入れる。テンプレートは最初の表示のときにこのリソースを読むので、
   `show` の前に設定する (WContentDialogTest)。
+- **MigLayout で折り返す WLabel (TextWrapping.WRAP) が 1 行分の高さになり、2 行目以降が切れる**
+  MigLayout のアダプターが幅の指定 (`getPreferredHeight(wHint)`) を無視し、無限の幅で測った 1 行の高さを返していた。
+  現在はコンテンツ バイアスを横 (`getContentBias() = HORIZONTAL`) にして、MigLayout が決めた幅で
+  `WComponent.preferredHeight(forWidth)` を測る (希望の幅より狭いときだけ UIElement.Measure を呼び、結果はキャッシュする)。
+  Canvas の子は WLayoutPanel が設定した Width / Height に DesiredSize が縛られるため、測る間だけ外して戻す。
+  折り返した高さは配置で幅が決まった後に分かるので、希望の大きさが変わったらパネルをもう一度レイアウトする。
+  折り返す WLabel の最小幅は 0 (列とともに狭まって折り返す) だが、WBorder に入れた場合などは `"w 300!"` や
+  `"growx, wmin 0"` で幅を制約する。なお TextBlock の ActualHeight は Height で切られていても文字全体の高さを返すため、
+  切れているかどうかはパネルや親の高さで確かめる (MigLayoutManagerTest)。

@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.extension.miglayout
 
+import com.appkitbox.winui4k.TextWrapping
 import com.appkitbox.winui4k.WButtonBase
 import com.appkitbox.winui4k.WCheckBox
 import com.appkitbox.winui4k.WComboBox
@@ -41,6 +42,11 @@ import kotlin.math.roundToInt
  * [ComponentWrapper.getPixelUnitFactor] = 1. Since WinUI has no way to measure a minimum size, the
  * minimum size is treated as equal to the preferred size (the same policy as the SWT port). It can
  * still be made shrinkable by stating so explicitly in a component constraint, e.g. "width 0::".
+ * Heights are measured at the width each component gets ([WComponent.preferredHeight]), so a
+ * [WLabel] with [TextWrapping.WRAP] narrower than its text gets the height of its wrapped lines.
+ * Such a label has no minimum width (it wraps instead), so it narrows with its column; other
+ * content that wraps, such as a wrapping label in a WBorder, needs a width constraint to narrow,
+ * e.g. "w 300!" or "growx, wmin 0".
  *
  * Constraints use the same string format as upstream:
  * ```
@@ -104,13 +110,16 @@ class MigLayoutManager(
         adapters.remove(component)
     }
 
+    /** The size [preferredLayoutSize] last reported, to notice when wrapped content changed it during a layout. */
+    private var reportedPreferredSize: WSize? = null
+
     override fun preferredLayoutSize(parent: WLayoutPanel): WSize {
         val grid = buildGrid(parent)
         val insets = parent.insets
         return WSize(
             LayoutUtil.getSizeSafe(grid.width, LayoutUtil.PREF) + insets.left + insets.right,
             LayoutUtil.getSizeSafe(grid.height, LayoutUtil.PREF) + insets.top + insets.bottom,
-        )
+        ).also { reportedPreferredSize = it }
     }
 
     override fun layoutContainer(parent: WLayoutPanel) {
@@ -126,6 +135,10 @@ class MigLayoutManager(
         if (buildGrid(parent).layout(bounds, lc.alignX, lc.alignY, false)) {
             buildGrid(parent).layout(bounds, lc.alignX, lc.alignY, false)
         }
+        // The preferred height of wrapped content depends on the width this layout just gave it (the preferred size
+        // reported before used the previous widths), so a panel that sizes itself from it is laid out once more
+        val reported = reportedPreferredSize
+        if (reported != null && preferredLayoutSize(parent) != reported) parent.revalidate()
     }
 
     /**
@@ -200,14 +213,20 @@ class MigLayoutManager(
 
         // WinUI's DesiredSize is only the preferred size and there's no way to measure a minimum
         // size, so minimum = preferred (same policy as the SWT port; can be made shrinkable with
-        // a constraint like "width 0::")
-        override fun getMinimumWidth(hHint: Int): Int = getPreferredWidth(hHint)
+        // a constraint like "width 0::"). A wrapping label is the exception: like a wrapping
+        // JTextArea it can be any narrower and wraps instead (its height follows via the content bias)
+        override fun getMinimumWidth(hHint: Int): Int = if (isWrappingLabel()) 0 else getPreferredWidth(hHint)
+
+        private fun isWrappingLabel(): Boolean = component is WLabel && component.textWrapping != TextWrapping.NO_WRAP
 
         override fun getMinimumHeight(wHint: Int): Int = getPreferredHeight(wHint)
 
         override fun getPreferredWidth(hHint: Int): Int = ceil(component.preferredSize().width).toInt()
 
-        override fun getPreferredHeight(wHint: Int): Int = ceil(component.preferredSize().height).toInt()
+        // The height at the width the grid gives (wHint, from the horizontal content bias): taller than the
+        // preferred height for wrapped text narrower than its one-line width
+        override fun getPreferredHeight(wHint: Int): Int =
+            ceil(if (wHint > 0) component.preferredHeight(wHint.toDouble()) else component.preferredSize().height).toInt()
 
         override fun getMaximumWidth(hHint: Int): Int {
             val maxWidth = component.maxWidth
@@ -259,9 +278,10 @@ class MigLayoutManager(
 
         override fun getComponentType(disregardScrollPane: Boolean): Int = componentType
 
-        // The preferred size uses a cached measurement under an infinite constraint, so width and
-        // height are independent
-        override fun getContentBias(): Int = -1
+        // Horizontal bias: the grid fixes the widths first and then asks for each height at its width, so wrapped
+        // text gets the height of its lines (WComponent.preferredHeight only measures when the width is narrower than
+        // the preferred width). A nested WLayoutPanel's height comes from its own manager, independent of the width
+        override fun getContentBias(): Int = if (component is WLayoutPanel) -1 else LayoutUtil.HORIZONTAL
 
         override fun hashCode(): Int = component.hashCode()
 
@@ -304,6 +324,8 @@ class MigLayoutManager(
         override fun getParent(): ContainerWrapper? = null
 
         override fun getComponentType(disregardScrollPane: Boolean): Int = ComponentWrapper.TYPE_CONTAINER
+
+        override fun getContentBias(): Int = -1
     }
 
     private companion object {

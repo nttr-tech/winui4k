@@ -194,6 +194,16 @@ internal object XamlStructs {
         }
     }
 
+    /** Puts a Windows.Foundation.Size (r4×2) by value (UIElement.Measure). An infinite value means no limit. */
+    fun putSizeFloat(target: ComPtr, slot: Int, width: Double, height: Double) {
+        Ffi.backend.withScope { scope ->
+            val size = scope.allocate(SIZE_FLOAT)
+            Ffi.backend.memory.putFloat(size.ptr, 0, width.toFloat())
+            Ffi.backend.memory.putFloat(size.ptr, 4, height.toFloat())
+            target.call(slot, size)
+        }
+    }
+
     /**
      * Gets a Windows.Foundation.Size (r4×2) via an out argument (UIElement.DesiredSize).
      * Returned in [width, height] order (float widened to double).

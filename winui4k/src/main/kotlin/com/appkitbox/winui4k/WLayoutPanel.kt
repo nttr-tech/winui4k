@@ -138,6 +138,9 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         )
     }
 
+    /** A Canvas measures as 0x0 at any width, so the height for a width is the layout manager's preferred height. */
+    override fun preferredHeight(forWidth: Double): Double = preferredSize().height
+
     /**
      * Assigns a child's position and size (like Component.setBounds). Called by a WLayoutManager
      * implementation from [WLayoutManager.layoutContainer]. Position is the Canvas.SetLeft/SetTop
