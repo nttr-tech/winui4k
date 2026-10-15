@@ -760,6 +760,7 @@ class WTable @JvmOverloads constructor(
             TabularInterop.IID_SortedHandler,
             TabularInterop.ITableView_add_Sorted,
         ) { _, args -> onSorted(ComPtr(args)) }
+        TableViewItemsSourceKeeper(frameworkElement, tableView) { source }.subscribe()
     }
 
     private fun onBeginningEdit(args: ComPtr) {

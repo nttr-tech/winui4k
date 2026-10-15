@@ -204,3 +204,10 @@
   WinUI は既定 (KeyboardAcceleratorPlacementMode=Auto) で、要素の KeyboardAccelerators のキーをツールチップとして表示する。
   Enter で確定する欄のように、ショートカットを独立したコマンドとして見せる必要がない要素では
   `keyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.HIDDEN` にする (WComponentTest)。
+- **WTable (TableView) を外して同じターンのうちに付け直すと、行が消えて列見出しだけになる**
+  TableView は Unloaded でテンプレート内の ItemsRepeater の ItemsSource を外し、Loaded で付け直す。
+  同じ UI ターンのうちに外して付け直す (閉じたポップアップを前のページを入れたまま開き、そのページを入れ直すなど) と、
+  WinUI は新しい Loaded を古い Unloaded より先に届けることがあり、最後に届いた Unloaded で ItemsRepeater の
+  ItemsSource が null のまま残る (TableView の ItemsSource や行のコレクションはそのままで、行を追加しても表示されない)。
+  WTable は IsLoaded が true のまま届いた Unloaded を古いものとみなし、次のターンで ItemsSource を一度 null にしてから
+  設定し直す (同じ値の設定だけでは TableView は何もしない。選択行は保たれる。WTableTest)。

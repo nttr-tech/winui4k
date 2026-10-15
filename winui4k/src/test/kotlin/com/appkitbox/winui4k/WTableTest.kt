@@ -136,6 +136,30 @@ class WTableTest : FunSpec() {
     }
 
     init {
+        test("a table removed and added again twice in one UI turn still shows its rows and keeps the selected row") {
+            val table = onUiThreadGet { WTable(productModel()) }
+            val host = onUiThreadGet { WGrid().also { it.add(table) } }
+            UiTestHarness.attachAndAwaitLoaded(host)
+            try {
+                onUiThread {
+                    table.updateLayout()
+                    table.selectRow(2)
+                    // The new Loaded arrives before the old Unloaded (like a page shown again in a reopened popup)
+                    host.remove(table)
+                    host.add(table)
+                    host.remove(table)
+                    host.add(table)
+                }
+                Thread.sleep(500)
+                onUiThreadGet {
+                    table.updateLayout()
+                    texts(table.dependencyObject).filter { it in setOf("Apple", "Orange", "Grape", "Peach") }.toSet() to table.selectedRow
+                }
+            } finally {
+                UiTestHarness.detach(host)
+            } shouldBe (setOf("Apple", "Orange", "Grape", "Peach") to 2)
+        }
+
         test("the shown table's row count, column count, cell values, and column names match the model") {
             val table = onUiThreadGet { WTable(productModel()) }
             withShownTable(table) {
