@@ -63,8 +63,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     internal var labelIcon: WIcon? = null
         private set
 
-    /** The position of the text relative to the icon ([WButton.horizontalTextPosition]). */
-    internal var labelTextPosition: TextPosition = TextPosition.TRAILING
+    /** The horizontal position of the text relative to the icon ([WButton.horizontalTextPosition]). */
+    internal var labelHorizontalTextPosition: HorizontalTextPosition = HorizontalTextPosition.TRAILING
+        private set
+
+    /** The vertical position of the text relative to the icon ([WButton.verticalTextPosition]). */
+    internal var labelVerticalTextPosition: VerticalTextPosition = VerticalTextPosition.CENTER
         private set
 
     /** The gap between the icon and the text ([WButton.iconTextGap]). */
@@ -149,10 +153,17 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
     }
 
-    /** Changes the position of the text relative to the icon (the setter of [WButton.horizontalTextPosition]). */
-    internal fun changeLabelTextPosition(position: TextPosition) {
-        if (position == labelTextPosition) return
-        labelTextPosition = position
+    /** Changes the horizontal position of the text relative to the icon ([WButton.horizontalTextPosition] setter). */
+    internal fun changeLabelHorizontalTextPosition(position: HorizontalTextPosition) {
+        if (position == labelHorizontalTextPosition) return
+        labelHorizontalTextPosition = position
+        if (labelIcon != null) showIconLabel()
+    }
+
+    /** Changes the vertical position of the text relative to the icon (the setter of [WButton.verticalTextPosition]). */
+    internal fun changeLabelVerticalTextPosition(position: VerticalTextPosition) {
+        if (position == labelVerticalTextPosition) return
+        labelVerticalTextPosition = position
         if (labelIcon != null) showIconLabel()
     }
 
@@ -166,8 +177,8 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     /**
      * Rebuilds the Content from [labelIcon] and [iconLabelText]. If the text is empty, only the icon (IconElement);
-     * otherwise a StackPanel arranging the icon and a TextBlock in the order and orientation of [labelTextPosition], with
-     * the gap set to [labelIconTextGap].
+     * otherwise a StackPanel arranging the icon and a TextBlock in the order and orientation of
+     * [labelHorizontalTextPosition] / [labelVerticalTextPosition], with the gap set to [labelIconTextGap].
      * The TextBlock inherits its text color and font from the button's ContentPresenter.
      * With a composite Content, the button's UI Automation name is no longer derived from the string
      * (ButtonBaseAutomationPeer uses the Content for the name only when it is a string), so the string is put into
@@ -182,16 +193,25 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             contentControl.call(XamlInterop.IContentControl_put_Content, iconElement.uiElement.ptr)
             return
         }
-        val vertical = labelTextPosition == TextPosition.TOP || labelTextPosition == TextPosition.BOTTOM
+        // CENTER + TOP / BOTTOM stacks them vertically; LEADING / TRAILING places them side by side (the vertical position
+        // becomes the text's vertical alignment). CENTER + CENTER (text overlaid on the icon) cannot be built with a
+        // StackPanel, so it is the same as TRAILING (text after the icon).
+        val vertical = labelHorizontalTextPosition == HorizontalTextPosition.CENTER &&
+            labelVerticalTextPosition != VerticalTextPosition.CENTER
+        val textFirst = if (vertical) {
+            labelVerticalTextPosition == VerticalTextPosition.TOP
+        } else {
+            labelHorizontalTextPosition == HorizontalTextPosition.LEADING
+        }
         val panel = WPanel(labelIconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
         val textBlock = WLabel(label)
-        val children = if (labelTextPosition == TextPosition.LEADING || labelTextPosition == TextPosition.TOP) {
-            listOf(textBlock, iconElement)
-        } else {
-            listOf(iconElement, textBlock)
-        }
+        val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
         for (child in children) {
-            if (vertical) child.horizontalAlignment = HorizontalAlignment.CENTER else child.verticalAlignment = VerticalAlignment.CENTER
+            if (vertical) {
+                child.horizontalAlignment = HorizontalAlignment.CENTER
+            } else {
+                child.verticalAlignment = if (child === textBlock) labelVerticalTextPosition.alignment else VerticalAlignment.CENTER
+            }
             panel.add(child)
         }
         contentControl.call(XamlInterop.IContentControl_put_Content, panel.uiElement.ptr)
@@ -381,22 +401,40 @@ private const val ASCII_LIMIT = 128
 internal const val DEFAULT_ICON_TEXT_GAP = 4.0
 
 /**
- * AbstractButton.setHorizontalTextPosition-like: the position of the text relative to the icon
+ * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon
  * ([WButton.horizontalTextPosition]).
  * [LEADING] / [TRAILING] follow the text flow direction (FlowDirection) and mean left / right in left-to-right flow.
  */
-enum class TextPosition {
+enum class HorizontalTextPosition {
     /** Puts the text before the icon (on the left in left-to-right flow). */
     LEADING,
 
     /** Puts the text after the icon (on the right in left-to-right flow) (the default; same as Swing). */
     TRAILING,
 
-    /** Puts the text above the icon. */
-    TOP,
+    /**
+     * Centers the text horizontally with the icon. With [VerticalTextPosition.TOP] it is above the icon, and with
+     * [VerticalTextPosition.BOTTOM] below the icon. [VerticalTextPosition.CENTER] (text overlaid on the icon) cannot be
+     * built with a StackPanel, so it is laid out the same as [TRAILING] (text after the icon).
+     */
+    CENTER,
+}
 
-    /** Puts the text below the icon. */
-    BOTTOM,
+/**
+ * AbstractButton.setVerticalTextPosition-like: the vertical position of the text relative to the icon
+ * ([WButton.verticalTextPosition]).
+ * With [HorizontalTextPosition.CENTER] the text is placed above / below the icon; with LEADING / TRAILING it is the
+ * vertical alignment of the text placed beside the icon.
+ */
+enum class VerticalTextPosition(internal val alignment: VerticalAlignment) {
+    /** Puts the text above the icon (top-aligned when placed side by side). */
+    TOP(VerticalAlignment.TOP),
+
+    /** Centers the text vertically with the icon (the default; center-aligned when placed side by side). */
+    CENTER(VerticalAlignment.CENTER),
+
+    /** Puts the text below the icon (bottom-aligned when placed side by side). */
+    BOTTOM(VerticalAlignment.BOTTOM),
 }
 
 /** Whether it is AWT's KeyEvent.VK_A..VK_Z (65..90) or VK_0..VK_9 (48..57). */

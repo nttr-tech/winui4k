@@ -133,12 +133,25 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         set(value) = changeLabelIcon(value)
 
     /**
-     * AbstractButton.setHorizontalTextPosition-like: the position of the text relative to the icon. The default is
-     * [TextPosition.TRAILING] (text after the icon). [TextPosition.TOP] / [TextPosition.BOTTOM] arrange them vertically.
+     * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon. The
+     * default is [HorizontalTextPosition.TRAILING] (text after the icon). [HorizontalTextPosition.CENTER] combined with
+     * [verticalTextPosition] stacks the text above / below the icon. CENTER + [VerticalTextPosition.CENTER] (text overlaid
+     * on the icon) cannot be built with a StackPanel, so it is laid out the same as TRAILING (text after the icon).
      */
-    var horizontalTextPosition: TextPosition
-        get() = labelTextPosition
-        set(value) = changeLabelTextPosition(value)
+    var horizontalTextPosition: HorizontalTextPosition
+        get() = labelHorizontalTextPosition
+        set(value) = changeLabelHorizontalTextPosition(value)
+
+    /**
+     * AbstractButton.setVerticalTextPosition-like: the vertical position of the text relative to the icon. The default
+     * is [VerticalTextPosition.CENTER].
+     * When [horizontalTextPosition] is CENTER, [VerticalTextPosition.TOP] / [VerticalTextPosition.BOTTOM] puts the text
+     * above / below the icon. With LEADING / TRAILING, it is the vertical alignment (top, center, bottom) of the text
+     * relative to the icon placed beside it.
+     */
+    var verticalTextPosition: VerticalTextPosition
+        get() = labelVerticalTextPosition
+        set(value) = changeLabelVerticalTextPosition(value)
 
     /**
      * AbstractButton.setIconTextGap-like: the gap between the icon and the text (DIP; StackPanel.Spacing). The default is

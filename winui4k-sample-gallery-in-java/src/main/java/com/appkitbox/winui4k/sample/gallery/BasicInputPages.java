@@ -1,12 +1,13 @@
 package com.appkitbox.winui4k.sample.gallery;
 
 import com.appkitbox.winui4k.ColorSpectrumShape;
+import com.appkitbox.winui4k.HorizontalTextPosition;
 import com.appkitbox.winui4k.Orientation;
 import com.appkitbox.winui4k.SliderSnapsTo;
 import com.appkitbox.winui4k.Symbol;
-import com.appkitbox.winui4k.TextPosition;
 import com.appkitbox.winui4k.TickPlacement;
 import com.appkitbox.winui4k.VerticalAlignment;
+import com.appkitbox.winui4k.VerticalTextPosition;
 import com.appkitbox.winui4k.WAbstractAction;
 import com.appkitbox.winui4k.WAction;
 import com.appkitbox.winui4k.WActionEvent;
@@ -135,10 +136,11 @@ final class BasicInputPages {
         saveButton.setToolTipText("Saves to a file");
 
         WButton nextButton = new WButton("Next", Symbol.FORWARD);
-        nextButton.setHorizontalTextPosition(TextPosition.LEADING); // Put the text before (left of) the icon
+        nextButton.setHorizontalTextPosition(HorizontalTextPosition.LEADING); // Put the text before (left of) the icon
 
         WButton glyphButton = new WButton("Folder", new WFontIcon("")); // A Segoe Fluent Icons glyph
-        glyphButton.setHorizontalTextPosition(TextPosition.TOP);
+        glyphButton.setHorizontalTextPosition(HorizontalTextPosition.CENTER);
+        glyphButton.setVerticalTextPosition(VerticalTextPosition.TOP); // Put the text above the icon
         glyphButton.setIconTextGap(8.0);
 
         WButton iconOnlyButton = new WButton(Symbol.SETTING);
@@ -149,7 +151,7 @@ final class BasicInputPages {
         row.add(nextButton);
         row.add(glyphButton);
         row.add(iconOnlyButton);
-        return GalleryScaffold.buildExample("Buttons with icons (icon / horizontalTextPosition / iconTextGap)", row);
+        return GalleryScaffold.buildExample("Buttons with icons (icon / horizontalTextPosition / verticalTextPosition / iconTextGap)", row);
     }
 
     /** Buttons with a WAction: two buttons share one action's text, tooltip and enabled state (like Swing's Action). */

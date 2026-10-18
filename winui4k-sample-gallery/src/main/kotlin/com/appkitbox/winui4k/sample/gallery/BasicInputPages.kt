@@ -1,12 +1,13 @@
 package com.appkitbox.winui4k.sample.gallery
 
 import com.appkitbox.winui4k.ColorSpectrumShape
+import com.appkitbox.winui4k.HorizontalTextPosition
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SliderSnapsTo
 import com.appkitbox.winui4k.Symbol
-import com.appkitbox.winui4k.TextPosition
 import com.appkitbox.winui4k.TickPlacement
 import com.appkitbox.winui4k.VerticalAlignment
+import com.appkitbox.winui4k.VerticalTextPosition
 import com.appkitbox.winui4k.WAbstractAction
 import com.appkitbox.winui4k.WAction
 import com.appkitbox.winui4k.WActionEvent
@@ -134,10 +135,11 @@ private fun buildIconButtonExample(): WComponent {
     saveButton.toolTipText = "Saves to a file"
 
     val nextButton = WButton("Next", Symbol.FORWARD)
-    nextButton.horizontalTextPosition = TextPosition.LEADING // Put the text before (left of) the icon
+    nextButton.horizontalTextPosition = HorizontalTextPosition.LEADING // Put the text before (left of) the icon
 
     val glyphButton = WButton("Folder", WFontIcon("")) // A Segoe Fluent Icons glyph
-    glyphButton.horizontalTextPosition = TextPosition.TOP
+    glyphButton.horizontalTextPosition = HorizontalTextPosition.CENTER
+    glyphButton.verticalTextPosition = VerticalTextPosition.TOP // Put the text above the icon
     glyphButton.iconTextGap = 8.0
 
     val iconOnlyButton = WButton(Symbol.SETTING)
@@ -145,7 +147,7 @@ private fun buildIconButtonExample(): WComponent {
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     listOf(saveButton, nextButton, glyphButton, iconOnlyButton).forEach { row.add(it) }
-    return buildExample("Buttons with icons (icon / horizontalTextPosition / iconTextGap)", row)
+    return buildExample("Buttons with icons (icon / horizontalTextPosition / verticalTextPosition / iconTextGap)", row)
 }
 
 /** Buttons with a WAction: two buttons share one action's text, tooltip and enabled state (like Swing's Action). */

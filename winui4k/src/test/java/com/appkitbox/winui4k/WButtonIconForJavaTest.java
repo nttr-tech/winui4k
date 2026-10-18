@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests that use WButton icons from Java, written the way developers used to Swing's JButton(String, Icon) / setIcon /
- * setHorizontalTextPosition / setIconTextGap would write them. The arrangement of the Content is checked in
- * WButtonIconTest.
+ * setHorizontalTextPosition / setVerticalTextPosition / setIconTextGap would write them. The arrangement of the Content
+ * is checked in WButtonIconTest.
  */
 class WButtonIconForJavaTest {
     @Test
@@ -58,14 +58,17 @@ class WButtonIconForJavaTest {
     }
 
     @Test
-    void setHorizontalTextPositionSetsTheTextPosition() {
+    void setHorizontalTextPositionAndSetVerticalTextPositionSetTheTextPosition() {
         onUiThread(() -> {
             WButton button = new WButton("Save", Symbol.SAVE);
-            assertEquals(TextPosition.TRAILING, button.getHorizontalTextPosition());
-            button.setHorizontalTextPosition(TextPosition.LEADING);
-            assertEquals(TextPosition.LEADING, button.getHorizontalTextPosition());
-            button.setHorizontalTextPosition(TextPosition.BOTTOM);
-            assertEquals(TextPosition.BOTTOM, button.getHorizontalTextPosition());
+            assertEquals(HorizontalTextPosition.TRAILING, button.getHorizontalTextPosition());
+            assertEquals(VerticalTextPosition.CENTER, button.getVerticalTextPosition());
+            button.setHorizontalTextPosition(HorizontalTextPosition.LEADING);
+            assertEquals(HorizontalTextPosition.LEADING, button.getHorizontalTextPosition());
+            button.setHorizontalTextPosition(HorizontalTextPosition.CENTER);
+            button.setVerticalTextPosition(VerticalTextPosition.BOTTOM);
+            assertEquals(HorizontalTextPosition.CENTER, button.getHorizontalTextPosition());
+            assertEquals(VerticalTextPosition.BOTTOM, button.getVerticalTextPosition());
         });
     }
 

@@ -13,7 +13,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 /**
- * Verifies WButton.icon / horizontalTextPosition / iconTextGap (such as AbstractButton's setIcon).
+ * Verifies WButton.icon / horizontalTextPosition / verticalTextPosition / iconTextGap (such as AbstractButton's setIcon).
  * Reads the contents of the button's Content with [contentOf] and checks the order, orientation, and spacing of the
  * icon and text.
  */
@@ -72,6 +72,44 @@ class WButtonIconTest : FunSpec() {
         } finally {
             textBlock.release()
         }
+    }
+
+    /** FrameworkElement.VerticalAlignment of the child of the Content's StackPanel for which [select] returns true. */
+    private fun childVerticalAlignment(button: WButtonBase, select: (ComPtr) -> Boolean): VerticalAlignment {
+        val contentControl = button.inspectable.queryInterface(XamlInterop.IID_IContentControl)
+        val content = try {
+            contentControl.getPtr(XamlInterop.IContentControl_get_Content)
+        } finally {
+            contentControl.release()
+        }
+        val children = try {
+            childrenOf(content)
+        } finally {
+            content.release()
+        }
+        try {
+            val child = children.first(select)
+            val element = child.queryInterface(XamlInterop.IID_IFrameworkElement)
+            return try {
+                VerticalAlignment.of(element.getInt(XamlInterop.IFrameworkElement_get_VerticalAlignment))
+            } finally {
+                element.release()
+            }
+        } finally {
+            children.forEach { it.release() }
+        }
+    }
+
+    private fun textVerticalAlignment(button: WButtonBase) =
+        childVerticalAlignment(button) { isTextBlock(it) }
+
+    private fun iconVerticalAlignment(button: WButtonBase) =
+        childVerticalAlignment(button) { !isTextBlock(it) }
+
+    private fun isTextBlock(element: ComPtr): Boolean {
+        val textBlock = element.queryInterfaceOrNull(XamlInterop.IID_ITextBlock) ?: return false
+        textBlock.release()
+        return true
     }
 
     /** The effective foreground color of the TextBlock inside the Content's StackPanel. */
@@ -141,34 +179,66 @@ class WButtonIconTest : FunSpec() {
             font shouldContainExactly listOf("Panel:HORIZONTAL:4.0", "Font:★/Segoe UI Symbol", "TextBlock:Star")
         }
 
-        test("horizontalTextPosition is TRAILING by default, and LEADING, TOP, and BOTTOM change the order and orientation") {
-            val results = onUiThreadGet {
+        test("horizontalTextPosition is TRAILING by default and verticalTextPosition is CENTER by default") {
+            onUiThreadGet {
                 val button = WButton("Save", Symbol.SAVE)
-                val initial = button.horizontalTextPosition
-                val layouts = listOf(TextPosition.LEADING, TextPosition.TOP, TextPosition.BOTTOM, TextPosition.TRAILING).map {
-                    button.horizontalTextPosition = it
-                    button.horizontalTextPosition to contentOf(button)
+                button.horizontalTextPosition to button.verticalTextPosition
+            } shouldBe (HorizontalTextPosition.TRAILING to VerticalTextPosition.CENTER)
+        }
+
+        test("the combination of horizontalTextPosition and verticalTextPosition determines the order and orientation, matching Swing's positioning") {
+            val horizontalTextFirst = listOf("Panel:HORIZONTAL:4.0", "TextBlock:Save", "Symbol:SAVE")
+            val horizontalIconFirst = listOf("Panel:HORIZONTAL:4.0", "Symbol:SAVE", "TextBlock:Save")
+            val verticalTextFirst = listOf("Panel:VERTICAL:4.0", "TextBlock:Save", "Symbol:SAVE")
+            val verticalIconFirst = listOf("Panel:VERTICAL:4.0", "Symbol:SAVE", "TextBlock:Save")
+            val cases = listOf(
+                Triple(HorizontalTextPosition.LEADING, VerticalTextPosition.CENTER, horizontalTextFirst),
+                Triple(HorizontalTextPosition.TRAILING, VerticalTextPosition.CENTER, horizontalIconFirst),
+                Triple(HorizontalTextPosition.CENTER, VerticalTextPosition.TOP, verticalTextFirst), // Text above the icon
+                Triple(HorizontalTextPosition.CENTER, VerticalTextPosition.BOTTOM, verticalIconFirst), // Text below the icon
+                Triple(HorizontalTextPosition.LEADING, VerticalTextPosition.TOP, horizontalTextFirst),
+                Triple(HorizontalTextPosition.LEADING, VerticalTextPosition.BOTTOM, horizontalTextFirst),
+                Triple(HorizontalTextPosition.TRAILING, VerticalTextPosition.TOP, horizontalIconFirst),
+                Triple(HorizontalTextPosition.TRAILING, VerticalTextPosition.BOTTOM, horizontalIconFirst),
+                Triple(HorizontalTextPosition.CENTER, VerticalTextPosition.CENTER, horizontalIconFirst), // There is no layout that overlays text on the icon, so the text goes after the icon
+            )
+            val actual = onUiThreadGet {
+                val button = WButton("Save", Symbol.SAVE)
+                cases.map { (horizontal, vertical, _) ->
+                    button.horizontalTextPosition = horizontal
+                    button.verticalTextPosition = vertical
+                    Triple(button.horizontalTextPosition, button.verticalTextPosition, contentOf(button))
                 }
-                initial to layouts
             }
-            results.first shouldBe TextPosition.TRAILING
-            results.second shouldContainExactly listOf(
-                TextPosition.LEADING to listOf("Panel:HORIZONTAL:4.0", "TextBlock:Save", "Symbol:SAVE"),
-                TextPosition.TOP to listOf("Panel:VERTICAL:4.0", "TextBlock:Save", "Symbol:SAVE"),
-                TextPosition.BOTTOM to listOf("Panel:VERTICAL:4.0", "Symbol:SAVE", "TextBlock:Save"),
-                TextPosition.TRAILING to listOf("Panel:HORIZONTAL:4.0", "Symbol:SAVE", "TextBlock:Save"),
+            actual shouldBe cases
+        }
+
+        test("when laid out horizontally, the text's vertical position follows verticalTextPosition (TOP at the top, CENTER in the middle, BOTTOM at the bottom) and the icon is centered") {
+            val actual = onUiThreadGet {
+                val button = WButton("Save", Symbol.SAVE)
+                button.horizontalTextPosition = HorizontalTextPosition.LEADING
+                VerticalTextPosition.entries.map {
+                    button.verticalTextPosition = it
+                    it to (textVerticalAlignment(button) to iconVerticalAlignment(button))
+                }
+            }
+            actual shouldContainExactly listOf(
+                VerticalTextPosition.TOP to (VerticalAlignment.TOP to VerticalAlignment.CENTER),
+                VerticalTextPosition.CENTER to (VerticalAlignment.CENTER to VerticalAlignment.CENTER),
+                VerticalTextPosition.BOTTOM to (VerticalAlignment.BOTTOM to VerticalAlignment.CENTER),
             )
         }
 
-        test("horizontalTextPosition and iconTextGap chosen before setting the icon also take effect once the icon is set") {
+        test("horizontalTextPosition, verticalTextPosition, and iconTextGap chosen before setting the icon also take effect once the icon is set") {
             onUiThreadGet {
                 val button = WButton("Save")
-                button.horizontalTextPosition = TextPosition.LEADING
+                button.horizontalTextPosition = HorizontalTextPosition.CENTER
+                button.verticalTextPosition = VerticalTextPosition.TOP
                 button.iconTextGap = 10.0
                 val beforeIcon = contentOf(button)
                 button.icon = Symbol.SAVE
                 beforeIcon to contentOf(button)
-            } shouldBe (listOf("String:Save") to listOf("Panel:HORIZONTAL:10.0", "TextBlock:Save", "Symbol:SAVE"))
+            } shouldBe (listOf("String:Save") to listOf("Panel:VERTICAL:10.0", "TextBlock:Save", "Symbol:SAVE"))
         }
 
         test("iconTextGap is 4 by default, the value set becomes the StackPanel spacing, and 0 is allowed") {
