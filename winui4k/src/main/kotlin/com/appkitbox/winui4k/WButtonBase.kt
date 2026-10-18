@@ -121,6 +121,16 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             }
         }
 
+    /**
+     * AbstractButton.doClick-like: clicks the button once programmatically.
+     * Implemented with UI Automation's Invoke, so like a mouse click it runs through the Click listeners, [command], and
+     * the Button's Flyout in order. Does nothing if disabled ([isEnabled] is false) (same as Swing).
+     */
+    fun doClick() {
+        if (!isEnabled) return
+        Xaml.invoke(inspectable)
+    }
+
     /** ActionListener-like. Subscribes to ButtonBase.Click (RoutedEventHandler) under the hood. */
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {

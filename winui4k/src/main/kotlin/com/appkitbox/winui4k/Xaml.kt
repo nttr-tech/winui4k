@@ -288,6 +288,45 @@ internal object Xaml {
         }
     }
 
+    /**
+     * Calls the Invoke pattern of [target]'s automation peer (UIA Invoke = a programmatic click).
+     * For a Button, Click, Command, and Flyout run just as with a normal click.
+     * On a disabled control it fails with UIA_E_ELEMENTNOTENABLED, so the caller must check the enabled state.
+     * Does nothing for an element without the Invoke pattern.
+     */
+    fun invoke(target: ComPtr) {
+        val ui = target.queryInterface(XamlInterop.IID_IUIElement)
+        try {
+            val statics = Activation.factory(XamlInterop.CLS_FrameworkElementAutomationPeer, XamlInterop.IID_IFrameworkElementAutomationPeerStatics)
+            val peer = try {
+                statics.getPtr(XamlInterop.IFrameworkElementAutomationPeerStatics_CreatePeerForElement, ui.ptr)
+            } finally {
+                statics.release()
+            }
+            try {
+                invokePattern(peer)
+            } finally {
+                peer.release()
+            }
+        } finally {
+            ui.release()
+        }
+    }
+
+    private fun invokePattern(peer: ComPtr) {
+        val pattern = peer.getPtrOrNull(XamlInterop.IAutomationPeer_GetPattern, XamlInterop.PatternInterface_Invoke) ?: return
+        try {
+            val provider = pattern.queryInterface(XamlInterop.IID_IInvokeProvider)
+            try {
+                provider.call(XamlInterop.IInvokeProvider_Invoke)
+            } finally {
+                provider.release()
+            }
+        } finally {
+            pattern.release()
+        }
+    }
+
     private fun raiseNotification(peer: ComPtr, text: String, activityId: String) = Hstring.use(text) { t ->
         Hstring.use(activityId) { a ->
             peer.call(

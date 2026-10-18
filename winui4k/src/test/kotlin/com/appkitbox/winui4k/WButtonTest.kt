@@ -4,8 +4,10 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import java.util.function.Consumer
 
 /** Tests verifying WButton's key properties (including behavior inherited from WButtonBase / WControl). */
 class WButtonTest : FunSpec() {
@@ -63,6 +65,87 @@ class WButtonTest : FunSpec() {
             }
             pressed.shouldBeFalse()
             pointerOver.shouldBeFalse()
+        }
+
+        test("doClick calls the Click listener once per call") {
+            onUiThreadGet {
+                val button = WButton("Press")
+                var count = 0
+                button.addActionListener { count++ }
+                button.doClick()
+                val afterFirst = count
+                button.doClick()
+                afterFirst to count
+            } shouldBe (1 to 2)
+        }
+
+        test("doClick does not call unregistered listeners and calls only the remaining ones") {
+            val (removed, kept) = onUiThreadGet {
+                val button = WButton("Press")
+                var removed = 0
+                var kept = 0
+                val removedListener: () -> Unit = { removed++ }
+                button.addActionListener(removedListener)
+                button.addActionListener { kept++ }
+                button.removeActionListener(removedListener)
+                button.doClick()
+                removed to kept
+            }
+            removed shouldBe 0
+            kept shouldBe 1
+        }
+
+        test("doClick on a disabled button throws no exception and does nothing") {
+            val (count, enabledAfter) = onUiThreadGet {
+                val button = WButton("Press")
+                var count = 0
+                button.addActionListener { count++ }
+                button.isEnabled = false
+                button.doClick()
+                button.isEnabled = true
+                button.doClick()
+                count to button.isEnabled
+            }
+            // The one click while disabled is not counted; only the one after re-enabling is
+            count shouldBe 1
+            enabledAfter.shouldBeTrue()
+        }
+
+        test("doClick executes command with commandParameter") {
+            val received = onUiThreadGet {
+                val received = mutableListOf<String?>()
+                val button = WButton("Run")
+                button.command = WCommand(true, Consumer { received += it })
+                button.commandParameter = "Argument"
+                button.doClick()
+                button.doClick()
+                received
+            }
+            received shouldContainExactly listOf("Argument", "Argument")
+        }
+
+        test("doClick on a button whose command has CanExecute false does not execute the command") {
+            val executed = onUiThreadGet {
+                var executed = 0
+                val button = WButton("Run")
+                button.command = WCommand(false, Consumer { executed++ })
+                button.doClick()
+                executed
+            }
+            executed shouldBe 0
+        }
+
+        test("doClick runs both the Click listener and the command") {
+            val order = onUiThreadGet {
+                val order = mutableListOf<String>()
+                val button = WButton("Run")
+                button.command = WCommand(true, Consumer { order += "command" })
+                button.addActionListener { order += "click" }
+                button.doClick()
+                order
+            }
+            // ButtonBase.OnClick raises Click first and then calls ExecuteCommand
+            order shouldContainExactly listOf("click", "command")
         }
     }
 }

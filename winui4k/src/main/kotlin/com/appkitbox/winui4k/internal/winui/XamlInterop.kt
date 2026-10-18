@@ -2366,6 +2366,10 @@ internal object XamlInterop {
     const val CLS_FrameworkElementAutomationPeer = "Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer"
     const val IID_IFrameworkElementAutomationPeerStatics = "081f6fbe-6500-528a-a506-f5a4d41ddf6c"
     const val IFrameworkElementAutomationPeerStatics_CreatePeerForElement = 7 // (UIElement) -> AutomationPeer
+    const val IAutomationPeer_GetPattern = 8 // (PatternInterface) -> IInspectable
+    const val PatternInterface_Invoke = 0
+    const val IID_IInvokeProvider = "02481105-3378-544d-b4e1-a1b368afbc02" // Microsoft.UI.Xaml.Automation.Provider
+    const val IInvokeProvider_Invoke = 6
     const val IAutomationPeer_RaiseNotificationEvent = 57 // (AutomationNotificationKind, AutomationNotificationProcessing, HSTRING, HSTRING)
     const val AutomationNotificationKind_ItemAdded = 0
     const val AutomationNotificationProcessing_MostRecent = 3
