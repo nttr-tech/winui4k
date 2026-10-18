@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -270,6 +271,64 @@ class WButtonTest : FunSpec() {
             val methods = WButtonBase::class.java.methods.filter { it.name == "addActionListener" && !it.isSynthetic }
                 .map { it.parameterTypes.single() }
             methods.toSet() shouldBe setOf(Runnable::class.java, WActionListener::class.java)
+        }
+
+        test("mnemonic is 0 when unset, and setMnemonic(Char) stores a letter as the uppercase key code") {
+            val codes = onUiThreadGet {
+                val button = WButton("Save")
+                val initial = button.mnemonic
+                button.setMnemonic('s')
+                val lower = button.mnemonic
+                button.setMnemonic('7')
+                listOf(initial, lower, button.mnemonic)
+            }
+            codes shouldBe listOf(0, 83, 55)
+        }
+
+        test("setMnemonic(Int) accepts key codes A..Z and 0..9 and reads them back") {
+            val codes = onUiThreadGet {
+                val button = WButton("Open")
+                button.mnemonic = 65
+                val first = button.mnemonic
+                button.mnemonic = 90
+                val last = button.mnemonic
+                button.mnemonic = 48
+                listOf(first, last, button.mnemonic)
+            }
+            codes shouldBe listOf(65, 90, 48)
+        }
+
+        test("setting mnemonic to 0 or the NUL character clears the access key") {
+            val codes = onUiThreadGet {
+                val button = WButton("Close")
+                button.mnemonic = 67
+                button.mnemonic = 0
+                val byInt = button.mnemonic
+                button.setMnemonic('C')
+                button.setMnemonic('\u0000')
+                listOf(byInt, button.mnemonic)
+            }
+            codes shouldBe listOf(0, 0)
+        }
+
+        test("passing mnemonic a key code other than a letter or digit, or a lowercase code, throws IllegalArgumentException and leaves the value unchanged") {
+            onUiThreadGet {
+                val button = WButton("Run")
+                button.mnemonic = 69
+                listOf(32, 47, 58, 64, 91, 97, 122, -1, 0x10000).forEach { invalid ->
+                    shouldThrow<IllegalArgumentException> { button.mnemonic = invalid }
+                }
+                shouldThrow<IllegalArgumentException> { button.setMnemonic('!') }
+                shouldThrow<IllegalArgumentException> { button.setMnemonic('é') }
+                button.mnemonic
+            } shouldBe 69
+        }
+
+        test("Java sees the int and char versions of setMnemonic, and getMnemonic") {
+            val setters = WButtonBase::class.java.methods.filter { it.name == "setMnemonic" }
+                .map { it.parameterTypes.single() }
+            setters.toSet() shouldBe setOf(Int::class.javaPrimitiveType, Char::class.javaPrimitiveType)
+            WButtonBase::class.java.getMethod("getMnemonic").returnType shouldBe Int::class.javaPrimitiveType
         }
     }
 }

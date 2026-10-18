@@ -2123,6 +2123,8 @@ internal object XamlInterop {
     const val IUIElement_get_ActualSize = 108          // get_ActualSize(out Vector2) — out of r4×2
     const val IUIElement_get_FocusState = 115          // get_FocusState(out FocusState)
     const val IUIElement_put_UseSystemFocusVisuals = 117 // put_UseSystemFocusVisuals(boolean)
+    const val IUIElement_get_AccessKey = 58            // get_AccessKey(out HSTRING)
+    const val IUIElement_put_AccessKey = 59            // put_AccessKey(HSTRING)
     const val IUIElement_get_IsTabStop = 126           // get_IsTabStop(out boolean)
     const val IUIElement_put_IsTabStop = 127           // put_IsTabStop(boolean)
     const val IUIElement_put_TabIndex = 129            // put_TabIndex(i4)

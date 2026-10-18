@@ -1,8 +1,10 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import kotlin.jvm.JvmName
@@ -129,6 +131,35 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
 
     /**
+     * AbstractButton.getMnemonic / setMnemonic(int)-like: the key code of the access key (UIElement.AccessKey).
+     * Uses the same values as AWT's KeyEvent.VK_A..VK_Z (65..90) / VK_0..VK_9 (48..57); leaving it unset or setting 0
+     * clears it (reads as 0). Anything other than letters and digits throws [IllegalArgumentException].
+     * The key appears in the key tips shown when the Alt key is pressed, and pressing that key clicks the button
+     * (unlike Swing, the character in the label is not underlined).
+     */
+    var mnemonic: Int
+        get() {
+            val key = uiElement.getString(XamlInterop.IUIElement_get_AccessKey)
+            return if (key.length == 1) key[0].code else 0
+        }
+        set(value) {
+            require(value == 0 || isMnemonicKeyCode(value)) { "mnemonic must be the key code of an uppercase letter or a digit: $value" }
+            val key = if (value == 0) "" else value.toChar().toString()
+            Hstring.use(key) { h -> uiElement.call(XamlInterop.IUIElement_put_AccessKey, h) }
+        }
+
+    /**
+     * AbstractButton.setMnemonic(char)-like: sets the access key by character. Letters are stored converted to uppercase,
+     * and '\u0000' clears it. Anything other than letters and digits throws [IllegalArgumentException].
+     */
+    fun setMnemonic(mnemonic: Char) {
+        require(mnemonic == '\u0000' || (mnemonic.code < ASCII_LIMIT && mnemonic.isLetterOrDigit())) {
+            "mnemonic must be an ASCII letter or digit: '$mnemonic'"
+        }
+        this.mnemonic = mnemonic.uppercaseChar().code
+    }
+
+    /**
      * AbstractButton.doClick-like: clicks the button once programmatically.
      * Implemented with UI Automation's Invoke, so like a mouse click it runs through the Click listeners, [command], and
      * the Button's Flyout in order. Does nothing if disabled ([isEnabled] is false) (same as Swing).
@@ -210,3 +241,8 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }
 }
+
+private const val ASCII_LIMIT = 128
+
+/** Whether it is AWT's KeyEvent.VK_A..VK_Z (65..90) or VK_0..VK_9 (48..57). */
+private fun isMnemonicKeyCode(keyCode: Int): Boolean = keyCode in 'A'.code..'Z'.code || keyCode in '0'.code..'9'.code
