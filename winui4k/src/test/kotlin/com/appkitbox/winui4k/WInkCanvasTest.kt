@@ -336,7 +336,6 @@ class WInkCanvasTest : FunSpec() {
                 presenter.highContrastAdjustment = InkHighContrastAdjustment.USE_ORIGINAL_COLORS
                 presenter.isPrimaryBarrelButtonInputEnabled = false
                 presenter.isEraserInputEnabled = false
-                presenter.setPredefinedConfiguration(InkPresenterPredefinedConfiguration.SIMPLE_MULTIPLE_POINTER)
                 defaults to listOf(
                     presenter.inputDeviceTypes,
                     presenter.isInputEnabled,

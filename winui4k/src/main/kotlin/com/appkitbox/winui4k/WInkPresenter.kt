@@ -72,23 +72,11 @@ enum class InkHighContrastAdjustment(internal val native: Int) {
 }
 
 /**
- * Windows.UI.Input.Inking.InkPresenterPredefinedConfiguration (OS-defined ink input configurations).
- * Values extracted from Windows.Foundation.UniversalApiContract.winmd (SimpleSinglePointer=0, SimpleMultiplePointer=1).
- */
-enum class InkPresenterPredefinedConfiguration(internal val native: Int) {
-    /** Draws ink with a single pointer only (touch is ignored while drawing with the pen). */
-    SIMPLE_SINGLE_POINTER(0),
-
-    /** Ink can be drawn with multiple pointers at the same time. */
-    SIMPLE_MULTIPLE_POINTER(1),
-}
-
-/**
  * The WinUI 3 InkPresenter (experimental in Windows App SDK 2.5; Swing has no equivalent):
  * manages the ink input and drawing of a canvas. Obtained with [WInkCanvas.inkPresenter].
  *
  * - Input: [inputDeviceTypes] (pen only by default) / [isInputEnabled] / [inputProcessingMode] / [rightDragAction] /
- *   [isPrimaryBarrelButtonInputEnabled] / [isEraserInputEnabled] / [setPredefinedConfiguration]
+ *   [isPrimaryBarrelButtonInputEnabled] / [isEraserInputEnabled]
  * - Drawing: [defaultDrawingAttributes] (the drawing attributes of lines drawn from now on) / [highContrastAdjustment]
  * - Events: [addStrokesCollectedListener] / [addStrokesErasedListener] (notified after being reflected in the model),
  *   [addStrokeInputListener] (StrokeInput), [addUnprocessedInputListener] (UnprocessedInput)
@@ -161,11 +149,6 @@ class WInkPresenter internal constructor(
                 native.release()
             }
         }
-
-    /** Applies an OS-defined input configuration (SetPredefinedConfiguration). */
-    fun setPredefinedConfiguration(configuration: InkPresenterPredefinedConfiguration) {
-        presenter.call(InkInterop.IInkPresenter_SetPredefinedConfiguration, configuration.native)
-    }
 
     /** How ink colors are handled in high contrast (HighContrastAdjustment). */
     var highContrastAdjustment: InkHighContrastAdjustment

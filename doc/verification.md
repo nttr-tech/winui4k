@@ -60,6 +60,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - OS 側の InkStrokeContainer に一度でも触れる (Clear / AddStroke / CanPasteFromClipboard など) と、
     以後の ActivateCustomDrying は E_ILLEGAL_METHOD_CALL になる。custom drying 中は StrokeContainer の操作が失敗する
   - InkSynchronizer.BeginDry は乾かす線が無いと E_UNEXPECTED
+  - InkPresenter の設定 (InputDeviceTypes / IsInputEnabled / InputProcessingConfiguration など) は、WinUI がインクの
+    スレッドへ投函するだけで結果を見ない。投函した処理が失敗すると、その IAsyncAction を UI スレッドが解放した瞬間に
+    XAML の未処理エラー (Application.UnhandledException) になり、Handled にしなければプロセスが落ちる (0xC000027B)。
+    winui4k は Handled にして UI スレッドの未捕捉例外ハンドラーへ渡す (`doc/troubleshooting.md`)
+  - OS の InkPresenter.SetPredefinedConfiguration は、プレゼンター自身の初期化より先に投函が届いたときしか受け付けず
+    (遅れると E_ILLEGAL_METHOD_CALL)、どちらが先かはタイミング次第 (2 コアの CI や JNA では負けやすい) なので
+    ラッパーを提供しない
   - MoveSelected は点の列ではなく InkStroke.PointTransform に平行移動を加える。LoadAsync は既存の線を置き換える
   - 鉛筆 (InkDrawingAttributes.CreateForPencil) は PenTip / PenTipTransform / DrawAsHighlighter の設定を、
     既定値の再設定も含めて E_INVALIDARG で拒否する

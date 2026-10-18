@@ -42,7 +42,6 @@ internal object InkInterop {
     const val IInkPresenter_put_IsInputEnabled = 9                  // put_IsInputEnabled(boolean)
     const val IInkPresenter_UpdateDefaultDrawingAttributes = 10     // UpdateDefaultDrawingAttributes(InkDrawingAttributes)
     const val IInkPresenter_CopyDefaultDrawingAttributes = 11       // CopyDefaultDrawingAttributes(out InkDrawingAttributes)
-    const val IInkPresenter_SetPredefinedConfiguration = 12         // SetPredefinedConfiguration(InkPresenterPredefinedConfiguration)
     const val IInkPresenter_get_HighContrastAdjustment = 13         // get_HighContrastAdjustment(out InkHighContrastAdjustment)
     const val IInkPresenter_put_HighContrastAdjustment = 14         // put_HighContrastAdjustment(InkHighContrastAdjustment)
     const val IInkPresenter_get_StrokeContainer = 15                // get_StrokeContainer(out InkStrokeContainer)
