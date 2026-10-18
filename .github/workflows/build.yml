@@ -12,11 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25 (for building; the foojay resolver auto-downloads JDK 8/9/22 for testing)
-        uses: actions/setup-java@v4
+      - name: Set up JDK 25 (for building; the version pinned in mise.toml. The foojay resolver auto-downloads JDK 8/9/22 for testing)
+        uses: jdx/mise-action@v5
         with:
-          distribution: temurin
-          java-version: 25
+          install_args: java
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -50,7 +49,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25 (Microsoft Build of OpenJDK because Temurin does not distribute JDK 25 for Windows aarch64)
+      - name: Set up JDK 25 (Microsoft Build of OpenJDK instead of mise.toml because Temurin does not distribute JDK 25 for Windows aarch64)
         uses: actions/setup-java@v4
         with:
           distribution: microsoft
