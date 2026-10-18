@@ -10,7 +10,6 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
-import java.lang.ref.WeakReference
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -37,10 +36,13 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     private val actionListeners = ArrayDeque<Pair<Any, (WActionEvent) -> Unit>>()
 
     /**
-     * A reference for looking up this field from the Enter KeyDown handler (the handler stays on the native side, so it
-     * does not reference this field strongly).
+     * The handling held by the Enter KeyDown handler (the handler stays on the native side, so it does not reference this
+     * field strongly).
      */
-    private val enterKeyTarget = EnterKeyTarget(this)
+    private val enterKeyTarget = EnterKeyTarget()
+
+    /** A reference for looking up this field from the Enter KeyDown handler (created when adding the first ActionListener). */
+    private val listenerAnchor by lazy { ListenerAnchor(this).also { enterKeyTarget.anchor = it } }
 
     var text: String
         get() = inspectable.getString(XamlInterop.ITextBox_get_Text)
@@ -148,16 +150,14 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
 
     private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) {
         actionListeners.addLast(key to invoke)
-        // While there are listeners, the handler references the field's wrapper strongly so that it is not collected and
-        // the listeners are not lost
-        enterKeyTarget.pinned = this
+        listenerAnchor.listenerAdded()
     }
 
     private fun removeAction(key: Any) {
         val index = actionListeners.indexOfLast { it.first === key }
         if (index < 0) return
         actionListeners.removeAt(index)
-        if (actionListeners.isEmpty()) enterKeyTarget.pinned = null
+        listenerAnchor.listenerRemoved()
     }
 
     /** Whether there is at least one ActionListener. */
@@ -206,13 +206,12 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
 
 /**
  * Handling of Enter KeyDown for WTextField. Called from the handler attached to the native TextBox; the field's wrapper is
- * referenced weakly (the wrapper of a field without listeners may be collected; even then the default button is pressed).
+ * looked up from [anchor] (the wrapper of a field without listeners may be collected; even then the default button is
+ * pressed).
  */
-private class EnterKeyTarget(field: WTextField) {
-    private val weak = WeakReference(field)
-
-    /** A strong reference set only while there are listeners. */
-    var pinned: WTextField? = null
+private class EnterKeyTarget {
+    /** A reference to the field that has the listeners (null until the first ActionListener is added). */
+    var anchor: ListenerAnchor<WTextField>? = null
 
     /**
      * On Enter with no modifier keys, if [sender] (TextBox) is single-line (AcceptsReturn = false), calls the listeners or
@@ -224,7 +223,7 @@ private class EnterKeyTarget(field: WTextField) {
         val textBox = ComPtr(sender).queryInterface(XamlInterop.IID_ITextBox)
         try {
             if (textBox.getBool(XamlInterop.ITextBox_get_AcceptsReturn)) return
-            val field = pinned ?: weak.get()
+            val field = anchor?.get()
             if (field != null && field.hasActionListeners) {
                 event.handled = true
                 field.postActionEvent()

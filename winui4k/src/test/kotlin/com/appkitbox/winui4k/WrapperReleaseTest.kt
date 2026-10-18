@@ -4,10 +4,13 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import java.lang.ref.WeakReference
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Verifies that wrappers and native controls that are no longer referenced from anywhere are released.
@@ -92,6 +95,43 @@ class WrapperReleaseTest : FunSpec() {
         return WeakReference(button)
     }
 
+    /** Creates a single-line field with an ActionListener that does not reference the field. */
+    private fun fieldWithListener(): WTextField = WTextField().also { field ->
+        val sources = clickSources
+        field.addActionListener { e -> sources += e.source }
+    }
+
+    /** Places a field with a listener in the window, removes it, and returns only a weak reference. */
+    private fun shownAndHiddenField(): WeakReference<WTextField> {
+        val field = onUiThreadGet { fieldWithListener() }
+        showAndHide(field)
+        return WeakReference(field)
+    }
+
+    /** Places a field with a listener in the window (waiting for Loaded) and returns only a weak reference. */
+    private fun shownField(): WeakReference<WTextField> {
+        val field = onUiThreadGet { fieldWithListener() }
+        UiTestHarness.attachAndAwaitLoaded(field)
+        return WeakReference(field)
+    }
+
+    /**
+     * Moves focus to the field of [reference], presses Enter, and returns a description of the source the listener
+     * received (same form as [clickSourcesOf]).
+     */
+    private suspend fun enterSourcesOf(reference: WeakReference<WTextField>): List<String> {
+        onUiThread {
+            clickSources.clear()
+            check(checkNotNull(reference.get()).requestFocusInWindow()) { "could not move focus" }
+        }
+        TestKeyboard.pressEnter()
+        eventually(3.seconds) { onUiThreadGet { clickSources.size } shouldBe 1 }
+        return onUiThreadGet {
+            val field = reference.get()
+            clickSources.map { if (it === field) "field" else it.javaClass.name }.also { clickSources.clear() }
+        }
+    }
+
     /** Also lets go of the [hiddenPanelWithButton] panel and returns weak references to the panel and the button. */
     private fun droppedPanelWithButton(): Pair<WeakReference<WPanel>, WeakReference<WButton>> {
         val panel = onUiThreadGet { WPanel() }
@@ -168,6 +208,21 @@ class WrapperReleaseTest : FunSpec() {
             }
             Reclamation.awaitCollected(shownAndHiddenActionButton(action)).shouldBeTrue()
             onUiThread { action.putValue(WAction.NAME, "After collection") } // Notifications to the collected button are discarded
+        }
+
+        test("a WTextField with an ActionListener that does not reference it is also collected after being placed in and removed from the window") {
+            Reclamation.awaitCollected(shownAndHiddenField()).shouldBeTrue()
+        }
+
+        test("a WTextField with an ActionListener is not collected while placed in the window even without references, and the Enter source is that field") {
+            val reference = shownField()
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                enterSourcesOf(reference) shouldContainExactly listOf("field")
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
         test("a WPanel that is not placed anywhere has its native StackPanel destroyed once the wrapper is collected") {
