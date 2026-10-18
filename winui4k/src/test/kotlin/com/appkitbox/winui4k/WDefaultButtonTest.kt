@@ -2,6 +2,9 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
@@ -91,6 +94,84 @@ class WDefaultButtonTest : FunSpec() {
         return onUiThreadGet { form.clicks.toList() }
     }
 
+    /** The string of the tooltip (ToolTip) open in [component]'s window. Content that is not a string is "(other)". */
+    private fun openToolTipTexts(component: WComponent): List<String> = onUiThreadGet {
+        val root = component.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
+        val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
+        val popups = try {
+            statics.getPtr(XamlInterop.IVisualTreeHelperStatics_GetOpenPopupsForXamlRoot, root.ptr)
+        } finally {
+            statics.release()
+            root.release()
+        }
+        try {
+            (0 until popups.getInt(FoundationInterop.IVectorView_get_Size)).mapNotNull { index ->
+                val popup = popups.getPtr(FoundationInterop.IVectorView_GetAt, index)
+                try {
+                    popup.getPtrOrNull(XamlInterop.IPopup_get_Child)?.let { child ->
+                        try {
+                            toolTipText(child)
+                        } finally {
+                            child.release()
+                        }
+                    }
+                } finally {
+                    popup.release()
+                }
+            }
+        } finally {
+            popups.release()
+        }
+    }
+
+    /** If [element] is a ToolTip, its content string ("(other)" if not a string); null if it is not a ToolTip. */
+    private fun toolTipText(element: ComPtr): String? {
+        if (element.queryInterfaceOrNull(XamlInterop.IID_IToolTip)?.also { it.release() } == null) return null
+        val contentControl = element.queryInterface(XamlInterop.IID_IContentControl)
+        val content = try {
+            contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content)
+        } finally {
+            contentControl.release()
+        } ?: return "(other)"
+        return try {
+            PropertyValues.unboxString(content) ?: "(other)"
+        } finally {
+            content.release()
+        }
+    }
+
+    /**
+     * Moves keyboard focus to [target] (tooltips also open on keyboard focus; ToolTipService::OnOwnerGotFocus) and
+     * returns the strings of the tooltips that opened. Empty if none opens within 3 seconds. Afterwards, moves focus to
+     * [away] to close the tooltip.
+     */
+    private fun toolTipsOnKeyboardFocus(target: WComponent, away: WComponent): List<String> {
+        onUiThread { away.requestFocusInWindow() }
+        Thread.sleep(SETTLE_MILLIS)
+        onUiThread { check(target.focus(XamlInterop.FocusState_Keyboard)) { "could not move focus" } }
+        var texts = emptyList<String>()
+        val deadline = System.currentTimeMillis() + TOOL_TIP_WAIT_MILLIS
+        while (texts.isEmpty() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(POLL_MILLIS)
+            texts = openToolTipTexts(target)
+        }
+        onUiThread { away.requestFocusInWindow() }
+        return texts
+    }
+
+    /**
+     * A form whose default button was set before it was placed in the window (if set after [showForm], WinUI does not
+     * create the accelerator tooltip).
+     */
+    private fun showFormWithDefaultButton(): Form {
+        val shared = frame // Creating the shared window for the first time on the UI thread would block waiting on itself, so create it first
+        val form = onUiThreadGet {
+            Form(WPanel(), mutableListOf()).also { shared.defaultButton = it.ok }
+        }
+        UiTestHarness.attachAndAwaitLoaded(form.panel)
+        return form
+    }
+
     /** A weak reference to a button that was made the shared window's default button and then removed. */
     private fun clearedDefaultButton(): WeakReference<WButton> {
         val shared = frame // Creating the shared window for the first time on the UI thread would block waiting on itself, so create it first
@@ -131,6 +212,57 @@ class WDefaultButtonTest : FunSpec() {
             val (closedFrame, button) = closedFrameWithDefaultButton()
             Reclamation.awaitCollected(button).shouldBeTrue()
             Reclamation.awaitCollected(closedFrame).shouldBeTrue()
+        }
+
+        test("measured check: a button with a tooltip shows that tooltip when keyboard focus moves to it") {
+            val form = showForm()
+            try {
+                onUiThread { form.other.toolTipText = "Description" }
+                toolTipsOnKeyboardFocus(form.other, form.check) shouldContainExactly listOf("Description")
+            } finally {
+                closeForm(form)
+            }
+        }
+
+        test("a button made the default button before being placed in the window does not show an Enter tooltip when keyboard focus moves to it") {
+            // With KeyboardAcceleratorPlacementMode left at Auto, WinUI shows the accelerator key ("Enter") as a tooltip
+            // (CKeyboardAccelerator::EnterImpl -> KeyboardAccelerator::SetToolTip; only on buttons without a tooltip)
+            val form = showFormWithDefaultButton()
+            try {
+                toolTipsOnKeyboardFocus(form.ok, form.check) shouldContainExactly emptyList()
+            } finally {
+                closeForm(form)
+            }
+        }
+
+        test("KeyboardAcceleratorPlacementMode is Hidden only while the button is the default button, and is restored when removed") {
+            val form = showForm()
+            try {
+                onUiThreadGet {
+                    val mode = { button: WButton -> button.uiElement.getInt(XamlInterop.IUIElement_get_KeyboardAcceleratorPlacementMode) }
+                    val before = mode(form.ok)
+                    frame.defaultButton = form.ok
+                    val whileDefault = mode(form.ok)
+                    frame.defaultButton = form.other
+                    listOf(before, whileDefault, mode(form.ok), mode(form.other))
+                } shouldContainExactly listOf(
+                    XamlInterop.KeyboardAcceleratorPlacementMode_Auto,
+                    XamlInterop.KeyboardAcceleratorPlacementMode_Hidden,
+                    XamlInterop.KeyboardAcceleratorPlacementMode_Auto,
+                    XamlInterop.KeyboardAcceleratorPlacementMode_Hidden,
+                )
+                onUiThread {
+                    frame.defaultButton = null
+                    form.ok.uiElement.call(XamlInterop.IUIElement_put_KeyboardAcceleratorPlacementMode, XamlInterop.KeyboardAcceleratorPlacementMode_Hidden)
+                    frame.defaultButton = form.ok
+                    frame.defaultButton = null
+                }
+                // A button that was already Hidden before becoming the default button stays Hidden after being removed
+                onUiThreadGet { form.ok.uiElement.getInt(XamlInterop.IUIElement_get_KeyboardAcceleratorPlacementMode) } shouldBe
+                    XamlInterop.KeyboardAcceleratorPlacementMode_Hidden
+            } finally {
+                closeForm(form)
+            }
         }
 
         test("defaultButton is null by default, and setting it makes that button's isDefaultButton true and shows it with the accent") {
@@ -323,5 +455,7 @@ class WDefaultButtonTest : FunSpec() {
 
     private companion object {
         const val SETTLE_MILLIS = 700L
+        const val TOOL_TIP_WAIT_MILLIS = 3_000L
+        const val POLL_MILLIS = 100L
     }
 }

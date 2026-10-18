@@ -135,3 +135,10 @@
   `VisualTreeHelper::GetParentStaticPrivate` は載っていない要素では親のピアを作らずに探す)。ウィンドウから外した直後の
   Unloaded のハンドラでも同じで、外れた部分木の根をたどれない。必要なら、載っている間 (Loaded) に祖先を弱参照
   (IWeakReferenceSource) で覚えておく (`ListenerAnchor`)。
+- **キーボード アクセラレータを付けたボタンに、キーの名前 ("Enter" など) のヒントが出る**
+  UIElement.KeyboardAcceleratorPlacementMode が既定の Auto だと、WinUI はアクセラレータがツリーに入るときに、そのキーを
+  ヒント (ToolTip) にする (`CKeyboardAccelerator::EnterImpl` → `KeyboardAccelerator::SetToolTip`)。ToolTipService.ToolTip を
+  設定したボタンではそちらが優先され、キーのヒントは出ない (`ToolTipService::GetActualToolTipObjectStatic`)。
+  2.5.4-experimental の実測では、載っているボタンに後からアクセラレータを足したときはヒントが出ず、アクセラレータを足してから
+  ツリーに載せたときにキーボードのフォーカスで "Enter" のヒントが出た (WDefaultButtonTest)。出したくなければ、アクセラレータを
+  足す前に KeyboardAcceleratorPlacementMode を Hidden にする (WButton の既定ボタンはそうしている)。

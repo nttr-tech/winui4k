@@ -298,6 +298,9 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     /** The Enter accelerator put into UIElement.KeyboardAccelerators only while this is the default button. */
     private var defaultButtonAccelerator: ComPtr? = null
 
+    /** The UIElement.KeyboardAcceleratorPlacementMode before becoming the default button (restored on leaving). */
+    private var placementModeBeforeDefault = XamlInterop.KeyboardAcceleratorPlacementMode_Auto
+
     /**
      * JButton.isDefaultButton-like: whether this is the [WFrame.defaultButton] of some frame (read-only).
      * While it is the default button, it is shown with the accent appearance (AccentButtonStyle); when it stops being one,
@@ -311,6 +314,8 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * button of another WFrame, it stops being that one's default button.
      * Adds an Enter accelerator with no modifier keys (no ScopeOwner = effective in the whole window). Since Invoked is
      * not handled, WinUI calls this button's UI Automation Invoke (= click). WinUI skips accelerators of disabled buttons.
+     * While it is the default button, KeyboardAcceleratorPlacementMode is set to Hidden so that the "Enter" hint is not
+     * shown (hints for accelerators that you attached to this button yourself are not shown either).
      */
     internal fun becomeDefaultButton(frame: WFrame) {
         val previous = defaultButtonOwner
@@ -318,6 +323,11 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         if (previous != null) previous.defaultButton = null // previous calls leaveDefaultButton
         defaultButtonOwner = frame
         DefaultButtons.active.add(this)
+        // If left as Auto, WinUI adds the accelerator's key ("Enter") as a tooltip hint to buttons without a tooltip
+        // (CKeyboardAccelerator::EnterImpl. It is decided when the accelerator enters the tree, so set Hidden before
+        // adding it)
+        placementModeBeforeDefault = uiElement.getInt(XamlInterop.IUIElement_get_KeyboardAcceleratorPlacementMode)
+        uiElement.call(XamlInterop.IUIElement_put_KeyboardAcceleratorPlacementMode, XamlInterop.KeyboardAcceleratorPlacementMode_Hidden)
         val accelerator = createKeyboardAccelerator(VirtualKey.ENTER, emptyArray())
         val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
         try {
@@ -342,6 +352,7 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
             accelerator.release()
         }
         defaultButtonAccelerator = null
+        uiElement.call(XamlInterop.IUIElement_put_KeyboardAcceleratorPlacementMode, placementModeBeforeDefault)
         updateAppearance()
     }
 

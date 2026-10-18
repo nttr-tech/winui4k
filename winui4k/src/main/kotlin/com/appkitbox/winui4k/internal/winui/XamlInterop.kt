@@ -74,6 +74,12 @@ internal object XamlInterop {
     const val IUIElement_get_ContextFlyout = 45        // get_ContextFlyout(out FlyoutBase)
     const val IUIElement_put_ContextFlyout = 46        // put_ContextFlyout(FlyoutBase)
     const val IUIElement_get_KeyboardAccelerators = 78 // get_KeyboardAccelerators(out IVector<KeyboardAccelerator>)
+    const val IUIElement_get_KeyboardAcceleratorPlacementMode = 81 // get_KeyboardAcceleratorPlacementMode(out KeyboardAcceleratorPlacementMode)
+    const val IUIElement_put_KeyboardAcceleratorPlacementMode = 82 // put_KeyboardAcceleratorPlacementMode(KeyboardAcceleratorPlacementMode)
+
+    // Microsoft.UI.Xaml.Input.KeyboardAcceleratorPlacementMode (whether to show the accelerator's key as a hint)
+    const val KeyboardAcceleratorPlacementMode_Auto = 0
+    const val KeyboardAcceleratorPlacementMode_Hidden = 1
     const val IUIElement_add_DoubleTapped = 170        // add_DoubleTapped(DoubleTappedEventHandler, out token)
     const val IUIElement_remove_DoubleTapped = 171     // remove_DoubleTapped(token)
     const val IUIElement_UpdateLayout = 220            // UpdateLayout() — a synchronous layout pass
