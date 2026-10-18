@@ -131,10 +131,12 @@ tasks.named("processResources") {
 // Tests (E2E tests that actually launch WinUI; see winui4k.ui-test for the settings)
 // ---------------------------------------------------------------------------
 
-// UiTestHarness (and Kotest's ProjectConfig) live in testFixtures so that
+// UiTestHarness (and the JUnit Platform session listener) live in testFixtures so that
 // E2E tests in other modules (such as winui4k-extension-ribbon) can use them too
 dependencies {
     testFixturesImplementation(libs.kotest.runner.junit5)
+    // For UiTestSessionListener (LauncherSessionListener)
+    testFixturesCompileOnly(libs.junit.platform.launcher)
 }
 
 // testFixtures are for tests only, so they are not published to Maven

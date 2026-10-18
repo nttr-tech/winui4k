@@ -28,3 +28,6 @@ miglayout-core = "com.miglayout:miglayout-core:5.3"
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+# For API tests from Java's point of view. 5.x is the last line that runs on Java 8 (6.0 and later require Java 17).
+# Runs on the same JUnit Platform as Kotest
+junit-jupiter = "org.junit.jupiter:junit-jupiter:5.11.4"

@@ -12,6 +12,9 @@ val libs = the<VersionCatalogsExtension>().named("libs")
 dependencies {
     "testImplementation"(libs.findLibrary("kotest-runner-junit5").get())
     "testImplementation"(libs.findLibrary("kotest-assertions-core").get())
+    // The API's behavior as seen from Java is verified by the Java tests (src/test/java).
+    // They run in the same test task as Kotest
+    "testImplementation"(libs.findLibrary("junit-jupiter").get())
     "testRuntimeOnly"(libs.findLibrary("junit-platform-launcher").get())
     // JDK 22+ selects the Panama backend; JDK 8/9, which can't load Panama, select JNA
     "testRuntimeOnly"(project(":winui4k-ffi-panama"))
@@ -21,6 +24,11 @@ dependencies {
 // Also include the Java 22-targeted winui4k-ffi-panama on the test runtime classpath
 // (the tests themselves target Java 8, but run on JDK 25)
 targetJvm25AtRuntime("testRuntimeClasspath")
+
+// Read the Java test sources (which include Japanese test names) as UTF-8
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+}
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
