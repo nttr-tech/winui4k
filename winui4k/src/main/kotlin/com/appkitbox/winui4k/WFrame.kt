@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 
 /** JFrame-like: WinUI 3's Window. */
 class WFrame @JvmOverloads constructor(title: String = "") {
@@ -27,11 +28,16 @@ class WFrame @JvmOverloads constructor(title: String = "") {
         // (see WinUiUtilities.exitOnLastWindowClosed). Closed fires exactly once whether via
         // Close() or the title bar's close button
         WinUiUtilities.noteWindowCreated()
+        // The handler stays on the window (the native object), so this WFrame is referenced weakly
+        val self = WeakReference(this)
         window.addEventHandler(
             "WinUI4K.WindowClosedHandler",
             XamlInterop.IID_WindowClosedHandler,
             XamlInterop.IWindow_add_Closed,
-        ) { _, _ -> WinUiUtilities.noteWindowClosed() }
+        ) { _, _ ->
+            self.get()?.let { DefaultButtons.forget(it) }
+            WinUiUtilities.noteWindowClosed()
+        }
     }
 
     fun add(component: WComponent) = contentPane.add(component)
@@ -53,6 +59,8 @@ class WFrame @JvmOverloads constructor(title: String = "") {
      * Enter itself (if another WButton has focus, that button is pressed). In a single-line [WTextField], it is pressed
      * only when that field has no ActionListener (same as JTextField; [WTextField.addActionListener]). A disabled button
      * is not pressed.
+     * When the window is closed, the button is removed from Enter dispatching (the value that was set and
+     * [WButton.isDefaultButton] remain as they are).
      */
     var defaultButton: WButton? = null
         set(value) {

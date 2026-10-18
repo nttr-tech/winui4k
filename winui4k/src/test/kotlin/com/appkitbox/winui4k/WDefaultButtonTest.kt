@@ -11,6 +11,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import java.lang.ref.WeakReference
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -90,7 +91,48 @@ class WDefaultButtonTest : FunSpec() {
         return onUiThreadGet { form.clicks.toList() }
     }
 
+    /** A weak reference to a button that was made the shared window's default button and then removed. */
+    private fun clearedDefaultButton(): WeakReference<WButton> {
+        val shared = frame // Creating the shared window for the first time on the UI thread would block waiting on itself, so create it first
+        return onUiThreadGet { clearDefaultButtonOf(shared) }
+    }
+
+    private fun clearDefaultButtonOf(shared: WFrame): WeakReference<WButton> {
+        val button = WButton("Remove")
+        shared.defaultButton = button
+        shared.defaultButton = null
+        check(button !in DefaultButtons.active) { "the removed default button is still in the list" }
+        return WeakReference(button)
+    }
+
+    /**
+     * Opens a second window (not brought to the foreground), closes it with a default button still set, and returns weak
+     * references to that window and button. Fails if the button has not left the default-button list when the window
+     * closes.
+     */
+    private fun closedFrameWithDefaultButton(): Pair<WeakReference<WFrame>, WeakReference<WButton>> = onUiThreadGet {
+        val other = WFrame("winui4k tests (2)")
+        other.appWindow.show(activate = false)
+        val button = WButton("Default before closing")
+        other.add(button)
+        other.defaultButton = button
+        check(button in DefaultButtons.active) { "the default button is not in the list" }
+        other.isVisible = false // Window.Close
+        check(button !in DefaultButtons.active) { "the default button of the closed window is still in the list" }
+        WeakReference(other) to WeakReference(button)
+    }
+
     init {
+        test("a button whose defaultButton was set back to null leaves the default-button list and is collected once unreferenced") {
+            Reclamation.awaitCollected(clearedDefaultButton()).shouldBeTrue()
+        }
+
+        test("closing a window with a default button still set removes it from the default-button list, and the window and button are collected") {
+            val (closedFrame, button) = closedFrameWithDefaultButton()
+            Reclamation.awaitCollected(button).shouldBeTrue()
+            Reclamation.awaitCollected(closedFrame).shouldBeTrue()
+        }
+
         test("defaultButton is null by default, and setting it makes that button's isDefaultButton true and shows it with the accent") {
             val form = showForm()
             try {

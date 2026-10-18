@@ -444,9 +444,20 @@ private fun WAction.keyCodeValue(key: String): Int? = when (val value = getValue
     else -> throw IllegalArgumentException("The value of WAction \"$key\" must be an Int key code: ${value.javaClass.name}")
 }
 
-/** The list of buttons that are the default button of some WFrame (touch only from the UI thread). */
+/**
+ * The list of buttons that are the default button of an open WFrame (touch only from the UI thread).
+ * A button is removed from the list when it stops being the default button and when the window closes ([forget]).
+ */
 internal object DefaultButtons {
     val active = LinkedHashSet<WButton>()
+
+    /**
+     * Removes the default button of the closed [frame] from the list (so as not to keep holding buttons of closed
+     * windows, nor use them for dispatching Enter).
+     */
+    fun forget(frame: WFrame) {
+        frame.defaultButton?.let { active.remove(it) }
+    }
 
     /**
      * The default button in the same XamlRoot (the same window) as [element] (any view of a UIElement). null if there is
