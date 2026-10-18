@@ -12,19 +12,43 @@ import java.nio.file.Paths
  * There are the predefined icons [Symbol], image file icons [WImageIcon], and font glyph icons [WFontIcon].
  * A WinUI IconElement (SymbolIcon / ImageIcon / FontIcon) is created each time it is shown, so the same WIcon may be
  * passed to multiple buttons.
- * The display mechanism is internal to the library, so implementations other than these three cannot be created (sealed).
+ * The display mechanism is internal to the library, so implementations other than these three cannot be created
+ * (sealed in Kotlin).
+ * The Java 8 output does not enforce sealed, so `new WIcon() { ... }` compiles, but icons you implement yourself, like
+ * Swing's javax.swing.Icon, cannot be used. Passing one to [WButton.icon] and the like throws an
+ * [IllegalArgumentException] that names the three supported kinds.
  */
 sealed interface WIcon
 
 /**
  * Creates a new IconElement that shows this icon. The caller must release it.
  * (Kotlin interfaces cannot have internal members, so this dispatches with a branch over the sealed types)
+ * An unsupported implementation created from Java throws [IllegalArgumentException].
  */
-internal fun WIcon.createIconElement(): ComPtr = when (this) {
-    is Symbol -> createSymbolIconElement()
-    is WImageIcon -> createImageIconElement()
-    is WFontIcon -> createFontIconElement()
+internal fun WIcon.createIconElement(): ComPtr {
+    requireSupported()
+    return when (val icon: Any = this) {
+        is Symbol -> icon.createSymbolIconElement()
+        is WImageIcon -> icon.createImageIconElement()
+        is WFontIcon -> icon.createFontIconElement()
+        else -> throw unsupported(icon)
+    }
 }
+
+/**
+ * Checks that this icon is one of the three kinds supported by the library ([Symbol] / [WImageIcon] / [WFontIcon]).
+ * Java does not enforce sealed, so a custom implementation can be passed as if it were a Swing Icon; throwing
+ * [IllegalArgumentException] at the time it is set avoids an obscure failure when it is shown.
+ */
+internal fun WIcon.requireSupported() {
+    val icon: Any = this
+    require(icon is Symbol || icon is WImageIcon || icon is WFontIcon) { unsupportedMessage(icon) }
+}
+
+private fun unsupported(icon: Any) = IllegalArgumentException(unsupportedMessage(icon))
+
+private fun unsupportedMessage(icon: Any) =
+    "Unsupported WIcon implementation: ${icon.javaClass.name} (only Symbol, WImageIcon, and WFontIcon can be used; custom implementations are not supported)"
 
 /**
  * ImageIcon-like: an icon from an image file (.png / .jpg / .bmp / .ico / .gif, etc.) (WinUI 3's ImageIcon + BitmapImage).

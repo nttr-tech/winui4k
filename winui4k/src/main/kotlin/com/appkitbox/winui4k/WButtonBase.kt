@@ -131,6 +131,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * (removing any component in [content]). If null, removes the icon and returns to a string-only Content.
      */
     internal fun changeLabelIcon(icon: WIcon?) {
+        icon?.requireSupported()
         if (icon == null && labelIcon == null) return
         val label = text
         contentComponent = null

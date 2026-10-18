@@ -1,8 +1,11 @@
 package com.appkitbox.winui4k;
 
+import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import org.junit.jupiter.api.Test;
@@ -93,5 +96,47 @@ class WIconForJavaTest {
     void anEmptyGlyphOrEmptyFontNameThrowsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new WFontIcon(""));
         assertThrows(IllegalArgumentException.class, () -> new WFontIcon("\uE74E", ""));
+    }
+
+    // ---- Custom implementations (written as if implementing Swing's Icon) ----
+
+    /** An icon implemented in Java like a Swing Icon. WIcon is sealed in Kotlin, but Java 8 output won't enforce it. */
+    private static WIcon myIcon() {
+        return new WIcon() {
+        };
+    }
+
+    @Test
+    void passingACustomWIconToSetIconThrowsIllegalArgumentExceptionListingTheThreeUsableTypesAndKeepsTheIcon() {
+        onUiThread(() -> {
+            WButton button = new WButton("Save", Symbol.SAVE);
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> button.setIcon(myIcon()));
+            String message = e.getMessage();
+            assertTrue(message.contains("Symbol"), message);
+            assertTrue(message.contains("WImageIcon"), message);
+            assertTrue(message.contains("WFontIcon"), message);
+            assertEquals(Symbol.SAVE, button.getIcon());
+            assertEquals("Save", button.getText());
+        });
+    }
+
+    @Test
+    void passingACustomWIconToAConstructorAlsoThrowsIllegalArgumentException() {
+        onUiThread(() -> {
+            assertThrows(IllegalArgumentException.class, () -> new WButton(myIcon()));
+            assertThrows(IllegalArgumentException.class, () -> new WButton("Save", myIcon()));
+        });
+    }
+
+    @Test
+    void afterRejectingACustomWIconNullCanStillRemoveTheIcon() {
+        onUiThread(() -> {
+            WButton button = new WButton("Save");
+            assertThrows(IllegalArgumentException.class, () -> button.setIcon(myIcon()));
+            assertNull(button.getIcon());
+            button.setIcon(Symbol.SAVE);
+            button.setIcon(null);
+            assertNull(button.getIcon());
+        });
     }
 }
