@@ -54,6 +54,14 @@ internal object FoundationInterop {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};delegate({${XamlInterop.IID_PointerEventHandler}}))")
     }
 
+    /**
+     * The concrete IID of IReference<Microsoft.UI.Xaml.Input.KeyEventHandler> (for subscribing to KeyDown with
+     * UIElement.AddHandler).
+     */
+    val IID_IReference_KeyEventHandler: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};delegate({${XamlInterop.IID_KeyEventHandler}}))")
+    }
+
     /** Concrete IID of IReference<DateTime>. DateTime's signature is struct(Windows.Foundation.DateTime;i8). */
     val IID_IReference_DateTime: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.DateTime;i8))")

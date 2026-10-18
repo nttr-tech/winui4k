@@ -50,9 +50,9 @@ class WFrame @JvmOverloads constructor(title: String = "") {
      * modifier keys and shown with the accent appearance ([WButton.isDefaultButton]). Changing to another button or null
      * makes the previous button stop being the default button.
      * It is implemented with a WinUI keyboard accelerator, so it is not pressed while focus is on a control that handles
-     * Enter itself (if another WButton has focus, that button is pressed, and it is not pressed in a single-line
-     * [WTextField] either; unlike Swing).
-     * A disabled button is not pressed.
+     * Enter itself (if another WButton has focus, that button is pressed). In a single-line [WTextField], it is pressed
+     * only when that field has no ActionListener (same as JTextField; [WTextField.addActionListener]). A disabled button
+     * is not pressed.
      */
     var defaultButton: WButton? = null
         set(value) {

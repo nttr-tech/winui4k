@@ -198,14 +198,42 @@ class WDefaultButtonTest : FunSpec() {
             }
         }
 
-        test("measured: with focus on a single-line WTextField, Enter does not press the default button (unlike Swing)") {
-            // TextBox passes Enter's KeyDown to the text engine (RichEdit) and marks it as handled, so
-            // the global accelerator does not run
+        test("with focus on a single-line WTextField without an ActionListener, Enter presses the default button once (same as Swing)") {
+            // A plain TextBox does not let the global accelerator run (see the measurement below), so WTextField presses the default
+            // button in its KeyDown handler
             val form = showForm()
             try {
                 onUiThread { frame.defaultButton = form.ok }
+                pressEnterOn(form, form.text, listOf("OK")) shouldContainExactly listOf("OK")
+            } finally {
+                closeForm(form)
+            }
+        }
+
+        test("measured: with focus on a plain WinUI single-line TextBox (not a WTextField), Enter does not press the default button") {
+            // TextBox passes Enter's KeyDown to the text engine (RichEdit) and marks it as handled (CTextBoxBase::OnKeyDown in
+            // TextBoxBase.cpp). When KeyDown ends up handled, the global accelerator does not run (KeyboardInputProcessor.cpp)
+            val form = showForm()
+            val textBox = onUiThreadGet { XamlElement.load("<TextBox />") }
+            onUiThread { form.panel.add(textBox) }
+            try {
+                onUiThread { frame.defaultButton = form.ok }
+                pressEnterOn(form, textBox, emptyList()) shouldContainExactly emptyList()
+            } finally {
+                closeForm(form)
+            }
+        }
+
+        test("even with focus on a single-line WTextField, a disabled default button is not pressed by Enter") {
+            val form = showForm()
+            try {
+                onUiThread {
+                    frame.defaultButton = form.ok
+                    form.ok.isEnabled = false
+                }
                 pressEnterOn(form, form.text, emptyList()) shouldContainExactly emptyList()
             } finally {
+                onUiThread { form.ok.isEnabled = true }
                 closeForm(form)
             }
         }

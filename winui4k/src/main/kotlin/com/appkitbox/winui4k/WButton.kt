@@ -230,6 +230,7 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         if (previous === frame) return
         if (previous != null) previous.defaultButton = null // previous calls leaveDefaultButton
         defaultButtonOwner = frame
+        DefaultButtons.active.add(this)
         val accelerator = createKeyboardAccelerator(VirtualKey.ENTER, emptyArray())
         val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
         try {
@@ -248,6 +249,7 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     internal fun leaveDefaultButton(frame: WFrame) {
         if (defaultButtonOwner !== frame) return
         defaultButtonOwner = null
+        DefaultButtons.active.remove(this)
         defaultButtonAccelerator?.let { accelerator ->
             removeKeyboardAccelerator(accelerator)
             accelerator.release()
@@ -326,6 +328,42 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         const val POINTER_OVER_BACKGROUND_OPACITY = 0.9
         const val PRESSED_BACKGROUND_OPACITY = 0.8
         const val PRESSED_FOREGROUND_OPACITY = 0.7
+    }
+}
+
+/** The list of buttons that are the default button of some WFrame (touch only from the UI thread). */
+internal object DefaultButtons {
+    val active = LinkedHashSet<WButton>()
+
+    /**
+     * The default button in the same XamlRoot (the same window) as [element] (any view of a UIElement). null if there is
+     * none.
+     * Used to find the button to press on Enter in a single-line [WTextField].
+     */
+    fun inRootOf(element: ComPtr): WButton? {
+        if (active.isEmpty()) return null
+        val root = xamlRootOf(element) ?: return null
+        try {
+            return active.firstOrNull { button ->
+                val buttonRoot = xamlRootOf(button.uiElement) ?: return@firstOrNull false
+                try {
+                    Xaml.sameObject(root, buttonRoot)
+                } finally {
+                    buttonRoot.release()
+                }
+            }
+        } finally {
+            root.release()
+        }
+    }
+
+    private fun xamlRootOf(element: ComPtr): ComPtr? {
+        val ui = element.queryInterface(XamlInterop.IID_IUIElement)
+        return try {
+            ui.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)
+        } finally {
+            ui.release()
+        }
     }
 }
 

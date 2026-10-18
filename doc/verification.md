@@ -87,6 +87,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - 既定ボタン自身にフォーカスがあるとき: 既定ボタンが 1 回だけ押される (ボタンが KeyDown を処理済みにするのでアクセラレータは動かない)
   - 既定ボタンでない Button にフォーカスがあるとき: フォーカスのあるボタンが押され、既定ボタンは押されない
     (ButtonBase は Enter の KeyDown を処理済みにし、KeyUp でクリックする。`ButtonBaseKeyProcess.h`)
-  - 1 行の TextBox にフォーカスがあるとき: 既定ボタンは押されない (TextBox は Enter をテキスト エンジンへ渡して処理済みにする。
-    `TextBoxBase.cpp` の `CTextBoxBase::OnKeyDown`)。Swing の JTextField とは異なる
+  - WinUI の 1 行の TextBox にフォーカスがあるとき: アクセラレータでは既定ボタンは押されない (TextBox は Enter をテキスト エンジンへ
+    渡して処理済みにする。`TextBoxBase.cpp` の `CTextBoxBase::OnKeyDown`)。ただし処理済みにされるのは要素に付けた KeyDown の
+    ハンドラが呼ばれた後で、普通のハンドラにも handledEventsToo のハンドラにも Handled = false で届く (`WTextFieldActionTest` の実測)
+  - そこで WTextField は KeyDown を `UIElement.AddHandler(KeyDownEvent, handler, handledEventsToo = true)` で購読し、
+    1 行 (AcceptsReturn = false) で修飾キーなしの Enter なら、ActionListener があればそれを呼び、無ければ同じ XamlRoot の
+    既定ボタンを押して、どちらでも Handled = true にする (JTextField と同じ動き。アクセラレータとの 2 重押しはない)。
+    複数行 (AcceptsReturn = true) は改行が入るだけ。AcceptsReturn = false で TextWrapping = Wrap の TextBox は Enter を
+    テキスト エンジンへ渡さない (`ShouldProcessKeyMessage`) ためアクセラレータでも押されるが、WTextField が先に処理済みにするので 1 回だけ押される
+  - IME の変換中に確定のために押した Enter で ActionListener が呼ばれないかは未確認 (PostMessageW の Enter では IME を通らない)
   - 無効な既定ボタンは押されず、アクセラレータを外した後も押されない
