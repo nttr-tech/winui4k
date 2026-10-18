@@ -5,20 +5,6 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * Creates a SymbolIcon and returns it as an IconElement view (for put_Icon-style properties).
- * Release it after use.
- */
-internal fun Symbol.createIconElement(): ComPtr {
-    val symbolIcon = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
-        .getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, native)
-    return try {
-        symbolIcon.queryInterface(XamlInterop.IID_IIconElement)
-    } finally {
-        symbolIcon.release()
-    }
-}
-
-/**
  * Creates a SymbolIconSource and returns it as an IconSource view (for put_IconSource-style properties).
  * Release it after use.
  */
@@ -35,8 +21,9 @@ internal fun Symbol.createIconSource(): ComPtr {
 /**
  * Microsoft.UI.Xaml.Controls.Symbol (a predefined icon that maps to a Segoe Fluent Icons glyph).
  * Values extracted from the winmd (all 197 values; each value is the glyph's code point).
+ * As a [WIcon], it can also be passed to [WButton.icon] and similar properties (shown with a SymbolIcon).
  */
-enum class Symbol(internal val native: Int) {
+enum class Symbol(internal val native: Int) : WIcon {
     PREVIOUS(57600),
     NEXT(57601),
     PLAY(57602),
@@ -235,6 +222,21 @@ enum class Symbol(internal val native: Int) {
     PRINT(59209),
     XBOX_ONE_CONSOLE(59792),
     ;
+
+    /**
+     * Creates a SymbolIcon and returns it as an IconElement view (for put_Icon-style properties).
+     * Release it after use.
+     */
+    @JvmSynthetic
+    internal fun createSymbolIconElement(): ComPtr {
+        val symbolIcon = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
+            .getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, native)
+        return try {
+            symbolIcon.queryInterface(XamlInterop.IID_IIconElement)
+        } finally {
+            symbolIcon.release()
+        }
+    }
 
     internal companion object {
         @JvmSynthetic

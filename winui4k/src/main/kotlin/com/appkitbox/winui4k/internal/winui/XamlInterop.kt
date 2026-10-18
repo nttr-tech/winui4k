@@ -286,6 +286,7 @@ internal object XamlInterop {
     const val ITextBlock_get_FontFamily = 8            // get_FontFamily(out FontFamily)
     const val ITextBlock_put_FontFamily = 9            // put_FontFamily(FontFamily)
     const val ITextBlock_put_FontWeight = 11           // put_FontWeight(FontWeight { u2 Weight } passed by value)
+    const val ITextBlock_get_Foreground = 18           // get_Foreground(out Brush)
     const val ITextBlock_put_Foreground = 19           // put_Foreground(Brush)
     const val ITextBlock_get_TextWrapping = 20         // get_TextWrapping(out TextWrapping)
     const val ITextBlock_put_TextWrapping = 21         // put_TextWrapping(TextWrapping)
@@ -1207,6 +1208,20 @@ internal object XamlInterop {
     const val ISymbolIcon_get_Symbol = 6               // get_Symbol(out Symbol)
     const val ISymbolIcon_put_Symbol = 7               // put_Symbol(Symbol)
 
+    // ---- Microsoft.UI.Xaml.Controls.ImageIcon / FontIcon (derived from IconElement) ----
+    const val CLS_ImageIcon = "Microsoft.UI.Xaml.Controls.ImageIcon"
+    const val IID_IImageIconFactory = "235e0279-a7d0-5fda-a308-9b7cb9c4c912"
+    const val IID_IImageIcon = "78a7b526-e635-59c6-93a1-d7e3c2fac6d5"
+    const val IImageIcon_get_Source = 6                // get_Source(out ImageSource)
+    const val IImageIcon_put_Source = 7                // put_Source(ImageSource)
+    const val CLS_FontIcon = "Microsoft.UI.Xaml.Controls.FontIcon"
+    const val IID_IFontIconFactory = "aa9a24fe-bef8-564a-b200-694cd6f6ba4e"
+    const val IID_IFontIcon = "6eba5ed9-d233-5f5e-91a8-f5134292658a"
+    const val IFontIcon_get_Glyph = 6                  // get_Glyph(out HSTRING)
+    const val IFontIcon_put_Glyph = 7                  // put_Glyph(HSTRING)
+    const val IFontIcon_get_FontFamily = 10            // get_FontFamily(out FontFamily)
+    const val IFontIcon_put_FontFamily = 11            // put_FontFamily(FontFamily)
+
     // ---- Microsoft.UI.Xaml.Controls.NavigationView ----
     const val CLS_NavigationView = "Microsoft.UI.Xaml.Controls.NavigationView"
     const val IID_INavigationViewFactory = "ffea1ada-9232-5507-a320-ed2fadbe6127"
@@ -1892,6 +1907,8 @@ internal object XamlInterop {
     const val IID_IBitmapImageFactory = "f037e0e9-f229-522e-95c9-da2211a14b05"
     const val IBitmapImageFactory_CreateInstanceWithUriSource = 6  // CreateInstanceWithUriSource(Uri) -> BitmapImage
     const val IID_IImageSource = "6c2038f6-d6d5-55e9-9b9e-082f12dbff60"
+    const val IID_IBitmapImage = "5cc29916-a411-5bc2-a3c5-a00d99a59da8"
+    const val IBitmapImage_get_UriSource = 8            // get_UriSource(out Uri)
 
     // ---- Microsoft.UI.Xaml.Controls.Image ----
     const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"
