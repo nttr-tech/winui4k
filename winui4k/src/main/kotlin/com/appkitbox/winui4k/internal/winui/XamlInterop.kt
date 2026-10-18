@@ -96,6 +96,7 @@ internal object XamlInterop {
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
     const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
+    const val IFrameworkElement_get_Resources = 7      // get_Resources(out ResourceDictionary) — per-element dictionary (for lightweight styling)
     const val IFrameworkElement_get_Style = 52         // get_Style(out Style)
     const val IFrameworkElement_put_Style = 53         // put_Style(Style)
     const val IFrameworkElement_get_RequestedTheme = 57 // get_RequestedTheme(out ElementTheme)
@@ -2233,6 +2234,7 @@ internal object XamlInterop {
     const val IControlStatics_get_FontWeightProperty = 11
     const val IControlStatics_get_FontStyleProperty = 12
     const val IControlStatics_get_ForegroundProperty = 15
+    const val IControlStatics_get_BackgroundProperty = 23
     const val IControlStatics_get_BorderThicknessProperty = 25
 
     // ---- Microsoft.UI.Xaml.VisualStateManager (statics) ----
@@ -2343,7 +2345,9 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Controls.ContentPresenter ----
     const val IID_IContentPresenter = "075e6ca8-da46-5ec6-8c64-03b3ddeaf74f"
     const val IContentPresenter_put_Content = 7        // put_Content(Object)
+    const val IContentPresenter_get_Foreground = 26    // get_Foreground(out Brush)
     const val IContentPresenter_get_BorderThickness = 46 // get_BorderThickness(out Thickness)
+    const val IContentPresenter_get_Background = 52    // get_Background(out Brush)
 
     // ---- Microsoft.UI.Xaml.Controls.IViewbox (default interface of Viewbox) ----
     const val IID_IViewbox = "510683e8-d0fe-5ef4-85bd-e1131076ac22"

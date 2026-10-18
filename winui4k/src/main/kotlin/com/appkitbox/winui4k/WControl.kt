@@ -94,8 +94,9 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
      * Reading returns the native effective value, which is the theme's default color before it is set (null if it is not a
      * solid color brush).
      * Setting null clears the value and returns to the theme's default color (DependencyObject.ClearValue).
+     * A button's [WButton.foreground] also changes the colors of the pointer-over and pressed visual states.
      */
-    var foreground: WColor?
+    open var foreground: WColor?
         get() {
             val brush = control.getPtrOrNull(XamlInterop.IControl_get_Foreground) ?: return null
             return try {

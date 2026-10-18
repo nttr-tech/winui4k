@@ -21,6 +21,22 @@
 - **`--enable-native-access` の警告/エラー**
   `gradlew run` 経由なら自動付与される。
   jar を直接実行する場合は `java --enable-native-access=ALL-UNNAMED ...` を付ける。
+- **Button: 表示後に Resources へ ButtonBackground を入れても通常の状態の背景が変わらない (PointerOver / Pressed だけ変わる)**
+  ボタン自身の `FrameworkElement.Resources` に `ButtonBackground` / `ButtonBackgroundPointerOver` / `ButtonBackgroundPressed`
+  (軽量スタイル) を入れたとき、表示状態ごとに反映のされ方が違う (2.5.4-experimental で ContentPresenter の Background を読んで確認)。
+  - PointerOver / Pressed は Loaded の前後どちらで入れても効く。テンプレートの表示状態の Storyboard は GoToState のたびに
+    遅延読み込みのストリームから作り直され (`OptimizedVisualStateManagerDataSource::TryGetOrCreateStoryboardForVisualStateImpl`)、
+    その時点で `{ThemeResource ButtonBackgroundPointerOver}` を要素の Resources から引くため。
+    ただしポインタが乗っている最中に入れ替えた色は、次に状態が変わるまで表示に出ない
+  - 通常 (Normal) の状態は Style の Setter `Background="{ThemeResource ButtonBackground}"` で決まり、この値は Style を
+    適用した時点で解決される。Loaded の後に入れたキーは拾われない (Loaded の前に入れれば拾われる)。
+    テンプレートを入れ直しても変わらず、RequestedTheme の切り替えや Style の設定し直しでは解決し直される
+  - 無効 (Disabled) は `ButtonBackgroundDisabled` を入れない限りテーマの既定のまま
+  - AccentButtonStyle / SubtleButtonStyle は `AccentButtonBackground*` / `SubtleButtonBackground*` を引くので、
+    `ButtonBackground*` だけ入れても変わらない
+  WButton.background / foreground は 3 つのスタイルのキーをすべて入れ、通常の状態の色は Control.Background /
+  Foreground のローカル値でも設定する (Style の Setter より優先される)。null に戻すときはキーを外してから ClearValue すると、
+  Loaded の前にキーを入れていた場合も含めてテーマの既定の色に戻る
 - **TabView: 表示後に TabItems へ Append しても画面にタブが増えない (Append は成功し Size も増える)**
   TabView は内部 ListView の Loaded 時に TabItems プロパティの実体を ListView.Items へ差し替える
   (microsoft-ui-xaml `TabView::OnListViewLoaded` 末尾の `TabItems(lvItems)`)。

@@ -1,6 +1,11 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.PropertyValues
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
@@ -10,7 +15,8 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * Covers the full surface Button defines (IButton + Primitives.IButtonBase +
  * ContentControl.Content): [text] / [content], [clickMode], [isPressed], [isPointerOver],
  * [addActionListener] / [removeActionListener] (Click), [command] / [commandParameter], [flyout].
- * The appearance is switched with [isAccent] / [isContentAreaFilled] / [isBorderPainted].
+ * The appearance is switched with [isAccent] / [isContentAreaFilled] / [isBorderPainted], and the colors are changed with
+ * [background] / [foreground].
  */
 class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
@@ -61,6 +67,104 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         }
 
     /**
+     * JComponent.getBackground / setBackground-like: the button's background color.
+     * The template's visual states (PointerOver / Pressed) are painted with theme resource colors rather than
+     * Control.Background, so ButtonBackground / ButtonBackgroundPointerOver / ButtonBackgroundPressed (and the keys of the
+     * same names with the Accent* / Subtle* prefixes for the built-in styles) are put into the button's own Resources, so
+     * that every state is painted in shades of this color (WinUI lightweight styling). The opacity is multiplied by 0.9
+     * when the pointer is over the button and by 0.8 when it is pressed (the same ratios as WinUI's accent button; the
+     * color behind shows through, so it looks lighter in the light theme and darker in the dark theme).
+     * The disabled appearance stays at the theme default. Reading returns the native effective value, which is the
+     * theme's default color before it is set.
+     * Setting null removes the Resources keys and the Control.Background value and returns to the theme default.
+     */
+    var background: WColor?
+        get() {
+            val brush = control.getPtrOrNull(XamlInterop.IControl_get_Background) ?: return null
+            return try {
+                colorOf(brush)
+            } finally {
+                brush.release()
+            }
+        }
+        set(value) {
+            if (value == null) {
+                removeStateResources(BACKGROUND_KEY)
+                clearControlProperty(XamlInterop.IControlStatics_get_BackgroundProperty)
+                return
+            }
+            putStateResources(
+                BACKGROUND_KEY,
+                value,
+                value.withAlphaScaled(POINTER_OVER_BACKGROUND_OPACITY),
+                value.withAlphaScaled(PRESSED_BACKGROUND_OPACITY),
+            )
+            // The Normal state is painted with Control.Background as already resolved by the Style's Setter, and adding
+            // Resources after loading does not re-resolve it, so also set it as a local value (doc/troubleshooting.md)
+            val brush = value.createBrush()
+            try {
+                control.call(XamlInterop.IControl_put_Background, brush.ptr)
+            } finally {
+                brush.release()
+            }
+        }
+
+    /**
+     * JComponent.getForeground / setForeground-like: the text color. Like [background], it is also put into the
+     * lightweight styling keys (ButtonForeground / ButtonForegroundPointerOver / ButtonForegroundPressed and
+     * Accent* / Subtle*); it is kept as is when the pointer is over the button and its opacity is multiplied by 0.7 when
+     * pressed (a value matched to the ratio between WinUI's primary and secondary text colors).
+     * The disabled appearance stays at the theme default. null returns to the theme default.
+     */
+    override var foreground: WColor?
+        get() = super.foreground
+        set(value) {
+            if (value == null) {
+                removeStateResources(FOREGROUND_KEY)
+            } else {
+                putStateResources(FOREGROUND_KEY, value, value, value.withAlphaScaled(PRESSED_FOREGROUND_OPACITY))
+            }
+            super.foreground = value
+        }
+
+    /**
+     * Puts the [baseKey] (Normal) / PointerOver / Pressed theme resources of the three built-in styles into the button's
+     * own Resources.
+     */
+    private fun putStateResources(baseKey: String, normal: WColor, pointerOver: WColor, pressed: WColor) {
+        withResources { resources ->
+            for (prefix in STYLE_KEY_PREFIXES) {
+                resources.put("$prefix$baseKey", normal)
+                resources.put("$prefix$baseKey$POINTER_OVER", pointerOver)
+                resources.put("$prefix$baseKey$PRESSED", pressed)
+            }
+        }
+    }
+
+    /** Removes the keys put by [putStateResources] (returning to the theme's default colors). */
+    private fun removeStateResources(baseKey: String) {
+        withResources { resources ->
+            for (prefix in STYLE_KEY_PREFIXES) {
+                for (state in listOf("", POINTER_OVER, PRESSED)) resources.remove("$prefix$baseKey$state")
+            }
+        }
+    }
+
+    private inline fun withResources(block: (ElementResources) -> Unit) {
+        val dictionary = frameworkElement.getPtr(XamlInterop.IFrameworkElement_get_Resources)
+        val map = try {
+            dictionary.queryInterface(FoundationInterop.IID_IMap_Object_Object)
+        } finally {
+            dictionary.release()
+        }
+        try {
+            block(ElementResources(map))
+        } finally {
+            map.release()
+        }
+    }
+
+    /**
      * The built-in style currently applied (FrameworkElement.Style). Not set again if unchanged (to avoid rebuilding the
      * template).
      */
@@ -96,6 +200,60 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
 
     init {
         if (text.isNotEmpty()) this.text = text
+    }
+
+    private companion object {
+        /** Keys of Button's lightweight styling (controls/dev/CommonStyles/Button_themeresources.xaml). */
+        const val BACKGROUND_KEY = "ButtonBackground"
+        const val FOREGROUND_KEY = "ButtonForeground"
+        const val POINTER_OVER = "PointerOver"
+        const val PRESSED = "Pressed"
+
+        /** Key prefixes for the default style (DefaultButtonStyle), AccentButtonStyle, and SubtleButtonStyle. */
+        val STYLE_KEY_PREFIXES = listOf("", "Accent", "Subtle")
+
+        // Opacity multipliers for pointer-over and pressed. The background uses 0.9 / 0.8, the same as
+        // AccentFillColorSecondary / Tertiary (Common_themeresources_any.xaml), and the text matches
+        // TextFillColorSecondary / Primary (about 0.69 in the light theme)
+        const val POINTER_OVER_BACKGROUND_OPACITY = 0.9
+        const val PRESSED_BACKGROUND_OPACITY = 0.8
+        const val PRESSED_FOREGROUND_OPACITY = 0.7
+    }
+}
+
+/** The color with only its opacity multiplied by [factor] (rounded). */
+private fun WColor.withAlphaScaled(factor: Double): WColor = WColor(red, green, blue, Math.round(alpha * factor).toInt())
+
+/** Puts color brushes into and removes them from FrameworkElement.Resources (IMap<Object, Object>). */
+private class ElementResources(private val map: ComPtr) {
+    /** Puts a SolidColorBrush of [color] at [key] (replacing any existing one). */
+    fun put(key: String, color: WColor) {
+        val boxedKey = PropertyValues.boxString(key)
+        val brush = color.createBrush()
+        try {
+            Ffi.backend.withScope { scope ->
+                val replaced = scope.allocate(1, 1)
+                map.call(FoundationInterop.IMap_Insert, boxedKey.ptr, brush.ptr, replaced)
+            }
+        } finally {
+            brush.release()
+            boxedKey.release()
+        }
+    }
+
+    /** Removes [key] if present (IMap.Remove fails for a missing key, so check with HasKey). */
+    fun remove(key: String) {
+        val boxedKey = PropertyValues.boxString(key)
+        try {
+            val present = Ffi.backend.withScope { scope ->
+                val out = scope.allocate(1, 1)
+                map.call(FoundationInterop.IMap_HasKey, boxedKey.ptr, out)
+                Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+            }
+            if (present) map.call(FoundationInterop.IMap_Remove, boxedKey.ptr)
+        } finally {
+            boxedKey.release()
+        }
     }
 }
 
