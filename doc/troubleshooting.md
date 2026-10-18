@@ -130,3 +130,8 @@
   WinUI の仕様で `getToolButton` / `getToggleButton` では得られないので、追加したラッパーをそのまま使う (`getItems`)。
   カスタム ペンは `WInkToolbar` に追加した `WInkToolbarCustomPenButton` の `customPen` に設定すると反映される
   (2.5.4-experimental の InkToolbar の不具合を WInkToolbar が補っている)。
+- **ビジュアルツリーに載っていない要素の親が取れない (VisualTreeHelper.GetParent も FrameworkElement.Parent も null)**
+  WinUI はツリーに載っていない要素について、Panel の子であっても親を返さない (2.5.4-experimental で実測。
+  `VisualTreeHelper::GetParentStaticPrivate` は載っていない要素では親のピアを作らずに探す)。ウィンドウから外した直後の
+  Unloaded のハンドラでも同じで、外れた部分木の根をたどれない。必要なら、載っている間 (Loaded) に祖先を弱参照
+  (IWeakReferenceSource) で覚えておく (`ListenerAnchor`)。

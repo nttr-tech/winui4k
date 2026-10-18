@@ -26,6 +26,22 @@ internal object Reclamation {
         }
     }
 
+    /**
+     * Whether the referent of [reference] still remains after prompting GC several times (verifies it is not collected).
+     * There is no need to prompt GC as many times as [awaitCollected], which waits for collection, so this stops after
+     * about a second.
+     */
+    @Suppress("ExplicitGarbageCollectionCall") // Prompts GC because the test verifies that it is not collected
+    fun survivesGc(reference: java.lang.ref.WeakReference<*>): Boolean {
+        repeat(SURVIVAL_GC_COUNT) {
+            System.gc()
+            Thread.sleep(POLL_MILLIS)
+        }
+        return reference.get() != null
+    }
+
+    private const val SURVIVAL_GC_COUNT = 20
+
     /** Waits until the referent of [reference] is collected. */
     fun awaitCollected(reference: java.lang.ref.WeakReference<*>): Boolean = awaitWithGc { reference.get() == null }
 

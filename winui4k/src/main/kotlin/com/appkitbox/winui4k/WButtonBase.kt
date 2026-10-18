@@ -50,6 +50,9 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
     private val clickTokens = ListenerTokens<Any>()
 
+    /** A reference for looking up this button from the Click handler (created when the first listener is added). */
+    private val listenerAnchor by lazy { ListenerAnchor(this) }
+
     private var contentComponent: WComponent? = null
 
     /**
@@ -325,12 +328,16 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     private fun subscribeClick(key: Any, onClick: (WActionEvent) -> Unit) {
+        // The handler stays on the native object, so it does not capture the button strongly but looks it up from anchor
+        // (see ListenerAnchor)
+        val anchor = listenerAnchor
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> onClick(createActionEvent()) }
+        ) { _, _ -> anchor.get()?.let { button -> onClick(button.createActionEvent()) } }
         clickTokens.add(key, token)
+        anchor.listenerAdded()
     }
 
     private fun createActionEvent() = WActionEvent(
@@ -364,6 +371,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     private fun unsubscribeClick(key: Any) {
         val token = clickTokens.remove(key) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
+        listenerAnchor.listenerRemoved()
     }
 }
 
