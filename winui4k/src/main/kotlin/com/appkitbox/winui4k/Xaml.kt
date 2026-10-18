@@ -252,6 +252,57 @@ internal object Xaml {
         return modifiers
     }
 
+    /**
+     * Subscribes to a routed event of [component] ([eventSlot] is get_XxxEvent of IUIElementStatics), including events
+     * that other elements or the control itself have marked handled (Handled)
+     * (UIElement.AddHandler(XxxEvent, handler, handledEventsToo = true)).
+     * [delegateIid] is the handler's delegate type (PointerEventHandler and so on, of the form Invoke(sender, args)), and
+     * [referenceIid] is the IID of the IReference that wraps it. AddHandler takes the handler as an object, so the delegate
+     * is wrapped in an IReference and passed (same as C++/WinRT's box_value). [handler] receives the sender (the element
+     * the handler is attached to) and a pointer to the event args.
+     * Calling the return value unsubscribes.
+     */
+    fun addHandlerHandledToo(component: WComponent, eventSlot: Int, delegateIid: String, referenceIid: String, handler: (Ptr, Ptr) -> Unit): () -> Unit {
+        val statics = Activation.factory(XamlInterop.CLS_UIElement, XamlInterop.IID_IUIElementStatics)
+        val routedEvent = try {
+            statics.getPtr(eventSlot)
+        } finally {
+            statics.release()
+        }
+        val delegate = KComObject("WinUI4K.HandledTooHandler", inspectable = false).addInterface(
+            delegateIid,
+            listOf(
+                // Invoke(this, sender, args)
+                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)) { args ->
+                    handler(args[1] as Ptr, args[2] as Ptr)
+                    KComObject.S_OK
+                },
+            ),
+        )
+        val boxed = KComObject("Windows.Foundation.IReference`1<WinUI4K.HandledTooHandler>").addInterface(
+            referenceIid,
+            listOf(
+                // get_Value(this, out handler): passes a reference that the caller releases
+                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)) { args ->
+                    delegate.addRef()
+                    Ffi.backend.memory.putPtr(args[1] as Ptr, 0, delegate.primary)
+                    KComObject.S_OK
+                },
+            ),
+        )
+        component.uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed.primary, 1)
+        var removed = false
+        return {
+            if (!removed) {
+                removed = true
+                component.uiElement.call(XamlInterop.IUIElement_RemoveHandler, routedEvent, boxed.primary)
+                routedEvent.release()
+                boxed.release()
+                delegate.release()
+            }
+        }
+    }
+
     /** Sets a UI Automation name, id, help text, etc. (null clears it with an empty string). */
     fun setAutomation(target: ComPtr, slot: Int, value: String?) {
         val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)
@@ -861,49 +912,13 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
      * Subscribes to a routed pointer event ([eventSlot] is a get_XxxEvent of IUIElementStatics), including events that
      * a child has marked as handled (UIElement.AddHandler(XxxEvent, handler, handledEventsToo = true)).
      * This also receives clicks on buttons. Calling the returned function unsubscribes.
-     * Since AddHandler takes the handler as an object, the delegate is wrapped in an IReference<PointerEventHandler>
-     * (the same as box_value in C++/WinRT).
      */
-    fun onPointerHandledToo(eventSlot: Int, handler: (XamlPointerEvent) -> Unit): () -> Unit {
-        val statics = Activation.factory(XamlInterop.CLS_UIElement, XamlInterop.IID_IUIElementStatics)
-        val routedEvent = try {
-            statics.getPtr(eventSlot)
-        } finally {
-            statics.release()
-        }
-        val delegate = KComObject("WinUI4K.XamlPointerHandledToo", inspectable = false).addInterface(
-            XamlInterop.IID_PointerEventHandler,
-            listOf(
-                // Invoke(this, sender, args)
-                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)) { args ->
-                    handler(XamlPointerEvent(ComPtr(args[2] as Ptr)))
-                    KComObject.S_OK
-                },
-            ),
-        )
-        val boxed = KComObject("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Input.PointerEventHandler>").addInterface(
-            FoundationInterop.IID_IReference_PointerEventHandler,
-            listOf(
-                // get_Value(this, out PointerEventHandler): hands over a reference that the caller releases
-                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)) { args ->
-                    delegate.addRef()
-                    Ffi.backend.memory.putPtr(args[1] as Ptr, 0, delegate.primary)
-                    KComObject.S_OK
-                },
-            ),
-        )
-        uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed.primary, 1)
-        var removed = false
-        return {
-            if (!removed) {
-                removed = true
-                uiElement.call(XamlInterop.IUIElement_RemoveHandler, routedEvent, boxed.primary)
-                routedEvent.release()
-                boxed.release()
-                delegate.release()
-            }
-        }
-    }
+    fun onPointerHandledToo(eventSlot: Int, handler: (XamlPointerEvent) -> Unit): () -> Unit = Xaml.addHandlerHandledToo(
+        this,
+        eventSlot,
+        XamlInterop.IID_PointerEventHandler,
+        FoundationInterop.IID_IReference_PointerEventHandler,
+    ) { _, args -> handler(XamlPointerEvent(ComPtr(args))) }
 
     /** Subscribes to Tapped. */
     fun onTapped(handler: (XamlTapEvent) -> Unit): Long =
