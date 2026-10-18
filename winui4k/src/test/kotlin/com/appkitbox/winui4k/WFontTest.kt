@@ -9,60 +9,12 @@ import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
-/** Verifies WFont's behavior as a value, and that WControl.font / foreground reach the native object. */
+/**
+ * Verifies that WControl.font / foreground reach the native object (WFont's own behavior as a value is covered by
+ * WFontForJavaTest).
+ */
 class WFontTest : FunSpec() {
     init {
-        test("style constants have the same values as AWT's Font") {
-            listOf(WFont.PLAIN, WFont.BOLD, WFont.ITALIC) shouldBe listOf(0, 1, 2)
-        }
-
-        test("holds name, style, and size, and isBold and isItalic are determined by the style bits") {
-            val plain = WFont("Segoe UI", WFont.PLAIN, 12.0)
-            plain.name shouldBe "Segoe UI"
-            plain.style shouldBe 0
-            plain.size2D shouldBe 12.0
-            plain.isBold.shouldBeFalse()
-            plain.isItalic.shouldBeFalse()
-
-            val boldItalic = WFont("Segoe UI", WFont.BOLD or WFont.ITALIC, 12.0)
-            boldItalic.isBold.shouldBeTrue()
-            boldItalic.isItalic.shouldBeTrue()
-            WFont("Segoe UI", WFont.BOLD, 12.0).isItalic.shouldBeFalse()
-            WFont("Segoe UI", WFont.ITALIC, 12.0).isBold.shouldBeFalse()
-        }
-
-        test("size is the rounded integer as in AWT, size2D returns the original value, and the Int constructor works too") {
-            val font = WFont("Yu Gothic UI", WFont.PLAIN, 12.6)
-            font.size shouldBe 13
-            font.size2D shouldBe 12.6
-            WFont("Yu Gothic UI", WFont.PLAIN, 14).size2D shouldBe 14.0
-        }
-
-        test("equals and hashCode match only when name, style, and size are all the same") {
-            val base = WFont("Consolas", WFont.BOLD, 16.0)
-            base shouldBe WFont("Consolas", WFont.BOLD, 16)
-            base.hashCode() shouldBe WFont("Consolas", WFont.BOLD, 16.0).hashCode()
-            base shouldNotBe WFont("Consolas Bold", WFont.BOLD, 16.0)
-            base shouldNotBe WFont("Consolas", WFont.PLAIN, 16.0)
-            base shouldNotBe WFont("Consolas", WFont.BOLD, 16.5)
-        }
-
-        test("deriveFont returns a new WFont with only the given attributes replaced, leaving the original unchanged") {
-            val base = WFont("Consolas", WFont.PLAIN, 12.0)
-            base.deriveFont(WFont.BOLD) shouldBe WFont("Consolas", WFont.BOLD, 12.0)
-            base.deriveFont(20f) shouldBe WFont("Consolas", WFont.PLAIN, 20.0)
-            base.deriveFont(WFont.ITALIC, 9f) shouldBe WFont("Consolas", WFont.ITALIC, 9.0)
-            base shouldBe WFont("Consolas", WFont.PLAIN, 12.0)
-        }
-
-        test("a WFont with size 0 or less or NaN, or a style containing undefined bits, cannot be created") {
-            shouldThrow<IllegalArgumentException> { WFont("Consolas", WFont.PLAIN, 0.0) }
-            shouldThrow<IllegalArgumentException> { WFont("Consolas", WFont.PLAIN, -1.0) }
-            shouldThrow<IllegalArgumentException> { WFont("Consolas", WFont.PLAIN, Double.NaN) }
-            shouldThrow<IllegalArgumentException> { WFont("Consolas", 4, 12.0) }
-            shouldThrow<IllegalArgumentException> { WFont("Consolas", -1, 12.0) }
-        }
-
         test("the family, weight, italic, and size set on WControl.font can be read back from the native object") {
             val button = onUiThreadGet { WButton("Font") }
             UiTestHarness.attachAndAwaitLoaded(button)

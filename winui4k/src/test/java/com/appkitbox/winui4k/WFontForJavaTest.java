@@ -40,6 +40,16 @@ class WFontForJavaTest {
     }
 
     @Test
+    void isBoldAndIsItalicAreDeterminedIndependentlyByEachStyleBit() {
+        WFont plain = new WFont("Segoe UI", WFont.PLAIN, 12);
+        assertFalse(plain.isBold());
+        assertFalse(plain.isItalic());
+        assertFalse(new WFont("Segoe UI", WFont.BOLD, 12).isItalic());
+        assertFalse(new WFont("Segoe UI", WFont.ITALIC, 12).isBold());
+        assertTrue(new WFont("Segoe UI", WFont.ITALIC, 12).isItalic());
+    }
+
+    @Test
     void boldAndItalicCanBeCombinedWithBitwiseOr() {
         WFont font = new WFont("Consolas", WFont.BOLD | WFont.ITALIC, 12);
         assertTrue(font.isBold());
@@ -66,8 +76,15 @@ class WFontForJavaTest {
     }
 
     @Test
-    void aFontWithASizeOfZeroOrLessCannotBeCreated() {
+    void aFontWithASizeOfZeroOrLessOrNaNCannotBeCreated() {
         assertThrows(IllegalArgumentException.class, () -> new WFont("Consolas", WFont.PLAIN, 0));
         assertThrows(IllegalArgumentException.class, () -> new WFont("Consolas", WFont.PLAIN, -1));
+        assertThrows(IllegalArgumentException.class, () -> new WFont("Consolas", WFont.PLAIN, Double.NaN));
+    }
+
+    @Test
+    void aFontWithUndefinedStyleBitsCannotBeCreated() {
+        assertThrows(IllegalArgumentException.class, () -> new WFont("Consolas", 4, 12));
+        assertThrows(IllegalArgumentException.class, () -> new WFont("Consolas", -1, 12));
     }
 }

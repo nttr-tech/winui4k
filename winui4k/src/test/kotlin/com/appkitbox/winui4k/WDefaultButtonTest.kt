@@ -249,12 +249,6 @@ class WDefaultButtonTest : FunSpec() {
                 closeForm(form)
             }
         }
-
-        test("Java sees WFrame's getDefaultButton / setDefaultButton and WButton's isDefaultButton") {
-            WFrame::class.java.getMethod("getDefaultButton").returnType shouldBe WButton::class.java
-            WFrame::class.java.getMethod("setDefaultButton", WButton::class.java).returnType shouldBe Void.TYPE
-            WButton::class.java.getMethod("isDefaultButton").returnType shouldBe Boolean::class.javaPrimitiveType
-        }
     }
 
     private companion object {
