@@ -328,7 +328,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         clickTokens.addKotlinAdapter(listener, adapter)
     }
 
-    /** The old form without the event. Kept to preserve the same JVM signature as `addActionListener(Runnable)`. */
+    /**
+     * The old form that does not receive the event. Kept to preserve the same JVM signature (binary compatibility) as
+     * `addActionListener(Runnable)`. It is not visible from Kotlin (HIDDEN), so calls that passed a value of type
+     * `() -> Unit` or a function reference such as `::save` must be rewritten as `addActionListener { save() }`.
+     * It is HIDDEN because a WARNING-level deprecation would make `addActionListener { }` ambiguous.
+     */
     @Deprecated("Use addActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
@@ -372,6 +377,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         unsubscribeClick(clickTokens.removeKotlinAdapter(listener) ?: return)
     }
 
+    /**
+     * Removal for the old `() -> Unit` form of [addActionListener] (not visible from Kotlin). Calls that passed something
+     * like `removeActionListener(::save)` should keep the same function used at registration, such as
+     * `val listener = { e: WActionEvent -> save() }`, and pass it.
+     * The reason and compatibility are the same as for the old form of [addActionListener].
+     */
     @Deprecated("Use removeActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {

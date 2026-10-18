@@ -15,6 +15,9 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * It can be implemented from Java, but normally you extend [WAbstractAction], which already implements storing and
  * notifying for [getValue] and [putValue] (just like Swing's AbstractAction).
+ *
+ * Use from the UI thread. Setting [putValue] and [isEnabled] updates the bound buttons synchronously on the calling
+ * thread.
  */
 interface WAction {
     /** Called when the button is clicked. The source of [e] is the clicked button. */
@@ -86,7 +89,8 @@ fun interface WActionChangeListener {
  *     public void actionPerformed(WActionEvent e) { save(); }
  * });
  * ```
- * Read and write the values from the UI thread (because the buttons are updated on the UI thread).
+ * Use from the UI thread. Setting [putValue] and [isEnabled] updates the bound buttons synchronously on the calling
+ * thread (calling them from another thread would touch the buttons from outside the UI thread).
  */
 abstract class WAbstractAction @JvmOverloads constructor(
     name: String? = null,

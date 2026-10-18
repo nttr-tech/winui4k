@@ -128,6 +128,9 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * JTextField.addActionListener).
      * The listener receives a [WActionEvent] whose source is this field. While there are listeners, Enter does not press
      * the default button.
+     *
+     * Enter pressed to confirm IME conversion is expected to arrive not as Enter but as WinUI's VirtualKey.ProcessKey
+     * (229), in which case the listeners are not called. However, this has not been confirmed by tests (unverified).
      */
     @JvmSynthetic
     fun addActionListener(listener: (WActionEvent) -> Unit) = addAction(listener, listener)
