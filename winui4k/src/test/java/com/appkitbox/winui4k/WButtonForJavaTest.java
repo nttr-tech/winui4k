@@ -296,24 +296,7 @@ class WButtonForJavaTest {
         });
     }
 
-    // ---- Appearance ----
-
-    @Test
-    void setContentAreaFilledAndSetBorderPaintedAreTrueByDefaultAndCanBeSetToFalseAndReadBack() {
-        onUiThread(() -> {
-            WButton button = new WButton("OK");
-            assertTrue(button.isContentAreaFilled());
-            assertTrue(button.isBorderPainted());
-            button.setContentAreaFilled(false);
-            button.setBorderPainted(false);
-            assertFalse(button.isContentAreaFilled());
-            assertFalse(button.isBorderPainted());
-            button.setContentAreaFilled(true);
-            button.setBorderPainted(true);
-            assertTrue(button.isContentAreaFilled());
-            assertTrue(button.isBorderPainted());
-        });
-    }
+    // ---- Fonts (colors and appearance toggles are in WButtonColorForJavaTest / WButtonAppearanceForJavaTest) ----
 
     @Test
     void setFontWithAWFontReadsBackBoldWithGetFont() {
@@ -345,38 +328,6 @@ class WButtonForJavaTest {
                 assertTrue(button.getFont().isItalic());
                 button.setFont(null);
                 assertEquals(before, button.getFont());
-            });
-        } finally {
-            UiTestHarness.detach(button);
-        }
-    }
-
-    @Test
-    void setForegroundWithAWColorConstantReadsBackTheSameColorWithGetForeground() {
-        WButton button = UiTestHarness.onUiThreadGet(() -> new WButton("Text color"));
-        UiTestHarness.attachAndAwaitLoaded(button);
-        try {
-            onUiThread(() -> {
-                button.setForeground(WColor.RED);
-                assertEquals(WColor.RED, button.getForeground());
-                assertEquals(237, button.getForeground().getRed());
-            });
-        } finally {
-            UiTestHarness.detach(button);
-        }
-    }
-
-    @Test
-    void theColorSetWithSetBackgroundIsReadBackWithGetBackgroundAndNullRestoresIt() {
-        WButton button = UiTestHarness.onUiThreadGet(() -> new WButton("Background"));
-        UiTestHarness.attachAndAwaitLoaded(button);
-        try {
-            onUiThread(() -> {
-                WColor before = button.getBackground();
-                button.setBackground(new WColor(10, 120, 200));
-                assertEquals(new WColor(10, 120, 200, 255), button.getBackground());
-                button.setBackground(null);
-                assertEquals(before, button.getBackground());
             });
         } finally {
             UiTestHarness.detach(button);
