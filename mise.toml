@@ -1,0 +1,6 @@
+# Pins the versions of the development tools (the x64 CI jobs also use this file through jdx/mise-action)
+# JDK 8 / 9 / 22 for the tests and JDK 21 for detekt are fetched automatically by Gradle's foojay resolver, so they are not listed here
+[tools]
+java = "temurin-25.0.4+101.0.LTS"
+# For tools/dump_winmd.py (install its dependency dnfile with pip install dnfile)
+python = "3.14.8"

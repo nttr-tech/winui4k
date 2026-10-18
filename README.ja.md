@@ -108,6 +108,7 @@ WinUiUtilities.invokeLater {
 
 必要なのは **JDK 25** (x64) だけです (Visual Studio、C++ ビルドツール、.NET SDK は不要)。
 [Eclipse Temurin](https://adoptium.net/) などから入手してパスに設定してください。
+[mise](https://mise.jdx.dev/) を使っている場合は、リポジトリで `mise install` を実行すると `mise.toml` で固定した版が入ります。
 
 ```powershell
 git clone https://github.com/nttr-tech/winui4k.git

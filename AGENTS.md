@@ -2,7 +2,7 @@
 
 - WinUI4KはKotlin/JavaからWinUIを使えるようにするライブラリ
   - JavaのFFI(Panama/JNA/JNR)でWinRTを呼び出し
-  - 開発にはJDK 25(x64)とWindows 11が必要
+  - 開発にはJDK 25(x64)とWindows 11が必要 (JDK と Python のバージョンは `mise.toml` で固定)
   - リンター実行と一部テストはfoojay resolverでJDK 21/8/9/22を自動取得
 
 # よく使うコマンド

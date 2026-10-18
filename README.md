@@ -108,6 +108,7 @@ On the other hand, there are the following limitations:
 
 All you need is **JDK 25** (x64) — no Visual Studio, C++ build tools, or .NET SDK.
 Get it from [Eclipse Temurin](https://adoptium.net/) or similar and add it to your PATH.
+If you use [mise](https://mise.jdx.dev/), run `mise install` in the repository to get the version pinned in `mise.toml`.
 
 ```powershell
 git clone https://github.com/nttr-tech/winui4k.git
