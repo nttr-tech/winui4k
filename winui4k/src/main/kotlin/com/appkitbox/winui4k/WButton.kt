@@ -42,7 +42,7 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * AbstractButton.isContentAreaFilled / setContentAreaFilled-like: whether to paint the button's background.
      * When false, the button uses a built-in style with a transparent background and border (SubtleButtonStyle), and is
      * lightly painted only when the pointer is over it or it is pressed (looks like a toolbar button). [isAccent] and the
-     * default button highlight take precedence.
+     * default button ([isDefaultButton]) highlight take precedence.
      */
     var isContentAreaFilled: Boolean = true
         set(value) {
@@ -164,6 +164,73 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         }
     }
 
+    /** The WFrame that has this button as its default button ([WFrame.defaultButton]). */
+    private var defaultButtonOwner: WFrame? = null
+
+    /** The Enter accelerator put into UIElement.KeyboardAccelerators only while this is the default button. */
+    private var defaultButtonAccelerator: ComPtr? = null
+
+    /**
+     * JButton.isDefaultButton-like: whether this is the [WFrame.defaultButton] of some frame (read-only).
+     * While it is the default button, it is shown with the accent appearance (AccentButtonStyle); when it stops being one,
+     * it returns to the appearance from [isAccent] / [isContentAreaFilled].
+     */
+    val isDefaultButton: Boolean
+        get() = defaultButtonOwner != null
+
+    /**
+     * Becomes the default button of [frame] (called from the setter of [WFrame.defaultButton]). If it was the default
+     * button of another WFrame, it stops being that one's default button.
+     * Adds an Enter accelerator with no modifier keys (no ScopeOwner = effective in the whole window). Since Invoked is
+     * not handled, WinUI calls this button's UI Automation Invoke (= click). WinUI skips accelerators of disabled buttons.
+     */
+    internal fun becomeDefaultButton(frame: WFrame) {
+        val previous = defaultButtonOwner
+        if (previous === frame) return
+        if (previous != null) previous.defaultButton = null // previous calls leaveDefaultButton
+        defaultButtonOwner = frame
+        val accelerator = createKeyboardAccelerator(VirtualKey.ENTER, emptyArray())
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        try {
+            accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
+        } finally {
+            accelerators.release()
+        }
+        defaultButtonAccelerator = accelerator
+        updateAppearance()
+    }
+
+    /**
+     * Stops being the default button of [frame] (called from the setter of [WFrame.defaultButton]).
+     * Removes the Enter accelerator.
+     */
+    internal fun leaveDefaultButton(frame: WFrame) {
+        if (defaultButtonOwner !== frame) return
+        defaultButtonOwner = null
+        defaultButtonAccelerator?.let { accelerator ->
+            removeKeyboardAccelerator(accelerator)
+            accelerator.release()
+        }
+        defaultButtonAccelerator = null
+        updateAppearance()
+    }
+
+    private fun removeKeyboardAccelerator(accelerator: ComPtr) {
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        try {
+            Ffi.backend.withScope { scope ->
+                val index = scope.allocate(4)
+                val found = scope.allocate(1, 1)
+                accelerators.call(FoundationInterop.IVector_IndexOf, accelerator.ptr, index, found)
+                if (Ffi.backend.memory.getByte(found, 0) != 0.toByte()) {
+                    accelerators.call(FoundationInterop.IVector_RemoveAt, Ffi.backend.memory.getInt(index, 0))
+                }
+            }
+        } finally {
+            accelerators.release()
+        }
+    }
+
     /**
      * The built-in style currently applied (FrameworkElement.Style). Not set again if unchanged (to avoid rebuilding the
      * template).
@@ -171,12 +238,12 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     private var appliedAppearance = ButtonAppearance.DEFAULT
 
     /**
-     * The built-in style determined by the appearance settings. The order of precedence is [isAccent] (emphasis) →
-     * [isContentAreaFilled] = false (no fill) → default.
-     * Removing the emphasis returns to the appearance of the remaining settings.
+     * The built-in style determined by the appearance settings. The order of precedence is [isDefaultButton] or
+     * [isAccent] (emphasis) → [isContentAreaFilled] = false (no fill) → default. When the emphasis goes away, it returns
+     * to the appearance of the remaining settings.
      */
     private fun requestedAppearance(): ButtonAppearance = when {
-        isAccent -> ButtonAppearance.ACCENT
+        isDefaultButton || isAccent -> ButtonAppearance.ACCENT
         !isContentAreaFilled -> ButtonAppearance.SUBTLE
         else -> ButtonAppearance.DEFAULT
     }

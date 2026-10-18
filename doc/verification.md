@@ -78,3 +78,15 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     UI スレッドへ遅れて届くため、CurrentPoint の読み取りが CO_E_NOT_SUPPORTED で失敗することがある
     (WinUI 自身のサンプル InkBugBash も投げ縄には使っていない)。InkPointerEvent は読めなければ null を返す
   - InkToolbarStencilButton.Ruler / Protractor は設定されず常に null (定規・分度器の表示は InkToolbar が InkPresenter 経由で行う)
+- 既定ボタン (WFrame.defaultButton) は、ボタンに修飾キーなしの Enter の KeyboardAccelerator (ScopeOwner なし) を入れて作る。
+  グローバルなアクセラレータは KeyDown がどの要素にも処理されなかったときだけ動き
+  (`components/ContentRoot/KeyboardInputProcessor.cpp`)、Invoked を処理しなければボタンの UI オートメーションの Invoke
+  (= クリック) になる。E2E テスト (`WDefaultButtonTest`。Enter は共有ウィンドウの InputSiteWindowClass へ PostMessageW で送る)
+  で次の動きを確かめた (2.5.4-experimental)
+  - CheckBox にフォーカスがあるとき: 既定ボタンが 1 回押される (CheckBox は Enter を受け付けない。`CheckBox_Partial.cpp` の `SetAcceptsReturn(false)`)
+  - 既定ボタン自身にフォーカスがあるとき: 既定ボタンが 1 回だけ押される (ボタンが KeyDown を処理済みにするのでアクセラレータは動かない)
+  - 既定ボタンでない Button にフォーカスがあるとき: フォーカスのあるボタンが押され、既定ボタンは押されない
+    (ButtonBase は Enter の KeyDown を処理済みにし、KeyUp でクリックする。`ButtonBaseKeyProcess.h`)
+  - 1 行の TextBox にフォーカスがあるとき: 既定ボタンは押されない (TextBox は Enter をテキスト エンジンへ渡して処理済みにする。
+    `TextBoxBase.cpp` の `CTextBoxBase::OnKeyDown`)。Swing の JTextField とは異なる
+  - 無効な既定ボタンは押されず、アクセラレータを外した後も押されない

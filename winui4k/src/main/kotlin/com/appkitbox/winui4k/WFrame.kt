@@ -45,6 +45,24 @@ class WFrame @JvmOverloads constructor(title: String = "") {
         window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
     }
 
+    /**
+     * JRootPane.getDefaultButton / setDefaultButton-like: the window's default button. It is pressed by Enter with no
+     * modifier keys and shown with the accent appearance ([WButton.isDefaultButton]). Changing to another button or null
+     * makes the previous button stop being the default button.
+     * It is implemented with a WinUI keyboard accelerator, so it is not pressed while focus is on a control that handles
+     * Enter itself (if another WButton has focus, that button is pressed, and it is not pressed in a single-line
+     * [WTextField] either; unlike Swing).
+     * A disabled button is not pressed.
+     */
+    var defaultButton: WButton? = null
+        set(value) {
+            val previous = field
+            if (previous === value) return
+            field = value
+            previous?.leaveDefaultButton(this)
+            value?.becomeDefaultButton(this)
+        }
+
     /** Setting this to true shows (activates) the window. */
     var isVisible: Boolean = false
         set(value) {
