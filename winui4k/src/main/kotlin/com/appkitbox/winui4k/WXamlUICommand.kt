@@ -29,6 +29,7 @@ open class WXamlUICommand internal constructor(
     /** The default interface pointer (IXamlUICommand / IStandardUICommand). */
     internal val inspectable: ComPtr,
 ) : WCommandBase() {
+    @JvmOverloads
     constructor(label: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_XamlUICommand, XamlInterop.IID_IXamlUICommandFactory),
     ) {

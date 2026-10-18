@@ -15,6 +15,7 @@ import kotlin.jvm.JvmSynthetic
  * the right side's arrow opens [flyout].
  */
 open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(inspectable) {
+    @JvmOverloads
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_SplitButton, XamlInterop.IID_ISplitButtonFactory),
     ) {

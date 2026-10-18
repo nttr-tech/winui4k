@@ -19,6 +19,7 @@ import kotlin.jvm.JvmSynthetic
  * [addItemListener] / [removeItemListener] (Checked / Unchecked / Indeterminate).
  */
 open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
+    @JvmOverloads
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_ToggleButton, XamlInterop.IID_IToggleButtonFactory),
     ) {
