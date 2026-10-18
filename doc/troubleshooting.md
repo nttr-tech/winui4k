@@ -88,6 +88,19 @@
   FocusState が Pointer (1) で、「クリックで入ったときだけ結果を出す」判定が誤って結果を開いていた。
   クリックかどうかは FocusState ではなく、ボックスの PointerPressed (handledEventsToo) を受けたかで見分ける
   (`WRibbonSearchBox`)。
+- **XAML の未処理エラーでプロセスが落ちる (終了コード 0xC000027B = STATUS_STOWED_EXCEPTION)**
+  XAML は、Application.UnhandledException で Handled にならなかった未処理エラーを `FailFastWithStowedExceptions` で
+  プロセスの強制終了にする。winui4k は Application.UnhandledException を購読して Handled にし、エラーを
+  `WindowsRuntimeException` として UI スレッドの未捕捉例外ハンドラー (既定は標準エラーへの出力) へ渡してアプリを続ける
+  (`WinUiUtilities`、ApplicationUnhandledExceptionTest)。落とすかどうかはアプリが `Thread.setDefaultUncaughtExceptionHandler`
+  などで決める (レイアウト中のエラーは XAML が Handled に関係なく落とす)。
+  典型例は InkCanvas で、WinUI がインクのスレッドへ投函した設定の処理 (OS に拒否された SetPredefinedConfiguration) の失敗が、
+  UI スレッドが次の投函で前の IAsyncAction を解放した瞬間にこの経路で落ちていた (CI の JDK 8/9 でだけ再現した。
+  2 コアの CI や遅い JNA ではインクのスレッドが先に進んで競合に負ける)。
+  調べ方: `Start-Process` で起動した Gradle に `$p.ProcessorAffinity = 1` で CPU を 1 つに制限すると手元でも再現する。
+  テストの JVM に `cdb -p <pid>` を付け、`sxe -c ".echo; kc 40; gn" 40080201` (WinRT の RoOriginateError) で失敗した
+  呼び出しのスタックを、`sxe -c2 "!analyze -v; ~*kn 60" c000027b` で落ちた側のスタックを記録する
+  (JVM が使うアクセス違反は `sxd av` で流し、`sxn epr` でプロセス終了では止めない)。
 - **InkCanvas: マウスやタッチで線が描けない**
   InkCanvas の既定の入力機器はペンだけである。`canvas.inkPresenter.inputDeviceTypes = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOUSE, CoreInputDeviceType.TOUCH)` のように設定する。
 - **InkCanvas: `activateCustomDrying` が E_ILLEGAL_METHOD_CALL (0x8000000E) で失敗する**

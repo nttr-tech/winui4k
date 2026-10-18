@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
 import com.appkitbox.winui4k.internal.com.lifetime.ReleasePump
 import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
@@ -16,6 +17,8 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.WinRtRuntime
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.BindableXamlTypes
 import com.appkitbox.winui4k.internal.winui.ChartsInterop
 import com.appkitbox.winui4k.internal.winui.Dispatcher
@@ -328,6 +331,8 @@ object WinUiUtilities {
         )
         app3.release()
 
+        installUnhandledExceptionHandler(app)
+
         // An unpackaged (non-templated) app can't discover the default theme resources
         // (ms-appx:///Microsoft.UI.Xaml/Themes/themeresources.xaml) on its own via XAML,
         // since there's no resources.pri next to the exe (= java.exe). We handle the
@@ -476,6 +481,37 @@ object WinUiUtilities {
         } finally {
             boxedKey.release()
             map.release()
+        }
+    }
+
+    /**
+     * Subscribes to Application.UnhandledException, marks the unhandled errors that XAML reports as Handled,
+     * and passes them to the UI thread's uncaught exception handler (which prints to standard error by default)
+     * so the app keeps running (the same treatment as Swing's EDT).
+     * Unless they are marked Handled, XAML forcibly terminates the process (0xC000027B). Failures that Kotlin
+     * has no way to catch (such as a failure of work that WinUI posted to the ink thread) also arrive here
+     * (doc/troubleshooting.md).
+     */
+    private fun installUnhandledExceptionHandler(app: ComPtr) {
+        app.addEventHandler(
+            "WinUI4K.UnhandledExceptionHandler",
+            XamlInterop.IID_UnhandledExceptionEventHandler,
+            XamlInterop.IApplication_add_UnhandledException,
+        ) { _, args ->
+            val eventArgs = ComPtr(args).queryInterface(XamlInterop.IID_IUnhandledExceptionEventArgs)
+            val error = try {
+                val hresult = eventArgs.getInt(XamlInterop.IUnhandledExceptionEventArgs_get_Exception)
+                val message = eventArgs.getString(XamlInterop.IUnhandledExceptionEventArgs_get_Message)
+                eventArgs.putBool(XamlInterop.IUnhandledExceptionEventArgs_put_Handled, true)
+                WindowsRuntimeException(
+                    if (message.isBlank()) "Application.UnhandledException" else "Application.UnhandledException [$message]",
+                    hresult,
+                )
+            } finally {
+                eventArgs.release()
+            }
+            val thread = Thread.currentThread()
+            thread.uncaughtExceptionHandler.uncaughtException(thread, error)
         }
     }
 

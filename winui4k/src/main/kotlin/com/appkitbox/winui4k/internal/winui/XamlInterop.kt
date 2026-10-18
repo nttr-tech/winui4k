@@ -33,6 +33,7 @@ internal object XamlInterop {
     const val IID_IApplication = "06a8f4e7-1146-55af-820d-ebd55643b021"
     const val IApplication_get_Resources = 6           // get_Resources(out ResourceDictionary)
     const val IApplication_put_Resources = 7           // put_Resources(ResourceDictionary)
+    const val IApplication_add_UnhandledException = 15 // add_UnhandledException(UnhandledExceptionEventHandler, out EventRegistrationToken)
     const val IApplication_Exit = 17                   // Exit()
     const val IID_IApplication3 = "be941595-61fe-5b36-a3d3-962a647d7c6f"
     const val IApplication3_put_DispatcherShutdownMode = 7 // put_DispatcherShutdownMode(DispatcherShutdownMode)
@@ -42,6 +43,13 @@ internal object XamlInterop {
 
     /** delegate Microsoft.UI.Xaml.ApplicationInitializationCallback — Invoke is vtbl[3] */
     const val IID_ApplicationInitializationCallback = "d8eef1c9-1234-56f1-9963-45dd9c80a661"
+
+    /** delegate Microsoft.UI.Xaml.UnhandledExceptionEventHandler — Invoke(sender, UnhandledExceptionEventArgs) is vtbl[3] */
+    const val IID_UnhandledExceptionEventHandler = "3427c1b6-5eca-5631-84b8-5bae732fb67f"
+    const val IID_IUnhandledExceptionEventArgs = "59eaeba9-8f9c-5be7-9b3b-820960faa220"
+    const val IUnhandledExceptionEventArgs_get_Exception = 6 // get_Exception(out HRESULT)
+    const val IUnhandledExceptionEventArgs_get_Message = 7   // get_Message(out HSTRING)
+    const val IUnhandledExceptionEventArgs_put_Handled = 9   // put_Handled(boolean)
 
     // ---- Microsoft.UI.Xaml.Window ----
     const val CLS_Window = "Microsoft.UI.Xaml.Window"
