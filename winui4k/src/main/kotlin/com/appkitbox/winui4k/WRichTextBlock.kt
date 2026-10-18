@@ -61,8 +61,7 @@ class WRichTextBlock : WComponent(
         // Create the Paragraph, fill Inlines with inline content, then append it to Blocks
         val paragraph = Activation.activate(XamlInterop.CLS_Paragraph, XamlInterop.IID_IParagraph)
         try {
-            val inlines = paragraph.getPtr(XamlInterop.IParagraph_get_Inlines)
-                .queryInterface(FoundationInterop.IID_IVector_Inline)
+            val inlines = inlinesOf(paragraph, XamlInterop.IParagraph_get_Inlines)
             try {
                 ParagraphBuilder(inlines).build()
             } finally {
@@ -126,10 +125,9 @@ class WRichTextBlock : WComponent(
         /** Creates a Bold / Italic / Underline Span, puts a single Run inside it, and appends it. */
         @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
         private fun appendSpan(runtimeClass: String, text: String) {
-            val span = Activation.activate(runtimeClass).queryInterface(XamlInterop.IID_ISpan)
+            val span = Activation.activate(runtimeClass, XamlInterop.IID_ISpan)
             try {
-                val spanInlines = span.getPtr(XamlInterop.ISpan_get_Inlines)
-                    .queryInterface(FoundationInterop.IID_IVector_Inline)
+                val spanInlines = inlinesOf(span, XamlInterop.ISpan_get_Inlines)
                 try {
                     val run = createRun(text)
                     try {
@@ -160,5 +158,18 @@ class WRichTextBlock : WComponent(
                 inline.release()
             }
         }
+    }
+}
+
+/**
+ * Returns the Inlines of [owner] (Paragraph / Span) as an IVector<Inline>. Intermediate references are released.
+ * The caller must release it.
+ */
+private fun inlinesOf(owner: ComPtr, getInlinesSlot: Int): ComPtr {
+    val collection = owner.getPtr(getInlinesSlot)
+    return try {
+        collection.queryInterface(FoundationInterop.IID_IVector_Inline)
+    } finally {
+        collection.release()
     }
 }

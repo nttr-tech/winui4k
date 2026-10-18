@@ -229,8 +229,12 @@ enum class Symbol(internal val native: Int) : WIcon {
      */
     @JvmSynthetic
     internal fun createSymbolIconElement(): ComPtr {
-        val symbolIcon = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
-            .getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, native)
+        val factory = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
+        val symbolIcon = try {
+            factory.getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, native)
+        } finally {
+            factory.release()
+        }
         return try {
             symbolIcon.queryInterface(XamlInterop.IID_IIconElement)
         } finally {

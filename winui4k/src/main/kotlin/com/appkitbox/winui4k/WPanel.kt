@@ -26,8 +26,7 @@ class WPanel @JvmOverloads constructor(
     spacing: Double = 0.0,
     orientation: Orientation = Orientation.VERTICAL,
 ) : WContainer(
-    Activation.composeDefault(XamlInterop.CLS_StackPanel, XamlInterop.IID_IStackPanelFactory)
-        .queryInterface(XamlInterop.IID_IStackPanel),
+    Activation.composeDefault(XamlInterop.CLS_StackPanel, XamlInterop.IID_IStackPanelFactory), // default interface = IStackPanel
 ) {
     /** The direction children are lined up in (StackPanel.Orientation). */
     var orientation: Orientation

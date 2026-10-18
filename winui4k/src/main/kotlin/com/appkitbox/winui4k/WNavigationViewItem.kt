@@ -59,8 +59,12 @@ class WNavigationViewItem @JvmOverloads constructor(text: String = "", icon: Sym
             } else {
                 // Build a SymbolIcon via ISymbolIconFactory.CreateInstanceWithSymbol, then QI it
                 // to IconElement, put_Icon's declared type, before passing it along
-                val symbolIcon = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
-                    .getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, value.native)
+                val factory = Activation.factory(XamlInterop.CLS_SymbolIcon, XamlInterop.IID_ISymbolIconFactory)
+                val symbolIcon = try {
+                    factory.getPtr(XamlInterop.ISymbolIconFactory_CreateInstanceWithSymbol, value.native)
+                } finally {
+                    factory.release()
+                }
                 val iconElement = symbolIcon.queryInterface(XamlInterop.IID_IIconElement)
                 inspectable.call(XamlInterop.INavigationViewItem_put_Icon, iconElement.ptr)
                 iconElement.release()

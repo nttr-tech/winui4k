@@ -33,8 +33,7 @@ class WLinearGradientPaint @JvmOverloads constructor(
     internal fun createBrush(): ComPtr {
         // Fill a GradientStopCollection (whose default interface is IVector<GradientStop>) with the
         // stops, then create the angled brush via ILinearGradientBrushFactory
-        val collection = Activation.activate(XamlInterop.CLS_GradientStopCollection)
-            .queryInterface(FoundationInterop.IID_IVector_GradientStop)
+        val collection = Activation.activate(XamlInterop.CLS_GradientStopCollection, FoundationInterop.IID_IVector_GradientStop)
         try {
             for ((offset, color) in stops) {
                 val stop = Activation.activate(XamlInterop.CLS_GradientStop, XamlInterop.IID_IGradientStop)
@@ -46,12 +45,16 @@ class WLinearGradientPaint @JvmOverloads constructor(
                     stop.release()
                 }
             }
-            return Activation.factory(XamlInterop.CLS_LinearGradientBrush, XamlInterop.IID_ILinearGradientBrushFactory)
-                .getPtr(
+            val factory = Activation.factory(XamlInterop.CLS_LinearGradientBrush, XamlInterop.IID_ILinearGradientBrushFactory)
+            try {
+                return factory.getPtr(
                     XamlInterop.ILinearGradientBrushFactory_CreateInstanceWithGradientStopCollectionAndAngle,
                     collection,
                     angle,
                 )
+            } finally {
+                factory.release()
+            }
         } finally {
             collection.release()
         }

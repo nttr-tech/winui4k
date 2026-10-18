@@ -25,8 +25,7 @@ import kotlin.jvm.JvmSynthetic
  * pressed (same as JTextField).
  */
 class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
-    Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory)
-        .queryInterface(XamlInterop.IID_ITextBox),
+    Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory), // default interface = ITextBox
 ) {
     /** TextChanged event tokens registered via addTextChangedListener. */
     private val textChangedTokens = ListenerTokens<Consumer<String>>()

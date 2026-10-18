@@ -27,8 +27,7 @@ import kotlin.jvm.JvmSynthetic
  */
 class WAppNotification @JvmOverloads constructor(text: String = "") {
     private val builder: ComPtr =
-        Activation.activate(NotificationInterop.CLS_AppNotificationBuilder)
-            .queryInterface(NotificationInterop.IID_IAppNotificationBuilder)
+        Activation.activate(NotificationInterop.CLS_AppNotificationBuilder, NotificationInterop.IID_IAppNotificationBuilder)
 
     init {
         if (text.isNotEmpty()) addText(text)

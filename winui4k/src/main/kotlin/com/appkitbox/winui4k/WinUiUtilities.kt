@@ -238,21 +238,18 @@ object WinUiUtilities {
     private fun createApplication(onReady: () -> Unit) {
         // Forwards all methods to the real provider (created lazily) that resolves XAML types for WinUI controls
         val realProvider: ComPtr by lazy {
-            Activation.activate(XamlInterop.CLS_XamlControlsXamlMetaDataProvider)
-                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
+            Activation.activate(XamlInterop.CLS_XamlControlsXamlMetaDataProvider, XamlInterop.IID_IXamlMetadataProvider)
         }
 
         // The types of TableView (Microsoft.UI.Xaml.Controls.Tabular) are owned by a dedicated provider in a separate DLL.
         // Only types the real provider could not resolve are queried here
         val tabularProvider: Lazy<ComPtr> = lazy {
-            Activation.activate(TabularInterop.CLS_XamlControlsTabularXamlMetaDataProvider)
-                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
+            Activation.activate(TabularInterop.CLS_XamlControlsTabularXamlMetaDataProvider, XamlInterop.IID_IXamlMetadataProvider)
         }
 
         // The types of Chart (Microsoft.UI.Xaml.Controls.Charts) are also owned by a dedicated provider in a separate DLL
         val chartsProvider: Lazy<ComPtr> = lazy {
-            Activation.activate(ChartsInterop.CLS_XamlControlsChartsXamlMetaDataProvider)
-                .queryInterface(XamlInterop.IID_IXamlMetadataProvider)
+            Activation.activate(ChartsInterop.CLS_XamlControlsChartsXamlMetaDataProvider, XamlInterop.IID_IXamlMetadataProvider)
         }
         val fallbackProviders = listOf(tabularProvider, chartsProvider)
 
