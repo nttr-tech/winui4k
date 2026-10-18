@@ -3,8 +3,13 @@ package com.appkitbox.winui4k.sample.gallery;
 import com.appkitbox.winui4k.ColorSpectrumShape;
 import com.appkitbox.winui4k.Orientation;
 import com.appkitbox.winui4k.SliderSnapsTo;
+import com.appkitbox.winui4k.Symbol;
+import com.appkitbox.winui4k.TextPosition;
 import com.appkitbox.winui4k.TickPlacement;
 import com.appkitbox.winui4k.VerticalAlignment;
+import com.appkitbox.winui4k.WAbstractAction;
+import com.appkitbox.winui4k.WAction;
+import com.appkitbox.winui4k.WActionEvent;
 import com.appkitbox.winui4k.WBorder;
 import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WCheckBox;
@@ -15,6 +20,7 @@ import com.appkitbox.winui4k.WCommand;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WDropDownButton;
 import com.appkitbox.winui4k.WFlyout;
+import com.appkitbox.winui4k.WFontIcon;
 import com.appkitbox.winui4k.WHyperlinkButton;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WPanel;
@@ -23,6 +29,7 @@ import com.appkitbox.winui4k.WRatingControl;
 import com.appkitbox.winui4k.WRepeatButton;
 import com.appkitbox.winui4k.WSlider;
 import com.appkitbox.winui4k.WSplitButton;
+import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WToggleButton;
 import com.appkitbox.winui4k.WToggleSplitButton;
 import com.appkitbox.winui4k.WToggleSwitch;
@@ -48,6 +55,10 @@ final class BasicInputPages {
         page.add(buildSimpleButtonExample());
         page.add(buildFlyoutButtonExample());
         page.add(buildCommandButtonExample());
+        page.add(buildIconButtonExample());
+        page.add(buildActionButtonExample());
+        page.add(buildAppearanceButtonExample());
+        page.add(buildDefaultButtonExample());
         return page;
     }
 
@@ -116,6 +127,109 @@ final class BasicInputPages {
         result.setVerticalAlignment(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Button with a command", row);
+    }
+
+    /** Buttons with icons: same shape as Swing's JButton(String, Icon); tries a Symbol, a font glyph, text positions */
+    private static WComponent buildIconButtonExample() {
+        WButton saveButton = new WButton("Save", Symbol.SAVE);
+        saveButton.setToolTipText("Saves to a file");
+
+        WButton nextButton = new WButton("Next", Symbol.FORWARD);
+        nextButton.setHorizontalTextPosition(TextPosition.LEADING); // Put the text before (left of) the icon
+
+        WButton glyphButton = new WButton("Folder", new WFontIcon("")); // A Segoe Fluent Icons glyph
+        glyphButton.setHorizontalTextPosition(TextPosition.TOP);
+        glyphButton.setIconTextGap(8.0);
+
+        WButton iconOnlyButton = new WButton(Symbol.SETTING);
+        iconOnlyButton.setToolTipText("Settings");
+
+        WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
+        row.add(saveButton);
+        row.add(nextButton);
+        row.add(glyphButton);
+        row.add(iconOnlyButton);
+        return GalleryScaffold.buildExample("Buttons with icons (icon / horizontalTextPosition / iconTextGap)", row);
+    }
+
+    /** Buttons with a WAction: two buttons share one action's text, tooltip and enabled state (like Swing's Action). */
+    private static WComponent buildActionButtonExample() {
+        WLabel result = new WLabel("Not run yet");
+        int[] count = {0};
+        WAbstractAction action = new WAbstractAction("Save", Symbol.SAVE) {
+            @Override
+            public void actionPerformed(WActionEvent e) {
+                count[0]++;
+                result.setText("Saved (run #" + count[0] + ", command: " + e.getActionCommand() + ")");
+            }
+        };
+        action.putValue(WAction.SHORT_DESCRIPTION, "Saves to a file");
+        action.putValue(WAction.MNEMONIC_KEY, (int) 'S');
+
+        WButton saveButton = new WButton(action);
+        WButton duplicateButton = new WButton(action); // Shares the action, so name and disabled state change together
+
+        WButton renameButton = new WButton("Rename");
+        renameButton.addActionListener(() -> {
+            boolean renamed = "Save".equals(action.getValue(WAction.NAME));
+            action.putValue(WAction.NAME, renamed ? "Overwrite" : "Save");
+        });
+        WButton toggleButton = new WButton("Disable action");
+        toggleButton.addActionListener(() -> {
+            action.setEnabled(!action.isEnabled());
+            toggleButton.setText(action.isEnabled() ? "Disable action" : "Enable action");
+        });
+
+        WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
+        row.add(saveButton);
+        row.add(duplicateButton);
+        row.add(renameButton);
+        row.add(toggleButton);
+        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        row.add(result);
+        return GalleryScaffold.buildExample("Buttons with an action (WAction / WAbstractAction)", row);
+    }
+
+    /** Button appearance: background and text colors, no background fill (toolbar-style), and no border. */
+    private static WComponent buildAppearanceButtonExample() {
+        WButton coloredButton = new WButton("With background color");
+        coloredButton.setBackground(new WColor(0, 120, 80));
+        coloredButton.setForeground(new WColor(255, 255, 255));
+
+        WButton flatButton = new WButton("No background fill");
+        flatButton.setContentAreaFilled(false); // Lightly filled only while the pointer is over it
+
+        WButton borderlessButton = new WButton("No border");
+        borderlessButton.setBorderPainted(false);
+
+        WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
+        row.add(coloredButton);
+        row.add(flatButton);
+        row.add(borderlessButton);
+        return GalleryScaffold.buildExample("Appearance (background / foreground / isContentAreaFilled / isBorderPainted)", row);
+    }
+
+    /** Default button: pressing Enter in a text field presses the default button (like JRootPane.setDefaultButton). */
+    private static WComponent buildDefaultButtonExample() {
+        WLabel result = new WLabel("Not submitted yet");
+        WTextField nameField = new WTextField("Type a name and press Enter");
+        WButton submitButton = new WButton("Submit");
+        submitButton.addActionListener(() -> result.setText("Submitted: " + nameField.getText()));
+
+        WCheckBox useDefault = new WCheckBox("Make Submit the default button");
+        useDefault.addItemListener(checked -> {
+            MainForGallery.galleryFrame.setDefaultButton(Boolean.TRUE.equals(checked) ? submitButton : null);
+        });
+
+        WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
+        row.add(nameField);
+        row.add(submitButton);
+        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        row.add(result);
+        WPanel body = new WPanel(8.0);
+        body.add(useDefault);
+        body.add(row);
+        return GalleryScaffold.buildExample("Text field and default button (WFrame.defaultButton / submit with Enter)", body);
     }
 
     // endregion

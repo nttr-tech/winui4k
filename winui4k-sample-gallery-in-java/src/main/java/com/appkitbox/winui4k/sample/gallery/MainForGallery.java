@@ -39,12 +39,16 @@ import java.util.function.Consumer;
  * As pages are added, register them in {@link GalleryNavigation#pages}.
  */
 public class MainForGallery {
+    /** The main Gallery window. Demo pages refer to it, e.g. to set the default button. */
+    static WFrame galleryFrame;
+
     private MainForGallery() {
     }
 
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("WinUI4K Gallery");
+            galleryFrame = frame;
 
             // The root that hosts the title bar and navigation. Settings' App theme is set here as
             // RequestedTheme and applies to every element in the window

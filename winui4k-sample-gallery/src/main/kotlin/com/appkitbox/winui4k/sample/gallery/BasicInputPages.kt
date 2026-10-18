@@ -3,8 +3,13 @@ package com.appkitbox.winui4k.sample.gallery
 import com.appkitbox.winui4k.ColorSpectrumShape
 import com.appkitbox.winui4k.Orientation
 import com.appkitbox.winui4k.SliderSnapsTo
+import com.appkitbox.winui4k.Symbol
+import com.appkitbox.winui4k.TextPosition
 import com.appkitbox.winui4k.TickPlacement
 import com.appkitbox.winui4k.VerticalAlignment
+import com.appkitbox.winui4k.WAbstractAction
+import com.appkitbox.winui4k.WAction
+import com.appkitbox.winui4k.WActionEvent
 import com.appkitbox.winui4k.WButton
 import com.appkitbox.winui4k.WCheckBox
 import com.appkitbox.winui4k.WColor
@@ -14,6 +19,7 @@ import com.appkitbox.winui4k.WCommand
 import com.appkitbox.winui4k.WComponent
 import com.appkitbox.winui4k.WDropDownButton
 import com.appkitbox.winui4k.WFlyout
+import com.appkitbox.winui4k.WFontIcon
 import com.appkitbox.winui4k.WHyperlinkButton
 import com.appkitbox.winui4k.WLabel
 import com.appkitbox.winui4k.WPanel
@@ -22,6 +28,7 @@ import com.appkitbox.winui4k.WRatingControl
 import com.appkitbox.winui4k.WRepeatButton
 import com.appkitbox.winui4k.WSlider
 import com.appkitbox.winui4k.WSplitButton
+import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WToggleButton
 import com.appkitbox.winui4k.WToggleSplitButton
 import com.appkitbox.winui4k.WToggleSwitch
@@ -49,6 +56,10 @@ internal fun buildButtonPage(): WComponent {
     page.add(buildFlyoutButtonExample())
     page.add(buildCommandButtonExample())
     page.add(buildCoroutineButtonExample())
+    page.add(buildIconButtonExample())
+    page.add(buildActionButtonExample())
+    page.add(buildAppearanceButtonExample())
+    page.add(buildDefaultButtonExample())
     return page
 }
 
@@ -115,6 +126,98 @@ private fun buildCommandButtonExample(): WComponent {
     row.add(toggleButton)
     row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
     return buildExample("Button with a command", row)
+}
+
+/** Buttons with icons: same shape as Swing's JButton(String, Icon); tries a Symbol, a font glyph, text positions */
+private fun buildIconButtonExample(): WComponent {
+    val saveButton = WButton("Save", Symbol.SAVE)
+    saveButton.toolTipText = "Saves to a file"
+
+    val nextButton = WButton("Next", Symbol.FORWARD)
+    nextButton.horizontalTextPosition = TextPosition.LEADING // Put the text before (left of) the icon
+
+    val glyphButton = WButton("Folder", WFontIcon("")) // A Segoe Fluent Icons glyph
+    glyphButton.horizontalTextPosition = TextPosition.TOP
+    glyphButton.iconTextGap = 8.0
+
+    val iconOnlyButton = WButton(Symbol.SETTING)
+    iconOnlyButton.toolTipText = "Settings"
+
+    val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    listOf(saveButton, nextButton, glyphButton, iconOnlyButton).forEach { row.add(it) }
+    return buildExample("Buttons with icons (icon / horizontalTextPosition / iconTextGap)", row)
+}
+
+/** Buttons with a WAction: two buttons share one action's text, tooltip and enabled state (like Swing's Action). */
+private fun buildActionButtonExample(): WComponent {
+    val result = WLabel("Not run yet")
+    var count = 0
+    val action = object : WAbstractAction("Save", Symbol.SAVE) {
+        override fun actionPerformed(e: WActionEvent) {
+            count++
+            result.text = "Saved (run #$count, command: ${e.actionCommand})"
+        }
+    }
+    action.putValue(WAction.SHORT_DESCRIPTION, "Saves to a file")
+    action.putValue(WAction.MNEMONIC_KEY, 'S'.code)
+
+    val saveButton = WButton(action)
+    val duplicateButton = WButton(action) // Shares the action, so name and disabled state change together
+
+    val renameButton = WButton("Rename")
+    renameButton.addActionListener {
+        val renamed = action.getValue(WAction.NAME) == "Save"
+        action.putValue(WAction.NAME, if (renamed) "Overwrite" else "Save")
+    }
+    val toggleButton = WButton("Disable action")
+    toggleButton.addActionListener {
+        action.isEnabled = !action.isEnabled
+        toggleButton.text = if (action.isEnabled) "Disable action" else "Enable action"
+    }
+
+    val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    listOf(saveButton, duplicateButton, renameButton, toggleButton).forEach { row.add(it) }
+    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    return buildExample("Buttons with an action (WAction / WAbstractAction)", row)
+}
+
+/** Button appearance: background and text colors, no background fill (toolbar-style), and no border. */
+private fun buildAppearanceButtonExample(): WComponent {
+    val coloredButton = WButton("With background color")
+    coloredButton.background = WColor(0, 120, 80)
+    coloredButton.foreground = WColor(255, 255, 255)
+
+    val flatButton = WButton("No background fill")
+    flatButton.isContentAreaFilled = false // Lightly filled only while the pointer is over it
+
+    val borderlessButton = WButton("No border")
+    borderlessButton.isBorderPainted = false
+
+    val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    listOf(coloredButton, flatButton, borderlessButton).forEach { row.add(it) }
+    return buildExample("Appearance (background / foreground / isContentAreaFilled / isBorderPainted)", row)
+}
+
+/** Default button: pressing Enter in a text field presses the default button (like JRootPane.setDefaultButton). */
+private fun buildDefaultButtonExample(): WComponent {
+    val result = WLabel("Not submitted yet")
+    val nameField = WTextField("Type a name and press Enter")
+    val submitButton = WButton("Submit")
+    submitButton.addActionListener { result.text = "Submitted: ${nameField.text}" }
+
+    val useDefault = WCheckBox("Make Submit the default button")
+    useDefault.addItemListener { checked ->
+        galleryFrame.defaultButton = if (checked == true) submitButton else null
+    }
+
+    val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
+    row.add(nameField)
+    row.add(submitButton)
+    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    val body = WPanel(spacing = 8.0)
+    body.add(useDefault)
+    body.add(row)
+    return buildExample("Text field and default button (WFrame.defaultButton / submit with Enter)", body)
 }
 
 /** The UI-thread coroutine scope used across the gallery (launches on Dispatchers.WinUi). */
