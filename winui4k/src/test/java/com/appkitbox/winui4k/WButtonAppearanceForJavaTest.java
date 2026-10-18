@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,6 +65,18 @@ class WButtonAppearanceForJavaTest {
             button.setContentAreaFilled(true);
             button.setContentAreaFilled(true);
             assertTrue(button.isContentAreaFilled());
+        });
+    }
+
+    @Test
+    void getBackgroundReturnsTheColorSetWithSetBackgroundWhileContentAreaFilledIsFalse() {
+        onUiThread(() -> {
+            WButton button = new WButton("Close");
+            button.setContentAreaFilled(false);
+            button.setBackground(new WColor(200, 40, 40));
+            assertEquals(new WColor(200, 40, 40), button.getBackground());
+            button.setContentAreaFilled(true);
+            assertEquals(new WColor(200, 40, 40), button.getBackground());
         });
     }
 

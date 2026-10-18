@@ -174,25 +174,101 @@ class WButtonColorTest : FunSpec() {
             }
         }
 
-        test("background and foreground take effect in each state with the built-in styles of isAccent and isContentAreaFilled = false too") {
-            for (configure in listOf<(WButton) -> Unit>({ it.isAccent = true }, { it.isContentAreaFilled = false })) {
-                val button = loadedButton("Accent", configure)
-                try {
-                    onUiThread {
-                        button.background = WColor(30, 30, 30)
-                        button.foreground = WColor(250, 250, 0)
-                    }
-                    allStates(
-                        button,
-                        listOf(
-                            Brushes(WColor(30, 30, 30, 255), WColor(250, 250, 0, 255)),
-                            Brushes(WColor(30, 30, 30, 230), WColor(250, 250, 0, 255)),
-                            Brushes(WColor(30, 30, 30, 204), WColor(250, 250, 0, 179)),
-                        ),
-                    )
-                } finally {
-                    UiTestHarness.detach(button)
+        test("background and foreground take effect in each state with the isAccent built-in style too") {
+            val button = loadedButton("Accent") { it.isAccent = true }
+            try {
+                onUiThread {
+                    button.background = WColor(30, 30, 30)
+                    button.foreground = WColor(250, 250, 0)
                 }
+                allStates(
+                    button,
+                    listOf(
+                        Brushes(WColor(30, 30, 30, 255), WColor(250, 250, 0, 255)),
+                        Brushes(WColor(30, 30, 30, 230), WColor(250, 250, 0, 255)),
+                        Brushes(WColor(30, 30, 30, 204), WColor(250, 250, 0, 179)),
+                    ),
+                )
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("while isContentAreaFilled = false, setting background does not paint in any state, but foreground takes effect") {
+            val defaults = themeDefaults { it.isContentAreaFilled = false }
+            val button = loadedButton("No fill") { it.isContentAreaFilled = false }
+            try {
+                onUiThread {
+                    button.background = WColor(200, 40, 40)
+                    button.foreground = WColor(0, 0, 160)
+                }
+                allStates(
+                    button,
+                    listOf(
+                        Brushes(defaults[0].background, WColor(0, 0, 160, 255)),
+                        Brushes(defaults[1].background, WColor(0, 0, 160, 255)),
+                        Brushes(defaults[2].background, WColor(0, 0, 160, 179)),
+                    ),
+                )
+                onUiThreadGet { button.background } shouldBe WColor(200, 40, 40) // The value that was set can be read back (same as Swing)
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("setting background before Loaded and then isContentAreaFilled = false does not paint in any state") {
+            val defaults = themeDefaults { it.isContentAreaFilled = false }
+            val button = loadedButton("No fill") {
+                it.background = WColor(200, 40, 40)
+                it.isContentAreaFilled = false
+            }
+            try {
+                allStates(button, defaults)
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("setting isContentAreaFilled back to true restores the background that was set in every state") {
+            val defaults = themeDefaults()
+            val button = loadedButton("Reset") {
+                it.background = WColor(200, 40, 40)
+                it.isContentAreaFilled = false
+            }
+            try {
+                onUiThread {
+                    button.isContentAreaFilled = true
+                    // Changing the Style rebuilds the template, so finish layout before switching visual states
+                    button.uiElement.call(XamlInterop.IUIElement_UpdateLayout)
+                }
+                allStates(
+                    button,
+                    listOf(
+                        Brushes(WColor(200, 40, 40, 255), defaults[0].foreground),
+                        Brushes(WColor(200, 40, 40, 230), defaults[1].foreground),
+                        Brushes(WColor(200, 40, 40, 204), defaults[2].foreground),
+                    ),
+                )
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("setting background to null while isContentAreaFilled = false and then back to true gives the theme default appearance") {
+            val defaults = themeDefaults()
+            val button = loadedButton("Clear") {
+                it.background = WColor(200, 40, 40)
+                it.isContentAreaFilled = false
+            }
+            try {
+                onUiThread {
+                    button.background = null
+                    button.isContentAreaFilled = true
+                    button.uiElement.call(XamlInterop.IUIElement_UpdateLayout)
+                }
+                allStates(button, defaults)
+            } finally {
+                UiTestHarness.detach(button)
             }
         }
 

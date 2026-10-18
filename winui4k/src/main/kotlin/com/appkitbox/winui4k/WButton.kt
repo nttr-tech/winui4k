@@ -171,11 +171,15 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * When false, the button uses a built-in style with a transparent background and border (SubtleButtonStyle), and is
      * lightly painted only when the pointer is over it or it is pressed (looks like a toolbar button). [isAccent] and the
      * default button ([isDefaultButton]) highlight take precedence.
+     * While false, the [background] color is not painted in any state (normal, pointer over, pressed) (same as Swing's
+     * contentAreaFilled). The color that was set is kept and comes back when set to true again. [foreground] is not
+     * affected.
      */
     var isContentAreaFilled: Boolean = true
         set(value) {
             field = value
             updateAppearance()
+            if (customBackground != null) applyBackground()
         }
 
     /**
@@ -202,12 +206,14 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * that every state is painted in shades of this color (WinUI lightweight styling). The opacity is multiplied by 0.9
      * when the pointer is over the button and by 0.8 when it is pressed (the same ratios as WinUI's accent button; the
      * color behind shows through, so it looks lighter in the light theme and darker in the dark theme).
-     * The disabled appearance stays at the theme default. Reading returns the native effective value, which is the
-     * theme's default color before it is set.
+     * The disabled appearance stays at the theme default. Reading returns the color that was set, or the native effective
+     * value (the theme's default color) if none is set.
+     * Not painted while [isContentAreaFilled] is false (the color is kept and painted again when set back to true).
      * Setting null removes the Resources keys and the Control.Background value and returns to the theme default.
      */
     var background: WColor?
         get() {
+            customBackground?.let { return it }
             val brush = control.getPtrOrNull(XamlInterop.IControl_get_Background) ?: return null
             return try {
                 colorOf(brush)
@@ -216,26 +222,36 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
             }
         }
         set(value) {
-            if (value == null) {
-                removeStateResources(BACKGROUND_KEY)
-                clearControlProperty(XamlInterop.IControlStatics_get_BackgroundProperty)
-                return
-            }
-            putStateResources(
-                BACKGROUND_KEY,
-                value,
-                value.withAlphaScaled(POINTER_OVER_BACKGROUND_OPACITY),
-                value.withAlphaScaled(PRESSED_BACKGROUND_OPACITY),
-            )
-            // The Normal state is painted with Control.Background as already resolved by the Style's Setter, and adding
-            // Resources after loading does not re-resolve it, so also set it as a local value (doc/troubleshooting.md)
-            val brush = value.createBrush()
-            try {
-                control.call(XamlInterop.IControl_put_Background, brush.ptr)
-            } finally {
-                brush.release()
-            }
+            customBackground = value
+            applyBackground()
         }
+
+    /** The color set to [background]. null means unset (theme default). Kept even while [isContentAreaFilled] is false. */
+    private var customBackground: WColor? = null
+
+    /** Applies [customBackground] to Resources and Control.Background only while [isContentAreaFilled] is true. */
+    private fun applyBackground() {
+        val color = customBackground
+        if (color == null || !isContentAreaFilled) {
+            removeStateResources(BACKGROUND_KEY)
+            clearControlProperty(XamlInterop.IControlStatics_get_BackgroundProperty)
+            return
+        }
+        putStateResources(
+            BACKGROUND_KEY,
+            color,
+            color.withAlphaScaled(POINTER_OVER_BACKGROUND_OPACITY),
+            color.withAlphaScaled(PRESSED_BACKGROUND_OPACITY),
+        )
+        // The Normal state is painted with Control.Background as already resolved by the Style's Setter, and adding
+        // Resources after loading does not re-resolve it, so also set it as a local value (doc/troubleshooting.md)
+        val brush = color.createBrush()
+        try {
+            control.call(XamlInterop.IControl_put_Background, brush.ptr)
+        } finally {
+            brush.release()
+        }
+    }
 
     /**
      * JComponent.getForeground / setForeground-like: the text color. Like [background], it is also put into the
