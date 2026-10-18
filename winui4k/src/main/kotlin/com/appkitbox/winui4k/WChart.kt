@@ -27,7 +27,9 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  *   [com.appkitbox.winui4k.chart.CategoryAxis] / [com.appkitbox.winui4k.chart.DateTimeAxis])
  *
  * When a series is added with [addSeries], the axes it uses are also registered with the chart (Chart.Axes; an axis
- * that no series uses any longer is removed automatically). The legend is controlled by [showLegend] / [legendTitle].
+ * axes are removed automatically). The legend is controlled by [showLegend] / [legendTitle]. The text color of the legend
+ * (its title and series names) is the inherited [foreground], which is not applied to the axis tick labels (specify it
+ * per axis with [CartesianAxis.tickLabelColor]).
  *
  * ```kotlin
  * val months = DefaultSampleModel.of("Jan", "Feb", "Mar")
@@ -96,17 +98,6 @@ class WChart : WControl(create()) {
         set(value) {
             field = value
             control.putColor(XamlInterop.IControl_put_Background, value)
-        }
-
-    /**
-     * The text color of the legend (title and series names) (Control.Foreground). Until it is set, the theme's default
-     * color is used. The color of axis tick labels is specified per axis with [CartesianAxis.tickLabelColor] (this
-     * color does not apply to them).
-     */
-    var foreground: WColor? = null
-        set(value) {
-            field = value
-            control.putColor(XamlInterop.IControl_put_Foreground, value)
         }
 
     /** The number of series. */

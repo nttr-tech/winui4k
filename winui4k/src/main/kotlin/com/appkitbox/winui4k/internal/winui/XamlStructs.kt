@@ -153,6 +153,13 @@ internal object XamlStructs {
         }
     }
 
+    /** Gets a FontWeight (u2) through an out argument (Control.FontWeight). */
+    fun getFontWeight(target: ComPtr, slot: Int): Int = Ffi.backend.withScope { scope ->
+        val fontWeight = scope.allocate(FONT_WEIGHT)
+        target.call(slot, fontWeight.ptr) // pass a pointer because it is an out argument
+        Ffi.backend.memory.getShort(fontWeight.ptr, 0).toInt() and 0xFFFF
+    }
+
     /** Gets a Windows.UI.Color (u8×4) via an out argument (e.g. ColorPicker.Color). */
     fun getColor(target: ComPtr, slot: Int): IntArray = Ffi.backend.withScope { scope ->
         val color = scope.allocate(COLOR)

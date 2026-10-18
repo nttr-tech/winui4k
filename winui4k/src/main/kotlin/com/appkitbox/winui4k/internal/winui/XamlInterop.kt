@@ -1643,6 +1643,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.IDependencyObject (target of attached properties) ----
     const val IID_IDependencyObject = "e7beaee7-160e-50f7-8789-d63463f979fa"
     const val IDependencyObject_SetValue = 7           // SetValue(DependencyProperty, object)
+    const val IDependencyObject_ClearValue = 8         // ClearValue(DependencyProperty)
     const val IDependencyObject_RegisterPropertyChangedCallback = 11 // (DependencyProperty, DependencyPropertyChangedCallback, out i8 token)
 
     /** delegate DependencyPropertyChangedCallback(DependencyObject sender, DependencyProperty dp) — Invoke is vtbl[3] */
@@ -2208,8 +2209,11 @@ internal object XamlInterop {
 
     // ---- Microsoft.UI.Xaml.Controls.Control (additions to IControl) ----
     const val IControl_get_FontSize = 12
+    const val IControl_get_FontFamily = 14             // get_FontFamily(out FontFamily)
     const val IControl_put_FontSize = 13
     const val IControl_put_FontFamily = 15
+    const val IControl_get_FontWeight = 16             // get_FontWeight(out FontWeight { u2 Weight })
+    const val IControl_get_FontStyle = 18              // get_FontStyle(out FontStyle)
     const val IControl_put_FontStyle = 19              // put_FontStyle(FontStyle enum: Normal=0, Oblique=1, Italic=2)
     const val IControl_get_Foreground = 24             // get_Foreground(out Brush)
     const val IControl_put_Foreground = 25             // put_Foreground(Brush)
@@ -2218,6 +2222,15 @@ internal object XamlInterop {
     const val IControl_add_IsEnabledChanged = 58       // add_IsEnabledChanged(DependencyPropertyChangedEventHandler, out token)
     const val IControl_remove_IsEnabledChanged = 59
     const val IControl_ApplyTemplate = 61              // ApplyTemplate(out boolean)
+
+    // ---- Microsoft.UI.Xaml.Controls.Control (statics: DependencyProperty passed to ClearValue) ----
+    const val CLS_Control = "Microsoft.UI.Xaml.Controls.Control"
+    const val IID_IControlStatics = "c3ae388d-aa36-5e10-acac-98415f47bcc7"
+    const val IControlStatics_get_FontSizeProperty = 9
+    const val IControlStatics_get_FontFamilyProperty = 10
+    const val IControlStatics_get_FontWeightProperty = 11
+    const val IControlStatics_get_FontStyleProperty = 12
+    const val IControlStatics_get_ForegroundProperty = 15
 
     // ---- Microsoft.UI.Xaml.VisualStateManager (statics) ----
     const val CLS_VisualStateManager = "Microsoft.UI.Xaml.VisualStateManager"

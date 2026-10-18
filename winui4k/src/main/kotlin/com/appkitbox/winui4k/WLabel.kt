@@ -1,8 +1,5 @@
 package com.appkitbox.winui4k
 
-import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.ffi.api.Ffi
-import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
@@ -180,22 +177,6 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     init {
         if (text.isNotEmpty()) this.text = text
     }
-}
-
-/**
- * Creates a Media.FontFamily from a family name.
- * Calls the composable factory's CreateInstanceWithName(HSTRING, outer, out inner, out instance)
- * with outer = NULL (same convention as [Activation.composeDefault]).
- */
-private fun createFontFamily(name: String): ComPtr = Ffi.backend.withScope { scope ->
-    val factory = Activation.factory(XamlInterop.CLS_FontFamily, XamlInterop.IID_IFontFamilyFactory)
-    val inner = scope.allocate(8)
-    val instance = scope.allocate(8)
-    Hstring.use(name) { h ->
-        factory.call(XamlInterop.IFontFamilyFactory_CreateInstanceWithName, h, null, inner, instance)
-    }
-    factory.release()
-    ComPtr(Ffi.backend.memory.getPtr(instance, 0))
 }
 
 // Values of Windows.UI.Text.FontStyle and TextDecorations (extracted from winmd)
