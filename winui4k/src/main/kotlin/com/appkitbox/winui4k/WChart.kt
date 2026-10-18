@@ -87,9 +87,6 @@ class WChart : WControl(create()) {
             Hstring.use(value) { h -> chart.call(ChartsInterop.IChart_put_LegendTitle, h) }
         }
 
-    /** The IControl view (background and text color). */
-    private val control: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IControl)) }
-
     /**
      * The background color of the whole chart (Control.Background). Until it is set, the theme's default background
      * is used; setting null draws no background (Background = null).

@@ -487,6 +487,7 @@ internal object XamlInterop {
     const val IControl_put_VerticalContentAlignment = 39 // put_VerticalContentAlignment(VerticalAlignment)
     const val IControl_get_Background = 40             // get_Background(out Brush)
     const val IControl_put_Background = 41             // put_Background(Brush)
+    const val IControl_get_BorderThickness = 44        // get_BorderThickness(out Thickness)
     const val IControl_put_BorderThickness = 45        // put_BorderThickness(Thickness) — struct passed by value
     const val IControl_put_BorderBrush = 47            // put_BorderBrush(Brush)
     const val IControl_put_CornerRadius = 53           // put_CornerRadius(CornerRadius) — struct passed by value
@@ -2232,6 +2233,7 @@ internal object XamlInterop {
     const val IControlStatics_get_FontWeightProperty = 11
     const val IControlStatics_get_FontStyleProperty = 12
     const val IControlStatics_get_ForegroundProperty = 15
+    const val IControlStatics_get_BorderThicknessProperty = 25
 
     // ---- Microsoft.UI.Xaml.VisualStateManager (statics) ----
     const val CLS_VisualStateManager = "Microsoft.UI.Xaml.VisualStateManager"
@@ -2341,6 +2343,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Controls.ContentPresenter ----
     const val IID_IContentPresenter = "075e6ca8-da46-5ec6-8c64-03b3ddeaf74f"
     const val IContentPresenter_put_Content = 7        // put_Content(Object)
+    const val IContentPresenter_get_BorderThickness = 46 // get_BorderThickness(out Thickness)
 
     // ---- Microsoft.UI.Xaml.Controls.IViewbox (default interface of Viewbox) ----
     const val IID_IViewbox = "510683e8-d0fe-5ef4-85bd-e1131076ac22"

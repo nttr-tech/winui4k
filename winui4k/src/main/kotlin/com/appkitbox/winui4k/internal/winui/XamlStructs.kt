@@ -125,6 +125,14 @@ internal object XamlStructs {
         }
     }
 
+    /** Gets a Thickness (double×4: Left, Top, Right, Bottom) through an out argument. */
+    fun getThickness(target: ComPtr, slot: Int): DoubleArray = Ffi.backend.withScope { scope ->
+        val memory = Ffi.backend.memory
+        val thickness = scope.allocate(THICKNESS)
+        target.call(slot, thickness.ptr) // pass a pointer because it is an out argument
+        DoubleArray(4) { memory.getDouble(thickness.ptr, it * 8L) }
+    }
+
     /** Puts a CornerRadius with the same radius on all four corners (double×4) by value. */
     fun putCornerRadius(target: ComPtr, slot: Int, radius: Double) {
         Ffi.backend.withScope { scope ->

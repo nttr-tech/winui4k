@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * Non-Control components such as StackPanel stay as plain [WComponent].
  */
 abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(inspectable) {
-    private val control: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IControl)) }
+    internal val control: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IControl)) }
 
     /** setEnabled-like (Control.IsEnabled). */
     var isEnabled: Boolean
@@ -118,7 +118,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         }
 
     /** Clears the local value of a Control dependency property ([staticsSlot] is get_XxxProperty of IControlStatics). */
-    private fun clearControlProperty(staticsSlot: Int) {
+    internal fun clearControlProperty(staticsSlot: Int) {
         val statics = Activation.factory(XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics)
         try {
             val property = statics.getPtr(staticsSlot)
