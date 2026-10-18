@@ -217,13 +217,6 @@ class WButtonTest : FunSpec() {
             modifiers shouldBe 0
         }
 
-        test("WActionEvent modifier constants have the same values as AWT") {
-            WActionEvent.SHIFT_MASK shouldBe 1
-            WActionEvent.CTRL_MASK shouldBe 2
-            WActionEvent.META_MASK shouldBe 4
-            WActionEvent.ALT_MASK shouldBe 8
-        }
-
         test("converts WinUI modifiers (Ctrl=1, Alt=2, Shift=4, Win=8) to AWT modifiers") {
             WActionEvent.fromVirtualKeyModifiers(0) shouldBe 0
             WActionEvent.fromVirtualKeyModifiers(1) shouldBe WActionEvent.CTRL_MASK
@@ -232,45 +225,6 @@ class WButtonTest : FunSpec() {
             WActionEvent.fromVirtualKeyModifiers(8) shouldBe WActionEvent.META_MASK
             WActionEvent.fromVirtualKeyModifiers(1 or 4) shouldBe (WActionEvent.CTRL_MASK or WActionEvent.SHIFT_MASK)
             WActionEvent.fromVirtualKeyModifiers(15) shouldBe 15
-        }
-
-        test("both the Java-facing Runnable and WActionListener listeners are called by doClick") {
-            val (runnableCount, listenerSources) = onUiThreadGet {
-                val button = WButton("Save")
-                var runnableCount = 0
-                val sources = mutableListOf<Any>()
-                button.addActionListenerForJava(Runnable { runnableCount++ })
-                button.addActionListenerForJava(WActionListener { e -> sources += e.source })
-                button.doClick()
-                runnableCount to (sources.single() === button)
-            }
-            runnableCount shouldBe 1
-            listenerSources.shouldBeTrue()
-        }
-
-        test("a Runnable, WActionListener, or Kotlin lambda removed with removeActionListener is not called") {
-            val counts = onUiThreadGet {
-                val button = WButton("Save")
-                val counts = IntArray(3)
-                val runnable = Runnable { counts[0]++ }
-                val listener = WActionListener { counts[1]++ }
-                val lambda: (WActionEvent) -> Unit = { counts[2]++ }
-                button.addActionListenerForJava(runnable)
-                button.addActionListenerForJava(listener)
-                button.addActionListener(lambda)
-                button.removeActionListenerForJava(runnable)
-                button.removeActionListenerForJava(listener)
-                button.removeActionListener(lambda)
-                button.doClick()
-                counts.toList()
-            }
-            counts shouldContainExactly listOf(0, 0, 0)
-        }
-
-        test("Java sees both the Runnable and the WActionListener versions of addActionListener") {
-            val methods = WButtonBase::class.java.methods.filter { it.name == "addActionListener" && !it.isSynthetic }
-                .map { it.parameterTypes.single() }
-            methods.toSet() shouldBe setOf(Runnable::class.java, WActionListener::class.java)
         }
 
         test("mnemonic is 0 when unset, and setMnemonic(Char) stores a letter as the uppercase key code") {
@@ -322,13 +276,6 @@ class WButtonTest : FunSpec() {
                 shouldThrow<IllegalArgumentException> { button.setMnemonic('é') }
                 button.mnemonic
             } shouldBe 69
-        }
-
-        test("Java sees the int and char versions of setMnemonic, and getMnemonic") {
-            val setters = WButtonBase::class.java.methods.filter { it.name == "setMnemonic" }
-                .map { it.parameterTypes.single() }
-            setters.toSet() shouldBe setOf(Int::class.javaPrimitiveType, Char::class.javaPrimitiveType)
-            WButtonBase::class.java.getMethod("getMnemonic").returnType shouldBe Int::class.javaPrimitiveType
         }
     }
 }

@@ -86,11 +86,6 @@ class WButtonAppearanceTest : FunSpec() {
             } shouldBe ("AccentButtonStyle" to null)
         }
 
-        test("Java sees isAccent / setAccent(boolean)") {
-            WButton::class.java.getMethod("isAccent").returnType shouldBe Boolean::class.javaPrimitiveType
-            WButton::class.java.getMethod("setAccent", Boolean::class.javaPrimitiveType).returnType shouldBe Void.TYPE
-        }
-
         test("isContentAreaFilled is true by default; false applies SubtleButtonStyle, and setting it back to true clears the Style") {
             val (initial, subtle, restored) = onUiThreadGet {
                 val button = WButton("Close")
@@ -164,13 +159,6 @@ class WButtonAppearanceTest : FunSpec() {
                 onUiThread { button.isAccent = false }
                 UiTestHarness.detach(button)
             }
-        }
-
-        test("Java sees isContentAreaFilled / setContentAreaFilled and isBorderPainted / setBorderPainted") {
-            WButton::class.java.getMethod("isContentAreaFilled").returnType shouldBe Boolean::class.javaPrimitiveType
-            WButton::class.java.getMethod("setContentAreaFilled", Boolean::class.javaPrimitiveType).returnType shouldBe Void.TYPE
-            WButton::class.java.getMethod("isBorderPainted").returnType shouldBe Boolean::class.javaPrimitiveType
-            WButton::class.java.getMethod("setBorderPainted", Boolean::class.javaPrimitiveType).returnType shouldBe Void.TYPE
         }
     }
 

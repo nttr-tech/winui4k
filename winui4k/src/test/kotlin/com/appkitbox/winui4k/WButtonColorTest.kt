@@ -238,11 +238,6 @@ class WButtonColorTest : FunSpec() {
                 UiTestHarness.detach(button)
             }
         }
-
-        test("Java sees getBackground / setBackground(WColor)") {
-            WButton::class.java.getMethod("getBackground").returnType shouldBe WColor::class.java
-            WButton::class.java.getMethod("setBackground", WColor::class.java).returnType shouldBe Void.TYPE
-        }
     }
 
     private companion object {

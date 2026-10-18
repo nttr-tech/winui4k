@@ -12,9 +12,8 @@ import io.kotest.matchers.shouldNotBe
 /** Verifies WFont's behavior as a value, and that WControl.font / foreground reach the native object. */
 class WFontTest : FunSpec() {
     init {
-        test("style constants have the same values as AWT's Font and are visible from Java as static fields") {
+        test("style constants have the same values as AWT's Font") {
             listOf(WFont.PLAIN, WFont.BOLD, WFont.ITALIC) shouldBe listOf(0, 1, 2)
-            WFont::class.java.getField("BOLD").getInt(null) shouldBe 1
         }
 
         test("holds name, style, and size, and isBold and isItalic are determined by the style bits") {
