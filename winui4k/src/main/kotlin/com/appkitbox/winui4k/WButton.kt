@@ -476,11 +476,14 @@ private inline fun <reified T : Any> WAction.typedValue(key: String, typeName: S
     return value as? T ?: throw IllegalArgumentException("The value of WAction \"$key\" must be $typeName: ${value.javaClass.name}")
 }
 
-/** The key code of MNEMONIC_KEY. Accepts numbers such as Int and Short, and Char (equivalent to Swing's Integer). */
+/**
+ * The key code of MNEMONIC_KEY. Accepts numbers such as Int and Short, and Char (letters are converted to uppercase)
+ * (equivalent to Swing's Integer).
+ */
 private fun WAction.keyCodeValue(key: String): Int? = when (val value = getValue(key)) {
     null -> null
     is Number -> value.toInt()
-    is Char -> value.code
+    is Char -> value.uppercaseChar().code // Convert letters to uppercase, like setMnemonic(Char)
     else -> throw IllegalArgumentException("The value of WAction \"$key\" must be an Int key code: ${value.javaClass.name}")
 }
 

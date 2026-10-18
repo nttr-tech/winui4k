@@ -88,6 +88,17 @@ class WActionForJavaTest {
     }
 
     @Test
+    void lowercaseCharForMnemonicKeyIsReadAsTheUppercaseKeyCode() {
+        onUiThread(() -> {
+            WAbstractAction action = saveAction();
+            WButton button = new WButton(action);
+
+            action.putValue(WAction.MNEMONIC_KEY, 's');
+            assertEquals(KeyEvent.VK_S, button.getMnemonic());
+        });
+    }
+
+    @Test
     void setEnabledFalseDisablesTheButtonAndDoClickDoesNotCallActionPerformed() {
         onUiThread(() -> {
             WAbstractAction action = saveAction();

@@ -157,6 +157,26 @@ class WActionTest : FunSpec() {
             )
         }
 
+        test("passing a lowercase Char to MNEMONIC_KEY gives the uppercase key code, same as setMnemonic(Char)") {
+            val codes = onUiThreadGet {
+                val action = RecordingAction("Save", Symbol.SAVE)
+                val button = WButton(action)
+                listOf('s', 'S', '7').map { char ->
+                    action.putValue(WAction.MNEMONIC_KEY, char)
+                    button.mnemonic
+                }
+            }
+            codes shouldContainExactly listOf('S'.code, 'S'.code, '7'.code)
+        }
+
+        test("passing a non-alphanumeric Char to MNEMONIC_KEY throws IllegalArgumentException") {
+            onUiThreadGet {
+                val action = RecordingAction("Save", Symbol.SAVE)
+                action.putValue(WAction.MNEMONIC_KEY, '-')
+                shouldThrow<IllegalArgumentException> { WButton(action) }
+            }
+        }
+
         test("putValue(key, null) and isEnabled=true return the button's properties to unset and enabled") {
             val snapshot = onUiThreadGet {
                 val action = RecordingAction("Save", Symbol.SAVE)

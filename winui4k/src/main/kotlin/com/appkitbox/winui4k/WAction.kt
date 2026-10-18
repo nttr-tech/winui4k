@@ -50,7 +50,8 @@ interface WAction {
 
         /**
          * The button's mnemonic ([WButtonBase.mnemonic]). The value is an Int key code, the same as AWT's KeyEvent.VK_A
-         * and so on (a Number or a Char is also accepted). Same key name as Swing's Action.MNEMONIC_KEY.
+         * and so on (a Number or a Char is also accepted; a lowercase letter Char is converted to the uppercase key code).
+         * Same key name as Swing's Action.MNEMONIC_KEY.
          */
         const val MNEMONIC_KEY: String = "MnemonicKey"
 
