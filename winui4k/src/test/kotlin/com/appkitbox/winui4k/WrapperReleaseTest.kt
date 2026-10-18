@@ -2,9 +2,11 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
+import java.lang.ref.WeakReference
 
 /**
  * Verifies that wrappers and native controls that are no longer referenced from anywhere are released.
@@ -41,6 +43,20 @@ class WrapperReleaseTest : FunSpec() {
             onUiThread { button.text = "After" }
             Reclamation.awaitDestroyed(probe).shouldBeTrue()
             onUiThreadGet { button.text } // Keep the button alive while waiting for collection
+        }
+
+        test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {
+            val captured = onUiThreadGet {
+                val captured = Any()
+                Xaml.addHandlerHandledToo(
+                    WButton("With handler"),
+                    XamlInterop.IUIElementStatics_get_KeyDownEvent,
+                    XamlInterop.IID_KeyEventHandler,
+                    FoundationInterop.IID_IReference_KeyEventHandler,
+                ) { _, _ -> captured.hashCode() }
+                WeakReference(captured)
+            }
+            Reclamation.awaitCollected(captured).shouldBeTrue()
         }
     }
 }

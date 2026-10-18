@@ -229,6 +229,30 @@ class WTextFieldActionTest : FunSpec() {
             }
         }
 
+        test("a handler removed by calling the return value of Xaml.addHandlerHandledToo is not called on later Enter presses") {
+            val form = showForm()
+            val textBox = onUiThreadGet { XamlElement.load("<TextBox />") }
+            onUiThread { form.panel.add(textBox) }
+            try {
+                val removeHandler = onUiThreadGet {
+                    Xaml.addHandlerHandledToo(
+                        textBox,
+                        XamlInterop.IUIElementStatics_get_KeyDownEvent,
+                        XamlInterop.IID_KeyEventHandler,
+                        FoundationInterop.IID_IReference_KeyEventHandler,
+                    ) { _, args -> if (XamlKeyEvent(ComPtr(args)).key == VirtualKey.ENTER.native) form.events += "handler" }
+                }
+                pressEnterOn(form, textBox, listOf("handler")) shouldContainExactly listOf("handler")
+                onUiThread {
+                    removeHandler()
+                    removeHandler() // The second call does nothing
+                }
+                pressEnterOn(form, textBox, emptyList()) shouldContainExactly emptyList()
+            } finally {
+                closeForm(form)
+            }
+        }
+
         test("Enter in a field with neither a listener nor a default button does nothing and leaves the text unchanged") {
             val form = showForm()
             try {

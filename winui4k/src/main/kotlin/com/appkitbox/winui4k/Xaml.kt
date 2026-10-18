@@ -260,15 +260,10 @@ internal object Xaml {
      * [referenceIid] is the IID of the IReference that wraps it. AddHandler takes the handler as an object, so the delegate
      * is wrapped in an IReference and passed (same as C++/WinRT's box_value). [handler] receives the sender (the element
      * the handler is attached to) and a pointer to the event args.
-     * Calling the return value unsubscribes.
+     * Calling the return value unsubscribes. If you do not unsubscribe, the return value can be discarded (the handler is
+     * released when the element is destroyed).
      */
     fun addHandlerHandledToo(component: WComponent, eventSlot: Int, delegateIid: String, referenceIid: String, handler: (Ptr, Ptr) -> Unit): () -> Unit {
-        val statics = Activation.factory(XamlInterop.CLS_UIElement, XamlInterop.IID_IUIElementStatics)
-        val routedEvent = try {
-            statics.getPtr(eventSlot)
-        } finally {
-            statics.release()
-        }
         val delegate = KComObject("WinUI4K.HandledTooHandler", inspectable = false).addInterface(
             delegateIid,
             listOf(
@@ -279,6 +274,39 @@ internal object Xaml {
                 },
             ),
         )
+        // AddHandler takes the delegate out of the IReference and holds its own reference (UnboxValue in
+        // UIElementGenerated::EventAddHandlerByIndex), so both the IReference and the delegate's creation reference are
+        // released right after registering. RemoveHandler likewise searches by the unwrapped delegate, so wrap it again
+        // when unsubscribing (the element keeps holding a reference to the delegate, so the delegate is still alive then)
+        try {
+            withBoxedHandler(eventSlot, delegate, referenceIid) { routedEvent, boxed ->
+                component.uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed, 1)
+            }
+        } finally {
+            delegate.release()
+        }
+        var removed = false
+        return {
+            if (!removed) {
+                removed = true
+                withBoxedHandler(eventSlot, delegate, referenceIid) { routedEvent, boxed ->
+                    component.uiElement.call(XamlInterop.IUIElement_RemoveHandler, routedEvent, boxed)
+                }
+            }
+        }
+    }
+
+    /**
+     * Passes the RoutedEvent of [eventSlot] (get_XxxEvent of IUIElementStatics) and an IReference wrapping [delegate] to
+     * [block] (the arguments of UIElement.AddHandler / RemoveHandler). Both references are released after [block].
+     */
+    private inline fun withBoxedHandler(eventSlot: Int, delegate: KComObject, referenceIid: String, block: (routedEvent: ComPtr, boxed: Ptr) -> Unit) {
+        val statics = Activation.factory(XamlInterop.CLS_UIElement, XamlInterop.IID_IUIElementStatics)
+        val routedEvent = try {
+            statics.getPtr(eventSlot)
+        } finally {
+            statics.release()
+        }
         val boxed = KComObject("Windows.Foundation.IReference`1<WinUI4K.HandledTooHandler>").addInterface(
             referenceIid,
             listOf(
@@ -290,16 +318,11 @@ internal object Xaml {
                 },
             ),
         )
-        component.uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed.primary, 1)
-        var removed = false
-        return {
-            if (!removed) {
-                removed = true
-                component.uiElement.call(XamlInterop.IUIElement_RemoveHandler, routedEvent, boxed.primary)
-                routedEvent.release()
-                boxed.release()
-                delegate.release()
-            }
+        try {
+            block(routedEvent, boxed.primary)
+        } finally {
+            boxed.release()
+            routedEvent.release()
         }
     }
 
