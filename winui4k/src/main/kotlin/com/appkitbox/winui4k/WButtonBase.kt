@@ -46,7 +46,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
-    private val clickTokens = ListenerTokens<Runnable>()
+    private val clickTokens = ListenerTokens<Any>()
 
     private var contentComponent: WComponent? = null
 
@@ -108,6 +108,13 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             )
         }
 
+    /**
+     * AbstractButton.getActionCommand-like: the string put into [WActionEvent.actionCommand] on click.
+     * While unset (null), returns [text]. Setting null returns it to unset.
+     */
+    var actionCommand: String? = null
+        get() = field ?: text
+
     /** The argument passed when [command] runs (ButtonBase.CommandParameter). */
     var commandParameter: String? = null
         set(value) {
@@ -131,7 +138,19 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         Xaml.invoke(inspectable)
     }
 
-    /** ActionListener-like. Subscribes to ButtonBase.Click (RoutedEventHandler) under the hood. */
+    /**
+     * ActionListener-like. Implemented as a subscription to ButtonBase.Click (RoutedEventHandler).
+     * The listener receives a [WActionEvent] that represents the click.
+     */
+    @JvmSynthetic
+    fun addActionListener(listener: (WActionEvent) -> Unit) {
+        val adapter = WActionListener(listener)
+        addActionListenerForJava(adapter)
+        clickTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    /** The old form without the event. Kept to preserve the same JVM signature as `addActionListener(Runnable)`. */
+    @Deprecated("Use addActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
@@ -141,24 +160,53 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     @JvmName("addActionListener")
     fun addActionListenerForJava(listener: Runnable) {
+        subscribeClick(listener) { listener.run() }
+    }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: WActionListener) {
+        subscribeClick(listener) { listener.actionPerformed(it) }
+    }
+
+    private fun subscribeClick(key: Any, onClick: (WActionEvent) -> Unit) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> listener.run() }
-        clickTokens.add(listener, token)
+        ) { _, _ -> onClick(createActionEvent()) }
+        clickTokens.add(key, token)
     }
+
+    private fun createActionEvent() = WActionEvent(
+        this,
+        actionCommand,
+        WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()),
+    )
 
     /** Unsubscribes a listener registered via [addActionListener]. */
     @JvmSynthetic
+    fun removeActionListener(listener: (WActionEvent) -> Unit) {
+        unsubscribeClick(clickTokens.removeKotlinAdapter(listener) ?: return)
+    }
+
+    @Deprecated("Use removeActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
+    @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {
-        val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
-        removeActionListenerForJava(adapter)
+        unsubscribeClick(clickTokens.removeKotlinAdapter(listener) ?: return)
     }
 
     @JvmName("removeActionListener")
     fun removeActionListenerForJava(listener: Runnable) {
-        val token = clickTokens.remove(listener) ?: return
+        unsubscribeClick(listener)
+    }
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: WActionListener) {
+        unsubscribeClick(listener)
+    }
+
+    private fun unsubscribeClick(key: Any) {
+        val token = clickTokens.remove(key) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }
 }

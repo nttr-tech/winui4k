@@ -682,7 +682,7 @@ internal class FilerWindow {
     ): WAppBarButton {
         val button = WAppBarButton(label, icon)
         button.addKeyboardAccelerator(key, *modifiers)
-        button.addActionListener(action)
+        button.addActionListener { action() }
         return button
     }
 
