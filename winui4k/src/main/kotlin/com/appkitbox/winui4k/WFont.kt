@@ -20,19 +20,26 @@ class WFont(
     val name: String,
     /** A bitwise OR of [PLAIN] / [BOLD] / [ITALIC]. */
     val style: Int,
-    /** The size in DIPs (equivalent to AWT's Font.getSize2D). */
-    val size2D: Double,
+    /**
+     * The exact size in DIPs. The public [size2D] is a Float to match AWT, so this error-free value is used internally.
+     */
+    internal val sizeDip: Double,
 ) {
     init {
         require(style and (BOLD or ITALIC).inv() == 0) { "style must be a bitwise OR of PLAIN / BOLD / ITALIC: $style" }
-        require(size2D > 0.0 && size2D.isFinite()) { "size must be a finite value greater than 0: $size2D" }
+        require(sizeDip > 0.0 && sizeDip.isFinite()) { "size must be a finite value greater than 0: $sizeDip" }
     }
 
     /** Specifies the size as an integer (the same call style as Swing's `new Font(name, style, 12)`). */
     constructor(name: String, style: Int, size: Int) : this(name, style, size.toDouble())
 
-    /** The size rounded to an integer (equivalent to AWT's Font.getSize). The exact value is [size2D]. */
-    val size: Int get() = size2D.roundToInt()
+    /**
+     * The size in DIPs (equivalent to AWT's Font.getSize2D; a Float so that Java can write `float s = font.getSize2D();`).
+     */
+    val size2D: Float get() = sizeDip.toFloat()
+
+    /** The size rounded to an integer (equivalent to AWT's Font.getSize). */
+    val size: Int get() = sizeDip.roundToInt()
 
     /** Whether it is bold ([style] includes [BOLD]). */
     val isBold: Boolean get() = style and BOLD != 0
@@ -41,7 +48,7 @@ class WFont(
     val isItalic: Boolean get() = style and ITALIC != 0
 
     /** A new WFont with only [style] replaced. */
-    fun deriveFont(style: Int): WFont = WFont(name, style, size2D)
+    fun deriveFont(style: Int): WFont = WFont(name, style, sizeDip)
 
     /** A new WFont with only [size] replaced. */
     fun deriveFont(size: Float): WFont = WFont(name, style, size.toDouble())
@@ -51,11 +58,11 @@ class WFont(
 
     /** Equal if name, style, and size are all equal. */
     override fun equals(other: Any?): Boolean =
-        other is WFont && name == other.name && style == other.style && size2D == other.size2D
+        other is WFont && name == other.name && style == other.style && sizeDip == other.sizeDip
 
-    override fun hashCode(): Int = (name.hashCode() * HASH_FACTOR + style) * HASH_FACTOR + size2D.hashCode()
+    override fun hashCode(): Int = (name.hashCode() * HASH_FACTOR + style) * HASH_FACTOR + sizeDip.hashCode()
 
-    override fun toString(): String = "WFont(name=$name, style=$style, size=$size2D)"
+    override fun toString(): String = "WFont(name=$name, style=$style, size=$sizeDip)"
 
     companion object {
         /** Plain (neither bold nor italic). */

@@ -27,7 +27,8 @@ class WFontForJavaTest {
         assertEquals("Segoe UI", font.getName());
         assertEquals(WFont.BOLD, font.getStyle());
         assertEquals(14, font.getSize());
-        assertEquals(14.0, font.getSize2D());
+        float size2D = font.getSize2D(); // The same float as AWT's Font.getSize2D()
+        assertEquals(14.0f, size2D);
         assertTrue(font.isBold());
         assertFalse(font.isItalic());
     }
@@ -36,7 +37,8 @@ class WFontForJavaTest {
     void creatingWithADoubleSizeRoundsGetSizeAndKeepsTheOriginalValueInGetSize2D() {
         WFont font = new WFont("Yu Gothic UI", WFont.PLAIN, 12.6);
         assertEquals(13, font.getSize());
-        assertEquals(12.6, font.getSize2D());
+        float size2D = font.getSize2D();
+        assertEquals(12.6f, size2D);
     }
 
     @Test

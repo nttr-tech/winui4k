@@ -80,7 +80,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             } finally {
                 family.release()
             }
-            control.call(XamlInterop.IControl_put_FontSize, value.size2D)
+            control.call(XamlInterop.IControl_put_FontSize, value.sizeDip)
             XamlStructs.putFontWeight(
                 control,
                 XamlInterop.IControl_put_FontWeight,
