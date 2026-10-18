@@ -17,10 +17,51 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * [addActionListener] / [removeActionListener] (Click), [command] / [commandParameter], [flyout].
  * The appearance is switched with [isAccent] / [isContentAreaFilled] / [isBorderPainted], and the colors are changed with
  * [background] / [foreground].
+ * With [icon], an icon can be placed beside (or above or below) the text (same as JButton(String, Icon)).
  */
 class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
 ) {
+    /** JButton(Icon)-like: a button with only an icon. */
+    constructor(icon: WIcon) : this("") {
+        this.icon = icon
+    }
+
+    /** JButton(String, Icon)-like: a button with text and an icon. If [icon] is null, text only. */
+    constructor(text: String, icon: WIcon?) : this(text) {
+        if (icon != null) this.icon = icon
+    }
+
+    /**
+     * AbstractButton.getIcon / setIcon-like: the icon shown alongside the text. null (the default) means no icon.
+     * WinUI's Button has no icon property, so the Content is made a StackPanel that arranges the icon (IconElement) and
+     * the text (TextBlock). If the text is empty, only the icon becomes the Content. [text] keeps returning the arranged
+     * string.
+     * Putting a component into [content] removes the icon (back to null), and setting an icon later removes [content].
+     * While the icon and text are arranged together, the string is put into the screen reader name ([accessibleName])
+     * (left as is if the user has set a different name).
+     */
+    var icon: WIcon?
+        get() = labelIcon
+        set(value) = changeLabelIcon(value)
+
+    /**
+     * AbstractButton.setHorizontalTextPosition-like: the position of the text relative to the icon. The default is
+     * [TextPosition.TRAILING] (text after the icon). [TextPosition.TOP] / [TextPosition.BOTTOM] arrange them vertically.
+     */
+    var horizontalTextPosition: TextPosition
+        get() = labelTextPosition
+        set(value) = changeLabelTextPosition(value)
+
+    /**
+     * AbstractButton.setIconTextGap-like: the gap between the icon and the text (DIP; StackPanel.Spacing). The default is
+     * 4, the same as Swing.
+     * Negative values, NaN, and infinity throw [IllegalArgumentException] (unlike Swing, they cannot be overlapped).
+     */
+    var iconTextGap: Double
+        get() = labelIconTextGap
+        set(value) = changeLabelIconTextGap(value)
+
     /** The flyout opened by clicking the button (Button.Flyout). */
     var flyout: WFlyoutBase? = null
         set(value) {

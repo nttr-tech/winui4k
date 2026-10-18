@@ -53,12 +53,39 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     private var contentComponent: WComponent? = null
 
     /**
+     * The icon shown alongside the label ([WButton.icon]). If null, there is no icon and the string is put into the
+     * Content as is.
+     * Controls other than Button (such as AppBarButton) have their own icon properties, so only [WButton] exposes this.
+     */
+    internal var labelIcon: WIcon? = null
+        private set
+
+    /** The position of the text relative to the icon ([WButton.horizontalTextPosition]). */
+    internal var labelTextPosition: TextPosition = TextPosition.TRAILING
+        private set
+
+    /** The gap between the icon and the text ([WButton.iconTextGap]). */
+    internal var labelIconTextGap: Double = DEFAULT_ICON_TEXT_GAP
+        private set
+
+    /** The label string while shown with an icon (null while [labelIcon] is null). */
+    private var iconLabelText: String? = null
+
+    /**
+     * The string put into AutomationProperties.Name when the icon and text are arranged together (a name set by the user
+     * is not overwritten).
+     */
+    private var labelAutomationName: String? = null
+
+    /**
      * The button's label string (ContentControl.Content).
      * Content is Object-typed, so the setter passes a boxed string and the getter unboxes it.
+     * With an icon ([WButton.icon]), returns the string arranged alongside the icon.
      * Returns "" if [content] currently holds a component.
      */
     var text: String
         get() {
+            iconLabelText?.let { return it }
             val boxed = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return ""
             return try {
                 PropertyValues.unboxString(boxed) ?: ""
@@ -68,21 +95,118 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
         set(value) {
             contentComponent = null
-            val boxed = PropertyValues.boxString(value)
-            contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
-            boxed.release()
+            if (labelIcon != null) {
+                iconLabelText = value
+                showIconLabel()
+            } else {
+                putContentText(value)
+            }
         }
 
-    /** Content for cases other than plain text. Mutually exclusive with text (whichever is set last wins). */
+    /**
+     * The Content for showing something other than a string. Mutually exclusive with [text] (whichever is set later wins).
+     * Setting it also removes the icon ([WButton.icon]).
+     */
     var content: WComponent?
         get() = contentComponent
         set(value) {
             contentComponent = value
+            labelIcon = null
+            iconLabelText = null
+            releaseLabelAutomationName()
             contentControl.call(
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
+
+    private fun putContentText(value: String) {
+        val boxed = PropertyValues.boxString(value)
+        contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
+        boxed.release()
+    }
+
+    /**
+     * Changes the icon (the setter of [WButton.icon]). Keeps the current [text] and shows it again alongside the icon
+     * (removing any component in [content]). If null, removes the icon and returns to a string-only Content.
+     */
+    internal fun changeLabelIcon(icon: WIcon?) {
+        if (icon == null && labelIcon == null) return
+        val label = text
+        contentComponent = null
+        labelIcon = icon
+        if (icon == null) {
+            iconLabelText = null
+            releaseLabelAutomationName()
+            putContentText(label)
+        } else {
+            iconLabelText = label
+            showIconLabel()
+        }
+    }
+
+    /** Changes the position of the text relative to the icon (the setter of [WButton.horizontalTextPosition]). */
+    internal fun changeLabelTextPosition(position: TextPosition) {
+        if (position == labelTextPosition) return
+        labelTextPosition = position
+        if (labelIcon != null) showIconLabel()
+    }
+
+    /** Changes the gap between the icon and the text (the setter of [WButton.iconTextGap]). */
+    internal fun changeLabelIconTextGap(gap: Double) {
+        require(gap >= 0.0 && gap.isFinite()) { "iconTextGap must be a finite value of 0 or more: $gap" }
+        if (gap == labelIconTextGap) return
+        labelIconTextGap = gap
+        if (labelIcon != null) showIconLabel()
+    }
+
+    /**
+     * Rebuilds the Content from [labelIcon] and [iconLabelText]. If the text is empty, only the icon (IconElement);
+     * otherwise a StackPanel arranging the icon and a TextBlock in the order and orientation of [labelTextPosition], with
+     * the gap set to [labelIconTextGap].
+     * The TextBlock inherits its text color and font from the button's ContentPresenter.
+     * With a composite Content, the button's UI Automation name is no longer derived from the string
+     * (ButtonBaseAutomationPeer uses the Content for the name only when it is a string), so the string is put into
+     * AutomationProperties.Name.
+     */
+    private fun showIconLabel() {
+        val icon = checkNotNull(labelIcon)
+        val label = checkNotNull(iconLabelText)
+        val iconElement = XamlElement.adopt(icon.createIconElement())
+        if (label.isEmpty()) {
+            releaseLabelAutomationName()
+            contentControl.call(XamlInterop.IContentControl_put_Content, iconElement.uiElement.ptr)
+            return
+        }
+        val vertical = labelTextPosition == TextPosition.TOP || labelTextPosition == TextPosition.BOTTOM
+        val panel = WPanel(labelIconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
+        val textBlock = WLabel(label)
+        val children = if (labelTextPosition == TextPosition.LEADING || labelTextPosition == TextPosition.TOP) {
+            listOf(textBlock, iconElement)
+        } else {
+            listOf(iconElement, textBlock)
+        }
+        for (child in children) {
+            if (vertical) child.horizontalAlignment = HorizontalAlignment.CENTER else child.verticalAlignment = VerticalAlignment.CENTER
+            panel.add(child)
+        }
+        contentControl.call(XamlInterop.IContentControl_put_Content, panel.uiElement.ptr)
+        val current = accessibleName
+        if (current.isEmpty() || current == labelAutomationName) {
+            accessibleName = label
+            labelAutomationName = label
+        }
+    }
+
+    /**
+     * Removes the AutomationProperties.Name put by [showIconLabel] (left as is if the user has changed it to a different
+     * name).
+     */
+    private fun releaseLabelAutomationName() {
+        val name = labelAutomationName ?: return
+        labelAutomationName = null
+        if (accessibleName == name) accessibleName = ""
+    }
 
     /** When Click fires (ButtonBase.ClickMode). */
     var clickMode: ClickMode
@@ -243,6 +367,28 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 }
 
 private const val ASCII_LIMIT = 128
+
+/** The default gap between the icon and the text (4, the same as Swing's AbstractButton.getIconTextGap). */
+internal const val DEFAULT_ICON_TEXT_GAP = 4.0
+
+/**
+ * AbstractButton.setHorizontalTextPosition-like: the position of the text relative to the icon
+ * ([WButton.horizontalTextPosition]).
+ * [LEADING] / [TRAILING] follow the text flow direction (FlowDirection) and mean left / right in left-to-right flow.
+ */
+enum class TextPosition {
+    /** Puts the text before the icon (on the left in left-to-right flow). */
+    LEADING,
+
+    /** Puts the text after the icon (on the right in left-to-right flow) (the default; same as Swing). */
+    TRAILING,
+
+    /** Puts the text above the icon. */
+    TOP,
+
+    /** Puts the text below the icon. */
+    BOTTOM,
+}
 
 /** Whether it is AWT's KeyEvent.VK_A..VK_Z (65..90) or VK_0..VK_9 (48..57). */
 private fun isMnemonicKeyCode(keyCode: Int): Boolean = keyCode in 'A'.code..'Z'.code || keyCode in '0'.code..'9'.code
