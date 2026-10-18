@@ -113,5 +113,161 @@ class WComponentTest : FunSpec() {
                 UiTestHarness.detach(button)
             }
         }
+
+        test("toolTipText and toolTip refer to the same value and can be cleared with null") {
+            val values = onUiThreadGet {
+                val button = WButton("Hint")
+                button.toolTipText = "Saves the file"
+                val viaText = button.toolTip
+                button.toolTip = "Different wording"
+                val viaToolTip = button.toolTipText
+                button.toolTipText = null
+                listOf(viaText, viaToolTip, button.toolTip, button.toolTipText)
+            }
+            values shouldBe listOf("Saves the file", "Different wording", null, null)
+        }
+
+        test("name is an empty string when unset, and the value set can be read back from the native object") {
+            val (initial, named) = onUiThreadGet {
+                val button = WButton()
+                val initial = button.name
+                button.name = "okButton"
+                initial to button.name
+            }
+            initial shouldBe ""
+            named shouldBe "okButton"
+        }
+
+        test("accessibleName and accessibleDescription are written to AutomationProperties") {
+            val (initial, name, description, cleared) = onUiThreadGet {
+                val button = WButton("Save")
+                val initial = button.accessibleName
+                button.accessibleName = "Save file"
+                button.accessibleDescription = "Saves the current document"
+                val name = button.accessibleName
+                val description = button.accessibleDescription
+                button.accessibleName = ""
+                listOf(initial, name, description, button.accessibleName)
+            }
+            initial shouldBe ""
+            name shouldBe "Save file"
+            description shouldBe "Saves the current document"
+            cleared shouldBe ""
+        }
+
+        test("minimumSize and maximumSize default to 0 and unlimited, and return the values that were set") {
+            val (defaults, updated) = onUiThreadGet {
+                val button = WButton()
+                val defaults = button.minimumSize to button.maximumSize
+                button.minimumSize = WSize(120.0, 36.0)
+                button.maximumSize = WSize(400.0, 90.0)
+                defaults to (button.minimumSize to button.maximumSize)
+            }
+            defaults.first shouldBe WSize(0.0, 0.0)
+            defaults.second shouldBe WSize(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)
+            updated.first shouldBe WSize(120.0, 36.0)
+            updated.second shouldBe WSize(400.0, 90.0)
+        }
+
+        test("minimumSize becomes the actual size after layout when larger than the content, and maximumSize caps the actual size") {
+            val (wide, narrow) = onUiThreadGet {
+                val wide = WButton("Short")
+                wide.horizontalAlignment = HorizontalAlignment.LEFT
+                wide.verticalAlignment = VerticalAlignment.TOP
+                wide.minimumSize = WSize(300.0, 80.0)
+                val narrow = WButton("A button with a very long label whose width exceeds the maximum")
+                narrow.horizontalAlignment = HorizontalAlignment.LEFT
+                narrow.verticalAlignment = VerticalAlignment.TOP
+                narrow.maximumSize = WSize(60.0, 30.0)
+                wide to narrow
+            }
+            val panel = onUiThreadGet {
+                val box = WPanel()
+                box.add(wide)
+                box.add(narrow)
+                box
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val sizes = onUiThreadGet {
+                    wide.updateLayout()
+                    narrow.updateLayout()
+                    listOf(wide.actualWidth, wide.actualHeight, narrow.actualWidth, narrow.actualHeight)
+                }
+                sizes[0] shouldBe 300.0
+                sizes[1] shouldBe 80.0
+                sizes[2] shouldBe 60.0
+                sizes[3] shouldBe 30.0
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("setting preferredSize sets width and height, which reach the actual size after layout") {
+            val button = onUiThreadGet {
+                val button = WButton("Preferred")
+                button.horizontalAlignment = HorizontalAlignment.LEFT
+                button.verticalAlignment = VerticalAlignment.TOP
+                button.preferredSize = WSize(210.0, 44.0)
+                button
+            }
+            onUiThreadGet { button.preferredSize } shouldBe WSize(210.0, 44.0)
+            UiTestHarness.attachAndAwaitLoaded(button)
+            try {
+                val sizes = onUiThreadGet { button.actualWidth to button.actualHeight }
+                sizes shouldBe (210.0 to 44.0)
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("a focusable button in the window gets hasFocus via requestFocus, and loses it when focus moves to another button") {
+            val (first, second) = onUiThreadGet { WButton("One") to WButton("Two") }
+            val panel = onUiThreadGet {
+                val box = WPanel()
+                box.add(first)
+                box.add(second)
+                box
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val results = onUiThreadGet {
+                    val before = first.hasFocus()
+                    val accepted = first.requestFocusInWindow()
+                    val firstFocused = first.hasFocus()
+                    second.requestFocus()
+                    listOf(before, accepted, firstFocused, first.hasFocus(), second.hasFocus())
+                }
+                results shouldBe listOf(false, true, true, false, true)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("a button with isFocusable = false returns false from requestFocusInWindow and does not get hasFocus") {
+            val button = onUiThreadGet {
+                val button = WButton("Not focusable")
+                button.isFocusable = false
+                button
+            }
+            UiTestHarness.attachAndAwaitLoaded(button)
+            try {
+                val results = onUiThreadGet {
+                    val accepted = button.requestFocusInWindow()
+                    listOf(button.isFocusable, accepted, button.hasFocus())
+                }
+                results shouldBe listOf(false, false, false)
+            } finally {
+                UiTestHarness.detach(button)
+            }
+        }
+
+        test("a button not placed in a window returns false from requestFocusInWindow") {
+            val results = onUiThreadGet {
+                val button = WButton("Not placed")
+                listOf(button.isFocusable, button.requestFocusInWindow(), button.hasFocus())
+            }
+            results shouldBe listOf(true, false, false)
+        }
     }
 }

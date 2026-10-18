@@ -2,9 +2,13 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
@@ -227,6 +231,99 @@ abstract class WComponent internal constructor(
     }
 
     /**
+     * The preferred size (equivalent to JComponent.get/setPreferredSize). Reading is the same as the [preferredSize]
+     * function.
+     * Setting it writes [width] / [height] as an explicit size (the actual size after layout also becomes this value).
+     */
+    var preferredSize: WSize
+        get() = preferredSize()
+        set(value) {
+            width = value.width
+            height = value.height
+        }
+
+    /**
+     * The minimum size (equivalent to JComponent.get/setMinimumSize; FrameworkElement.MinWidth / MinHeight).
+     * At least this size is reserved even if the content is smaller. The default is (0, 0).
+     */
+    var minimumSize: WSize
+        get() = WSize(
+            frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinWidth),
+            frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinHeight),
+        )
+        set(value) {
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, value.width)
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, value.height)
+        }
+
+    /**
+     * The maximum size (equivalent to JComponent.get/setMaximumSize; FrameworkElement.MaxWidth / MaxHeight).
+     * The size is limited to this even if the content is larger. The default is unlimited (Double.POSITIVE_INFINITY).
+     */
+    var maximumSize: WSize
+        get() = WSize(
+            frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxWidth),
+            frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxHeight),
+        )
+        set(value) {
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value.width)
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxHeight, value.height)
+        }
+
+    /**
+     * Equivalent to Component.getName / setName (FrameworkElement.Name). An empty string if unset.
+     * Used as the lookup key in the XAML name scope.
+     */
+    var name: String
+        get() = frameworkElement.getString(XamlInterop.IFrameworkElement_get_Name)
+        set(value) = Hstring.use(value) { h -> frameworkElement.call(XamlInterop.IFrameworkElement_put_Name, h) }
+
+    /**
+     * The name read by screen readers (AutomationProperties.Name; equivalent to AccessibleContext.getAccessibleName).
+     * An empty string if unset; setting an empty string clears it.
+     */
+    var accessibleName: String
+        get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetName)
+        set(value) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetName, value)
+
+    /**
+     * Supplementary description for screen readers (AutomationProperties.HelpText;
+     * equivalent to AccessibleContext.getAccessibleDescription). An empty string if unset.
+     */
+    var accessibleDescription: String
+        get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
+        set(value) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetHelpText, value)
+
+    /**
+     * Whether it can be a destination of Tab key navigation (equivalent to JComponent.isFocusable; UIElement.IsTabStop).
+     * When false, it does not receive focus even with [requestFocus] / [requestFocusInWindow].
+     */
+    var isFocusable: Boolean
+        get() = uiElement.getBool(XamlInterop.IUIElement_get_IsTabStop)
+        set(value) = uiElement.putBool(XamlInterop.IUIElement_put_IsTabStop, value)
+
+    /** Moves focus (UIElement.Focus). true if accepted. false for an element that is not on a window. */
+    internal fun focus(state: Int = XamlInterop.FocusState_Keyboard): Boolean = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(1, 1)
+        uiElement.call(XamlInterop.IUIElement_Focus, state, out)
+        Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+    }
+
+    /** Requests focus (equivalent to Component.requestFocus). Use when the result is not needed. */
+    fun requestFocus() {
+        requestFocusInWindow()
+    }
+
+    /**
+     * Requests focus and returns whether it was accepted (equivalent to Component.requestFocusInWindow).
+     * false for an element that is not on a window, is disabled, or has [isFocusable] set to false.
+     */
+    fun requestFocusInWindow(): Boolean = isFocusable && focus(XamlInterop.FocusState_Programmatic)
+
+    /** Whether this element has focus (equivalent to Component.hasFocus; FocusState is other than Unfocused). */
+    fun hasFocus(): Boolean = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
+
+    /**
      * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
      * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
      * change.
@@ -239,11 +336,9 @@ abstract class WComponent internal constructor(
      * Upper bound on the width (FrameworkElement.MaxWidth). Unlike [width], this is measured against the
      * content's natural width and only clamps it once it exceeds this value (unlimited by default).
      */
-    var maxWidth: Double = Double.POSITIVE_INFINITY
-        set(value) {
-            field = value
-            frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value)
-        }
+    var maxWidth: Double
+        get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxWidth)
+        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value)
 
     /** Horizontal position within the space the parent allots (FrameworkElement.HorizontalAlignment). */
     var horizontalAlignment: HorizontalAlignment
@@ -435,6 +530,13 @@ abstract class WComponent internal constructor(
             toolTip.inspectable.ptr,
         )
     }
+
+    /** An alias for [toolTip] (equivalent to JComponent.get/setToolTipText). Reads and writes the same value. */
+    var toolTipText: String?
+        get() = toolTip
+        set(value) {
+            toolTip = value
+        }
 
     /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */
     var contextFlyout: WFlyoutBase? = null

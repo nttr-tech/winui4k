@@ -638,18 +638,13 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
 
     /** Whether the Tab key stops at the element (UIElement.IsTabStop). */
     var isTabStop: Boolean
-        get() = uiElement.getBool(XamlInterop.IUIElement_get_IsTabStop)
-        set(value) = uiElement.putBool(XamlInterop.IUIElement_put_IsTabStop, value)
+        get() = isFocusable
+        set(value) {
+            isFocusable = value
+        }
 
-    /** Moves focus to the element. */
-    fun focus(state: Int = XamlInterop.FocusState_Keyboard): Boolean = Ffi.backend.withScope { scope ->
-        val out = scope.allocate(1, 1)
-        uiElement.call(XamlInterop.IUIElement_Focus, state, out)
-        Ffi.backend.memory.getByte(out, 0) != 0.toByte()
-    }
-
-    /** Whether the element has focus. */
-    val hasFocus: Boolean get() = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
+    /** Whether it has focus (same as the [hasFocus] function). */
+    val hasFocus: Boolean get() = hasFocus()
 
     /** The position as a child of a Canvas (Canvas.Left / Canvas.Top). */
     fun setCanvasPosition(x: Double, y: Double) {
@@ -682,18 +677,22 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
     fun goToState(state: String, useTransitions: Boolean = false): Boolean = Xaml.goToState(inspectable, state, useTransitions)
 
     /** The UI Automation name. */
-    fun setAutomationName(name: String?) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetName, name)
+    fun setAutomationName(name: String?) {
+        accessibleName = name.orEmpty()
+    }
 
     /** The UI Automation id. */
     fun setAutomationId(id: String?) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetAutomationId, id)
 
     /** The UI Automation help text. */
-    fun setAutomationHelpText(text: String?) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetHelpText, text)
+    fun setAutomationHelpText(text: String?) {
+        accessibleDescription = text.orEmpty()
+    }
 
     /** The UI Automation name, id, help text, and access key (an empty string if not set). */
-    val automationName: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetName)
+    val automationName: String get() = accessibleName
     val automationId: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetAutomationId)
-    val automationHelpText: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
+    val automationHelpText: String get() = accessibleDescription
     val automationAccessKey: String get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetAccessKey)
 
     /** The UI Automation access key (the KeyTip; read aloud by Narrator). */

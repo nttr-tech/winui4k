@@ -2185,8 +2185,12 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.FrameworkElement (additions to IFrameworkElement) ----
     const val IFrameworkElement_get_Width = 15
     const val IFrameworkElement_get_Height = 17
+    const val IFrameworkElement_get_MinWidth = 19
     const val IFrameworkElement_put_MinWidth = 20
+    const val IFrameworkElement_get_MaxWidth = 21
+    const val IFrameworkElement_get_MinHeight = 23
     const val IFrameworkElement_put_MinHeight = 24
+    const val IFrameworkElement_get_MaxHeight = 25
     const val IFrameworkElement_put_MaxHeight = 26
     const val IFrameworkElement_put_Name = 34
     const val IFrameworkElement_put_AllowFocusOnInteraction = 39
