@@ -96,6 +96,38 @@ class WAppBarButtonTest : FunSpec() {
             } shouldContainExactly listOf("Symbol:SAVE", "Symbol:OPEN_FILE", 1)
         }
 
+        test("an AppBar button's text is an alias of label, does not go into Content, and is also the default actionCommand") {
+            onUiThreadGet {
+                val button = WAppBarButton("Save")
+                val initial = button.text
+                button.text = "Overwrite"
+                val label = button.label
+                button.label = "Save As"
+                listOf(initial, label, button.text, button.actionCommand, ButtonContents.contentOf(button))
+            } shouldContainExactly listOf("Save", "Overwrite", "Save As", "Save As", emptyList<String>())
+        }
+
+        test("WAppBarToggleButton's text is also an alias of label, and the action's NAME goes into label") {
+            onUiThreadGet {
+                val button = WAppBarToggleButton()
+                button.text = "Bold"
+                val label = button.label
+                button.action = RecordingAction("Italic", Symbol.ITALIC)
+                listOf(label, button.label, button.text, ButtonContents.contentOf(button))
+            } shouldContainExactly listOf("Bold", "Italic", "Italic", emptyList<String>())
+        }
+
+        test("the NAME of WAppBarButton's action goes into the label, and the click's actionCommand is that string too") {
+            onUiThreadGet {
+                val commands = mutableListOf<String?>()
+                val button = WAppBarButton()
+                button.action = RecordingAction("Save", Symbol.SAVE)
+                button.addActionListener { e: WActionEvent -> commands += e.actionCommand }
+                button.doClick()
+                listOf(button.label, commands)
+            } shouldContainExactly listOf("Save", listOf("Save"))
+        }
+
         test("WAppBarToggleButton's action is linked to the toggle's selected state via SELECTED_KEY") {
             onUiThreadGet {
                 val action = RecordingAction("Bold", Symbol.BOLD)

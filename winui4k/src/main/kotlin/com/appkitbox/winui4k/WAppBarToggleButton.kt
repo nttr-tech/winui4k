@@ -29,9 +29,11 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
     /**
      * The legacy `WAppBarToggleButton(String, Symbol)`. Kept only for binary compatibility (linking of compiled callers)
      * and invisible from source (HIDDEN). Symbol is a WIcon, so in source the same call picks the form taking a WIcon.
+     * The default arguments are there to also keep the synthetic constructor (String, Symbol, int,
+     * DefaultConstructorMarker) used by Kotlin callers compiled with arguments omitted.
      */
     @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
-    constructor(label: String, icon: Symbol?) : this(label, icon as WIcon?)
+    constructor(label: String = "", icon: Symbol? = null) : this(label, icon as WIcon?)
 
     /**
      * AbstractButton.setIcon-style: the button's icon (AppBarToggleButton.Icon). Returns the icon as set; null for no icon.
@@ -63,6 +65,17 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
     @Deprecated("Use icon, which returns a WIcon", level = DeprecationLevel.HIDDEN)
     @JvmName("getIcon")
     fun getIconAsSymbol(): Symbol? = icon as? Symbol
+
+    /**
+     * AbstractButton.getText / setText-style: an alias of [label]. The AppBarToggleButton template displays Label rather
+     * than Content, so Swing's setText and the action's [WAction.NAME] also go into the label. The default of
+     * [actionCommand] is also this string.
+     */
+    override var text: String
+        get() = label
+        set(value) {
+            label = value
+        }
 
     /** The label position for just this button (AppBarToggleButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition

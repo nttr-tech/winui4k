@@ -129,8 +129,9 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * Content is Object-typed, so the setter passes a boxed string and the getter unboxes it.
      * With an icon ([icon]), returns the string laid out with the icon.
      * Returns "" if [content] currently holds a component.
+     * In [WAppBarButton] / [WAppBarToggleButton] it is an alias of the label ([WAppBarButton.label]) rather than Content.
      */
-    var text: String
+    open var text: String
         get() {
             iconLabelText?.let { return it }
             val boxed = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return ""

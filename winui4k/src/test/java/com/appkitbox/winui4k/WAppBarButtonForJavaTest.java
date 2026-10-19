@@ -47,6 +47,21 @@ class WAppBarButtonForJavaTest {
     }
 
     @Test
+    void setTextAndGetTextReadAndWriteTheLabelLikeJButton() {
+        onUiThread(() -> {
+            WAppBarButton button = new WAppBarButton("Save", Symbol.SAVE);
+            assertEquals("Save", button.getText());
+            button.setText("Overwrite");
+            assertEquals("Overwrite", button.getLabel());
+
+            WAppBarToggleButton toggle = new WAppBarToggleButton();
+            toggle.setText("Bold");
+            assertEquals("Bold", toggle.getLabel());
+            assertEquals("Bold", toggle.getActionCommand());
+        });
+    }
+
+    @Test
     void selfImplementedWIconThrowsIllegalArgumentException() {
         onUiThread(() -> {
             WIcon custom = new WIcon() {
@@ -81,6 +96,9 @@ class WAppBarButtonForJavaTest {
     void legacySymbolConstructorAndSetIconGetIconRemainAsSyntheticMembersAndCanBeCalled() throws Exception {
         for (Class<?> type : Arrays.asList(WAppBarButton.class, WAppBarToggleButton.class)) {
             Constructor<?> constructor = type.getConstructor(String.class, Symbol.class);
+            // The synthetic constructor for default arguments, used by Kotlin callers compiled with arguments omitted, also remains
+            Class<?> marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
+            assertTrue(type.getConstructor(String.class, Symbol.class, int.class, marker).isSynthetic());
             Method setter = type.getMethod("setIcon", Symbol.class);
             List<Method> symbolGetters = Arrays.stream(type.getMethods())
                 .filter(m -> m.getName().equals("getIcon") && m.getReturnType() == Symbol.class)

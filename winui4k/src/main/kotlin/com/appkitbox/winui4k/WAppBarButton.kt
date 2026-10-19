@@ -49,9 +49,11 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? =
      * The legacy `WAppBarButton(String, Symbol)`. It is kept only for binary compatibility (linking of compiled callers)
      * and is not visible from source (HIDDEN). Symbol is a WIcon, so in source the same call selects the overload taking
      * a WIcon.
+     * The default arguments are there to also keep the synthetic constructor (String, Symbol, int,
+     * DefaultConstructorMarker) used by Kotlin callers compiled with omitted arguments.
      */
     @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
-    constructor(label: String, icon: Symbol?) : this(label, icon as WIcon?)
+    constructor(label: String = "", icon: Symbol? = null) : this(label, icon as WIcon?)
 
     /**
      * AbstractButton.setIcon-like: the button's icon (AppBarButton.Icon). Returns the icon as set. null means no icon.
@@ -83,6 +85,16 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? =
     @Deprecated("Use icon, which returns a WIcon", level = DeprecationLevel.HIDDEN)
     @JvmName("getIcon")
     fun getIconAsSymbol(): Symbol? = icon as? Symbol
+
+    /**
+     * AbstractButton.getText / setText-like: an alias of [label]. AppBarButton's template shows Label, not Content, so
+     * Swing's setText and the action's [WAction.NAME] also go into the label. [actionCommand] also defaults to this string.
+     */
+    override var text: String
+        get() = label
+        set(value) {
+            label = value
+        }
 
     /** The label position for just this button (AppBarButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition
