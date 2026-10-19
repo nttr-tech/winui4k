@@ -7,7 +7,6 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
@@ -26,8 +25,11 @@ import kotlin.jvm.JvmSynthetic
 class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory), // default interface = ITextBox
 ) {
-    /** TextChanged event tokens registered via addTextChangedListener. */
-    private val textChangedTokens = ListenerTokens<Consumer<String>>()
+    /** Listeners registered with addTextChangedListener (the registered object and a function receiving the text). Called in registration order. */
+    private val textChangedListeners = ArrayList<Pair<Any, (String) -> Unit>>()
+
+    /** Whether TextBox.TextChanged has been subscribed (subscribed only once, when the first listener is added). */
+    private var textChangedSubscribed = false
 
     /**
      * Listeners registered with addActionListener (the registered object and the function that receives the event).
@@ -396,35 +398,51 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         ) { _, _ -> (anchor.get() as? WTextField)?.caret?.check() }
     }
 
-    /** Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change. */
+    /**
+     * Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change.
+     * TextChanged is delivered later in a batch (in the message loop), so consecutive changes may be merged into one.
+     * Use [addDocumentListener] when you need the changed position and length.
+     * The Kotlin lambda form and the Java Consumer form go into the same list and are called in the order added.
+     */
     @JvmSynthetic
-    fun addTextChangedListener(listener: (String) -> Unit) {
-        val adapter = Consumer<String> { listener(it) }
-        addTextChangedListenerForJava(adapter)
-        textChangedTokens.addKotlinAdapter(listener, adapter)
-    }
+    fun addTextChangedListener(listener: (String) -> Unit) = addTextChanged(listener, listener)
 
     @JvmName("addTextChangedListener")
-    fun addTextChangedListenerForJava(listener: Consumer<String>) {
-        val token = inspectable.addEventHandler(
-            "WinUI4K.TextChangedHandler",
-            XamlInterop.IID_TextChangedEventHandler,
-            XamlInterop.ITextBox_add_TextChanged,
-        ) { _, _ -> listener.accept(text) }
-        textChangedTokens.add(listener, token)
-    }
+    fun addTextChangedListenerForJava(listener: Consumer<String>) = addTextChanged(listener) { listener.accept(it) }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
     @JvmSynthetic
-    fun removeTextChangedListener(listener: (String) -> Unit) {
-        val adapter = textChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeTextChangedListenerForJava(adapter)
-    }
+    fun removeTextChangedListener(listener: (String) -> Unit) = removeTextChanged(listener)
 
     @JvmName("removeTextChangedListener")
-    fun removeTextChangedListenerForJava(listener: Consumer<String>) {
-        val token = textChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(XamlInterop.ITextBox_remove_TextChanged, token)
+    fun removeTextChangedListenerForJava(listener: Consumer<String>) = removeTextChanged(listener)
+
+    private fun addTextChanged(key: Any, invoke: (String) -> Unit) {
+        if (!textChangedSubscribed) {
+            // The handler stays in the native object, so do not capture the field strongly; look it up from listenerAnchor
+            val anchor = listenerAnchor
+            inspectable.addEventHandler(
+                "WinUI4K.TextChangedHandler",
+                XamlInterop.IID_TextChangedEventHandler,
+                XamlInterop.ITextBox_add_TextChanged,
+            ) { _, _ -> (anchor.get() as? WTextField)?.fireTextChanged() }
+            textChangedSubscribed = true
+        }
+        textChangedListeners += key to invoke
+        listenerAnchor.listenerAdded()
+    }
+
+    private fun removeTextChanged(key: Any) {
+        val index = textChangedListeners.indexOfLast { it.first === key }
+        if (index < 0) return
+        textChangedListeners.removeAt(index)
+        listenerAnchor.listenerRemoved()
+    }
+
+    private fun fireTextChanged() {
+        if (textChangedListeners.isEmpty()) return
+        val current = text
+        for ((_, invoke) in textChangedListeners.toList()) invoke(current)
     }
 }
 

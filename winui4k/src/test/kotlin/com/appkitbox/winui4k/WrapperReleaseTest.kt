@@ -10,6 +10,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.lang.ref.WeakReference
+import java.util.function.Consumer
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -472,6 +473,30 @@ class WrapperReleaseTest : FunSpec() {
                 field.text = "Changed"
                 field.selectAll()
                 field.removeCaretListener(listener)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text field with TextChanged listeners (Kotlin and Java forms) that do not reference the field is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden {
+                WTextField().also {
+                    it.addTextChangedListener { _ -> }
+                    it.addTextChangedListenerForJava(Consumer { _ -> })
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once all its TextChanged listeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                val kotlin: (String) -> Unit = { _ -> }
+                val java = Consumer<String> { _ -> }
+                field.addTextChangedListener(kotlin)
+                field.addTextChangedListenerForJava(java)
+                field.removeTextChangedListener(kotlin)
+                field.removeTextChangedListenerForJava(java)
                 WeakReference(field)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
