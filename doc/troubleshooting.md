@@ -174,3 +174,25 @@
   探して Invoke し (Toggle の切り替え、Click、command が実際のクリックと同じ順に走る)、見つからない (載せる前) ときは何もしない
   (`WSplitButtonTest`、`WToggleSplitButtonTest`)。command が実行できない (CanExecute が false) ときは SplitButton 自身は有効のまま
   PrimaryButton だけが無効になるため、doClick は PrimaryButton の IsEnabled も見る。
+- **RichEditBox: 読み取り専用 (IsReadOnly = true) のとき Document の書き換えが E_ACCESSDENIED になる**
+  `ITextRange.SetText` / `ITextDocument.SetText` / `Cut` は、`RichEditBox.IsReadOnly` が true の間は 0x80070005 で失敗する。JTextArea は編集不可でも
+  `setText` / `append` / `insert` / `replaceRange` で文字列を変えられるため、`WTextPane` は書き換えの間だけ IsReadOnly を false にして戻す
+  (`WTextPane.writable`、`WTextPaneTest`)。ユーザーの入力と `replaceSelection` / `cut` / `paste` は、Swing と同じく編集不可なら何もしない。
+- **RichEditBox: 末尾の改行は最後の段落記号に使われて消える**
+  `ITextDocument.GetText` は最後の段落記号 (`"\r"`) を必ず付けて返す。`SetText("a\r")` のように末尾が段落記号の文字列を渡すと、その記号が最後の
+  段落記号になり、読み戻すと `"a"` になる (末尾の改行が失われる)。`"a\n"` を保つには、末尾にもう 1 つ `"\r"` を足して渡す。読むときは
+  最後の 1 文字を外す。`TextGetOptions.UseLf` を付けると段落の区切りが `"\n"` で返り、位置 (`ITextRange.StartPosition` など) は段落記号 1 文字を
+  1 と数えるので、Swing の位置と一致する (`WTextPane.text`、`WTextPaneTest`)。
+- **RichEditBox: TextWrapping の既定は NoWrap**
+  以前の KDoc は「既定で折り返す」と書いていたが、実測では `NoWrap` (JTextArea の `lineWrap = false` と同じ) だった (`WTextPaneTest`)。
+- **PasswordBox: PasswordChanging と PasswordChanged は 1 回の変更から同期的に続けて届く**
+  `Password` を設定すると、その呼び出しの中で PasswordChanging、続けて PasswordChanged が届く
+  (`dxaml/xcp/core/native/text/Controls/PasswordBox.cpp:402-409`)。選択位置 (SelectionStart) は持たないので、`WPasswordField` の DocumentListener は
+  キャレットの手がかりなしに前後の文字列の差から位置を求める (同じ文字が続く所では右端の位置になる。`WPasswordFieldDocumentTest`)。
+- **Image: Stretch の既定 (Uniform) は割り当てられた領域いっぱいに拡大する**
+  パネルに入れた `Image` は、画像の大きさではなく領域に合わせて拡大される (幅 40 の画像が 1857 DIP になった)。元の大きさにするには
+  `Stretch.None` にする (`WImageTest`)。
+- **AutoSuggestBox: Enter の時点で Text が入力欄に追いついていないことがある**
+  キーを続けて送ると、QuerySubmitted の `QueryText` も `AutoSuggestBox.Text` も最後の文字を含まないことがある。入力欄 (内部の TextBox) の文字列が
+  ボックスへ伝わるのが後だから。`WAutoSuggestBox` の ActionEvent は、`Text` ではなく QuerySubmitted の `QueryText` を既定の actionCommand にする
+  (`WAutoSuggestBoxTest` は、キーの間に待つ)。
