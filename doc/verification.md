@@ -151,3 +151,12 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     Grid にした。アイコンの無いラベルの DesiredSize・TextTrimming での切り詰め・TextAlignment での最初の文字の位置は、TextBlock だけのときと同じ
   - TextBlock の ActualWidth は、Width を 300 にしても、Stretch で広げても文字の幅 (例: 14) を返す。TextAlignment.Right の文字は
     広げた幅の右端に描かれる (TextPointer.GetCharacterRect の x が 286) ので、揃えの確認には ActualWidth ではなく文字の位置を使う
+- WTextField の DocumentListener 風のリスナーと選択の API のために、TextBox の通知の届き方を E2E テストで確かめた
+  (2.5.4-experimental。`WTextFieldDocumentTest` / `WTextFieldEditTest`)
+  - TextChanging は put_Text の中で同期的に呼ばれる (Loaded の前でも呼ばれる)。TextChanged と違い、ハンドラの中で Text を読むと
+    変更後の文字列。プログラムからの setText と replaceSelection は、WinUI4K が Swing と同じ REMOVE / INSERT を自分で知らせ、
+    書き換えの最中に届く TextChanging は無視する
+  - Select や put_SelectedText の SelectionChanged は同期的には呼ばれず、後からまとめて届く (同じ位置で 2 回届くこともある)
+  - put_SelectedText は入れた文字を選択したままにする (Swing の replaceSelection は入れた文字の後ろにキャレットを置くので、
+    WinUI4K は置き換えた後で Select し直す)
+  - Padding (10,5,6,6)・BorderThickness (1)・MinWidth (64) などの既定のスタイルの値は、ツリーに載る (Loaded) までは 0 のまま

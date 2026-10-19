@@ -41,9 +41,19 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     private val enterKeyTarget = EnterKeyTarget()
 
+    /** DocumentListener-style listeners (subscribes to TextBox.TextChanging when the first listener is added). */
+    private val document = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+
+    /**
+     * JTextComponent.getText / setText-style: the text of the field (TextBox.Text).
+     * When set, the [addDocumentListener] listeners receive removeUpdate for the whole old text and then insertUpdate for
+     * the whole new text, as Swing's setText does (nothing is delivered if the text is the same).
+     */
     var text: String
-        get() = inspectable.getString(XamlInterop.ITextBox_get_Text)
-        set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) }
+        get() = nativeText()
+        set(value) = document.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
+
+    private fun nativeText(): String = inspectable.getString(XamlInterop.ITextBox_get_Text)
 
     /** The placeholder shown when empty (TextBox.PlaceholderText). */
     var placeholderText: String
@@ -166,12 +176,16 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * null or an empty string deletes the selection. After replacing, the caret is placed after the inserted text (the
      * selection is cleared).
      * Does nothing if [isEditable] is false (as in Swing). It can be undone like a user edit ([undo]).
+     * The [addDocumentListener] listeners receive removeUpdate for the whole selection and then insertUpdate for the
+     * inserted text, as in Swing.
      */
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
         val start = selectionStart
         val inserted = content.orEmpty()
-        Hstring.use(inserted) { h -> inspectable.call(XamlInterop.ITextBox_put_SelectedText, h) }
+        document.replaceRange(start, selectionLength) {
+            Hstring.use(inserted) { h -> inspectable.call(XamlInterop.ITextBox_put_SelectedText, h) }
+        }
         // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing
         inspectable.call(XamlInterop.ITextBox_Select, start + inserted.length, 0)
     }
@@ -291,6 +305,46 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     fun postActionEvent() {
         val event = WActionEvent(this, actionCommand, WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()))
         for ((_, invoke) in actionListeners.toList()) invoke(event)
+    }
+
+    /**
+     * Document.addDocumentListener-style: adds a listener called when the text changes. Does nothing if null.
+     * Swing's JTextField adds it to the Document from getDocument(), but WinUI4K has no Document, so it is added to the
+     * field directly.
+     *
+     * User edits such as typing, pasting and undo are detected via TextBox.TextChanging (delivered right after the
+     * change, before rendering), and the difference from the previous text is reported as a single removeUpdate (the
+     * removed part) and insertUpdate (the inserted part). The position is found by excluding the matching prefix and
+     * suffix, and where the same character repeats (such as typing a at the start of "aa") it is decided by the caret
+     * position.
+     * Characters being composed in the IME are also reported each time the field's text changes. The field has no
+     * formatting, so changedUpdate is never called.
+     * Changes made by [text] and [replaceSelection] are reported in the same form as Swing (see their descriptions).
+     */
+    fun addDocumentListener(listener: WDocumentListener?) {
+        if (listener != null) document.add(listener)
+    }
+
+    /** Document.removeDocumentListener-style: removes one listener added with [addDocumentListener]. Does nothing if it was not added. */
+    fun removeDocumentListener(listener: WDocumentListener?) {
+        if (listener != null) document.remove(listener)
+    }
+
+    /** AbstractDocument.getDocumentListeners-style: the DocumentListener-style listeners added (in the order added). */
+    val documentListeners: Array<WDocumentListener>
+        get() = document.listeners()
+
+    /** Subscribes to TextBox.TextChanging. The handler stays in the native object, so the field is looked up from [listenerAnchor]. */
+    private fun subscribeTextChanging() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.DocumentTextChanging",
+            XamlInterop.IID_TextBoxTextChangingHandler,
+            XamlInterop.ITextBox_add_TextChanging,
+        ) { _, _ ->
+            val field = anchor.get() as? WTextField
+            if (field != null) field.document.onNativeChange(field.selectionStart)
+        }
     }
 
     /** Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change. */

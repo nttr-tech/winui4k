@@ -442,6 +442,23 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a text field with a DocumentListener that does not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden { WTextField().also { it.addDocumentListener(EmptyDocumentListener()) } }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once all its DocumentListeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                val listener = EmptyDocumentListener()
+                field.addDocumentListener(listener)
+                field.text = "Changed"
+                field.removeDocumentListener(listener)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a text field never shown is also collected once all its key listeners are removed") {
             val reference = onUiThreadGet {
                 val field = WTextField()
@@ -554,5 +571,20 @@ class WrapperReleaseTest : FunSpec() {
             }
             Reclamation.awaitCollected(captured).shouldBeTrue()
         }
+    }
+}
+
+/** A DocumentListener that does nothing (does not reference the component). */
+private class EmptyDocumentListener : WDocumentListener {
+    override fun insertUpdate(e: WDocumentEvent) {
+        // Does nothing, since this is a collection test
+    }
+
+    override fun removeUpdate(e: WDocumentEvent) {
+        // Does nothing, since this is a collection test
+    }
+
+    override fun changedUpdate(e: WDocumentEvent) {
+        // Does nothing, since this is a collection test
     }
 }
