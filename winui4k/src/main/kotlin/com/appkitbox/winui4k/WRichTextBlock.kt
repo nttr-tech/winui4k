@@ -31,6 +31,15 @@ class WRichTextBlock : WComponent(
         own(blocks.queryInterface(FoundationInterop.IID_IVector_Block))
     }
 
+    /**
+     * JComponent.getFont / setFont-like: the font (RichTextBlock.FontFamily / FontWeight / FontStyle / FontSize).
+     * Paragraph text is drawn in this font, except for parts changed individually with [ParagraphBuilder.bold] and the like.
+     * Reads return the native effective value, and setting null clears it and restores the default (same as [WLabel.font]).
+     */
+    var font: WFont?
+        get() = FontProperties.read(inspectable, FontProperties.RICH_TEXT_BLOCK)
+        set(value) = FontProperties.write(inspectable, dependencyObject, FontProperties.RICH_TEXT_BLOCK, value)
+
     /** How text wraps (RichTextBlock.TextWrapping). Wraps by default. */
     var textWrapping: TextWrapping
         get() = TextWrapping.of(inspectable.getInt(XamlInterop.IRichTextBlock_get_TextWrapping))

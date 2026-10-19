@@ -1,8 +1,6 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
@@ -54,40 +52,8 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
      * Setting null clears the four properties and returns to the theme default (DependencyObject.ClearValue).
      */
     var font: WFont?
-        get() {
-            val family = control.getPtrOrNull(XamlInterop.IControl_get_FontFamily)
-            val name = try {
-                family?.getString(XamlInterop.IFontFamily_get_Source).orEmpty()
-            } finally {
-                family?.release()
-            }
-            val bold = XamlStructs.getFontWeight(control, XamlInterop.IControl_get_FontWeight) >= SEMI_BOLD_WEIGHT
-            val italic = control.getInt(XamlInterop.IControl_get_FontStyle) == FONT_STYLE_ITALIC
-            val style = (if (bold) WFont.BOLD else WFont.PLAIN) or (if (italic) WFont.ITALIC else WFont.PLAIN)
-            return WFont(name, style, control.getDouble(XamlInterop.IControl_get_FontSize))
-        }
-        set(value) {
-            if (value == null) {
-                clearControlProperty(XamlInterop.IControlStatics_get_FontFamilyProperty)
-                clearControlProperty(XamlInterop.IControlStatics_get_FontSizeProperty)
-                clearControlProperty(XamlInterop.IControlStatics_get_FontWeightProperty)
-                clearControlProperty(XamlInterop.IControlStatics_get_FontStyleProperty)
-                return
-            }
-            val family = createFontFamily(value.name)
-            try {
-                control.call(XamlInterop.IControl_put_FontFamily, family.ptr)
-            } finally {
-                family.release()
-            }
-            control.call(XamlInterop.IControl_put_FontSize, value.sizeDip)
-            XamlStructs.putFontWeight(
-                control,
-                XamlInterop.IControl_put_FontWeight,
-                if (value.isBold) BOLD_WEIGHT else NORMAL_WEIGHT,
-            )
-            control.call(XamlInterop.IControl_put_FontStyle, if (value.isItalic) FONT_STYLE_ITALIC else FONT_STYLE_NORMAL)
-        }
+        get() = FontProperties.read(control, FontProperties.CONTROL)
+        set(value) = FontProperties.write(control, dependencyObject, FontProperties.CONTROL, value)
 
     /**
      * JComponent.getForeground / setForeground-like: the text color (Control.Foreground). Converted to a SolidColorBrush.
@@ -179,23 +145,6 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
 
     /** Clears the local value of a Control dependency property ([staticsSlot] is get_XxxProperty of IControlStatics). */
     internal fun clearControlProperty(staticsSlot: Int) {
-        val statics = Activation.factory(XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics)
-        try {
-            val property = statics.getPtr(staticsSlot)
-            try {
-                dependencyObject.call(XamlInterop.IDependencyObject_ClearValue, property.ptr)
-            } finally {
-                property.release()
-            }
-        } finally {
-            statics.release()
-        }
+        clearDependencyProperty(dependencyObject, XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics, staticsSlot)
     }
 }
-
-// FontWeight weights and Windows.UI.Text.FontStyle values (Normal=0, Italic=2; extracted from the winmd)
-private const val NORMAL_WEIGHT = 400
-private const val SEMI_BOLD_WEIGHT = 600
-private const val BOLD_WEIGHT = 700
-private const val FONT_STYLE_NORMAL = 0
-private const val FONT_STYLE_ITALIC = 2

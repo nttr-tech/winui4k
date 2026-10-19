@@ -91,6 +91,18 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         get() = inspectable.getString(XamlInterop.ITextBlock_get_Text)
         set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBlock_put_Text, h) }
 
+    /**
+     * JLabel.getFont / setFont-like: the font (TextBlock.FontFamily / FontWeight / FontStyle / FontSize).
+     * Reads return the native effective value, which is the default font even before setting (a weight of 600 or more is
+     * [WFont.BOLD]).
+     * Setting null clears the four properties and restores the default (the value inherited from the parent)
+     * (DependencyObject.ClearValue).
+     * [fontSize] / [fontFamily] / [fontWeight] / [isItalic] read and write the same properties one at a time.
+     */
+    var font: WFont?
+        get() = FontProperties.read(inspectable, FontProperties.TEXT_BLOCK)
+        set(value) = FontProperties.write(inspectable, dependencyObject, FontProperties.TEXT_BLOCK, value)
+
     /** Font size (TextBlock.FontSize). Used to emphasize headings and the like. */
     var fontSize: Double
         get() = inspectable.getDouble(XamlInterop.ITextBlock_get_FontSize)
@@ -98,31 +110,21 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
     var fontFamily: String
-        get() {
-            val family = inspectable.getPtrOrNull(XamlInterop.ITextBlock_get_FontFamily) ?: return ""
-            return try {
-                family.getString(XamlInterop.IFontFamily_get_Source)
-            } finally {
-                family.release()
-            }
-        }
-        set(value) {
-            val family = createFontFamily(value)
-            inspectable.call(XamlInterop.ITextBlock_put_FontFamily, family.ptr)
-            family.release()
-        }
+        get() = FontProperties.readFamily(inspectable, FontProperties.TEXT_BLOCK)
+        set(value) = FontProperties.writeFamily(inspectable, FontProperties.TEXT_BLOCK, value)
 
-    /** Font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. */
-    var fontWeight: Int = 400
-        set(value) {
-            field = value
-            XamlStructs.putFontWeight(inspectable, XamlInterop.ITextBlock_put_FontWeight, value)
-        }
+    /** The font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. Reads return the native effective value. */
+    var fontWeight: Int
+        get() = XamlStructs.getFontWeight(inspectable, XamlInterop.ITextBlock_get_FontWeight)
+        set(value) = XamlStructs.putFontWeight(inspectable, XamlInterop.ITextBlock_put_FontWeight, value)
 
     /** Whether the text is italic (TextBlock.FontStyle is Italic). */
     var isItalic: Boolean
-        get() = inspectable.getInt(XamlInterop.ITextBlock_get_FontStyle) == FONT_STYLE_ITALIC
-        set(value) = inspectable.call(XamlInterop.ITextBlock_put_FontStyle, if (value) FONT_STYLE_ITALIC else FONT_STYLE_NORMAL)
+        get() = inspectable.getInt(XamlInterop.ITextBlock_get_FontStyle) == FontProperties.FONT_STYLE_ITALIC
+        set(value) = inspectable.call(
+            XamlInterop.ITextBlock_put_FontStyle,
+            if (value) FontProperties.FONT_STYLE_ITALIC else FontProperties.FONT_STYLE_NORMAL,
+        )
 
     /** Whether the text is underlined (Underline in TextBlock.TextDecorations). */
     var isUnderline: Boolean
@@ -141,15 +143,35 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         inspectable.call(XamlInterop.ITextBlock_put_TextDecorations, if (on) current or flag else current and flag.inv())
     }
 
-    /** Text color (TextBlock.Foreground). Converted to a SolidColorBrush before being set. Null restores the default color. */
-    var foreground: WColor? = null
+    /**
+     * JLabel.getForeground / setForeground-like: the text color (TextBlock.Foreground). Passed as a SolidColorBrush.
+     * Reads return the native effective value, which is the default color even before setting (null if not a solid color
+     * brush).
+     * Setting null clears it and restores the default (the color inherited from the parent) (DependencyObject.ClearValue).
+     */
+    var foreground: WColor?
+        get() {
+            val brush = inspectable.getPtrOrNull(XamlInterop.ITextBlock_get_Foreground) ?: return null
+            return try {
+                colorOf(brush)
+            } finally {
+                brush.release()
+            }
+        }
         set(value) {
-            field = value
             if (value == null) {
-                inspectable.call(XamlInterop.ITextBlock_put_Foreground, null)
-            } else {
-                val brush = value.createBrush()
+                clearDependencyProperty(
+                    dependencyObject,
+                    XamlInterop.CLS_TextBlock,
+                    XamlInterop.IID_ITextBlockStatics,
+                    XamlInterop.ITextBlockStatics_get_ForegroundProperty,
+                )
+                return
+            }
+            val brush = value.createBrush()
+            try {
                 inspectable.call(XamlInterop.ITextBlock_put_Foreground, brush.ptr)
+            } finally {
                 brush.release()
             }
         }
@@ -179,8 +201,6 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     }
 }
 
-// Values of Windows.UI.Text.FontStyle and TextDecorations (extracted from winmd)
-private const val FONT_STYLE_NORMAL = 0
-private const val FONT_STYLE_ITALIC = 2
+// Windows.UI.Text.TextDecorations values (extracted from winmd)
 private const val DECORATION_UNDERLINE = 1
 private const val DECORATION_STRIKETHROUGH = 2
