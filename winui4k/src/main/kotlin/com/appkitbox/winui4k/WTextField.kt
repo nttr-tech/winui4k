@@ -228,12 +228,17 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
         val start = selectionStart
+        val selected = selectionLength
+        val before = text.length
         val inserted = content.orEmpty()
-        document.replaceRange(start, selectionLength) {
+        document.replaceRange(start, selected) {
             Hstring.use(inserted) { h -> inspectable.call(XamlInterop.ITextBox_put_SelectedText, h) }
         }
-        // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing
-        inspectable.call(XamlInterop.ITextBox_Select, start + inserted.length, 0)
+        // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing.
+        // TextBox normalizes the inserted string (CRLF to CR when multi-line, and drops everything after a line break when
+        // single-line), so the position is computed from the length actually added, not the length of the passed string
+        val position = start + (text.length - before + selected)
+        inspectable.call(XamlInterop.ITextBox_Select, position, 0)
         caret.check()
     }
 

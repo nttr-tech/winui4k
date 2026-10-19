@@ -7,6 +7,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldEndWith
+import io.kotest.matchers.string.shouldStartWith
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -101,6 +103,33 @@ class WTextFieldEditTest : FunSpec() {
                 field.replaceSelection("XYZ")
                 field.text to selectionOf(field)
             } shouldBe ("abXYZef" to Triple(5, 5, 5))
+        }
+
+        test("replaceSelection with text containing line breaks puts the caret after what was actually inserted (the boundary between the inserted and following text), after TextBox fixes the line breaks (CRLF to CR for multi-line, dropping everything from the line break for single-line)") {
+            withField("xy") { field ->
+                field.caretPosition = 1
+                field.replaceSelection("a\r\nb")
+                val singleLine = Triple(field.text, field.caretPosition, field.text.length - 1)
+                field.text = "xy"
+                field.acceptsReturn = true
+                field.caretPosition = 1
+                field.replaceSelection("a\r\nb")
+                listOf(singleLine, Triple(field.text, field.caretPosition, field.text.length - 1))
+            }.forEach { (text, caret, beforeTail) ->
+                // Whatever the length of the actually inserted text, Swing expects the caret right before the trailing "y"
+                text shouldStartWith "xa"
+                text shouldEndWith "y"
+                caret shouldBe beforeTail
+            }
+        }
+
+        test("replaceSelection exceeding maxLength is not truncated from the program (MaxLength only limits input), and puts the caret after the inserted text") {
+            withField("abcd") { field ->
+                field.maxLength = 5
+                field.select(1, 2) // Replacing "b" with 3 characters makes 6 characters
+                field.replaceSelection("XYZ")
+                field.text to field.caretPosition
+            } shouldBe ("aXYZcd" to 4)
         }
 
         test("without a selection, replaceSelection inserts at the caret position, and null or an empty string deletes the selected range") {
