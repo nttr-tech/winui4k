@@ -62,6 +62,34 @@ class WToggleSplitButtonTest : FunSpec() {
             received.all { it.source === button && it.itemSelectable === button && it.item === button }.shouldBeTrue()
         }
 
+        test("even if the first listener changes the checked state, later listeners of the same notification receive the state at the time of the notification (same order as Swing)") {
+            val first = mutableListOf<Int>()
+            val second = mutableListOf<Int>()
+            val button = onUiThreadGet {
+                val button = WToggleSplitButton("Bold")
+                var flipped = false
+                button.addItemListener(
+                    WItemListener { e ->
+                        first += e.stateChange
+                        if (!flipped) {
+                            flipped = true
+                            button.isChecked = false // The nested notification is delivered first, within this notification
+                        }
+                    },
+                )
+                button.addItemListener(WItemListener { e -> second += e.stateChange })
+                button
+            }
+            UiTestHarness.attachAndAwaitLoaded(button)
+            try {
+                onUiThread { button.isChecked = true }
+            } finally {
+                UiTestHarness.detach(button)
+            }
+            first shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.DESELECTED)
+            second shouldContainExactly listOf(WItemEvent.DESELECTED, WItemEvent.SELECTED)
+        }
+
         test("a listener removed with removeItemListener is no longer called (both the lambda style and WItemListener)") {
             val lambdaStates = mutableListOf<Boolean>()
             val eventStates = mutableListOf<Int>()

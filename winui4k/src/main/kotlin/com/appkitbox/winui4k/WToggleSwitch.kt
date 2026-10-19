@@ -3,7 +3,6 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
@@ -18,8 +17,8 @@ import kotlin.jvm.JvmSynthetic
 class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_ToggleSwitch, XamlInterop.IID_IToggleSwitch), // created via the default factory
 ) {
-    /** Toggled event tokens registered via addItemListener. */
-    private val itemTokens = ListenerTokens<Any>()
+    /** The list of ItemListeners. Only one Toggled handler is registered, when the first listener is added. */
+    private val itemListeners = ItemListeners(this) { addToggledHandler() }
 
     /** Whether the switch is on (ToggleSwitch.IsOn). */
     var isOn: Boolean
@@ -105,9 +104,7 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
      */
     @JvmSynthetic
     fun addItemListener(listener: (Boolean) -> Unit) {
-        val adapter = WItemListener { listener(it.stateChange == WItemEvent.SELECTED) }
-        addItemListener(adapter)
-        itemTokens.addKotlinAdapter(listener, adapter)
+        itemListeners.addAdapter(listener, WItemListener { listener(it.stateChange == WItemEvent.SELECTED) })
     }
 
     /**
@@ -117,51 +114,49 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     @Deprecated("Use the addItemListener that takes a WItemListener", level = DeprecationLevel.HIDDEN)
     @JvmName("addItemListener")
     fun addItemListenerForJava(listener: Consumer<Boolean>) {
-        subscribeItem(listener) { listener.accept(it.stateChange == WItemEvent.SELECTED) }
+        itemListeners.addAdapter(listener, WItemListener { listener.accept(it.stateChange == WItemEvent.SELECTED) })
     }
 
-    /** ItemListener.itemStateChanged-like: receives a [WItemEvent] every time it toggles on/off (on is SELECTED, off is DESELECTED). */
+    /**
+     * ItemListener.itemStateChanged-like: receives a [WItemEvent] every time it toggles on/off (on is SELECTED, off is
+     * DESELECTED).
+     * One event per toggle is passed to all listeners, so even if an earlier listener changes [isOn], later listeners
+     * receive the state of that toggle (as in Swing).
+     */
     fun addItemListener(listener: WItemListener) {
-        subscribeItem(listener) { listener.itemStateChanged(it) }
+        itemListeners.add(listener)
     }
 
-    private fun subscribeItem(key: Any, onChange: (WItemEvent) -> Unit) {
+    private fun addToggledHandler() {
         // The handler stays in the native object, so the switch is not captured strongly but looked up from anchor (see ListenerAnchor)
         val anchor = listenerAnchor
-        val token = inspectable.addEventHandler(
+        inspectable.addEventHandler(
             "WinUI4K.ToggledHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IToggleSwitch_add_Toggled,
         ) { _, _ ->
             (anchor.get() as? WToggleSwitch)?.let { toggleSwitch ->
-                onChange(WItemEvent(toggleSwitch, if (toggleSwitch.isOn) WItemEvent.SELECTED else WItemEvent.DESELECTED))
+                val state = if (toggleSwitch.isOn) WItemEvent.SELECTED else WItemEvent.DESELECTED
+                toggleSwitch.itemListeners.fire(WItemEvent(toggleSwitch, state))
             }
         }
-        itemTokens.add(key, token)
-        anchor.listenerAdded()
     }
 
     /** Unsubscribes a listener registered via [addItemListener]. */
     @JvmSynthetic
     fun removeItemListener(listener: (Boolean) -> Unit) {
-        unsubscribeItem(itemTokens.removeKotlinAdapter(listener) ?: return)
+        itemListeners.removeAdapter(listener)
     }
 
     /** The legacy `removeItemListener(Consumer<Boolean>)` (not visible from Java source), for the same reason as [addItemListenerForJava]. */
     @Deprecated("Use the removeItemListener that takes a WItemListener", level = DeprecationLevel.HIDDEN)
     @JvmName("removeItemListener")
     fun removeItemListenerForJava(listener: Consumer<Boolean>) {
-        unsubscribeItem(listener)
+        itemListeners.removeAdapter(listener)
     }
 
     /** Unsubscribes a [WItemListener] registered with [addItemListener]. */
     fun removeItemListener(listener: WItemListener) {
-        unsubscribeItem(listener)
-    }
-
-    private fun unsubscribeItem(key: Any) {
-        val token = itemTokens.remove(key) ?: return
-        inspectable.removeEventHandler(XamlInterop.IToggleSwitch_remove_Toggled, token)
-        listenerAnchor.listenerRemoved()
+        itemListeners.remove(listener)
     }
 }

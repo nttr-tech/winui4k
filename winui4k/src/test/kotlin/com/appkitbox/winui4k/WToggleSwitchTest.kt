@@ -73,6 +73,28 @@ class WToggleSwitchTest : FunSpec() {
             received.all { it.source === toggleSwitch && it.itemSelectable === toggleSwitch && it.item === toggleSwitch }.shouldBeTrue()
         }
 
+        test("even if the first listener changes the state, later listeners of the same notification receive the state at the time of the notification (same order as Swing)") {
+            val first = mutableListOf<Int>()
+            val second = mutableListOf<Int>()
+            onUiThread {
+                val toggleSwitch = WToggleSwitch()
+                var flipped = false
+                toggleSwitch.addItemListener(
+                    WItemListener { e ->
+                        first += e.stateChange
+                        if (!flipped) {
+                            flipped = true
+                            toggleSwitch.isOn = false // Nested notifications are delivered first within this notification
+                        }
+                    },
+                )
+                toggleSwitch.addItemListener(WItemListener { e -> second += e.stateChange })
+                toggleSwitch.isOn = true
+            }
+            first shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.DESELECTED)
+            second shouldContainExactly listOf(WItemEvent.DESELECTED, WItemEvent.SELECTED)
+        }
+
         test("removing the WItemListener with removeItemListener stops delivery") {
             val states = mutableListOf<Int>()
             onUiThread {
