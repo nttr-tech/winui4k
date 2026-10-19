@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.appkitbox.winui4k.internal.ffi.api.allocate
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
@@ -476,6 +477,14 @@ internal object Xaml {
         }
     }
 
+    /**
+     * The position [x, y] of [element] (IUIElement) relative to its parent (UIElement.ActualOffset).
+     * ActualOffset writes a Vector3 (r4×3 = 12 bytes) as out, so it allocates room for 3 elements, reads them and returns
+     * only x and y.
+     */
+    fun actualOffset(element: ComPtr): DoubleArray =
+        readFloats(element, XamlInterop.IUIElement_get_ActualOffset, ACTUAL_OFFSET_COMPONENTS).copyOf(2)
+
     /** The top-left position of the element relative to the root of its visual tree (the window content or the popup child). */
     fun positionInRoot(element: ComPtr): DoubleArray {
         var x = 0.0
@@ -483,7 +492,7 @@ internal object Xaml {
         var current: ComPtr? = element.queryInterface(XamlInterop.IID_IUIElement)
         var guard = 0
         while (current != null && guard++ < MAX_TREE_DEPTH) {
-            val offset = readFloats(current, XamlInterop.IUIElement_get_ActualOffset, 3)
+            val offset = actualOffset(current)
             x += offset[0]
             y += offset[1]
             val parent = parentOf(current)
@@ -496,6 +505,51 @@ internal object Xaml {
         }
         current?.release()
         return doubleArrayOf(x, y)
+    }
+
+    /**
+     * The on-screen position (physical pixels) [x, y] of [component]'s top-left. null if not in a tree.
+     * Uses ConvertScreenToLocal of XamlRoot.CoordinateConverter to find where the screen origin (0, 0) lies in the root's
+     * coordinates, and converts the difference from [positionInRoot] by multiplying by XamlRoot.RasterizationScale
+     * (ConvertLocalToScreen passes a float Point by value, which would be passing a single-precision struct by value, which
+     * this library avoids).
+     */
+    fun positionOnScreen(component: WComponent): IntArray? {
+        val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return null
+        try {
+            val scale = root.getDouble(XamlInterop.IXamlRoot_get_RasterizationScale)
+            val screenOrigin = screenOriginInRoot(root)
+            val local = positionInRoot(component.uiElement)
+            return intArrayOf(
+                Math.round((local[0] - screenOrigin[0]) * scale).toInt(),
+                Math.round((local[1] - screenOrigin[1]) * scale).toInt(),
+            )
+        } finally {
+            root.release()
+        }
+    }
+
+    /** The screen origin (0, 0) expressed in the coordinates (DIP) of [root] (XamlRoot), as [x, y]. */
+    private fun screenOriginInRoot(root: ComPtr): DoubleArray {
+        val root3 = root.queryInterface(XamlInterop.IID_IXamlRoot3)
+        val converter = try {
+            root3.getPtr(XamlInterop.IXamlRoot3_get_CoordinateConverter)
+        } finally {
+            root3.release()
+        }
+        try {
+            return Ffi.backend.withScope { scope ->
+                val memory = Ffi.backend.memory
+                val origin = scope.allocate(XamlStructs.POINT_INT32)
+                memory.putInt(origin.ptr, 0, 0)
+                memory.putInt(origin.ptr, 4, 0)
+                val out = scope.allocate(8)
+                converter.call(WindowingInterop.IContentCoordinateConverter_ConvertScreenToLocal, origin, out)
+                doubleArrayOf(Float.fromBits(memory.getInt(out, 0)).toDouble(), Float.fromBits(memory.getInt(out, 4)).toDouble())
+            }
+        } finally {
+            converter.release()
+        }
     }
 
     /** RoutedEventArgs.OriginalSource. The caller owns the returned reference. */
@@ -522,6 +576,7 @@ internal object Xaml {
 
     private const val IID_IUNKNOWN = "00000000-0000-0000-c000-000000000046"
     private const val MAX_TREE_DEPTH = 512
+    private const val ACTUAL_OFFSET_COMPONENTS = 3
 
     // Windows.System.VirtualKey (same values as VirtualKey.kt)
     private const val VK_SHIFT = 16
@@ -779,7 +834,7 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
     fun desiredSize(): DoubleArray = XamlStructs.getSizeFloat(uiElement, XamlInterop.IUIElement_get_DesiredSize)
 
     /** The position [x, y] relative to the parent (UIElement.ActualOffset). */
-    fun actualOffset(): DoubleArray = Xaml.readFloats(uiElement, XamlInterop.IUIElement_get_ActualOffset, 2)
+    fun actualOffset(): DoubleArray = Xaml.actualOffset(uiElement)
 
     /** The top-left position [x, y] relative to the root of the visual tree. */
     fun positionInRoot(): DoubleArray = Xaml.positionInRoot(uiElement)

@@ -2280,6 +2280,10 @@ internal object XamlInterop {
     const val IXamlRoot_add_Changed = 10               // add_Changed(TypedEventHandler<XamlRoot, XamlRootChangedEventArgs>, out token)
     const val IXamlRoot_remove_Changed = 11
 
+    // ---- Microsoft.UI.Xaml.XamlRoot (IXamlRoot3) ----
+    const val IID_IXamlRoot3 = "b71dbf3b-2e0f-5de0-ac68-f0c1f65114c8"
+    const val IXamlRoot3_get_CoordinateConverter = 6   // get_CoordinateConverter(out ContentCoordinateConverter)
+
     /** Concrete IID of TypedEventHandler<XamlRoot, XamlRootChangedEventArgs> (SHA-1 name-based). */
     val IID_TypedEventHandler_XamlRoot_XamlRootChangedEventArgs: String by lazy {
         Pinterface.iid(

@@ -235,4 +235,8 @@ internal object WindowingInterop {
 
     // enum Microsoft.UI.Input.NonClientRegionKind: Close=0, ..., Caption=4, ..., Passthrough=9
     const val NonClientRegionKind_Passthrough = 9
+
+    // ---- Microsoft.UI.Content.ContentCoordinateConverter (XamlRoot.CoordinateConverter; Microsoft.UI.winmd) ----
+    const val IID_IContentCoordinateConverter = "10a11230-5eb4-5840-a346-570f4a49040f"
+    const val IContentCoordinateConverter_ConvertScreenToLocal = 10 // ConvertScreenToLocal(PointInt32, out Point)
 }

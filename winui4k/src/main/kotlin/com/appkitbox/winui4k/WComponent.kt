@@ -193,6 +193,70 @@ abstract class WComponent internal constructor(
         get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight)
 
     /**
+     * Swing's getSize-style: the actual size after layout (DIP, FrameworkElement.ActualWidth / ActualHeight).
+     * (0, 0) for an element not placed in a window or before layout.
+     *
+     * Swing's getWidth() / getHeight() correspond to the width and height of this [size] ([actualWidth] / [actualHeight]).
+     * This class's [width] / [height] are the explicit size (FrameworkElement.Width / Height), which is NaN when unset, so
+     * they are different things.
+     */
+    val size: WSize
+        get() = WSize(actualWidth, actualHeight)
+
+    /**
+     * Swing's getX-style: the left edge of this element as seen from the parent's top-left (DIP rounded to the nearest
+     * integer). The parent is the parent in the XAML visual tree, which includes not only panels and Canvas but also parts
+     * of a control's template. It points inside the margin (the left edge of the visible frame). 0 for an element not
+     * placed in a window or before layout. Movement by transforms such as rotation (RenderTransform) or by scrolling is not
+     * included. The unrounded value is [actualX].
+     */
+    val x: Int
+        get() = Math.round(actualX).toInt()
+
+    /** Swing's getY-style: the top edge of this element as seen from the parent's top-left (DIP rounded to the nearest integer). See [x] for details. */
+    val y: Int
+        get() = Math.round(actualY).toInt()
+
+    /** The left edge of this element as seen from the parent's top-left (DIP, UIElement.ActualOffset). The rounded value is [x]. */
+    val actualX: Double
+        get() = Xaml.actualOffset(uiElement)[0]
+
+    /** The top edge of this element as seen from the parent's top-left (DIP, UIElement.ActualOffset). The rounded value is [y]. */
+    val actualY: Double
+        get() = Xaml.actualOffset(uiElement)[1]
+
+    /**
+     * Swing's getLocation-style: the top-left of this element as seen from the parent's top-left ([x], [y]). The unit is
+     * DIP rounded to integers. [WPoint] is also used for screen pixels such as the window position ([WAppWindow.position]),
+     * but here it is DIP.
+     */
+    val location: WPoint
+        get() = WPoint(x, y)
+
+    /**
+     * Swing's getBounds-style: the position and size of this element as seen from the parent's top-left ([x], [y], width,
+     * height). Integers as in Swing's Rectangle, with DIP rounded to the nearest integer. The unrounded values are
+     * [actualX] / [actualY] / [size].
+     * (WinUI4K has no setBounds that writes this value; placement is left to layout. Children of [WLayoutPanel] are placed
+     * by the WLayoutManager.)
+     */
+    val bounds: WRectangle
+        get() = WRectangle(x, y, Math.round(actualWidth).toInt(), Math.round(actualHeight).toInt())
+
+    /**
+     * Swing's getLocationOnScreen-style: the on-screen position of this element's top-left (physical pixels; with multiple
+     * monitors, virtual desktop coordinates). DIP is converted with the window's scale (XamlRoot.RasterizationScale). As
+     * with [x], movement by RenderTransform or scrolling is not included.
+     *
+     * @throws IllegalStateException for an element not placed in a window (corresponds to Swing's IllegalComponentStateException)
+     */
+    val locationOnScreen: WPoint
+        get() {
+            val position = checkNotNull(Xaml.positionOnScreen(this)) { "cannot determine the on-screen position because the component is not placed in a window" }
+            return WPoint(position[0], position[1])
+        }
+
+    /**
      * Sets the size a layout manager assigns. Does not change [width] / [height] (the record of the
      * user's intent). Called from [WLayoutPanel.setBounds].
      */

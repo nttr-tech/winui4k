@@ -70,8 +70,8 @@ internal object TestKeyboard {
     /** Presses and releases the Enter key (VK_RETURN = 0x0D, scan code 0x1C). */
     fun pressEnter() = press(0x0D, 0x1C)
 
-    /** The InputSiteWindowClass inside this process's shared window. */
-    private fun inputSite(): Ptr {
+    /** The InputSiteWindowClass in this process's shared window. [TestWindow] also uses it to measure on-screen positions. */
+    internal fun inputSite(): Ptr {
         val pid = getCurrentProcessId() as Int
         var top: Ptr? = null
         while (true) {
