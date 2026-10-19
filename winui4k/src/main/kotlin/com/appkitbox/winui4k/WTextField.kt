@@ -37,17 +37,8 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     /** Whether TextBox.TextChanged has been subscribed (subscribed only once, when the first listener is added). */
     private var textChangedSubscribed = false
 
-    /**
-     * Listeners registered with addActionListener (the registered object and the function that receives the event).
-     * Called in registration order.
-     */
-    private val actionListeners = ArrayDeque<Pair<Any, (WActionEvent) -> Unit>>()
-
-    /**
-     * The handling held by the Enter KeyDown handler (the handler stays on the native side, so it does not reference this
-     * field strongly).
-     */
-    private val enterKeyTarget = EnterKeyTarget()
+    /** ActionListener-style listeners and the handling of Enter's KeyDown ([ActionEvents]). */
+    private val actions = ActionEvents(this, { actionCommand }, ::acceptsReturnOf)
 
     /** DocumentListener-style listeners (subscribes to TextBox.TextChanging when the first listener is added). */
     private val document = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
@@ -372,17 +363,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
 
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
-        val target = enterKeyTarget
-        // Even when single-line, TextBox passes the Enter KeyDown to the text engine and marks it handled (OnKeyDown in
-        // TextBoxBase.cpp), so the default button's global accelerator does not fire. It is marked handled after the
-        // element's handlers (measured with 2.5.4-experimental), but to avoid relying on the order, subscribe in a way that
-        // also receives handled events
-        Xaml.addHandlerHandledToo(
-            this,
-            XamlInterop.IUIElementStatics_get_KeyDownEvent,
-            XamlInterop.IID_KeyEventHandler,
-            FoundationInterop.IID_IReference_KeyEventHandler,
-        ) { sender, args -> target.onKeyDown(sender, XamlKeyEvent(ComPtr(args))) }
+        actions.install()
     }
 
     /**
@@ -413,30 +394,15 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     @JvmName("removeActionListener")
     fun removeActionListenerForJava(listener: WActionListener) = removeAction(listener)
 
-    private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) {
-        actionListeners.addLast(key to invoke)
-        enterKeyTarget.anchor = listenerAnchor
-        listenerAnchor.listenerAdded()
-    }
+    private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) = actions.add(key, invoke)
 
-    private fun removeAction(key: Any) {
-        val index = actionListeners.indexOfLast { it.first === key }
-        if (index < 0) return
-        actionListeners.removeAt(index)
-        listenerAnchor.listenerRemoved()
-    }
-
-    /** Whether there is at least one ActionListener. */
-    internal val hasActionListeners: Boolean get() = actionListeners.isNotEmpty()
+    private fun removeAction(key: Any) = actions.remove(key)
 
     /**
      * JTextField.postActionEvent-like: calls the registered listeners in registration order, as when Enter is pressed.
      * Does not press the default button.
      */
-    fun postActionEvent() {
-        val event = WActionEvent(this, actionCommand, WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()))
-        for ((_, invoke) in actionListeners.toList()) invoke(event)
-    }
+    fun postActionEvent() = actions.post()
 
     /**
      * Document.addDocumentListener-style: adds a listener called when the text changes. Does nothing if null.
@@ -559,40 +525,12 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 }
 
-/**
- * Handling of Enter KeyDown for WTextField. Called from the handler attached to the native TextBox; the field's wrapper is
- * looked up from [anchor] (the wrapper of a field without listeners may be collected; even then the default button is
- * pressed).
- */
-private class EnterKeyTarget {
-    /** A reference to the field that has the listeners (null until the first ActionListener is added). */
-    var anchor: ListenerAnchor<WComponent>? = null
-
-    /**
-     * On Enter with no modifier keys, if [sender] (TextBox) is single-line (AcceptsReturn = false), calls the listeners or
-     * presses the default button and marks the event handled. Since it is marked handled, the default button's Enter
-     * accelerator does not press it again.
-     */
-    fun onKeyDown(sender: Ptr, event: XamlKeyEvent) {
-        if (event.key != VirtualKey.ENTER.native || Xaml.currentModifiers() != 0) return
-        val textBox = ComPtr(sender).queryInterface(XamlInterop.IID_ITextBox)
-        try {
-            // Does not act on an Enter consumed in a KeyListener's keyPressed (in Swing, bindings for a consumed key do not act either)
-            if (ConsumedKeyPresses.take(textBox, VirtualKey.ENTER.native)) return
-            if (textBox.getBool(XamlInterop.ITextBox_get_AcceptsReturn)) return
-            val field = anchor?.get() as? WTextField
-            if (field != null && field.hasActionListeners) {
-                event.handled = true
-                field.postActionEvent()
-                return
-            }
-            val button = DefaultButtons.inRootOf(textBox) ?: return
-            if (button.isEnabled) {
-                event.handled = true
-                button.doClick()
-            }
-        } finally {
-            textBox.release()
-        }
+/** Whether the TextBox that raised the Enter event is multi-line and accepts line breaks (AcceptsReturn). [sender] is borrowed. */
+private fun acceptsReturnOf(sender: ComPtr): Boolean {
+    val textBox = sender.queryInterface(XamlInterop.IID_ITextBox)
+    return try {
+        textBox.getBool(XamlInterop.ITextBox_get_AcceptsReturn)
+    } finally {
+        textBox.release()
     }
 }
