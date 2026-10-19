@@ -41,9 +41,6 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     private val enterKeyTarget = EnterKeyTarget()
 
-    /** A reference for looking up this field from the Enter KeyDown handler (created when adding the first ActionListener). */
-    private val listenerAnchor by lazy { ListenerAnchor(this).also { enterKeyTarget.anchor = it } }
-
     var text: String
         get() = inspectable.getString(XamlInterop.ITextBox_get_Text)
         set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) }
@@ -153,6 +150,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
 
     private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) {
         actionListeners.addLast(key to invoke)
+        enterKeyTarget.anchor = listenerAnchor
         listenerAnchor.listenerAdded()
     }
 
@@ -214,7 +212,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
  */
 private class EnterKeyTarget {
     /** A reference to the field that has the listeners (null until the first ActionListener is added). */
-    var anchor: ListenerAnchor<WTextField>? = null
+    var anchor: ListenerAnchor<WComponent>? = null
 
     /**
      * On Enter with no modifier keys, if [sender] (TextBox) is single-line (AcceptsReturn = false), calls the listeners or
@@ -226,7 +224,7 @@ private class EnterKeyTarget {
         val textBox = ComPtr(sender).queryInterface(XamlInterop.IID_ITextBox)
         try {
             if (textBox.getBool(XamlInterop.ITextBox_get_AcceptsReturn)) return
-            val field = anchor?.get()
+            val field = anchor?.get() as? WTextField
             if (field != null && field.hasActionListeners) {
                 event.handled = true
                 field.postActionEvent()

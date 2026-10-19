@@ -50,9 +50,6 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     /** Click event tokens registered via addActionListener (used by removeActionListener). */
     private val clickTokens = ListenerTokens<Any>()
 
-    /** A reference for looking up this button from the Click handler (created when the first listener is added). */
-    private val listenerAnchor by lazy { ListenerAnchor(this) }
-
     private var contentComponent: WComponent? = null
 
     /**
@@ -360,7 +357,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> anchor.get()?.let { button -> onClick(button.createActionEvent()) } }
+        ) { _, _ -> (anchor.get() as? WButtonBase)?.let { button -> onClick(button.createActionEvent()) } }
         clickTokens.add(key, token)
         anchor.listenerAdded()
     }

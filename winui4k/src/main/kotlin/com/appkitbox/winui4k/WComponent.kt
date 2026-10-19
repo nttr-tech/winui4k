@@ -132,6 +132,13 @@ abstract class WComponent internal constructor(
         own(inspectable.queryInterface(XamlInterop.IID_IFrameworkElement))
     }
 
+    /**
+     * A reference from the event handlers that remain on the native object (those of ActionListener and the input
+     * listeners) to this wrapper (created when the first listener is added). Not created per listener type; one element
+     * shares a single one.
+     */
+    internal val listenerAnchor: ListenerAnchor<WComponent> by lazy { ListenerAnchor(this) }
+
     /** DependencyObject view (passed as the target of attached properties like ToolTipService). */
     internal val dependencyObject: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IDependencyObject))
