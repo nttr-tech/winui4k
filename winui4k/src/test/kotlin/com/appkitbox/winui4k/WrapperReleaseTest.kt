@@ -485,6 +485,36 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a text pane with a DocumentListener and a CaretListener that do not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden {
+                WTextPane().also {
+                    it.addDocumentListener(EmptyDocumentListener())
+                    it.addCaretListener(WCaretListener { })
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text pane never shown is also collected once all its listeners are removed") {
+            val reference = onUiThreadGet {
+                val pane = WTextPane()
+                val document = EmptyDocumentListener()
+                val caret = WCaretListener { }
+                pane.addDocumentListener(document)
+                pane.addCaretListener(caret)
+                pane.text = "Changed"
+                pane.selectAll()
+                pane.removeDocumentListener(document)
+                pane.removeCaretListener(caret)
+                WeakReference(pane)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text pane with columns and rows set before being shown is collected after being shown in a window and removed") {
+            Reclamation.awaitCollected(shownAndHidden { WTextPane(5, 40) }).shouldBeTrue()
+        }
+
         test("a text field with a CaretListener that does not reference the component is also collected after being shown in a window and removed") {
             val reference = shownAndHidden { WTextField().also { it.addCaretListener(WCaretListener { }) } }
             Reclamation.awaitCollected(reference).shouldBeTrue()

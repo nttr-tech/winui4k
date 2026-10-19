@@ -90,6 +90,17 @@ internal class DocumentEvents(
         fire(offset, removedLength, text.length - oldLength + removedLength)
     }
 
+    /**
+     * Reports with changedUpdate that the attributes (formatting) of [length] characters from [offset] changed (the text
+     * does not change). Called by text fields with formatting ([WTextPane]) after a formatting change from the program.
+     * Reports nothing if the length is 0.
+     */
+    fun changed(offset: Int, length: Int) {
+        if (length <= 0 || listeners.isEmpty()) return
+        val event = WDocumentEvent(owner, offset, length, WDocumentEvent.EventType.CHANGE)
+        for (listener in listeners.toList()) listener.changedUpdate(event)
+    }
+
     private fun write(apply: () -> Unit) {
         val wasApplying = applying
         applying = true

@@ -444,10 +444,29 @@ internal object XamlInterop {
     const val IRichEditBox_put_PlaceholderText = 26
     const val IRichEditBox_add_TextChanged = 49        // add_TextChanged(RoutedEventHandler, out token)
     const val IRichEditBox_remove_TextChanged = 50     // remove_TextChanged(token)
+    const val IRichEditBox_add_SelectionChanged = 51   // add_SelectionChanged(RoutedEventHandler, out token)
+    const val IRichEditBox_remove_SelectionChanged = 52 // remove_SelectionChanged(token)
+    const val IRichEditBox_add_TextChanging = 78       // add_TextChanging(TypedEventHandler<RichEditBox, RichEditBoxTextChangingEventArgs>, out token)
+    const val IRichEditBox_remove_TextChanging = 79    // remove_TextChanging(token)
+
+    // ---- Microsoft.UI.Xaml.Controls.RichEditBoxTextChangingEventArgs ----
+    const val IID_IRichEditBoxTextChangingEventArgs = "e887b29a-1551-5868-a5dc-3fcfe7452e6b"
+
+    /** The concrete IID (computed at run time) of TypedEventHandler<RichEditBox, RichEditBoxTextChangingEventArgs>. */
+    val IID_RichEditBoxTextChangingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc($CLS_RichEditBox;{$IID_IRichEditBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.RichEditBoxTextChangingEventArgs;{$IID_IRichEditBoxTextChangingEventArgs}))",
+        )
+    }
 
     // ---- Microsoft.UI.Text.ITextDocument (from Microsoft.UI.Text.winmd; the type of RichEditBox.Document) ----
     const val IID_ITextDocument = "1149d57d-86a6-59dd-88d9-196f27bc5c85"
     const val ITextDocument_get_Selection = 10         // get_Selection(out ITextSelection)
+    const val ITextDocument_CanCopy = 13               // CanCopy(out boolean)
+    const val ITextDocument_CanPaste = 14              // CanPaste(out boolean)
+    const val ITextDocument_GetRange = 23              // GetRange(i4 start, i4 end, out ITextRange)
     const val ITextDocument_CanRedo = 15               // CanRedo(out boolean)
     const val ITextDocument_CanUndo = 16               // CanUndo(out boolean)
     const val ITextDocument_GetText = 25               // GetText(TextGetOptions, out HSTRING)
@@ -456,11 +475,22 @@ internal object XamlInterop {
     const val ITextDocument_Undo = 32                  // Undo()
     const val TextOptions_None = 0                     // TextGetOptions.None / TextSetOptions.None
     const val TextOptions_FormatRtf = 8192             // TextGetOptions.FormatRtf / TextSetOptions.FormatRtf
+    const val TextGetOptions_UseLf = 16777216          // TextGetOptions.UseLf (uses LF instead of CR as the paragraph separator)
 
     // ---- Microsoft.UI.Text.ITextRange / ITextCharacterFormat (formatting operations) ----
     // ITextSelection doesn't inherit ITextRange's members, so QI Selection to ITextRange before use
     const val IID_ITextRange = "06d4abcf-0c06-5d12-a743-85537efd09ea"
     const val ITextRange_get_CharacterFormat = 8       // get_CharacterFormat(out ITextCharacterFormat)
+    const val ITextRange_get_EndPosition = 12          // get_EndPosition(out i4)
+    const val ITextRange_get_StartPosition = 21        // get_StartPosition(out i4)
+    const val ITextRange_get_StoryLength = 23          // get_StoryLength(out i4) the number of characters including the final paragraph mark
+    const val ITextRange_Collapse = 28                 // Collapse(boolean start)
+    const val ITextRange_Copy = 29                     // Copy()
+    const val ITextRange_Cut = 30                      // Cut()
+    const val ITextRange_GetText = 40                  // GetText(TextGetOptions, out HSTRING)
+    const val ITextRange_Paste = 49                    // Paste(i4 format) 0 is the default format
+    const val ITextRange_SetRange = 54                 // SetRange(i4 start, i4 end)
+    const val ITextRange_SetText = 55                  // SetText(TextSetOptions, HSTRING)
     const val IID_ITextCharacterFormat = "f5710050-98e5-5788-b1e3-32191eebf94d"
     const val ITextCharacterFormat_get_Bold = 10       // get_Bold(out FormatEffect)
     const val ITextCharacterFormat_put_Bold = 11       // put_Bold(FormatEffect)
