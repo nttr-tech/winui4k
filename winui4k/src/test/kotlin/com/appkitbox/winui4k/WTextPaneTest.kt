@@ -196,13 +196,19 @@ class WTextPaneTest : FunSpec() {
                 val initial = pane.isEditable
                 pane.isEditable = false
                 val readOnly = pane.isReadOnly
+                // Even though it is made writable temporarily for writing, isEditable is back to false after every write
+                val editableAfter = mutableListOf<Boolean>()
                 pane.append("d")
+                editableAfter += pane.isEditable
                 pane.insert("0", 0)
+                editableAfter += pane.isEditable
                 pane.replaceRange("X", 1, 2)
+                editableAfter += pane.isEditable
                 val edited = pane.text
                 pane.text = "New"
-                listOf(initial, readOnly, edited, pane.text)
-            } shouldContainExactly listOf(true, true, "0Xbcd", "New")
+                editableAfter += pane.isEditable
+                listOf(initial, readOnly, edited, pane.text, editableAfter, pane.isReadOnly)
+            } shouldContainExactly listOf(true, true, "0Xbcd", "New", listOf(false, false, false, false), true)
         }
 
         test("rtfText returns formatted RTF, and setting RTF puts its text into text") {
