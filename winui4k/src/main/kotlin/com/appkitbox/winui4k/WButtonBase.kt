@@ -1,10 +1,8 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
-import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import kotlin.jvm.JvmName
@@ -283,25 +281,15 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * (unlike Swing, the character in the label is not underlined).
      */
     var mnemonic: Int
-        get() {
-            val key = uiElement.getString(XamlInterop.IUIElement_get_AccessKey)
-            return if (key.length == 1) key[0].code else 0
-        }
-        set(value) {
-            require(value == 0 || isMnemonicKeyCode(value)) { "mnemonic must be the key code of an uppercase letter or a digit: $value" }
-            val key = if (value == 0) "" else value.toChar().toString()
-            Hstring.use(key) { h -> uiElement.call(XamlInterop.IUIElement_put_AccessKey, h) }
-        }
+        get() = Mnemonics.read(uiElement)
+        set(value) = Mnemonics.write(uiElement, value)
 
     /**
      * AbstractButton.setMnemonic(char)-like: sets the access key by character. Letters are stored converted to uppercase,
      * and '\u0000' clears it. Anything other than letters and digits throws [IllegalArgumentException].
      */
     fun setMnemonic(mnemonic: Char) {
-        require(mnemonic == '\u0000' || (mnemonic.code < ASCII_LIMIT && mnemonic.isLetterOrDigit())) {
-            "mnemonic must be an ASCII letter or digit: '$mnemonic'"
-        }
-        this.mnemonic = mnemonic.uppercaseChar().code
+        this.mnemonic = Mnemonics.keyCodeOf(mnemonic)
     }
 
     /**
@@ -407,8 +395,6 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 }
 
-private const val ASCII_LIMIT = 128
-
 /** The default gap between the icon and the text (4, the same as Swing's AbstractButton.getIconTextGap). */
 internal const val DEFAULT_ICON_TEXT_GAP = 4.0
 
@@ -448,6 +434,3 @@ enum class VerticalTextPosition(internal val alignment: VerticalAlignment) {
     /** Puts the text below the icon (bottom-aligned when placed side by side). */
     BOTTOM(VerticalAlignment.BOTTOM),
 }
-
-/** Whether it is AWT's KeyEvent.VK_A..VK_Z (65..90) or VK_0..VK_9 (48..57). */
-private fun isMnemonicKeyCode(keyCode: Int): Boolean = keyCode in 'A'.code..'Z'.code || keyCode in '0'.code..'9'.code

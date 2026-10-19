@@ -849,8 +849,11 @@ internal object XamlInterop {
     const val IID_IToggleSwitch = "1b17eeb1-74bf-5a83-8161-a86f0fdcdf24" // activatable (default factory)
     const val IToggleSwitch_get_IsOn = 6               // get_IsOn(out boolean)
     const val IToggleSwitch_put_IsOn = 7               // put_IsOn(boolean)
+    const val IToggleSwitch_get_Header = 8             // get_Header(out IInspectable)
     const val IToggleSwitch_put_Header = 9             // put_Header(IInspectable)
+    const val IToggleSwitch_get_OnContent = 12         // get_OnContent(out IInspectable)
     const val IToggleSwitch_put_OnContent = 13         // put_OnContent(IInspectable)
+    const val IToggleSwitch_get_OffContent = 16        // get_OffContent(out IInspectable)
     const val IToggleSwitch_put_OffContent = 17        // put_OffContent(IInspectable)
     const val IToggleSwitch_add_Toggled = 21           // add_Toggled(RoutedEventHandler, out token)
     const val IToggleSwitch_remove_Toggled = 22
