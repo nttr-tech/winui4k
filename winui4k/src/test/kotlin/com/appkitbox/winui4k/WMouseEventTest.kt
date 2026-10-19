@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -375,6 +376,43 @@ class WMouseEventTest : FunSpec() {
                 0, // Other (moves and so on)
             ).map { buttonOfUpdateKind(it) } shouldBe listOf(1, 1, 2, 3, 4, 5, 0)
             (1..5).map { WInputEvent.getMaskForButton(it) } shouldBe listOf(1024, 2048, 4096, 16384, 32768)
+        }
+
+        test("classification of the source of a handled press (handledByContent): a control in the content and outside the tree are handled by others; itself, its parts and text in the content are its own") {
+            // Native pointer events cannot be created, so only the check MouseInput.handledByContent applies to OriginalSource is verified with real elements
+            val button = onUiThreadGet { WButton("OK") }
+            val label = onUiThreadGet { WLabel("Text") }
+            val combo = onUiThreadGet { WComboBox().also { it.addItem("Small") } }
+            val panel = onUiThreadGet { WPanel().also { listOf(button, label, combo).forEach(it::add) } }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                onUiThreadGet {
+                    val buttonPart = checkNotNull(Xaml.childAt(button.inspectable, 0)) { "Button has no template" }
+                    val popupElement = checkNotNull(TemplateParts.find(combo, "Popup")) { "ComboBox has no Popup" }
+                    val popup = popupElement.queryInterface(XamlInterop.IID_IPopup)
+                    popupElement.release()
+                    val popupChild = checkNotNull(popup.getPtrOrNull(XamlInterop.IPopup_get_Child)) { "Popup has no Child" }
+                    val detached = WLabel("Outside the tree")
+                    try {
+                        listOf(
+                            isHandledInContent(panel, button.inspectable),
+                            isHandledInContent(panel, buttonPart),
+                            isHandledInContent(panel, label.inspectable),
+                            isHandledInContent(panel, panel.inspectable),
+                            isHandledInContent(button, buttonPart),
+                            isHandledInContent(panel, detached.inspectable),
+                            // Inside the drop-down Popup is outside the combo box for the mouse (JComboBox's popup is also a separate component)
+                            isHandledInContent(combo, popupChild),
+                        )
+                    } finally {
+                        popupChild.release()
+                        popup.release()
+                        buttonPart.release()
+                    }
+                } shouldContainExactly listOf(true, true, false, false, false, true, true)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
         }
 
         test("adding or removing null does nothing, the list is in the order added, and removed listeners receive nothing") {

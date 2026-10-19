@@ -130,8 +130,22 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     ウィンドウのどれに WM_MOUSEMOVE / WM_LBUTTONDOWN / WM_LBUTTONUP を PostMessageW / SendMessageW しても、PointerEntered /
     PointerPressed / PointerMoved は 1 つも届かない (キーの WM_KEYDOWN は届く)。SendInput や InjectSyntheticPointerInput は
     本物のカーソルを動かし、テスト中にユーザーが使っている別のウィンドウを操作してしまうので使わない。そのため `WMouseEventTest` は
-    ネイティブのイベントから読んだ値の代わり (`TestMouse`) を MouseInput.dispatch に渡して確かめ、ネイティブのイベントからの読み取り
-    (MouseInput.nativeSample) と捕捉の呼び出しは実際の入力では未確認
+    ネイティブのイベントから読んだ値の代わり (`TestMouse`) を MouseInput.dispatch に渡して確かめている
+  - 実際の入力では確かめていないネイティブの経路: MouseInput.onNative / nativeSample (XamlPointerEvent.pointState の
+    GetCurrentPoint と PointerPointProperties のボタン・ホイールの読み取り、PointerPoint.Timestamp、PointerId / FrameId による
+    同じイベントの見分け)、Handled の読み取り、handledByContent が OriginalSource を読む部分、NativePointerTarget
+    (UIElement.CapturePointer / ReleasePointerCapture と Handled = true の書き込み)、Xaml.addHandlerHandledToo で登録した
+    処理済みのイベントが本当に届くこと、PointerEntered / PointerExited の購読、RasterizationScale の読み取り。
+    実際の要素で確かめているのは、handledByContent が OriginalSource に使う分類 (isHandledInContent。パネルの中のボタンと
+    その部品は子のもの、パネルの中の文字・自身・自身の部品は自分のもの、ツリーの外と Popup の中は外)、PointerUpdateKind から
+    ボタンの番号への写し、修飾キーの写し (`WMouseEventTest`)
+  - パネルなどが処理されていない押下でポインターを捕捉しても (MouseInput の onPressed)、タッチの ScrollViewer のパンは止まらない
+    (WinUI のソースで確認。実機のタッチでは未確認)。DirectManipulation の接触はヒットテストした要素とその祖先の ManipulationMode
+    で決まり (`InputServices.cpp` の ProcessDirectManipulationPointerHitTest と InitializeDirectManipulationForPointerId)、
+    押下の後の登録 (`PointerInputProcessor.cpp` の XCP_POINTERDOWN での RegisterDMViewportsOnPointerDown) もヒットテストの要素を
+    渡し、捕捉は見ない。パンが始まると WinUI は WM_POINTERCAPTURECHANGED を受けて捕捉を解き PointerCaptureLost を送る
+    (`PointerInputProcessor.cpp` の ProcessPointerInput の XCP_POINTERCAPTURECHANGED → ReleasePointerCaptureById) ので、
+    MouseInput は押した状態を捨てる (mouseReleased / mouseClicked は届かない)。そのため捕捉をマウスのポインターに限らない
   - PointerPressed / Released / Moved / WheelChanged は子から親へ伝わる。ButtonBase は左ボタンの押下と離すのを自分で処理済みにし、
     押下で自分にポインターを捕捉する (`ButtonBase_Partial.cpp` の OnPointerPressed / OnPointerReleased)。そのため MouseInput は
     処理済みのものも受け取り (AddHandler の handledEventsToo)、処理済みの押下では捕捉し直さない
