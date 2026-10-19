@@ -63,6 +63,28 @@ internal object TestKeyboard {
         check(postMessageW(inputSite(), WM_KEYUP, virtualKey.toLong(), up) as Int != 0) { "could not send WM_KEYUP" }
     }
 
+    /**
+     * Presses and releases [virtualKey] while holding Alt (WM_SYSKEYDOWN / WM_SYSKEYUP; bit 29 of lParam marks that Alt
+     * is held down).
+     * Pressing and releasing the Alt key (VK_MENU) itself is also sent with WM_SYSKEYDOWN / WM_SYSKEYUP.
+     */
+    fun pressWithAlt(virtualKey: Int, scanCode: Int) {
+        val alt = 1L shl 29
+        post(WM_SYSKEYDOWN, VK_MENU, keyData(SCAN_MENU, false) or alt)
+        post(WM_SYSKEYDOWN, virtualKey, keyData(scanCode, false) or alt)
+        post(WM_SYSKEYUP, virtualKey, keyData(scanCode, false) or alt or (1L shl 30) or (1L shl 31))
+        post(WM_SYSKEYUP, VK_MENU, keyData(SCAN_MENU, false) or (1L shl 30) or (1L shl 31))
+    }
+
+    private fun post(message: Int, virtualKey: Int, lParam: Long) {
+        check(postMessageW(inputSite(), message, virtualKey.toLong(), lParam) as Int != 0) { "could not send message $message" }
+    }
+
+    private const val WM_SYSKEYDOWN = 0x0104
+    private const val WM_SYSKEYUP = 0x0105
+    private const val VK_MENU = 0x12
+    private const val SCAN_MENU = 0x38
+
     /** lParam of WM_KEYDOWN / WM_KEYUP (repeat count 1, scan code, extended-key mark). */
     private fun keyData(scanCode: Int, extended: Boolean): Long =
         1L or (scanCode.toLong() shl 16) or (if (extended) 1L shl 24 else 0L)

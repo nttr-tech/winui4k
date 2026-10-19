@@ -373,6 +373,74 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         get() = textBlock.getBool(XamlInterop.ITextBlock_get_IsTextSelectionEnabled)
         set(value) = textBlock.putBool(XamlInterop.ITextBlock_put_IsTextSelectionEnabled, value)
 
+    /** The key code put into the AccessKey of the [labelFor] target (0 if none). */
+    private var appliedMnemonic = 0
+
+    /**
+     * JLabel.getLabelFor / setLabelFor-like: the component this label names (null by default).
+     * The target's AutomationProperties.LabeledBy is set to this label's text (TextBlock), so screen readers read the
+     * target by the label's text. If there is a [displayedMnemonic], it becomes the target's access key.
+     * Switching to another target or null removes the LabeledBy and access key this label put on the previous target
+     * (they are left as they are if they have since been changed to other values).
+     */
+    var labelFor: WComponent? = null
+        set(value) {
+            val old = field
+            if (old === value) return
+            if (old != null) detachFrom(old)
+            field = value
+            if (value != null) {
+                Xaml.setLabeledBy(value.automationTarget, textBlock)
+                applyMnemonic(value)
+            }
+        }
+
+    /**
+     * JLabel.getDisplayedMnemonic / setDisplayedMnemonic(int)-like: the key code of the access key passed to the
+     * [labelFor] target (same values as AWT's KeyEvent.VK_A..VK_Z / VK_0..VK_9; defaults to 0, and setting 0 clears it).
+     * Anything other than letters and digits throws [IllegalArgumentException].
+     * It becomes the target's UIElement.AccessKey: pressing Alt shows a key tip over the target, and that key activates
+     * the target (a text field receives focus; in Swing every target only receives focus, but a WinUI button is pressed,
+     * and the target's own [WButtonBase.mnemonic] is overwritten). Unlike Swing, the label's text is not underlined.
+     * While there is no [labelFor], the value is remembered and applied when the target is set.
+     */
+    var displayedMnemonic: Int = 0
+        set(value) {
+            Mnemonics.requireKeyCode(value)
+            field = value
+            labelFor?.let { applyMnemonic(it) }
+        }
+
+    /**
+     * JLabel.setDisplayedMnemonic(char)-like: sets [displayedMnemonic] by character. Letters are converted to uppercase,
+     * and '\u0000' clears it.
+     * Anything other than ASCII letters and digits throws [IllegalArgumentException].
+     */
+    fun setDisplayedMnemonic(aChar: Char) {
+        displayedMnemonic = Mnemonics.keyCodeOf(aChar)
+    }
+
+    /** Sets the access key of [target] to [displayedMnemonic] (removing the previously applied key first if it remains). */
+    private fun applyMnemonic(target: WComponent) {
+        if (appliedMnemonic != 0 && Mnemonics.read(target.uiElement) == appliedMnemonic) Mnemonics.write(target.uiElement, 0)
+        if (displayedMnemonic != 0) Mnemonics.write(target.uiElement, displayedMnemonic)
+        appliedMnemonic = displayedMnemonic
+    }
+
+    /** Removes the LabeledBy and access key this label put on the previous [labelFor] target. */
+    private fun detachFrom(target: WComponent) {
+        val labeledBy = Xaml.labeledBy(target.automationTarget)
+        if (labeledBy != null) {
+            try {
+                if (Xaml.sameObject(labeledBy, textBlock)) Xaml.setLabeledBy(target.automationTarget, null)
+            } finally {
+                labeledBy.release()
+            }
+        }
+        if (appliedMnemonic != 0 && Mnemonics.read(target.uiElement) == appliedMnemonic) Mnemonics.write(target.uiElement, 0)
+        appliedMnemonic = 0
+    }
+
     init {
         children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
         if (text.isNotEmpty()) this.text = text

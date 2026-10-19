@@ -464,6 +464,35 @@ internal object Xaml {
         }
     }
 
+    /** Sets [target]'s AutomationProperties.LabeledBy to [label] (an element that can be a UIElement; null clears it). */
+    fun setLabeledBy(target: ComPtr, label: ComPtr?) {
+        val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)
+        try {
+            if (label == null) {
+                automationStatics.call(XamlInterop.IAutomationPropertiesStatics_SetLabeledBy, dependency.ptr, null)
+                return
+            }
+            val element = label.queryInterface(XamlInterop.IID_IUIElement)
+            try {
+                automationStatics.call(XamlInterop.IAutomationPropertiesStatics_SetLabeledBy, dependency.ptr, element.ptr)
+            } finally {
+                element.release()
+            }
+        } finally {
+            dependency.release()
+        }
+    }
+
+    /** [target]'s AutomationProperties.LabeledBy (IUIElement; null if not set). The caller releases it. */
+    fun labeledBy(target: ComPtr): ComPtr? {
+        val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)
+        return try {
+            automationStatics.getPtrOrNull(XamlInterop.IAutomationPropertiesStatics_GetLabeledBy, dependency.ptr)
+        } finally {
+            dependency.release()
+        }
+    }
+
     /** Reads a UI Automation name, id, help text, etc. ([slot] is a GetXxx of AutomationProperties). */
     fun getAutomation(target: ComPtr, slot: Int): String {
         val dependency = target.queryInterface(XamlInterop.IID_IDependencyObject)

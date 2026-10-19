@@ -6,8 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * Reads and writes the AbstractButton.setMnemonic-style access key (UIElement.AccessKey). Shared by [WButtonBase] and
- * [WToggleSwitch].
+ * Reads and writes the AbstractButton.setMnemonic-style access key (UIElement.AccessKey). Shared by [WButtonBase],
+ * [WToggleSwitch] and [WLabel.displayedMnemonic].
  * Key codes have the same values as AWT's KeyEvent.VK_A..VK_Z (65..90) / VK_0..VK_9 (48..57), and 0 clears it.
  */
 internal object Mnemonics {
@@ -21,9 +21,14 @@ internal object Mnemonics {
 
     /** Sets the AccessKey of [uiElement] (IUIElement) to [keyCode]. 0 clears it. Anything but uppercase letters and digits throws [IllegalArgumentException]. */
     fun write(uiElement: ComPtr, keyCode: Int) {
-        require(keyCode == 0 || isKeyCode(keyCode)) { "only key codes of uppercase letters and digits can be used as a mnemonic: $keyCode" }
+        requireKeyCode(keyCode)
         val key = if (keyCode == 0) "" else keyCode.toChar().toString()
         Hstring.use(key) { h -> uiElement.call(XamlInterop.IUIElement_put_AccessKey, h) }
+    }
+
+    /** Checks that [keyCode] is 0 or the key code of an uppercase letter or digit. Throws [IllegalArgumentException] otherwise. */
+    fun requireKeyCode(keyCode: Int) {
+        require(keyCode == 0 || isKeyCode(keyCode)) { "only key codes of uppercase letters and digits can be used as a mnemonic: $keyCode" }
     }
 
     /** Converts the character of setMnemonic(char) to a key code. Letters are uppercased and '\u0000' becomes 0. Anything but ASCII letters and digits throws [IllegalArgumentException]. */
