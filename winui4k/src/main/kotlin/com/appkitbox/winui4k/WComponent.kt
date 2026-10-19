@@ -168,6 +168,10 @@ abstract class WComponent internal constructor(
     internal val appliedWidth: Double
         get() = Double.fromBits(appliedWidthBits)
 
+    /** The value last written with put_Height (NaN if not written). */
+    internal val appliedHeight: Double
+        get() = Double.fromBits(appliedHeightBits)
+
     internal fun applyWidth(value: Double) {
         if (value.toRawBits() == appliedWidthBits) return
         appliedWidthBits = value.toRawBits()
