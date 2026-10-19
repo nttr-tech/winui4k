@@ -767,6 +767,10 @@ internal object XamlInterop {
     const val IID_ISplitButton = "f627202d-d2d7-5ff6-bb05-8c48eb6b1fc6"
     const val ISplitButton_get_Flyout = 6              // get_Flyout(out FlyoutBase)
     const val ISplitButton_put_Flyout = 7              // put_Flyout(FlyoutBase)
+    const val ISplitButton_get_Command = 8             // get_Command(out ICommand)
+    const val ISplitButton_put_Command = 9             // put_Command(ICommand)
+    const val ISplitButton_get_CommandParameter = 10   // get_CommandParameter(out Object)
+    const val ISplitButton_put_CommandParameter = 11   // put_CommandParameter(Object)
     const val ISplitButton_add_Click = 12              // add_Click(TypedEventHandler, out token)
     const val ISplitButton_remove_Click = 13           // remove_Click(token)
     const val IID_ISplitButtonClickEventArgs = "6af896c2-e65a-5998-9c82-2af8f3e0741f"

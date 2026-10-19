@@ -390,6 +390,45 @@ internal object Xaml {
         }
     }
 
+    /**
+     * Applies the template of Control [control], and finds and returns the part whose name (FrameworkElement.Name) is
+     * [partName] in its visual tree. The caller releases it. null if there is no such part.
+     * The visual tree is walked to compare names because, for a control not yet placed in a window, FindName from the root
+     * cannot find template parts.
+     */
+    fun templatePartOrNull(control: ComPtr, partName: String): ComPtr? {
+        val controlView = control.queryInterface(XamlInterop.IID_IControl)
+        try {
+            Ffi.backend.withScope { scope ->
+                controlView.call(XamlInterop.IControl_ApplyTemplate, scope.allocate(1, 1))
+            }
+        } finally {
+            controlView.release()
+        }
+        val root = childAt(control, 0) ?: return null
+        return findDescendantByName(root, partName)
+    }
+
+    /** Searches [element] (takes ownership) and its descendants depth-first for an element named [name]. The caller releases the found element. */
+    private fun findDescendantByName(element: ComPtr, name: String): ComPtr? {
+        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
+        val found = try {
+            framework.getString(XamlInterop.IFrameworkElement_get_Name) == name
+        } finally {
+            framework.release()
+        }
+        if (found) return element
+        try {
+            for (i in 0 until childCount(element)) {
+                val child = childAt(element, i) ?: continue
+                findDescendantByName(child, name)?.let { return it }
+            }
+        } finally {
+            element.release()
+        }
+        return null
+    }
+
     /** Clicks with the first pattern found among [peer]'s Invoke, Toggle and SelectionItem. */
     private fun clickPattern(peer: ComPtr) {
         if (callPattern(peer, XamlInterop.PatternInterface_Invoke, XamlInterop.IID_IInvokeProvider, XamlInterop.IInvokeProvider_Invoke)) return

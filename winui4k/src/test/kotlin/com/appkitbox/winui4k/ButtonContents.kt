@@ -13,7 +13,7 @@ internal object ButtonContents {
      * [IconElements.describe], and a StackPanel is "Panel:<orientation>:<spacing>" followed by its children (a TextBlock is
      * "TextBlock:<string>"). Empty if there is no Content.
      */
-    fun contentOf(button: WButtonBase): List<String> {
+    fun contentOf(button: WControl): List<String> {
         val contentControl = button.inspectable.queryInterface(XamlInterop.IID_IContentControl)
         val content = try {
             contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content)

@@ -79,4 +79,87 @@ class WToggleSplitButtonForJavaTest {
         assertSame(button, events.get(0).getSource());
         assertEquals(WItemEvent.SELECTED, events.get(0).getStateChange());
     }
+
+    @Test
+    void doClickTogglesTheSelectionAndCallsTheActionListenerOnceLikeJToggleButton() {
+        WToggleSplitButton button = UiTestHarness.onUiThreadGet(() -> new WToggleSplitButton("Bold"));
+        List<WActionEvent> events = new ArrayList<>();
+        onUiThread(() -> button.addActionListener(e -> events.add(e)));
+        UiTestHarness.attachAndAwaitLoaded(button);
+        try {
+            onUiThread(() -> {
+                assertFalse(button.isSelected());
+                button.doClick();
+                assertTrue(button.isSelected());
+                assertEquals(1, events.size());
+                assertSame(button, events.get(0).getSource());
+                assertEquals("Bold", events.get(0).getActionCommand());
+                button.doClick();
+                assertFalse(button.isSelected());
+                assertEquals(2, events.size());
+            });
+        } finally {
+            UiTestHarness.detach(button);
+        }
+    }
+
+    @Test
+    void doClickInWindowDeliversOnceEachToItemListenerAndActionListener() {
+        WToggleSplitButton button = UiTestHarness.onUiThreadGet(() -> new WToggleSplitButton("Bold"));
+        List<String> order = new ArrayList<>();
+        onUiThread(() -> {
+            button.addItemListener(e -> order.add("item" + e.getStateChange()));
+            button.addActionListener(() -> order.add("action"));
+        });
+        UiTestHarness.attachAndAwaitLoaded(button);
+        try {
+            onUiThread(button::doClick);
+        } finally {
+            UiTestHarness.detach(button);
+        }
+        assertEquals(Arrays.asList("item" + WItemEvent.SELECTED, "action"), order);
+    }
+
+    @Test
+    void doClickOnDisabledButtonChangesNeitherSelectionNorActionListener() {
+        WToggleSplitButton button = UiTestHarness.onUiThreadGet(() -> new WToggleSplitButton("Bold"));
+        int[] count = {0};
+        onUiThread(() -> button.addActionListener(() -> count[0]++));
+        UiTestHarness.attachAndAwaitLoaded(button);
+        try {
+            onUiThread(() -> {
+                button.setEnabled(false);
+                button.doClick();
+                assertFalse(button.isSelected());
+                assertEquals(0, count[0]);
+            });
+        } finally {
+            UiTestHarness.detach(button);
+        }
+    }
+
+    @Test
+    void doClickBeforeBeingPlacedInWindowDoesNothing() {
+        onUiThread(() -> {
+            WToggleSplitButton button = new WToggleSplitButton("Bold");
+            int[] count = {0};
+            button.addActionListener(() -> count[0]++);
+            button.doClick();
+            assertFalse(button.isSelected());
+            assertEquals(0, count[0]);
+        });
+    }
+
+    @Test
+    void setIconSetMnemonicAndSetActionCommandCanBeUsedTheSameWayAsWSplitButton() {
+        onUiThread(() -> {
+            WToggleSplitButton button = new WToggleSplitButton("Bold");
+            button.setIcon(Symbol.BOLD);
+            button.setMnemonic('b');
+            button.setActionCommand("bold");
+            assertSame(Symbol.BOLD, button.getIcon());
+            assertEquals('B', button.getMnemonic());
+            assertEquals("bold", button.getActionCommand());
+        });
+    }
 }

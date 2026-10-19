@@ -72,6 +72,14 @@ class WrapperReleaseTest : FunSpec() {
         return WeakReference(button)
     }
 
+    /** Puts a WSplitButton with a listener into a window (waiting for Loaded) and returns only a weak reference. */
+    private fun shownSplitButton(): WeakReference<WSplitButton> {
+        val sources = clickSources
+        val button = onUiThreadGet { WSplitButton("Paste").also { it.addActionListener { e -> sources += e.source } } }
+        UiTestHarness.attachAndAwaitLoaded(button)
+        return WeakReference(button)
+    }
+
     /**
      * Places and removes a panel containing a button with a listener (the caller keeps holding the panel, as when the
      * native side keeps a subtree around).
@@ -284,6 +292,48 @@ class WrapperReleaseTest : FunSpec() {
                 val listener: (WActionEvent) -> Unit = { }
                 button.addActionListener(listener)
                 button.removeActionListener(listener)
+                WeakReference(button)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WSplitButton and a WToggleSplitButton with an ActionListener that does not reference the component are also collected after being shown in a window and removed") {
+            val sources = clickSources
+            val split = shownAndHidden { WSplitButton("Paste").also { it.addActionListener { e -> sources += e.source } } }
+            val toggle = shownAndHidden { WToggleSplitButton("Bold").also { it.addActionListener { e -> sources += e.source } } }
+            Reclamation.awaitCollected(split).shouldBeTrue()
+            Reclamation.awaitCollected(toggle).shouldBeTrue()
+        }
+
+        test("a WSplitButton with an ActionListener is not collected while shown in a window even without references, and the click source is that WSplitButton") {
+            val reference = shownSplitButton()
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                val sources = onUiThreadGet {
+                    clickSources.clear()
+                    val button = checkNotNull(reference.get())
+                    button.doClick()
+                    clickSources.map { if (it === button) "button" else it.javaClass.name }.also { clickSources.clear() }
+                }
+                sources shouldContainExactly listOf("button")
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WSplitButton never shown is also collected once all three forms of its ActionListener are removed") {
+            val reference = onUiThreadGet {
+                val button = WSplitButton("Remove")
+                val lambda: (WActionEvent) -> Unit = { }
+                val runnable = Runnable { }
+                val listener = WActionListener { }
+                button.addActionListener(lambda)
+                button.addActionListenerForJava(runnable)
+                button.addActionListenerForJava(listener)
+                button.removeActionListener(lambda)
+                button.removeActionListenerForJava(runnable)
+                button.removeActionListenerForJava(listener)
                 WeakReference(button)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()

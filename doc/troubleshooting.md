@@ -164,3 +164,13 @@
   `ToggleSplitButton::OnIsCheckedChanged` は `m_hasLoaded` が true (Loaded 済み) のときだけイベントを発火する。ToggleButton の Checked /
   Unchecked は載せる前でも発火するのと違うので、ItemListener を確かめるテストは `attachAndAwaitLoaded` で Loaded を待ってから状態を変える
   (`WToggleSplitButtonTest`)。
+- **SplitButton / ToggleSplitButton: ウィンドウに載せる前は doClick で Click を起こせない**
+  SplitButton の UIA の Invoke は、テンプレートの本体の Button (`m_primaryButton`) の Invoke を呼ぶ。本体の Button が無いと
+  `FrameworkElementAutomationPeer::FromElement(null)` を渡して E_INVALIDARG (0x80070057) で失敗する (`SplitButton::Invoke` の「本体が無ければ
+  OnClickPrimary を呼ぶ」という代替も、その前に例外になる)。ToggleSplitButton のピアは Toggle と ExpandCollapse だけで Invoke を持たず、
+  Toggle は `IsChecked` を反転するだけで Click を起こさない。ビジュアル ツリーに載せる前は既定のスタイルが当たらず、`Control.ApplyTemplate` は
+  PrimaryButton のない最小のテンプレート (空の要素が 3 段) を作るだけなので、`FindName` でもツリーをたどっても PrimaryButton は見つからない。
+  既定のテンプレートはツリーに入った時点 (Loaded を待たなくてよい) で当たる。そこで `WSplitButton.doClick` は、テンプレートの PrimaryButton を
+  探して Invoke し (Toggle の切り替え、Click、command が実際のクリックと同じ順に走る)、見つからない (載せる前) ときは何もしない
+  (`WSplitButtonTest`、`WToggleSplitButtonTest`)。command が実行できない (CanExecute が false) ときは SplitButton 自身は有効のまま
+  PrimaryButton だけが無効になるため、doClick は PrimaryButton の IsEnabled も見る。

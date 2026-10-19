@@ -12,6 +12,8 @@ import kotlin.jvm.JvmSynthetic
 /**
  * A [WSplitButton] that toggles on/off: WinUI 3's ToggleSplitButton.
  * Clicking the body flips [isChecked]; the right-side arrow opens the flyout.
+ * [doClick] works like clicking the body: it toggles the checked state and calls ItemListener and ActionListener once each
+ * (it does nothing before being shown in a window; see [WSplitButton.doClick] for why).
  */
 class WToggleSplitButton @JvmOverloads constructor(text: String = "") : WSplitButton(
     Activation.composeDefault(XamlInterop.CLS_ToggleSplitButton, XamlInterop.IID_IToggleSplitButtonFactory),
