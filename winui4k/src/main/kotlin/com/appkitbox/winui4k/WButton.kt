@@ -111,15 +111,7 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
      * Setting null removes the Resources keys and the Control.Background value and returns to the theme default.
      */
     var background: WColor?
-        get() {
-            customBackground?.let { return it }
-            val brush = control.getPtrOrNull(XamlInterop.IControl_get_Background) ?: return null
-            return try {
-                colorOf(brush)
-            } finally {
-                brush.release()
-            }
-        }
+        get() = customBackground ?: nativeBackground()
         set(value) {
             customBackground = value
             applyBackground()
@@ -132,24 +124,14 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
     private fun applyBackground() {
         val color = customBackground
         if (color == null || !isContentAreaFilled) {
-            removeStateResources(BACKGROUND_KEY)
-            clearControlProperty(XamlInterop.IControlStatics_get_BackgroundProperty)
+            BACKGROUND_KEYS.remove(this)
+            putLocalBackground(null)
             return
         }
-        putStateResources(
-            BACKGROUND_KEY,
-            color,
-            color.withAlphaScaled(POINTER_OVER_BACKGROUND_OPACITY),
-            color.withAlphaScaled(PRESSED_BACKGROUND_OPACITY),
-        )
+        BACKGROUND_KEYS.put(this, color)
         // The Normal state is painted with Control.Background as already resolved by the Style's Setter, and adding
         // Resources after loading does not re-resolve it, so also set it as a local value (doc/troubleshooting.md)
-        val brush = color.createBrush()
-        try {
-            control.call(XamlInterop.IControl_put_Background, brush.ptr)
-        } finally {
-            brush.release()
-        }
+        putLocalBackground(color)
     }
 
     /**
@@ -162,50 +144,9 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
     override var foreground: WColor?
         get() = super.foreground
         set(value) {
-            if (value == null) {
-                removeStateResources(FOREGROUND_KEY)
-            } else {
-                putStateResources(FOREGROUND_KEY, value, value, value.withAlphaScaled(PRESSED_FOREGROUND_OPACITY))
-            }
+            if (value == null) FOREGROUND_KEYS.remove(this) else FOREGROUND_KEYS.put(this, value)
             super.foreground = value
         }
-
-    /**
-     * Puts the [baseKey] (Normal) / PointerOver / Pressed theme resources of the three built-in styles into the button's
-     * own Resources.
-     */
-    private fun putStateResources(baseKey: String, normal: WColor, pointerOver: WColor, pressed: WColor) {
-        withResources { resources ->
-            for (prefix in STYLE_KEY_PREFIXES) {
-                resources.put("$prefix$baseKey", normal)
-                resources.put("$prefix$baseKey$POINTER_OVER", pointerOver)
-                resources.put("$prefix$baseKey$PRESSED", pressed)
-            }
-        }
-    }
-
-    /** Removes the keys put by [putStateResources] (returning to the theme's default colors). */
-    private fun removeStateResources(baseKey: String) {
-        withResources { resources ->
-            for (prefix in STYLE_KEY_PREFIXES) {
-                for (state in listOf("", POINTER_OVER, PRESSED)) resources.remove("$prefix$baseKey$state")
-            }
-        }
-    }
-
-    private inline fun withResources(block: (ElementResources) -> Unit) {
-        val dictionary = frameworkElement.getPtr(XamlInterop.IFrameworkElement_get_Resources)
-        val map = try {
-            dictionary.queryInterface(FoundationInterop.IID_IMap_Object_Object)
-        } finally {
-            dictionary.release()
-        }
-        try {
-            block(ElementResources(map))
-        } finally {
-            map.release()
-        }
-    }
 
     /** The WFrame that has this button as its default button ([WFrame.defaultButton]). */
     private var defaultButtonOwner: WFrame? = null
@@ -331,21 +272,15 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
     }
 
     private companion object {
-        /** Keys of Button's lightweight styling (controls/dev/CommonStyles/Button_themeresources.xaml). */
-        const val BACKGROUND_KEY = "ButtonBackground"
-        const val FOREGROUND_KEY = "ButtonForeground"
-        const val POINTER_OVER = "PointerOver"
-        const val PRESSED = "Pressed"
-
         /** Key prefixes for the default style (DefaultButtonStyle), AccentButtonStyle, and SubtleButtonStyle. */
         val STYLE_KEY_PREFIXES = listOf("", "Accent", "Subtle")
 
-        // Opacity multipliers for pointer-over and pressed. The background uses 0.9 / 0.8, the same as
-        // AccentFillColorSecondary / Tertiary (Common_themeresources_any.xaml), and the text matches
-        // TextFillColorSecondary / Primary (about 0.69 in the light theme)
-        const val POINTER_OVER_BACKGROUND_OPACITY = 0.9
-        const val PRESSED_BACKGROUND_OPACITY = 0.8
-        const val PRESSED_FOREGROUND_OPACITY = 0.7
+        /**
+         * Keys of the Button's lightweight styling (ButtonBackground / ButtonBackgroundPointerOver / ButtonBackgroundPressed
+         * and ButtonForeground* in controls/dev/CommonStyles/Button_themeresources.xaml, for the three states).
+         */
+        val BACKGROUND_KEYS = StateColorKeys.of("ButtonBackground", BUTTON_BACKGROUND_SHADES, STYLE_KEY_PREFIXES)
+        val FOREGROUND_KEYS = StateColorKeys.of("ButtonForeground", BUTTON_FOREGROUND_SHADES, STYLE_KEY_PREFIXES)
     }
 }
 
@@ -392,42 +327,6 @@ internal object DefaultButtons {
             ui.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)
         } finally {
             ui.release()
-        }
-    }
-}
-
-/** The color with only its opacity multiplied by [factor] (rounded). */
-private fun WColor.withAlphaScaled(factor: Double): WColor = WColor(red, green, blue, Math.round(alpha * factor).toInt())
-
-/** Puts color brushes into and removes them from FrameworkElement.Resources (IMap<Object, Object>). */
-private class ElementResources(private val map: ComPtr) {
-    /** Puts a SolidColorBrush of [color] at [key] (replacing any existing one). */
-    fun put(key: String, color: WColor) {
-        val boxedKey = PropertyValues.boxString(key)
-        val brush = color.createBrush()
-        try {
-            Ffi.backend.withScope { scope ->
-                val replaced = scope.allocate(1, 1)
-                map.call(FoundationInterop.IMap_Insert, boxedKey.ptr, brush.ptr, replaced)
-            }
-        } finally {
-            brush.release()
-            boxedKey.release()
-        }
-    }
-
-    /** Removes [key] if present (IMap.Remove fails for a missing key, so check with HasKey). */
-    fun remove(key: String) {
-        val boxedKey = PropertyValues.boxString(key)
-        try {
-            val present = Ffi.backend.withScope { scope ->
-                val out = scope.allocate(1, 1)
-                map.call(FoundationInterop.IMap_HasKey, boxedKey.ptr, out)
-                Ffi.backend.memory.getByte(out, 0) != 0.toByte()
-            }
-            if (present) map.call(FoundationInterop.IMap_Remove, boxedKey.ptr)
-        } finally {
-            boxedKey.release()
         }
     }
 }
