@@ -51,4 +51,18 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
     var groupName: String
         get() = radioButton.getString(XamlInterop.IRadioButton_get_GroupName)
         set(value) = Hstring.use(value) { h -> radioButton.call(XamlInterop.IRadioButton_put_GroupName, h) }
+
+    override val stateColors: ToggleStateColors
+        get() = RADIO_BUTTON_COLORS
 }
+
+/**
+ * RadioButton keys (controls/dev/CommonStyles/RadioButton_themeresources.xaml). The background is
+ * RadioButtonBackground{,PointerOver,Pressed,Disabled}, which paints RootGrid, and the foreground is
+ * RadioButtonForeground{,PointerOver,Pressed}. The fill of the mark (RadioButtonOuterEllipse*, RadioButtonCheckGlyph*)
+ * is not included.
+ */
+private val RADIO_BUTTON_COLORS = ToggleStateColors(
+    background = StateColorKeys.uniform(listOf("", "PointerOver", "Pressed", "Disabled").map { "RadioButtonBackground$it" }),
+    foreground = StateColorKeys.uniform(listOf("", "PointerOver", "Pressed").map { "RadioButtonForeground$it" }),
+)

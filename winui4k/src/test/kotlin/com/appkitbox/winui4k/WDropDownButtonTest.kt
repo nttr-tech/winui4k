@@ -3,7 +3,6 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
@@ -19,31 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * covered by WDropDownButtonForJavaTest.
  */
 class WDropDownButtonTest : FunSpec() {
-    /** The element in the template whose name (FrameworkElement.Name) is [name]. The caller releases it. */
-    private fun templatePart(button: WButtonBase, name: String): ComPtr? {
-        val root = Xaml.childAt(button.inspectable, 0) ?: return null
-        return findByName(root, name)
-    }
-
-    /** Searches [element] (taking ownership) and its descendants for the element named [name]. */
-    private fun findByName(element: ComPtr, name: String): ComPtr? {
-        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
-        val found = try {
-            framework.getString(XamlInterop.IFrameworkElement_get_Name) == name
-        } finally {
-            framework.release()
-        }
-        if (found) return element
-        try {
-            for (i in 0 until Xaml.childCount(element)) {
-                val child = Xaml.childAt(element, i) ?: continue
-                findByName(child, name)?.let { return it }
-            }
-        } finally {
-            element.release()
-        }
-        return null
-    }
+    private fun templatePart(button: WButtonBase, name: String): ComPtr? = TemplateParts.find(button, name)
 
     private fun brushColor(brush: ComPtr?): WColor? = brush?.let {
         try {

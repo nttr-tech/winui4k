@@ -77,6 +77,13 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
             label = value
         }
 
+    /**
+     * The AppBarToggleButton template uses keys (AppBarToggleButtonBackground* and so on) and visual states different from
+     * ToggleButton's, so it has no per-visual-state colors ([background] / [foreground] only affect the normal state).
+     */
+    override val stateColors: ToggleStateColors
+        get() = NO_STATE_COLORS
+
     /** The label position for just this button (AppBarToggleButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition
         get() = CommandBarLabelPosition.of(
@@ -99,3 +106,5 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
 class WAppBarSeparator : WControl(
     Activation.composeDefault(XamlInterop.CLS_AppBarSeparator, XamlInterop.IID_IAppBarSeparatorFactory),
 )
+
+private val NO_STATE_COLORS = ToggleStateColors(StateColorKeys.NONE, StateColorKeys.NONE)

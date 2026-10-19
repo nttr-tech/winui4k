@@ -37,6 +37,11 @@
   WButton.background / foreground は 3 つのスタイルのキーをすべて入れ、通常の状態の色は Control.Background /
   Foreground のローカル値でも設定する (Style の Setter より優先される)。null に戻すときはキーを外してから ClearValue すると、
   Loaded の前にキーを入れていた場合も含めてテーマの既定の色に戻る
+  - ToggleButton / CheckBox / RadioButton も同じ仕組み (キーの名前はコントロールごとに違い、ToggleButton は
+    `ToggleButtonBackgroundChecked` など、CheckBox は `CheckBoxBackgroundUncheckedPointerOver` などのチェック状態つきの名前)。
+    チェック済みのまま表示している (Checked / CheckedNormal の Storyboard が動いている) ところへキーを入れても、状態を
+    切り替えずに色が替わった (WToggleButtonColorTest で ToggleButton の文字色と CheckBox の背景色を確認。上のポインタが
+    乗っている最中の Button とは違う結果なので、状態ごとに確かめること)
 - **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
   どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
   DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、

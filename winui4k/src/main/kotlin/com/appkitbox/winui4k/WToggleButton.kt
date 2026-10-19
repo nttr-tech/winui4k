@@ -186,6 +186,59 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         set(value) = toggleButton.putBool(XamlInterop.IToggleButton_put_IsThreeState, value)
 
     /**
+     * JComponent.getBackground / setBackground-style: the background color. The color for each visual state is put in
+     * the class's theme resource keys ([stateColors]), and the color of the normal state is also set as the local value
+     * of Control.Background (the same mechanism as [WButton.background]).
+     * - [WToggleButton]: paints the unchecked and indeterminate states, at 0.9x opacity on pointer over and 0.8x when
+     *   pressed. The checked state keeps the theme's accent color (Swing's JToggleButton also paints the selected state
+     *   with the selection color rather than the background color, so it is kept so that being checked stays
+     *   distinguishable)
+     * - [WCheckBox] / [WRadioButton]: paints the area behind the mark and text (the template's RootGrid) with the same
+     *   color in every state: checked, indeterminate, pointer over, pressed and disabled (the same as setBackground of
+     *   JCheckBox / JRadioButton painting the component's area; by default WinUI makes every state transparent). The fill
+     *   of the mark (the check box square or the radio circle) is not changed
+     *
+     * The disabled look stays the theme default for [WToggleButton]. Reading returns the set color, or the effective
+     * native value (the theme's default color) if unset. Setting null removes the keys and the local value and returns it
+     * to the theme default.
+     * Changing the color of the current visual state (such as checked) while shown is reflected as is, without changing
+     * the state.
+     * [WAppBarToggleButton] has no per-visual-state colors and the color affects only the normal state.
+     */
+    var background: WColor?
+        get() = customBackground ?: nativeBackground()
+        set(value) {
+            customBackground = value
+            val keys = stateColors.background
+            if (value == null) keys.remove(this) else keys.put(this, value)
+            putLocalBackground(value)
+        }
+
+    /** The color set to [background]. null means unset (the theme default). */
+    private var customBackground: WColor? = null
+
+    /**
+     * JComponent.getForeground / setForeground-style: the text color. Like [background], it is also put in the keys for
+     * each visual state.
+     * [WToggleButton] uses 0.7x opacity only when pressed, in every state including checked and indeterminate (the same
+     * as [WButton.foreground]).
+     * [WCheckBox] / [WRadioButton] use the same color in every state (WinUI's default does not change the text color when
+     * pressed either).
+     * The disabled look stays the theme default. null returns it to the theme default.
+     */
+    override var foreground: WColor?
+        get() = super.foreground
+        set(value) {
+            val keys = stateColors.foreground
+            if (value == null) keys.remove(this) else keys.put(this, value)
+            super.foreground = value
+        }
+
+    /** The background and text color keys that this class's template looks up for each visual state. */
+    internal open val stateColors: ToggleStateColors
+        get() = TOGGLE_BUTTON_COLORS
+
+    /**
      * ItemListener-style: subscribes to changes of the check state. The listener receives the new [isChecked]
      * (true / false, or null when indeterminate).
      * Under the hood this subscribes to ToggleButton.Checked / Unchecked / Indeterminate (all RoutedEventHandler) at once.
@@ -262,3 +315,21 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         listenerAnchor.listenerRemoved()
     }
 }
+
+/** Theme resource keys for the background and text color of toggle-type buttons for each visual state ([WToggleButton.stateColors]). */
+internal class ToggleStateColors(val background: StateColorKeys, val foreground: StateColorKeys)
+
+/**
+ * ToggleButton keys (controls/dev/CommonStyles/ToggleButton_themeresources.xaml). The background covers only the
+ * unchecked and indeterminate states (ToggleButtonBackground* / ToggleButtonBackgroundIndeterminate*), and
+ * ToggleButtonBackgroundChecked* is not included.
+ * The foreground is ToggleButtonForeground* / ToggleButtonForegroundChecked* / ToggleButtonForegroundIndeterminate*.
+ */
+private val TOGGLE_BUTTON_COLORS = ToggleStateColors(
+    background = StateColorKeys.of("ToggleButtonBackground", BUTTON_BACKGROUND_SHADES.withChecks("", "Indeterminate")),
+    foreground = StateColorKeys.of("ToggleButtonForeground", BUTTON_FOREGROUND_SHADES.withChecks("", "Checked", "Indeterminate")),
+)
+
+/** A map with each of [checks] (check state names; "" is unchecked) prefixed to the state names (the keys of this map). */
+internal fun Map<String, Double>.withChecks(vararg checks: String): Map<String, Double> =
+    checks.flatMap { check -> map { (state, factor) -> "$check$state" to factor } }.toMap()

@@ -41,4 +41,21 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
     constructor(action: WAction) : this("") {
         this.action = action
     }
+
+    override val stateColors: ToggleStateColors
+        get() = CHECK_BOX_COLORS
 }
+
+/**
+ * CheckBox keys (controls/dev/CommonStyles/CheckBox_themeresources.xaml). The background is
+ * CheckBoxBackground{Unchecked,Checked,Indeterminate}{,PointerOver,Pressed,Disabled}, which paints RootGrid, and the
+ * foreground is CheckBoxForeground{Unchecked,Checked,Indeterminate}{,PointerOver,Pressed}. The check mark fill
+ * (CheckBoxCheckBackgroundFill*) is not included.
+ */
+private val CHECK_BOX_COLORS = ToggleStateColors(
+    background = StateColorKeys.uniform(checkBoxKeys("CheckBoxBackground", listOf("", "PointerOver", "Pressed", "Disabled"))),
+    foreground = StateColorKeys.uniform(checkBoxKeys("CheckBoxForeground", listOf("", "PointerOver", "Pressed"))),
+)
+
+private fun checkBoxKeys(baseKey: String, states: List<String>): List<String> =
+    listOf("Unchecked", "Checked", "Indeterminate").flatMap { check -> states.map { "$baseKey$check$it" } }
