@@ -59,10 +59,21 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
             boxed.release()
         }
 
-    /** Whether the text box is read-only (TextBox.IsReadOnly). */
+    /** Whether the field is read-only (TextBox.IsReadOnly). The inverse of [isEditable]. */
     var isReadOnly: Boolean
         get() = inspectable.getBool(XamlInterop.ITextBox_get_IsReadOnly)
         set(value) = inspectable.putBool(XamlInterop.ITextBox_put_IsReadOnly, value)
+
+    /**
+     * JTextComponent.isEditable / setEditable-style: whether the user can edit the text (true by default). The inverse
+     * of [isReadOnly]; selecting and copying still work when false. [replaceSelection] / [cut] / [paste] do nothing
+     * while it is false (as in Swing).
+     */
+    var isEditable: Boolean
+        get() = !isReadOnly
+        set(value) {
+            isReadOnly = !value
+        }
 
     /** Whether Enter inserts a line break (TextBox.AcceptsReturn). Used for multi-line input. */
     var acceptsReturn: Boolean
@@ -84,19 +95,128 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         get() = inspectable.getInt(XamlInterop.ITextBox_get_MaxLength)
         set(value) = inspectable.call(XamlInterop.ITextBox_put_MaxLength, value)
 
-    /** The currently selected text (TextBox.SelectedText). */
+    /** The selected text (TextBox.SelectedText). Unlike JTextComponent.getSelectedText, it is an empty string (not null) when nothing is selected. */
     val selectedText: String
         get() = inspectable.getString(XamlInterop.ITextBox_get_SelectedText)
 
-    /** Selects [length] characters starting at [start] (TextBox.Select). */
-    fun select(start: Int, length: Int) {
-        inspectable.call(XamlInterop.ITextBox_Select, start, length)
+    /** The number of selected characters (TextBox.SelectionLength). */
+    private val selectionLength: Int
+        get() = inspectable.getInt(XamlInterop.ITextBox_get_SelectionLength)
+
+    /**
+     * JTextComponent.getSelectionStart / setSelectionStart-style: the start of the selection (the caret position if
+     * nothing is selected; TextBox.SelectionStart).
+     * As in Swing, setting it is `select(value, selectionEnd)`, and setting it past the end moves the end to the same
+     * position.
+     */
+    var selectionStart: Int
+        get() = inspectable.getInt(XamlInterop.ITextBox_get_SelectionStart)
+        set(value) = select(value, selectionEnd)
+
+    /**
+     * JTextComponent.getSelectionEnd / setSelectionEnd-style: the end of the selection (the character at this position is
+     * excluded; the caret position if nothing is selected).
+     * As in Swing, setting it is `select(selectionStart, value)`, and setting it before the start makes it the same
+     * position as the start (no selection).
+     */
+    var selectionEnd: Int
+        get() = selectionStart + selectionLength
+        set(value) = select(selectionStart, value)
+
+    /**
+     * JTextComponent.select-style: selects from [selectionStart] up to just before [selectionEnd] (the character at the
+     * end position is excluded).
+     * As in Swing, the range is clamped to the string (a negative start becomes 0, positions past the length become the
+     * length), and if the end is before the start it becomes the same position as the start (no selection). The caret is
+     * placed at the end.
+     *
+     * The meaning changed from `select(start, length)` in earlier versions (the second argument being a character count)
+     * to (start, end) as in Swing. To select by character count, write `select(start, start + length)`.
+     */
+    fun select(selectionStart: Int, selectionEnd: Int) {
+        val length = text.length
+        val start = selectionStart.coerceIn(0, length)
+        val end = selectionEnd.coerceAtMost(length).coerceAtLeast(start)
+        inspectable.call(XamlInterop.ITextBox_Select, start, end - start)
     }
 
     /** Selects all text (TextBox.SelectAll). */
     fun selectAll() {
         inspectable.call(XamlInterop.ITextBox_SelectAll)
     }
+
+    /**
+     * JTextComponent.getCaretPosition / setCaretPosition-style: the caret position (from 0 to the number of characters).
+     * With a selection, it is the end of the selection (WinUI does not keep the direction of the selection, so it is not
+     * the start of a selection extended backwards as in Swing).
+     * Setting it clears the selection and places the caret at that position.
+     *
+     * @throws IllegalArgumentException if the position is before 0 or after the number of characters (as in Swing)
+     */
+    var caretPosition: Int
+        get() = selectionEnd
+        set(value) {
+            require(value in 0..text.length) { "cannot place the caret at: $value (length ${text.length})" }
+            inspectable.call(XamlInterop.ITextBox_Select, value, 0)
+        }
+
+    /**
+     * JTextComponent.replaceSelection-style: replaces the selection with [content] (inserts it at the caret position if
+     * nothing is selected).
+     * null or an empty string deletes the selection. After replacing, the caret is placed after the inserted text (the
+     * selection is cleared).
+     * Does nothing if [isEditable] is false (as in Swing). It can be undone like a user edit ([undo]).
+     */
+    fun replaceSelection(content: String?) {
+        if (isReadOnly) return
+        val start = selectionStart
+        val inserted = content.orEmpty()
+        Hstring.use(inserted) { h -> inspectable.call(XamlInterop.ITextBox_put_SelectedText, h) }
+        // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing
+        inspectable.call(XamlInterop.ITextBox_Select, start + inserted.length, 0)
+    }
+
+    /** JTextComponent.copy-style: copies the selection to the clipboard (TextBox.CopySelectionToClipboard). Does nothing if nothing is selected. */
+    fun copy() {
+        inspectable.call(XamlInterop.ITextBox_CopySelectionToClipboard)
+    }
+
+    /**
+     * JTextComponent.cut-style: moves the selection to the clipboard (TextBox.CutSelectionToClipboard).
+     * Does nothing if [isEditable] is false (as in Swing).
+     */
+    fun cut() {
+        if (!isReadOnly) inspectable.call(XamlInterop.ITextBox_CutSelectionToClipboard)
+    }
+
+    /**
+     * JTextComponent.paste-style: replaces the selection with the text on the clipboard (inserts it at the caret position
+     * if nothing is selected; TextBox.PasteFromClipboard). Reading the clipboard is asynchronous, so the text changes
+     * after the call returns (in the message loop).
+     * Does nothing if [isEditable] is false (as in Swing).
+     */
+    fun paste() {
+        if (!isReadOnly) inspectable.call(XamlInterop.ITextBox_PasteFromClipboard)
+    }
+
+    /**
+     * UndoManager.undo-style: undoes the last edit (typing, [replaceSelection], [cut], [paste], etc.; TextBox.Undo).
+     * Does nothing if there is no edit to undo (unlike UndoManager, it does not throw).
+     */
+    fun undo() {
+        inspectable.call(XamlInterop.ITextBox_Undo)
+    }
+
+    /** UndoManager.redo-style: redoes an edit undone by [undo] (TextBox.Redo). Does nothing if there is no edit to redo. */
+    fun redo() {
+        inspectable.call(XamlInterop.ITextBox_Redo)
+    }
+
+    /** UndoManager.canUndo-style: whether there is an edit that [undo] can undo (TextBox.CanUndo). */
+    fun canUndo(): Boolean = inspectable.getBool(XamlInterop.ITextBox_get_CanUndo)
+
+    /** UndoManager.canRedo-style: whether there is an edit that [redo] can redo (TextBox.CanRedo). */
+    fun canRedo(): Boolean = inspectable.getBool(XamlInterop.ITextBox_get_CanRedo)
 
     /**
      * JTextField.setActionCommand-like: the string put into [WActionEvent.actionCommand] of the listeners called on Enter.

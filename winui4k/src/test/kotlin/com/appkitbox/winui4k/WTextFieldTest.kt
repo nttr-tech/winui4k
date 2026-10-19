@@ -68,11 +68,11 @@ class WTextFieldTest : FunSpec() {
             }
         }
 
-        test("the range passed to select can be retrieved via selectedText") {
+        test("select(start, end) makes the specified range (excluding the end character) available as selectedText") {
             onUiThreadGet {
                 val textField = WTextField()
                 textField.text = "abcde"
-                textField.select(1, 3)
+                textField.select(1, 4)
                 textField.selectedText
             } shouldBe "bcd"
         }
