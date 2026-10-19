@@ -71,24 +71,7 @@ class WImageIcon(
 
     @JvmSynthetic
     internal fun createImageIconElement(): ComPtr {
-        val uriFactory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
-        val nativeUri = try {
-            Hstring.use(uri) { h -> uriFactory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h) }
-        } finally {
-            uriFactory.release()
-        }
-        val bitmapFactory = Activation.factory(XamlInterop.CLS_BitmapImage, XamlInterop.IID_IBitmapImageFactory)
-        val bitmap = try {
-            bitmapFactory.getPtr(XamlInterop.IBitmapImageFactory_CreateInstanceWithUriSource, nativeUri.ptr)
-        } finally {
-            bitmapFactory.release()
-            nativeUri.release()
-        }
-        val imageSource = try {
-            bitmap.queryInterface(XamlInterop.IID_IImageSource)
-        } finally {
-            bitmap.release()
-        }
+        val imageSource = createImageSource(uri)
         val imageIcon = Activation.composeDefault(XamlInterop.CLS_ImageIcon, XamlInterop.IID_IImageIconFactory)
         return try {
             imageIcon.call(XamlInterop.IImageIcon_put_Source, imageSource.ptr)
@@ -163,5 +146,30 @@ class WFontIcon @JvmOverloads constructor(
         const val DEFAULT_FONT_FAMILY = "Segoe Fluent Icons"
 
         private const val HASH_FACTOR = 31
+    }
+}
+
+/**
+ * Creates a new ImageSource (BitmapImage) that loads the image at [uri]. The caller must release it.
+ * Shared by the ImageIcon of [WImageIcon] and the Image of [WImage]. Loading is asynchronous and does not throw on failure.
+ */
+internal fun createImageSource(uri: String): ComPtr {
+    val uriFactory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
+    val nativeUri = try {
+        Hstring.use(uri) { h -> uriFactory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h) }
+    } finally {
+        uriFactory.release()
+    }
+    val bitmapFactory = Activation.factory(XamlInterop.CLS_BitmapImage, XamlInterop.IID_IBitmapImageFactory)
+    val bitmap = try {
+        bitmapFactory.getPtr(XamlInterop.IBitmapImageFactory_CreateInstanceWithUriSource, nativeUri.ptr)
+    } finally {
+        bitmapFactory.release()
+        nativeUri.release()
+    }
+    return try {
+        bitmap.queryInterface(XamlInterop.IID_IImageSource)
+    } finally {
+        bitmap.release()
     }
 }

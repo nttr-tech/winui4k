@@ -21,6 +21,8 @@ internal object FoundationInterop {
     const val IID_IUriRuntimeClassFactory = "44a9796f-723e-4fdf-a218-033e75b0c084"
     const val IUriRuntimeClassFactory_CreateUri = 6    // CreateUri(HSTRING, out Uri)
     const val IUriRuntimeClass_get_AbsoluteUri = 6     // get_AbsoluteUri(out HSTRING)
+    const val IID_IUriRuntimeClass = "9e365e57-48b2-4160-956f-c7385120bbfc"
+    const val IUriRuntimeClass_get_RawUri = 16         // get_RawUri(out HSTRING) the string as passed
 
     /** Base IID of Windows.Foundation.TypedEventHandler`2. */
     internal const val IID_TypedEventHandler_OPEN = "9de1c534-6ae1-11e0-84e1-18a905bcc53f"

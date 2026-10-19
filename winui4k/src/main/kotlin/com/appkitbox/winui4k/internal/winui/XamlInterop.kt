@@ -1983,6 +1983,7 @@ internal object XamlInterop {
     const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"
     const val IID_IImage = "220d3d8d-66de-53a1-a215-ba9c165565ab"
     const val IImage_put_Source = 7                     // put_Source(ImageSource)
+    const val IImage_get_Source = 6                     // get_Source(out ImageSource)
     const val IImage_get_Stretch = 8                    // get_Stretch(out Stretch)
     const val IImage_put_Stretch = 9                    // put_Stretch(Stretch enum)
 
