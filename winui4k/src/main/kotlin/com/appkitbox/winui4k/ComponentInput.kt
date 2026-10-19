@@ -36,7 +36,7 @@ internal class ComponentInput(private val owner: WComponent) {
             addFocusHandlers()
             focusHandlersAdded = true
         }
-        if (focusListeners.isEmpty()) focusOwned = ownsFocus()
+        if (focusListeners.isEmpty()) focusOwned = ownsFocus(owner)
         focusListeners += listener
         owner.listenerAnchor.listenerAdded()
     }
@@ -75,7 +75,7 @@ internal class ComponentInput(private val owner: WComponent) {
     /** LostFocus. Does not report when focus merely moved between parts of this component itself (composite controls). */
     private fun onLostFocus(args: Ptr) {
         if (focusListeners.isEmpty() || !focusOwned || !isFromOwnPart(args)) return
-        if (ownsFocus()) return
+        if (ownsFocus(owner)) return
         focusOwned = false
         val event = WFocusEvent(owner, WFocusEvent.FOCUS_LOST)
         for (listener in focusListeners.toList()) listener.focusLost(event)
@@ -89,20 +89,20 @@ internal class ComponentInput(private val owner: WComponent) {
             source.release()
         }
     }
+}
 
-    /** Whether the element that currently has focus (FocusManager.GetFocusedElement) is a part of this component itself. */
-    private fun ownsFocus(): Boolean {
-        val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
-        val focused = try {
-            Xaml.focusedElement(root)
-        } finally {
-            root.release()
-        } ?: return false
-        return try {
-            isOwnPart(owner, focused)
-        } finally {
-            focused.release()
-        }
+/** Whether the element that currently has focus (FocusManager.GetFocusedElement) is [owner] itself or a part of [owner]'s template. */
+internal fun ownsFocus(owner: WComponent): Boolean {
+    val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
+    val focused = try {
+        Xaml.focusedElement(root)
+    } finally {
+        root.release()
+    } ?: return false
+    return try {
+        isOwnPart(owner, focused)
+    } finally {
+        focused.release()
     }
 }
 

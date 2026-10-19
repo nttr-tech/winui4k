@@ -41,6 +41,9 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
 class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NumberBox, XamlInterop.IID_INumberBoxFactory), // default interface = INumberBox
 ) {
+    /** Its own IsTabStop is false, and UIElement.Focus passes focus to the template's input field (TextBox) ([isFocusable] / [requestFocusInWindow]). */
+    override val focusIsDelegated: Boolean get() = true
+
     /** ValueChanged event tokens registered via addChangeListener. */
     private val changeTokens = ListenerTokens<DoubleConsumer>()
 

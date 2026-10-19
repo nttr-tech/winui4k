@@ -386,13 +386,31 @@ abstract class WComponent internal constructor(
         get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
         set(value) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetHelpText, value)
 
+    /** The value set to [isFocusable] (null = not set). */
+    private var focusableSetting: Boolean? = null
+
     /**
-     * Whether it can be a destination of Tab key navigation (equivalent to JComponent.isFocusable; UIElement.IsTabStop).
-     * When false, it does not receive focus even with [requestFocus] / [requestFocusInWindow].
+     * Whether this is a control whose own IsTabStop is false, but where UIElement.Focus passes focus to a part inside the
+     * template (such as the NumberBox input field) that can receive it. [WSpinner], [WAutoSuggestBox], [WDatePicker] and
+     * [WTimePicker] set it to true.
+     */
+    internal open val focusIsDelegated: Boolean get() = false
+
+    /**
+     * Equivalent to JComponent.isFocusable: whether it can receive focus.
+     * If not set, true if it is a Tab key destination (UIElement.IsTabStop), or a control whose template part receives
+     * focus ([WSpinner] etc.; its own IsTabStop is false, but [requestFocusInWindow] succeeds).
+     * Setting it to false sets IsTabStop to false and it does not receive focus even with [requestFocus] /
+     * [requestFocusInWindow] (WinUI's IsTabStop only decides Tab key destinations and does not stop programmatic focus, so
+     * the set value is remembered and used to stop it).
+     * Setting it to true makes it able to receive focus (IsTabStop of a control whose part receives focus stays false).
      */
     var isFocusable: Boolean
-        get() = uiElement.getBool(XamlInterop.IUIElement_get_IsTabStop)
-        set(value) = uiElement.putBool(XamlInterop.IUIElement_put_IsTabStop, value)
+        get() = focusableSetting ?: (focusIsDelegated || uiElement.getBool(XamlInterop.IUIElement_get_IsTabStop))
+        set(value) {
+            focusableSetting = value
+            if (!(value && focusIsDelegated)) uiElement.putBool(XamlInterop.IUIElement_put_IsTabStop, value)
+        }
 
     /** Moves focus (UIElement.Focus). true if accepted. false for an element that is not on a window. */
     internal fun focus(state: Int = XamlInterop.FocusState_Keyboard): Boolean = Ffi.backend.withScope { scope ->
@@ -407,13 +425,18 @@ abstract class WComponent internal constructor(
     }
 
     /**
-     * Requests focus and returns whether it was accepted (equivalent to Component.requestFocusInWindow).
-     * false for an element that is not on a window, is disabled, or has [isFocusable] set to false.
+     * Requests focus and returns whether it was accepted (equivalent to Component.requestFocusInWindow; the result of
+     * UIElement.Focus). false for elements not placed in a window, disabled or unable to receive focus, and for elements
+     * whose [isFocusable] is set to false. IsTabStop is not checked, so it is true for [WSpinner] and the like, whose own
+     * IsTabStop is false but whose template part receives focus.
      */
-    fun requestFocusInWindow(): Boolean = isFocusable && focus(XamlInterop.FocusState_Programmatic)
+    fun requestFocusInWindow(): Boolean = focusableSetting != false && focus(XamlInterop.FocusState_Programmatic)
 
-    /** Whether this element has focus (equivalent to Component.hasFocus; FocusState is other than Unfocused). */
-    fun hasFocus(): Boolean = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
+    /**
+     * Whether this element has focus (equivalent to Component.hasFocus). true when FocusState is other than Unfocused, or
+     * when a template part has focus (such as the input field of [WSpinner]).
+     */
+    fun hasFocus(): Boolean = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0 || ownsFocus(this)
 
     /** The list of input listeners and the native handlers (created when the first listener is added). */
     private var inputOrNull: ComponentInput? = null

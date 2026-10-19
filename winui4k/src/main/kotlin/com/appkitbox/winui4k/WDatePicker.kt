@@ -22,6 +22,9 @@ import kotlin.jvm.JvmSynthetic
 class WDatePicker : WControl(
     Activation.composeDefault(XamlInterop.CLS_DatePicker, XamlInterop.IID_IDatePickerFactory),
 ) {
+    /** Its own IsTabStop is false, and UIElement.Focus passes focus to the template's button (FlyoutButton) ([isFocusable] / [requestFocusInWindow]). */
+    override val focusIsDelegated: Boolean get() = true
+
     private val selectedDateChangedTokens = ListenerTokens<Consumer<LocalDate?>>()
 
     /** The heading text (DatePicker.Header). */

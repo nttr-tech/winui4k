@@ -45,6 +45,9 @@ enum class TextChangeReason(internal val native: Int) {
 class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_AutoSuggestBox, XamlInterop.IID_IAutoSuggestBox),
 ) {
+    /** Its own IsTabStop is false, and UIElement.Focus passes focus to the template's input field (TextBox) ([isFocusable] / [requestFocusInWindow]). */
+    override val focusIsDelegated: Boolean get() = true
+
     /** The IItemsControl view used to set ItemsSource. */
     private val itemsControl: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IItemsControl))

@@ -22,6 +22,9 @@ import kotlin.jvm.JvmSynthetic
 class WTimePicker : WControl(
     Activation.composeDefault(XamlInterop.CLS_TimePicker, XamlInterop.IID_ITimePickerFactory),
 ) {
+    /** Its own IsTabStop is false, and UIElement.Focus passes focus to the template's button (FlyoutButton) ([isFocusable] / [requestFocusInWindow]). */
+    override val focusIsDelegated: Boolean get() = true
+
     private val selectedTimeChangedTokens = ListenerTokens<Consumer<LocalTime?>>()
 
     /** The heading text (TimePicker.Header). */

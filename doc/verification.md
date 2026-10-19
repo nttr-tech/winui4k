@@ -109,7 +109,8 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - ウィンドウで最初にフォーカスを移したとき、LostFocus を挟まずに同じ要素の GotFocus が 2 回届くことがある。
     WinUI4K は状態が変わったときだけ知らせる
   - GotFocus / LostFocus は相手の要素を渡さない (RoutedEventArgs だけ) ため、WFocusEvent.oppositeComponent は null。
-    なお WComponent.requestFocusInWindow は IsTabStop (isFocusable) を見るので、NumberBox などでは false を返す (UIElement.Focus は成功する)
+    なお WinUI の IsTabStop は Tab キーの移動先を決めるだけで、UIElement.Focus (プログラムからのフォーカス) は止めない。そのため WComponent.requestFocusInWindow は
+    IsTabStop を見ずに Focus の結果を返し (NumberBox などでも true)、isFocusable = false にしたコンポーネントだけを、設定した値を覚えて止める
 - マウスのリスナー (WComponent.addMouseListener など) のために、ポインターのイベントの届き方を WinUI のソースと E2E テストの調査で確かめた
   (2.5.4-experimental)
   - E2E テストではポインターの入力を作れない。共有ウィンドウの InputSiteWindowClass・その親 (DesktopChildSiteBridge)・トップレベルの
