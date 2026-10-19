@@ -94,6 +94,9 @@ enum class TextTrimming(internal val native: Int) {
  * The Grid is the same size as the TextBlock, and when it is given a width the TextBlock gets the same width, so
  * [textAlignment] and [textTrimming] work the same as when the root was the TextBlock. UI Automation names such as
  * [accessibleName] go into the TextBlock (the Grid does not appear as an element to screen readers).
+ *
+ * Of JLabel's features, the disabled icon (setDisabledIcon), HTML strings, the mnemonic display that underlines a
+ * character (setDisplayedMnemonicIndex), and the grayed display from the label's own setEnabled are not available.
  */
 class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     Activation.composeDefault(XamlInterop.CLS_Grid, XamlInterop.IID_IGridFactory), // Default interface = IGrid
