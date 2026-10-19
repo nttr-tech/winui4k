@@ -183,8 +183,11 @@
   段落記号になり、読み戻すと `"a"` になる (末尾の改行が失われる)。`"a\n"` を保つには、末尾にもう 1 つ `"\r"` を足して渡す。読むときは
   最後の 1 文字を外す。`TextGetOptions.UseLf` を付けると段落の区切りが `"\n"` で返り、位置 (`ITextRange.StartPosition` など) は段落記号 1 文字を
   1 と数えるので、Swing の位置と一致する (`WTextPane.text`、`WTextPaneTest`)。
-- **RichEditBox: TextWrapping の既定は NoWrap**
-  以前の KDoc は「既定で折り返す」と書いていたが、実測では `NoWrap` (JTextArea の `lineWrap = false` と同じ) だった (`WTextPaneTest`)。
+- **RichEditBox: TextWrapping の既定は、ウィンドウに載せた後は Wrap (載せる前に読むと NoWrap)**
+  依存プロパティ自体の既定値は `NoWrap` だが、既定のスタイルが `TextWrapping = Wrap` を設定する
+  (`microsoft-ui-xaml` の `controls/dev/CommonStyles/RichEditBox_themeresources.xaml:18`)。スタイルはビジュアルツリーに載ってから効くので、
+  ウィンドウに載せる前に読むと `NoWrap`、載せた後は `Wrap` になる。以前の記録の「既定は NoWrap」は載せる前に読んだ値で誤りだった。
+  JTextArea の `lineWrap` の既定 (false) とは違うので、`WTextPane.lineWrap` は WinUI の既定のまま (載せた後は true) にしてある (`WTextPaneTest`)。
 - **PasswordBox: PasswordChanging と PasswordChanged は 1 回の変更から同期的に続けて届く**
   `Password` を設定すると、その呼び出しの中で PasswordChanging、続けて PasswordChanged が届く
   (`dxaml/xcp/core/native/text/Controls/PasswordBox.cpp:402-409`)。選択位置 (SelectionStart) は持たないので、`WPasswordField` の DocumentListener は

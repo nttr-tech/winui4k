@@ -146,22 +146,29 @@ class WTextPaneTest : FunSpec() {
             onUiThreadGet { pane.text } shouldBe "abc"
         }
 
-        test("lineWrap defaults to false (as in JTextArea), wraps when set to true, and stops wrapping when set back to false") {
-            withPane { pane ->
-                val initial = pane.lineWrap to pane.textWrapping
-                pane.lineWrap = true
-                val on = pane.lineWrap to pane.textWrapping
-                pane.lineWrap = false
-                listOf(initial, on, pane.lineWrap to pane.textWrapping)
-            } shouldContainExactly listOf(
-                false to TextWrapping.NO_WRAP,
-                true to TextWrapping.WRAP,
-                false to TextWrapping.NO_WRAP,
-            )
+        test("lineWrap defaults to true once placed in a window, from TextWrapping = Wrap in WinUI's default style (unlike JTextArea's false), stops wrapping when set to false, and wraps again when set back to true") {
+            val pane = onUiThreadGet { WTextPane() }
+            UiTestHarness.attachAndAwaitLoaded(pane)
+            try {
+                onUiThreadGet {
+                    val initial = pane.lineWrap to pane.textWrapping
+                    pane.lineWrap = false
+                    val off = pane.lineWrap to pane.textWrapping
+                    pane.lineWrap = true
+                    listOf(initial, off, pane.lineWrap to pane.textWrapping)
+                } shouldContainExactly listOf(
+                    true to TextWrapping.WRAP,
+                    false to TextWrapping.NO_WRAP,
+                    true to TextWrapping.WRAP,
+                )
+            } finally {
+                UiTestHarness.detach(pane)
+            }
         }
 
         test("with wrapStyleWord true, wrapping does not break in the middle of a word, and a value set while not wrapping is used when wrapping is enabled") {
             withPane { pane ->
+                pane.lineWrap = false // the default lineWrap is determined after placing (see the lineWrap default test below), so start from the non-wrapping state
                 val initial = pane.wrapStyleWord
                 pane.wrapStyleWord = true
                 val whileNoWrap = pane.wrapStyleWord to pane.textWrapping
