@@ -459,6 +459,24 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a text field with a CaretListener that does not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden { WTextField().also { it.addCaretListener(WCaretListener { }) } }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once all its CaretListeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                val listener = WCaretListener { }
+                field.addCaretListener(listener)
+                field.text = "Changed"
+                field.selectAll()
+                field.removeCaretListener(listener)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a text field never shown is also collected once all its key listeners are removed") {
             val reference = onUiThreadGet {
                 val field = WTextField()

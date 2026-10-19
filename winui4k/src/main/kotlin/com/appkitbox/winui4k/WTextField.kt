@@ -51,9 +51,21 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     var text: String
         get() = nativeText()
-        set(value) = document.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
+        set(value) {
+            document.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
+            caret.check()
+        }
 
     private fun nativeText(): String = inspectable.getString(XamlInterop.ITextBox_get_Text)
+
+    /** CaretListener-style listeners (subscribes to TextBox.SelectionChanged when the first listener is added). */
+    private val caret = CaretEvents(this, ::nativeCaret, ::subscribeSelectionChanged)
+
+    /** The current [dot, mark] (with a selection, dot is the end and mark is the start). */
+    private fun nativeCaret(): IntArray {
+        val start = selectionStart
+        return intArrayOf(start + selectionLength, start)
+    }
 
     /** The placeholder shown when empty (TextBox.PlaceholderText). */
     var placeholderText: String
@@ -148,11 +160,13 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         val start = selectionStart.coerceIn(0, length)
         val end = selectionEnd.coerceAtMost(length).coerceAtLeast(start)
         inspectable.call(XamlInterop.ITextBox_Select, start, end - start)
+        caret.check()
     }
 
     /** Selects all text (TextBox.SelectAll). */
     fun selectAll() {
         inspectable.call(XamlInterop.ITextBox_SelectAll)
+        caret.check()
     }
 
     /**
@@ -168,6 +182,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         set(value) {
             require(value in 0..text.length) { "cannot place the caret at: $value (length ${text.length})" }
             inspectable.call(XamlInterop.ITextBox_Select, value, 0)
+            caret.check()
         }
 
     /**
@@ -188,6 +203,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         }
         // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing
         inspectable.call(XamlInterop.ITextBox_Select, start + inserted.length, 0)
+        caret.check()
     }
 
     /** JTextComponent.copy-style: copies the selection to the clipboard (TextBox.CopySelectionToClipboard). Does nothing if nothing is selected. */
@@ -345,6 +361,39 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
             val field = anchor.get() as? WTextField
             if (field != null) field.document.onNativeChange(field.selectionStart)
         }
+    }
+
+    /**
+     * JTextComponent.addCaretListener-style: adds a listener called when the caret or the selection moves. Does nothing
+     * if null.
+     * [WCaretEvent.dot] is the caret position (the end of the selection, if any), and [WCaretEvent.mark] is the other
+     * end of the selection (the start).
+     *
+     * Movement and typing by key or mouse are detected via TextBox.SelectionChanged and delivered later (in the message
+     * loop). Programmatic changes such as [select], [caretPosition], [text] and [replaceSelection] are delivered right
+     * after the change, as in Swing. Notifications where the position does not change are not reported.
+     */
+    fun addCaretListener(listener: WCaretListener?) {
+        if (listener != null) caret.add(listener)
+    }
+
+    /** JTextComponent.removeCaretListener-style: removes one listener added with [addCaretListener]. Does nothing if it was not added. */
+    fun removeCaretListener(listener: WCaretListener?) {
+        if (listener != null) caret.remove(listener)
+    }
+
+    /** JTextComponent.getCaretListeners-style: the CaretListener-style listeners added (in the order added). */
+    val caretListeners: Array<WCaretListener>
+        get() = caret.listeners()
+
+    /** Subscribes to TextBox.SelectionChanged. The handler stays in the native object, so the field is looked up from [listenerAnchor]. */
+    private fun subscribeSelectionChanged() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.CaretSelectionChanged",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.ITextBox_add_SelectionChanged,
+        ) { _, _ -> (anchor.get() as? WTextField)?.caret?.check() }
     }
 
     /** Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change. */
