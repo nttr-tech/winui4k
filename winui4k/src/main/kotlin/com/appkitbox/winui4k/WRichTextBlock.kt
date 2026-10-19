@@ -12,7 +12,7 @@ import java.util.function.Consumer
  * WinUI 3's RichTextBlock (a direct FrameworkElement, so it derives from [WComponent]). No Swing equivalent.
  *
  * Displays read-only formatted text mixing bold and italic.
- * Content is assembled paragraph by paragraph via [addParagraph]:
+ * Plain text is read and written with [text]; to mix formatting, build it paragraph by paragraph with [addParagraph]:
  *
  * ```kotlin
  * richTextBlock.addParagraph {
@@ -21,6 +21,9 @@ import java.util.function.Consumer
  *     run(" with regular text.")
  * }
  * ```
+ *
+ * A line break `"\n"` in [text] separates paragraphs, and reading [text] returns the paragraphs, including formatted text,
+ * joined with `"\n"`.
  */
 class WRichTextBlock : WComponent(
     Activation.activate(XamlInterop.CLS_RichTextBlock, XamlInterop.IID_IRichTextBlock),
@@ -39,6 +42,81 @@ class WRichTextBlock : WComponent(
     var font: WFont?
         get() = FontProperties.read(inspectable, FontProperties.RICH_TEXT_BLOCK)
         set(value) = FontProperties.write(inspectable, dependencyObject, FontProperties.RICH_TEXT_BLOCK, value)
+
+    /**
+     * JLabel.getText / setText-like: the displayed string. The paragraphs joined with `"\n"`, including formatted text such
+     * as bold.
+     * Setting it removes all existing paragraphs and makes one paragraph (a single unformatted Run) per line break (`"\n"`,
+     * `"\r\n"`, `"\r"`).
+     * An empty string leaves no paragraphs. Paragraphs are created even if empty before or after a line break (`"a\n"` is
+     * 2 paragraphs and reads back as the same string).
+     * Non-text content such as images (InlineUIContainer, BlockUIContainer) is not included in the string.
+     */
+    var text: String
+        get() = readText()
+        set(value) {
+            removeAllParagraphs()
+            append(value)
+        }
+
+    /**
+     * JTextArea.append-like: appends [str] to the end of the text. Does nothing if null or empty.
+     * The first line continues the end of the last paragraph, and what follows a line break (`"\n"` etc.) becomes a new
+     * paragraph. A paragraph is created if there is none.
+     */
+    fun append(str: String?) {
+        if (str.isNullOrEmpty()) return
+        val lines = str.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        lines.forEachIndexed { index, line ->
+            val paragraph = if (index == 0) lastParagraphOrNew() else newParagraph()
+            try {
+                if (line.isNotEmpty()) {
+                    val inlines = inlinesOf(paragraph, XamlInterop.IParagraph_get_Inlines)
+                    try {
+                        ParagraphBuilder(inlines).run(line)
+                    } finally {
+                        inlines.release()
+                    }
+                }
+            } finally {
+                paragraph.release()
+            }
+        }
+    }
+
+    /**
+     * JLabel.getForeground / setForeground-like: the text color (RichTextBlock.Foreground). Passed as a SolidColorBrush.
+     * Reads return the native effective value, which is the default color even before setting (null if not a solid color
+     * brush).
+     * Setting null clears it and restores the default (the color inherited from the parent) (DependencyObject.ClearValue).
+     * Paragraph text is drawn in this color, except for parts colored individually.
+     */
+    var foreground: WColor?
+        get() {
+            val brush = inspectable.getPtrOrNull(XamlInterop.IRichTextBlock_get_Foreground) ?: return null
+            return try {
+                colorOf(brush)
+            } finally {
+                brush.release()
+            }
+        }
+        set(value) {
+            if (value == null) {
+                clearDependencyProperty(
+                    dependencyObject,
+                    XamlInterop.CLS_RichTextBlock,
+                    XamlInterop.IID_IRichTextBlockStatics,
+                    XamlInterop.IRichTextBlockStatics_get_ForegroundProperty,
+                )
+                return
+            }
+            val brush = value.createBrush()
+            try {
+                inspectable.call(XamlInterop.IRichTextBlock_put_Foreground, brush.ptr)
+            } finally {
+                brush.release()
+            }
+        }
 
     /** How text wraps (RichTextBlock.TextWrapping). Wraps by default. */
     var textWrapping: TextWrapping
@@ -90,6 +168,56 @@ class WRichTextBlock : WComponent(
     /** A Java-friendly overload of [addParagraph]. [build] receives a [ParagraphBuilder]. */
     fun addParagraph(build: Consumer<ParagraphBuilder>) {
         addParagraph { build.accept(this) }
+    }
+
+    /** Creates a new paragraph (Paragraph) and appends it to the end of Blocks. The caller must release it. */
+    private fun newParagraph(): ComPtr {
+        val paragraph = Activation.activate(XamlInterop.CLS_Paragraph, XamlInterop.IID_IParagraph)
+        val block = paragraph.queryInterface(XamlInterop.IID_IBlock)
+        try {
+            blockVector.call(FoundationInterop.IVector_Append, block)
+        } finally {
+            block.release()
+        }
+        return paragraph
+    }
+
+    /** Returns the last block if it is a paragraph; otherwise (empty, or a non-paragraph block) a new paragraph. The caller must release it. */
+    private fun lastParagraphOrNew(): ComPtr {
+        val size = blockVector.getInt(FoundationInterop.IVector_get_Size)
+        if (size > 0) {
+            val last = blockVector.getPtr(FoundationInterop.IVector_GetAt, size - 1)
+            try {
+                val paragraph = last.queryInterfaceOrNull(XamlInterop.IID_IParagraph)
+                if (paragraph != null) return paragraph
+            } finally {
+                last.release()
+            }
+        }
+        return newParagraph()
+    }
+
+    /** The paragraphs joined with `"\n"`. Non-paragraph blocks count as empty paragraphs. */
+    private fun readText(): String {
+        val size = blockVector.getInt(FoundationInterop.IVector_get_Size)
+        val paragraphs = (0 until size).map { index ->
+            val block = blockVector.getPtr(FoundationInterop.IVector_GetAt, index)
+            try {
+                val paragraph = block.queryInterfaceOrNull(XamlInterop.IID_IParagraph)
+                if (paragraph == null) {
+                    ""
+                } else {
+                    try {
+                        textOfInlines(paragraph, XamlInterop.IParagraph_get_Inlines)
+                    } finally {
+                        paragraph.release()
+                    }
+                }
+            } finally {
+                block.release()
+            }
+        }
+        return paragraphs.joinToString("\n")
     }
 
     /** Removes all paragraphs (Blocks.Clear). */
@@ -181,4 +309,53 @@ private fun inlinesOf(owner: ComPtr, getInlinesSlot: Int): ComPtr {
     } finally {
         collection.release()
     }
+}
+
+/**
+ * The text of the Inlines of [owner] (Paragraph / Span). A Run gives its Text, a Span (Bold / Italic / Underline, etc.)
+ * follows its inner Inlines, and a LineBreak is `"\n"`. Other Inlines such as images are treated as empty.
+ */
+private fun textOfInlines(owner: ComPtr, getInlinesSlot: Int): String {
+    val inlines = inlinesOf(owner, getInlinesSlot)
+    try {
+        val size = inlines.getInt(FoundationInterop.IVector_get_Size)
+        val text = StringBuilder()
+        for (index in 0 until size) {
+            val inline = inlines.getPtr(FoundationInterop.IVector_GetAt, index)
+            try {
+                text.append(textOfInline(inline))
+            } finally {
+                inline.release()
+            }
+        }
+        return text.toString()
+    } finally {
+        inlines.release()
+    }
+}
+
+/** The text of one Inline (see [textOfInlines]). */
+private fun textOfInline(inline: ComPtr): String {
+    val run = inline.queryInterfaceOrNull(XamlInterop.IID_IRun)
+    if (run != null) {
+        try {
+            return run.getString(XamlInterop.IRun_get_Text)
+        } finally {
+            run.release()
+        }
+    }
+    val span = inline.queryInterfaceOrNull(XamlInterop.IID_ISpan)
+    if (span != null) {
+        try {
+            return textOfInlines(span, XamlInterop.ISpan_get_Inlines)
+        } finally {
+            span.release()
+        }
+    }
+    val lineBreak = inline.queryInterfaceOrNull(XamlInterop.IID_ILineBreak)
+    if (lineBreak != null) {
+        lineBreak.release()
+        return "\n"
+    }
+    return ""
 }

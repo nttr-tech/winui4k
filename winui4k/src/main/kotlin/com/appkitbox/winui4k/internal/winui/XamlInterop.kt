@@ -501,6 +501,8 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Controls.RichTextBlock ----
     const val CLS_RichTextBlock = "Microsoft.UI.Xaml.Controls.RichTextBlock"
     const val IID_IRichTextBlock = "d766e4db-a684-50b7-a202-c8e91fa26ff3"
+    const val IRichTextBlock_get_Foreground = 16       // get_Foreground(out Brush)
+    const val IRichTextBlock_put_Foreground = 17       // put_Foreground(Brush)
     const val IRichTextBlock_get_TextWrapping = 18     // get_TextWrapping(out TextWrapping)
     const val IRichTextBlock_put_TextWrapping = 19     // put_TextWrapping(TextWrapping)
     const val IRichTextBlock_get_TextTrimming = 20     // get_TextTrimming(out TextTrimming)
@@ -517,6 +519,7 @@ internal object XamlInterop {
     const val IParagraph_get_Inlines = 6               // get_Inlines(out InlineCollection)
     const val CLS_Run = "Microsoft.UI.Xaml.Documents.Run"
     const val IID_IRun = "1f905239-37cb-590b-9132-3ffb7741906e"
+    const val IRun_get_Text = 6                        // get_Text(out HSTRING)
     const val IRun_put_Text = 7                        // put_Text(HSTRING)
     const val CLS_Bold = "Microsoft.UI.Xaml.Documents.Bold"
     const val IID_IBold = "241a5f5a-c164-597f-b0db-fac7431297f2"
@@ -526,6 +529,7 @@ internal object XamlInterop {
     const val IID_IUnderline = "68aaec6e-ea71-5ed2-b83e-91684b25efb9"
     const val IID_ISpan = "91b93d4d-4e28-57b9-bffb-3566c2a3c2a1"
     const val ISpan_get_Inlines = 6                    // get_Inlines(out InlineCollection)
+    const val IID_ILineBreak = "09307599-7cc2-5f54-b106-728620c16f76"
     const val IID_IBlock = "8149d507-672f-5fd5-a10a-351389ba9659"   // used to shape IVector<Block>
     const val IID_IInline = "813d427a-8980-5a79-a8fa-f27919cfb24f"  // used to shape IVector<Inline>
 
@@ -2501,6 +2505,7 @@ internal object XamlInterop {
     const val IRichTextBlockStatics_get_FontFamilyProperty = 7
     const val IRichTextBlockStatics_get_FontWeightProperty = 8
     const val IRichTextBlockStatics_get_FontStyleProperty = 9
+    const val IRichTextBlockStatics_get_ForegroundProperty = 11
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox (additions to ITextBox) ----
     const val ITextBox_put_SelectionLength = 11
