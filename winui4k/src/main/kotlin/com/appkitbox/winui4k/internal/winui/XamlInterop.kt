@@ -488,6 +488,7 @@ internal object XamlInterop {
     const val IControl_get_IsEnabled = 28              // get_IsEnabled(out boolean)
     const val IControl_put_IsEnabled = 29              // put_IsEnabled(boolean)
     const val IControl_put_FontWeight = 17             // put_FontWeight(FontWeight) — struct passed by value
+    const val IControl_get_Padding = 34                // get_Padding(out Thickness)
     const val IControl_put_Padding = 35                // put_Padding(Thickness) — struct passed by value
     const val IControl_get_HorizontalContentAlignment = 36 // get_HorizontalContentAlignment(out HorizontalAlignment)
     const val IControl_put_HorizontalContentAlignment = 37 // put_HorizontalContentAlignment(HorizontalAlignment)
@@ -497,6 +498,7 @@ internal object XamlInterop {
     const val IControl_put_Background = 41             // put_Background(Brush)
     const val IControl_get_BorderThickness = 44        // get_BorderThickness(out Thickness)
     const val IControl_put_BorderThickness = 45        // put_BorderThickness(Thickness) — struct passed by value
+    const val IControl_get_BorderBrush = 46            // get_BorderBrush(out Brush)
     const val IControl_put_BorderBrush = 47            // put_BorderBrush(Brush)
     const val IControl_put_CornerRadius = 53           // put_CornerRadius(CornerRadius) — struct passed by value
 
@@ -2261,8 +2263,10 @@ internal object XamlInterop {
     const val IControlStatics_get_FontWeightProperty = 11
     const val IControlStatics_get_FontStyleProperty = 12
     const val IControlStatics_get_ForegroundProperty = 15
+    const val IControlStatics_get_PaddingProperty = 20
     const val IControlStatics_get_BackgroundProperty = 23
     const val IControlStatics_get_BorderThicknessProperty = 25
+    const val IControlStatics_get_BorderBrushProperty = 26
 
     // ---- Microsoft.UI.Xaml.VisualStateManager (statics) ----
     const val CLS_VisualStateManager = "Microsoft.UI.Xaml.VisualStateManager"

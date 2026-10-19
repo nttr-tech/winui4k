@@ -118,6 +118,65 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             }
         }
 
+    /** The border last set to [border]. */
+    private var borderValue: WControlBorder? = null
+
+    /**
+     * JComponent.getBorder / setBorder-style: the control's border (created with [WBorderFactory]). Returns the border as
+     * set. A new border replaces the previous one, and nothing of the previous border remains.
+     *
+     * A line border ([WLineBorder]) becomes Control.BorderBrush and BorderThickness, and an empty border ([WEmptyBorder])
+     * becomes Padding (a compound border sets both; the order of outside and inside is not distinguished; see
+     * [WCompoundBorder]). Without a line border no border line is drawn (thickness 0), and without an empty border Padding
+     * stays at the theme default. Setting null clears all three and returns to the theme defaults
+     * (DependencyObject.ClearValue; in Swing null means "no border", but the border line is part of the look of WinUI
+     * controls, so this returns to the default).
+     *
+     * [padding] and [WButton.isBorderPainted] also write the same Padding / BorderThickness, so whichever is set last takes
+     * effect (reading [border] afterwards still returns the border as set). The template draws the pointer-over and pressed
+     * states of buttons with the theme's border color, so the line border's color only affects the normal state.
+     * Only [WControl] has a border; it cannot be set on [WLabel] or [WPanel] (wrap them in a [WBorder] with a border).
+     *
+     * @throws IllegalArgumentException for a combination containing two or more line borders (in which case neither the
+     * control nor [border] changes)
+     */
+    var border: WControlBorder?
+        get() = borderValue
+        set(value) {
+            // Validate first, so that nothing is changed on failure
+            val flat = value?.let { FlatBorder.of(it) }
+            borderValue = value
+            if (flat == null) {
+                clearControlProperty(XamlInterop.IControlStatics_get_BorderBrushProperty)
+                clearControlProperty(XamlInterop.IControlStatics_get_BorderThicknessProperty)
+                clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
+                return
+            }
+            applyLine(flat.line)
+            val padding = flat.padding
+            if (padding == null) {
+                clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
+            } else {
+                setPadding(padding.left, padding.top, padding.right, padding.bottom)
+            }
+        }
+
+    private fun applyLine(line: WLineBorder?) {
+        if (line == null) {
+            clearControlProperty(XamlInterop.IControlStatics_get_BorderBrushProperty)
+            XamlStructs.putThickness(control, XamlInterop.IControl_put_BorderThickness, 0.0, 0.0, 0.0, 0.0)
+            return
+        }
+        val brush = line.color.createBrush()
+        try {
+            control.call(XamlInterop.IControl_put_BorderBrush, brush.ptr)
+        } finally {
+            brush.release()
+        }
+        val thickness = line.thickness.toDouble()
+        XamlStructs.putThickness(control, XamlInterop.IControl_put_BorderThickness, thickness, thickness, thickness, thickness)
+    }
+
     /** Clears the local value of a Control dependency property ([staticsSlot] is get_XxxProperty of IControlStatics). */
     internal fun clearControlProperty(staticsSlot: Int) {
         val statics = Activation.factory(XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics)
