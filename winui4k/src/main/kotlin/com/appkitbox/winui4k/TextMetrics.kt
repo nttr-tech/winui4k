@@ -14,27 +14,35 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * Results for the same font and string are cached.
  */
 internal object TextMetrics {
-    private val cache = HashMap<Pair<WFont, String>, WSize>()
+    private data class Key(val font: WFont, val weight: Int, val text: String)
+
+    private val cache = HashMap<Key, WSize>()
 
     /**
      * The size (DIP) of [text] drawn on one line in [font]. [host] is a displayed element, and the measurement is done in
      * its XamlRoot (window). null if [host] is not placed in a window.
+     *
+     * [weight] is the font weight (a FontWeight value: 400 normal, 600 SemiBold, 700 bold, etc.). [WFont] can only hold the
+     * weight as plain or bold ([WFont.style]), so intermediate weights such as SemiBold are measured by passing the native
+     * value as is.
      */
-    fun measure(host: WComponent, font: WFont, text: String): WSize? {
-        cache[font to text]?.let { return it }
+    fun measure(host: WComponent, font: WFont, weight: Int, text: String): WSize? {
+        val key = Key(font, weight, text)
+        cache[key]?.let { return it }
         val root = host.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return null
         val size = try {
-            measureIn(root, font, text)
+            measureIn(root, font, weight, text)
         } finally {
             root.release()
         }
-        cache[font to text] = size
+        cache[key] = size
         return size
     }
 
-    private fun measureIn(root: ComPtr, font: WFont, text: String): WSize {
+    private fun measureIn(root: ComPtr, font: WFont, weight: Int, text: String): WSize {
         val probe = WLabel(text)
         probe.font = font
+        probe.fontWeight = weight
         probe.horizontalAlignment = HorizontalAlignment.LEFT
         probe.verticalAlignment = VerticalAlignment.TOP
         val popup = Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup)

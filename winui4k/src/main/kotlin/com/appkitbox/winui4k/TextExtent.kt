@@ -107,7 +107,9 @@ internal class TextExtent(private val owner: WControl) {
             return
         }
         subscribeLoaded()
-        val m = TextMetrics.measure(owner, checkNotNull(owner.font), "m")
+        // Measure with the native weight (SemiBold etc.) as is, without rounding it to WFont (plain or bold)
+        val weight = XamlStructs.getFontWeight(owner.control, XamlInterop.IControl_get_FontWeight)
+        val m = TextMetrics.measure(owner, checkNotNull(owner.font), weight, "m")
         if (m == null) {
             // Not placed in a window yet. Keep the wrapper alive until it is measured when placed
             if (!pinned) {

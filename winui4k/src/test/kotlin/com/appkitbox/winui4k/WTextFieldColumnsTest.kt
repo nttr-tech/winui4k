@@ -35,9 +35,15 @@ class WTextFieldColumnsTest : FunSpec() {
         return row
     }
 
-    /** The expected width of the text field of [row] for [columns] columns (measured with the label set to the same font as the text field). */
+    /**
+     * The expected width of the text field of [row] for [columns] columns. The 'm' label is given the family, size and
+     * weight of the text field's native font one by one as they are (not through [WControl.font], which the
+     * implementation uses and which rounds the weight to normal or bold).
+     */
     private fun expectedWidth(row: Row, columns: Int): Double = onUiThreadGet {
-        row.m.font = row.field.font
+        row.m.fontFamily = FontProperties.readFamily(row.field.control, FontProperties.CONTROL)
+        row.m.fontSize = row.field.control.getDouble(XamlInterop.IControl_get_FontSize)
+        row.m.fontWeight = XamlStructs.getFontWeight(row.field.control, XamlInterop.IControl_get_FontWeight)
         row.panel.updateLayout()
         val padding = XamlStructs.getThickness(row.field.control, XamlInterop.IControl_get_Padding)
         val border = XamlStructs.getThickness(row.field.control, XamlInterop.IControl_get_BorderThickness)
@@ -80,6 +86,27 @@ class WTextFieldColumnsTest : FunSpec() {
             } finally {
                 UiTestHarness.detach(row.panel)
             }
+        }
+
+        test("text fields whose native weight is normal (400), SemiBold (600) or bold (700) get a column width determined by the width of 'm' measured in that weight") {
+            // In Segoe UI, 'm' has the same width at 400 and 600, and is wider only at 700 (layout rounding in 1/3 DIP units). Measuring 600 with the bold width shifts the column width
+            val widths = mutableListOf<Double>()
+            for (weight in listOf(400, 600, 700)) {
+                val row = shownRow {
+                    font = WFont("Segoe UI", WFont.PLAIN, 14.0)
+                    XamlStructs.putFontWeight(control, XamlInterop.IControl_put_FontWeight, weight)
+                    columns = 20
+                }
+                try {
+                    val expected = expectedWidth(row, 20)
+                    eventually(3.seconds) { actualWidthOf(row) shouldBe (expected plusOrMinus TOLERANCE) }
+                    widths += expected
+                } finally {
+                    UiTestHarness.detach(row.panel)
+                }
+            }
+            // The expected width itself changes with the weight (if all were the same width, this check could not tell rounding differences apart)
+            (widths[2] - widths[0]) shouldBeGreaterThan 2 * TOLERANCE
         }
 
         test("enlarging font remeasures and widens the width for the same columns") {

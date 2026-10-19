@@ -73,11 +73,12 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * JTextField.getColumns / setColumns-style: the number of columns that determines the field's width (0 by default,
      * meaning the width is not determined by columns).
      * As in Swing, the width is "columns x the width of 'm' + the left and right padding (Padding) and border
-     * (BorderThickness)" (DIP). The width of 'm' is measured by drawing it in a TextBlock with the current [font]
-     * (Swing's column width is FontMetrics.charWidth('m')). Full-width characters such as CJK characters are often wider
-     * than 'm', so this is a guide rather than a width that exactly fits that many characters. It is never narrower than
-     * the theme's default minimum width (MinWidth, 64 DIP), and when the field has focus and contains text, the width
-     * available for text is reduced by the clear button at the right end.
+     * (BorderThickness)" (DIP). The width of 'm' is measured by drawing it in a TextBlock with the current [font] (the
+     * weight is not the plain or bold of [font] but stays the control's native value, such as SemiBold; Swing's column
+     * width is FontMetrics.charWidth('m')). Full-width characters such as CJK characters are often wider than 'm', so
+     * this is a guide rather than a width that exactly fits that many characters. It is never narrower than the theme's
+     * default minimum width (MinWidth, 64 DIP), and when the field has focus and contains text, the width available for
+     * text is reduced by the clear button at the right end.
      *
      * Measuring needs a shown window (the default padding and border are also determined only after being placed in a
      * window), so columns set before placement become the width when placed (Loaded) (the wrapper is not collected
