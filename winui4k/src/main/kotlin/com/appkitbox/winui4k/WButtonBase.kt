@@ -1,9 +1,6 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.winrt.PropertyValues
-import com.appkitbox.winui4k.internal.winrt.addEventHandler
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
@@ -46,13 +43,13 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         own(inspectable.queryInterface(XamlInterop.IID_IButtonBase))
     }
 
-    /** Click event tokens registered via addActionListener (used by removeActionListener). */
-    private val clickTokens = ListenerTokens<Any>()
+    /** Builds content / text / icon (shared with WSplitButton). */
+    private val label: ButtonLabel by lazy { ButtonLabel(this, contentControl) }
 
-    private var contentComponent: WComponent? = null
-
-    /** The value of [icon] (the icon this class lays out in Content). If null, there is no icon and the string is put in Content as is. */
-    private var labelIcon: WIcon? = null
+    /** The Click subscription registered with addActionListener (shared with WSplitButton). */
+    private val clickListeners: ClickListeners by lazy {
+        ClickListeners(buttonBase, BUTTON_CLICK, listenerAnchor) { (it as WButtonBase).actionCommand }
+    }
 
     /**
      * AbstractButton.getIcon / setIcon-style: an icon shown alongside the text. null (default) means no icon.
@@ -68,8 +65,10 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * [WAppBarButton] / [WAppBarToggleButton], which have their own icon property, set it there (Content is not used).
      */
     open var icon: WIcon?
-        get() = labelIcon
-        set(value) = changeLabelIcon(value)
+        get() = label.icon
+        set(value) {
+            label.icon = value
+        }
 
     /**
      * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon. The
@@ -79,11 +78,10 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (the positions of the icon
      * and text are decided by the WinUI template from [WAppBarButton.labelPosition] and the CommandBar settings).
      */
-    var horizontalTextPosition: HorizontalTextPosition = HorizontalTextPosition.TRAILING
+    var horizontalTextPosition: HorizontalTextPosition
+        get() = label.horizontalTextPosition
         set(value) {
-            if (value == field) return
-            field = value
-            if (labelIcon != null) showIconLabel()
+            label.horizontalTextPosition = value
         }
 
     /**
@@ -94,11 +92,10 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * relative to the icon placed beside it.
      * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (same as [horizontalTextPosition]).
      */
-    var verticalTextPosition: VerticalTextPosition = VerticalTextPosition.CENTER
+    var verticalTextPosition: VerticalTextPosition
+        get() = label.verticalTextPosition
         set(value) {
-            if (value == field) return
-            field = value
-            if (labelIcon != null) showIconLabel()
+            label.verticalTextPosition = value
         }
 
     /**
@@ -107,22 +104,11 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * Negative values, NaN, and infinity throw [IllegalArgumentException] (unlike Swing, they cannot be overlapped).
      * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (same as [horizontalTextPosition]).
      */
-    var iconTextGap: Double = DEFAULT_ICON_TEXT_GAP
+    var iconTextGap: Double
+        get() = label.iconTextGap
         set(value) {
-            require(value >= 0.0 && value.isFinite()) { "iconTextGap must be a finite value of 0 or more: $value" }
-            if (value == field) return
-            field = value
-            if (labelIcon != null) showIconLabel()
+            label.iconTextGap = value
         }
-
-    /** The label string while shown with an icon (null while [labelIcon] is null). */
-    private var iconLabelText: String? = null
-
-    /**
-     * The string put into AutomationProperties.Name when the icon and text are arranged together (a name set by the user
-     * is not overwritten).
-     */
-    private var labelAutomationName: String? = null
 
     /**
      * The button's label string (ContentControl.Content).
@@ -132,23 +118,9 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * In [WAppBarButton] / [WAppBarToggleButton] it is an alias of the label ([WAppBarButton.label]) rather than Content.
      */
     open var text: String
-        get() {
-            iconLabelText?.let { return it }
-            val boxed = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return ""
-            return try {
-                PropertyValues.unboxString(boxed) ?: ""
-            } finally {
-                boxed.release()
-            }
-        }
+        get() = label.text
         set(value) {
-            contentComponent = null
-            if (labelIcon != null) {
-                iconLabelText = value
-                showIconLabel()
-            } else {
-                putContentText(value)
-            }
+            label.text = value
         }
 
     /**
@@ -156,100 +128,10 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * Setting it also removes the icon ([icon]).
      */
     var content: WComponent?
-        get() = contentComponent
+        get() = label.content
         set(value) {
-            contentComponent = value
-            labelIcon = null
-            iconLabelText = null
-            releaseLabelAutomationName()
-            contentControl.call(
-                XamlInterop.IContentControl_put_Content,
-                value?.uiElement?.ptr,
-            )
+            label.content = value
         }
-
-    private fun putContentText(value: String) {
-        val boxed = PropertyValues.boxString(value)
-        contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
-        boxed.release()
-    }
-
-    /**
-     * Changes the icon (the setter of [icon]). Keeps the current [text] and redisplays it laid out with the icon
-     * (removing any component in [content]). If null, removes the icon and returns to a string-only Content.
-     */
-    private fun changeLabelIcon(icon: WIcon?) {
-        icon?.requireSupported()
-        if (icon == null && labelIcon == null) return
-        val label = text
-        contentComponent = null
-        labelIcon = icon
-        if (icon == null) {
-            iconLabelText = null
-            releaseLabelAutomationName()
-            putContentText(label)
-        } else {
-            iconLabelText = label
-            showIconLabel()
-        }
-    }
-
-    /**
-     * Rebuilds Content from [labelIcon] and [iconLabelText]. If the text is empty, only the icon (IconElement); otherwise
-     * lays out the icon and a TextBlock in a StackPanel in the order and orientation of [horizontalTextPosition] /
-     * [verticalTextPosition], with a spacing of [iconTextGap].
-     * The TextBlock's text color and font are inherited from the button's ContentPresenter.
-     * With composite Content, the button's UI Automation name is no longer determined from the string
-     * (ButtonBaseAutomationPeer uses Content for the name only when it is a string), so the string is put in
-     * AutomationProperties.Name.
-     */
-    private fun showIconLabel() {
-        val icon = checkNotNull(labelIcon)
-        val label = checkNotNull(iconLabelText)
-        val iconElement = XamlElement.adopt(icon.createIconElement())
-        if (label.isEmpty()) {
-            releaseLabelAutomationName()
-            contentControl.call(XamlInterop.IContentControl_put_Content, iconElement.uiElement.ptr)
-            return
-        }
-        // CENTER + TOP / BOTTOM stacks them vertically; LEADING / TRAILING places them side by side (the vertical position
-        // becomes the text's vertical alignment). CENTER + CENTER (text overlaid on the icon) cannot be built with a
-        // StackPanel, so it is the same as TRAILING (text after the icon).
-        val vertical = horizontalTextPosition == HorizontalTextPosition.CENTER &&
-            verticalTextPosition != VerticalTextPosition.CENTER
-        val textFirst = if (vertical) {
-            verticalTextPosition == VerticalTextPosition.TOP
-        } else {
-            horizontalTextPosition == HorizontalTextPosition.LEADING
-        }
-        val panel = WPanel(iconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
-        val textBlock = WLabel(label)
-        val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
-        for (child in children) {
-            if (vertical) {
-                child.horizontalAlignment = HorizontalAlignment.CENTER
-            } else {
-                child.verticalAlignment = if (child === textBlock) verticalTextPosition.alignment else VerticalAlignment.CENTER
-            }
-            panel.add(child)
-        }
-        contentControl.call(XamlInterop.IContentControl_put_Content, panel.uiElement.ptr)
-        val current = accessibleName
-        if (current.isEmpty() || current == labelAutomationName) {
-            accessibleName = label
-            labelAutomationName = label
-        }
-    }
-
-    /**
-     * Removes the AutomationProperties.Name put by [showIconLabel] (left as is if the user has changed it to a different
-     * name).
-     */
-    private fun releaseLabelAutomationName() {
-        val name = labelAutomationName ?: return
-        labelAutomationName = null
-        if (accessibleName == name) accessibleName = ""
-    }
 
     /** When Click fires (ButtonBase.ClickMode). */
     var clickMode: ClickMode
@@ -288,13 +170,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     var commandParameter: String? = null
         set(value) {
             field = value
-            if (value == null) {
-                buttonBase.call(XamlInterop.IButtonBase_put_CommandParameter, null)
-            } else {
-                val boxed = PropertyValues.boxString(value)
-                buttonBase.call(XamlInterop.IButtonBase_put_CommandParameter, boxed.ptr)
-                boxed.release()
-            }
+            putCommandParameter(buttonBase, XamlInterop.IButtonBase_put_CommandParameter, value)
         }
 
     /**
@@ -436,9 +312,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      */
     @JvmSynthetic
     fun addActionListener(listener: (WActionEvent) -> Unit) {
-        val adapter = WActionListener(listener)
-        addActionListenerForJava(adapter)
-        clickTokens.addKotlinAdapter(listener, adapter)
+        clickListeners.addKotlin(listener)
     }
 
     /**
@@ -450,44 +324,23 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     @Deprecated("Use addActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
-        val adapter = Runnable(listener)
-        addActionListenerForJava(adapter)
-        clickTokens.addKotlinAdapter(listener, adapter)
+        clickListeners.addKotlinWithoutEvent(listener)
     }
 
     @JvmName("addActionListener")
     fun addActionListenerForJava(listener: Runnable) {
-        subscribeClick(listener) { listener.run() }
+        clickListeners.add(listener)
     }
 
     @JvmName("addActionListener")
     fun addActionListenerForJava(listener: WActionListener) {
-        subscribeClick(listener) { listener.actionPerformed(it) }
+        clickListeners.add(listener)
     }
-
-    private fun subscribeClick(key: Any, onClick: (WActionEvent) -> Unit) {
-        // The handler stays on the native object, so it does not capture the button strongly but looks it up from anchor
-        // (see ListenerAnchor)
-        val anchor = listenerAnchor
-        val token = buttonBase.addEventHandler(
-            "WinUI4K.ClickHandler",
-            XamlInterop.IID_RoutedEventHandler,
-            XamlInterop.IButtonBase_add_Click,
-        ) { _, _ -> (anchor.get() as? WButtonBase)?.let { button -> onClick(button.createActionEvent()) } }
-        clickTokens.add(key, token)
-        anchor.listenerAdded()
-    }
-
-    private fun createActionEvent() = WActionEvent(
-        this,
-        actionCommand,
-        WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()),
-    )
 
     /** Unsubscribes a listener registered via [addActionListener]. */
     @JvmSynthetic
     fun removeActionListener(listener: (WActionEvent) -> Unit) {
-        unsubscribeClick(clickTokens.removeKotlinAdapter(listener) ?: return)
+        clickListeners.removeKotlin(listener)
     }
 
     /**
@@ -499,25 +352,27 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     @Deprecated("Use removeActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {
-        unsubscribeClick(clickTokens.removeKotlinAdapter(listener) ?: return)
+        clickListeners.removeKotlin(listener)
     }
 
     @JvmName("removeActionListener")
     fun removeActionListenerForJava(listener: Runnable) {
-        unsubscribeClick(listener)
+        clickListeners.remove(listener)
     }
 
     @JvmName("removeActionListener")
     fun removeActionListenerForJava(listener: WActionListener) {
-        unsubscribeClick(listener)
-    }
-
-    private fun unsubscribeClick(key: Any) {
-        val token = clickTokens.remove(key) ?: return
-        buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
-        listenerAnchor.listenerRemoved()
+        clickListeners.remove(listener)
     }
 }
+
+/** ABI values of ButtonBase.Click (RoutedEventHandler). */
+private val BUTTON_CLICK = ClickEvent(
+    "WinUI4K.ClickHandler",
+    XamlInterop.IID_RoutedEventHandler,
+    XamlInterop.IButtonBase_add_Click,
+    XamlInterop.IButtonBase_remove_Click,
+)
 
 /** The keys of the items mapped from [WButtonBase.action] to the button (the order used when mapping all at first; the selection state is last, as in Swing). */
 private val ACTION_KEYS = listOf(
