@@ -62,6 +62,18 @@ internal object FoundationInterop {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};delegate({${XamlInterop.IID_KeyEventHandler}}))")
     }
 
+    /**
+     * The concrete IID of IReference<TypedEventHandler<UIElement, CharacterReceivedRoutedEventArgs>>
+     * (to subscribe to CharacterReceived with UIElement.AddHandler).
+     */
+    val IID_IReference_CharacterReceivedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_IReference_OPEN};pinterface({$IID_TypedEventHandler_OPEN};" +
+                "rc(Microsoft.UI.Xaml.UIElement;{${XamlInterop.IID_IUIElement}});" +
+                "rc(Microsoft.UI.Xaml.Input.CharacterReceivedRoutedEventArgs;{${XamlInterop.IID_ICharacterReceivedRoutedEventArgs}})))",
+        )
+    }
+
     /** Concrete IID of IReference<DateTime>. DateTime's signature is struct(Windows.Foundation.DateTime;i8). */
     val IID_IReference_DateTime: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.DateTime;i8))")

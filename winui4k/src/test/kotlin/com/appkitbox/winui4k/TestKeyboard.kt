@@ -37,14 +37,35 @@ internal object TestKeyboard {
     private const val FRAME_TITLE = "winui4k tests"
     private const val CLASS_NAME_CAPACITY = 256
 
-    /** Presses and releases [virtualKey] (a Win32 virtual-key code). [scanCode] is the scan code put into lParam. */
+    /**
+     * Presses and releases [virtualKey] (a Win32 virtual-key code). [scanCode] is the scan code put into lParam.
+     * WM_CHAR for a character key is generated from WM_KEYDOWN by TranslateMessage in WinUI's message loop, so whether
+     * it arrives before or after the WM_KEYUP sent right after is not determined (with real input, before). To check the
+     * order, send [keyDown], wait for the character to arrive, and then send [keyUp].
+     */
     fun press(virtualKey: Int, scanCode: Int) {
-        val target = inputSite()
-        val down = 1L or (scanCode.toLong() shl 16)
-        val up = down or (1L shl 30) or (1L shl 31)
-        check(postMessageW(target, WM_KEYDOWN, virtualKey.toLong(), down) as Int != 0) { "could not post WM_KEYDOWN" }
-        check(postMessageW(target, WM_KEYUP, virtualKey.toLong(), up) as Int != 0) { "could not post WM_KEYUP" }
+        keyDown(virtualKey, scanCode)
+        keyUp(virtualKey, scanCode)
     }
+
+    /** Presses [virtualKey] (WM_KEYDOWN). [extended] marks an extended key (arrows, Delete etc.; bit 24 of lParam). */
+    @JvmOverloads
+    fun keyDown(virtualKey: Int, scanCode: Int, extended: Boolean = false) {
+        check(postMessageW(inputSite(), WM_KEYDOWN, virtualKey.toLong(), keyData(scanCode, extended)) as Int != 0) {
+            "could not send WM_KEYDOWN"
+        }
+    }
+
+    /** Releases [virtualKey] (WM_KEYUP). */
+    @JvmOverloads
+    fun keyUp(virtualKey: Int, scanCode: Int, extended: Boolean = false) {
+        val up = keyData(scanCode, extended) or (1L shl 30) or (1L shl 31)
+        check(postMessageW(inputSite(), WM_KEYUP, virtualKey.toLong(), up) as Int != 0) { "could not send WM_KEYUP" }
+    }
+
+    /** lParam of WM_KEYDOWN / WM_KEYUP (repeat count 1, scan code, extended-key mark). */
+    private fun keyData(scanCode: Int, extended: Boolean): Long =
+        1L or (scanCode.toLong() shl 16) or (if (extended) 1L shl 24 else 0L)
 
     /** Presses and releases the Enter key (VK_RETURN = 0x0D, scan code 0x1C). */
     fun pressEnter() = press(0x0D, 0x1C)

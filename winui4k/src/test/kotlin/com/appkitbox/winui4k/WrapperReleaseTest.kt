@@ -307,6 +307,22 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a text field with a key listener that does not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden { WTextField().also { it.addKeyListener(object : WKeyAdapter() {}) } }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once all its key listeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                val listener = object : WKeyAdapter() {}
+                field.addKeyListener(listener)
+                field.removeKeyListener(listener)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {
             val captured = onUiThreadGet {
                 val captured = Any()

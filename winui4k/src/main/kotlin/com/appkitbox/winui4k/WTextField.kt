@@ -223,6 +223,8 @@ private class EnterKeyTarget {
         if (event.key != VirtualKey.ENTER.native || Xaml.currentModifiers() != 0) return
         val textBox = ComPtr(sender).queryInterface(XamlInterop.IID_ITextBox)
         try {
+            // Does not act on an Enter consumed in a KeyListener's keyPressed (in Swing, bindings for a consumed key do not act either)
+            if (ConsumedKeyPresses.take(textBox, VirtualKey.ENTER.native)) return
             if (textBox.getBool(XamlInterop.ITextBox_get_AcceptsReturn)) return
             val field = anchor?.get() as? WTextField
             if (field != null && field.hasActionListeners) {

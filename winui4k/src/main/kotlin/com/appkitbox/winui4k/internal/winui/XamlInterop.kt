@@ -2313,6 +2313,20 @@ internal object XamlInterop {
     const val IKeyRoutedEventArgs_put_Handled = 9
     const val IKeyRoutedEventArgs_get_OriginalKey = 10 // get_OriginalKey(out VirtualKey)
 
+    const val IID_ICharacterReceivedRoutedEventArgs = "e26ca5bb-34c3-5c1e-9a16-00b80b07a899"
+    const val ICharacterReceivedRoutedEventArgs_get_Character = 6 // get_Character(out char16)
+    const val ICharacterReceivedRoutedEventArgs_get_Handled = 8
+    const val ICharacterReceivedRoutedEventArgs_put_Handled = 9
+
+    /** The concrete IID (computed at run time) of TypedEventHandler<UIElement, CharacterReceivedRoutedEventArgs> (UIElement.CharacterReceived). */
+    val IID_CharacterReceivedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.UIElement;{$IID_IUIElement});" +
+                "rc(Microsoft.UI.Xaml.Input.CharacterReceivedRoutedEventArgs;{$IID_ICharacterReceivedRoutedEventArgs}))",
+        )
+    }
+
     const val IID_IPointerRoutedEventArgs = "66e78a9a-1bec-5f92-b1a1-ea6334ee511c"
     const val IPointerRoutedEventArgs_get_Pointer = 6  // get_Pointer(out Pointer)
     const val IPointerRoutedEventArgs_get_KeyModifiers = 7 // get_KeyModifiers(out VirtualKeyModifiers)

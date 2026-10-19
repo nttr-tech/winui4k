@@ -126,3 +126,21 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - PointerEntered / PointerExited は親へ伝わらず、入った・出た要素のそれぞれに直接送られる (`PointerInputProcessor.cpp` の
     ProcessPointerEnterLeave。子に入っても親の Exited は来ない)。Swing は子にマウスのリスナーがあると親に mouseExited を送るが、
     WinUI4K は WinUI と同じく、そのコンポーネントの境界をまたぐときだけ知らせる
+- キーのリスナー (WComponent.addKeyListener) のために、キーのイベントの届き方を E2E テストの調査と WinUI のソースで確かめた
+  (2.5.4-experimental。`WKeyEventTest`)
+  - KeyDown / KeyUp / CharacterReceived は、フォーカスを持つ要素 (OriginalSource) から親へ伝わる。PreviewKeyDown / PreviewKeyUp は
+    親から子へ伝わり、KeyDown より先に届く。Button は Enter の KeyDown を、要素に付けたハンドラより先に処理済みにする
+    (ハンドラには Handled = true で届く)。そこで keyPressed / keyReleased は PreviewKeyDown / PreviewKeyUp (処理済みのものも
+    受け取る) から作り、consume() で Handled を立てると Button の Enter のクリックは起きない (ButtonBase.OnKeyDown は処理済みなら
+    何もしない)。WTextField の Enter の ActionListener は KeyDown で動くので、keyPressed で consume された Enter を覚えて無視する
+  - 共有ウィンドウの InputSiteWindowClass へ PostMessageW した WM_KEYDOWN からも、WinUI のメッセージ ループの TranslateMessage が
+    WM_CHAR を作り、CharacterReceived が届く。
+    Enter の WM_CHAR は '\r' (13) なので、keyTyped の文字は AWT と同じ '\n' に直す
+  - KeyDown が処理済みになった押下の文字は CharacterReceived として送られない。ただしウィンドウがアクティブなときだけ
+    (`KeyboardInputProcessor.cpp` の m_fKeyDownHandled)。非アクティブ表示の共有ウィンドウでも、Button が処理済みにした Enter や
+    PreviewKeyDown で処理済みにした Enter の文字は、実行によって届いたり届かなかったりした (TextBox で処理済みにした Enter の文字は
+    届いた。どこで決まるかは未確認)。WinUI4K の keyTyped は、処理済みになった押下で来るかどうかを約束しない
+  - WM_KEYDOWN と WM_KEYUP を続けて送ると、TranslateMessage の作る WM_CHAR が WM_KEYUP の前に処理されるか後かは実行によって変わる
+    (テストは WM_KEYDOWN の後の keyTyped を待ってから WM_KEYUP を送る)
+  - TextBox は CharacterReceived の文字を、要素に付けたハンドラより先に挿入する (`TextBoxBase.cpp` の CTextBoxBase::OnCharacterReceived)
+    ため、keyTyped の consume() では入力を止められない

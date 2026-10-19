@@ -420,6 +420,31 @@ abstract class WComponent internal constructor(
         get() = inputOrNull?.mouse?.mouseWheelListeners() ?: emptyArray()
 
     /**
+     * Component.addKeyListener-style: adds a listener called for key operations while this component has focus
+     * (UIElement.PreviewKeyDown / PreviewKeyUp / CharacterReceived). Does nothing if null.
+     * As in Swing, it is not called while a child component has focus (as with [addFocusListener], for controls where a
+     * part inside the template receives focus, such as [WSpinner], it is called for that part's keys).
+     *
+     * keyPressed is called before the control's own key handling, such as Enter on a button, and [WInputEvent.consume]
+     * can stop that handling and keyboard accelerators (the default button and so on). Because WinUI may not send the
+     * character (CharacterReceived) of a press that became handled (Handled), keyTyped may not arrive for consumed presses
+     * or for Enter / Space presses that a button handles itself (in Swing it does). Consuming keyTyped does not stop the
+     * character from being inserted into an input field (TextBox inserts the character before the handler).
+     */
+    fun addKeyListener(listener: WKeyListener?) {
+        if (listener != null) input.keys.addKeyListener(listener)
+    }
+
+    /** Component.removeKeyListener-style: removes one listener added with [addKeyListener]. Does nothing if not added. */
+    fun removeKeyListener(listener: WKeyListener?) {
+        if (listener != null) inputOrNull?.keys?.removeKeyListener(listener)
+    }
+
+    /** Component.getKeyListeners-style: the key listeners added (in the order they were added). */
+    val keyListeners: Array<WKeyListener>
+        get() = inputOrNull?.keys?.keyListeners() ?: emptyArray()
+
+    /**
      * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
      * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
      * change.

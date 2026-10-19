@@ -18,6 +18,9 @@ internal class ComponentInput(private val owner: WComponent) {
     /** The mouse listeners (created when the first mouse listener is added). */
     val mouse: MouseInput by lazy { MouseInput(owner) }
 
+    /** The key listeners (created when the first key listener is added). */
+    val keys: KeyInput by lazy { KeyInput(owner) }
+
     private val focusListeners = ArrayList<WFocusListener>()
     private var focusHandlersAdded = false
 
