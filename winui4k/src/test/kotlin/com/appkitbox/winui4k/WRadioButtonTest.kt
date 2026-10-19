@@ -110,5 +110,34 @@ class WRadioButtonTest : FunSpec() {
             firstStates shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.DESELECTED)
             secondStates shouldContainExactly listOf(WItemEvent.SELECTED)
         }
+
+        test("for radio buttons with the same parent placed in a window, WinUI sends Unchecked of the deselected one before Checked of the selected one") {
+            // RadioButton::OnChecked fires Checked after UpdateRadioButtonGroup (IsChecked = false on the other buttons)
+            val events = mutableListOf<String>()
+            val (panel, radios) = onUiThreadGet {
+                val panel = WPanel()
+                val radios = listOf("A", "B").map { text ->
+                    WRadioButton(text).also {
+                        panel.add(it)
+                        it.addItemListener(WItemListener { e -> events.add(text + ":" + e.stateChange + ":" + it.isSelected) })
+                    }
+                }
+                panel to radios
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                onUiThread {
+                    radios[0].doClick()
+                    radios[1].doClick()
+                }
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+            events shouldContainExactly listOf(
+                "A:${WItemEvent.SELECTED}:true",
+                "A:${WItemEvent.DESELECTED}:false",
+                "B:${WItemEvent.SELECTED}:true",
+            )
+        }
     }
 }

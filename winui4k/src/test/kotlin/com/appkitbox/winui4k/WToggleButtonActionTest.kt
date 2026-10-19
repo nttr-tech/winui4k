@@ -187,6 +187,46 @@ class WToggleButtonActionTest : FunSpec() {
             } shouldContainExactly listOf(false, false, true)
         }
 
+        test("the SELECTED_KEY write-back reaches ItemListeners added both before and after setAction with a delay (as in Swing)") {
+            onUiThreadGet {
+                val trace = mutableListOf<String>()
+                val action = RecordingAction("Bold")
+                action.putValue(WAction.SELECTED_KEY, false)
+                val button = WToggleButton()
+                button.addItemListener(WItemListener { trace += "before:${it.stateChange}:${action.getValue(WAction.SELECTED_KEY)}" })
+                button.action = action
+                button.addItemListener(WItemListener { trace += "after:${it.stateChange}:${action.getValue(WAction.SELECTED_KEY)}" })
+                action.addPropertyChangeListener { changed, key -> trace += "$key:${changed.getValue(key)}" }
+                button.isSelected = true
+                trace
+            } shouldContainExactly listOf("before:1:false", "after:1:false", "${WAction.SELECTED_KEY}:true")
+        }
+
+        test("when reselecting in a group, the deselected button's notification and write-back finish before those of the selected button") {
+            onUiThreadGet {
+                val trace = mutableListOf<String>()
+                val group = WButtonGroup()
+                val buttons = listOf("Small", "Large").map { name ->
+                    val action = RecordingAction(name)
+                    action.putValue(WAction.SELECTED_KEY, false)
+                    action.addPropertyChangeListener { changed, key -> trace += "$name.$key:${changed.getValue(key)}" }
+                    WRadioButton(action).also {
+                        it.addItemListener(WItemListener { e -> trace += "$name:${e.stateChange}" })
+                        group.add(it)
+                    }
+                }
+                buttons[0].doClick()
+                trace.clear()
+                buttons[1].doClick()
+                trace
+            } shouldContainExactly listOf(
+                "Small:${WItemEvent.DESELECTED}",
+                "Small.${WAction.SELECTED_KEY}:false",
+                "Large:${WItemEvent.SELECTED}",
+                "Large.${WAction.SELECTED_KEY}:true",
+            )
+        }
+
         test("setting action to null deselects the button, after which the action and the button's selected state no longer mirror each other") {
             onUiThreadGet {
                 val action = RecordingAction("Bold")

@@ -10,20 +10,24 @@ import java.util.concurrent.atomic.AtomicLong
  * to be selected.
  *
  * When one of the buttons [add]ed is selected (by a click, or by [WToggleButton.isSelected] / [setSelected]), the other
- * buttons go back to unselected. Clicking the selected button does not deselect it (as with Swing's JToggleButton).
- * When deselecting is attempted by a click or by [WToggleButton.isSelected] = false, the button's ItemListener first
- * receives DESELECTED and then immediately goes back to SELECTED (WinUI buttons change state before notifying, so the
- * notification cannot be stopped).
+ * buttons go back to unselected. The DESELECTED for the ItemListener of the deselected button arrives before the
+ * SELECTED of the selected button (as in Swing).
+ * Neither clicking the selected button nor setting [WToggleButton.isSelected] = false deselects it, and nothing is
+ * delivered to the ItemListener (as with Swing's JToggleButton. WinUI buttons change state before notifying, so the
+ * group restores the selection on the spot, and the notifications of that change and of the restoration are delivered
+ * neither to ItemListeners nor to actions). To deselect all, use [clearSelection].
  *
  * WinUI's RadioButton is exclusive per parent (or per visual tree root when GroupName is set), so [add]ing a
- * [WRadioButton] gives it a unique [WRadioButton.groupName] dedicated to this group. Radio buttons of different groups
- * stay independent even under the same parent. [remove] restores the groupName it had before joining the group.
+ * [WRadioButton] gives it a unique [WRadioButton.groupName] dedicated to this group (all members of the group share
+ * the same name). Radio buttons of different groups stay independent even under the same parent, and WinUI's arrow
+ * key focus navigation (which moves within the same GroupName) works within the group.
+ * [remove] restores the groupName it had before joining the group.
  *
  * There is no counterpart of Swing's `ButtonModel`, so [selection] / [isSelected] / [setSelected] deal with the buttons
  * themselves.
  *
- * Memory: the group and its buttons reference each other strongly (as in Swing). An ItemListener for the exclusion
- * control is attached internally to each button, but its native handler references only the button weakly through
+ * Memory: the group and its buttons reference each other strongly (as in Swing). A button passes selection state
+ * notifications to the group first, but its native handler references only the button weakly through
  * [ListenerAnchor] and does not capture the group. So a group and buttons that are removed from the window and no longer
  * referenced are collected together without forming a cycle across the native boundary. As with other listeners, a
  * button that has never been placed in a window is not collected until it is [remove]d from the group.
@@ -36,8 +40,14 @@ class WButtonGroup {
     var selection: WToggleButton? = null
         private set
 
-    /** True while the group is changing a button's state. ItemListener notifications that arrive then are not subject to the exclusion control. */
+    /** True while the group is changing a button's state. Notifications that arrive then are not subject to the exclusion control. */
     private var updating = false
+
+    /** The button whose attempted deselection the group is currently reverting. Notifications of the reversion are delivered to no one. */
+    private var reverting: WToggleButton? = null
+
+    /** The GroupName given to this group's radio buttons (shared by the members). */
+    private val groupName = newGroupName()
 
     /** The groupName a radio button had before joining the group (restored by remove). */
     private val originalGroupNames = IdentityHashMap<WRadioButton, String>()
@@ -64,10 +74,6 @@ class WButtonGroup {
         if (members.any { it === button }) return
         button.buttonGroup?.remove(button)
         members += button
-        if (button is WRadioButton) {
-            originalGroupNames[button] = button.groupName
-            button.groupName = uniqueGroupName
-        }
         button.joinGroup(this)
         if (button.isSelected) {
             if (selection == null) {
@@ -75,6 +81,11 @@ class WButtonGroup {
             } else {
                 withUpdating { button.isSelected = false }
             }
+        }
+        // Set the name after settling the selection (setting it while selected makes WinUI deselect the group's original selection instead)
+        if (button is WRadioButton) {
+            originalGroupNames[button] = button.groupName
+            button.groupName = groupName
         }
     }
 
@@ -117,21 +128,40 @@ class WButtonGroup {
     }
 
     /**
-     * Notification that a member's selection state changed (from the internal ItemListener of [WToggleButton]).
-     * Makes the selected button the [selection] and deselects the previous [selection]. When the [selection] is
-     * deselected (cancelled by a click), selects it again. WinUI's RadioButton delivers Unchecked for the old one after
-     * Checked for the new one, and in that case [selection] is already the new one, so this does nothing.
+     * Notification that a member's selection state changed (from [WToggleButton], before its ItemListeners). A
+     * notification for which this returns false is delivered neither to the button's ItemListeners nor to actions.
+     * - Selected: makes the button the [selection] and deselects the previous [selection] (its DESELECTED is delivered
+     *   first)
+     * - The [selection] was deselected: if another member has been selected (when a button with the same GroupName is
+     *   selected, WinUI's RadioButton sends this one's Unchecked before the selected one's Checked;
+     *   RadioButton::OnChecked), makes that one the [selection].
+     *   Otherwise it was only an attempt to deselect, so selects it again and delivers neither the deselection nor the
+     *   reselection notification (in Swing the state does not change)
      */
-    internal fun onItemStateChanged(button: WToggleButton, stateChange: Int) {
-        if (updating) return
+    internal fun onItemStateChanged(button: WToggleButton, stateChange: Int): Boolean {
+        if (reverting === button) return false
+        if (updating) return true
         if (stateChange == WItemEvent.SELECTED) {
-            if (selection === button) return
-            val old = selection
-            selection = button
-            old?.let { deselect(it) }
-        } else if (selection === button) {
-            withUpdating { button.isSelected = true }
+            if (selection !== button) {
+                val old = selection
+                selection = button
+                old?.let { deselect(it) }
+            }
+            return true
         }
+        if (selection !== button) return true
+        val selectedByWinUi = members.firstOrNull { it !== button && it.isSelected }
+        if (selectedByWinUi != null) {
+            selection = selectedByWinUi
+            return true
+        }
+        reverting = button
+        try {
+            withUpdating { button.isSelected = true }
+        } finally {
+            reverting = null
+        }
+        return false
     }
 
     private fun deselect(button: WToggleButton) {
@@ -152,6 +182,6 @@ class WButtonGroup {
         private val counter = AtomicLong()
 
         /** A name for giving each group a different WinUI GroupName (with a prefix that does not collide with other GroupNames). */
-        val uniqueGroupName: String get() = "WinUI4K.ButtonGroup#" + counter.incrementAndGet()
+        fun newGroupName(): String = "WinUI4K.ButtonGroup#" + counter.incrementAndGet()
     }
 }

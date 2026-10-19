@@ -127,6 +127,18 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - PointerEntered / PointerExited は親へ伝わらず、入った・出た要素のそれぞれに直接送られる (`PointerInputProcessor.cpp` の
     ProcessPointerEnterLeave。子に入っても親の Exited は来ない)。Swing は子にマウスのリスナーがあると親に mouseExited を送るが、
     WinUI4K は WinUI と同じく、そのコンポーネントの境界をまたぐときだけ知らせる
+- ItemListener (WToggleButton.addItemListener) と WButtonGroup のために、RadioButton の通知の順序を WinUI のソースと E2E テストで
+  確かめた (2.5.4-experimental。`WRadioButtonTest`・`WButtonGroupTest`)
+  - 同じ GroupName (無ければ同じ親) のラジオボタンを選ぶと、WinUI は外れた方の Unchecked を先に、選んだ方の Checked を後に送る。
+    `RadioButton_Partial.cpp` の `RadioButton::OnChecked` が、Checked を発火する (`RadioButtonGenerated::OnChecked`) 前に
+    UpdateRadioButtonGroup でほかのボタンの IsChecked を false にし、その Unchecked はその場で届く。外れた方の通知の時点で、
+    選んだ方の IsChecked はもう true になっている。親が無い (ツリーに載る前の親も無い) ボタンでは UpdateRadioButtonGroup は何もしない
+  - WButtonGroup は、外れた方の Unchecked が届いたとき、ほかのメンバーがもう選ばれていればそれを選択にする (選び直さない)。
+    ほかに選ばれたメンバーが無ければ、外そうとしただけなので選択に戻し、外した通知も戻した通知も ItemListener とアクションに配らない
+    (Swing の ButtonGroup では状態が変わらない)
+  - 以前の WButtonGroup はラジオボタンごとに別の GroupName を付けていた (名前を作るプロパティが読むたびに新しい名前を返していた) ので、
+    グループの中で WinUI の排他も矢印キーのフォーカスの移動 (`RadioButton::FocusNextElementInGroup` は同じ GroupName の
+    ボタンにだけ移る) も効かなかった。いまはグループで 1 つの名前を付ける
 - キーのリスナー (WComponent.addKeyListener) のために、キーのイベントの届き方を E2E テストの調査と WinUI のソースで確かめた
   (2.5.4-experimental。`WKeyEventTest`)
   - KeyDown / KeyUp / CharacterReceived は、フォーカスを持つ要素 (OriginalSource) から親へ伝わる。PreviewKeyDown / PreviewKeyUp は

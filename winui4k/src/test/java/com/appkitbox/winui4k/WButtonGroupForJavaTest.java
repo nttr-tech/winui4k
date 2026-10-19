@@ -106,6 +106,23 @@ class WButtonGroupForJavaTest {
     }
 
     @Test
+    void itemListenerAddedBeforeJoiningGroupStillReceivesDeselectedOfOldBeforeSelectedOfNew() {
+        onUiThread(() -> {
+            List<String> log = new ArrayList<>();
+            WRadioButton small = new WRadioButton("Small");
+            WRadioButton large = new WRadioButton("Large");
+            small.addItemListener(e -> log.add("Small:" + e.getStateChange()));
+            large.addItemListener(e -> log.add("Large:" + e.getStateChange()));
+            WButtonGroup group = new WButtonGroup();
+            group.add(small);
+            group.add(large);
+            small.doClick();
+            large.doClick();
+            assertEquals(Arrays.asList("Small:" + WItemEvent.SELECTED, "Small:" + WItemEvent.DESELECTED, "Large:" + WItemEvent.SELECTED), log);
+        });
+    }
+
+    @Test
     void worksWithUsualSwingStyleItemListenerAndActionListenerOnButtons() {
         onUiThread(() -> {
             WButtonGroup group = new WButtonGroup();

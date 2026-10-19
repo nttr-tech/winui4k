@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -231,6 +232,118 @@ class WButtonGroupTest : FunSpec() {
                 "A:${WItemEvent.DESELECTED}",
                 "B:${WItemEvent.SELECTED}",
             )
+        }
+
+        test("whether the ItemListener is added before or after joining the group, DESELECTED of the deselected button arrives before SELECTED of the selected one") {
+            // Swing's ButtonGroup.setSelected deselects the old button before changing the new button's state
+            val events = mutableListOf<String>()
+            onUiThread {
+                val group = WButtonGroup()
+                val a = WCheckBox("A")
+                val b = WToggleButton("B")
+                val c = WRadioButton("C")
+                a.addItemListener(WItemListener { events.add("A:" + it.stateChange) })
+                b.addItemListener(WItemListener { events.add("B:" + it.stateChange) })
+                listOf(a, b, c).forEach { group.add(it) }
+                c.addItemListener(WItemListener { events.add("C:" + it.stateChange) })
+                a.doClick()
+                b.doClick()
+                c.doClick()
+                a.doClick()
+            }
+            events shouldContainExactly listOf(
+                "A:${WItemEvent.SELECTED}",
+                "A:${WItemEvent.DESELECTED}",
+                "B:${WItemEvent.SELECTED}",
+                "B:${WItemEvent.DESELECTED}",
+                "C:${WItemEvent.SELECTED}",
+                "C:${WItemEvent.DESELECTED}",
+                "A:${WItemEvent.SELECTED}",
+            )
+        }
+
+        test("trying to deselect the selected button (click, isSelected = false, three-state indeterminate) delivers nothing to the ItemListener (as in Swing)") {
+            val (events, states) = onUiThreadGet {
+                val events = mutableListOf<Int>()
+                val group = WButtonGroup()
+                val a = WCheckBox("A").also { it.isThreeState = true }
+                group.add(a)
+                group.setSelected(a, true)
+                a.addItemListener(WItemListener { events.add(it.stateChange) })
+                a.doClick() // A three-state check box would normally advance to indeterminate
+                a.isSelected = false
+                a.isChecked = null
+                events to listOf(a.isChecked, group.selection === a)
+            }
+            events.shouldBeEmpty()
+            states shouldContainExactly listOf(true, true)
+        }
+
+        test("WRadioButtons in the same group get the same groupName (so that WinUI's arrow-key navigation works within the group)") {
+            val names = onUiThreadGet {
+                val group = WButtonGroup()
+                val radios = listOf("A", "B", "C").map { WRadioButton(it).also { radio -> group.add(radio) } }
+                radios.map { it.groupName }
+            }
+            names.toSet().size shouldBe 1
+            names.first().isNotEmpty() shouldBe true
+        }
+
+        test("for radio buttons of a group placed in a window, DESELECTED of the deselected one arrives before SELECTED of the selected one") {
+            val events = mutableListOf<String>()
+            val (panel, radios) = onUiThreadGet {
+                val panel = WPanel()
+                val group = WButtonGroup()
+                val radios = listOf("A", "B").map { text ->
+                    WRadioButton(text).also {
+                        panel.add(it)
+                        it.addItemListener(WItemListener { e -> events.add(text + ":" + e.stateChange) })
+                        group.add(it)
+                    }
+                }
+                panel to radios
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val states = onUiThreadGet {
+                    radios[0].doClick()
+                    radios[1].doClick()
+                    radios[1].isSelected = false // The group's selection is not cleared
+                    radios.map { it.isSelected }
+                }
+                states shouldContainExactly listOf(false, true)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+            events shouldContainExactly listOf(
+                "A:${WItemEvent.SELECTED}",
+                "A:${WItemEvent.DESELECTED}",
+                "B:${WItemEvent.SELECTED}",
+            )
+        }
+
+        test("when the group has a selection, adding a selected radio button after placing it keeps the original selection and deselects the added one") {
+            val (panel, radios) = onUiThreadGet {
+                val panel = WPanel()
+                val radios = listOf("A", "B").map { WRadioButton(it).also { radio -> panel.add(radio) } }
+                // Give them different names so that both stay selected after being placed
+                radios[0].groupName = "first"
+                radios[1].groupName = "second"
+                panel to radios
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val trace = onUiThreadGet {
+                    radios.forEach { it.isSelected = true }
+                    val group = WButtonGroup()
+                    group.add(radios[0])
+                    group.add(radios[1])
+                    radios.map { it.isSelected } to (group.selection === radios[0])
+                }
+                trace shouldBe (listOf(true, false) to true)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
         }
 
         test("WRadioButtons of different groups under the same parent are mutually exclusive independently per group") {

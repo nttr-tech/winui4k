@@ -119,6 +119,24 @@ class WToggleButtonActionForJavaTest {
     }
 
     @Test
+    void selectedKeyOfTheActionIsStillThePreviousValueInsideItemListenerAndIsWrittenBackAfterAllListeners() {
+        onUiThread(() -> {
+            WAction action = new WAbstractAction("Bold") {
+                @Override
+                public void actionPerformed(WActionEvent e) {
+                }
+            };
+            action.putValue(WAction.SELECTED_KEY, Boolean.FALSE);
+            WCheckBox bold = new WCheckBox(action);
+            List<Object> seen = new ArrayList<>();
+            bold.addItemListener(e -> seen.add(action.getValue(WAction.SELECTED_KEY)));
+            bold.doClick();
+            assertEquals(Arrays.asList((Object) Boolean.FALSE), seen);
+            assertEquals(Boolean.TRUE, action.getValue(WAction.SELECTED_KEY));
+        });
+    }
+
+    @Test
     void nonBooleanSelectedKeyThrowsIllegalArgumentException() {
         onUiThread(() -> {
             WAction action = new WAbstractAction("Bold") {
