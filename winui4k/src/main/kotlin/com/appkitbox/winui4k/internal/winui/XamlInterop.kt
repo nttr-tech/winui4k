@@ -2423,10 +2423,62 @@ internal object XamlInterop {
     const val ITextBlock_put_MaxLines = 46
     const val ITextBlock_put_TextLineBounds = 48
     const val ITextBlock_put_IsTextScaleFactorEnabled = 56
+    const val ITextBlock_get_FontWeight = 10           // get_FontWeight(out FontWeight { u2 Weight })
+
+    // ---- Microsoft.UI.Xaml.Controls.TextBlock (statics: dependency properties passed to ClearValue) ----
+    const val IID_ITextBlockStatics = "3187104b-65c2-5e53-b889-c8272b1314cd"
+    const val ITextBlockStatics_get_FontSizeProperty = 6
+    const val ITextBlockStatics_get_FontFamilyProperty = 7
+    const val ITextBlockStatics_get_FontWeightProperty = 8
+    const val ITextBlockStatics_get_FontStyleProperty = 9
+    const val ITextBlockStatics_get_ForegroundProperty = 12
+
+    // ---- Microsoft.UI.Xaml.Controls.RichTextBlock (fonts of IRichTextBlock; same order as ITextBlock) ----
+    const val IRichTextBlock_get_FontSize = 6
+    const val IRichTextBlock_put_FontSize = 7
+    const val IRichTextBlock_get_FontFamily = 8        // get_FontFamily(out FontFamily)
+    const val IRichTextBlock_put_FontFamily = 9        // put_FontFamily(FontFamily)
+    const val IRichTextBlock_get_FontWeight = 10       // get_FontWeight(out FontWeight { u2 Weight })
+    const val IRichTextBlock_put_FontWeight = 11       // put_FontWeight(FontWeight by value)
+    const val IRichTextBlock_get_FontStyle = 12        // get_FontStyle(out FontStyle)
+    const val IRichTextBlock_put_FontStyle = 13        // put_FontStyle(FontStyle)
+
+    // ---- Microsoft.UI.Xaml.Controls.RichTextBlock (statics) ----
+    const val IID_IRichTextBlockStatics = "65dca245-b4fc-5718-b628-a4953f61d6a3"
+    const val IRichTextBlockStatics_get_FontSizeProperty = 6
+    const val IRichTextBlockStatics_get_FontFamilyProperty = 7
+    const val IRichTextBlockStatics_get_FontWeightProperty = 8
+    const val IRichTextBlockStatics_get_FontStyleProperty = 9
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox (additions to ITextBox) ----
     const val ITextBox_put_SelectionLength = 11
     const val ITextBox_put_SelectionStart = 13
+    const val ITextBox_put_SelectedText = 9            // put_SelectedText(HSTRING) replaces the selection
+    const val ITextBox_get_SelectionLength = 10        // get_SelectionLength(out INT32)
+    const val ITextBox_get_SelectionStart = 12         // get_SelectionStart(out INT32)
+    const val ITextBox_get_CanUndo = 51                // get_CanUndo(out boolean)
+    const val ITextBox_get_CanRedo = 52                // get_CanRedo(out boolean)
+    const val ITextBox_add_SelectionChanged = 60       // add_SelectionChanged(RoutedEventHandler, out token)
+    const val ITextBox_remove_SelectionChanged = 61    // remove_SelectionChanged(token)
+    const val ITextBox_Undo = 84                       // Undo()
+    const val ITextBox_Redo = 85                       // Redo()
+    const val ITextBox_PasteFromClipboard = 86         // PasteFromClipboard()
+    const val ITextBox_CopySelectionToClipboard = 87   // CopySelectionToClipboard()
+    const val ITextBox_CutSelectionToClipboard = 88    // CutSelectionToClipboard()
+    const val ITextBox_add_TextChanging = 96           // add_TextChanging(TypedEventHandler<TextBox, TextBoxTextChangingEventArgs>, out token)
+    const val ITextBox_remove_TextChanging = 97        // remove_TextChanging(token)
+
+    // ---- Microsoft.UI.Xaml.Controls.TextBoxTextChangingEventArgs ----
+    const val IID_ITextBoxTextChangingEventArgs = "a1a08d48-e8c0-5379-b138-7eb3f8d5f5e6"
+
+    /** The concrete IID (computed at run time) of TypedEventHandler<TextBox, TextBoxTextChangingEventArgs>. */
+    val IID_TextBoxTextChangingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc($CLS_TextBox;{$IID_ITextBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.TextBoxTextChangingEventArgs;{$IID_ITextBoxTextChangingEventArgs}))",
+        )
+    }
 
     // ---- Microsoft.UI.Xaml.Controls.ScrollViewer (additions to IScrollViewer) ----
     const val IScrollViewer_get_ExtentWidth = 44
@@ -2476,6 +2528,8 @@ internal object XamlInterop {
     const val IAutomationPropertiesStatics_SetHelpText = 17
     const val IAutomationPropertiesStatics_GetName = 31
     const val IAutomationPropertiesStatics_SetName = 32
+    const val IAutomationPropertiesStatics_GetLabeledBy = 28 // (DependencyObject) -> UIElement
+    const val IAutomationPropertiesStatics_SetLabeledBy = 29 // (DependencyObject, UIElement)
 
     // ---- Microsoft.UI.Xaml.Media.Animation.Storyboard ----
     const val IID_IStoryboard = "04d41bb3-8721-519e-8e53-fb8b34920305"
