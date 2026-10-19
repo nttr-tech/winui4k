@@ -97,3 +97,16 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     テキスト エンジンへ渡さない (`ShouldProcessKeyMessage`) ためアクセラレータでも押されるが、WTextField が先に処理済みにするので 1 回だけ押される
   - IME の変換中に確定のために押した Enter で ActionListener が呼ばれないかは未確認 (PostMessageW の Enter では IME を通らない)
   - 無効な既定ボタンは押されず、アクセラレータを外した後も押されない
+- フォーカスのリスナー (WComponent.addFocusListener) のために、GotFocus / LostFocus の届き方を E2E テストの調査で確かめた
+  (2.5.4-experimental。`WFocusEventTest`)
+  - GotFocus / LostFocus は子孫から親へ伝わる (パネルにも、中の入力欄やボタンのフォーカスが OriginalSource = その子として届く)。
+    WinUI4K は OriginalSource がそのコンポーネント自身か、そのテンプレートの部品のときだけ知らせる
+  - TextBox / Button / ComboBox / Slider / ToggleSwitch / CheckBox / PasswordBox / CalendarDatePicker / RatingControl は
+    コントロール自身がフォーカスを受け取る (OriginalSource = コントロール)。NumberBox / AutoSuggestBox / DatePicker / TimePicker は
+    自身の IsTabStop が false で、UIElement.Focus はテンプレートの中の部品 (NumberBox は "InputBox" の TextBox、AutoSuggestBox は
+    "TextBox"、DatePicker / TimePicker は "FlyoutButton") へフォーカスを渡す。部品の FrameworkElement.Parent はコントロールに
+    ならず、内容 (Content / Children) の Parent はコントロールになるので、これでテンプレートの部品と内容を見分ける
+  - ウィンドウで最初にフォーカスを移したとき、LostFocus を挟まずに同じ要素の GotFocus が 2 回届くことがある。
+    WinUI4K は状態が変わったときだけ知らせる
+  - GotFocus / LostFocus は相手の要素を渡さない (RoutedEventArgs だけ) ため、WFocusEvent.oppositeComponent は null。
+    なお WComponent.requestFocusInWindow は IsTabStop (isFocusable) を見るので、NumberBox などでは false を返す (UIElement.Focus は成功する)

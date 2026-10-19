@@ -132,6 +132,13 @@ class WrapperReleaseTest : FunSpec() {
         }
     }
 
+    /** Puts a component made by [create] (on the UI thread) into a window, removes it, and returns only a weak reference. */
+    private fun shownAndHidden(create: () -> WComponent): WeakReference<WComponent> {
+        val component = onUiThreadGet(create)
+        showAndHide(component)
+        return WeakReference(component)
+    }
+
     /** Also lets go of the [hiddenPanelWithButton] panel and returns weak references to the panel and the button. */
     private fun droppedPanelWithButton(): Pair<WeakReference<WPanel>, WeakReference<WButton>> {
         val panel = onUiThreadGet { WPanel() }
@@ -253,6 +260,24 @@ class WrapperReleaseTest : FunSpec() {
             onUiThread { button.text = "After" }
             Reclamation.awaitDestroyed(probe).shouldBeTrue()
             onUiThreadGet { button.text } // Keep the button alive while waiting for collection
+        }
+
+        test("a text field with a focus listener that does not reference the component is also collected after being shown in a window and removed") {
+            Reclamation.awaitCollected(shownAndHidden { WTextField().also { it.addFocusListener(object : WFocusAdapter() {}) } })
+                .shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once all its focus listeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                val listener = object : WFocusAdapter() {}
+                field.addFocusListener(listener)
+                field.addFocusListener(listener)
+                field.removeFocusListener(listener)
+                field.removeFocusListener(listener)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {

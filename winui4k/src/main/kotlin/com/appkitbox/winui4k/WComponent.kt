@@ -330,6 +330,34 @@ abstract class WComponent internal constructor(
     /** Whether this element has focus (equivalent to Component.hasFocus; FocusState is other than Unfocused). */
     fun hasFocus(): Boolean = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0
 
+    /** The list of input listeners and the native handlers (created when the first listener is added). */
+    private var inputOrNull: ComponentInput? = null
+
+    internal val input: ComponentInput
+        get() = inputOrNull ?: ComponentInput(this).also { inputOrNull = it }
+
+    /**
+     * Component.addFocusListener-style: adds a listener called when this component gains or loses focus
+     * (UIElement.GotFocus / LostFocus). Does nothing if null. Adding the same listener twice makes it be called twice
+     * (same as Swing).
+     *
+     * As in Swing, it is not called for the focus of child components (such as a button inside a panel). For controls
+     * where a part inside the template (the input field) receives focus, such as [WSpinner] which uses NumberBox, the
+     * focus of that part is reported as this component's, and moving between the parts does not call it.
+     */
+    fun addFocusListener(listener: WFocusListener?) {
+        if (listener != null) input.addFocusListener(listener)
+    }
+
+    /** Component.removeFocusListener-style: removes one listener added with [addFocusListener]. Does nothing if not added. */
+    fun removeFocusListener(listener: WFocusListener?) {
+        if (listener != null) inputOrNull?.removeFocusListener(listener)
+    }
+
+    /** Component.getFocusListeners-style: the focus listeners added (in the order they were added). */
+    val focusListeners: Array<WFocusListener>
+        get() = inputOrNull?.focusListeners() ?: emptyArray()
+
     /**
      * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
      * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
