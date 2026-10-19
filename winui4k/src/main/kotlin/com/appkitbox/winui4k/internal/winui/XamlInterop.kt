@@ -2446,6 +2446,12 @@ internal object XamlInterop {
     const val PatternInterface_Invoke = 0
     const val IID_IInvokeProvider = "02481105-3378-544d-b4e1-a1b368afbc02" // Microsoft.UI.Xaml.Automation.Provider
     const val IInvokeProvider_Invoke = 6
+    const val PatternInterface_SelectionItem = 11
+    const val PatternInterface_Toggle = 15
+    const val IID_IToggleProvider = "021080c2-30a9-52ef-bc32-2b79847b6ba7" // Microsoft.UI.Xaml.Automation.Provider
+    const val IToggleProvider_Toggle = 7
+    const val IID_ISelectionItemProvider = "c9dfdd81-d4ac-5d31-be7f-24fab16060e4" // Microsoft.UI.Xaml.Automation.Provider
+    const val ISelectionItemProvider_Select = 10
     const val IAutomationPeer_RaiseNotificationEvent = 57 // (AutomationNotificationKind, AutomationNotificationProcessing, HSTRING, HSTRING)
     const val AutomationNotificationKind_ItemAdded = 0
     const val AutomationNotificationProcessing_MostRecent = 3

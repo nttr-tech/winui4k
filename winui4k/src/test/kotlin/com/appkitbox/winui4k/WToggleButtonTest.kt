@@ -65,5 +65,65 @@ class WToggleButtonTest : FunSpec() {
             on.shouldBeTrue()
             off.shouldBeFalse()
         }
+
+        test("doClick checks an unchecked toggle button and calls the ActionListener and the ItemListener once each") {
+            val actions = mutableListOf<String>()
+            val items = mutableListOf<Boolean?>()
+            val checked = onUiThreadGet {
+                val toggle = WToggleButton("Toggle")
+                toggle.addActionListener { actions.add(it.actionCommand ?: "") }
+                toggle.addItemListener { items.add(it) }
+                toggle.doClick()
+                toggle.isChecked
+            }
+            checked shouldBe true
+            actions shouldContainExactly listOf("Toggle")
+            items shouldContainExactly listOf<Boolean?>(true)
+        }
+
+        test("calling doClick repeatedly alternates between checked and unchecked") {
+            val items = mutableListOf<Boolean?>()
+            val states = onUiThreadGet {
+                val toggle = WToggleButton()
+                toggle.addItemListener { items.add(it) }
+                toggle.doClick()
+                val first = toggle.isSelected
+                toggle.doClick()
+                val second = toggle.isSelected
+                toggle.doClick()
+                listOf(first, second, toggle.isSelected)
+            }
+            states shouldContainExactly listOf(true, false, true)
+            items shouldContainExactly listOf<Boolean?>(true, false, true)
+        }
+
+        test("doClick on an isThreeState toggle button advances through checked, indeterminate and unchecked in that order") {
+            val states = onUiThreadGet {
+                val toggle = WToggleButton()
+                toggle.isThreeState = true
+                List(3) {
+                    toggle.doClick()
+                    toggle.isChecked
+                }
+            }
+            states shouldContainExactly listOf<Boolean?>(true, null, false)
+        }
+
+        test("doClick on a disabled toggle button does nothing, and toggles again once re-enabled") {
+            val actions = mutableListOf<String>()
+            val (whileDisabled, afterEnabled) = onUiThreadGet {
+                val toggle = WToggleButton("Toggle")
+                toggle.addActionListener { actions.add("action") }
+                toggle.isEnabled = false
+                toggle.doClick()
+                val whileDisabled = toggle.isSelected
+                toggle.isEnabled = true
+                toggle.doClick()
+                whileDisabled to toggle.isSelected
+            }
+            whileDisabled shouldBe false
+            afterEnabled shouldBe true
+            actions shouldContainExactly listOf("action") // the one call while disabled is not counted
+        }
     }
 }

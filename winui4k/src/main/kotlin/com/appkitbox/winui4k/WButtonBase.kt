@@ -306,8 +306,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     /**
      * AbstractButton.doClick-like: clicks the button once programmatically.
-     * Implemented with UI Automation's Invoke, so like a mouse click it runs through the Click listeners, [command], and
-     * the Button's Flyout in order. Does nothing if disabled ([isEnabled] is false) (same as Swing).
+     * Internally it is UI Automation's Invoke (Toggle for toggle types, SelectionItem.Select for [WRadioButton]), and
+     * as with a mouse operation, the Click listeners, [command] and the Button's Flyout run in order.
+     * For [WToggleButton] / [WCheckBox] it toggles the selection state and also calls the ItemListener; for [WRadioButton]
+     * it selects it (if already selected it stays selected and only the ActionListener is called, same as Swing's
+     * JRadioButton).
+     * Does nothing if disabled ([isEnabled] is false) (same as Swing).
      */
     fun doClick() {
         if (!isEnabled) return

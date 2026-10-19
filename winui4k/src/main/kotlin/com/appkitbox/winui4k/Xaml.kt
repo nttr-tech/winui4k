@@ -364,10 +364,12 @@ internal object Xaml {
     }
 
     /**
-     * Calls the Invoke pattern of [target]'s automation peer (UIA Invoke = a programmatic click).
-     * For a Button, Click, Command, and Flyout run just as with a normal click.
+     * Performs the operation corresponding to a "click" on [target]'s automation peer (UIA Invoke / Toggle /
+     * SelectionItem.Select). Looks for the patterns the peer has in the order Invoke, Toggle, SelectionItem, and calls the
+     * first one. Button types have only Invoke, ToggleButton / CheckBox / ToggleSwitch only Toggle, and RadioButton only
+     * SelectionItem, and each runs through Click, Command and the state change the same as a normal click.
      * On a disabled control it fails with UIA_E_ELEMENTNOTENABLED, so the caller must check the enabled state.
-     * Does nothing for an element without the Invoke pattern.
+     * Does nothing for an element that has none of the patterns.
      */
     fun invoke(target: ComPtr) {
         val ui = target.queryInterface(XamlInterop.IID_IUIElement)
@@ -379,7 +381,7 @@ internal object Xaml {
                 statics.release()
             }
             try {
-                invokePattern(peer)
+                clickPattern(peer)
             } finally {
                 peer.release()
             }
@@ -388,18 +390,27 @@ internal object Xaml {
         }
     }
 
-    private fun invokePattern(peer: ComPtr) {
-        val pattern = peer.getPtrOrNull(XamlInterop.IAutomationPeer_GetPattern, XamlInterop.PatternInterface_Invoke) ?: return
+    /** Clicks with the first pattern found among [peer]'s Invoke, Toggle and SelectionItem. */
+    private fun clickPattern(peer: ComPtr) {
+        if (callPattern(peer, XamlInterop.PatternInterface_Invoke, XamlInterop.IID_IInvokeProvider, XamlInterop.IInvokeProvider_Invoke)) return
+        if (callPattern(peer, XamlInterop.PatternInterface_Toggle, XamlInterop.IID_IToggleProvider, XamlInterop.IToggleProvider_Toggle)) return
+        callPattern(peer, XamlInterop.PatternInterface_SelectionItem, XamlInterop.IID_ISelectionItemProvider, XamlInterop.ISelectionItemProvider_Select)
+    }
+
+    /** If [peer] has [pattern], calls [slot] of that provider ([providerIid]) with no arguments and returns true. false otherwise. */
+    private fun callPattern(peer: ComPtr, pattern: Int, providerIid: String, slot: Int): Boolean {
+        val patternObject = peer.getPtrOrNull(XamlInterop.IAutomationPeer_GetPattern, pattern) ?: return false
         try {
-            val provider = pattern.queryInterface(XamlInterop.IID_IInvokeProvider)
+            val provider = patternObject.queryInterface(providerIid)
             try {
-                provider.call(XamlInterop.IInvokeProvider_Invoke)
+                provider.call(slot)
             } finally {
                 provider.release()
             }
         } finally {
-            pattern.release()
+            patternObject.release()
         }
+        return true
     }
 
     private fun raiseNotification(peer: ComPtr, text: String, activityId: String) = Hstring.use(text) { t ->

@@ -41,5 +41,56 @@ class WRadioButtonTest : FunSpec() {
             firstChecked shouldBe false
             secondChecked shouldBe true
         }
+
+        test("doClick selects the radio button, deselects the other radio buttons with the same parent, and calls the ActionListener") {
+            val actions = mutableListOf<String>()
+            val states = onUiThreadGet {
+                val panel = WPanel()
+                val first = WRadioButton("A")
+                val second = WRadioButton("B")
+                panel.add(first)
+                panel.add(second)
+                second.addActionListener { actions.add(it.actionCommand ?: "") }
+                first.doClick()
+                val afterFirst = first.isSelected to second.isSelected
+                second.doClick()
+                listOf(afterFirst, first.isSelected to second.isSelected)
+            }
+            states shouldContainExactly listOf(true to false, false to true)
+            actions shouldContainExactly listOf("B")
+        }
+
+        test("doClick on a selected radio button keeps it selected and calls the ActionListener, but not the ItemListener") {
+            val actions = mutableListOf<String>()
+            val items = mutableListOf<Boolean?>()
+            val selected = onUiThreadGet {
+                val panel = WPanel()
+                val radio = WRadioButton("A")
+                panel.add(radio)
+                radio.isSelected = true
+                radio.addActionListener { actions.add("action") }
+                radio.addItemListener { items.add(it) }
+                radio.doClick()
+                radio.isSelected
+            }
+            selected shouldBe true
+            actions shouldContainExactly listOf("action")
+            items shouldBe emptyList() // The state does not change, so no ItemEvent is fired (same as Swing's JRadioButton)
+        }
+
+        test("doClick on a disabled radio button does nothing") {
+            val (selected, actionCount) = onUiThreadGet {
+                val panel = WPanel()
+                val radio = WRadioButton("A")
+                panel.add(radio)
+                var actionCount = 0
+                radio.addActionListener { actionCount++ }
+                radio.isEnabled = false
+                radio.doClick()
+                radio.isSelected to actionCount
+            }
+            selected shouldBe false
+            actionCount shouldBe 0
+        }
     }
 }

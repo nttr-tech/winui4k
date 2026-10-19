@@ -32,5 +32,35 @@ class WCheckBoxTest : FunSpec() {
                 checkBox.isChecked
             } shouldBe null
         }
+
+        test("doClick toggles the check box and calls ActionListener and ItemListener once each") {
+            val actions = mutableListOf<String>()
+            val items = mutableListOf<Boolean?>()
+            val states = onUiThreadGet {
+                val checkBox = WCheckBox("I agree")
+                checkBox.addActionListener { actions.add(it.actionCommand ?: "") }
+                checkBox.addItemListener { items.add(it) }
+                checkBox.doClick()
+                val afterFirst = checkBox.isSelected
+                checkBox.doClick()
+                afterFirst to checkBox.isSelected
+            }
+            states shouldBe (true to false)
+            actions shouldContainExactly listOf("I agree", "I agree")
+            items shouldContainExactly listOf<Boolean?>(true, false)
+        }
+
+        test("doClick on a disabled check box does nothing") {
+            val (selected, actionCount) = onUiThreadGet {
+                val checkBox = WCheckBox("I agree")
+                var actionCount = 0
+                checkBox.addActionListener { actionCount++ }
+                checkBox.isEnabled = false
+                checkBox.doClick()
+                checkBox.isSelected to actionCount
+            }
+            selected shouldBe false
+            actionCount shouldBe 0
+        }
     }
 }
