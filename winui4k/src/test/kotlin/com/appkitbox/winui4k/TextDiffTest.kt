@@ -67,6 +67,21 @@ class TextDiffTest : FunSpec() {
             TextDiff.between("aa", "aaaa", caretAfter = 1) shouldBe TextDiff(2, 0, 2)
         }
 
+        test("replacing a surrogate pair removes and inserts 2 characters from the start of the pair, not from its middle (U+1F600 to U+1F601, with the same high surrogate)") {
+            TextDiff.between("\uD83D\uDE00", "\uD83D\uDE01") shouldBe TextDiff(0, 2, 2)
+            TextDiff.between("a\uD83D\uDE00b", "a\uD83D\uDE01b") shouldBe TextDiff(1, 2, 2)
+        }
+
+        test("replacing a surrogate pair that differs only in the high surrogate, with the same low surrogate, also removes and inserts the whole pair (U+1F200 to U+1F600)") {
+            TextDiff.between("\uD83C\uDE00", "\uD83D\uDE00") shouldBe TextDiff(0, 2, 2)
+            TextDiff.between("a\uD83C\uDE00b", "a\uD83D\uDE00b") shouldBe TextDiff(1, 2, 2)
+        }
+
+        test("when inserting or removing a whole surrogate pair, the position is set at the pair boundary") {
+            TextDiff.between("ab", "a\uD83D\uDE00b") shouldBe TextDiff(1, 0, 2)
+            TextDiff.between("a\uD83D\uDE00b", "ab") shouldBe TextDiff(1, 2, 0)
+        }
+
         test("the caret also determines the position for a replacement (retyping a selected a as b)") {
             // Selecting the 2nd character (a) of "aab" and typing b gives "abb", with the caret at 2
             TextDiff.between("aab", "abb", caretAfter = 2) shouldBe TextDiff(1, 1, 1)

@@ -17,6 +17,9 @@ internal data class TextDiff(val offset: Int, val removedLength: Int, val insert
          * unique, so [caretAfter] (the caret position after the change; negative if unknown) is used as a hint: if it is
          * consistent to assume the inserted characters end right before the caret (for a deletion, that they were removed
          * at the caret position), that position is used; otherwise the position after the matching part (the rightmost).
+         *
+         * Positions and lengths are in UTF-16 chars, but a difference never starts or ends in the middle of a surrogate pair
+         * (changing 😀 to 😁, which share the high surrogate, gives offset 0 length 2, not offset 1 length 1).
          */
         fun between(old: String, new: String, caretAfter: Int = -1): TextDiff? {
             if (old == new) return null
@@ -25,6 +28,9 @@ internal data class TextDiff(val offset: Int, val removedLength: Int, val insert
             while (prefix < shorter && old[prefix] == new[prefix]) prefix++
             var suffix = 0
             while (suffix < shorter - prefix && old[old.length - 1 - suffix] == new[new.length - 1 - suffix]) suffix++
+            // Move the matching range back to before the pair so that the difference does not start or end in the middle of a surrogate pair
+            if (prefix > 0 && old[prefix - 1].isHighSurrogate()) prefix--
+            if (suffix > 0 && old[old.length - suffix].isLowSurrogate()) suffix--
             val removed = old.length - prefix - suffix
             val inserted = new.length - prefix - suffix
             val hinted = caretAfter - inserted
