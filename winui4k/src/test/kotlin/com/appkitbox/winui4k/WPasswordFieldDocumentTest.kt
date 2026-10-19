@@ -48,7 +48,35 @@ class WPasswordFieldDocumentTest : FunSpec() {
         return onUiThreadGet { recorder.events.toList() }
     }
 
+    /** A listener that calls [mutate] within a notification and catches and records the IllegalStateException. */
+    private class Mutating(private val mutate: () -> Unit) : WDocumentListener {
+        val caught = mutableListOf<String?>()
+
+        override fun insertUpdate(e: WDocumentEvent) {
+            try {
+                mutate()
+            } catch (ex: IllegalStateException) {
+                caught += ex.message
+            }
+        }
+
+        override fun removeUpdate(e: WDocumentEvent) = Unit
+
+        override fun changedUpdate(e: WDocumentEvent) = Unit
+    }
+
     init {
+        test("setting password from a listener within a notification throws the same IllegalStateException as Swing (Attempt to mutate in notification), the string does not change, and the remaining listeners receive only the original INSERT") {
+            onUiThreadGet {
+                val field = WPasswordField()
+                val mutating = Mutating { field.password = "z" }
+                field.addDocumentListener(mutating)
+                val recorder = Recorder(field)
+                field.addDocumentListener(recorder)
+                field.password = "abc"
+                Triple(mutating.caught, recorder.events, field.password)
+            } shouldBe Triple(listOf<String?>("Attempt to mutate in notification"), listOf("insert:0:3:abc"), "abc")
+        }
         test("setting password from empty delivers only an insertUpdate for the whole, and setting it empty only a removeUpdate for the whole (even before being shown)") {
             onUiThreadGet {
                 val field = WPasswordField()

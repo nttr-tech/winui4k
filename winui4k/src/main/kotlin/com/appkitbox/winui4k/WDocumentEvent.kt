@@ -49,6 +49,10 @@ class WDocumentEvent(
 /**
  * DocumentListener-style: a listener passed to [WTextField.addDocumentListener] and the like.
  * Like Swing's DocumentListener it has three methods, and as in Swing there is no Adapter (leave unused methods empty).
+ *
+ * As in Swing, changing the text field's text from inside a listener (setting [WTextField.text], replaceSelection and
+ * the like) throws IllegalStateException("Attempt to mutate in notification"). Make changes after the notification
+ * (such as in another event).
  */
 interface WDocumentListener : EventListener {
     /** Called when characters are inserted ([WDocumentEvent.type] is [WDocumentEvent.EventType.INSERT]). */

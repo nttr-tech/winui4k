@@ -32,6 +32,9 @@ internal class DocumentEvents(
     /** Whether a rewrite from the program is in progress (native notifications during it are ignored). */
     private var applying = false
 
+    /** Whether listeners are being notified (rewrites during it are refused by [checkNotNotifying]). */
+    private var notifying = false
+
     fun add(listener: WDocumentListener) {
         if (!subscribed) {
             subscribe()
@@ -68,6 +71,7 @@ internal class DocumentEvents(
      * whole old text and then the INSERT of the whole new text. Reports nothing if the text does not change.
      */
     fun replaceAll(apply: () -> Unit) {
+        checkNotNotifying()
         val old = readText()
         write(apply)
         if (listeners.isEmpty()) return
@@ -82,6 +86,7 @@ internal class DocumentEvents(
      * before and after (excluding anything cut off by the maximum length). A side with length 0 is not reported.
      */
     fun replaceRange(offset: Int, removedLength: Int, apply: () -> Unit) {
+        checkNotNotifying()
         val oldLength = readText().length
         write(apply)
         if (listeners.isEmpty()) return
@@ -97,8 +102,28 @@ internal class DocumentEvents(
      */
     fun changed(offset: Int, length: Int) {
         if (length <= 0 || listeners.isEmpty()) return
+        checkNotNotifying()
         val event = WDocumentEvent(owner, offset, length, WDocumentEvent.EventType.CHANGE)
-        for (listener in listeners.toList()) listener.changedUpdate(event)
+        notify { it.changedUpdate(event) }
+    }
+
+    /**
+     * Refuses rewrites from inside a listener. Swing's AbstractDocument throws
+     * IllegalStateException("Attempt to mutate in notification") when the document is changed during a notification.
+     * Without refusing, the REMOVE and INSERT of a nested rewrite would overtake the (already stale) INSERT not yet
+     * delivered to the remaining listeners and arrive first.
+     */
+    private fun checkNotNotifying() = check(!notifying) { "Attempt to mutate in notification" }
+
+    /** Sets the in-notification flag and calls [call] for every listener in the current list (the flag is restored even if a listener throws). */
+    private fun notify(call: (WDocumentListener) -> Unit) {
+        val wasNotifying = notifying
+        notifying = true
+        try {
+            for (listener in listeners.toList()) call(listener)
+        } finally {
+            notifying = wasNotifying
+        }
     }
 
     private fun write(apply: () -> Unit) {
@@ -114,11 +139,11 @@ internal class DocumentEvents(
     private fun fire(offset: Int, removedLength: Int, insertedLength: Int) {
         if (removedLength > 0) {
             val event = WDocumentEvent(owner, offset, removedLength, WDocumentEvent.EventType.REMOVE)
-            for (listener in listeners.toList()) listener.removeUpdate(event)
+            notify { it.removeUpdate(event) }
         }
         if (insertedLength > 0) {
             val event = WDocumentEvent(owner, offset, insertedLength, WDocumentEvent.EventType.INSERT)
-            for (listener in listeners.toList()) listener.insertUpdate(event)
+            notify { it.insertUpdate(event) }
         }
     }
 }

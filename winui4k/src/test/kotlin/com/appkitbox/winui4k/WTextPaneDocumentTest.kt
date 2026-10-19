@@ -65,7 +65,35 @@ class WTextPaneDocumentTest : FunSpec() {
         eventually(3.seconds) { onUiThreadGet { recorder.events.toList() } shouldBe expected }
     }
 
+    /** A listener that calls [mutate] within a notification and catches and records the IllegalStateException. */
+    private class Mutating(private val mutate: () -> Unit) : WDocumentListener {
+        val caught = mutableListOf<String?>()
+
+        override fun insertUpdate(e: WDocumentEvent) {
+            try {
+                mutate()
+            } catch (ex: IllegalStateException) {
+                caught += ex.message
+            }
+        }
+
+        override fun removeUpdate(e: WDocumentEvent) = Unit
+
+        override fun changedUpdate(e: WDocumentEvent) = Unit
+    }
+
     init {
+        test("when a listener sets text during a notification, it throws IllegalStateException (Attempt to mutate in notification) as in Swing, the text is unchanged, and the remaining listeners receive only the original INSERT") {
+            onUiThreadGet {
+                val field = WTextPane()
+                val mutating = Mutating { field.text = "z" }
+                field.addDocumentListener(mutating)
+                val recorder = Recorder(field)
+                field.addDocumentListener(recorder)
+                field.text = "abc"
+                Triple(mutating.caught, recorder.events, field.text)
+            } shouldBe Triple(listOf<String?>("Attempt to mutate in notification"), listOf("insert:0:3:abc"), "abc")
+        }
         test("setting text from empty delivers only an insertUpdate for the whole, and emptying it only a removeUpdate for the whole (delivered even before placing it)") {
             onUiThreadGet {
                 val pane = WTextPane()
