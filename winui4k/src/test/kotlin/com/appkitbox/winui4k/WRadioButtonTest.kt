@@ -92,5 +92,23 @@ class WRadioButtonTest : FunSpec() {
             selected shouldBe false
             actionCount shouldBe 0
         }
+
+        test("selecting a radio button with the same parent delivers an ItemEvent of SELECTED to the selected one and DESELECTED to the deselected one") {
+            val firstStates = mutableListOf<Int>()
+            val secondStates = mutableListOf<Int>()
+            onUiThread {
+                val panel = WPanel()
+                val first = WRadioButton("A")
+                val second = WRadioButton("B")
+                panel.add(first)
+                panel.add(second)
+                first.addItemListener(WItemListener { firstStates.add(it.stateChange) })
+                second.addItemListener(WItemListener { secondStates.add(it.stateChange) })
+                first.isSelected = true
+                second.isSelected = true
+            }
+            firstStates shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.DESELECTED)
+            secondStates shouldContainExactly listOf(WItemEvent.SELECTED)
+        }
     }
 }

@@ -21,6 +21,9 @@ class WrapperReleaseTest : FunSpec() {
     /** The source of events received on click. The listener does not reference the button itself (it only records here). */
     private val clickSources = mutableListOf<Any>()
 
+    /** The source of events received by the ItemListener. The listener does not reference the toggle (it only records here). */
+    private val itemSources = mutableListOf<Any>()
+
     /** Creates a button with a listener that does not reference the button. The test holds it only through a weak reference. */
     private fun buttonWithListener(): WButton = WButton("Press").also { button ->
         val sources = clickSources
@@ -99,6 +102,16 @@ class WrapperReleaseTest : FunSpec() {
     private fun fieldWithListener(): WTextField = WTextField().also { field ->
         val sources = clickSources
         field.addActionListener { e -> sources += e.source }
+    }
+
+    /** Puts a check box with an ItemListener into a window (waiting for Loaded) and returns only a weak reference. */
+    private fun shownCheckBox(): WeakReference<WCheckBox> {
+        val sources = itemSources
+        val checkBox = onUiThreadGet {
+            WCheckBox("Agree").also { it.addItemListener(WItemListener { e -> sources += e.source }) }
+        }
+        UiTestHarness.attachAndAwaitLoaded(checkBox)
+        return WeakReference(checkBox)
     }
 
     /** Places a field with a listener in the window, removes it, and returns only a weak reference. */
@@ -321,6 +334,56 @@ class WrapperReleaseTest : FunSpec() {
                 WeakReference(field)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WCheckBox with an ItemListener that does not reference the component is also collected after being shown in a window and removed") {
+            val sources = itemSources
+            val reference = shownAndHidden {
+                WCheckBox("Agree").also { checkBox ->
+                    checkBox.addItemListener(WItemListener { e -> sources += e.source })
+                    checkBox.addItemListener { checked -> sources += checked.toString() }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WCheckBox with an ItemListener is not collected while shown in a window even without references, and the ItemEvent source is that check box") {
+            val reference = shownCheckBox()
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                val described = onUiThreadGet {
+                    itemSources.clear()
+                    val target = checkNotNull(reference.get())
+                    target.isSelected = true
+                    itemSources.map { if (it === target) "checkBox" else it.javaClass.name }.also { itemSources.clear() }
+                }
+                described shouldContainExactly listOf("checkBox")
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WCheckBox never shown is also collected once all its ItemListeners are removed") {
+            val reference = onUiThreadGet {
+                val checkBox = WCheckBox("Remove")
+                val listener = WItemListener { }
+                val lambda: (Boolean?) -> Unit = { }
+                checkBox.addItemListener(listener)
+                checkBox.addItemListener(lambda)
+                checkBox.removeItemListener(listener)
+                checkBox.removeItemListener(lambda)
+                WeakReference(checkBox)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WToggleSwitch and a WToggleSplitButton with an ItemListener that does not reference the component are also collected after being shown in a window and removed") {
+            val sources = itemSources
+            val switch = shownAndHidden { WToggleSwitch("Notifications").also { it.addItemListener(WItemListener { e -> sources += e.source }) } }
+            val split = shownAndHidden { WToggleSplitButton("Bold").also { it.addItemListener(WItemListener { e -> sources += e.source }) } }
+            Reclamation.awaitCollected(switch).shouldBeTrue()
+            Reclamation.awaitCollected(split).shouldBeTrue()
         }
 
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {

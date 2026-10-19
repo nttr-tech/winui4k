@@ -18,6 +18,7 @@ import com.appkitbox.winui4k.WCommandBar;
 import com.appkitbox.winui4k.WCommandBarFlyout;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WDropDownButton;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WMenuBar;
 import com.appkitbox.winui4k.WMenuBarItem;
@@ -146,8 +147,8 @@ final class MenusToolbarsPages {
         WLabel result = new WLabel("Shuffle: off");
 
         WAppBarToggleButton shuffleButton = new WAppBarToggleButton("Shuffle", Symbol.SHUFFLE);
-        shuffleButton.addItemListener((isChecked) -> {
-            result.setText("Shuffle: " + (Boolean.TRUE.equals(isChecked) ? "on" : "off"));
+        shuffleButton.addItemListener(e -> {
+            result.setText("Shuffle: " + (e.getStateChange() == WItemEvent.SELECTED ? "on" : "off"));
         });
 
         WAppBarToggleButton boldButton = new WAppBarToggleButton("Bold", Symbol.BOLD);

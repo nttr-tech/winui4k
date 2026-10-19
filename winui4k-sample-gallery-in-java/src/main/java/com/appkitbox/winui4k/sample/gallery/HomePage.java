@@ -14,6 +14,7 @@ import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WGrid;
 import com.appkitbox.winui4k.WGradientStop;
 import com.appkitbox.winui4k.WImage;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WLinearGradientPaint;
 import com.appkitbox.winui4k.WPanel;
@@ -574,8 +575,8 @@ final class HomePage {
         WToggleButton toggle = new WToggleButton("");
         toggle.setContent(star);
         toggle.setChecked(GallerySettings.isFavorite(pageName));
-        toggle.addItemListener(checked -> {
-            boolean isFavorite = Boolean.TRUE.equals(checked);
+        toggle.addItemListener(e -> {
+            boolean isFavorite = e.getStateChange() == WItemEvent.SELECTED;
             star.setText(isFavorite ? "" : "");
             GallerySettings.setFavorite(pageName, isFavorite);
         });

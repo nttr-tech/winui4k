@@ -6,6 +6,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 
 /** Tests verifying WToggleSwitch's on/off state and Toggled listener. */
 class WToggleSwitchTest : FunSpec() {
@@ -43,6 +44,44 @@ class WToggleSwitchTest : FunSpec() {
                 toggleSwitch.isOn = false
             }
             received shouldContainExactly listOf(true)
+        }
+
+        test("isSelected reads and writes the same value as isOn") {
+            val (afterSelected, afterOff) = onUiThreadGet {
+                val toggleSwitch = WToggleSwitch()
+                toggleSwitch.isSelected = true
+                val afterSelected = toggleSwitch.isOn to toggleSwitch.isSelected
+                toggleSwitch.isOn = false
+                afterSelected to toggleSwitch.isSelected
+            }
+            afterSelected shouldBe (true to true)
+            afterOff shouldBe false
+        }
+
+        test("WItemListener receives an ItemEvent of SELECTED when turned on and DESELECTED when turned off, with the switch as source") {
+            val received = mutableListOf<WItemEvent>()
+            val toggleSwitch = onUiThreadGet {
+                val toggleSwitch = WToggleSwitch("Airplane mode")
+                toggleSwitch.addItemListener(WItemListener { received.add(it) })
+                toggleSwitch.isOn = true
+                toggleSwitch.isSelected = false
+                toggleSwitch
+            }
+            received.map { it.stateChange } shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.DESELECTED)
+            received.all { it.source === toggleSwitch && it.itemSelectable === toggleSwitch && it.item === toggleSwitch }.shouldBeTrue()
+        }
+
+        test("removing the WItemListener with removeItemListener stops delivery") {
+            val states = mutableListOf<Int>()
+            onUiThread {
+                val toggleSwitch = WToggleSwitch()
+                val listener = WItemListener { states.add(it.stateChange) }
+                toggleSwitch.addItemListener(listener)
+                toggleSwitch.isOn = true
+                toggleSwitch.removeItemListener(listener)
+                toggleSwitch.isOn = false
+            }
+            states shouldContainExactly listOf(WItemEvent.SELECTED)
         }
     }
 }

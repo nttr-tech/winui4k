@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WCheckBox;
 import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.extension.ribbon.WRibbon;
@@ -393,13 +394,13 @@ final class RibbonPages {
         options.add(language);
 
         WCheckBox qatBelow = new WCheckBox("Show the QAT below the ribbon");
-        qatBelow.addItemListener((checked) -> {
-            model.setQuickAccessPosition(Boolean.TRUE.equals(checked) ? RibbonQuickAccessPosition.BELOW_RIBBON : RibbonQuickAccessPosition.ABOVE_RIBBON);
+        qatBelow.addItemListener(e -> {
+            model.setQuickAccessPosition(e.getStateChange() == WItemEvent.SELECTED ? RibbonQuickAccessPosition.BELOW_RIBBON : RibbonQuickAccessPosition.ABOVE_RIBBON);
         });
         options.add(qatBelow);
         WCheckBox tableTools = new WCheckBox("Table Tools (contextual tabs)");
-        tableTools.addItemListener((checked) -> {
-            model.setContextualGroupVisible("tableTools", Boolean.TRUE.equals(checked));
+        tableTools.addItemListener(e -> {
+            model.setContextualGroupVisible("tableTools", e.getStateChange() == WItemEvent.SELECTED);
         });
         options.add(tableTools);
 
@@ -490,8 +491,8 @@ final class RibbonPages {
 
         WPanel options = new WPanel(8.0);
         WCheckBox cadStyle = new WCheckBox("CAD look (RibbonThemeStyle.CAD)");
-        cadStyle.addItemListener((checked) -> {
-            WRibbonTheme.applyStyle(Boolean.TRUE.equals(checked) ? RibbonThemeStyle.CAD : RibbonThemeStyle.OFFICE);
+        cadStyle.addItemListener(e -> {
+            WRibbonTheme.applyStyle(e.getStateChange() == WItemEvent.SELECTED ? RibbonThemeStyle.CAD : RibbonThemeStyle.OFFICE);
         });
         options.add(cadStyle);
         WButton minimize = new WButton("Toggle minimize");

@@ -19,6 +19,7 @@ import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WExpander;
 import com.appkitbox.winui4k.WGrid;
 import com.appkitbox.winui4k.WGradientStop;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WLinearGradientPaint;
@@ -699,8 +700,8 @@ final class LayoutPages {
 
         WToggleSwitch actionIconSwitch = new WToggleSwitch("Show the chevron icon (IsActionIconVisible)");
         actionIconSwitch.setOn(true);
-        actionIconSwitch.addItemListener((isOn) -> {
-            card.setActionIconVisible(isOn);
+        actionIconSwitch.addItemListener(e -> {
+            card.setActionIconVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WPanel body = new WPanel(8.0);
@@ -776,8 +777,8 @@ final class LayoutPages {
 
         WToggleSwitch enabledSwitch = new WToggleSwitch("Enable the card (IsEnabled)");
         enabledSwitch.setOn(true);
-        enabledSwitch.addItemListener((isOn) -> {
-            card.setEnabled(isOn);
+        enabledSwitch.addItemListener(e -> {
+            card.setEnabled(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WPanel body = new WPanel(8.0);

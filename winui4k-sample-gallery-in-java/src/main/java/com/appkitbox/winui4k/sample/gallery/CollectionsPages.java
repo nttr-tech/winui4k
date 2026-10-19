@@ -18,6 +18,7 @@ import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WItemContainer;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WItemsView;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WList;
@@ -416,7 +417,7 @@ final class CollectionsPages {
     private static WCheckBox optionCheckBox(String text, boolean checked, Consumer<Boolean> onChanged) {
         WCheckBox checkBox = new WCheckBox(text);
         checkBox.setChecked(checked);
-        checkBox.addItemListener((value) -> onChanged.accept(Boolean.TRUE.equals(value)));
+        checkBox.addItemListener(e -> onChanged.accept(e.getStateChange() == WItemEvent.SELECTED));
         return checkBox;
     }
 

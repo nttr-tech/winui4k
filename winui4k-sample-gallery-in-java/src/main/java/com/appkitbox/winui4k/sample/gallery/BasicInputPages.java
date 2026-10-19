@@ -23,6 +23,7 @@ import com.appkitbox.winui4k.WDropDownButton;
 import com.appkitbox.winui4k.WFlyout;
 import com.appkitbox.winui4k.WFontIcon;
 import com.appkitbox.winui4k.WHyperlinkButton;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WRadioButton;
@@ -219,8 +220,8 @@ final class BasicInputPages {
         submitButton.addActionListener(() -> result.setText("Submitted: " + nameField.getText()));
 
         WCheckBox useDefault = new WCheckBox("Make Submit the default button");
-        useDefault.addItemListener(checked -> {
-            MainForGallery.galleryFrame.setDefaultButton(Boolean.TRUE.equals(checked) ? submitButton : null);
+        useDefault.addItemListener(e -> {
+            MainForGallery.galleryFrame.setDefaultButton(e.getStateChange() == WItemEvent.SELECTED ? submitButton : null);
         });
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -253,8 +254,8 @@ final class BasicInputPages {
         WLabel result = new WLabel("State: off");
 
         WCheckBox checkBox = new WCheckBox("Receive notifications");
-        checkBox.addItemListener((checked) -> {
-            result.setText(Boolean.TRUE.equals(checked) ? "State: on" : "State: off");
+        checkBox.addItemListener(e -> {
+            result.setText(e.getStateChange() == WItemEvent.SELECTED ? "State: on" : "State: off");
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
@@ -270,10 +271,10 @@ final class BasicInputPages {
 
         WCheckBox checkBox = new WCheckBox("Three-state checkbox");
         checkBox.setThreeState(true);
-        checkBox.addItemListener((checked) -> {
-            if (checked == null) {
+        checkBox.addItemListener(e -> {
+            if (e.getStateChange() == WItemEvent.INDETERMINATE) {
                 result.setText("State: indeterminate");
-            } else if (checked) {
+            } else if (e.getStateChange() == WItemEvent.SELECTED) {
                 result.setText("State: on");
             } else {
                 result.setText("State: off");
@@ -297,19 +298,21 @@ final class BasicInputPages {
 
         // Guard against an infinite event loop from the parent and children updating each other
         boolean[] updating = {false};
-        parent.addItemListener((checked) -> {
-            if (updating[0] || checked == null) {
+        parent.addItemListener(e -> {
+            if (updating[0] || e.getStateChange() == WItemEvent.INDETERMINATE) {
+                return;
             }
             updating[0] = true;
             for (WCheckBox child : children) {
-                child.setChecked(checked);
+                child.setSelected(e.getStateChange() == WItemEvent.SELECTED);
             }
             updating[0] = false;
         });
         for (WCheckBox child : children) {
             child.setMargin(4.0);
-            child.addItemListener((checked) -> {
+            child.addItemListener(e -> {
                 if (updating[0]) {
+                    return;
                 }
                 updating[0] = true;
                 int checkedCount = 0;
@@ -554,8 +557,8 @@ final class BasicInputPages {
         for (String name : Arrays.asList("Small", "Medium", "Large")) {
             WRadioButton radioButton = new WRadioButton(name);
             radioButton.setGroupName("Size");
-            radioButton.addItemListener((checked) -> {
-                if (Boolean.TRUE.equals(checked)) {
+            radioButton.addItemListener(e -> {
+                if (e.getStateChange() == WItemEvent.SELECTED) {
                     result.setText("Selected: " + name);
                 }
             });
@@ -594,8 +597,8 @@ final class BasicInputPages {
         for (String name : Arrays.asList("White", "Black", "Blue")) {
             WRadioButton radioButton = new WRadioButton(name);
             radioButton.setGroupName(group);
-            radioButton.addItemListener((checked) -> {
-                if (Boolean.TRUE.equals(checked)) {
+            radioButton.addItemListener(e -> {
+                if (e.getStateChange() == WItemEvent.SELECTED) {
                     onSelect.accept(name);
                 }
             });
@@ -841,8 +844,8 @@ final class BasicInputPages {
         WLabel result = new WLabel("State: off");
 
         WToggleButton toggleButton = new WToggleButton("Mute");
-        toggleButton.addItemListener((checked) -> {
-            result.setText(Boolean.TRUE.equals(checked) ? "State: on" : "State: off");
+        toggleButton.addItemListener(e -> {
+            result.setText(e.getStateChange() == WItemEvent.SELECTED ? "State: on" : "State: off");
         });
 
         WButton codeButton = new WButton("Toggle from code");
@@ -904,7 +907,7 @@ final class BasicInputPages {
             menu.add(button);
         }
         toggleSplitButton.setFlyout(flyout);
-        toggleSplitButton.addItemListener((checked) -> {
+        toggleSplitButton.addItemListener(e -> {
             render.run();
         });
 
@@ -934,8 +937,8 @@ final class BasicInputPages {
         WLabel result = new WLabel("State: off");
 
         WToggleSwitch toggleSwitch = new WToggleSwitch("");
-        toggleSwitch.addItemListener((isOn) -> {
-            result.setText(isOn ? "State: on" : "State: off");
+        toggleSwitch.addItemListener(e -> {
+            result.setText(e.getStateChange() == WItemEvent.SELECTED ? "State: on" : "State: off");
         });
 
         WButton codeButton = new WButton("Toggle from code");

@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.WCheckBox;
 import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WDatePicker;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WTimePicker;
@@ -91,14 +92,14 @@ final class DateTimePages {
         // Options
         WCheckBox isGroupLabelVisible = new WCheckBox("IsGroupLabelVisible");
         isGroupLabelVisible.setSelected(true);
-        isGroupLabelVisible.addItemListener(checked -> {
-            calendarView.setGroupLabelVisible(Boolean.TRUE.equals(checked));
+        isGroupLabelVisible.addItemListener(e -> {
+            calendarView.setGroupLabelVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WCheckBox isOutOfScopeEnabled = new WCheckBox("IsOutOfScopeEnabled");
         isOutOfScopeEnabled.setSelected(true);
-        isOutOfScopeEnabled.addItemListener(checked -> {
-            calendarView.setOutOfScopeEnabled(Boolean.TRUE.equals(checked));
+        isOutOfScopeEnabled.addItemListener(e -> {
+            calendarView.setOutOfScopeEnabled(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WComboBox selectionModeCombo = new WComboBox(Arrays.asList("None", "Single", "Multiple"));
@@ -197,20 +198,20 @@ final class DateTimePages {
         // Options
         WCheckBox dayVisibleCheck = new WCheckBox("DayVisible");
         dayVisibleCheck.setSelected(true);
-        dayVisibleCheck.addItemListener(checked -> {
-            picker.setDayVisible(Boolean.TRUE.equals(checked));
+        dayVisibleCheck.addItemListener(e -> {
+            picker.setDayVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WCheckBox monthVisibleCheck = new WCheckBox("MonthVisible");
         monthVisibleCheck.setSelected(true);
-        monthVisibleCheck.addItemListener(checked -> {
-            picker.setMonthVisible(Boolean.TRUE.equals(checked));
+        monthVisibleCheck.addItemListener(e -> {
+            picker.setMonthVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WCheckBox yearVisibleCheck = new WCheckBox("YearVisible");
         yearVisibleCheck.setSelected(false);
-        yearVisibleCheck.addItemListener(checked -> {
-            picker.setYearVisible(Boolean.TRUE.equals(checked));
+        yearVisibleCheck.addItemListener(e -> {
+            picker.setYearVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WPanel options = new WPanel(12.0);

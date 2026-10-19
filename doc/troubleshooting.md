@@ -142,3 +142,13 @@
   2.5.4-experimental の実測では、載っているボタンに後からアクセラレータを足したときはヒントが出ず、アクセラレータを足してから
   ツリーに載せたときにキーボードのフォーカスで "Enter" のヒントが出た (WDefaultButtonTest)。出したくなければ、アクセラレータを
   足す前に KeyboardAcceleratorPlacementMode を Hidden にする (WButton の既定ボタンはそうしている)。
+- **doClick (UIA の Invoke) がトグル系のボタンで何も起こさない**
+  ToggleButton / CheckBox / ToggleSwitch のオートメーション ピアは Toggle パターンだけ、RadioButton は SelectionItem パターンだけを
+  持ち、Invoke を持たない (`ToggleButtonAutomationPeer::GetPatternCore`、`RadioButtonAutomationPeer::GetPatternCore`)。
+  Invoke だけを探すと何もせずに戻る。Toggle と Select は `OnClick` に流れるので、Click リスナーと状態の変更が通常のクリックと同じに
+  走る (`Xaml.invoke` は Invoke、Toggle、SelectionItem の順に探す)。選択済みの RadioButton への Select でも Click は発火し、
+  選択は変わらない。
+- **ToggleSplitButton: ウィンドウに載せる前に IsChecked を変えても IsCheckedChanged が来ない**
+  `ToggleSplitButton::OnIsCheckedChanged` は `m_hasLoaded` が true (Loaded 済み) のときだけイベントを発火する。ToggleButton の Checked /
+  Unchecked は載せる前でも発火するのと違うので、ItemListener を確かめるテストは `attachAndAwaitLoaded` で Loaded を待ってから状態を変える
+  (`WToggleSplitButtonTest`)。

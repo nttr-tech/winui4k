@@ -62,5 +62,27 @@ class WCheckBoxTest : FunSpec() {
             selected shouldBe false
             actionCount shouldBe 0
         }
+
+        test("doClick on a three-state check box delivers ItemEvents in the order SELECTED, INDETERMINATE, DESELECTED") {
+            val states = mutableListOf<Int>()
+            onUiThread {
+                val checkBox = WCheckBox("Three-state")
+                checkBox.isThreeState = true
+                checkBox.addItemListener(WItemListener { states.add(it.stateChange) })
+                repeat(3) { checkBox.doClick() }
+            }
+            states shouldContainExactly listOf(WItemEvent.SELECTED, WItemEvent.INDETERMINATE, WItemEvent.DESELECTED)
+        }
+
+        test("the ItemEvent source is the check box itself, and isSelected at that moment matches the new state") {
+            val observed = mutableListOf<Pair<Boolean, Int>>()
+            onUiThread {
+                val checkBox = WCheckBox("Agree")
+                checkBox.addItemListener(WItemListener { observed.add((it.source as WCheckBox).isSelected to it.stateChange) })
+                checkBox.isSelected = true
+                checkBox.isSelected = false
+            }
+            observed shouldContainExactly listOf(true to WItemEvent.SELECTED, false to WItemEvent.DESELECTED)
+        }
     }
 }

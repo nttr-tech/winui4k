@@ -25,6 +25,7 @@ import com.appkitbox.winui4k.WDisplayArea;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WFullScreenPresenter;
 import com.appkitbox.winui4k.WGrid;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WNavigationView;
 import com.appkitbox.winui4k.WNavigationViewItem;
@@ -202,30 +203,30 @@ final class WindowingPages {
             status.setText("state = " + (presenter[0] == null ? null : presenter[0].getState()));
 
         WCheckBox alwaysOnTopCheck = new WCheckBox("IsAlwaysOnTop");
-        alwaysOnTopCheck.addItemListener(checked -> {
+        alwaysOnTopCheck.addItemListener(e -> {
             if (presenter[0] != null) {
-                presenter[0].setAlwaysOnTop(Boolean.TRUE.equals(checked));
+                presenter[0].setAlwaysOnTop(e.getStateChange() == WItemEvent.SELECTED);
             }
         });
         WCheckBox maximizableCheck = new WCheckBox("IsMaximizable");
         maximizableCheck.setSelected(true);
-        maximizableCheck.addItemListener(checked -> {
+        maximizableCheck.addItemListener(e -> {
             if (presenter[0] != null) {
-                presenter[0].setMaximizable(Boolean.TRUE.equals(checked));
+                presenter[0].setMaximizable(e.getStateChange() == WItemEvent.SELECTED);
             }
         });
         WCheckBox minimizableCheck = new WCheckBox("IsMinimizable");
         minimizableCheck.setSelected(true);
-        minimizableCheck.addItemListener(checked -> {
+        minimizableCheck.addItemListener(e -> {
             if (presenter[0] != null) {
-                presenter[0].setMinimizable(Boolean.TRUE.equals(checked));
+                presenter[0].setMinimizable(e.getStateChange() == WItemEvent.SELECTED);
             }
         });
         WCheckBox resizableCheck = new WCheckBox("IsResizable");
         resizableCheck.setSelected(true);
-        resizableCheck.addItemListener(checked -> {
+        resizableCheck.addItemListener(e -> {
             if (presenter[0] != null) {
-                presenter[0].setResizable(Boolean.TRUE.equals(checked));
+                presenter[0].setResizable(e.getStateChange() == WItemEvent.SELECTED);
             }
         });
         WCheckBox borderCheck = new WCheckBox("HasBorder");
@@ -598,9 +599,9 @@ final class WindowingPages {
         });
 
         WCheckBox extendCheck = new WCheckBox("ExtendsContentIntoTitleBar");
-        extendCheck.addItemListener(checked -> {
+        extendCheck.addItemListener(e -> {
             if (child[0] != null) {
-                child[0].setExtendsContentIntoTitleBar(Boolean.TRUE.equals(checked));
+                child[0].setExtendsContentIntoTitleBar(e.getStateChange() == WItemEvent.SELECTED);
             }
         });
 
@@ -822,23 +823,23 @@ final class WindowingPages {
 
         WCheckBox backVisibleCheck = new WCheckBox("IsBackButtonVisible");
         backVisibleCheck.setSelected(true);
-        backVisibleCheck.addItemListener(checked -> {
-            titleBar.setBackButtonVisible(Boolean.TRUE.equals(checked));
+        backVisibleCheck.addItemListener(e -> {
+            titleBar.setBackButtonVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
         WCheckBox backEnabledCheck = new WCheckBox("IsBackButtonEnabled");
         backEnabledCheck.setSelected(true);
-        backEnabledCheck.addItemListener(checked -> {
-            titleBar.setBackButtonEnabled(Boolean.TRUE.equals(checked));
+        backEnabledCheck.addItemListener(e -> {
+            titleBar.setBackButtonEnabled(e.getStateChange() == WItemEvent.SELECTED);
         });
         WCheckBox paneToggleCheck = new WCheckBox("IsPaneToggleButtonVisible");
         paneToggleCheck.setSelected(true);
-        paneToggleCheck.addItemListener(checked -> {
-            titleBar.setPaneToggleButtonVisible(Boolean.TRUE.equals(checked));
+        paneToggleCheck.addItemListener(e -> {
+            titleBar.setPaneToggleButtonVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WCheckBox useSearchBoxCheck = new WCheckBox("Show a search box as Content");
-        useSearchBoxCheck.addItemListener(checked -> {
-            titleBar.setContent(Boolean.TRUE.equals(checked) ? new WAutoSuggestBox("Search") : null);
+        useSearchBoxCheck.addItemListener(e -> {
+            titleBar.setContent(e.getStateChange() == WItemEvent.SELECTED ? new WAutoSuggestBox("Find") : null);
         });
 
         WPanel fields = new WPanel(8.0, Orientation.HORIZONTAL);

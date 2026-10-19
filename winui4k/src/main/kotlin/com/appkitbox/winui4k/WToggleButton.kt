@@ -32,8 +32,10 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     }
 
     /** Event tokens registered via addItemListener (3 per listener: Checked / Unchecked / Indeterminate). */
-    private val itemTokens = ArrayDeque<Pair<Consumer<Boolean?>, LongArray>>()
-    private val itemListenerAdapters = KotlinListenerAdapters<Consumer<Boolean?>>()
+    private val itemTokens = ArrayDeque<Pair<Any, LongArray>>()
+
+    /** Maps listeners registered as Kotlin lambdas to the [WItemListener]s wrapping them (for removal). */
+    private val itemListenerAdapters = KotlinListenerAdapters<WItemListener>()
 
     private companion object {
         val ADD_SLOTS = intArrayOf(
@@ -46,6 +48,9 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
             XamlInterop.IToggleButton_remove_Unchecked,
             XamlInterop.IToggleButton_remove_Indeterminate,
         )
+
+        /** The value put in [WItemEvent.stateChange] for each event in [ADD_SLOTS]. */
+        val STATES = intArrayOf(WItemEvent.SELECTED, WItemEvent.DESELECTED, WItemEvent.INDETERMINATE)
     }
 
     /**
@@ -90,43 +95,79 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         set(value) = toggleButton.putBool(XamlInterop.IToggleButton_put_IsThreeState, value)
 
     /**
-     * ItemListener-like: subscribes to changes in the checked state. The listener receives
-     * the new [isChecked] value. Subscribes to ToggleButton.Checked / Unchecked / Indeterminate
-     * (all RoutedEventHandler) together as one unit.
+     * ItemListener-style: subscribes to changes of the check state. The listener receives the new [isChecked]
+     * (true / false, or null when indeterminate).
+     * Under the hood this subscribes to ToggleButton.Checked / Unchecked / Indeterminate (all RoutedEventHandler) at once.
+     * To receive a [WItemEvent], pass a [WItemListener] instead (`addItemListener(WItemListener { e -> })`).
      */
     @JvmSynthetic
     fun addItemListener(listener: (Boolean?) -> Unit) {
-        val adapter = Consumer<Boolean?> { listener(it) }
-        addItemListenerForJava(adapter)
+        val adapter = WItemListener { listener(WItemEvent.checkedOf(it.stateChange)) }
+        addItemListener(adapter)
         itemListenerAdapters.add(listener, adapter)
     }
 
+    /**
+     * The legacy `addItemListener(Consumer<Boolean>)` for Java. It is kept only for binary compatibility (linking of
+     * already compiled callers) and is not visible from Java source (HIDDEN). In Java, pass a [WItemListener] instead.
+     */
+    @Deprecated("Use the addItemListener that takes a WItemListener", level = DeprecationLevel.HIDDEN)
     @JvmName("addItemListener")
     fun addItemListenerForJava(listener: Consumer<Boolean?>) {
+        subscribeItem(listener) { listener.accept(WItemEvent.checkedOf(it.stateChange)) }
+    }
+
+    /**
+     * ItemListener.itemStateChanged-style: receives a [WItemEvent] each time the selection state changes.
+     * It is also called when the state becomes indeterminate ([WItemEvent.INDETERMINATE]), which Swing's
+     * `getStateChange() == SELECTED` check treats the same as unchecked.
+     */
+    fun addItemListener(listener: WItemListener) {
+        subscribeItem(listener) { listener.itemStateChanged(it) }
+    }
+
+    private fun subscribeItem(key: Any, onChange: (WItemEvent) -> Unit) {
+        // The handler stays on the native object, so it does not capture the button strongly but looks it up from anchor
+        // (see ListenerAnchor)
+        val anchor = listenerAnchor
         val tokens = LongArray(ADD_SLOTS.size) { i ->
+            val state = STATES[i]
             toggleButton.addEventHandler(
                 "WinUI4K.ToggleHandler",
                 XamlInterop.IID_RoutedEventHandler,
                 ADD_SLOTS[i],
-            ) { _, _ -> listener.accept(isChecked) }
+            ) { _, _ -> (anchor.get() as? WToggleButton)?.let { button -> onChange(WItemEvent(button, state)) } }
         }
-        itemTokens.addLast(listener to tokens)
+        itemTokens.addLast(key to tokens)
+        anchor.listenerAdded()
     }
 
     /** Unsubscribes a listener registered via [addItemListener]. */
     @JvmSynthetic
     fun removeItemListener(listener: (Boolean?) -> Unit) {
         val adapter = itemListenerAdapters.remove(listener) ?: return
-        removeItemListenerForJava(adapter)
+        removeItemListener(adapter)
     }
 
+    /** The legacy `removeItemListener(Consumer<Boolean>)` (not visible from Java source), for the same reason as [addItemListenerForJava]. */
+    @Deprecated("Use the removeItemListener that takes a WItemListener", level = DeprecationLevel.HIDDEN)
     @JvmName("removeItemListener")
     fun removeItemListenerForJava(listener: Consumer<Boolean?>) {
-        val index = itemTokens.indexOfLast { it.first === listener }
+        unsubscribeItem(listener)
+    }
+
+    /** Unsubscribes a [WItemListener] registered with [addItemListener]. */
+    fun removeItemListener(listener: WItemListener) {
+        unsubscribeItem(listener)
+    }
+
+    private fun unsubscribeItem(key: Any) {
+        val index = itemTokens.indexOfLast { it.first === key }
         if (index < 0) return
         val (_, tokens) = itemTokens.removeAt(index)
         for (i in REMOVE_SLOTS.indices) {
             toggleButton.removeEventHandler(REMOVE_SLOTS[i], tokens[i])
         }
+        listenerAnchor.listenerRemoved()
     }
 }

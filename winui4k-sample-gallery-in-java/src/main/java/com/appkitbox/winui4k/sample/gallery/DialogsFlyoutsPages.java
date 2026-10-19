@@ -14,6 +14,7 @@ import com.appkitbox.winui4k.WComboBox;
 import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WContentDialog;
 import com.appkitbox.winui4k.WFlyout;
+import com.appkitbox.winui4k.WItemEvent;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WPanel;
 import com.appkitbox.winui4k.WPopup;
@@ -87,8 +88,8 @@ final class DialogsFlyoutsPages {
         dialog.setCloseButtonText("Cancel");
         dialog.setDefaultButton(ContentDialogButton.PRIMARY);
         dialog.setPrimaryButtonEnabled(false);
-        agreeCheckBox.addItemListener((checked) -> {
-            dialog.setPrimaryButtonEnabled(Boolean.TRUE.equals(checked));
+        agreeCheckBox.addItemListener(e -> {
+            dialog.setPrimaryButtonEnabled(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WButton showButton = new WButton("Show dialog with consent checkbox");
@@ -214,8 +215,8 @@ final class DialogsFlyoutsPages {
         popup.setChild(popupCard);
 
         WCheckBox lightDismissCheckBox = new WCheckBox("Close on an outside click (IsLightDismissEnabled)");
-        lightDismissCheckBox.addItemListener((checked) -> {
-            popup.setLightDismissEnabled(Boolean.TRUE.equals(checked));
+        lightDismissCheckBox.addItemListener(e -> {
+            popup.setLightDismissEnabled(e.getStateChange() == WItemEvent.SELECTED);
         });
 
         WButton showButton = new WButton("Show popup");
