@@ -370,7 +370,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
             XamlInterop.ITextBox_add_TextChanging,
         ) { _, _ ->
             val field = anchor.get() as? WTextField
-            if (field != null) field.document.onNativeChange(field.selectionStart)
+            if (field != null) field.document.onNativeChange(field.selectionEnd)
         }
     }
 
