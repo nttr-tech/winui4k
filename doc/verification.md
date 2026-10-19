@@ -160,3 +160,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - put_SelectedText は入れた文字を選択したままにする (Swing の replaceSelection は入れた文字の後ろにキャレットを置くので、
     WinUI4K は置き換えた後で Select し直す)
   - Padding (10,5,6,6)・BorderThickness (1)・MinWidth (64) などの既定のスタイルの値は、ツリーに載る (Loaded) までは 0 のまま
+- WTextField.columns のために、TextBox の Loaded と幅の決まり方を E2E テストで確かめた (2.5.4-experimental。`WTextFieldColumnsTest`)
+  - パネルの Loaded が届いた時点で、中の TextBox の IsLoaded はまだ false のことがある (TextBox の Loaded は後から届く)。
+    XamlRoot はもう持っているので、columns は XamlRoot があれば測り、TextBox の Loaded でも測り直す
+  - WinUI4K は UIElement.Measure を呼ばない (float の Size の値渡しを避ける) ため、'm' の幅は見えない Popup に TextBlock を入れて
+    表示中のウィンドウで開き、UpdateLayout の後の DesiredSize で測る (TextMetrics)。Yu Gothic UI 14 の 'm' は 12.67 DIP、
+    'm' を 10 個並べると 120.67 DIP で、1 個の 10 倍 (126.7) より狭い。columns は Swing と同じく 1 個の幅 × 列数で決める

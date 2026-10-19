@@ -164,6 +164,10 @@ abstract class WComponent internal constructor(
     private var appliedWidthBits = Double.NaN.toRawBits()
     private var appliedHeightBits = Double.NaN.toRawBits()
 
+    /** The value last written with put_Width (NaN if not written). The width assigned by the layout manager also appears here. */
+    internal val appliedWidth: Double
+        get() = Double.fromBits(appliedWidthBits)
+
     internal fun applyWidth(value: Double) {
         if (value.toRawBits() == appliedWidthBits) return
         appliedWidthBits = value.toRawBits()

@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -25,6 +26,11 @@ import kotlin.jvm.JvmSynthetic
 class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory), // default interface = ITextBox
 ) {
+    /** JTextField(int columns)-style: creates a field [columns] columns wide. */
+    constructor(columns: Int) : this("") {
+        this.columns = columns
+    }
+
     /** Listeners registered with addTextChangedListener (the registered object and a function receiving the text). Called in registration order. */
     private val textChangedListeners = ArrayList<Pair<Any, (String) -> Unit>>()
 
@@ -67,6 +73,113 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     private fun nativeCaret(): IntArray {
         val start = selectionStart
         return intArrayOf(start + selectionLength, start)
+    }
+
+    /** The width (DIP) computed from [columns]. NaN if columns is 0 or it has not been measured yet. */
+    private var columnsWidth = Double.NaN
+
+    /** Whether the wrapper is being kept alive until it can be measured (until placed in a window; counted in [listenerAnchor]). */
+    private var columnsPinned = false
+
+    /** Whether Loaded has been subscribed to remeasure columns. */
+    private var columnsLoadedSubscribed = false
+
+    /**
+     * JTextField.getColumns / setColumns-style: the number of columns that determines the field's width (0 by default,
+     * meaning the width is not determined by columns).
+     * As in Swing, the width is "columns x the width of 'm' + the left and right padding (Padding) and border
+     * (BorderThickness)" (DIP). The width of 'm' is measured by drawing it in a TextBlock with the current [font]
+     * (Swing's column width is FontMetrics.charWidth('m')). Full-width characters such as CJK characters are often wider
+     * than 'm', so this is a guide rather than a width that exactly fits that many characters. It is never narrower than
+     * the theme's default minimum width (MinWidth, 64 DIP), and when the field has focus and contains text, the width
+     * available for text is reduced by the clear button at the right end.
+     *
+     * Measuring needs a shown window (the default padding and border are also determined only after being placed in a
+     * window), so columns set before placement become the width when placed (Loaded) (the wrapper is not collected
+     * until then). Changing [font] remeasures it.
+     * An explicit [width] takes precedence, and inside a [WLayoutPanel] this width is passed to the layout manager as the
+     * preferred width ([preferredSize]) (the assigned width is decided by the layout manager). Setting it back to 0
+     * removes the width determined by columns.
+     *
+     * @throws IllegalArgumentException if the value is negative (as in Swing)
+     */
+    var columns: Int = 0
+        set(value) {
+            require(value >= 0) { "columns must be 0 or more: $value" }
+            if (value == field) return
+            field = value
+            applyColumns()
+        }
+
+    override fun fontChanged() {
+        if (columns > 0) applyColumns()
+    }
+
+    override fun preferredSize(): WSize {
+        val size = super.preferredSize()
+        return if (width.isNaN() && !columnsWidth.isNaN()) WSize(columnsWidth, size.height) else size
+    }
+
+    /** Computes the width from [columns] and sets it as Width if there is neither an explicit width nor a width assigned by the layout manager. */
+    private fun applyColumns() {
+        val previous = columnsWidth
+        val applied = appliedWidth
+        val ours = applied.isNaN() || applied == previous // whether the current Width is the one determined by columns (or unset)
+        if (columns == 0) {
+            columnsWidth = Double.NaN
+            if (width.isNaN() && !previous.isNaN() && applied == previous) applyWidth(Double.NaN)
+            releaseColumnsPin()
+            invalidateNaturalSize()
+            return
+        }
+        subscribeLoadedForColumns()
+        val measured = measureColumnsWidth()
+        if (measured == null) {
+            // Not placed in a window yet. Keep the wrapper alive until it is measured when placed
+            if (!columnsPinned) {
+                columnsPinned = true
+                listenerAnchor.listenerAdded()
+            }
+            return
+        }
+        columnsWidth = measured
+        if (width.isNaN() && ours) applyWidth(measured)
+        releaseColumnsPin()
+        invalidateNaturalSize()
+    }
+
+    /**
+     * columns x the width of 'm' + the left and right padding and border. null if not placed in a window (no XamlRoot).
+     * Measures even right after placement before Loaded (even after the panel's Loaded, the inner TextBox's Loaded may
+     * arrive later).
+     * Even if the padding and border do not have the default style's values yet, remeasuring on Loaded corrects it.
+     */
+    private fun measureColumnsWidth(): Double? {
+        val m = TextMetrics.measure(this, checkNotNull(font), "m") ?: return null
+        val padding = XamlStructs.getThickness(control, XamlInterop.IControl_get_Padding)
+        val border = XamlStructs.getThickness(control, XamlInterop.IControl_get_BorderThickness)
+        return columns * m.width + padding[0] + padding[2] + border[0] + border[2]
+    }
+
+    private fun releaseColumnsPin() {
+        if (!columnsPinned) return
+        columnsPinned = false
+        listenerAnchor.listenerRemoved()
+    }
+
+    /** Remeasures [columns] on Loaded (subscribed only once; the handler does not capture the field strongly and looks it up from [listenerAnchor]). */
+    private fun subscribeLoadedForColumns() {
+        if (columnsLoadedSubscribed) return
+        columnsLoadedSubscribed = true
+        val anchor = listenerAnchor
+        frameworkElement.addEventHandler(
+            "WinUI4K.TextFieldColumnsLoaded",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
+        ) { _, _ ->
+            val field = anchor.get() as? WTextField
+            if (field != null && field.columns > 0) field.applyColumns()
+        }
     }
 
     /** The placeholder shown when empty (TextBox.PlaceholderText). */

@@ -502,6 +502,19 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a text field with columns set is also collected after being shown in a window and removed") {
+            Reclamation.awaitCollected(shownAndHidden { WTextField(12) }).shouldBeTrue()
+        }
+
+        test("a text field never shown is also collected once columns is set back to 0") {
+            val reference = onUiThreadGet {
+                val field = WTextField(12)
+                field.columns = 0
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a text field never shown is also collected once all its key listeners are removed") {
             val reference = onUiThreadGet {
                 val field = WTextField()

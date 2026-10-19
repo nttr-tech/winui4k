@@ -53,7 +53,15 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
      */
     var font: WFont?
         get() = FontProperties.read(control, FontProperties.CONTROL)
-        set(value) = FontProperties.write(control, dependencyObject, FontProperties.CONTROL, value)
+        set(value) {
+            FontProperties.write(control, dependencyObject, FontProperties.CONTROL, value)
+            fontChanged()
+        }
+
+    /** Called after [font] is set (so that [WTextField.columns], which derives the width from the font, remeasures). */
+    internal open fun fontChanged() {
+        // Does nothing by default
+    }
 
     /**
      * JComponent.getForeground / setForeground-like: the text color (Control.Foreground). Converted to a SolidColorBrush.
