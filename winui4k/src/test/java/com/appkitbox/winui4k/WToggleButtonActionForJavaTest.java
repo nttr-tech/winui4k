@@ -119,6 +119,28 @@ class WToggleButtonActionForJavaTest {
     }
 
     @Test
+    void radioButtonSelectedInAButtonGroupIsDeselectedWhenTheActionSelectedKeyIsSetToFalseAndGetSelectionBecomesNull() {
+        onUiThread(() -> {
+            WAction smallAction = new WAbstractAction("Small") {
+                @Override
+                public void actionPerformed(WActionEvent e) {
+                }
+            };
+            smallAction.putValue(WAction.SELECTED_KEY, Boolean.TRUE);
+            WRadioButton small = new WRadioButton(smallAction);
+            WRadioButton large = new WRadioButton("Large");
+            WButtonGroup group = new WButtonGroup();
+            group.add(small);
+            group.add(large);
+            assertSame(small, group.getSelection());
+            smallAction.putValue(WAction.SELECTED_KEY, Boolean.FALSE);
+            assertFalse(small.isSelected());
+            assertNull(group.getSelection());
+            assertEquals(Boolean.FALSE, smallAction.getValue(WAction.SELECTED_KEY));
+        });
+    }
+
+    @Test
     void selectedKeyOfTheActionIsStillThePreviousValueInsideItemListenerAndIsWrittenBackAfterAllListeners() {
         onUiThread(() -> {
             WAction action = new WAbstractAction("Bold") {

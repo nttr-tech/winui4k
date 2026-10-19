@@ -106,10 +106,21 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         }
     }
 
-    /** Matches the selection state to the action's SELECTED_KEY (false if absent). Throws [IllegalArgumentException] if it is not a Boolean. */
+    /**
+     * Matches the selection state to the action's SELECTED_KEY (false if absent). Throws [IllegalArgumentException] if it
+     * is not a Boolean.
+     * A selected button in a [WButtonGroup] cannot be deselected because of the group, so, as in Swing's
+     * AbstractButton.setSelectedFromAction, the group's selection is cleared as a whole ([WButtonGroup.clearSelection]).
+     */
     override fun applyActionSelected(action: WAction?) {
         val selected = action?.typedValue<Boolean>(WAction.SELECTED_KEY, "Boolean") == true
-        if (selected != isSelected) isSelected = selected
+        if (selected == isSelected) return
+        val group = buttonGroup
+        if (!selected && group != null && group.isSelected(this)) {
+            group.clearSelection()
+        } else {
+            isSelected = selected
+        }
     }
 
     /** Whether an action is bound ([onActionChanged]). While bound, it counts as one listener for writing back the selection state. */

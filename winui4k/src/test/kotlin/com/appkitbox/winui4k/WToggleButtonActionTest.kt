@@ -187,6 +187,38 @@ class WToggleButtonActionTest : FunSpec() {
             } shouldContainExactly listOf(false, false, true)
         }
 
+        test("setting the action's SELECTED_KEY to false deselects a selected button in a group, and the group's selection is cleared too") {
+            // Swing's AbstractButton.setSelectedFromAction calls ButtonGroup.clearSelection when the group prevents deselection
+            val (trace, events) = onUiThreadGet {
+                val action = RecordingAction("Bold")
+                action.putValue(WAction.SELECTED_KEY, true)
+                val button = WCheckBox(action)
+                val other = WCheckBox("Italic")
+                val group = WButtonGroup()
+                group.add(button)
+                group.add(other)
+                val events = mutableListOf<Int>()
+                button.addItemListener(WItemListener { events += it.stateChange })
+                action.putValue(WAction.SELECTED_KEY, false)
+                listOf(button.isSelected, group.selection, action.getValue(WAction.SELECTED_KEY)) to events
+            }
+            trace shouldContainExactly listOf(false, null, false)
+            events shouldContainExactly listOf(WItemEvent.DESELECTED)
+        }
+
+        test("setting action to null on a selected button in a group deselects it, and the group's selection is cleared too") {
+            onUiThreadGet {
+                val action = RecordingAction("Small")
+                action.putValue(WAction.SELECTED_KEY, true)
+                val button = WRadioButton(action)
+                val group = WButtonGroup()
+                group.add(button)
+                group.add(WRadioButton("Large"))
+                button.action = null
+                listOf(button.isSelected, group.selection, action.getValue(WAction.SELECTED_KEY))
+            } shouldContainExactly listOf(false, null, true)
+        }
+
         test("the SELECTED_KEY write-back reaches ItemListeners added both before and after setAction with a delay (as in Swing)") {
             onUiThreadGet {
                 val trace = mutableListOf<String>()
