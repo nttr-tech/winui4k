@@ -238,12 +238,18 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
 
     @JvmName("addPasswordChangedListener")
     fun addPasswordChangedListenerForJava(listener: Consumer<String>) {
+        // The handler stays in the native object, so the password field is not captured strongly but looked up from listenerAnchor
+        val anchor = listenerAnchor
         val token = inspectable.addEventHandler(
             "WinUI4K.PasswordChangedHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IPasswordBox_add_PasswordChanged,
-        ) { _, _ -> listener.accept(password) }
+        ) { _, _ ->
+            val field = anchor.get() as? WPasswordField
+            if (field != null) listener.accept(field.password)
+        }
         passwordChangedTokens.add(listener, token)
+        anchor.listenerAdded()
     }
 
     /** Unsubscribes a listener registered via [addPasswordChangedListener]. */
@@ -257,6 +263,7 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     fun removePasswordChangedListenerForJava(listener: Consumer<String>) {
         val token = passwordChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPasswordBox_remove_PasswordChanged, token)
+        listenerAnchor.listenerRemoved()
     }
 
     private companion object {

@@ -217,6 +217,8 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
 
     @JvmName("addTextChangedListener")
     fun addTextChangedListenerForJava(listener: BiConsumer<String, TextChangeReason>) {
+        // The handler stays on the native object, so the box is not captured strongly but looked up from listenerAnchor
+        val anchor = listenerAnchor
         val token = inspectable.addEventHandler(
             "WinUI4K.AutoSuggestBoxTextChangedHandler",
             XamlInterop.IID_AutoSuggestBoxTextChangedHandler,
@@ -226,9 +228,11 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
             val reason = TextChangeReason.of(
                 ComPtr(args).getInt(XamlInterop.IAutoSuggestBoxTextChangedEventArgs_get_Reason),
             )
-            listener.accept(text, reason)
+            val box = anchor.get() as? WAutoSuggestBox
+            if (box != null) listener.accept(box.text, reason)
         }
         textChangedTokens.add(listener, token)
+        anchor.listenerAdded()
     }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
@@ -242,6 +246,7 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     fun removeTextChangedListenerForJava(listener: BiConsumer<String, TextChangeReason>) {
         val token = textChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAutoSuggestBox_remove_TextChanged, token)
+        listenerAnchor.listenerRemoved()
     }
 
     /**
