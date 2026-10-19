@@ -359,6 +359,67 @@ abstract class WComponent internal constructor(
         get() = inputOrNull?.focusListeners() ?: emptyArray()
 
     /**
+     * Component.addMouseListener-style: adds a listener called when a button is pressed, released or clicked over this
+     * component, or when the mouse enters or exits it (UIElement.PointerPressed / PointerReleased / PointerEntered /
+     * PointerExited). Does nothing if null.
+     *
+     * As in Swing, the component that was pressed receives the release and drags (it captures the pointer), and if both a
+     * child and a parent have mouse listeners, only the child receives them. Presses that a child control handled itself
+     * (such as pressing a button inside a panel) are not reported to the parent.
+     * Listeners added to a button or input field itself also receive presses that the control handled (because the
+     * control's handling runs first, [WInputEvent.consume] cannot stop clicks and the like). Touch and pen input also
+     * arrive as the left mouse button.
+     */
+    fun addMouseListener(listener: WMouseListener?) {
+        if (listener != null) input.mouse.addMouseListener(listener)
+    }
+
+    /** Component.removeMouseListener-style: removes one listener added with [addMouseListener]. Does nothing if not added. */
+    fun removeMouseListener(listener: WMouseListener?) {
+        if (listener != null) inputOrNull?.mouse?.removeMouseListener(listener)
+    }
+
+    /** Component.getMouseListeners-style: the mouse listeners added (in the order they were added). */
+    val mouseListeners: Array<WMouseListener>
+        get() = inputOrNull?.mouse?.mouseListeners() ?: emptyArray()
+
+    /**
+     * Component.addMouseMotionListener-style: adds a listener called when the mouse is moved over this component, or moved
+     * while pressed (dragged) (UIElement.PointerMoved). Does nothing if null. Drags are delivered to the pressed component
+     * even after leaving the component.
+     */
+    fun addMouseMotionListener(listener: WMouseMotionListener?) {
+        if (listener != null) input.mouse.addMouseMotionListener(listener)
+    }
+
+    /** Component.removeMouseMotionListener-style: removes one listener added with [addMouseMotionListener]. */
+    fun removeMouseMotionListener(listener: WMouseMotionListener?) {
+        if (listener != null) inputOrNull?.mouse?.removeMouseMotionListener(listener)
+    }
+
+    /** Component.getMouseMotionListeners-style: the mouse motion listeners added (in the order they were added). */
+    val mouseMotionListeners: Array<WMouseMotionListener>
+        get() = inputOrNull?.mouse?.mouseMotionListeners() ?: emptyArray()
+
+    /**
+     * Component.addMouseWheelListener-style: adds a listener called when the wheel is rotated over this component
+     * (UIElement.PointerWheelChanged). Does nothing if null. If both a child and a parent have wheel listeners, only the
+     * child receives them. Calling [WInputEvent.consume] stops it from propagating to a parent ScrollViewer and the like.
+     */
+    fun addMouseWheelListener(listener: WMouseWheelListener?) {
+        if (listener != null) input.mouse.addMouseWheelListener(listener)
+    }
+
+    /** Component.removeMouseWheelListener-style: removes one listener added with [addMouseWheelListener]. */
+    fun removeMouseWheelListener(listener: WMouseWheelListener?) {
+        if (listener != null) inputOrNull?.mouse?.removeMouseWheelListener(listener)
+    }
+
+    /** Component.getMouseWheelListeners-style: the wheel listeners added (in the order they were added). */
+    val mouseWheelListeners: Array<WMouseWheelListener>
+        get() = inputOrNull?.mouse?.mouseWheelListeners() ?: emptyArray()
+
+    /**
      * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
      * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
      * change.

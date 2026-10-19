@@ -15,6 +15,9 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * references the component, the cycle does not cross the native boundary).
  */
 internal class ComponentInput(private val owner: WComponent) {
+    /** The mouse listeners (created when the first mouse listener is added). */
+    val mouse: MouseInput by lazy { MouseInput(owner) }
+
     private val focusListeners = ArrayList<WFocusListener>()
     private var focusHandlersAdded = false
 
@@ -109,21 +112,46 @@ internal class ComponentInput(private val owner: WComponent) {
  * (FrameworkElement.Parent) of an element on the way is [owner]. The logical tree parent of a template part is never
  * [owner] (the root of the template has null). Returns false when [owner] is not reached (such as inside a Popup).
  */
-internal fun isOwnPart(owner: WComponent, element: ComPtr): Boolean {
-    if (Xaml.sameObject(element, owner.inspectable)) return true
+internal fun isOwnPart(owner: WComponent, element: ComPtr): Boolean = classifyPart(owner, element) == PartKind.OWN
+
+/**
+ * Whether the source [element] of a handled pointer event is inside a control (Control) within the content (children) of
+ * [owner]. If true, that control (such as a button inside a panel) is considered to have handled the event. False for
+ * [owner] itself, its template parts, or content containing no control (such as text inside a panel). True when [owner]
+ * is not reached.
+ */
+internal fun isHandledInContent(owner: WComponent, element: ComPtr): Boolean {
+    val kind = classifyPart(owner, element)
+    return kind == PartKind.CONTROL_IN_CONTENT || kind == PartKind.DETACHED
+}
+
+/** The result of [classifyPart]. */
+private enum class PartKind { OWN, CONTENT, CONTROL_IN_CONTENT, DETACHED }
+
+/** Walks the visual tree parents from [element] up to [owner] to find where [element] lies within [owner]. */
+private fun classifyPart(owner: WComponent, element: ComPtr): PartKind {
+    if (Xaml.sameObject(element, owner.inspectable)) return PartKind.OWN
     var current = element.queryInterface(XamlInterop.IID_IDependencyObject)
+    var controlSeen = false
     try {
         repeat(MAX_PART_DEPTH) {
-            if (isLogicalChildOf(current, owner)) return false
-            val parent = Xaml.parentOf(current) ?: return false
+            if (isControl(current)) controlSeen = true
+            if (isLogicalChildOf(current, owner)) return if (controlSeen) PartKind.CONTROL_IN_CONTENT else PartKind.CONTENT
+            val parent = Xaml.parentOf(current) ?: return PartKind.DETACHED
             current.release()
             current = parent
-            if (Xaml.sameObject(current, owner.inspectable)) return true
+            if (Xaml.sameObject(current, owner.inspectable)) return PartKind.OWN
         }
-        return false
+        return PartKind.DETACHED
     } finally {
         current.release()
     }
+}
+
+private fun isControl(element: ComPtr): Boolean {
+    val control = element.queryInterfaceOrNull(XamlInterop.IID_IControl) ?: return false
+    control.release()
+    return true
 }
 
 /** Whether the logical tree parent (FrameworkElement.Parent) of [element] is [owner]. */

@@ -45,6 +45,49 @@ internal object Win32 {
         Ffi.backend.function("kernel32.dll", "CloseHandle", CallDescriptor(ValueKind.I32, ArgKind.PTR))
     }
 
+    private val getDoubleClickTime by lazy {
+        Ffi.backend.function("user32.dll", "GetDoubleClickTime", CallDescriptor(ValueKind.I32))
+    }
+    private val getSystemMetrics by lazy {
+        Ffi.backend.function("user32.dll", "GetSystemMetrics", CallDescriptor(ValueKind.I32, ArgKind.I32))
+    }
+    private val systemParametersInfoW by lazy {
+        Ffi.backend.function(
+            "user32.dll",
+            "SystemParametersInfoW",
+            CallDescriptor(ValueKind.I32, ArgKind.I32, ArgKind.I32, ArgKind.PTR, ArgKind.I32),
+        )
+    }
+
+    /** The maximum interval between two presses to count as a double click (milliseconds; GetDoubleClickTime). */
+    fun doubleClickTimeMillis(): Int = getDoubleClickTime() as Int
+
+    /** A system metric (GetSystemMetrics; [index] is SM_*). In physical pixels. */
+    fun systemMetric(index: Int): Int = getSystemMetrics(index) as Int
+
+    /**
+     * The number of lines to scroll per wheel notch (SystemParametersInfoW(SPI_GETWHEELSCROLLLINES)). [WHEEL_PAGESCROLL]
+     * when set to scroll by pages, and Windows' default of 3 when it cannot be read.
+     */
+    fun wheelScrollLines(): Int = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(4)
+        if (systemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, out, 0) as Int == 0) {
+            DEFAULT_WHEEL_SCROLL_LINES
+        } else {
+            Ffi.backend.memory.getInt(out, 0)
+        }
+    }
+
+    const val SM_CXDOUBLECLK = 36
+    const val SM_CYDOUBLECLK = 37
+    const val SM_CXDRAG = 68
+    const val SM_CYDRAG = 69
+
+    /** The value SPI_GETWHEELSCROLLLINES returns when set to scroll by pages (WHEEL_PAGESCROLL = UINT_MAX). */
+    const val WHEEL_PAGESCROLL = -1
+    private const val SPI_GETWHEELSCROLLLINES = 0x0068
+    private const val DEFAULT_WHEEL_SCROLL_LINES = 3
+
     /** Enables Per-Monitor v2 DPI awareness. java.exe has no manifest, so this is done in code. */
     fun enablePerMonitorDpiAwareness() {
         // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = (HANDLE)-4

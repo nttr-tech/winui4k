@@ -190,13 +190,32 @@ internal object WindowingInterop {
 
     // ---- Microsoft.UI.Input.PointerPoint (Microsoft.UI.winmd) ----
     const val IID_IPointerPoint = "0d430ee6-252c-59a4-b2a2-d44264dc6a40"
+    const val IPointerPoint_get_FrameId = 6            // get_FrameId(out u4)
+    const val IPointerPoint_get_PointerId = 9          // get_PointerId(out u4)
     const val IPointerPoint_get_Position = 10          // get_Position(out Point) — out of r4×2
     const val IPointerPoint_get_Properties = 11        // get_Properties(out PointerPointProperties)
+    const val IPointerPoint_get_Timestamp = 12         // get_Timestamp(out u8) — microseconds
     const val IID_IPointerPointProperties = "d760ed77-4b10-57a5-b3cc-d9bf3413e996"
     const val IPointerPointProperties_get_IsHorizontalMouseWheel = 10
     const val IPointerPointProperties_get_IsLeftButtonPressed = 13
+    const val IPointerPointProperties_get_IsMiddleButtonPressed = 14
     const val IPointerPointProperties_get_IsRightButtonPressed = 16
+    const val IPointerPointProperties_get_IsXButton1Pressed = 17
+    const val IPointerPointProperties_get_IsXButton2Pressed = 18
     const val IPointerPointProperties_get_MouseWheelDelta = 19 // get_MouseWheelDelta(out i4)
+    const val IPointerPointProperties_get_PointerUpdateKind = 21 // get_PointerUpdateKind(out PointerUpdateKind)
+
+    // enum Microsoft.UI.Input.PointerUpdateKind (the button whose state changed)
+    const val PointerUpdateKind_LeftButtonPressed = 1
+    const val PointerUpdateKind_LeftButtonReleased = 2
+    const val PointerUpdateKind_RightButtonPressed = 3
+    const val PointerUpdateKind_RightButtonReleased = 4
+    const val PointerUpdateKind_MiddleButtonPressed = 5
+    const val PointerUpdateKind_MiddleButtonReleased = 6
+    const val PointerUpdateKind_XButton1Pressed = 7
+    const val PointerUpdateKind_XButton1Released = 8
+    const val PointerUpdateKind_XButton2Pressed = 9
+    const val PointerUpdateKind_XButton2Released = 10
 
     // ---- Microsoft.UI.Input.InputKeyboardSource (statics) ----
     const val CLS_InputKeyboardSource = "Microsoft.UI.Input.InputKeyboardSource"

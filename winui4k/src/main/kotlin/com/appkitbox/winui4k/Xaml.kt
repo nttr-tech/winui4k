@@ -579,6 +579,46 @@ internal class XamlPointerEvent(private val args: ComPtr) {
         Xaml.readPoint(point, WindowingInterop.IPointerPoint_get_Position)
     }
 
+    /**
+     * Reads the pointer state as seen from [relativeTo] (position, button whose state changed, pressed buttons, wheel,
+     * identifier) all at once (calling GetCurrentPoint only once). Buttons are returned as AWT numbers and BUTTONn_DOWN_MASK.
+     */
+    fun pointState(relativeTo: WComponent): PointerPointState = withPoint(relativeTo) { point ->
+        val position = Xaml.readPoint(point, WindowingInterop.IPointerPoint_get_Position)
+        val properties = point.getPtr(WindowingInterop.IPointerPoint_get_Properties)
+        try {
+            var buttonsDown = 0
+            if (properties.getBool(WindowingInterop.IPointerPointProperties_get_IsLeftButtonPressed)) {
+                buttonsDown = buttonsDown or WInputEvent.getMaskForButton(WMouseEvent.BUTTON1)
+            }
+            if (properties.getBool(WindowingInterop.IPointerPointProperties_get_IsMiddleButtonPressed)) {
+                buttonsDown = buttonsDown or WInputEvent.getMaskForButton(WMouseEvent.BUTTON2)
+            }
+            if (properties.getBool(WindowingInterop.IPointerPointProperties_get_IsRightButtonPressed)) {
+                buttonsDown = buttonsDown or WInputEvent.getMaskForButton(WMouseEvent.BUTTON3)
+            }
+            if (properties.getBool(WindowingInterop.IPointerPointProperties_get_IsXButton1Pressed)) {
+                buttonsDown = buttonsDown or WInputEvent.getMaskForButton(EXTRA_BUTTON_1)
+            }
+            if (properties.getBool(WindowingInterop.IPointerPointProperties_get_IsXButton2Pressed)) {
+                buttonsDown = buttonsDown or WInputEvent.getMaskForButton(EXTRA_BUTTON_2)
+            }
+            PointerPointState(
+                x = position[0],
+                y = position[1],
+                changedButton = buttonOfUpdateKind(properties.getInt(WindowingInterop.IPointerPointProperties_get_PointerUpdateKind)),
+                buttonsDown = buttonsDown,
+                wheelDelta = properties.getInt(WindowingInterop.IPointerPointProperties_get_MouseWheelDelta),
+                isHorizontalWheel = properties.getBool(WindowingInterop.IPointerPointProperties_get_IsHorizontalMouseWheel),
+                pointerId = point.getInt(WindowingInterop.IPointerPoint_get_PointerId),
+                frameId = point.getInt(WindowingInterop.IPointerPoint_get_FrameId),
+                timestampMicros = readTimestamp(point),
+            )
+        } finally {
+            properties.release()
+        }
+    }
+
     /** Whether the left button is pressed. */
     val isLeftButtonPressed: Boolean get() = withProperties { it.getBool(WindowingInterop.IPointerPointProperties_get_IsLeftButtonPressed) }
 

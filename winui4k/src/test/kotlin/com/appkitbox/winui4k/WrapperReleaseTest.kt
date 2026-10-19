@@ -280,6 +280,33 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a panel with mouse listeners (all 3 kinds) that do not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden {
+                WPanel().also { panel ->
+                    val adapter = object : WMouseAdapter() {}
+                    panel.addMouseListener(adapter)
+                    panel.addMouseMotionListener(adapter)
+                    panel.addMouseWheelListener(adapter)
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a panel never shown is also collected once all its mouse listeners are removed") {
+            val reference = onUiThreadGet {
+                val panel = WPanel()
+                val adapter = object : WMouseAdapter() {}
+                panel.addMouseListener(adapter)
+                panel.addMouseMotionListener(adapter)
+                panel.addMouseWheelListener(adapter)
+                panel.removeMouseListener(adapter)
+                panel.removeMouseMotionListener(adapter)
+                panel.removeMouseWheelListener(adapter)
+                WeakReference(panel)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {
             val captured = onUiThreadGet {
                 val captured = Any()

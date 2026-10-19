@@ -2203,8 +2203,12 @@ internal object XamlInterop {
     const val IUIElementStatics_get_PointerPressedEvent = 9
     const val IUIElementStatics_get_PointerMovedEvent = 10
     const val IUIElementStatics_get_PointerReleasedEvent = 11
+    const val IUIElementStatics_get_PointerCaptureLostEvent = 13
     const val IUIElementStatics_get_PointerWheelChangedEvent = 15
     const val IUIElementStatics_get_TappedEvent = 16
+    const val IUIElementStatics_get_PreviewKeyDownEvent = 32
+    const val IUIElementStatics_get_CharacterReceivedEvent = 33
+    const val IUIElementStatics_get_PreviewKeyUpEvent = 34
 
     // enum Microsoft.UI.Xaml.FocusState: Unfocused=0, Pointer=1, Keyboard=2, Programmatic=3
     const val FocusState_Pointer = 1

@@ -110,3 +110,19 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     WinUI4K は状態が変わったときだけ知らせる
   - GotFocus / LostFocus は相手の要素を渡さない (RoutedEventArgs だけ) ため、WFocusEvent.oppositeComponent は null。
     なお WComponent.requestFocusInWindow は IsTabStop (isFocusable) を見るので、NumberBox などでは false を返す (UIElement.Focus は成功する)
+- マウスのリスナー (WComponent.addMouseListener など) のために、ポインターのイベントの届き方を WinUI のソースと E2E テストの調査で確かめた
+  (2.5.4-experimental)
+  - E2E テストではポインターの入力を作れない。共有ウィンドウの InputSiteWindowClass・その親 (DesktopChildSiteBridge)・トップレベルの
+    ウィンドウのどれに WM_MOUSEMOVE / WM_LBUTTONDOWN / WM_LBUTTONUP を PostMessageW / SendMessageW しても、PointerEntered /
+    PointerPressed / PointerMoved は 1 つも届かない (キーの WM_KEYDOWN は届く)。SendInput や InjectSyntheticPointerInput は
+    本物のカーソルを動かし、テスト中にユーザーが使っている別のウィンドウを操作してしまうので使わない。そのため `WMouseEventTest` は
+    ネイティブのイベントから読んだ値の代わり (`TestMouse`) を MouseInput.dispatch に渡して確かめ、ネイティブのイベントからの読み取り
+    (MouseInput.nativeSample) と捕捉の呼び出しは実際の入力では未確認
+  - PointerPressed / Released / Moved / WheelChanged は子から親へ伝わる。ButtonBase は左ボタンの押下と離すのを自分で処理済みにし、
+    押下で自分にポインターを捕捉する (`ButtonBase_Partial.cpp` の OnPointerPressed / OnPointerReleased)。そのため MouseInput は
+    処理済みのものも受け取り (AddHandler の handledEventsToo)、処理済みの押下では捕捉し直さない
+  - コントロール自身の処理 (OnPointerPressed などの仮想関数) は、同じ要素に付けたハンドラより先に呼ばれる (`eventmgr.cpp` の
+    CEventManager::Raise は RaiseControlEvents の後に登録されたハンドラを呼ぶ)。リスナーの consume() でボタンのクリックは止められない
+  - PointerEntered / PointerExited は親へ伝わらず、入った・出た要素のそれぞれに直接送られる (`PointerInputProcessor.cpp` の
+    ProcessPointerEnterLeave。子に入っても親の Exited は来ない)。Swing は子にマウスのリスナーがあると親に mouseExited を送るが、
+    WinUI4K は WinUI と同じく、そのコンポーネントの境界をまたぐときだけ知らせる
