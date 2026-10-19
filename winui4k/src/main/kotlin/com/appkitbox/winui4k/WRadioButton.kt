@@ -19,6 +19,31 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
         if (text.isNotEmpty()) this.text = text
     }
 
+    /** JRadioButton(String, boolean)-style: a button with the specified text and selection state. */
+    constructor(text: String, selected: Boolean) : this(text) {
+        if (selected) isSelected = true
+    }
+
+    /** JRadioButton(Icon)-style: a button with only an icon (the icon is placed to the right of the mark; see [icon]). */
+    constructor(icon: WIcon) : this("") {
+        this.icon = icon
+    }
+
+    /** JRadioButton(String, Icon)-style: a button with text and an icon. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?) : this(text) {
+        if (icon != null) this.icon = icon
+    }
+
+    /** JRadioButton(String, Icon, boolean)-style: a button with the specified text, icon and selection state. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?, selected: Boolean) : this(text, icon) {
+        if (selected) isSelected = true
+    }
+
+    /** JRadioButton(Action)-style: a button that copies the values of [action] (including the SELECTED_KEY selection state) and calls the action on click. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
+
     /** The IRadioButton view that has GroupName (QI'd because derived classes have a different default interface). */
     private val radioButton: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IRadioButton)) }
 

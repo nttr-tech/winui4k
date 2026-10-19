@@ -16,4 +16,29 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
     ) {
         if (text.isNotEmpty()) this.text = text
     }
+
+    /** JCheckBox(String, boolean)-style: a button with the given text and selection state. */
+    constructor(text: String, selected: Boolean) : this(text) {
+        if (selected) isSelected = true
+    }
+
+    /** JCheckBox(Icon)-style: an icon-only button (the icon is placed to the right of the check mark; see [icon]). */
+    constructor(icon: WIcon) : this("") {
+        this.icon = icon
+    }
+
+    /** JCheckBox(String, Icon)-style: a button with text and an icon. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?) : this(text) {
+        if (icon != null) this.icon = icon
+    }
+
+    /** JCheckBox(String, Icon, boolean)-style: a button with the given text, icon and selection state. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?, selected: Boolean) : this(text, icon) {
+        if (selected) isSelected = true
+    }
+
+    /** JCheckBox(Action)-style: a button that takes the values of [action] (including the selection state of SELECTED_KEY) and calls the action on click. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
 }

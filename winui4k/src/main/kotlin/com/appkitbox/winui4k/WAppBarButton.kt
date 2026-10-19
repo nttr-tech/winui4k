@@ -29,7 +29,7 @@ enum class CommandBarLabelPosition(internal val native: Int) {
  * Meant to sit on a WCommandBar, so it has [label] and [icon]; Click / Command /
  * Flyout work the same way they do on Button.
  */
-class WAppBarButton @JvmOverloads constructor(label: String = "", icon: Symbol? = null) : WButtonBase(
+class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? = null) : WButtonBase(
     Activation.composeDefault(XamlInterop.CLS_AppBarButton, XamlInterop.IID_IAppBarButtonFactory),
 ) {
     /** The IButton view that holds Flyout (AppBarButton is a Button subclass). */
@@ -45,18 +45,44 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: Symbol? 
         get() = inspectable.getString(XamlInterop.IAppBarButton_get_Label)
         set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IAppBarButton_put_Label, h) }
 
-    /** The button's icon (AppBarButton.Icon). Creates and passes a SymbolIcon. */
-    var icon: Symbol? = null
+    /**
+     * The legacy `WAppBarButton(String, Symbol)`. It is kept only for binary compatibility (linking of compiled callers)
+     * and is not visible from source (HIDDEN). Symbol is a WIcon, so in source the same call selects the overload taking
+     * a WIcon.
+     */
+    @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
+    constructor(label: String, icon: Symbol?) : this(label, icon as WIcon?)
+
+    /**
+     * AbstractButton.setIcon-like: the button's icon (AppBarButton.Icon). Returns the icon as set. null means no icon.
+     * Unlike [WButtonBase.icon], which is laid out in Content, this creates an IconElement (SymbolIcon / ImageIcon /
+     * FontIcon) and passes it to WinUI's AppBarButton's own icon. The template decides the arrangement of the icon and
+     * label, so [horizontalTextPosition] / [verticalTextPosition] / [iconTextGap] are not used for display (it is decided
+     * by [labelPosition] and the CommandBar settings).
+     */
+    override var icon: WIcon? = null
         set(value) {
+            value?.requireSupported()
             field = value
-            if (value == null) {
-                inspectable.call(XamlInterop.IAppBarButton_put_Icon, null)
-                return
+            val iconElement = value?.createIconElement()
+            try {
+                inspectable.call(XamlInterop.IAppBarButton_put_Icon, iconElement?.ptr)
+            } finally {
+                iconElement?.release()
             }
-            val iconElement = value.createIconElement()
-            inspectable.call(XamlInterop.IAppBarButton_put_Icon, iconElement.ptr)
-            iconElement.release()
         }
+
+    /** The legacy `setIcon(Symbol)` (for binary compatibility, not visible from source). Same reason as the legacy constructor. */
+    @Deprecated("Use icon, which takes a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("setIcon")
+    fun setIconForSymbol(icon: Symbol?) {
+        this.icon = icon
+    }
+
+    /** The legacy `Symbol getIcon()` (for binary compatibility, not visible from source). null if the icon is not a Symbol. */
+    @Deprecated("Use icon, which returns a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("getIcon")
+    fun getIconAsSymbol(): Symbol? = icon as? Symbol
 
     /** The label position for just this button (AppBarButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition

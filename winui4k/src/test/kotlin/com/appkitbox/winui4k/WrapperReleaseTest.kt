@@ -453,6 +453,16 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(split).shouldBeTrue()
         }
 
+        test("a WCheckBox bound to a shared WAction with SELECTED_KEY is collected after being removed from the window even if the action remains") {
+            val action = object : WAbstractAction("Shared") {
+                override fun actionPerformed(e: WActionEvent) = Unit
+            }
+            action.putValue(WAction.SELECTED_KEY, true)
+            val reference = shownAndHidden { WCheckBox(action) }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            onUiThread { action.putValue(WAction.SELECTED_KEY, false) } // Notifications to collected buttons are discarded
+        }
+
         test("a button group shown in a window and removed is entirely collected once neither the group nor the buttons are referenced") {
             val refs = shownAndHiddenGroup()
             refs.all().forEach { Reclamation.awaitCollected(it).shouldBeTrue() }

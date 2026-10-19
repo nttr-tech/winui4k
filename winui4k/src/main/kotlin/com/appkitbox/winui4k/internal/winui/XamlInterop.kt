@@ -152,6 +152,7 @@ internal object XamlInterop {
     const val IStackPanel_put_Spacing = 21
     const val IID_IPanel = "27a1b418-56f3-525e-b883-cefed905eed3"
     const val IPanel_get_Children = 6                  // -> IVector<UIElement>
+    const val IPanel_get_Background = 7                // get_Background(out Brush)
 
     // ---- Microsoft.UI.Xaml.Controls.Border ----
     const val CLS_Border = "Microsoft.UI.Xaml.Controls.Border"
@@ -506,6 +507,7 @@ internal object XamlInterop {
     const val CLS_Button = "Microsoft.UI.Xaml.Controls.Button"
     const val IID_IButtonFactory = "fe393422-d91c-57b1-9a9c-2c7e3f41f77c"
     const val IID_IButton = "216c183d-d07a-5aa5-b8a4-0300a2683e87"
+    const val IButton_get_Flyout = 6                   // get_Flyout(out FlyoutBase)
     const val IButton_put_Flyout = 7                   // put_Flyout(FlyoutBase)
     const val IID_IContentControl = "07e81761-11b2-52ae-8f8b-4d53d2b5900a"
     const val IContentControl_get_Content = 6          // get_Content(out IInspectable)
@@ -1633,6 +1635,7 @@ internal object XamlInterop {
     const val IID_IAppBarButton = "8ab0e278-b6ae-569e-8dcd-d293552fe4d5"
     const val IAppBarButton_get_Label = 6              // get_Label(out HSTRING)
     const val IAppBarButton_put_Label = 7              // put_Label(HSTRING)
+    const val IAppBarButton_get_Icon = 8               // get_Icon(out IconElement)
     const val IAppBarButton_put_Icon = 9               // put_Icon(IconElement)
     const val IAppBarButton_get_LabelPosition = 10     // get_LabelPosition(out CommandBarLabelPosition)
     const val IAppBarButton_put_LabelPosition = 11     // put_LabelPosition(CommandBarLabelPosition)
@@ -1645,6 +1648,7 @@ internal object XamlInterop {
     const val IID_IAppBarToggleButton = "9687c0b1-c390-59be-acdc-4fc48f552823"
     const val IAppBarToggleButton_get_Label = 6        // get_Label(out HSTRING)
     const val IAppBarToggleButton_put_Label = 7        // put_Label(HSTRING)
+    const val IAppBarToggleButton_get_Icon = 8         // get_Icon(out IconElement)
     const val IAppBarToggleButton_put_Icon = 9         // put_Icon(IconElement)
     const val IAppBarToggleButton_get_LabelPosition = 10 // get_LabelPosition(out CommandBarLabelPosition)
     const val IAppBarToggleButton_put_LabelPosition = 11 // put_LabelPosition(CommandBarLabelPosition)

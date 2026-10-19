@@ -11,7 +11,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * [isChecked] / [addItemListener] are inherited from WToggleButton; this adds
  * [label] and [icon] for use on a WCommandBar.
  */
-class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: Symbol? = null) : WToggleButton(
+class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WIcon? = null) : WToggleButton(
     Activation.composeDefault(XamlInterop.CLS_AppBarToggleButton, XamlInterop.IID_IAppBarToggleButtonFactory),
 ) {
     /** The ICommandBarElement view that holds IsCompact / DynamicOverflowOrder. */
@@ -26,18 +26,43 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: Sy
             inspectable.call(XamlInterop.IAppBarToggleButton_put_Label, h)
         }
 
-    /** The button's icon (AppBarToggleButton.Icon). Creates and passes a SymbolIcon. */
-    var icon: Symbol? = null
+    /**
+     * The legacy `WAppBarToggleButton(String, Symbol)`. Kept only for binary compatibility (linking of compiled callers)
+     * and invisible from source (HIDDEN). Symbol is a WIcon, so in source the same call picks the form taking a WIcon.
+     */
+    @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
+    constructor(label: String, icon: Symbol?) : this(label, icon as WIcon?)
+
+    /**
+     * AbstractButton.setIcon-style: the button's icon (AppBarToggleButton.Icon). Returns the icon as set; null for no icon.
+     * Unlike [WButtonBase.icon], which is laid out in Content, this creates an IconElement (SymbolIcon / ImageIcon /
+     * FontIcon) and passes it to WinUI's AppBarToggleButton's own icon. The template decides the arrangement of icon and
+     * label, so [horizontalTextPosition] / [verticalTextPosition] / [iconTextGap] are not used for display (it is decided
+     * by [labelPosition] and the CommandBar settings).
+     */
+    override var icon: WIcon? = null
         set(value) {
+            value?.requireSupported()
             field = value
-            if (value == null) {
-                inspectable.call(XamlInterop.IAppBarToggleButton_put_Icon, null)
-                return
+            val iconElement = value?.createIconElement()
+            try {
+                inspectable.call(XamlInterop.IAppBarToggleButton_put_Icon, iconElement?.ptr)
+            } finally {
+                iconElement?.release()
             }
-            val iconElement = value.createIconElement()
-            inspectable.call(XamlInterop.IAppBarToggleButton_put_Icon, iconElement.ptr)
-            iconElement.release()
         }
+
+    /** The legacy `setIcon(Symbol)` (for binary compatibility, not visible from source). Same reason as the legacy constructor. */
+    @Deprecated("Use icon, which takes a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("setIcon")
+    fun setIconForSymbol(icon: Symbol?) {
+        this.icon = icon
+    }
+
+    /** The legacy `Symbol getIcon()` (for binary compatibility, not visible from source). null if the icon is not a Symbol. */
+    @Deprecated("Use icon, which returns a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("getIcon")
+    fun getIconAsSymbol(): Symbol? = icon as? Symbol
 
     /** The label position for just this button (AppBarToggleButton.LabelPosition). */
     var labelPosition: CommandBarLabelPosition

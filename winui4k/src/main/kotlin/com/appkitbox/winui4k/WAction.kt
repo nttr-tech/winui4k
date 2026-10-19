@@ -3,11 +3,11 @@ package com.appkitbox.winui4k
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * javax.swing.Action-like: bundles a button's text, icon, tooltip, enabled state, and click handling in one place.
- * When passed to [WButton.action] or `WButton(action)`, the button copies values such as [NAME] into its own properties,
- * follows them whenever the values or [isEnabled] change, and calls [actionPerformed] on click. The same WAction may be
- * passed to multiple buttons.
- * Use it to share the same operation between a menu and a toolbar.
+ * javax.swing.Action-style: bundles a button's text, icon, tooltip, enabled state and click handling in one place.
+ * When passed to [WButtonBase.action], `WButton(action)`, `WCheckBox(action)` etc., the button copies values such as
+ * [NAME] into its own properties, follows them whenever the values or [isEnabled] change, and calls [actionPerformed]
+ * on click. The same WAction may be passed to multiple buttons.
+ * Used to share the same operation between a menu and a toolbar.
  *
  * Swing's Action uses java.beans.PropertyChangeListener for change notifications, but java.beans belongs to the
  * java.desktop module and this library avoids depending on java.desktop, so [WActionChangeListener] is used instead
@@ -42,7 +42,7 @@ interface WAction {
         /** The button's text ([WButtonBase.text]). The value is a String. Same key name as Swing's Action.NAME. */
         const val NAME: String = "Name"
 
-        /** The button's icon ([WButton.icon]). The value is a [WIcon]. Same key name as Swing's Action.SMALL_ICON. */
+        /** The button's icon ([WButtonBase.icon]). The value is a [WIcon]. Same key name as Swing's Action.SMALL_ICON. */
         const val SMALL_ICON: String = "SmallIcon"
 
         /**
@@ -63,6 +63,14 @@ interface WAction {
          * Same key name as Swing's Action.ACTION_COMMAND_KEY.
          */
         const val ACTION_COMMAND_KEY: String = "ActionCommandKey"
+
+        /**
+         * The selected state of toggle-type buttons ([WToggleButton.isSelected]). The value is a Boolean. Same key name as
+         * Swing's Action.SELECTED_KEY.
+         * When the button's selected state changes, it is written back from the button only if the action has a value for
+         * this key.
+         */
+        const val SELECTED_KEY: String = "SwingSelectedKey"
 
         /**
          * The key name used to report changes to [WAction.isEnabled] to [WActionChangeListener.actionChanged]
@@ -132,4 +140,24 @@ abstract class WAbstractAction @JvmOverloads constructor(
     private fun fireChanged(key: String) {
         for (listener in listeners) listener.actionChanged(this, key)
     }
+}
+
+/** Returns the value of [key] as a String. null if absent, [IllegalArgumentException] if the type does not match. */
+internal fun WAction.stringValue(key: String): String? = typedValue<String>(key, "String")
+
+/** Returns the value of [key] as T. null if there is none; [IllegalArgumentException] if the type does not match. */
+internal inline fun <reified T : Any> WAction.typedValue(key: String, typeName: String): T? {
+    val value = getValue(key) ?: return null
+    return value as? T ?: throw IllegalArgumentException("The value of WAction \"$key\" must be $typeName: ${value.javaClass.name}")
+}
+
+/**
+ * The key code of MNEMONIC_KEY. Accepts numbers such as Int and Short, and Char (letters are converted to uppercase)
+ * (equivalent to Swing's Integer).
+ */
+internal fun WAction.keyCodeValue(key: String): Int? = when (val value = getValue(key)) {
+    null -> null
+    is Number -> value.toInt()
+    is Char -> value.uppercaseChar().code // Convert letters to uppercase, like setMnemonic(Char)
+    else -> throw IllegalArgumentException("The value of WAction \"$key\" must be an Int key code: ${value.javaClass.name}")
 }

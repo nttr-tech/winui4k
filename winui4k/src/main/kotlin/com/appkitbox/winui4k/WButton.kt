@@ -8,7 +8,6 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
-import java.lang.ref.WeakReference
 
 /**
  * JButton-like: WinUI 3's Button.
@@ -37,130 +36,6 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
     constructor(action: WAction) : this("") {
         this.action = action
     }
-
-    /**
-     * AbstractButton.getAction / setAction-like: the [WAction] bound to the button. null (the default) means unbound.
-     * When set, the action's values are copied to the button as follows, and the button follows them whenever the
-     * action's values change afterwards.
-     * Items for which the action has no value are unset (the text becomes "", the icon, tooltip, and action command
-     * become null, and the mnemonic becomes 0). Same as Swing's setAction.
-     * - [WAction.NAME] to [text], [WAction.SMALL_ICON] to [icon], [WAction.SHORT_DESCRIPTION] to [toolTipText]
-     * - [WAction.MNEMONIC_KEY] to [mnemonic], [WAction.ACTION_COMMAND_KEY] to [actionCommand]
-     * - [WAction.isEnabled] to [isEnabled]
-     *
-     * On click, [WAction.actionPerformed] is called from the button's Click event (it does not go through [command]
-     * (ICommand), because via ICommand the linkage between CanExecute and IsEnabled would make it act twice). It is
-     * therefore called in the same order and with the same [WActionEvent] as the listeners added with
-     * [addActionListener].
-     * Changing to another action or null unbinds the previous action (value following and click calls).
-     * When set to null, the button's items are put into the "no value" state described above.
-     * If a value has the wrong type (for example, NAME is not a String), [IllegalArgumentException] is thrown.
-     * The action calls the button through a weak reference, so even when the action is shared, buttons that are no longer
-     * used can be collected.
-     */
-    var action: WAction? = null
-        set(value) {
-            if (field === value) return
-            detachAction()
-            if (value != null) {
-                for (key in ACTION_KEYS) applyActionValue(value, key)
-                val sync = ActionSync(this)
-                val clickListener = WActionListener { e -> value.actionPerformed(e) }
-                value.addPropertyChangeListener(sync)
-                addActionListenerForJava(clickListener)
-                actionBinding = ActionBinding(value, sync, clickListener)
-            } else {
-                for (key in ACTION_KEYS) applyActionValue(null, key)
-            }
-            field = value
-        }
-
-    private var actionBinding: ActionBinding? = null
-
-    /** Unbinds [action] (change notifications and click calls). The button's items stay as they are. */
-    private fun detachAction() {
-        val binding = actionBinding ?: return
-        actionBinding = null
-        binding.action.removePropertyChangeListener(binding.sync)
-        removeActionListenerForJava(binding.clickListener)
-    }
-
-    /**
-     * Copies the value of [action] to the button item for [key] (unsets it if action is null). Does nothing for an
-     * unknown key.
-     */
-    private fun applyActionValue(action: WAction?, key: String) {
-        when (key) {
-            WAction.NAME -> text = action?.stringValue(key) ?: ""
-            WAction.SMALL_ICON -> icon = action?.typedValue<WIcon>(key, "WIcon")
-            WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
-            WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
-            WAction.ACTION_COMMAND_KEY -> actionCommand = action?.stringValue(key)
-            WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
-        }
-    }
-
-    /**
-     * A listener that copies to the button when the action changes. Holds the button through a weak reference (removes
-     * itself when the button is collected).
-     */
-    private class ActionSync(button: WButton) : WActionChangeListener {
-        private val reference = WeakReference(button)
-
-        override fun actionChanged(action: WAction, key: String) {
-            val button = reference.get()
-            if (button == null) {
-                action.removePropertyChangeListener(this)
-            } else {
-                button.applyActionValue(action, key)
-            }
-        }
-    }
-
-    private class ActionBinding(val action: WAction, val sync: WActionChangeListener, val clickListener: WActionListener)
-
-    /**
-     * AbstractButton.getIcon / setIcon-like: the icon shown alongside the text. null (the default) means no icon.
-     * WinUI's Button has no icon property, so the Content is made a StackPanel that arranges the icon (IconElement) and
-     * the text (TextBlock). If the text is empty, only the icon becomes the Content. [text] keeps returning the arranged
-     * string.
-     * Putting a component into [content] removes the icon (back to null), and setting an icon later removes [content].
-     * While the icon and text are arranged together, the string is put into the screen reader name ([accessibleName])
-     * (left as is if the user has set a different name).
-     */
-    var icon: WIcon?
-        get() = labelIcon
-        set(value) = changeLabelIcon(value)
-
-    /**
-     * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon. The
-     * default is [HorizontalTextPosition.TRAILING] (text after the icon). [HorizontalTextPosition.CENTER] combined with
-     * [verticalTextPosition] stacks the text above / below the icon. CENTER + [VerticalTextPosition.CENTER] (text overlaid
-     * on the icon) cannot be built with a StackPanel, so it is laid out the same as TRAILING (text after the icon).
-     */
-    var horizontalTextPosition: HorizontalTextPosition
-        get() = labelHorizontalTextPosition
-        set(value) = changeLabelHorizontalTextPosition(value)
-
-    /**
-     * AbstractButton.setVerticalTextPosition-like: the vertical position of the text relative to the icon. The default
-     * is [VerticalTextPosition.CENTER].
-     * When [horizontalTextPosition] is CENTER, [VerticalTextPosition.TOP] / [VerticalTextPosition.BOTTOM] puts the text
-     * above / below the icon. With LEADING / TRAILING, it is the vertical alignment (top, center, bottom) of the text
-     * relative to the icon placed beside it.
-     */
-    var verticalTextPosition: VerticalTextPosition
-        get() = labelVerticalTextPosition
-        set(value) = changeLabelVerticalTextPosition(value)
-
-    /**
-     * AbstractButton.setIconTextGap-like: the gap between the icon and the text (DIP; StackPanel.Spacing). The default is
-     * 4, the same as Swing.
-     * Negative values, NaN, and infinity throw [IllegalArgumentException] (unlike Swing, they cannot be overlapped).
-     */
-    var iconTextGap: Double
-        get() = labelIconTextGap
-        set(value) = changeLabelIconTextGap(value)
 
     /** The flyout opened by clicking the button (Button.Flyout). */
     var flyout: WFlyoutBase? = null
@@ -455,36 +330,7 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         const val POINTER_OVER_BACKGROUND_OPACITY = 0.9
         const val PRESSED_BACKGROUND_OPACITY = 0.8
         const val PRESSED_FOREGROUND_OPACITY = 0.7
-
-        /** Keys of the items copied from [action] to the button (in the order used when copying all of them at first). */
-        val ACTION_KEYS = listOf(
-            WAction.NAME,
-            WAction.SMALL_ICON,
-            WAction.SHORT_DESCRIPTION,
-            WAction.MNEMONIC_KEY,
-            WAction.ACTION_COMMAND_KEY,
-            WAction.ENABLED,
-        )
     }
-}
-
-private fun WAction.stringValue(key: String): String? = typedValue<String>(key, "String")
-
-/** Returns the value of [key] as T. null if there is none; [IllegalArgumentException] if the type does not match. */
-private inline fun <reified T : Any> WAction.typedValue(key: String, typeName: String): T? {
-    val value = getValue(key) ?: return null
-    return value as? T ?: throw IllegalArgumentException("The value of WAction \"$key\" must be $typeName: ${value.javaClass.name}")
-}
-
-/**
- * The key code of MNEMONIC_KEY. Accepts numbers such as Int and Short, and Char (letters are converted to uppercase)
- * (equivalent to Swing's Integer).
- */
-private fun WAction.keyCodeValue(key: String): Int? = when (val value = getValue(key)) {
-    null -> null
-    is Number -> value.toInt()
-    is Char -> value.uppercaseChar().code // Convert letters to uppercase, like setMnemonic(Char)
-    else -> throw IllegalArgumentException("The value of WAction \"$key\" must be an Int key code: ${value.javaClass.name}")
 }
 
 /**

@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -50,25 +51,69 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     private var contentComponent: WComponent? = null
 
+    /** The value of [icon] (the icon this class lays out in Content). If null, there is no icon and the string is put in Content as is. */
+    private var labelIcon: WIcon? = null
+
     /**
-     * The icon shown alongside the label ([WButton.icon]). If null, there is no icon and the string is put into the
-     * Content as is.
-     * Controls other than Button (such as AppBarButton) have their own icon properties, so only [WButton] exposes this.
+     * AbstractButton.getIcon / setIcon-style: an icon shown alongside the text. null (default) means no icon.
+     * WinUI's Button and the like have no icon property, so Content is made a StackPanel that lays out the icon
+     * (IconElement) and the text (TextBlock). If the text is empty, only the icon becomes the Content. [text] keeps
+     * returning the laid-out string.
+     * Putting a component in [content] removes the icon (back to null), and setting an icon later removes [content].
+     * While the icon and text are laid out together, the string is put in the name for screen readers ([accessibleName])
+     * (left as is if the user has set another name).
+     * In [WCheckBox] / [WRadioButton] the icon is placed to the right of the check mark (before the text), and the mark is
+     * kept (Swing's JCheckBox / JRadioButton setIcon replaces the mark itself, but the mark in the WinUI template cannot
+     * be replaced).
+     * [WAppBarButton] / [WAppBarToggleButton], which have their own icon property, set it there (Content is not used).
      */
-    internal var labelIcon: WIcon? = null
-        private set
+    open var icon: WIcon?
+        get() = labelIcon
+        set(value) = changeLabelIcon(value)
 
-    /** The horizontal position of the text relative to the icon ([WButton.horizontalTextPosition]). */
-    internal var labelHorizontalTextPosition: HorizontalTextPosition = HorizontalTextPosition.TRAILING
-        private set
+    /**
+     * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon. The
+     * default is [HorizontalTextPosition.TRAILING] (text after the icon). [HorizontalTextPosition.CENTER] combined with
+     * [verticalTextPosition] stacks the text above / below the icon. CENTER + [VerticalTextPosition.CENTER] (text overlaid
+     * on the icon) cannot be built with a StackPanel, so it is laid out the same as TRAILING (text after the icon).
+     * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (the positions of the icon
+     * and text are decided by the WinUI template from [WAppBarButton.labelPosition] and the CommandBar settings).
+     */
+    var horizontalTextPosition: HorizontalTextPosition = HorizontalTextPosition.TRAILING
+        set(value) {
+            if (value == field) return
+            field = value
+            if (labelIcon != null) showIconLabel()
+        }
 
-    /** The vertical position of the text relative to the icon ([WButton.verticalTextPosition]). */
-    internal var labelVerticalTextPosition: VerticalTextPosition = VerticalTextPosition.CENTER
-        private set
+    /**
+     * AbstractButton.setVerticalTextPosition-like: the vertical position of the text relative to the icon. The default
+     * is [VerticalTextPosition.CENTER].
+     * When [horizontalTextPosition] is CENTER, [VerticalTextPosition.TOP] / [VerticalTextPosition.BOTTOM] puts the text
+     * above / below the icon. With LEADING / TRAILING, it is the vertical alignment (top, center, bottom) of the text
+     * relative to the icon placed beside it.
+     * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (same as [horizontalTextPosition]).
+     */
+    var verticalTextPosition: VerticalTextPosition = VerticalTextPosition.CENTER
+        set(value) {
+            if (value == field) return
+            field = value
+            if (labelIcon != null) showIconLabel()
+        }
 
-    /** The gap between the icon and the text ([WButton.iconTextGap]). */
-    internal var labelIconTextGap: Double = DEFAULT_ICON_TEXT_GAP
-        private set
+    /**
+     * AbstractButton.setIconTextGap-like: the gap between the icon and the text (DIP; StackPanel.Spacing). The default is
+     * 4, the same as Swing.
+     * Negative values, NaN, and infinity throw [IllegalArgumentException] (unlike Swing, they cannot be overlapped).
+     * In [WAppBarButton] / [WAppBarToggleButton] the value is only kept and not used for display (same as [horizontalTextPosition]).
+     */
+    var iconTextGap: Double = DEFAULT_ICON_TEXT_GAP
+        set(value) {
+            require(value >= 0.0 && value.isFinite()) { "iconTextGap must be a finite value of 0 or more: $value" }
+            if (value == field) return
+            field = value
+            if (labelIcon != null) showIconLabel()
+        }
 
     /** The label string while shown with an icon (null while [labelIcon] is null). */
     private var iconLabelText: String? = null
@@ -82,7 +127,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     /**
      * The button's label string (ContentControl.Content).
      * Content is Object-typed, so the setter passes a boxed string and the getter unboxes it.
-     * With an icon ([WButton.icon]), returns the string arranged alongside the icon.
+     * With an icon ([icon]), returns the string laid out with the icon.
      * Returns "" if [content] currently holds a component.
      */
     var text: String
@@ -107,7 +152,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     /**
      * The Content for showing something other than a string. Mutually exclusive with [text] (whichever is set later wins).
-     * Setting it also removes the icon ([WButton.icon]).
+     * Setting it also removes the icon ([icon]).
      */
     var content: WComponent?
         get() = contentComponent
@@ -129,10 +174,10 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /**
-     * Changes the icon (the setter of [WButton.icon]). Keeps the current [text] and shows it again alongside the icon
+     * Changes the icon (the setter of [icon]). Keeps the current [text] and redisplays it laid out with the icon
      * (removing any component in [content]). If null, removes the icon and returns to a string-only Content.
      */
-    internal fun changeLabelIcon(icon: WIcon?) {
+    private fun changeLabelIcon(icon: WIcon?) {
         icon?.requireSupported()
         if (icon == null && labelIcon == null) return
         val label = text
@@ -148,35 +193,13 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
     }
 
-    /** Changes the horizontal position of the text relative to the icon ([WButton.horizontalTextPosition] setter). */
-    internal fun changeLabelHorizontalTextPosition(position: HorizontalTextPosition) {
-        if (position == labelHorizontalTextPosition) return
-        labelHorizontalTextPosition = position
-        if (labelIcon != null) showIconLabel()
-    }
-
-    /** Changes the vertical position of the text relative to the icon (the setter of [WButton.verticalTextPosition]). */
-    internal fun changeLabelVerticalTextPosition(position: VerticalTextPosition) {
-        if (position == labelVerticalTextPosition) return
-        labelVerticalTextPosition = position
-        if (labelIcon != null) showIconLabel()
-    }
-
-    /** Changes the gap between the icon and the text (the setter of [WButton.iconTextGap]). */
-    internal fun changeLabelIconTextGap(gap: Double) {
-        require(gap >= 0.0 && gap.isFinite()) { "iconTextGap must be a finite value of 0 or more: $gap" }
-        if (gap == labelIconTextGap) return
-        labelIconTextGap = gap
-        if (labelIcon != null) showIconLabel()
-    }
-
     /**
-     * Rebuilds the Content from [labelIcon] and [iconLabelText]. If the text is empty, only the icon (IconElement);
-     * otherwise a StackPanel arranging the icon and a TextBlock in the order and orientation of
-     * [labelHorizontalTextPosition] / [labelVerticalTextPosition], with the gap set to [labelIconTextGap].
-     * The TextBlock inherits its text color and font from the button's ContentPresenter.
-     * With a composite Content, the button's UI Automation name is no longer derived from the string
-     * (ButtonBaseAutomationPeer uses the Content for the name only when it is a string), so the string is put into
+     * Rebuilds Content from [labelIcon] and [iconLabelText]. If the text is empty, only the icon (IconElement); otherwise
+     * lays out the icon and a TextBlock in a StackPanel in the order and orientation of [horizontalTextPosition] /
+     * [verticalTextPosition], with a spacing of [iconTextGap].
+     * The TextBlock's text color and font are inherited from the button's ContentPresenter.
+     * With composite Content, the button's UI Automation name is no longer determined from the string
+     * (ButtonBaseAutomationPeer uses Content for the name only when it is a string), so the string is put in
      * AutomationProperties.Name.
      */
     private fun showIconLabel() {
@@ -191,21 +214,21 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         // CENTER + TOP / BOTTOM stacks them vertically; LEADING / TRAILING places them side by side (the vertical position
         // becomes the text's vertical alignment). CENTER + CENTER (text overlaid on the icon) cannot be built with a
         // StackPanel, so it is the same as TRAILING (text after the icon).
-        val vertical = labelHorizontalTextPosition == HorizontalTextPosition.CENTER &&
-            labelVerticalTextPosition != VerticalTextPosition.CENTER
+        val vertical = horizontalTextPosition == HorizontalTextPosition.CENTER &&
+            verticalTextPosition != VerticalTextPosition.CENTER
         val textFirst = if (vertical) {
-            labelVerticalTextPosition == VerticalTextPosition.TOP
+            verticalTextPosition == VerticalTextPosition.TOP
         } else {
-            labelHorizontalTextPosition == HorizontalTextPosition.LEADING
+            horizontalTextPosition == HorizontalTextPosition.LEADING
         }
-        val panel = WPanel(labelIconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
+        val panel = WPanel(iconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
         val textBlock = WLabel(label)
         val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
         for (child in children) {
             if (vertical) {
                 child.horizontalAlignment = HorizontalAlignment.CENTER
             } else {
-                child.verticalAlignment = if (child === textBlock) labelVerticalTextPosition.alignment else VerticalAlignment.CENTER
+                child.verticalAlignment = if (child === textBlock) verticalTextPosition.alignment else VerticalAlignment.CENTER
             }
             panel.add(child)
         }
@@ -307,6 +330,106 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /**
+     * AbstractButton.getAction / setAction-like: the [WAction] bound to the button. null (the default) means unbound.
+     * When set, the action's values are copied to the button as follows, and the button follows them whenever the
+     * action's values change afterwards.
+     * Items for which the action has no value are unset (the text becomes "", the icon, tooltip, and action command
+     * become null, and the mnemonic becomes 0). Same as Swing's setAction.
+     * - [WAction.NAME] to [text], [WAction.SMALL_ICON] to [icon], [WAction.SHORT_DESCRIPTION] to [toolTipText]
+     * - [WAction.MNEMONIC_KEY] to [mnemonic], [WAction.ACTION_COMMAND_KEY] to [actionCommand]
+     * - [WAction.isEnabled] to [isEnabled]
+     * - [WAction.SELECTED_KEY] to [WToggleButton.isSelected] of a [WToggleButton] (and derived classes), which has a
+     *   selection state. If there is no value, it is deselected. It is also mapped in reverse: when the selection state
+     *   changes by a click or programmatically, the action's SELECTED_KEY value is rewritten only if the action has that
+     *   value (same as Swing's JToggleButton; nothing is written to an action without the value).
+     *   Buttons without a selection state ([WButton] etc.) do not read SELECTED_KEY.
+     *
+     * On a click, [WAction.actionPerformed] is called from the button's Click event (it does not go through [command]
+     * (ICommand), because going through ICommand would run twice due to the linkage of CanExecute and IsEnabled). So it is
+     * called in the same order and with the same [WActionEvent] as listeners added with [addActionListener]. For toggle
+     * types it is called after the selection state changes, so reading SELECTED_KEY in actionPerformed gives the new state.
+     * Replacing it with another action or null removes the link to the previous action (value tracking and click calls).
+     * When set to null, the button's items are put in the "no value" state described above.
+     * If a value's type does not match (for example NAME is not a String, or SELECTED_KEY is not a Boolean),
+     * [IllegalArgumentException] is thrown.
+     * The button is called from the action through a weak reference, so even when an action is shared, buttons no longer
+     * used can be collected.
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            detachAction()
+            // Replace before mapping the values (so that the mapped selection state change is not written back to the previous action; same order as Swing's setAction)
+            field = value
+            if (value != null) {
+                for (key in ACTION_KEYS) applyActionValue(value, key)
+                val sync = ActionSync(this)
+                val clickListener = WActionListener { e -> value.actionPerformed(e) }
+                value.addPropertyChangeListener(sync)
+                addActionListenerForJava(clickListener)
+                actionBinding = ActionBinding(value, sync, clickListener)
+            } else {
+                for (key in ACTION_KEYS) applyActionValue(null, key)
+            }
+            onActionChanged(value)
+        }
+
+    private var actionBinding: ActionBinding? = null
+
+    /** Unbinds [action] (change notifications and click calls). The button's items stay as they are. */
+    private fun detachAction() {
+        val binding = actionBinding ?: return
+        actionBinding = null
+        binding.action.removePropertyChangeListener(binding.sync)
+        removeActionListenerForJava(binding.clickListener)
+    }
+
+    /**
+     * Copies the value of [action] to the button item for [key] (unsets it if action is null). Does nothing for an
+     * unknown key.
+     */
+    private fun applyActionValue(action: WAction?, key: String) {
+        when (key) {
+            WAction.NAME -> text = action?.stringValue(key) ?: ""
+            WAction.SMALL_ICON -> icon = action?.typedValue<WIcon>(key, "WIcon")
+            WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+            WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
+            WAction.ACTION_COMMAND_KEY -> actionCommand = action?.stringValue(key)
+            WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+            WAction.SELECTED_KEY -> applyActionSelected(action)
+        }
+    }
+
+    /** Maps [action]'s [WAction.SELECTED_KEY] to the button's selection state (deselects if null). Only [WToggleButton], which has a selection state, overrides this. */
+    internal open fun applyActionSelected(action: WAction?) {
+        // Buttons without a selection state do not read SELECTED_KEY (same as Swing's JButton)
+    }
+
+    /** Called after [action] changes ([WToggleButton] adds or removes the subscription that writes the selection state back to the action). */
+    internal open fun onActionChanged(action: WAction?) {
+        // Buttons without a selection state have nothing to write back to the action
+    }
+
+    /**
+     * A listener that copies to the button when the action changes. Holds the button through a weak reference (removes
+     * itself when the button is collected).
+     */
+    private class ActionSync(button: WButtonBase) : WActionChangeListener {
+        private val reference = WeakReference(button)
+
+        override fun actionChanged(action: WAction, key: String) {
+            val button = reference.get()
+            if (button == null) {
+                action.removePropertyChangeListener(this)
+            } else {
+                button.applyActionValue(action, key)
+            }
+        }
+    }
+
+    private class ActionBinding(val action: WAction, val sync: WActionChangeListener, val clickListener: WActionListener)
+
+    /**
      * ActionListener-like. Implemented as a subscription to ButtonBase.Click (RoutedEventHandler).
      * The listener receives a [WActionEvent] that represents the click.
      */
@@ -395,13 +518,24 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 }
 
+/** The keys of the items mapped from [WButtonBase.action] to the button (the order used when mapping all at first; the selection state is last, as in Swing). */
+private val ACTION_KEYS = listOf(
+    WAction.NAME,
+    WAction.SMALL_ICON,
+    WAction.SHORT_DESCRIPTION,
+    WAction.MNEMONIC_KEY,
+    WAction.ACTION_COMMAND_KEY,
+    WAction.ENABLED,
+    WAction.SELECTED_KEY,
+)
+
 /** The default gap between the icon and the text (4, the same as Swing's AbstractButton.getIconTextGap). */
 internal const val DEFAULT_ICON_TEXT_GAP = 4.0
 
 /**
- * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon
- * ([WButton.horizontalTextPosition]).
- * [LEADING] / [TRAILING] follow the text flow direction (FlowDirection) and mean left / right in left-to-right flow.
+ * AbstractButton.setHorizontalTextPosition-style: the horizontal position of the text relative to the icon
+ * ([WButtonBase.horizontalTextPosition]).
+ * [LEADING] / [TRAILING] follow the text flow direction (FlowDirection); in left-to-right flow they are left / right.
  */
 enum class HorizontalTextPosition {
     /** Puts the text before the icon (on the left in left-to-right flow). */
@@ -419,10 +553,10 @@ enum class HorizontalTextPosition {
 }
 
 /**
- * AbstractButton.setVerticalTextPosition-like: the vertical position of the text relative to the icon
- * ([WButton.verticalTextPosition]).
+ * AbstractButton.setVerticalTextPosition-style: the vertical position of the text relative to the icon
+ * ([WButtonBase.verticalTextPosition]).
  * With [HorizontalTextPosition.CENTER] the text is placed above / below the icon; with LEADING / TRAILING it is the
- * vertical alignment of the text placed beside the icon.
+ * vertical alignment of the text laid out beside the icon.
  */
 enum class VerticalTextPosition(internal val alignment: VerticalAlignment) {
     /** Puts the text above the icon (top-aligned when placed side by side). */

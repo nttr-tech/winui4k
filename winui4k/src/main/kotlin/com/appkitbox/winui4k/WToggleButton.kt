@@ -17,6 +17,7 @@ import kotlin.jvm.JvmSynthetic
  *
  * Provides [isChecked] (null = indeterminate), [isThreeState], and
  * [addItemListener] / [removeItemListener] (Checked / Unchecked / Indeterminate).
+ * It can be created with the same constructors as Swing's JToggleButton (text, icon, selection state, [WAction]).
  */
 open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
     @JvmOverloads
@@ -24,6 +25,31 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
         Activation.composeDefault(XamlInterop.CLS_ToggleButton, XamlInterop.IID_IToggleButtonFactory),
     ) {
         if (text.isNotEmpty()) this.text = text
+    }
+
+    /** JToggleButton(String, boolean)-style: a button with the specified text and selection state. */
+    constructor(text: String, selected: Boolean) : this(text) {
+        if (selected) isSelected = true
+    }
+
+    /** JToggleButton(Icon)-style: a button with only an icon. */
+    constructor(icon: WIcon) : this("") {
+        this.icon = icon
+    }
+
+    /** JToggleButton(String, Icon)-style: a button with text and an icon. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?) : this(text) {
+        if (icon != null) this.icon = icon
+    }
+
+    /** JToggleButton(String, Icon, boolean)-style: a button with the specified text, icon and selection state. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?, selected: Boolean) : this(text, icon) {
+        if (selected) isSelected = true
+    }
+
+    /** JToggleButton(Action)-style: a button that copies the values of [action] (including the SELECTED_KEY selection state) and calls the action on click. */
+    constructor(action: WAction) : this("") {
+        this.action = action
     }
 
     /** The IToggleButton view holding IsChecked / IsThreeState / the Checked-family events. */
@@ -63,6 +89,36 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
             val button = e.source as WToggleButton
             button.buttonGroup?.onItemStateChanged(button, e.stateChange)
         }
+
+        /** The key in [itemTokens] for the subscription that writes the selection state back to [action] (counted separately from user listeners). */
+        val ACTION_KEY = Any()
+
+        /**
+         * The subscription that writes the selection state back to the SELECTED_KEY of [action]. As in Swing's AbstractButton,
+         * it rewrites the value only when the action has a SELECTED_KEY value and it differs. Like [GROUP_LISTENER], it
+         * captures nothing (the button is looked up from the event source).
+         */
+        val ACTION_LISTENER: (WItemEvent) -> Unit = { e ->
+            val button = e.source as WToggleButton
+            val action = button.action
+            val current = action?.getValue(WAction.SELECTED_KEY)
+            if (action != null && current != null) {
+                val selected = button.isSelected
+                if (current != selected) action.putValue(WAction.SELECTED_KEY, selected)
+            }
+        }
+    }
+
+    /** Matches the selection state to the action's SELECTED_KEY (false if absent). Throws [IllegalArgumentException] if it is not a Boolean. */
+    override fun applyActionSelected(action: WAction?) {
+        val selected = action?.typedValue<Boolean>(WAction.SELECTED_KEY, "Boolean") == true
+        if (selected != isSelected) isSelected = selected
+    }
+
+    /** Holds the subscription that writes the selection state back to the action only while an action is bound. */
+    override fun onActionChanged(action: WAction?) {
+        unsubscribeItem(ACTION_KEY)
+        if (action != null) subscribeItem(ACTION_KEY, ACTION_LISTENER)
     }
 
     /**
