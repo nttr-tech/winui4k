@@ -254,6 +254,33 @@ class WLabelTest : FunSpec() {
                 UiTestHarness.detach(panel)
             }
         }
+
+        test("the root Grid has a transparent brush as its Background (without a Background, mouse events are not received in places such as the gap between the icon and the text)") {
+            onUiThreadGet {
+                val withIcon = WLabel("Text", Symbol.SAVE).also { it.iconTextGap = 24.0 }
+                listOf(WLabel("Text"), withIcon, WLabel(Symbol.SAVE), WLabel()).map { rootBackgroundAlpha(it) }
+            } shouldContainExactly listOf(0, 0, 0, 0)
+        }
+    }
+
+    /** The alpha of the root Grid's Background (0 is transparent and hit-testable). -1 if there is no Background (null). */
+    private fun rootBackgroundAlpha(label: WLabel): Int {
+        val panel = label.inspectable.queryInterface(XamlInterop.IID_IPanel)
+        val brush = try {
+            panel.getPtrOrNull(XamlInterop.IPanel_get_Background)
+        } finally {
+            panel.release()
+        } ?: return -1
+        val solid = try {
+            brush.queryInterface(XamlInterop.IID_ISolidColorBrush)
+        } finally {
+            brush.release()
+        }
+        return try {
+            XamlStructs.getColor(solid, XamlInterop.ISolidColorBrush_get_Color)[0]
+        } finally {
+            solid.release()
+        }
     }
 
     private companion object {

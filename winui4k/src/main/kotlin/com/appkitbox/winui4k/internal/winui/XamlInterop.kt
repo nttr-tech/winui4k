@@ -153,6 +153,7 @@ internal object XamlInterop {
     const val IID_IPanel = "27a1b418-56f3-525e-b883-cefed905eed3"
     const val IPanel_get_Children = 6                  // -> IVector<UIElement>
     const val IPanel_get_Background = 7                // get_Background(out Brush)
+    const val IPanel_put_Background = 8                // put_Background(Brush)
 
     // ---- Microsoft.UI.Xaml.Controls.Border ----
     const val CLS_Border = "Microsoft.UI.Xaml.Controls.Border"

@@ -95,8 +95,17 @@ enum class TextTrimming(internal val native: Int) {
  * [textAlignment] and [textTrimming] work the same as when the root was the TextBlock. UI Automation names such as
  * [accessibleName] go into the TextBlock (the Grid does not appear as an element to screen readers).
  *
+ * The root Grid has a transparent brush as its Background. A Grid without a Background does not receive mouse events
+ * where its children do not paint (such as the gap between the icon and the text), whereas Swing's JLabel receives mouse
+ * events over its whole bounds.
+ *
  * Of JLabel's features, the disabled icon (setDisabledIcon), HTML strings, the mnemonic display that underlines a
  * character (setDisplayedMnemonicIndex), and the grayed display from the label's own setEnabled are not available.
+ *
+ * Changes from earlier versions: since a constructor taking an icon was added, Java's `new WLabel(null)` is ambiguous
+ * between `WLabel(String)` and `WLabel(WIcon)` and does not compile (write `(String) null` or `(WIcon) null`).
+ * [foreground] returns the default color (the native effective value) even before being set (previously it was null
+ * until set).
  */
 class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     Activation.composeDefault(XamlInterop.CLS_Grid, XamlInterop.IID_IGridFactory), // Default interface = IGrid
@@ -130,6 +139,18 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             }
         },
     )
+
+    init {
+        // A Grid without a Background is not hit-testable where its children do not paint. A transparent brush makes its whole bounds hit-testable
+        val transparent = Xaml.solidBrush(0, TRANSPARENT_RGB, TRANSPARENT_RGB, TRANSPARENT_RGB)
+        val panel = inspectable.queryInterface(XamlInterop.IID_IPanel)
+        try {
+            panel.call(XamlInterop.IPanel_put_Background, transparent.ptr)
+        } finally {
+            panel.release()
+            transparent.release()
+        }
+    }
 
     override val automationTarget: ComPtr get() = textBlock
 
@@ -460,3 +481,6 @@ private fun groupAlignment(alignment: TextAlignment): HorizontalAlignment = when
 // Windows.UI.Text.TextDecorations values (extracted from winmd)
 private const val DECORATION_UNDERLINE = 1
 private const val DECORATION_STRIKETHROUGH = 2
+
+/** The RGB of the transparent brush (white with A=0, same as Brushes.Transparent). */
+private const val TRANSPARENT_RGB = 255
