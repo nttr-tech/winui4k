@@ -1,13 +1,48 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
+import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 /** Tests that WLabel's text decorations, font and text color are applied to the TextBlock and can be read back from the native object. */
 class WLabelTest : FunSpec() {
+    /** The DesiredSize of [element] ([width, height]). */
+    private fun desiredSizeOf(element: ComPtr): List<Double> {
+        val ui = element.queryInterface(XamlInterop.IID_IUIElement)
+        return try {
+            XamlStructs.getSizeFloat(ui, XamlInterop.IUIElement_get_DesiredSize).toList()
+        } finally {
+            ui.release()
+        }
+    }
+
+    /** The left edge of the first character of the TextBlock [element] (TextPointer.GetCharacterRect). */
+    private fun firstCharacterX(element: ComPtr): Double {
+        val textBlock = element.queryInterface(XamlInterop.IID_ITextBlock)
+        val start = try {
+            textBlock.getPtr(XamlInterop.ITextBlock_get_ContentStart)
+        } finally {
+            textBlock.release()
+        }
+        return try {
+            Ffi.backend.withScope { scope ->
+                val rect = scope.allocate(RECT_BYTES, FLOAT_ALIGNMENT) // Windows.Foundation.Rect { float X, Y, Width, Height }
+                start.call(XamlInterop.ITextPointer_GetCharacterRect, XamlInterop.LogicalDirection_Forward, rect)
+                Ffi.backend.memory.getFloat(rect, 0).toDouble()
+            }
+        } finally {
+            start.release()
+        }
+    }
+
     init {
         test("isItalic is false by default and can be read back from the TextBlock once set") {
             val states = onUiThreadGet {
@@ -100,6 +135,105 @@ class WLabelTest : FunSpec() {
             restored shouldBe initial
         }
 
+        test("the desired size of a label without an icon is the same as that of a TextBlock alone with the same text") {
+            val panel = onUiThreadGet {
+                val panel = WPanel()
+                panel.add(WLabel("Save now").also { it.horizontalAlignment = HorizontalAlignment.LEFT })
+                panel.add(XamlElement.load("""<TextBlock Text="Save now" HorizontalAlignment="Left" />"""))
+                panel
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val (label, textBlock) = onUiThreadGet {
+                    panel.updateLayout()
+                    val label = checkNotNull(Xaml.childAt(panel.uiElement, 0))
+                    val textBlock = checkNotNull(Xaml.childAt(panel.uiElement, 1))
+                    try {
+                        listOf(label, textBlock).map { desiredSizeOf(it) }
+                    } finally {
+                        label.release()
+                        textBlock.release()
+                    }
+                }.let { it[0] to it[1] }
+                label shouldBe textBlock
+                label[0] shouldBeGreaterThan 0.0
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("a label without enough width trims its text with textTrimming, and does not trim once widened") {
+            val label = onUiThreadGet {
+                WLabel("a very long label string").also {
+                    it.textTrimming = TextTrimming.CHARACTER_ELLIPSIS
+                    it.width = 40.0
+                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(label)
+            try {
+                val narrow = onUiThreadGet {
+                    label.updateLayout()
+                    label.textBlock.getBool(XamlInterop.ITextBlock_get_IsTextTrimmed)
+                }
+                val wide = onUiThreadGet {
+                    label.width = 1000.0
+                    label.updateLayout()
+                    label.textBlock.getBool(XamlInterop.ITextBlock_get_IsTextTrimmed)
+                }
+                (narrow to wide) shouldBe (true to false)
+            } finally {
+                UiTestHarness.detach(label)
+            }
+        }
+
+        test("textAlignment aligns the text within the widened label, and the text position is the same as a TextBlock alone with the same width") {
+            // A TextBlock's ActualWidth is the text width even with Width set to 300 (measured in WinUI), so compare the position of the first character
+            val panel = onUiThreadGet {
+                val panel = WPanel()
+                panel.add(
+                    WLabel("Right").also {
+                        it.width = 300.0
+                        it.horizontalAlignment = HorizontalAlignment.LEFT
+                        it.textAlignment = TextAlignment.RIGHT
+                    },
+                )
+                panel.add(XamlElement.load("""<TextBlock Width="300" HorizontalAlignment="Left" TextAlignment="Right" Text="Right" />"""))
+                panel
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                val (labelX, textBlockX) = onUiThreadGet {
+                    panel.updateLayout()
+                    val label = checkNotNull(Xaml.childAt(panel.uiElement, 0))
+                    val textBlock = checkNotNull(Xaml.childAt(panel.uiElement, 1))
+                    val inner = checkNotNull(Xaml.childAt(label, 0))
+                    try {
+                        firstCharacterX(inner) to firstCharacterX(textBlock)
+                    } finally {
+                        listOf(label, textBlock, inner).forEach { it.release() }
+                    }
+                }
+                labelX shouldBe textBlockX
+                labelX shouldBeGreaterThan 250.0
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("accessibleName and accessibleDescription go into the TextBlock that is read aloud") {
+            onUiThreadGet {
+                val label = WLabel("Full name")
+                label.accessibleName = "Full name label"
+                label.accessibleDescription = "Description"
+                listOf(
+                    label.accessibleName,
+                    Xaml.getAutomation(label.textBlock, XamlInterop.IAutomationPropertiesStatics_GetName),
+                    Xaml.getAutomation(label.textBlock, XamlInterop.IAutomationPropertiesStatics_GetHelpText),
+                )
+            } shouldContainExactly listOf("Full name label", "Full name label", "Description")
+        }
+
         test("even after foreground = null, the shown text is drawn in the color inherited from the parent (not transparent)") {
             // When the parent's Foreground is blue, a TextBlock whose local value is cleared inherits the parent's color (setting a null brush would not inherit it)
             val panel = onUiThreadGet {
@@ -120,5 +254,10 @@ class WLabelTest : FunSpec() {
                 UiTestHarness.detach(panel)
             }
         }
+    }
+
+    private companion object {
+        const val RECT_BYTES = 16L
+        const val FLOAT_ALIGNMENT = 4L
     }
 }

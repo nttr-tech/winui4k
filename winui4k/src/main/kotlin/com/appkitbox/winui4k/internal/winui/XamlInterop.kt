@@ -2424,6 +2424,13 @@ internal object XamlInterop {
     const val ITextBlock_put_TextLineBounds = 48
     const val ITextBlock_put_IsTextScaleFactorEnabled = 56
     const val ITextBlock_get_FontWeight = 10           // get_FontWeight(out FontWeight { u2 Weight })
+    const val ITextBlock_get_IsTextTrimmed = 59        // get_IsTextTrimmed(out boolean)
+    const val ITextBlock_get_ContentStart = 38         // get_ContentStart(out TextPointer)
+
+    // ---- Microsoft.UI.Xaml.Documents.TextPointer ----
+    const val IID_ITextPointer = "842eb385-ee41-5930-979b-438fa7525a51"
+    const val ITextPointer_GetCharacterRect = 10       // GetCharacterRect(LogicalDirection, out Rect)
+    const val LogicalDirection_Forward = 1             // Microsoft.UI.Xaml.Documents.LogicalDirection (Backward=0, Forward=1)
 
     // ---- Microsoft.UI.Xaml.Controls.TextBlock (statics: dependency properties passed to ClearValue) ----
     const val IID_ITextBlockStatics = "3187104b-65c2-5e53-b889-c8272b1314cd"

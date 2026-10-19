@@ -371,20 +371,26 @@ abstract class WComponent internal constructor(
         set(value) = Hstring.use(value) { h -> frameworkElement.call(XamlInterop.IFrameworkElement_put_Name, h) }
 
     /**
+     * The element on which UI Automation attached properties ([accessibleName] etc.) are set. The default is this element
+     * itself; [WLabel], whose inner element is the target read aloud (the TextBlock rather than the root Grid), overrides it.
+     */
+    internal open val automationTarget: ComPtr get() = inspectable
+
+    /**
      * The name read by screen readers (AutomationProperties.Name; equivalent to AccessibleContext.getAccessibleName).
      * An empty string if unset; setting an empty string clears it.
      */
     var accessibleName: String
-        get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetName)
-        set(value) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetName, value)
+        get() = Xaml.getAutomation(automationTarget, XamlInterop.IAutomationPropertiesStatics_GetName)
+        set(value) = Xaml.setAutomation(automationTarget, XamlInterop.IAutomationPropertiesStatics_SetName, value)
 
     /**
      * Supplementary description for screen readers (AutomationProperties.HelpText;
      * equivalent to AccessibleContext.getAccessibleDescription). An empty string if unset.
      */
     var accessibleDescription: String
-        get() = Xaml.getAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
-        set(value) = Xaml.setAutomation(inspectable, XamlInterop.IAutomationPropertiesStatics_SetHelpText, value)
+        get() = Xaml.getAutomation(automationTarget, XamlInterop.IAutomationPropertiesStatics_GetHelpText)
+        set(value) = Xaml.setAutomation(automationTarget, XamlInterop.IAutomationPropertiesStatics_SetHelpText, value)
 
     /** The value set to [isFocusable] (null = not set). */
     private var focusableSetting: Boolean? = null

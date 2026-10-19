@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
@@ -141,7 +142,9 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             horizontalTextPosition == HorizontalTextPosition.LEADING
         }
         val panel = WPanel(iconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
-        val textBlock = WLabel(label)
+        // WLabel's root is a Grid, so the text inside a button uses a TextBlock directly (without a Grid in between)
+        val textBlock = XamlElement.adopt(Activation.activate(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlock))
+        textBlock.setText(label)
         val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
         for (child in children) {
             if (vertical) {

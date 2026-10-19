@@ -145,3 +145,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (テストは WM_KEYDOWN の後の keyTyped を待ってから WM_KEYUP を送る)
   - TextBox は CharacterReceived の文字を、要素に付けたハンドラより先に挿入する (`TextBoxBase.cpp` の CTextBoxBase::OnCharacterReceived)
     ため、keyTyped の consume() では入力を止められない
+- WLabel にアイコンを並べるために、TextBlock を Grid に入れたときの大きさと文字の位置を E2E テストで確かめた
+  (2.5.4-experimental。`WLabelTest`)
+  - TextBlock は画像を子に持てない (Inlines の InlineUIContainer は RichTextBlock だけ) ため、WLabel のルートは TextBlock を 1 つ入れた
+    Grid にした。アイコンの無いラベルの DesiredSize・TextTrimming での切り詰め・TextAlignment での最初の文字の位置は、TextBlock だけのときと同じ
+  - TextBlock の ActualWidth は、Width を 300 にしても、Stretch で広げても文字の幅 (例: 14) を返す。TextAlignment.Right の文字は
+    広げた幅の右端に描かれる (TextPointer.GetCharacterRect の x が 286) ので、揃えの確認には ActualWidth ではなく文字の位置を使う
