@@ -341,6 +341,27 @@ abstract class WComponent internal constructor(
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxHeight, value.height)
         }
 
+    /** The values put with [putClientProperty] (not created until one is put). */
+    private var clientProperties: MutableMap<Any, Any>? = null
+
+    /**
+     * JComponent.putClientProperty-style: associates an arbitrary value with an arbitrary key (a Kotlin-side map that does
+     * not change the native state). Used by apps to attach their own markers or data to a component. Keys are compared with
+     * equals / hashCode. If [value] is null, the value for that key is removed. Unlike Swing, value changes are not reported
+     * with PropertyChangeEvent.
+     */
+    fun putClientProperty(key: Any, value: Any?) {
+        if (value == null) {
+            clientProperties?.remove(key)
+            return
+        }
+        val properties = clientProperties ?: HashMap<Any, Any>().also { clientProperties = it }
+        properties[key] = value
+    }
+
+    /** JComponent.getClientProperty-style: the value put with [putClientProperty]. null for keys not put or removed. */
+    fun getClientProperty(key: Any): Any? = clientProperties?.get(key)
+
     /**
      * Equivalent to Component.getName / setName (FrameworkElement.Name). An empty string if unset.
      * Used as the lookup key in the XAML name scope.
