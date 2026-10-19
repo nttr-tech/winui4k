@@ -37,6 +37,13 @@
   WButton.background / foreground は 3 つのスタイルのキーをすべて入れ、通常の状態の色は Control.Background /
   Foreground のローカル値でも設定する (Style の Setter より優先される)。null に戻すときはキーを外してから ClearValue すると、
   Loaded の前にキーを入れていた場合も含めてテーマの既定の色に戻る
+- **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
+  どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
+  DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、
+  Style を適用したときにテンプレートから ChevronIcon が見つからないことを確認)。WinUI にアクセント配色の DropDownButton の
+  Style は無い。一方 DropDownButton 自身のテンプレート (`DropDownButton.xaml`) は背景・枠・文字を Button と同じ
+  `ButtonBackground*` / `ButtonBorderBrush*` / `ButtonForeground*` で塗るので、軽量スタイルのキーはそのまま効く。
+  シェブロンだけは `DropDownButtonForegroundSecondary*` で塗られる。WDropDownButton は組み込みスタイルを適用しない
 - **TabView: 表示後に TabItems へ Append しても画面にタブが増えない (Append は成功し Size も増える)**
   TabView は内部 ListView の Loaded 時に TabItems プロパティの実体を ListView.Items へ差し替える
   (microsoft-ui-xaml `TabView::OnListViewLoaded` 末尾の `TabItems(lvItems)`)。

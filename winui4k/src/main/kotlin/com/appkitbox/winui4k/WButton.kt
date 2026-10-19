@@ -19,9 +19,14 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
  * [background] / [foreground].
  * With [icon], an icon can be placed beside (or above or below) the text (same as JButton(String, Icon)).
  */
-class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
-    Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // default interface = IButton
-) {
+open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
+    @JvmOverloads
+    constructor(text: String = "") : this(
+        Activation.composeDefault(XamlInterop.CLS_Button, XamlInterop.IID_IButtonFactory), // Default interface = IButton
+    ) {
+        if (text.isNotEmpty()) this.text = text
+    }
+
     /** JButton(Icon)-like: a button with only an icon. */
     constructor(icon: WIcon) : this("") {
         this.icon = icon
@@ -37,16 +42,20 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
         this.action = action
     }
 
+    /** The IButton view with Flyout (QI'd, since the derived class [WDropDownButton] has a different default interface). */
+    private val button: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IButton)) }
+
     /** The flyout opened by clicking the button (Button.Flyout). */
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
-            inspectable.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
+            button.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
         }
 
     /**
      * Whether to apply the built-in accent-colored style (AccentButtonStyle).
      * Gives the emphasized look of a dialog's default button. Setting it back to false restores the default style.
+     * Has no visual effect on [WDropDownButton] (not applied, since AccentButtonStyle uses the Button template, which removes the chevron).
      */
     var isAccent: Boolean = false
         set(value) {
@@ -62,6 +71,8 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * While false, the [background] color is not painted in any state (normal, pointer over, pressed) (same as Swing's
      * contentAreaFilled). The color that was set is kept and comes back when set to true again. [foreground] is not
      * affected.
+     * [WDropDownButton] does not apply SubtleButtonStyle (for the same reason as [isAccent]), so it only stops painting
+     * [background], and the theme's default background and border remain.
      */
     var isContentAreaFilled: Boolean = true
         set(value) {
@@ -288,10 +299,19 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
      * to the appearance of the remaining settings.
      */
     private fun requestedAppearance(): ButtonAppearance = when {
+        !usesButtonStyles -> ButtonAppearance.DEFAULT
         isDefaultButton || isAccent -> ButtonAppearance.ACCENT
         !isContentAreaFilled -> ButtonAppearance.SUBTLE
         else -> ButtonAppearance.DEFAULT
     }
+
+    /**
+     * Whether the built-in styles (AccentButtonStyle / SubtleButtonStyle) can be used. Both have TargetType Button and
+     * replace the whole template, so derived classes with a different template ([WDropDownButton]) return false to keep
+     * their own template.
+     */
+    internal open val usesButtonStyles: Boolean
+        get() = true
 
     private fun updateAppearance() {
         val appearance = requestedAppearance()
@@ -308,10 +328,6 @@ class WButton @JvmOverloads constructor(text: String = "") : WButtonBase(
                 style.release()
             }
         }
-    }
-
-    init {
-        if (text.isNotEmpty()) this.text = text
     }
 
     private companion object {

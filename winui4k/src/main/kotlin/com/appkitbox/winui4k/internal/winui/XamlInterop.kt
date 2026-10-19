@@ -1214,6 +1214,7 @@ internal object XamlInterop {
 
     // ---- Microsoft.UI.Xaml.Controls.IconElement / SymbolIcon ----
     const val IID_IIconElement = "18f69350-279e-50ea-8d23-138e717ed939"
+    const val IIconElement_get_Foreground = 6          // get_Foreground(out Brush)
     const val CLS_SymbolIcon = "Microsoft.UI.Xaml.Controls.SymbolIcon"
     const val IID_ISymbolIconFactory = "d4430447-567c-5aad-996a-a547774e2c3c"
     const val ISymbolIconFactory_CreateInstanceWithSymbol = 6 // CreateInstanceWithSymbol(Symbol, out SymbolIcon)
