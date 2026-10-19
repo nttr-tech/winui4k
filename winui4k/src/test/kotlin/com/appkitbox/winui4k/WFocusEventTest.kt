@@ -62,6 +62,21 @@ class WFocusEventTest : FunSpec() {
 
     private fun focus(component: WComponent) = onUiThread { check(component.requestFocusInWindow()) { "could not move focus" } }
 
+    /** Whether the element that currently has focus (FocusManager.GetFocusedElement) is [component] itself (false for template parts or inside a Popup). */
+    private fun focusIsOnItself(component: WComponent): Boolean = onUiThreadGet {
+        val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return@onUiThreadGet false
+        val focused = try {
+            Xaml.focusedElement(root)
+        } finally {
+            root.release()
+        } ?: return@onUiThreadGet false
+        try {
+            Xaml.sameObject(focused, component.inspectable)
+        } finally {
+            focused.release()
+        }
+    }
+
     init {
         test("gaining focus via requestFocusInWindow calls focusGained exactly once, with that component as the source") {
             val form = showForm()
@@ -121,6 +136,33 @@ class WFocusEventTest : FunSpec() {
                 awaitEvents(form, listOf("spinner:gained"))
                 focus(form.button)
                 awaitEvents(form, listOf("spinner:gained", "spinner:lost"))
+            } finally {
+                UiTestHarness.detach(form.panel)
+            }
+        }
+
+        test("opening and closing a WComboBox drop-down keeps focus while focus is on the drop-down items (as in JComboBox)") {
+            val form = showForm()
+            val combo = onUiThreadGet {
+                WComboBox().also { combo ->
+                    listOf("Small", "Medium", "Large").forEach { combo.addItem(it) }
+                    form.panel.add(combo)
+                }
+            }
+            try {
+                eventually(3.seconds) { onUiThreadGet { combo.actualWidth > 0.0 }.shouldBeTrue() }
+                onUiThread { form.record(combo, "combo") }
+                focus(combo)
+                awaitEvents(form, listOf("combo:gained"))
+                // On open, WinUI moves focus to an item (a ComboBoxItem inside the drop-down Popup) (SetFocusedItem in ComboBox::OnOpen)
+                onUiThread { combo.isDropDownOpen = true }
+                eventually(3.seconds) { focusIsOnItself(combo).shouldBeFalse() }
+                onUiThreadGet { combo.hasFocus() }.shouldBeTrue()
+                onUiThread { combo.isDropDownOpen = false }
+                eventually(3.seconds) { focusIsOnItself(combo).shouldBeTrue() }
+                awaitEvents(form, listOf("combo:gained"))
+                focus(form.button)
+                awaitEvents(form, listOf("combo:gained", "combo:lost"))
             } finally {
                 UiTestHarness.detach(form.panel)
             }

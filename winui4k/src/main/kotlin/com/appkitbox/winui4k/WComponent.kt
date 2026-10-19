@@ -465,7 +465,12 @@ abstract class WComponent internal constructor(
      *
      * As in Swing, it is not called for the focus of child components (such as a button inside a panel). For controls
      * where a part inside the template (the input field) receives focus, such as [WSpinner] which uses NumberBox, the
-     * focus of that part is reported as this component's, and moving between the parts does not call it.
+     * focus of that part is reported as this component's, and moving between the parts does not call it. The same goes for
+     * parts shown in a Popup inside the template: opening the [WComboBox] dropdown and moving focus to an item, or closing
+     * it and coming back, does not call it (just as JComboBox keeps focus while its popup is open).
+     * However, for a Flyout (the picker of [WDatePicker] / [WTimePicker], or [WFlyout]) WinUI cannot tell which component
+     * it belongs to, so when it takes focus focusLost is called, and when it closes and focus returns focusGained is called
+     * (unlike Swing; doc/verification.md).
      */
     fun addFocusListener(listener: WFocusListener?) {
         if (listener != null) input.addFocusListener(listener)

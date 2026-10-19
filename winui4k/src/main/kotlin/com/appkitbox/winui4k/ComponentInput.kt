@@ -84,14 +84,17 @@ internal class ComponentInput(private val owner: WComponent) {
     private fun isFromOwnPart(args: Ptr): Boolean {
         val source = Xaml.originalSource(args) ?: return false
         return try {
-            isOwnPart(owner, source)
+            isOwnFocusPart(owner, source)
         } finally {
             source.release()
         }
     }
 }
 
-/** Whether the element that currently has focus (FocusManager.GetFocusedElement) is [owner] itself or a part of [owner]'s template. */
+/**
+ * Whether the element that currently has focus (FocusManager.GetFocusedElement) is [owner] itself or a part of [owner]'s
+ * template (including parts shown in a Popup inside the template; see [isOwnFocusPart]).
+ */
 internal fun ownsFocus(owner: WComponent): Boolean {
     val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
     val focused = try {
@@ -100,11 +103,24 @@ internal fun ownsFocus(owner: WComponent): Boolean {
         root.release()
     } ?: return false
     return try {
-        isOwnPart(owner, focused)
+        isOwnFocusPart(owner, focused)
     } finally {
         focused.release()
     }
 }
+
+/**
+ * [isOwnPart] for focus checks: parts shown in a Popup inside [owner]'s template (such as the items of a WComboBox
+ * drop-down) are also treated as parts of [owner]. Just as JComboBox keeps focus while its popup is open, opening or
+ * closing does not report focusLost / focusGained. The visual tree parent of a Popup's child is PopupRoot rather than the
+ * Popup, so this moves to the Popup through the logical tree parent (FrameworkElement.Parent of Popup.Child is the Popup)
+ * and continues from there.
+ * The Popup of a Flyout (the picker of DatePicker / TimePicker, a [WFlyout] attached to a [WComponent], and so on) does
+ * not belong to the tree, and which element it belongs to cannot be looked up with WinUI's public API, so it is not
+ * treated as a part of [owner] (doc/verification.md).
+ */
+internal fun isOwnFocusPart(owner: WComponent, element: ComPtr): Boolean =
+    classifyPart(owner, element, throughPopups = true) == PartKind.OWN
 
 /**
  * Whether [element] is [owner] itself or a part of [owner]'s template (such as the TextBox inside a NumberBox).
@@ -115,32 +131,43 @@ internal fun ownsFocus(owner: WComponent): Boolean {
  * (FrameworkElement.Parent) of an element on the way is [owner]. The logical tree parent of a template part is never
  * [owner] (the root of the template has null). Returns false when [owner] is not reached (such as inside a Popup).
  */
-internal fun isOwnPart(owner: WComponent, element: ComPtr): Boolean = classifyPart(owner, element) == PartKind.OWN
+internal fun isOwnPart(owner: WComponent, element: ComPtr): Boolean = classifyPart(owner, element, throughPopups = false) == PartKind.OWN
 
 /**
  * Whether the source [element] of a handled pointer event is inside a control (Control) within the content (children) of
  * [owner]. If true, that control (such as a button inside a panel) is considered to have handled the event. False for
  * [owner] itself, its template parts, or content containing no control (such as text inside a panel). True when [owner]
- * is not reached.
+ * is not reached (including inside a Popup; JComboBox's popup is also a separate component, so for the mouse it counts as
+ * outside [owner]).
  */
 internal fun isHandledInContent(owner: WComponent, element: ComPtr): Boolean {
-    val kind = classifyPart(owner, element)
+    val kind = classifyPart(owner, element, throughPopups = false)
     return kind == PartKind.CONTROL_IN_CONTENT || kind == PartKind.DETACHED
 }
 
 /** The result of [classifyPart]. */
 private enum class PartKind { OWN, CONTENT, CONTROL_IN_CONTENT, DETACHED }
 
-/** Walks the visual tree parents from [element] up to [owner] to find where [element] lies within [owner]. */
-private fun classifyPart(owner: WComponent, element: ComPtr): PartKind {
+/**
+ * Walks the visual tree parents from [element] up to [owner] to find where [element] lies within [owner].
+ * If [throughPopups], continues from a Popup's child to the Popup, its logical tree parent ([isOwnFocusPart]).
+ */
+private fun classifyPart(owner: WComponent, element: ComPtr, throughPopups: Boolean): PartKind {
     if (Xaml.sameObject(element, owner.inspectable)) return PartKind.OWN
     var current = element.queryInterface(XamlInterop.IID_IDependencyObject)
     var controlSeen = false
     try {
         repeat(MAX_PART_DEPTH) {
             if (isControl(current)) controlSeen = true
-            if (isLogicalChildOf(current, owner)) return if (controlSeen) PartKind.CONTROL_IN_CONTENT else PartKind.CONTENT
-            val parent = Xaml.parentOf(current) ?: return PartKind.DETACHED
+            val logicalParent = logicalParentOf(current)
+            val parent = try {
+                if (logicalParent != null && Xaml.sameObject(logicalParent, owner.inspectable)) {
+                    return if (controlSeen) PartKind.CONTROL_IN_CONTENT else PartKind.CONTENT
+                }
+                (if (throughPopups) popupOrNull(logicalParent) else null) ?: Xaml.parentOf(current)
+            } finally {
+                logicalParent?.release()
+            } ?: return PartKind.DETACHED
             current.release()
             current = parent
             if (Xaml.sameObject(current, owner.inspectable)) return PartKind.OWN
@@ -157,18 +184,23 @@ private fun isControl(element: ComPtr): Boolean {
     return true
 }
 
-/** Whether the logical tree parent (FrameworkElement.Parent) of [element] is [owner]. */
-private fun isLogicalChildOf(element: ComPtr, owner: WComponent): Boolean {
-    val frameworkElement = element.queryInterfaceOrNull(XamlInterop.IID_IFrameworkElement) ?: return false
-    val logicalParent = try {
+/** The logical tree parent (FrameworkElement.Parent) of [element], or null if none. The caller owns the returned reference. */
+private fun logicalParentOf(element: ComPtr): ComPtr? {
+    val frameworkElement = element.queryInterfaceOrNull(XamlInterop.IID_IFrameworkElement) ?: return null
+    return try {
         frameworkElement.getPtrOrNull(XamlInterop.IFrameworkElement_get_Parent)
     } finally {
         frameworkElement.release()
-    } ?: return false
+    }
+}
+
+/** If [element] is a Popup, its IDependencyObject (owned by the caller). Null if null or not a Popup. */
+private fun popupOrNull(element: ComPtr?): ComPtr? {
+    val popup = element?.queryInterfaceOrNull(XamlInterop.IID_IPopup) ?: return null
     return try {
-        Xaml.sameObject(logicalParent, owner.inspectable)
+        popup.queryInterface(XamlInterop.IID_IDependencyObject)
     } finally {
-        logicalParent.release()
+        popup.release()
     }
 }
 

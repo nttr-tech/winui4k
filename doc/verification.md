@@ -108,6 +108,19 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     ならず、内容 (Content / Children) の Parent はコントロールになるので、これでテンプレートの部品と内容を見分ける
   - ウィンドウで最初にフォーカスを移したとき、LostFocus を挟まずに同じ要素の GotFocus が 2 回届くことがある。
     WinUI4K は状態が変わったときだけ知らせる
+  - ComboBox のドロップダウンを開くと (プログラムから IsDropDownOpen = true にしたときも)、WinUI はフォーカスを Popup の中の
+    項目 (ComboBoxItem) へ移す (`ComboBox_Partial.cpp` の `ComboBox::OnOpen` の SetFocusedItem(forceFocus))。Popup の子の
+    ビジュアル ツリーの親 (VisualTreeHelper.GetParent) をたどってもコンボボックスに着かないので、以前は開くと focusLost、
+    閉じると focusGained が届いていた (JComboBox は開いている間もフォーカスを持つ)。Popup.Child の論理ツリーの親
+    (FrameworkElement.Parent) は Popup になる (`Popup.cpp` の AddLogicalChild) ので、フォーカスの判定では論理ツリーの親が Popup の
+    要素から Popup へ移ってたどり、テンプレートの中の Popup の部品もコントロールの部品とみなす (`WFocusEventTest`)。
+    マウスの判定 (処理済みの押下を子のコントロールのものとみなすか) では、Popup の中はこれまでどおりコンポーネントの外として扱う
+    (JComboBox のポップアップも別のコンポーネント)
+  - Flyout (FlyoutBase.ShowAt で出す DatePicker / TimePicker の選択の画面や WFlyout) の Popup はコントロールのツリーに属さず、
+    配置先 (FlyoutBase の m_tpPlacementTarget、`FlyoutBase_partial.cpp` の SetPlacementTarget) も Popup には付かないので、
+    どのコントロールのものかを公開 API で引けない。そのため Flyout がフォーカスを取ると focusLost、閉じて戻ると focusGained が届く
+    (未対応。E2E では未確認)。AutoSuggestBox の候補の一覧はテンプレートの中の Popup なので、項目にフォーカスが移っても
+    ComboBox と同じに部品として扱われる (E2E では未確認)
   - GotFocus / LostFocus は相手の要素を渡さない (RoutedEventArgs だけ) ため、WFocusEvent.oppositeComponent は null。
     なお WinUI の IsTabStop は Tab キーの移動先を決めるだけで、UIElement.Focus (プログラムからのフォーカス) は止めない。そのため WComponent.requestFocusInWindow は
     IsTabStop を見ずに Focus の結果を返し (NumberBox などでも true)、isFocusable = false にしたコンポーネントだけを、設定した値を覚えて止める
