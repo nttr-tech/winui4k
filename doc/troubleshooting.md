@@ -199,3 +199,10 @@
   キーを続けて送ると、QuerySubmitted の `QueryText` も `AutoSuggestBox.Text` も最後の文字を含まないことがある。入力欄 (内部の TextBox) の文字列が
   ボックスへ伝わるのが後だから。`WAutoSuggestBox` の ActionEvent は、`Text` ではなく QuerySubmitted の `QueryText` を既定の actionCommand にする
   (`WAutoSuggestBoxTest` は、キーの間に待つ)。
+- **テストの JVM が終了の途中で `upcallLinker.cpp:77` (wrong thread state for upcall) で落ちることがある (未解決)**
+  テストがすべて終わって結果を書いた後、JVM の終了 (`VM_Operation: Exit`、`VM state: at safepoint (shutting down)`) の途中で、
+  VM Thread の上で upcall が呼ばれて落ち、作業ディレクトリに `hs_err_pid*.log` が残る (2026-10-18 22:38 と 2026-10-19 04:01 の 2 回、
+  どちらも `:winui4k:test`)。終了処理の中でネイティブ側が Kotlin 実装の COM オブジェクト (イベント ハンドラの KComObject など) を
+  呼び戻していると考えられるが、呼び出し元は特定できていない (hs_err のネイティブのフレームは `jvm.dll` と名前の無いアドレスだけ)。
+  どちらのプロセスにも SentinelOne の Java エージェント (`-agentpath:...SentinelJava64.dll`) が入っていた。テストの結果には影響しないが、
+  アプリの終了時にも起きうるので、終了前にネイティブへ渡したハンドラを外す、などの対策を別に調べる。
