@@ -51,6 +51,41 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
 
         /** The value put in [WItemEvent.stateChange] for each event in [ADD_SLOTS]. */
         val STATES = intArrayOf(WItemEvent.SELECTED, WItemEvent.DESELECTED, WItemEvent.INDETERMINATE)
+
+        /** The key in [itemTokens] for the subscription that [WButtonGroup] adds (counted separately from user listeners). */
+        val GROUP_KEY = Any()
+
+        /**
+         * The [WButtonGroup] subscription. It captures neither the button nor the group (both are looked up from the
+         * event source), so no reference extends from the handler left in the native object to the group or other buttons.
+         */
+        val GROUP_LISTENER: (WItemEvent) -> Unit = { e ->
+            val button = e.source as WToggleButton
+            button.buttonGroup?.onItemStateChanged(button, e.stateChange)
+        }
+    }
+
+    /**
+     * The [WButtonGroup] this button belongs to (changed only by [WButtonGroup.add] / [WButtonGroup.remove]).
+     * The button holds the group strongly, in the same direction as Swing's ButtonModel holding the group. The group
+     * also holds the button strongly, but the cycle stays inside the JVM heap and neither native handler captures them,
+     * so once they are removed from the window and no longer referenced, they are collected together.
+     */
+    internal var buttonGroup: WButtonGroup? = null
+        private set
+
+    /** Becomes a member of [group]. Adds an ItemListener (for the group's mutual exclusion), so it is treated as holding one listener. */
+    internal fun joinGroup(group: WButtonGroup) {
+        check(buttonGroup == null) { "already belongs to another ButtonGroup" }
+        buttonGroup = group
+        subscribeItem(GROUP_KEY, GROUP_LISTENER)
+    }
+
+    /** Stops being a member of the group (removes the ItemListener). */
+    internal fun leaveGroup() {
+        if (buttonGroup == null) return
+        buttonGroup = null
+        unsubscribeItem(GROUP_KEY)
     }
 
     /**

@@ -114,6 +114,73 @@ class WrapperReleaseTest : FunSpec() {
         return WeakReference(checkBox)
     }
 
+    /** Weak references to a button group and its buttons (the group, 2 check boxes and 1 radio button). */
+    private class GroupRefs(
+        val group: WeakReference<WButtonGroup>,
+        val checkBoxes: List<WeakReference<WCheckBox>>,
+        val radio: WeakReference<WRadioButton>,
+    ) {
+        fun all(): List<WeakReference<*>> = listOf(group, radio) + checkBoxes
+    }
+
+    /** Puts buttons in a group onto a panel, shows and removes it, releases the group and panel, and returns only weak references. */
+    private fun shownAndHiddenGroup(): GroupRefs {
+        val panel = onUiThreadGet { WPanel() }
+        val refs = onUiThreadGet {
+            val group = WButtonGroup()
+            val checkBoxes = listOf(WCheckBox("A"), WCheckBox("B"))
+            val radio = WRadioButton("R")
+            (checkBoxes + radio).forEach {
+                panel.add(it)
+                group.add(it)
+            }
+            GroupRefs(WeakReference(group), checkBoxes.map { WeakReference(it) }, WeakReference(radio))
+        }
+        showAndHide(panel)
+        return refs
+    }
+
+    /**
+     * Shows a panel holding 2 check boxes in a group (waiting for Loaded), releases the group, and returns only weak references.
+     * The panel goes into [panelHolder] (the caller holds it, to keep the buttons alive as the root of the detached subtree
+     * until it is removed and released).
+     */
+    private fun shownGroupedCheckBoxes(panelHolder: Array<WPanel?>): List<WeakReference<WCheckBox>> {
+        val panel = onUiThreadGet { WPanel() }
+        panelHolder[0] = panel
+        val refs = onUiThreadGet {
+            val group = WButtonGroup()
+            listOf(WCheckBox("A"), WCheckBox("B")).map {
+                panel.add(it)
+                group.add(it)
+                WeakReference(it)
+            }
+        }
+        UiTestHarness.attachAndAwaitLoaded(panel)
+        return refs
+    }
+
+    /** Removes the panel in [panelHolder] from the window and releases the panel too. */
+    private fun hideAndDropPanel(panelHolder: Array<WPanel?>) {
+        showAndHideTail(checkNotNull(panelHolder[0]))
+        panelHolder[0] = null
+    }
+
+    private fun showAndHideTail(panel: WPanel) {
+        UiTestHarness.detach(panel)
+        awaitUnloaded(panel)
+    }
+
+    /** Puts 2 never-shown check boxes into a group, removes them all, and returns only weak references. */
+    private fun removedGroupedCheckBoxes(): GroupRefs = onUiThreadGet {
+        val group = WButtonGroup()
+        val checkBoxes = listOf(WCheckBox("A"), WCheckBox("B"))
+        val radio = WRadioButton("R")
+        (checkBoxes + radio).forEach { group.add(it) }
+        (checkBoxes + radio).forEach { group.remove(it) }
+        GroupRefs(WeakReference(group), checkBoxes.map { WeakReference(it) }, WeakReference(radio))
+    }
+
     /** Places a field with a listener in the window, removes it, and returns only a weak reference. */
     private fun shownAndHiddenField(): WeakReference<WTextField> {
         val field = onUiThreadGet { fieldWithListener() }
@@ -384,6 +451,34 @@ class WrapperReleaseTest : FunSpec() {
             val split = shownAndHidden { WToggleSplitButton("Bold").also { it.addItemListener(WItemListener { e -> sources += e.source }) } }
             Reclamation.awaitCollected(switch).shouldBeTrue()
             Reclamation.awaitCollected(split).shouldBeTrue()
+        }
+
+        test("a button group shown in a window and removed is entirely collected once neither the group nor the buttons are referenced") {
+            val refs = shownAndHiddenGroup()
+            refs.all().forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
+
+        test("while shown, the group stays alive through the buttons even after the reference to the button group is released, and exclusivity is kept") {
+            val panelHolder = arrayOfNulls<WPanel>(1)
+            val refs = shownGroupedCheckBoxes(panelHolder)
+            try {
+                refs.forEach { Reclamation.survivesGc(it).shouldBeTrue() }
+                val states = onUiThreadGet {
+                    val (a, b) = refs.map { checkNotNull(it.get()) }
+                    a.doClick()
+                    b.doClick()
+                    listOf(a.isSelected, b.isSelected)
+                }
+                states shouldBe listOf(false, true)
+            } finally {
+                hideAndDropPanel(panelHolder)
+            }
+            refs.forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
+
+        test("buttons never shown are also collected together with the group once removed from the group") {
+            val refs = removedGroupedCheckBoxes()
+            refs.all().forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
         }
 
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {
