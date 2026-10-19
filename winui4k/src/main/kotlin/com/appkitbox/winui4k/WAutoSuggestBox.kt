@@ -37,9 +37,9 @@ enum class TextChangeReason(internal val native: Int) {
 /**
  * WinUI 3's AutoSuggestBox (an ItemsControl subclass). No Swing equivalent.
  *
- * A text box that shows a list of suggestions as you type.
+ * A text box that shows a list of suggestions as the user types (similar to an editable JComboBox).
  * Detect input via [addTextChangedListener] and replace suggestions via [setSuggestions];
- * you can also subscribe to [addQuerySubmittedListener] (Enter / choosing a suggestion) and
+ * [addActionListener] / [addQuerySubmittedListener] (Enter / choosing a suggestion) and
  * [addSuggestionChosenListener] (a suggestion getting highlighted).
  */
 class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WControl(
@@ -62,6 +62,15 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     /** SuggestionChosen event tokens registered via addSuggestionChosenListener. */
     private val suggestionChosenTokens = ListenerTokens<Consumer<String>>()
 
+    /** ActionListener-style listeners ([ActionEvents]; the Enter KeyDown is received via QuerySubmitted, so [ActionEvents.install] is not used). */
+    private val actions = ActionEvents(this, { actionCommand ?: submittedQuery ?: text }, { false })
+
+    /** The query committed by QuerySubmitted (only during the commit notification; [text] may not yet have caught up with the field's latest string at this point). */
+    private var submittedQuery: String? = null
+
+    /** Whether QuerySubmitted has been subscribed for ActionListeners (subscribed only once, when the first listener is added). */
+    private var actionSubscribed = false
+
     /** The text currently being entered (AutoSuggestBox.Text). */
     var text: String
         get() = inspectable.getString(XamlInterop.IAutoSuggestBox_get_Text)
@@ -81,18 +90,36 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
             boxed.release()
         }
 
-    /** The icon shown on the right of the text (AutoSuggestBox.QueryIcon). Creates and passes a SymbolIcon. */
-    var queryIcon: Symbol? = null
+    /**
+     * Icon shown on the right side of the text (AutoSuggestBox.QueryIcon). Creates an IconElement (SymbolIcon /
+     * ImageIcon / FontIcon) from a [Symbol], [WImageIcon] or [WFontIcon] and passes it, and returns the icon as set.
+     * null for no icon.
+     * Earlier versions accepted only [Symbol]. In Kotlin source, `box.queryIcon = Symbol.FIND` still works as written,
+     * but the type when reading changed to [WIcon] (use `as? Symbol` when a Symbol is needed).
+     */
+    var queryIcon: WIcon? = null
         set(value) {
+            value?.requireSupported()
             field = value
-            if (value == null) {
-                inspectable.call(XamlInterop.IAutoSuggestBox_put_QueryIcon, null)
-            } else {
-                val icon = value.createIconElement()
-                inspectable.call(XamlInterop.IAutoSuggestBox_put_QueryIcon, icon)
-                icon.release()
+            val icon = value?.createIconElement()
+            try {
+                inspectable.call(XamlInterop.IAutoSuggestBox_put_QueryIcon, icon?.ptr)
+            } finally {
+                icon?.release()
             }
         }
+
+    /** The old-style `setQueryIcon(Symbol)` (for binary compatibility, invisible from source; Symbol is a WIcon, so the same code selects the WIcon form). */
+    @Deprecated("use queryIcon, which takes a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("setQueryIcon")
+    fun setQueryIconForSymbol(icon: Symbol?) {
+        queryIcon = icon
+    }
+
+    /** The old-style `Symbol getQueryIcon()` (for binary compatibility, invisible from source). null for icons other than Symbol. */
+    @Deprecated("use queryIcon, which returns a WIcon", level = DeprecationLevel.HIDDEN)
+    @JvmName("getQueryIcon")
+    fun getQueryIconAsSymbol(): Symbol? = queryIcon as? Symbol
 
     /** Whether the suggestion list is open (AutoSuggestBox.IsSuggestionListOpen). */
     var isSuggestionListOpen: Boolean
@@ -111,6 +138,69 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     fun setSuggestions(suggestions: List<String>) {
         val iterable = StringIterable(suggestions)
         itemsControl.call(XamlInterop.IItemsControl_put_ItemsSource, iterable.comObject.primary)
+    }
+
+    /**
+     * JTextField.setActionCommand-style: the string put into [WActionEvent.actionCommand] for [addActionListener]
+     * listeners.
+     * While unset (null), returns the committed query string (as in JTextField).
+     */
+    var actionCommand: String? = null
+
+    /**
+     * ActionListener-style: called when a query is committed with Enter or by choosing a suggestion
+     * (AutoSuggestBox.QuerySubmitted).
+     * Listeners receive a [WActionEvent] with this box as the source. When the committed query and the chosen suggestion
+     * are needed, use [addQuerySubmittedListener]. It plays the same role as Enter in an editable JComboBox, and the
+     * ActionEvent's [WActionEvent.actionCommand] is [actionCommand] (the text if unset).
+     */
+    @JvmSynthetic
+    fun addActionListener(listener: (WActionEvent) -> Unit) = addAction(listener, listener)
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: Runnable) = addAction(listener) { listener.run() }
+
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: WActionListener) = addAction(listener) { listener.actionPerformed(it) }
+
+    /** Removes a listener registered with [addActionListener] (only one if the same listener was registered several times). */
+    @JvmSynthetic
+    fun removeActionListener(listener: (WActionEvent) -> Unit) = actions.remove(listener)
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: Runnable) = actions.remove(listener)
+
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: WActionListener) = actions.remove(listener)
+
+    /** JComboBox.actionPerformed-style: calls the registered listeners in registration order, as when a query is committed. */
+    fun postActionEvent() = actions.post()
+
+    /** Calls the listeners with the committed query [queryText] as the default [actionCommand]. */
+    private fun postSubmitted(queryText: String) {
+        submittedQuery = queryText
+        try {
+            actions.post()
+        } finally {
+            submittedQuery = null
+        }
+    }
+
+    private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) {
+        if (!actionSubscribed) {
+            actionSubscribed = true
+            // The handler stays on the native object, so the box is not captured strongly but looked up from listenerAnchor
+            val anchor = listenerAnchor
+            inspectable.addEventHandler(
+                "WinUI4K.AutoSuggestBoxActionHandler",
+                XamlInterop.IID_AutoSuggestBoxQuerySubmittedHandler,
+                XamlInterop.IAutoSuggestBox_add_QuerySubmitted,
+            ) { _, args ->
+                val queryText = ComPtr(args).getString(XamlInterop.IAutoSuggestBoxQuerySubmittedEventArgs_get_QueryText)
+                (anchor.get() as? WAutoSuggestBox)?.postSubmitted(queryText)
+            }
+        }
+        actions.add(key, invoke)
     }
 
     /**

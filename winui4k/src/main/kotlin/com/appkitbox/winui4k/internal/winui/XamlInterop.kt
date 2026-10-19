@@ -413,6 +413,7 @@ internal object XamlInterop {
     const val IAutoSuggestBox_get_PlaceholderText = 16
     const val IAutoSuggestBox_put_PlaceholderText = 17
     const val IAutoSuggestBox_put_Header = 19          // put_Header(IInspectable)
+    const val IAutoSuggestBox_get_QueryIcon = 24       // get_QueryIcon(out IconElement)
     const val IAutoSuggestBox_put_QueryIcon = 25       // put_QueryIcon(IconElement)
     const val IAutoSuggestBox_add_SuggestionChosen = 30 // add_SuggestionChosen(TypedEventHandler, out token)
     const val IAutoSuggestBox_remove_SuggestionChosen = 31 // remove_SuggestionChosen(token)
@@ -1982,8 +1983,8 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Controls.Image ----
     const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"
     const val IID_IImage = "220d3d8d-66de-53a1-a215-ba9c165565ab"
-    const val IImage_put_Source = 7                     // put_Source(ImageSource)
     const val IImage_get_Source = 6                     // get_Source(out ImageSource)
+    const val IImage_put_Source = 7                     // put_Source(ImageSource)
     const val IImage_get_Stretch = 8                    // get_Stretch(out Stretch)
     const val IImage_put_Stretch = 9                    // put_Stretch(Stretch enum)
 
