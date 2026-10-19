@@ -359,6 +359,21 @@ internal object XamlInterop {
     const val IPasswordBox_add_PasswordChanged = 35    // add_PasswordChanged(RoutedEventHandler, out token)
     const val IPasswordBox_remove_PasswordChanged = 36 // remove_PasswordChanged(token)
     const val IPasswordBox_SelectAll = 43              // SelectAll()
+    const val IPasswordBox_add_PasswordChanging = 41   // add_PasswordChanging(TypedEventHandler<PasswordBox, PasswordBoxPasswordChangingEventArgs>, out token)
+    const val IPasswordBox_remove_PasswordChanging = 42 // remove_PasswordChanging(token)
+    const val IPasswordBox_PasteFromClipboard = 44     // PasteFromClipboard()
+
+    // ---- Microsoft.UI.Xaml.Controls.PasswordBoxPasswordChangingEventArgs ----
+    const val IID_IPasswordBoxPasswordChangingEventArgs = "9a2f3b79-c00c-5d27-bb67-92cab3db0477"
+
+    /** The concrete IID (computed at run time) of TypedEventHandler<PasswordBox, PasswordBoxPasswordChangingEventArgs>. */
+    val IID_PasswordBoxPasswordChangingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc($CLS_PasswordBox;{$IID_IPasswordBox});" +
+                "rc(Microsoft.UI.Xaml.Controls.PasswordBoxPasswordChangingEventArgs;{$IID_IPasswordBoxPasswordChangingEventArgs}))",
+        )
+    }
 
     // ---- Microsoft.UI.Xaml.Controls.NumberBox ----
     const val CLS_NumberBox = "Microsoft.UI.Xaml.Controls.NumberBox"

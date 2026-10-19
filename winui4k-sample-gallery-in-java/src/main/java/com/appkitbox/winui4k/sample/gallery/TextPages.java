@@ -151,6 +151,7 @@ final class TextPages {
         WPasswordField passwordField = new WPasswordField("Enter password");
         passwordField.setWidth(300.0);
         passwordField.setHeader("Password");
+        passwordField.setPasswordRevealMode(PasswordRevealMode.PEEK); // show the reveal button (the default is HIDDEN, no reveal button, as in Swing)
         passwordField.addPasswordChangedListener(password -> {
             if (password.isEmpty()) {
                 result.setText("Enter a password of at least 8 characters");
@@ -169,9 +170,12 @@ final class TextPages {
 
     /** Reveal mode and mask character: PasswordRevealMode and PasswordChar. */
     private static WComponent buildRevealModePasswordBoxExample() {
-        WPasswordField hiddenField = new WPasswordField("No reveal button (HIDDEN)");
+        WPasswordField hiddenField = new WPasswordField("Default: no reveal button (HIDDEN)");
         hiddenField.setWidth(300.0);
-        hiddenField.setPasswordRevealMode(PasswordRevealMode.HIDDEN);
+
+        WPasswordField visibleField = new WPasswordField("echoChar = 0: always plain text (VISIBLE)");
+        visibleField.setWidth(300.0);
+        visibleField.setEchoChar((char) 0);
 
         WPasswordField customCharField = new WPasswordField("Use # as the mask character");
         customCharField.setWidth(300.0);
@@ -179,8 +183,9 @@ final class TextPages {
 
         WPanel body = new WPanel(8.0);
         body.add(hiddenField);
+        body.add(visibleField);
         body.add(customCharField);
-        return GalleryScaffold.buildExample("Reveal mode and mask character (PasswordRevealMode / PasswordChar)", body);
+        return GalleryScaffold.buildExample("Reveal mode and echo character (PasswordRevealMode / echoChar)", body);
     }
 
     // endregion

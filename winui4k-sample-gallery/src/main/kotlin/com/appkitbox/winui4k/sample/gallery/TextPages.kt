@@ -134,6 +134,7 @@ private fun buildSimplePasswordBoxExample(): WComponent {
     val passwordField = WPasswordField(placeholder = "Enter password")
     passwordField.width = 300.0
     passwordField.header = "Password"
+    passwordField.passwordRevealMode = PasswordRevealMode.PEEK // Show the reveal button (the default is HIDDEN with no reveal button, as in Swing)
     passwordField.addPasswordChangedListener { password ->
         result.text = when {
             password.isEmpty() -> "Enter a password of at least 8 characters"
@@ -150,9 +151,12 @@ private fun buildSimplePasswordBoxExample(): WComponent {
 
 /** Reveal mode and mask character: PasswordRevealMode and PasswordChar. */
 private fun buildRevealModePasswordBoxExample(): WComponent {
-    val hiddenField = WPasswordField(placeholder = "No reveal button (HIDDEN)")
+    val hiddenField = WPasswordField(placeholder = "Default: no reveal button (HIDDEN)")
     hiddenField.width = 300.0
-    hiddenField.passwordRevealMode = PasswordRevealMode.HIDDEN
+
+    val visibleField = WPasswordField(placeholder = "echoChar = 0: always plain text (VISIBLE)")
+    visibleField.width = 300.0
+    visibleField.echoChar = 0.toChar()
 
     val customCharField = WPasswordField(placeholder = "Use # as the mask character")
     customCharField.width = 300.0
@@ -160,8 +164,9 @@ private fun buildRevealModePasswordBoxExample(): WComponent {
 
     val body = WPanel(spacing = 8.0)
     body.add(hiddenField)
+    body.add(visibleField)
     body.add(customCharField)
-    return buildExample("Reveal mode and mask character (PasswordRevealMode / PasswordChar)", body)
+    return buildExample("Reveal mode and echo character (PasswordRevealMode / echoChar)", body)
 }
 
 // endregion

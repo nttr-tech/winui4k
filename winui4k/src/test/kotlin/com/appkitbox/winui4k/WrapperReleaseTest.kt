@@ -460,6 +460,31 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a password field with a DocumentListener and an ActionListener that do not reference the component is also collected after being shown in a window and removed") {
+            val reference = shownAndHidden {
+                WPasswordField().also {
+                    it.addDocumentListener(EmptyDocumentListener())
+                    it.addActionListener { _ -> }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a password field never shown is also collected once all its DocumentListeners and ActionListeners are removed") {
+            val reference = onUiThreadGet {
+                val field = WPasswordField()
+                val document = EmptyDocumentListener()
+                val action: (WActionEvent) -> Unit = { }
+                field.addDocumentListener(document)
+                field.addActionListener(action)
+                field.password = "Changed"
+                field.removeDocumentListener(document)
+                field.removeActionListener(action)
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a text field with a CaretListener that does not reference the component is also collected after being shown in a window and removed") {
             val reference = shownAndHidden { WTextField().also { it.addCaretListener(WCaretListener { }) } }
             Reclamation.awaitCollected(reference).shouldBeTrue()
