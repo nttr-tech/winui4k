@@ -21,6 +21,12 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     /** ViewChangeStarted event tokens registered via addViewChangeStartedListener. */
     private val viewChangeStartedTokens = ListenerTokens<Runnable>()
 
+    /** The ChangeListeners. A single ViewChangeCompleted handler is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addViewChangeCompletedHandler() }
+
+    /** The [isZoomedInViewActive] last notified. */
+    private var notifiedZoomedIn = true
+
     /** The detail view (SemanticZoom.ZoomedInView). The ListViewBase is passed as ISemanticZoomInformation. */
     val zoomedInView: WList = zoomedInView
 
@@ -78,11 +84,54 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
         inspectable.removeEventHandler(XamlInterop.ISemanticZoom_remove_ViewChangeStarted, token)
     }
 
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this control) every time a view switch finishes
+     * (SemanticZoom.ViewChangeCompleted). Inside the listener, [isZoomedInViewActive] returns the value after the switch.
+     * It is called after the switching animation, so it may not have been called yet when [toggleActiveView] or setting [isZoomedInViewActive] returns.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun notifyIfChanged() {
+        val old = notifiedZoomedIn
+        val now = isZoomedInViewActive
+        notifiedZoomedIn = now
+        changeListeners.fireIfChanged(old, now)
+    }
+
+    private fun addViewChangeCompletedHandler() {
+        notifiedZoomedIn = isZoomedInViewActive
+        // The handler stays on the native side, so do not strongly capture this control; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.SemanticZoomViewChangeCompletedHandler",
+            XamlInterop.IID_SemanticZoomViewChangedEventHandler,
+            XamlInterop.ISemanticZoom_add_ViewChangeCompleted,
+        ) { _, _ -> (anchor.get() as? WSemanticZoom)?.notifyIfChanged() }
+    }
+
     init {
-        // Obtain the ListViewBase as ISemanticZoomInformation and set it as the detail/summary view
+        // Get the ListViewBase as ISemanticZoomInformation and set it as the zoomed-in/out view (the setter holds its own reference, so release the one obtained)
         val zoomedInInformation = zoomedInView.inspectable.queryInterface(XamlInterop.IID_ISemanticZoomInformation)
-        inspectable.call(XamlInterop.ISemanticZoom_put_ZoomedInView, zoomedInInformation.ptr)
+        try {
+            inspectable.call(XamlInterop.ISemanticZoom_put_ZoomedInView, zoomedInInformation.ptr)
+        } finally {
+            zoomedInInformation.release()
+        }
         val zoomedOutInformation = zoomedOutView.inspectable.queryInterface(XamlInterop.IID_ISemanticZoomInformation)
-        inspectable.call(XamlInterop.ISemanticZoom_put_ZoomedOutView, zoomedOutInformation.ptr)
+        try {
+            inspectable.call(XamlInterop.ISemanticZoom_put_ZoomedOutView, zoomedOutInformation.ptr)
+        } finally {
+            zoomedOutInformation.release()
+        }
     }
 }
