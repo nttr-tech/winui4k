@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
@@ -209,8 +210,24 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
     }
 
+    /** Whether this popup is shown on [xamlRoot] (the XamlRoot of the closed window). */
+    private fun isShownIn(xamlRoot: ComPtr): Boolean {
+        val own = uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
+        return try {
+            Xaml.sameObject(own, xamlRoot)
+        } finally {
+            own.release()
+        }
+    }
+
     private companion object {
         /** The open WPopups (read and written only by the UI thread). */
         val openPopups = HashSet<WPopup>()
+
+        init {
+            // When the window it is shown on closes while it is open, WinUI only sets IsOpen to false and does not raise Closed
+            // (ContentRoot::Close → CPopup::ForceCloseForTreeReset; Popup.cpp), so release it here
+            WFrame.addWindowClosedHook { root -> openPopups.removeAll { it.isShownIn(root) } }
+        }
     }
 }

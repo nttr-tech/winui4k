@@ -152,6 +152,7 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
             val frame = self.get()
             if (frame != null) {
                 DefaultButtons.forget(frame)
+                frame.notifyWindowClosedHooks()
                 frame.onClosed()
             }
             if (openCount.counted) {
@@ -184,6 +185,21 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
         ) { _, args ->
             val visibilityChanged = ComPtr(args).getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidVisibilityChange)
             self.get()?.onChanged(visibilityChanged)
+        }
+    }
+
+    /**
+     * Passes this window's XamlRoot to the [addWindowClosedHook] hooks. Window.Closed comes before the content tree is torn down
+     * (ContentRoot.Close sets popups to IsOpen = false but does not raise Popup.Closed; ForceCloseForTreeReset in Popup.cpp),
+     * so the XamlRoot can still be read at this point.
+     */
+    private fun notifyWindowClosedHooks() {
+        if (windowClosedHooks.isEmpty()) return
+        val root = rootContent.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return
+        try {
+            windowClosedHooks.toList().forEach { it.windowClosed(root) }
+        } finally {
+            root.release()
         }
     }
 
@@ -985,6 +1001,23 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
          */
         private val openFrames = LinkedHashSet<WFrame>()
 
+        /** The hooks called when a window closes ([addWindowClosedHook]). Read and written only by the UI thread. */
+        private val windowClosedHooks = ArrayList<WindowClosedHook>()
+
+        /**
+         * Calls [hook] when a window closes (Window.Closed; both for × and [dispose]) (internal). Popups, dialogs and flyouts whose owner window
+         * was closed while they were open get no closed notification (Closed), so this releases their while-open state.
+         * Call on the UI thread.
+         */
+        internal fun addWindowClosedHook(hook: WindowClosedHook) {
+            windowClosedHooks += hook
+        }
+
+        /** Removes a hook added with [addWindowClosedHook]. */
+        internal fun removeWindowClosedHook(hook: WindowClosedHook) {
+            windowClosedHooks.remove(hook)
+        }
+
         /**
          * Frame.getFrames-like: an array of the WFrames that have been shown and are not yet closed, including hidden ones. Unlike Swing, closed ones and
          * ones never shown are not included. Call it on the UI thread.
@@ -1030,6 +1063,12 @@ enum class SystemBackdropType {
 
     /** Acrylic: a translucent material that lets windows behind it show through (DesktopAcrylicBackdrop). */
     ACRYLIC,
+}
+
+/** A hook for [WFrame.addWindowClosedHook]. */
+internal fun interface WindowClosedHook {
+    /** A window closed. [xamlRoot] is the XamlRoot of that window (borrowed; not Released). */
+    fun windowClosed(xamlRoot: ComPtr)
 }
 
 /** Whether the [WFrame] has been counted as an open window (shared by the Window.Closed handler and the WFrame; does not reference the WFrame). */
