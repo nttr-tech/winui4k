@@ -627,7 +627,8 @@ final class BasicInputPages {
 
         WRatingControl rating = new WRatingControl();
         rating.setClearEnabled(true);
-        rating.addChangeListener((value) -> {
+        rating.addChangeListener(e -> {
+            double value = rating.getValue();
             result.setText(value < 0 ? "Rating: unset" : "Rating: " + (int) value);
         });
 
@@ -741,7 +742,8 @@ final class BasicInputPages {
 
         WSlider slider = new WSlider(0.0, 100.0, 0.0);
         slider.setWidth(300.0);
-        slider.addChangeListener((value) -> {
+        slider.addChangeListener(e -> {
+            double value = slider.getValue();
             result.setText("Value: " + (int) value);
         });
 

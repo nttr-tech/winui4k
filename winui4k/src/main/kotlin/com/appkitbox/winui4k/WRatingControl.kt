@@ -4,28 +4,37 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.DoubleConsumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
 /**
- * Star-based rating input: WinUI 3's RatingControl.
+ * Star-based rating input: WinUI 3's RatingControl. Swing has no corresponding class, but change notifications take the ChangeListener form ([addChangeListener]).
  *
  * Provides [value] (unset is -1) / [maxRating] / [isClearEnabled] / [isReadOnly] /
- * [placeholderValue] / [caption], and [addChangeListener] (ValueChanged).
+ * [placeholderValue] / [caption], and [addChangeListener] (ValueChanged and setting [value]).
  */
 class WRatingControl : WControl(
     Activation.composeDefault(XamlInterop.CLS_RatingControl, XamlInterop.IID_IRatingControlFactory),
 ) {
-    /** ValueChanged event tokens registered via addChangeListener. */
-    private val changeTokens = ListenerTokens<DoubleConsumer>()
+    /** The ChangeListeners. A single ValueChanged handler is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addValueChangedHandler() }
 
-    /** The rating value (RatingControl.Value). Unset is -1. */
+    /** The [value] last notified (or when listeners started to be added). Used to drop notifications of the same value. */
+    private var notifiedValue = UNSET
+
+    /**
+     * The rating value (RatingControl.Value). Unset is -1, and setting -1 clears the rating.
+     * Setting it also calls the [addChangeListener] listeners when the value changes (the native ValueChanged is raised only by user input,
+     * so it is notified from here).
+     */
     var value: Double
         get() = inspectable.getDouble(XamlInterop.IRatingControl_get_Value)
-        set(value) = inspectable.call(XamlInterop.IRatingControl_put_Value, value)
+        set(value) {
+            inspectable.call(XamlInterop.IRatingControl_put_Value, value)
+            notifyIfChanged()
+        }
 
     /** The number of stars (RatingControl.MaxRating). Default is 5. */
     var maxRating: Int
@@ -53,36 +62,76 @@ class WRatingControl : WControl(
         set(value) = Hstring.use(value) { h -> inspectable.call(XamlInterop.IRatingControl_put_Caption, h) }
 
     /**
-     * ChangeListener-like: subscribes to changes in the rating value. The listener receives
-     * the new [value]. Subscribes to RatingControl.ValueChanged (TypedEventHandler<RatingControl, Object>) under the hood.
+     * ChangeListener-like: subscribes to changes in the rating value. The listener receives the new [value] (unset is -1).
+     * Called on user input and also when [value] is set, and notifications where the value did not change are dropped (same as the form taking a [WChangeListener]).
      */
     @JvmSynthetic
     fun addChangeListener(listener: (Double) -> Unit) {
-        val adapter = DoubleConsumer { listener(it) }
-        addChangeListenerForJava(adapter)
-        changeTokens.addKotlinAdapter(listener, adapter)
+        changeListeners.addAdapter(listener, WChangeListener { listener(value) })
     }
 
+    /**
+     * The legacy Java `addChangeListener(DoubleConsumer)`. Kept only for binary compatibility (linking already compiled
+     * callers) and not visible from Java source (HIDDEN). In Java, use the form that takes a [WChangeListener].
+     * Unlike before, it is also called when [value] is set.
+     */
+    @Deprecated("Use addChangeListener that takes a WChangeListener", level = DeprecationLevel.HIDDEN)
     @JvmName("addChangeListener")
     fun addChangeListenerForJava(listener: DoubleConsumer) {
-        val token = inspectable.addEventHandler(
-            "WinUI4K.RatingChangedHandler",
-            XamlInterop.IID_RatingControlValueChangedHandler,
-            XamlInterop.IRatingControl_add_ValueChanged,
-        ) { _, _ -> listener.accept(value) }
-        changeTokens.add(listener, token)
+        changeListeners.addAdapter(listener, WChangeListener { listener.accept(value) })
+    }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this control) every time the rating value changes.
+     * Called once per change. Called both on user input (RatingControl.ValueChanged) and when [value] is set, and
+     * notifications where the value did not change are dropped (the native side sends ValueChanged even for the same value,
+     * for example when the highest star is chosen again). Read the new value with `(e.source as WRatingControl).value`.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
     }
 
     /** Unsubscribes a listener registered via [addChangeListener]. */
     @JvmSynthetic
     fun removeChangeListener(listener: (Double) -> Unit) {
-        val adapter = changeTokens.removeKotlinAdapter(listener) ?: return
-        removeChangeListenerForJava(adapter)
+        changeListeners.removeAdapter(listener)
     }
 
+    /** The legacy Java `removeChangeListener(DoubleConsumer)` (HIDDEN; kept only for binary compatibility). */
+    @Deprecated("Use removeChangeListener that takes a WChangeListener", level = DeprecationLevel.HIDDEN)
     @JvmName("removeChangeListener")
     fun removeChangeListenerForJava(listener: DoubleConsumer) {
-        val token = changeTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(XamlInterop.IRatingControl_remove_ValueChanged, token)
+        changeListeners.removeAdapter(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added; Kotlin lambdas appear wrapped). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun notifyIfChanged() {
+        val old = notifiedValue
+        val now = value
+        notifiedValue = now
+        changeListeners.fireIfChanged(old, now)
+    }
+
+    private fun addValueChangedHandler() {
+        notifiedValue = value
+        // The handler stays on the native side, so do not strongly capture the control; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.RatingChangedHandler",
+            XamlInterop.IID_RatingControlValueChangedHandler,
+            XamlInterop.IRatingControl_add_ValueChanged,
+        ) { _, _ -> (anchor.get() as? WRatingControl)?.notifyIfChanged() }
+    }
+
+    private companion object {
+        /** RatingControl's "unset" value (c_noValueSetSentinel). */
+        const val UNSET = -1.0
     }
 }
