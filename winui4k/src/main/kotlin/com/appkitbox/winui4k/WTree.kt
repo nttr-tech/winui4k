@@ -306,6 +306,8 @@ class WTree() : WControl(
     /**
      * Whether to show the root (Swing's `isRootVisible` / `setRootVisible`, true by default).
      * If false, the children of the model's root are placed at the top level (the root is treated as always expanded and is not counted as a row).
+     * Changing it keeps the selection and expanded paths as they are and fires no selection or expansion events, as in JTree
+     * (if a hidden root is selected, it stays in the selection model but is not shown). Showing a hidden root shows it expanded.
      * It has no effect in the node-building usage (root nodes are always shown).
      */
     @get:JvmName("isRootVisible")
@@ -313,8 +315,27 @@ class WTree() : WControl(
         set(value) {
             if (field == value) return
             field = value
-            (binding as? ModelTreeBinding)?.let { bind(it.model, value) }
+            val old = binding as? ModelTreeBinding ?: return
+            val expanded = expandedPaths()
+            selectionBridge.quietly {
+                bind(old.model, value, clearSelection = false)
+                muted {
+                    for (path in expanded) {
+                        val node = binding.nodeOf(path, true) ?: continue
+                        binding.realize(node)
+                        node.isExpanded = true
+                    }
+                }
+            }
+            selectionBridge.pushToNative()
         }
+
+    /** The expanded paths (including those not visible because an ancestor is collapsed; parents first). A hidden root is always included. */
+    private fun expandedPaths(): List<TreePath> {
+        val hiddenRoot = (binding as? ModelTreeBinding)?.takeIf { !it.rootVisible }?.model?.getRoot()?.let(::TreePath)
+        val nodes = binding.topNodes.asSequence().flatMap { it.selfAndDescendants() }
+        return listOfNotNull(hiddenRoot) + nodes.filter { it.isExpanded }.mapNotNull(binding::pathOf).toList()
+    }
 
     /**
      * Whether to show the expand mark of the root (Swing's `getShowsRootHandles` / `setShowsRootHandles`).
@@ -322,7 +343,7 @@ class WTree() : WControl(
      */
     var showsRootHandles: Boolean = true
 
-    private fun bind(newModel: TreeModel?, newRootVisible: Boolean) {
+    private fun bind(newModel: TreeModel?, newRootVisible: Boolean, clearSelection: Boolean = true) {
         when (val old = binding) {
             is ModelTreeBinding -> {
                 old.model.removeTreeModelListener(modelListener)
@@ -338,7 +359,7 @@ class WTree() : WControl(
         } else {
             muted { ModelTreeBinding(newModel, newRootVisible, rootVector) }.also { newModel.addTreeModelListener(modelListener) }
         }
-        selectionModel.clearSelection() // Clear the selection, as Swing's setModel does
+        if (clearSelection) selectionModel.clearSelection() // Clear the selection, as Swing's setModel does
     }
 
     /** The node APIs cannot be used while a model is mirrored. */

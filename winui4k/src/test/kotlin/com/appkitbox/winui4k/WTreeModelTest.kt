@@ -4,6 +4,8 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.tree.DefaultMutableTreeNode
 import com.appkitbox.winui4k.tree.DefaultTreeModel
+import com.appkitbox.winui4k.tree.TreeExpansionEvent
+import com.appkitbox.winui4k.tree.TreeExpansionListener
 import com.appkitbox.winui4k.tree.TreePath
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -68,6 +70,43 @@ class WTreeModelTest : FunSpec() {
                 tree.getRowForPath(TreePath(s.root)) shouldBe -1
                 tree.getRowForPath(s.path(s.water)) shouldBe 2
             }
+        }
+
+        test("changing rootVisible keeps the selection and expanded paths, and fires no selection or expansion events (as in JTree)") {
+            val s = Sample()
+            onUiThreadGet {
+                val tree = WTree(s.model)
+                tree.expandPath(s.path(s.vegetable, s.carrot))
+                tree.collapsePath(s.path(s.vegetable)) // Keep Carrot expanded and hide it by closing Vegetables
+                tree.expandPath(s.path(s.fruit))
+                tree.selectionPath = s.path(s.fruit, s.orange)
+                val events = mutableListOf<String>()
+                tree.addTreeSelectionListener { events += "selection" }
+                tree.addTreeExpansionListener(object : TreeExpansionListener {
+                    override fun treeExpanded(event: TreeExpansionEvent) {
+                        events += "expanded"
+                    }
+
+                    override fun treeCollapsed(event: TreeExpansionEvent) {
+                        events += "collapsed"
+                    }
+                })
+                fun state() = listOf(
+                    tree.rowTexts(),
+                    tree.selectionPath,
+                    tree.getSelectionRows()?.toList(),
+                    tree.isExpanded(s.path(s.vegetable)),
+                    tree.nativeNodeOf(s.path(s.vegetable, s.carrot))?.isExpanded == true,
+                )
+                tree.rootVisible = false
+                val hidden = state()
+                tree.rootVisible = true
+                listOf(hidden, state(), events)
+            } shouldBe listOf(
+                listOf(listOf("Fruit", "Apple", "Orange", "Vegetables", "Water"), s.path(s.fruit, s.orange), listOf(2), false, true),
+                listOf(listOf("Food", "Fruit", "Apple", "Orange", "Vegetables", "Water"), s.path(s.fruit, s.orange), listOf(3), false, true),
+                emptyList<String>(),
+            )
         }
 
         test("children do not get native nodes until expanded, and get them on expansion") {

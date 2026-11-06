@@ -126,6 +126,16 @@ internal class TreeSelectionBridge(
         }
     }
 
+    /** While the TreeView selection is rebuilt by [block], notifications from the TreeView are not copied to the model (rewrite it with [pushToNative] afterwards). */
+    fun <T> quietly(block: () -> T): T {
+        pushing++
+        try {
+            return block()
+        } finally {
+            pushing--
+        }
+    }
+
     /** TreeView SelectionChanged: mirrors the user's selection to the model. */
     fun onNativeSelectionChanged() {
         if (pushing > 0) return
