@@ -67,6 +67,38 @@ class WrapperReleaseFrameTest : FunSpec() {
             Reclamation.awaitDestroyed(built.window).shouldBeTrue()
         }
 
+        test("a WFrame that replaced its content root with a menu bar, moved the focus to an input field and read mostRecentFocusOwner is also collected after dispose and dropping the reference") {
+            val events = events
+            val built = onUiThreadGet {
+                val frame = WFrame(TITLE)
+                frame.addWindowListener(
+                    object : WWindowAdapter() {
+                        override fun windowClosed(e: WWindowEvent) {
+                            events += "closed"
+                        }
+                    },
+                )
+                val field = WTextField()
+                frame.add(WButton("Before"))
+                frame.add(field)
+                frame.jMenuBar = WMenuBar() // The root subscribed to GotFocus changes to the menu's Grid
+                frame.isVisible = true
+                Built(WeakReference(frame), WeakReference(WButton("Unused")), NativeProbe(frame.window)) to WeakReference(field)
+            }
+            val (frameBuilt, field) = built
+            eventually(5.seconds) {
+                onUiThread {
+                    field.get()?.requestFocusInWindow()
+                    (frameBuilt.frame.get()?.mostRecentFocusOwner === field.get()).shouldBeTrue()
+                }
+            }
+            onUiThread { frameBuilt.frame.get()?.dispose() }
+            eventually(5.seconds) { events() shouldContain "closed" }
+            Reclamation.awaitCollected(frameBuilt.frame).shouldBeTrue()
+            Reclamation.awaitCollected(field).shouldBeTrue()
+            Reclamation.awaitDestroyed(frameBuilt.window).shouldBeTrue()
+        }
+
         test("a WFrame never shown is collected and its Window destroyed once the reference is released") {
             val built = onUiThreadGet {
                 val frame = WFrame(TITLE)

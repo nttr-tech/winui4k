@@ -216,4 +216,23 @@ class WFrameForJavaTest {
             assertFalse(own.isShowing());
         });
     }
+
+    @Test
+    void getFocusOwnerAndGetMostRecentFocusOwnerReadTheInputFieldWithTheFocus() throws InterruptedException {
+        WTextField field = onUiThreadGet(() -> {
+            own = new WFrame(TITLE);
+            WTextField name = new WTextField();
+            own.add(new WTextField());
+            own.add(name);
+            own.setVisible(true);
+            return name;
+        });
+        long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
+        while (onUiThreadGet(() -> own.getFocusOwner() != field) && System.currentTimeMillis() < deadline) {
+            onUiThread(field::requestFocus);
+            Thread.sleep(100);
+        }
+        assertSame(field, onUiThreadGet(own::getFocusOwner));
+        assertSame(field, onUiThreadGet(own::getMostRecentFocusOwner));
+    }
 }

@@ -121,8 +121,12 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     /** Window.isFocused-like: true if this window has the focus. Same as [isActive] in WinUI. */
     val isFocused: Boolean get() = isActive
 
+    /** Finds the focus owner and remembers the element that last got the focus ([focusOwner] / [mostRecentFocusOwner]). */
+    private val focus = FrameFocusTracker()
+
     init {
         window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
+        focus.track(contentPane)
         if (title.isNotEmpty()) this.title = title
         subscribeNativeEvents()
     }
@@ -207,6 +211,7 @@ class WFrame @JvmOverloads constructor(title: String = "") :
 
     private fun onClosed() {
         closed = true
+        focus.forget()
         openFrames.remove(this)
         if (isActive) onActivated(false)
         fireWindow(WWindowEvent.WINDOW_CLOSED) { l, e -> l.windowClosed(e) }
@@ -219,6 +224,8 @@ class WFrame @JvmOverloads constructor(title: String = "") :
             // Put the one that became active last at the end (used to decide where a WOptionPane without a parent opens)
             if (!closed && openFrames.remove(this)) openFrames.add(this)
         }
+        // GotFocus may not come when the window is not in the foreground (doc/verification.md), so also remember the focus when leaving
+        if (!active && isActive) focus.rememberFocused(rootContent)
         if (active == isActive) return
         isActive = active
         if (active) {
@@ -420,6 +427,26 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         closed = true
         openFrames.remove(this)
     }
+
+    /**
+     * Window.getFocusOwner-like: if this window is active ([isFocused]), the component that has the focus
+     * (FocusManager.GetFocusedElement). null when inactive, before being shown, and after being closed (the same as Swing).
+     * If the focus is on a template part (such as the input field of a [WSpinner]) or an element without a WinUI4K wrapper, the innermost
+     * component containing it. When an element inside a popup (a menu or a dialog) has the focus, its owner component or null.
+     */
+    val focusOwner: WComponent?
+        get() = if (closed || !isActive) null else focus.focusOwner(rootContent, focusRoots())
+
+    /**
+     * Window.getMostRecentFocusOwner-like: [focusOwner] if this window is active. If inactive, the component in this window that last
+     * got the focus (remembered per window). If there is none yet or that component was removed from the window, the first
+     * focusable component (FocusManager.FindFirstFocusableElement). null after being closed.
+     */
+    val mostRecentFocusOwner: WComponent?
+        get() = if (closed) null else focusOwner ?: focus.mostRecent(rootContent, focusRoots())
+
+    /** The roots to search for the focus owner (the content and the menu bar). */
+    private fun focusRoots(): List<WComponent> = listOfNotNull(content, jMenuBar)
 
     /** Component.isDisplayable-like: true if not yet closed (neither [dispose]d nor disposed with ×). true if only hidden. */
     val isDisplayable: Boolean get() = !closed
@@ -686,6 +713,7 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         if (grid == null) {
             component.removeFromParent()
             window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
+            focus.track(component)
         } else {
             grid.remove(content)
             grid.add(component, CONTENT_ROW, 0)
@@ -714,6 +742,7 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         grid.addRow(GridLength.star())
         // First replace Window.Content with the Grid to detach the content from the window, then put it into the Grid
         window.call(XamlInterop.IWindow_put_Content, grid.uiElement.ptr)
+        focus.track(grid)
         grid.add(content, CONTENT_ROW, 0)
         rootGrid = grid
         return grid

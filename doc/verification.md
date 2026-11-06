@@ -410,3 +410,11 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   共有ウィンドウに載せたラベルに AncestorListener (Loaded のハンドラを足す) を付けると、数周回と 0.5 秒待っても IsLoaded は false のままだった。
   そのため WComponent.isDisplayable は IsLoaded を使わず、XamlRoot があり、ビジュアル ツリーの根が XamlRoot.Content の根と同じかで決める
   (WComponentShowingTest)。IsLoaded を読むほかの箇所 (ListenerAnchor など) も、自分で Loaded のハンドラを足した直後は false を読みうる
+- ウィンドウの中身の根 (Window.Content) に付けた UIElement.GotFocus は、中の入力欄に UIElement.Focus でフォーカスを移しても
+  届かないことがあった (FocusManager.GetFocusedElement はその入力欄を返す。テスト プロセスのウィンドウが前面に無いときと見られるが、
+  条件は確かめきれていない)。WFrame.mostRecentFocusOwner は GotFocus に加えて、Window.Activated (非アクティブ) の時点で
+  GetFocusedElement の要素も覚える (WFrameFocusOwnerTest)
+- WLayoutPanel (リスナーを持つ ListenerAnchor のある要素) を Window.Content に置いたウィンドウを閉じて参照を手放すと、その子のラッパーが
+  回収されなかった (WFrame.setLayout・setContentPane(WLayoutPanel) のどちらでも。既定の WPanel やメニュー バーの Grid の根なら回収される)。
+  Window.Closed で Window.Content を null にしても変わらない。根の Unloaded が届かず ListenerAnchor が強く持ったままになっていると
+  見られる (未確認)
