@@ -215,6 +215,7 @@ internal object WindowingInterop {
     const val IDisplayArea_get_WorkArea = 9             // -> RectInt32 (out of a struct)
     const val IID_IDisplayAreaStatics = "02ab4926-211e-5d49-8e4b-2af193daed09"
     const val IDisplayAreaStatics_get_Primary = 6
+    const val IDisplayAreaStatics_FindAll = 8           // FindAll() -> IVectorView<DisplayArea>
     const val IDisplayAreaStatics_GetFromWindowId = 9   // GetFromWindowId(WindowId, DisplayAreaFallback) -> DisplayArea
     const val DisplayAreaFallback_Nearest = 2           // enum Microsoft.UI.Windowing.DisplayAreaFallback.Nearest
 

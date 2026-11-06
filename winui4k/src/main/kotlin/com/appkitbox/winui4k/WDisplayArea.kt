@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
@@ -11,8 +12,8 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
 data class WRectangle(val x: Int, val y: Int, val width: Int, val height: Int)
 
 /**
- * WinUI 3's DisplayArea (a display's viewable area info). No Swing equivalent.
- * Obtained via [primary] / [nearest].
+ * GraphicsDevice-like: WinUI 3's DisplayArea (a display's viewable area info).
+ * Obtained via [primary] (GraphicsEnvironment.getDefaultScreenDevice) / [all] (getScreenDevices) / [nearest].
  *
  * Provides [isPrimary] / [workArea] (the working area excluding things like the taskbar) /
  * [outerBounds] (the display's whole area).
@@ -33,6 +34,9 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
             WRectangle(it[0], it[1], it[2], it[3])
         }
 
+    /** An alias of [outerBounds] (GraphicsDevice.getDefaultConfiguration().getBounds()-like). */
+    val bounds: WRectangle get() = outerBounds
+
     companion object {
         private val statics: ComPtr by lazy {
             Activation.factory(WindowingInterop.CLS_DisplayArea, WindowingInterop.IID_IDisplayAreaStatics)
@@ -41,6 +45,29 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
         /** Gets the primary display's DisplayArea (DisplayAreaStatics.Primary). */
         @JvmStatic
         fun primary(): WDisplayArea = WDisplayArea(statics.getPtr(WindowingInterop.IDisplayAreaStatics_get_Primary))
+
+        /**
+         * Gets the DisplayAreas of all connected displays (DisplayAreaStatics.FindAll).
+         * GraphicsEnvironment.getScreenDevices-like. An empty list if there are no displays.
+         */
+        @JvmStatic
+        fun all(): List<WDisplayArea> {
+            val view = statics.getPtr(WindowingInterop.IDisplayAreaStatics_FindAll)
+            try {
+                return Ffi.backend.withScope { scope ->
+                    val memory = Ffi.backend.memory
+                    val size = scope.allocate(4)
+                    view.call(FoundationInterop.IVectorView_get_Size, size)
+                    (0 until memory.getInt(size, 0)).map { i ->
+                        val out = scope.allocate(8)
+                        view.call(FoundationInterop.IVectorView_GetAt, i, out)
+                        WDisplayArea(ComPtr(memory.getPtr(out, 0)))
+                    }
+                }
+            } finally {
+                view.release()
+            }
+        }
 
         /**
          * Gets the DisplayArea closest to whatever display [appWindow] is on
