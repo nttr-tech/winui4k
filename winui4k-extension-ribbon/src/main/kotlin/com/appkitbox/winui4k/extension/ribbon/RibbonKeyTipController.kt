@@ -156,7 +156,7 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
      * its key input is also watched by the ribbon. When the user closes the menu (click or Esc), KeyTip mode is exited.
      */
     private fun continueInMenu(menu: WMenuFlyout) {
-        val entries = menu.addedItems.filter { it is WMenuFlyoutItem || it is WMenuFlyoutSubItem }
+        val entries = menu.menuComponents.filter { it is WMenuFlyoutItem || it is WMenuFlyoutSubItem }
         if (entries.isEmpty()) {
             hide()
             return

@@ -4,7 +4,6 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.jvm.JvmName
@@ -20,6 +19,9 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
     internal val menuFlyoutItemBase: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IMenuFlyoutItemBase))
     }
+
+    /** The menu it is in (set by the item management of WMenuBarItem / WMenuFlyoutSubItem / WMenuFlyout). */
+    internal var menuOwner: MenuItems<WMenuFlyoutItemBase>? = null
 }
 
 /**
@@ -532,7 +534,8 @@ class WRadioMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyo
 
 /**
  * JMenu submenu-like: WinUI 3's MenuFlyoutSubItem.
- * Hovering over it shows the child items added with [add] in a cascade.
+ * Pointing at it cascades the [add]ed child items. Adding and removing items ([add] / [insert] / [remove] / [getItem] ...) uses
+ * the same JMenu-like API as [WMenuBarItem].
  */
 class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyoutItemBase(inspectable) {
     /** JMenu(String)-like: a submenu with text and an icon. Text only if [icon] is null. */
@@ -549,9 +552,11 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
     @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
     constructor(text: String = "", icon: Symbol? = null) : this(text, icon as WIcon?)
 
-    private val items: ComPtr by lazy {
+    private val nativeItems: ComPtr by lazy {
         own(inspectable.getPtr(XamlInterop.IMenuFlyoutSubItem_get_Items)) // IVector<MenuFlyoutItemBase>
     }
+
+    private val items = MenuItems.forMenuItems { nativeItems }
 
     /** The submenu's label (MenuFlyoutSubItem.Text). */
     var text: String
@@ -601,10 +606,76 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
         this.mnemonic = Mnemonics.keyCodeOf(mnemonic)
     }
 
-    /** Appends a child item (Append onto MenuFlyoutSubItem.Items). */
-    fun add(item: WMenuFlyoutItemBase) {
-        items.call(FoundationInterop.IVector_Append, item.menuFlyoutItemBase.ptr)
+    /** JMenu.add(JMenuItem)-like: appends an item at the end and returns [item]. An item that is in another menu is first removed from there. */
+    fun <T : WMenuFlyoutItemBase> add(item: T): T = items.add(item)
+
+    /** The legacy `void add(WMenuFlyoutItemBase)` (for binary compatibility; not visible from source). */
+    @Deprecated("Use add that returns the item", level = DeprecationLevel.HIDDEN)
+    @JvmName("add")
+    fun addReturningUnit(item: WMenuFlyoutItemBase) {
+        items.add(item)
     }
+
+    /** JMenu.add(String)-like: creates a [WMenuFlyoutItem] with [text], appends it at the end, and returns it. */
+    fun add(text: String): WMenuFlyoutItem = items.add(WMenuFlyoutItem(text))
+
+    /** JMenu.add(Action)-like: creates a [WMenuFlyoutItem] bound to [action], appends it at the end, and returns it. */
+    fun add(action: WAction): WMenuFlyoutItem = items.add(WMenuFlyoutItem(action))
+
+    /** JMenu.addSeparator-like: appends a separator ([WMenuFlyoutSeparator]) at the end. */
+    fun addSeparator() {
+        items.add(WMenuFlyoutSeparator())
+    }
+
+    /** JMenu.insert(JMenuItem, int)-like: inserts at [index] and returns [item]. Negative throws IllegalArgumentException; at or beyond the number of items, at the end. */
+    fun <T : WMenuFlyoutItemBase> insert(item: T, index: Int): T = items.insert(item, index)
+
+    /** JMenu.insert(String, int)-like: creates an item with [text], inserts it at [index], and returns it. */
+    fun insert(text: String, index: Int): WMenuFlyoutItem = items.insert(WMenuFlyoutItem(text), index)
+
+    /** JMenu.insert(Action, int)-like: creates an item bound to [action], inserts it at [index], and returns it. */
+    fun insert(action: WAction, index: Int): WMenuFlyoutItem = items.insert(WMenuFlyoutItem(action), index)
+
+    /** JMenu.insertSeparator-like: inserts a separator at [index]. */
+    fun insertSeparator(index: Int) {
+        items.insert(WMenuFlyoutSeparator(), index)
+    }
+
+    /** JMenu.remove(JMenuItem)-like: removes an item. Does nothing if it is not an item of this menu. */
+    fun remove(item: WMenuFlyoutItemBase) {
+        items.remove(item)
+    }
+
+    /** JMenu.remove(int)-like: removes the item at [index]. Negative or at or beyond the number of items throws IllegalArgumentException (as in Swing). */
+    fun remove(index: Int) {
+        items.removeAt(index)
+    }
+
+    /** JMenu.removeAll-like: removes all items from the end. */
+    fun removeAll() {
+        items.clear()
+    }
+
+    /**
+     * JMenu.getItem-like: the item at [index]. null for a separator (as in Swing). It also returns submenus ([WMenuFlyoutSubItem]), so
+     * the type is [WMenuFlyoutItemBase]. Negative throws IllegalArgumentException; at or beyond the number of items throws ArrayIndexOutOfBoundsException.
+     */
+    fun getItem(index: Int): WMenuFlyoutItemBase? = items.getChecked(index).takeUnless { it is WMenuFlyoutSeparator }
+
+    /** JMenu.getItemCount-like: the number of items including separators (same as [menuComponentCount]). */
+    val itemCount: Int
+        get() = items.size
+
+    /** JMenu.getMenuComponentCount-like: the number of items including separators. */
+    val menuComponentCount: Int
+        get() = items.size
+
+    /** JMenu.getMenuComponent-like: the item at [index] (separators included). Out of range throws ArrayIndexOutOfBoundsException. */
+    fun getMenuComponent(index: Int): WMenuFlyoutItemBase = items[index]
+
+    /** JMenu.getMenuComponents-like: the list of items (in order; a new array on each call). */
+    val menuComponents: Array<WMenuFlyoutItemBase>
+        get() = items.list.toTypedArray()
 }
 
 /** JSeparator-like: WinUI 3's MenuFlyoutSeparator (a menu divider line). */

@@ -233,3 +233,9 @@
   ERROR_SCROLLVIEWER_UNSUPPORTED_HORIZONTALALIGNMENT_WITH_HEADER)。レイアウト中のエラーなので XAML がプロセスを落とす。
   `WScrollPane` は `columnHeaderView` / `rowHeaderView` / `setCorner` で見出しを付けると中身を左上寄せに書き換える。
   見出しがあるあいだに中身の寄せ方を変えると同じように落ちる。
+- **MenuBarItem.Items の Clear が開くメニューに届かない**
+  MenuBarItem はテンプレートの適用時に Items を自分の MenuBarItemFlyout へ写し、その後の Items の変更は VectorChanged で写すが、
+  写すのは ItemInserted と ItemRemoved だけで、Reset (IVector.Clear) と ItemChanged (SetAt) は無視する
+  (`controls/dev/MenuBar/MenuBarItem.cpp` の `OnItemsVectorChanged`)。載った後に Clear すると、Items は空でも開くメニューには
+  古い項目が残る。`WMenuBarItem.removeAll` (と共有の `MenuItems`) は Swing の Container.removeAll と同じく末尾から 1 つずつ RemoveAt する
+  (`WMenuContainerTest`)。
