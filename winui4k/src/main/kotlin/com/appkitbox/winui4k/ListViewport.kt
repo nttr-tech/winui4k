@@ -34,7 +34,7 @@ internal class ListViewport(
     private val itemsControl: ComPtr by lazy { owner.own(owner.inspectable.queryInterface(XamlInterop.IID_IItemsControl)) }
     private val mapping: ComPtr by lazy { owner.own(owner.inspectable.queryInterface(XamlInterop.IID_IItemContainerMapping)) }
 
-    private val rows = VisibleRows(owner, rowHeight)
+    private val rows = VisibleRows(owner, rowHeight = rowHeight)
 
     /** The value of JList.getVisibleRowCount (8 by default, as in Swing). */
     var visibleRowCount: Int by rows::count
@@ -141,14 +141,16 @@ internal class ListViewport(
  */
 internal class VisibleRows(
     private val owner: WControl,
+    /** The default number of rows to show (8 for JList, 20 for JTree). */
+    defaultCount: Int = ListViewport.DEFAULT_VISIBLE_ROW_COUNT,
     /** The estimated height of one row (DIP). */
     private val rowHeight: () -> Double,
 ) {
     /** The height last set by [count] (NaN if not set). */
     private var heightFromRows = Double.NaN
 
-    /** The number of rows to show (8 by default, as in Swing; negative values become 0). */
-    var count: Int = ListViewport.DEFAULT_VISIBLE_ROW_COUNT
+    /** The number of rows to show (negative values become 0). */
+    var count: Int = defaultCount
         set(value) {
             field = value.coerceAtLeast(0)
             apply()

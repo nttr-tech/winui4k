@@ -599,6 +599,43 @@ class WTree() : WControl(
     /** Scrolls to row [row] (Swing's `scrollRowToVisible`). */
     fun scrollRowToVisible(row: Int) = scrollPathToVisible(getPathForRow(row))
 
+    /** The implementation of [visibleRowCount] (the same approximation as WList). */
+    private val visibleRows = VisibleRows(this, DEFAULT_VISIBLE_ROW_COUNT) { ROW_HEIGHT }
+
+    /**
+     * The number of rows to show (Swing's `getVisibleRowCount` / `setVisibleRowCount`). The default is 20, the same as JTree, and negative values become 0
+     * (Swing keeps negative values as they are). Setting it sets the height ([height]) to "rows × 32 DIP + top and bottom padding (Padding) and border (BorderThickness)".
+     * 32 is WinUI's default minimum TreeViewItem height (TreeViewItemMinHeight = 28) plus the top and bottom outer margins of the content (2 + 2),
+     * an estimate like [WList.visibleRowCount] (it drifts when a renderer draws rows of different heights). If the user has specified [height], the height is not changed.
+     * Unlike Swing, the default 20 rows does not affect the size until set.
+     */
+    var visibleRowCount: Int
+        get() = visibleRows.count
+        set(value) {
+            visibleRows.count = value
+        }
+
+    /**
+     * Whether to expand the parents of the selected paths to make them visible when the selection changes (Swing's `getExpandsSelectedPaths` /
+     * `setExpandsSelectedPaths`, true by default). As in Swing, whether through operations on the display, this tree's selection API or direct changes to [selectionModel],
+     * every time the selection changes it calls [makeVisible] for all selected paths (the expansion listeners are called, and
+     * TreeWillExpandListener can veto it). If a node along the path is a leaf (a path not in the tree), it does not expand.
+     * If false, the parents stay closed and the path remains in the selection model (not visible in the TreeView). Setting it back to true does not expand until the selection changes next.
+     * It expands before the tree's listeners (in Swing the UI's selection handler expands, so the order relative to listeners depends on the order they were added).
+     */
+    var expandsSelectedPaths: Boolean = true
+
+    /** When the selection changes ([TreeSelectionBridge]): if [expandsSelectedPaths], expands the parents of the selected paths. */
+    internal fun expandSelectedParents() {
+        if (!expandsSelectedPaths) return
+        val paths = selectionModel.getSelectionPaths() ?: return
+        for (path in paths.reversed()) {
+            // As in BasicTreeUI, do not expand if there is a leaf along the path (a path no longer in the tree)
+            val ancestorIsLeaf = generateSequence(path.getParentPath()) { it.getParentPath() }.any { binding.isLeaf(it) }
+            if (!ancestorIsLeaf) makeVisible(path)
+        }
+    }
+
     /**
      * The path of the row at the position ([x], [y], in DIP) from the top-left of the tree (Swing's `getPathForLocation`). null outside the rows.
      * Only rows realized on screen (TreeViewItem) are examined, so rows before it is shown or scrolled out are not found.
@@ -1106,6 +1143,15 @@ class WTree() : WControl(
 
     // Called from native handlers, so placed in the companion so as not to capture the wrapper
     private companion object {
+        /**
+         * The estimated height of one row: TreeViewItemMinHeight (28) + the top and bottom outer margins of the content frame, TreeViewItemPresenterMargin (2 + 2)
+         * (TreeView_themeresources.xaml; the height of a shown row was also 32).
+         */
+        const val ROW_HEIGHT = 32.0
+
+        /** The default value of JTree's visibleRowCount. */
+        const val DEFAULT_VISIBLE_ROW_COUNT = 20
+
         /** The distance from the vertical position [y] to the range [top]..[bottom] (0 inside the range). */
         fun distance(y: Double, top: Double, bottom: Double): Double = when {
             y < top -> top - y

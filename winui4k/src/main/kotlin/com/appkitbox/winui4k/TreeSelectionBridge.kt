@@ -97,6 +97,8 @@ internal class TreeSelectionBridge(
     }
 
     fun onModelSelectionChanged(e: TreeSelectionEvent) {
+        // Expand the parents of the selected path first (expandsSelectedPaths; the TreeView cannot select it until expanded)
+        tree.expandSelectedParents()
         if (!pulling) pushToNative()
         val event = e.cloneWithSource(tree) as TreeSelectionEvent
         listeners.forEach { it.valueChanged(event) }

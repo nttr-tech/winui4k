@@ -57,6 +57,29 @@ class WTreeForJavaTest {
     }
 
     @Test
+    void setVisibleRowCountMakesTheHeightFitTheRows_setSelectionPathExpandsClosedParentsByDefault_setExpandsSelectedPathsFalseStopsIt() {
+        onUiThread(() -> {
+            DefaultMutableTreeNode root = sampleRoot();
+            WTree tree = new WTree(root);
+            assertEquals(20, tree.getVisibleRowCount());
+            tree.setVisibleRowCount(5);
+            assertEquals(5, tree.getVisibleRowCount());
+            assertEquals(160.0, tree.getHeight());
+            assertTrue(tree.getExpandsSelectedPaths());
+            TreePath report = new TreePath(new Object[] {root, root.getChildAt(0), root.getChildAt(0).getChildAt(0)});
+            tree.setSelectionPath(report);
+            assertTrue(tree.isExpanded(report.getParentPath()));
+            assertEquals(2, tree.getRowForPath(report));
+            tree.collapsePath(report.getParentPath());
+            tree.setExpandsSelectedPaths(false);
+            tree.clearSelection();
+            tree.setSelectionPath(report);
+            assertFalse(tree.isExpanded(report.getParentPath()));
+            assertEquals(-1, tree.getRowForPath(report));
+        });
+    }
+
+    @Test
     void setRootVisibleFalseHidesTheRootAndGetModelReturnsThePassedModel() {
         onUiThread(() -> {
             DefaultMutableTreeNode root = sampleRoot();
