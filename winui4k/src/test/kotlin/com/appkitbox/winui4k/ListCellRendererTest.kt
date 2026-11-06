@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -167,6 +168,18 @@ class ListCellRendererTest : FunSpec() {
                     waitFor = mapOf(2 to listOf("a", "b")),
                 )[2] shouldBe listOf(false, true, true, 1, null)
             }
+        }
+
+        test("WList: a renderer called from ContainerContentChanging (during layout) throws IllegalStateException when it tries to wait for a dialog to close") {
+            val outcomes = ArrayList<String>()
+            val renderer = object : WListCellRenderer<Any?> {
+                override fun getListCellRendererComponent(list: WComponent, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): WComponent {
+                    outcomes += runCatching { ModalLoop.run { true } }.fold({ "ran" }, { it.javaClass.simpleName })
+                    return WLabel("<$value>")
+                }
+            }
+            val list = onUiThreadGet { WList(arrayOf<Any?>("a", "b")).also { it.cellRenderer = renderer } }
+            shown(list, listOf("<a>", "<b>")) { outcomes.isNotEmpty() to outcomes.distinct() } shouldBe (true to listOf("IllegalStateException"))
         }
 
         test("WListBox: even with a renderer, selectedItems and selectedValue stay the element strings and elements") {

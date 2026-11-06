@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
@@ -74,7 +75,10 @@ internal class ListCellRendering<T : WControl>(
                 "WinUI4K.ListCellRendererContainerHandler",
                 XamlInterop.IID_ContainerContentChangingHandler,
                 XamlInterop.IListViewBase_add_ContainerContentChanging,
-            ) { _, args -> anchor.get()?.let(resolve)?.onContainerContentChanging(ComPtr(args)) }
+            ) { _, args ->
+                // It is called during layout, so refuse if the user's renderer tries to wait for a dialog to close (do not freeze)
+                ModalLoop.duringLayout { anchor.get()?.let(resolve)?.onContainerContentChanging(ComPtr(args)) }
+            }
         }
     }
 
