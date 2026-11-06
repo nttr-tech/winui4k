@@ -19,7 +19,7 @@ import kotlin.jvm.JvmSynthetic
  * JComboBox-like: WinUI 3's ComboBox (a Selector subclass).
  *
  * The items and the selected item are held by [model] ([WComboBoxModel]; [WDefaultComboBoxModel] by default), and the native ComboBox.Items get
- * the `toString()` strings of the model's items. Model changes ([WListDataListener] notifications) are copied to native, and native selection changes made
+ * the `toString()` strings of the model's items (changeable with [renderer]). Model changes ([WListDataListener] notifications) are copied to native, and native selection changes made
  * by the user are written back to the model's [WComboBoxModel.selectedItem]. One model can be shared by several combos.
  *
  * Item operations: [addItem] / [insertItemAt] / [getItemAt] / [removeItemAt] / [removeItem] / [removeAllItems] / [itemCount]
@@ -318,7 +318,20 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         mutableModel().insertElementAt(item, index)
     }
 
-    /** Returns the display string of the item at [index]. Throws [IndexOutOfBoundsException] if out of range ([getItemAt] returns null when out of range). */
+    /**
+     * JComboBox.getRenderer / setRenderer-like: a function that turns the model's items into the strings shown in the list and the closed field. If null (the default),
+     * the item's `toString()` ("" for a null item). Setting it recreates the native items (the selection does not change and no listeners are called).
+     * Difference from Swing: it returns only a string, not a component like ListCellRenderer (the same element cannot be placed in
+     * two places, the closed field and the list). [getItem] / [getItemAt] return this string, but [selectedItem] and the input field of an editable combo box
+     * stay `toString()` as before, since they also represent values not in the list. The function is called per item on the UI thread every time the model changes.
+     */
+    var renderer: ((Any?) -> String)? = null
+        set(value) {
+            field = value
+            rebuildNative()
+        }
+
+    /** Returns the display string (the [renderer] string) of the item at [index]. Throws [IndexOutOfBoundsException] if out of range ([getItemAt] returns null when out of range). */
     fun getItem(index: Int): String {
         if (index !in 0 until itemCount) throw IndexOutOfBoundsException("index: $index, size: $itemCount")
         return textOf(dataModel.getElementAt(index))
@@ -863,7 +876,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         return true
     }
 
-    private fun textOf(element: Any?): String = element?.toString() ?: ""
+    private fun textOf(element: Any?): String = renderer?.invoke(element) ?: element?.toString() ?: ""
 
     private fun addTextSubmittedHandler() {
         val anchor = listenerAnchor
