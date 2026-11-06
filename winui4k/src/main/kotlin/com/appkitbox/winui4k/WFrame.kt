@@ -21,9 +21,11 @@ import kotlin.math.roundToInt
 /**
  * JFrame-like: WinUI 3's Window.
  *
- * As in Swing, open (not yet closed) WFrames are held by [frames], so they are not removed by GC even if not kept in a variable,
+ * As in Swing, WFrames that have been shown and are not yet closed are held by [frames], so they are not removed by GC even if not kept in a variable,
  * and are released when closed (Window.Closed). A window that is only hidden ([isVisible] = false) is considered still open, and
  * the automatic app exit when the last window closes ([WinUiUtilities.exitOnLastWindowClosed]) does not happen either (as in Swing).
+ * A WFrame never shown is not counted as an open window (the same as before it becomes displayable in Swing) and does not stop the automatic exit.
+ * It is collected by GC once the reference is released.
  *
  * Differences from Swing:
  * - The default of [defaultCloseOperation] is [DISPOSE_ON_CLOSE], not Swing's HIDE_ON_CLOSE (so that no invisible
@@ -72,6 +74,12 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /** true if closed (Window.Closed, or Close was called by [dispose]). */
     private var closed = false
 
+    /**
+     * Whether it has been counted as an open window ([registerOpen]). The Window.Closed handler also reads it, so it is a holder independent of the WFrame
+     * (so that the handler does not hold the WFrame strongly, and the count can be restored correctly even if the WFrame is collected before closing).
+     */
+    private val openCount = OpenCount()
+
     /** true if windowOpened has been fired (fired only once). */
     private var opened = false
 
@@ -103,20 +111,28 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     init {
         window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
         if (title.isNotEmpty()) this.title = title
-        // Tracks the number of open windows and auto-exits the app once the last one closes
-        // (see WinUiUtilities.exitOnLastWindowClosed). Closed fires exactly once whether via
-        // Close() or the title bar's close button
-        WinUiUtilities.noteWindowCreated()
-        openFrames.add(this)
         subscribeNativeEvents()
     }
 
     /**
-     * Subscribes to window notifications. The handlers stay in the window (native), so they reference the WFrame weakly. Until it is closed,
+     * When first shown, counts it as an open window and puts it into [openFrames] (does nothing from the second time on). The count is used for the automatic
+     * app exit when the last one closes (WinUiUtilities.exitOnLastWindowClosed), and is decremented on Window.Closed.
+     * Called not only for [isVisible] = true but also when shown with [appWindow]'s show (AppWindow.Changed / Window.Activated).
+     */
+    private fun registerOpen() {
+        if (closed || openCount.counted) return
+        openCount.counted = true
+        WinUiUtilities.noteWindowCreated()
+        openFrames.add(this)
+    }
+
+    /**
+     * Subscribes to window notifications. The handlers stay in the window (native), so they reference the WFrame weakly. From being shown until it is closed,
      * [openFrames] holds it strongly, so the weak reference is never cleared during that time.
      */
     private fun subscribeNativeEvents() {
         val self = WeakReference(this)
+        val openCount = openCount
         window.addEventHandler(
             "WinUI4K.WindowClosedHandler",
             XamlInterop.IID_WindowClosedHandler,
@@ -127,7 +143,10 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
                 DefaultButtons.forget(frame)
                 frame.onClosed()
             }
-            WinUiUtilities.noteWindowClosed()
+            if (openCount.counted) {
+                openCount.counted = false
+                WinUiUtilities.noteWindowClosed()
+            }
         }
         window.addEventHandler(
             "WinUI4K.WindowActivatedHandler",
@@ -166,6 +185,7 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
 
     private fun onActivated(active: Boolean) {
         if (active) {
+            registerOpen()
             fireOpenedOnce()
             // Put the one that became active last at the end (used to decide where a WOptionPane without a parent opens)
             if (!closed && openFrames.remove(this)) openFrames.add(this)
@@ -215,7 +235,10 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /** AppWindow.Changed. Fires windowOpened when shown, and iconify / maximize events when the presenter state changes. */
     private fun onChanged(visibilityChanged: Boolean) {
         if (closed) return
-        if (visibilityChanged && appWindow.isVisible) fireOpenedOnce()
+        if (visibilityChanged && appWindow.isVisible) {
+            registerOpen()
+            fireOpenedOnce()
+        }
         if (!applyingState) syncState()
     }
 
@@ -638,6 +661,7 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
         set(value) {
             if (value) {
                 check(!closed) { "A closed (disposed) WFrame cannot be shown again" }
+                registerOpen()
                 val pending = pendingState
                 pendingState = null
                 // Maximizing is done together with showing (so it does not first appear at the normal size). Minimizing is done after showing (because Activate restores it)
@@ -868,14 +892,14 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
         private const val MICA_KIND_BASE_ALT = 1
 
         /**
-         * The open (not closed) WFrames. In creation order, with ones that become active moved to the end. Holds WFrames strongly until closed
+         * The WFrames that have been shown and are not closed. In the order first shown, with ones that become active moved to the end. Holds WFrames strongly until closed
          * so that the native handlers (weak references) can reach them. Read and written only by the UI thread.
          */
         private val openFrames = LinkedHashSet<WFrame>()
 
         /**
-         * Frame.getFrames-like: an array of the open (not yet closed) WFrames, including hidden ones. Unlike Swing, closed ones are
-         * not included. Call it on the UI thread.
+         * Frame.getFrames-like: an array of the WFrames that have been shown and are not yet closed, including hidden ones. Unlike Swing, closed ones and
+         * ones never shown are not included. Call it on the UI thread.
          */
         @JvmStatic
         val frames: Array<WFrame>
@@ -918,4 +942,9 @@ enum class SystemBackdropType {
 
     /** Acrylic: a translucent material that lets windows behind it show through (DesktopAcrylicBackdrop). */
     ACRYLIC,
+}
+
+/** Whether the [WFrame] has been counted as an open window (shared by the Window.Closed handler and the WFrame; does not reference the WFrame). */
+private class OpenCount {
+    var counted = false
 }

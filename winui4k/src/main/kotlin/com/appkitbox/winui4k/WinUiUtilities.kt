@@ -183,7 +183,8 @@ object WinUiUtilities {
     }
 
     /**
-     * Whether to auto-exit the app when the last [WFrame] closes (default true).
+     * Whether to auto-exit the app when the last [WFrame] closes (default true). Only windows that have been shown are counted,
+     * and a WFrame never shown does not stop the exit.
      * Set to false to keep the message loop running even after every window closes,
      * so [invokeLater] can still open a new window. Call [exit] to shut down explicitly.
      */
@@ -192,9 +193,10 @@ object WinUiUtilities {
     var exitOnLastWindowClosed: Boolean = true
 
     /** The number of open (not yet Closed) WFrames. Updated only on the UI thread. */
-    private var openWindowCount = 0
+    internal var openWindowCount = 0
+        private set
 
-    /** Called when a [WFrame] is created. Must be called on the UI thread. */
+    /** Called when a [WFrame] is shown for the first time (windows never shown are not counted). Must be called on the UI thread. */
     internal fun noteWindowCreated() {
         openWindowCount++
     }

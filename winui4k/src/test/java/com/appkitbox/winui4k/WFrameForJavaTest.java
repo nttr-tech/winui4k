@@ -106,9 +106,10 @@ class WFrameForJavaTest {
     void setVisibleFalseOnlyHidesAndKeepsItInGetFramesAndDisposeClosesIt() {
         onUiThread(() -> {
             own = new WFrame(TITLE);
-            assertTrue(Arrays.asList(WFrame.getFrames()).contains(own));
+            assertFalse(Arrays.asList(WFrame.getFrames()).contains(own)); // Not counted while never shown
             own.setVisible(true);
             assertTrue(own.isVisible());
+            assertTrue(Arrays.asList(WFrame.getFrames()).contains(own));
             own.setVisible(false);
             assertFalse(own.isVisible());
             assertTrue(own.isDisplayable());

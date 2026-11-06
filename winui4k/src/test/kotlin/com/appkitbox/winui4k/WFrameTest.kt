@@ -268,15 +268,44 @@ class WFrameTest : FunSpec() {
             }
         }
 
-        test("even if the caller drops the reference, frames holds it while open, so it is not removed by GC") {
-            val weak = onUiThreadGet { WeakReference(WFrame(TITLE)) }
-            repeat(3) {
-                System.gc()
-                Thread.sleep(50)
-            }
+        test("a shown WFrame is held by frames until closed even if the caller drops the reference, so it is not removed by GC") {
+            val weak = onUiThreadGet { WeakReference(WFrame(TITLE).also { it.isVisible = true }) }
+            Reclamation.survivesGc(weak).shouldBeTrue()
             val kept = weak.get().shouldNotBeNull()
             onUiThread { WFrame.frames.toList() shouldContain kept }
             onUiThread { kept.dispose() }
+        }
+
+        test("a WFrame never shown is not in frames and is collected by GC once the reference is dropped (the same as before it becomes displayable in Swing)") {
+            val weak = onUiThreadGet {
+                val neverShown = WFrame(TITLE)
+                WFrame.frames.toList() shouldNotContain neverShown
+                WeakReference(neverShown)
+            }
+            Reclamation.awaitCollected(weak).shouldBeTrue()
+        }
+
+        test("the number of open windows (used to decide the exit on the last window) increases only once when first shown and goes back when closed. Disposing without showing does not change it") {
+            val before = onUiThreadGet { WinUiUtilities.openWindowCount }
+            val frame = newFrame()
+            onUiThreadGet { WinUiUtilities.openWindowCount } shouldBe before
+            showAndAwaitOpened(frame)
+            onUiThread {
+                WinUiUtilities.openWindowCount shouldBe before + 1
+                frame.isVisible = false
+                frame.isVisible = true
+                WinUiUtilities.openWindowCount shouldBe before + 1
+                frame.dispose()
+            }
+            eventually(5.seconds) { onUiThreadGet { WinUiUtilities.openWindowCount } shouldBe before }
+            onUiThread {
+                val neverShown = WFrame(TITLE)
+                WinUiUtilities.openWindowCount shouldBe before
+                neverShown.dispose()
+                neverShown.isDisplayable.shouldBeFalse()
+            }
+            Thread.sleep(SETTLE_MILLIS) // The count must not decrease even when the closed notification (Window.Closed) comes
+            onUiThreadGet { WinUiUtilities.openWindowCount } shouldBe before
         }
 
         test("add goes into the content container replaced with setContentPane. add with a constraint passes it to that layout manager") {
