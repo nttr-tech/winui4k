@@ -598,6 +598,50 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
     @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
     constructor(text: String = "", icon: Symbol? = null) : this(text, icon as WIcon?)
 
+    /** JMenu(Action)-like: creates a submenu with the values of [action] (NAME, SMALL_ICON, etc.) copied. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
+
+    /**
+     * JMenu.getAction / setAction-like: the [WAction] bound to the submenu heading. null (the default) means no binding.
+     * As with Swing's JMenu, [WAction.NAME] is copied to [text], [WAction.SMALL_ICON] to [icon], [WAction.MNEMONIC_KEY] to [mnemonic],
+     * [WAction.isEnabled] to [isEnabled] and [WAction.SHORT_DESCRIPTION] to [toolTipText], following every later change of the action's values.
+     * Items without a value are unset. Opening the submenu does not call [WAction.actionPerformed] (Swing's JMenu does not either).
+     * The binding rules are the same as [WMenuBarItem.action].
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            actionBinder.detach()
+            field = value
+            actionBinder.attach(value)
+        }
+
+    /** The binding to [action] (following its values). The action looks up the submenu through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) {
+                when (key) {
+                    WAction.NAME -> text = action?.stringValue(key) ?: ""
+                    WAction.SMALL_ICON -> icon = action?.typedValue<WIcon>(key, "WIcon")
+                    WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
+                    WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+                    WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+                }
+            }
+
+            override fun addActionClickListener(listener: WActionListener) {
+                // JMenu does not call the action when opened
+            }
+
+            override fun removeActionClickListener(listener: WActionListener) {
+                // Nothing was attached, so there is nothing to remove
+            }
+        },
+        MENU_HEADER_ACTION_KEYS,
+    )
+
     private val nativeItems: ComPtr by lazy {
         own(inspectable.getPtr(XamlInterop.IMenuFlyoutSubItem_get_Items)) // IVector<MenuFlyoutItemBase>
     }
@@ -644,7 +688,7 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
 
     /**
      * JMenu.getMnemonic / setMnemonic(int)-like: the key code of the access key (UIElement.AccessKey). The values and constraints are
-     * the same as [WMenuFlyoutItem.mnemonic]. Submenus have no action or accelerator (Swing's JMenu.setAccelerator cannot be used either).
+     * the same as [WMenuFlyoutItem.mnemonic]. A submenu has no accelerator (Swing's JMenu.setAccelerator cannot be used either).
      */
     var mnemonic: Int
         get() = Mnemonics.read(uiElement)

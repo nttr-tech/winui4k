@@ -69,5 +69,24 @@ class WrapperReleaseButtonTest : FunSpec() {
             }
             Reclamation.awaitCollected(toggleSwitch).shouldBeTrue()
         }
+
+        test("a WToggleSplitButton, WComboBox and menu headings bound to a shared action are collected even while the action is kept") {
+            val log = received
+            val shared = object : WAbstractAction("Shared") {
+                override fun actionPerformed(e: WActionEvent) {
+                    log += "action"
+                }
+            }
+            shared.putValue(WAction.SELECTED_KEY, true)
+            val split = shownAndHidden { WToggleSplitButton().also { it.action = shared } }
+            val combo = shownAndHidden { WComboBox(listOf("a")).also { it.action = shared } }
+            val menu = WeakReference(onUiThreadGet { WMenuBarItem(shared) })
+            val sub = WeakReference(onUiThreadGet { WMenuFlyoutSubItem(shared) })
+            Reclamation.awaitCollected(split).shouldBeTrue()
+            Reclamation.awaitCollected(combo).shouldBeTrue()
+            Reclamation.awaitCollected(menu).shouldBeTrue()
+            Reclamation.awaitCollected(sub).shouldBeTrue()
+            shared.putValue(WAction.NAME, "After collection") // Notifications to collected components are discarded
+        }
     }
 }

@@ -16,7 +16,7 @@ import kotlin.jvm.JvmSynthetic
  * [WActionEvent]).
  * WinUI's SplitButton is not a ButtonBase, so this is not derived from [WButtonBase] but shares the same parts
  * (ButtonLabel and ClickListeners).
- * It has no Action equivalent to [WButtonBase.action].
+ * An Action ([action]) is also bound with the same mechanism (ActionBinder) as [WButtonBase.action].
  */
 open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(inspectable) {
     @JvmOverloads
@@ -249,7 +249,74 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     /** AbstractButton.getActionListeners-like: the added listeners (in the order added; wrapped ones can be removed too, as with [WButtonBase.actionListeners]). */
     val actionListeners: Array<WActionListener>
         get() = clickListeners.listeners()
+
+    /**
+     * AbstractButton.getAction / setAction-like: the [WAction] bound to the main part (left side). null (the default) means no binding.
+     * The copied items, following, calling on click and handling of null are the same as [WButtonBase.action]
+     * ([WAction.NAME] to [text], [WAction.SMALL_ICON] to [icon], [WAction.SHORT_DESCRIPTION] to [toolTipText],
+     * [WAction.MNEMONIC_KEY] to [mnemonic], [WAction.ACTION_COMMAND_KEY] to [actionCommand], [WAction.isEnabled] to [isEnabled].
+     * Only [WToggleSplitButton] copies [WAction.SELECTED_KEY] to and from [WToggleSplitButton.isChecked]. Writing the checked state back to the action
+     * is done from IsCheckedChanged, so changes before being placed in a window, for which WinUI does not raise this event, are not written back).
+     * On click, [WAction.actionPerformed] is called from the main part's Click (in the same order and with the same [WActionEvent] as the [addActionListener] listeners).
+     * It is not called when [flyout] is opened with the arrow on the right. There is no hideActionText.
+     * [IllegalArgumentException] if a value has the wrong type. The action refers to the button through a weak reference.
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            actionBinder.detach()
+            // Switch before copying the values (so that a selection change from copying is not written back to the previous action; the same order as Swing's setAction)
+            field = value
+            actionBinder.attach(value)
+            onActionChanged(value)
+        }
+
+    /** The binding to [action] (following its values and calling it on click). The action looks up the button through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) = this@WSplitButton.applyActionValue(action, key)
+
+            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+        },
+        SPLIT_BUTTON_ACTION_KEYS,
+    )
+
+    /** Copies the value of [action] to the item corresponding to [key] (unset if action is null). */
+    private fun applyActionValue(action: WAction?, key: String) {
+        when (key) {
+            WAction.NAME -> text = action?.stringValue(key) ?: ""
+            WAction.SMALL_ICON -> icon = action?.typedValue<WIcon>(key, "WIcon")
+            WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+            WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
+            WAction.ACTION_COMMAND_KEY -> actionCommand = action?.stringValue(key)
+            WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+            WAction.SELECTED_KEY -> applyActionSelected(action)
+        }
+    }
+
+    /** Copies [WAction.SELECTED_KEY] of [action] to the selection state. Only [WToggleSplitButton], which has a selection state, overrides this. */
+    internal open fun applyActionSelected(action: WAction?) {
+        // A button without a selection state does not read SELECTED_KEY
+    }
+
+    /** Called after [action] changes ([WToggleSplitButton] attaches or detaches the subscription that writes the selection state back to the action). */
+    internal open fun onActionChanged(action: WAction?) {
+        // A button without a selection state has nothing to write back to the action
+    }
 }
+
+/** The keys of the items copied from [WSplitButton.action] (in the order of the initial full copy; the selection state comes last, as in Swing). */
+private val SPLIT_BUTTON_ACTION_KEYS = listOf(
+    WAction.NAME,
+    WAction.SMALL_ICON,
+    WAction.SHORT_DESCRIPTION,
+    WAction.MNEMONIC_KEY,
+    WAction.ACTION_COMMAND_KEY,
+    WAction.ENABLED,
+    WAction.SELECTED_KEY,
+)
 
 /** ABI values of SplitButton.Click (TypedEventHandler<SplitButton, SplitButtonClickEventArgs>). */
 private val SPLIT_BUTTON_CLICK = ClickEvent(

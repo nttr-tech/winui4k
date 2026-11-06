@@ -134,6 +134,42 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     var actionCommand: String = COMBO_BOX_CHANGED
 
     /**
+     * JComboBox.getAction / setAction-like: the [WAction] bound to the combo box. null (the default) means no binding.
+     * When set, as with JComboBox, [WAction.isEnabled] is copied to [isEnabled], [WAction.SHORT_DESCRIPTION] to [toolTipText] and
+     * [WAction.ACTION_COMMAND_KEY] to [actionCommand], following every later change of the action's values. The action
+     * goes into the same list as the [addActionListener] listeners and receives the same [WActionEvent] on selection changes and input submission.
+     * Switching to another action or null unbinds the previous action and puts the items in the "no value" state (enabled, no tooltip).
+     *
+     * Difference from Swing: when the action has no ACTION_COMMAND_KEY, JComboBox's actionCommand becomes null, but [actionCommand]
+     * cannot hold null, so it returns to the default `"comboBoxChanged"`. [IllegalArgumentException] if a value has the wrong type.
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            actionBinder.detach()
+            field = value
+            actionBinder.attach(value)
+        }
+
+    /** The binding to [action] (following its values and calling it on events). The action looks up the combo box through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) {
+                when (key) {
+                    WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+                    WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+                    WAction.ACTION_COMMAND_KEY -> actionCommand = action?.stringValue(key) ?: COMBO_BOX_CHANGED
+                }
+            }
+
+            override fun addActionClickListener(listener: WActionListener) = addActionListener(listener)
+
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListener(listener)
+        },
+        listOf(WAction.ENABLED, WAction.SHORT_DESCRIPTION, WAction.ACTION_COMMAND_KEY),
+    )
+
+    /**
      * JComboBox.getModel / setModel-like: the model of items and selection. Replacing it matches the native items to the new model, but as in JComboBox
      * listeners are not called. The model references the combo through its listener, so holding on to the model keeps the combo from being collected too (as in Swing).
      * A combo whose model has been read or written even once (including the constructor that takes a model) is, for the other components sharing the model, the same as when listeners are added:

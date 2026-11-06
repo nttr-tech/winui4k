@@ -3,7 +3,7 @@ package com.appkitbox.winui4k
 import java.lang.ref.WeakReference
 
 /**
- * The action-facing side of a component that can be bound to a [WAction] ([WButtonBase] / [WMenuFlyoutItem]).
+ * The action-facing side of a component that can be bound to a [WAction] ([WButtonBase] / [WMenuFlyoutItem] / [WSplitButton] / [WComboBox] / menu headings).
  * Each component holds one private implementation and passes it to [ActionBinder] (so that public classes do not
  * implement an internal interface). The implementation may strongly reference the component ([ActionBinder] reaches it only weakly from the action).
  */
@@ -20,7 +20,7 @@ internal interface ActionTarget {
 
 /**
  * Shared part of AbstractButton.setAction's binding: copies the action's values to the component (in [keys] order), keeps
- * following every change of the action's values, and calls the action's actionPerformed on click. [WButtonBase] and [WMenuFlyoutItem] each hold one.
+ * following every change of the action's values, and calls the action's actionPerformed on click. Each bindable component holds one.
  *
  * The action reaches [target] only through a weak reference ([Sync]). Since only the component references [target], an unused component can be
  * collected even if the action is shared, and then removes itself from the action on the next notification. Use only from the UI thread.

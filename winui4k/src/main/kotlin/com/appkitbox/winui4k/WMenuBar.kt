@@ -100,6 +100,50 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
         if (title.isNotEmpty()) this.title = title
     }
 
+    /** JMenu(Action)-like: creates a menu with the values of [action] (NAME etc.) copied. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
+
+    /**
+     * JMenu.getAction / setAction-like: the [WAction] bound to the menu heading. null (the default) means no binding.
+     * As with Swing's JMenu, [WAction.NAME] is copied to [title], [WAction.MNEMONIC_KEY] to [mnemonic], [WAction.isEnabled] to [isEnabled] and
+     * [WAction.SHORT_DESCRIPTION] to [toolTipText], following every later change of the action's values. Items without a value are unset
+     * (the text is "", the mnemonic 0 and the tooltip null). Switching to another action or null unbinds the previous action.
+     * Opening the menu does not call [WAction.actionPerformed] (Swing's JMenu does not either). MenuBarItem has no icon, so
+     * [WAction.SMALL_ICON] is not used. [IllegalArgumentException] if a value has the wrong type. The action refers to the menu through a weak reference.
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            actionBinder.detach()
+            field = value
+            actionBinder.attach(value)
+        }
+
+    /** The binding to [action] (following its values). The action looks up the menu through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) {
+                when (key) {
+                    WAction.NAME -> this@WMenuBarItem.title = action?.stringValue(key) ?: ""
+                    WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
+                    WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+                    WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+                }
+            }
+
+            override fun addActionClickListener(listener: WActionListener) {
+                // JMenu does not call the action when opened
+            }
+
+            override fun removeActionClickListener(listener: WActionListener) {
+                // Nothing was attached, so there is nothing to remove
+            }
+        },
+        MENU_HEADER_ACTION_KEYS,
+    )
+
     /** JMenu.getText / setText-like: an alias of [title]. */
     var text: String
         get() = title
@@ -247,3 +291,6 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
     val menuComponents: Array<WMenuFlyoutItemBase>
         get() = items.list.toTypedArray()
 }
+
+/** The keys of the items copied to menu headings ([WMenuBarItem.action] / [WMenuFlyoutSubItem.action]) (the part of JMenu's configurePropertiesFromAction). */
+internal val MENU_HEADER_ACTION_KEYS = listOf(WAction.NAME, WAction.SMALL_ICON, WAction.MNEMONIC_KEY, WAction.ENABLED, WAction.SHORT_DESCRIPTION)

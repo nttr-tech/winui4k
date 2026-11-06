@@ -76,11 +76,39 @@ class WToggleSplitButton @JvmOverloads constructor(text: String = "") : WSplitBu
             "WinUI4K.ToggleSplitButtonHandler",
             XamlInterop.IID_ToggleSplitButtonIsCheckedChangedHandler,
             XamlInterop.IToggleSplitButton_add_IsCheckedChanged,
-        ) { _, _ ->
-            (anchor.get() as? WToggleSplitButton)?.let { button ->
-                val state = if (button.isChecked) WItemEvent.SELECTED else WItemEvent.DESELECTED
-                button.itemListeners.fire(WItemEvent(button, state))
-            }
+        ) { _, _ -> (anchor.get() as? WToggleSplitButton)?.onCheckedChanged() }
+    }
+
+    /**
+     * Dispatches one IsCheckedChanged in the same order as Swing's JToggleButton: after the user's ItemListeners (in the order added), if [action]
+     * has a SELECTED_KEY value, it is rewritten only when different (the same as [WToggleButton]).
+     */
+    private fun onCheckedChanged() {
+        val selected = isChecked
+        itemListeners.fire(WItemEvent(this, if (selected) WItemEvent.SELECTED else WItemEvent.DESELECTED))
+        val action = action
+        val current = action?.getValue(WAction.SELECTED_KEY)
+        if (action != null && current != null && current != selected) action.putValue(WAction.SELECTED_KEY, selected)
+    }
+
+    /** Matches the checked state to the action's SELECTED_KEY (false if absent). [IllegalArgumentException] if it is not a Boolean. */
+    override fun applyActionSelected(action: WAction?) {
+        isChecked = action?.typedValue<Boolean>(WAction.SELECTED_KEY, "Boolean") == true
+    }
+
+    /** Whether it is bound to an action. While bound, it counts as one listener for writing back the checked state. */
+    private var actionBound = false
+
+    /** Receives checked state notifications only while an action is bound (to write it back). */
+    override fun onActionChanged(action: WAction?) {
+        val bound = action != null
+        if (bound == actionBound) return
+        actionBound = bound
+        if (bound) {
+            itemListeners.ensureNativeHandler()
+            listenerAnchor.listenerAdded()
+        } else {
+            listenerAnchor.listenerRemoved()
         }
     }
 
