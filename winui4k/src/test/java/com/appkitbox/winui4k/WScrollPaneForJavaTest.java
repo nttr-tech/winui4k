@@ -3,8 +3,10 @@ package com.appkitbox.winui4k;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -152,6 +154,42 @@ class WScrollPaneForJavaTest {
                 Thread.sleep(50);
             }
             assertEquals(new WPoint(0, 650), onUiThreadGet(() -> pane.getViewport().getViewPosition()));
+        } finally {
+            UiTestHarness.detach(pane);
+        }
+    }
+
+    @Test
+    void scrollToHorizontalOffsetAndARunnableAddViewChangedListener() throws InterruptedException {
+        WScrollPane pane = onUiThreadGet(() -> {
+            WScrollPane p = new WScrollPane(content(), WScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, WScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            p.setWidth(200);
+            p.setHeight(150);
+            return p;
+        });
+        List<String> calls = new CopyOnWriteArrayList<>();
+        Runnable removed = () -> calls.add("removed");
+        UiTestHarness.attachAndAwaitLoaded(pane);
+        try {
+            onUiThread(() -> {
+                pane.updateLayout();
+                pane.addViewChangedListener(new Runnable() {
+                    @Override
+                    public void run() {
+                        calls.add("kept");
+                    }
+                });
+                pane.addViewChangedListener(removed);
+                pane.removeViewChangedListener(removed);
+                pane.scrollToHorizontalOffset(300);
+            });
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (onUiThreadGet(pane::getHorizontalOffset) != 300.0 && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+            }
+            assertEquals(300.0, onUiThreadGet(pane::getHorizontalOffset));
+            assertTrue(calls.contains("kept"));
+            assertFalse(calls.contains("removed"));
         } finally {
             UiTestHarness.detach(pane);
         }

@@ -180,6 +180,41 @@ class WScrollPaneTest : FunSpec() {
                 onUiThreadGet { pane.viewport.getChangeListeners().size } shouldBe 1
             }
         }
+
+        context("Events") {
+            test("scrollToHorizontalOffset moves only the horizontal position with animation, and addViewChangedListener listeners are called. Removed listeners are not called") {
+                val pane = onUiThreadGet {
+                    WScrollPane(content(), WScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, WScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED).sized()
+                }
+                shown(pane) {
+                    val calls = mutableListOf<String>()
+                    val removed: () -> Unit = { calls += "removed" }
+                    onUiThread {
+                        pane.viewport.viewPosition = WPoint(0, 100)
+                        pane.addViewChangedListener { calls += "kept" }
+                        pane.addViewChangedListener(removed)
+                        pane.removeViewChangedListener(removed)
+                        pane.scrollToHorizontalOffset(300.0)
+                    }
+                    awaitOnUiThread { pane.horizontalOffset == 300.0 } shouldBe true
+                    awaitOnUiThread { calls.contains("kept") } shouldBe true
+                    onUiThreadGet { calls.contains("removed") } shouldBe false
+                    onUiThreadGet { pane.verticalOffset } shouldBe 100.0
+                }
+            }
+
+            test("scrollToHorizontalOffset stops at the edge for values outside the scrollable amount") {
+                val pane = onUiThreadGet {
+                    WScrollPane(content(), WScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, WScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED).sized()
+                }
+                shown(pane) {
+                    onUiThread { pane.scrollToHorizontalOffset(5000.0) }
+                    awaitOnUiThread { pane.horizontalOffset == pane.scrollableWidth } shouldBe true
+                    onUiThread { pane.scrollToHorizontalOffset(-50.0) }
+                    awaitOnUiThread { pane.horizontalOffset == 0.0 } shouldBe true
+                }
+            }
+        }
     }
 
     private companion object {
