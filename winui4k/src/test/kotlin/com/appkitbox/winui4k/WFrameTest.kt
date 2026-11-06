@@ -357,6 +357,77 @@ class WFrameTest : FunSpec() {
                 shouldThrow<IllegalStateException> { frame.add(WButton("x"), WBorderLayout.NORTH) }
             }
         }
+
+        context("Reading and writing") {
+            test("title shows the constructor value and values set later as the window title (caption)") {
+                val frame = newFrame()
+                showAndAwaitOpened(frame)
+                onUiThread {
+                    frame.title shouldBe TITLE
+                    TopLevelWindows.find(null, TITLE) shouldBe WindowNatives.hwnd(frame)
+                    frame.title = "$TITLE (edited)"
+                    frame.title shouldBe "$TITLE (edited)"
+                    TopLevelWindows.find(null, "$TITLE (edited)") shouldBe WindowNatives.hwnd(frame)
+                }
+            }
+        }
+
+        context("Swing compatibility") {
+            test("isShowing, like isVisible, is false before it is shown, after it is hidden and after it is closed") {
+                val frame = newFrame()
+                onUiThreadGet { frame.isShowing }.shouldBeFalse()
+                showAndAwaitOpened(frame)
+                onUiThread {
+                    frame.isShowing.shouldBeTrue()
+                    frame.isVisible = false
+                    frame.isShowing.shouldBeFalse()
+                    frame.isVisible = true
+                    frame.isShowing.shouldBeTrue()
+                    frame.dispose()
+                    frame.isShowing.shouldBeFalse()
+                }
+            }
+
+            test("add(c, constraints, index) inserts at index of the current content, passing the constraint to the layout manager. An out-of-range index throws IllegalArgumentException") {
+                val frame = newFrame()
+                onUiThread {
+                    val root = WLayoutPanel(WBorderLayout())
+                    frame.setContentPane(root)
+                    val center = WButton("Center")
+                    frame.add(center)
+                    val north = WButton("North")
+                    frame.add(north, WBorderLayout.NORTH, 0)
+                    root.getComponent(0) shouldBeSameInstanceAs north
+                    root.getComponent(1) shouldBeSameInstanceAs center
+                    (root.layout as WBorderLayout).getLayoutComponent(WBorderLayout.NORTH) shouldBeSameInstanceAs north
+                    shouldThrow<IllegalArgumentException> { frame.add(WButton("x"), WBorderLayout.SOUTH, 5) }
+                    root.componentCount shouldBe 2
+                }
+            }
+
+            test("revalidate and validate of the frame relayout the content, and the positions of added children are decided when validate returns. repaint can be called") {
+                val frame = newFrame()
+                val root = onUiThreadGet {
+                    WLayoutPanel(WBorderLayout()).also {
+                        frame.setContentPane(it)
+                        frame.setSize(400, 300)
+                    }
+                }
+                showAndAwaitOpened(frame)
+                eventually(5.seconds) { onUiThreadGet { root.actualWidth } shouldBeGreaterThan 0.0 }
+                onUiThread {
+                    val north = WButton("North")
+                    frame.add(north, WBorderLayout.NORTH)
+                    frame.revalidate()
+                    frame.validate()
+                    frame.repaint()
+                    north.bounds.x shouldBe 0
+                    north.bounds.y shouldBe 0
+                    north.bounds.width shouldBe root.bounds.width
+                    north.actualHeight shouldBeGreaterThan 0.0
+                }
+            }
+        }
     }
 
     private companion object {

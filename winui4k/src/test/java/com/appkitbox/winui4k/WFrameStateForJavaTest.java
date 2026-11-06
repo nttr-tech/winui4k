@@ -104,4 +104,24 @@ class WFrameStateForJavaTest {
             assertNull(frame.getJMenuBar());
         });
     }
+
+    @Test
+    void setStateSetAutoRequestFocusAndIsAlwaysOnTopSupportedHaveTheSameShapeAsFrameAndWindow() {
+        onUiThread(() -> {
+            frame = new WFrame(TITLE);
+            assertTrue(frame.isAlwaysOnTopSupported());
+            assertTrue(frame.isAutoRequestFocus());
+            frame.setAutoRequestFocus(false);
+            assertFalse(frame.isAutoRequestFocus());
+            assertEquals(WFrame.NORMAL, frame.getState());
+            frame.setState(WFrame.ICONIFIED);
+            assertEquals(WFrame.ICONIFIED, frame.getState());
+            frame.setState(WFrame.NORMAL);
+            assertEquals(WFrame.NORMAL, frame.getState());
+            frame.setVisible(true);
+            assertTrue(frame.isVisible());
+            frame.setSystemBackdrop(SystemBackdropType.MICA);
+            assertEquals(SystemBackdropType.MICA, frame.getSystemBackdrop());
+        });
+    }
 }

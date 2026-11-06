@@ -189,4 +189,31 @@ class WFrameForJavaTest {
             assertFalse(ok.isDefaultButton());
         });
     }
+
+    @Test
+    void setTitleIsShowingAndRevalidateCanBeWrittenTheSameWayAsJFrame() {
+        onUiThread(() -> {
+            own = new WFrame(TITLE);
+            assertEquals(TITLE, own.getTitle());
+            own.setTitle(TITLE + " 2");
+            assertEquals(TITLE + " 2", own.getTitle());
+            WLayoutPanel root = new WLayoutPanel(new WBorderLayout());
+            own.setContentPane(root);
+            WButton center = new WButton("Center");
+            WButton north = new WButton("North");
+            own.add(center, WBorderLayout.CENTER);
+            own.add(north, WBorderLayout.NORTH, 0);
+            assertSame(north, root.getComponent(0));
+            assertFalse(own.isShowing());
+            own.setVisible(true);
+            assertTrue(own.isShowing());
+            own.revalidate();
+            own.validate();
+            own.invalidate();
+            own.repaint();
+            assertEquals(2, root.getComponentCount());
+            own.dispose();
+            assertFalse(own.isShowing());
+        });
+    }
 }

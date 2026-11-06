@@ -591,8 +591,32 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /** Container.add(Component, int)-like: adds a child at [index] of the current content (-1 for the end). */
     fun add(component: WComponent, index: Int) = currentContainer().add(component, index)
 
+    /**
+     * Container.add(Component, Object, int)-like: adds a child with a constraint at [index] of the current content (-1 for the end).
+     * [IllegalArgumentException] if [index] is out of range (as in Swing).
+     */
+    fun add(component: WComponent, constraints: Any?, index: Int) = currentContainer().addImpl(component, constraints, index)
+
     /** Container.remove(Component)-like: removes a child from the current content. */
     fun remove(component: WComponent) = currentContainer().remove(component)
+
+    /**
+     * Component.invalidate-like: records that the size of the window content (the root including the menu bar, if any) may change
+     * ([WComponent.invalidate]).
+     */
+    fun invalidate() = rootContent.invalidate()
+
+    /**
+     * Component.revalidate-like: schedules a relayout of the window content ([WComponent.revalidate]). Swing code's
+     * `frame.revalidate(); frame.repaint();` can be written as is.
+     */
+    fun revalidate() = rootContent.revalidate()
+
+    /** Container.validate-like: performs the scheduled relayout of the content now and finishes the layout ([WComponent.validate]). */
+    fun validate() = rootContent.validate()
+
+    /** Component.repaint-like: does nothing (XAML redraws by itself; [WComponent.repaint]). */
+    fun repaint() = rootContent.repaint()
 
     private fun currentContainer(): WContainer = content as? WContainer ?: error(
         "The content replaced with setContentPane (${content.javaClass.simpleName}) is not a container, so children cannot be added. Add them to the content's container directly",
@@ -679,12 +703,22 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
                 pendingState = null
                 // Maximizing is done together with showing (so it does not first appear at the normal size). Minimizing is done after showing (because Activate restores it)
                 if (pending != null && pending != ICONIFIED) applyState(pending)
-                window.call(XamlInterop.IWindow_Activate)
+                if (isAutoRequestFocus) window.call(XamlInterop.IWindow_Activate) else appWindow.show(activate = false)
                 if (pending == ICONIFIED) applyState(pending)
             } else if (!closed) {
                 appWindow.hide()
             }
         }
+
+    /** Window.isShowing-like: the same as [isVisible] (a top-level window has no parent that hides it). */
+    val isShowing: Boolean get() = isVisible
+
+    /**
+     * Window.isAutoRequestFocus / setAutoRequestFocus-like: whether to activate this window when showing it with [isVisible] = true and on [toFront]
+     * (true by default). If false, showing does not activate it (AppWindow.Show(false); it does not steal the focus from the window being worked in),
+     * and [toFront] only brings it to the front. It becomes active when the user selects the window.
+     */
+    var isAutoRequestFocus: Boolean = true
 
     // ---- State and decorations ----
 
@@ -711,6 +745,38 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
                 pendingState = state
             }
         }
+
+    /**
+     * Frame.getState / setState-like: [ICONIFIED] if minimized, otherwise [NORMAL] (maximized is also NORMAL).
+     * As in Swing, setting [ICONIFIED] minimizes it (if not minimized), and [NORMAL] only undoes the minimization (a window minimized from maximized
+     * goes back to maximized, the same as Windows' restore). Other values, and setting the state it is already in, do nothing.
+     * A setting while hidden is applied the next time it is shown, the same as [extendedState].
+     */
+    var state: Int
+        get() = if (extendedState and ICONIFIED != 0) ICONIFIED else NORMAL
+        set(value) {
+            val iconified = extendedState and ICONIFIED != 0
+            when {
+                value == ICONIFIED && !iconified -> extendedState = ICONIFIED
+                value == NORMAL && iconified -> deiconify()
+            }
+        }
+
+    /** Undoes the minimization (OverlappedPresenter.Restore once; if minimized from maximized, it goes back to maximized). */
+    private fun deiconify() {
+        if (closed) return
+        if (!appWindow.isVisible) {
+            pendingState = NORMAL
+            return
+        }
+        applyingState = true
+        try {
+            withOverlapped { it.restore() }
+        } finally {
+            applyingState = false
+        }
+        syncState()
+    }
 
     private fun normalizeState(value: Int): Int = when {
         value and ICONIFIED != 0 -> ICONIFIED
@@ -765,6 +831,9 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
             withOverlapped { it.isAlwaysOnTop = value }
         }
 
+    /** Window.isAlwaysOnTopSupported-like: always true ([isAlwaysOnTop] can always be used on Windows). */
+    val isAlwaysOnTopSupported: Boolean get() = true
+
     /**
      * Frame.isUndecorated / setUndecorated-like: true to remove the border and title bar (OverlappedPresenter.SetBorderAndTitleBar(false, false)).
      * The default is false. Unlike Swing, it may be changed after it is shown (no IllegalComponentStateException).
@@ -779,12 +848,12 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /**
      * Window.toFront-like: if shown, brings it in front of other windows and activates it (IAppWindow2.MoveInZOrderAtTop and
      * Window.Activate). Does nothing while hidden or after it is closed (as in Swing). Whether it can come to the foreground while another app is in front
-     * depends on Windows' foreground rules.
+     * depends on Windows' foreground rules. If [isAutoRequestFocus] is false, it is only brought to the front without being activated (as in Swing).
      */
     fun toFront() {
         if (!isVisible) return
         appWindow.moveInZOrderAtTop()
-        window.call(XamlInterop.IWindow_Activate)
+        if (isAutoRequestFocus) window.call(XamlInterop.IWindow_Activate)
     }
 
     /** Window.toBack-like: if shown, sends it behind other windows (IAppWindow2.MoveInZOrderAtBottom). Does nothing while hidden or after it is closed. */

@@ -2123,10 +2123,12 @@ internal object XamlInterop {
     const val CLS_MicaBackdrop = "Microsoft.UI.Xaml.Media.MicaBackdrop"
     const val IID_IMicaBackdropFactory = "774379ce-74bd-59d4-849d-d99c4184d838"
     const val IID_IMicaBackdrop = "c156a404-3dac-593a-b1f3-7a33c289dc83"
+    const val IMicaBackdrop_get_Kind = 6                // get_Kind(out MicaKind)
     const val IMicaBackdrop_put_Kind = 7                // put_Kind(MicaKind) — Base=0 / BaseAlt=1
 
     const val CLS_DesktopAcrylicBackdrop = "Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop"
     const val IID_IDesktopAcrylicBackdropFactory = "00922e6d-ae51-564a-bce2-1973d5e463dd"
+    const val IID_IDesktopAcrylicBackdrop = "bfd9915b-82a6-5df6-aff0-a4824ddc1143"
 
     // ---- Microsoft.UI.Xaml.Controls.TitleBar (derives from Controls.Control) ----
     const val CLS_TitleBar = "Microsoft.UI.Xaml.Controls.TitleBar"

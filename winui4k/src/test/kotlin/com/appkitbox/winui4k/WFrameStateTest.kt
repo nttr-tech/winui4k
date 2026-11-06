@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.assertions.nondeterministic.continually
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -55,6 +56,36 @@ class WFrameStateTest : FunSpec() {
     }
 
     private fun pngFile(name: String): File = File(workDir, name).also { it.writeBytes(WindowNatives.solidPng(32, 0xFF2080E0.toInt())) }
+
+    /** The kind of Window.SystemBackdrop of [frame] ("none" / "mica:<Kind>" / "acrylic" / "other"). */
+    private fun backdropOf(frame: WFrame): String = onUiThreadGet {
+        val window2 = frame.window.queryInterface(XamlInterop.IID_IWindow2)
+        try {
+            val native = window2.getPtrOrNull(XamlInterop.IWindow2_get_SystemBackdrop)
+            if (native == null) {
+                "none"
+            } else {
+                try {
+                    val mica = native.queryInterfaceOrNull(XamlInterop.IID_IMicaBackdrop)
+                    val acrylic = native.queryInterfaceOrNull(XamlInterop.IID_IDesktopAcrylicBackdrop)
+                    try {
+                        when {
+                            mica != null -> "mica:" + mica.getInt(XamlInterop.IMicaBackdrop_get_Kind)
+                            acrylic != null -> "acrylic"
+                            else -> "other"
+                        }
+                    } finally {
+                        mica?.release()
+                        acrylic?.release()
+                    }
+                } finally {
+                    native.release()
+                }
+            }
+        } finally {
+            window2.release()
+        }
+    }
 
     init {
         beforeSpec {
@@ -293,6 +324,79 @@ class WFrameStateTest : FunSpec() {
                 val expected = ceil((menuBar.actualHeight + 148) * scale).toInt()
                 frame.appWindow.clientSize.height shouldBeGreaterThanOrEqual expected - 1
                 frame.appWindow.clientSize.height.toDouble() shouldBe (expected.toDouble() plusOrMinus 1.0)
+            }
+        }
+
+        context("Reading and writing") {
+            test("systemBackdrop defaults to NONE (SystemBackdrop is null). MICA and MICA_ALT are MicaBackdrop (Kind Base and BaseAlt), ACRYLIC is DesktopAcrylicBackdrop, and NONE removes it") {
+                val frame = newFrame()
+                val seen = mutableListOf(onUiThreadGet { frame.systemBackdrop.name } to backdropOf(frame))
+                for (type in listOf(SystemBackdropType.MICA, SystemBackdropType.MICA_ALT, SystemBackdropType.ACRYLIC, SystemBackdropType.NONE)) {
+                    onUiThread { frame.systemBackdrop = type }
+                    seen += onUiThreadGet { frame.systemBackdrop.name } to backdropOf(frame)
+                }
+                seen shouldBe listOf("NONE" to "none", "MICA" to "mica:0", "MICA_ALT" to "mica:1", "ACRYLIC" to "acrylic", "NONE" to "none")
+            }
+        }
+
+        context("Swing compatibility") {
+            test("state is the same as Frame.getState / setState: ICONIFIED minimizes, and NORMAL only undoes the minimization. Maximized reads as NORMAL and setting NORMAL does not restore it") {
+                val frame = newFrame()
+                show(frame)
+                onUiThread {
+                    frame.state shouldBe WFrame.NORMAL
+                    frame.extendedState = WFrame.MAXIMIZED_BOTH
+                    frame.state shouldBe WFrame.NORMAL
+                    frame.state = WFrame.NORMAL
+                    frame.extendedState shouldBe WFrame.MAXIMIZED_BOTH
+                    frame.state = WFrame.ICONIFIED
+                    frame.state shouldBe WFrame.ICONIFIED
+                    frame.extendedState shouldBe WFrame.ICONIFIED
+                    frame.state = WFrame.NORMAL // Swing removes only the ICONIFIED bit from extendedState, so it goes back to maximized
+                    frame.extendedState shouldBe WFrame.MAXIMIZED_BOTH
+                    frame.extendedState = WFrame.NORMAL
+                    frame.state = WFrame.MAXIMIZED_BOTH // Values other than NORMAL and ICONIFIED do nothing (as in Swing)
+                    frame.extendedState shouldBe WFrame.NORMAL
+                }
+            }
+
+            test("state = ICONIFIED before it is shown minimizes it when shown (the same as extendedState)") {
+                val frame = newFrame()
+                onUiThread {
+                    frame.state = WFrame.ICONIFIED
+                    frame.state shouldBe WFrame.ICONIFIED
+                    frame.isVisible.shouldBeFalse()
+                    frame.isVisible = true
+                }
+                eventually(5.seconds) { onUiThreadGet { frame.extendedState } shouldBe WFrame.ICONIFIED }
+            }
+
+            test("isAlwaysOnTopSupported is true") {
+                val frame = newFrame()
+                onUiThreadGet { frame.isAlwaysOnTopSupported }.shouldBeTrue()
+            }
+
+            test("isAutoRequestFocus defaults to true. A window with false does not become active when shown, and toFront only brings it to the front") {
+                val first = newFrame()
+                show(first)
+                eventually(5.seconds) { onUiThreadGet { first.isActive }.shouldBeTrue() }
+                val second = newFrame("$TITLE 2")
+                onUiThread {
+                    second.isAutoRequestFocus.shouldBeTrue()
+                    second.isAutoRequestFocus = false
+                }
+                show(second)
+                continually(1.seconds) {
+                    onUiThreadGet { second.isVisible }.shouldBeTrue()
+                    onUiThreadGet { second.isActive }.shouldBeFalse()
+                    onUiThreadGet { first.isActive }.shouldBeTrue()
+                }
+                onUiThread {
+                    first.toFront()
+                    second.toFront()
+                }
+                eventually(5.seconds) { onUiThreadGet { WindowNatives.isAbove(second, first) }.shouldBeTrue() }
+                continually(1.seconds) { onUiThreadGet { second.isActive }.shouldBeFalse() }
             }
         }
     }
