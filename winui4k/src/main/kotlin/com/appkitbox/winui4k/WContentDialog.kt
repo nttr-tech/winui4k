@@ -218,14 +218,22 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
      * Like JDialog.setVisible(true): opens it in [owner]'s window, blocks the caller until it is closed, and returns the button pressed.
      * [ContentDialogResult.NONE] when the owner window is closed and when the app exits (WM_QUIT).
      * Call on the UI thread, outside layout notifications (otherwise [IllegalStateException], and the dialog does not open).
-     * Other exceptions are the same as [show].
+     * Other exceptions are the same as [show]. If the message loop exits with an exception while waiting, the dialog is closed before that exception is thrown.
      */
     fun showAndWait(owner: WComponent): ContentDialogResult {
         ModalLoop.checkRunnable()
         var result: ContentDialogResult? = null
         open(owner) { result = it }
         val state = state
-        ModalLoop.run { result != null || !state.isShowing() }
+        var waited = false
+        try {
+            ModalLoop.run { result != null || !state.isShowing() }
+            waited = true
+        } finally {
+            // If an exception occurs while waiting (a GetMessageW failure, etc.), close it before rethrowing. If it stayed open, no dialog
+            // could be opened in this window afterwards (WinUI allows one per window at a time). A failure to close does not hide the original exception
+            if (!waited && result == null) runCatching { hide() }
+        }
         return result ?: ContentDialogResult.NONE
     }
 
