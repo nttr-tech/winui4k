@@ -81,5 +81,26 @@ class WrapperReleaseTreeTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
             onUiThreadGet { selection.getSelectionCount() } shouldBe 1
         }
+
+        test("a WTree with cellRenderer set, shown, selected and expanded is collected after being placed in the window and removed (a renderer removed before showing does not remain either)") {
+            val model = onUiThreadGet { DefaultTreeModel(DefaultMutableTreeNode("Root").also { it.add(DefaultMutableTreeNode("Child").also { c -> c.add(DefaultMutableTreeNode("Grandchild")) }) }) }
+            val shown = shownAndHidden {
+                WTree(model).also { tree ->
+                    tree.cellRenderer = WDefaultTreeCellRenderer()
+                    tree.setSelectionRow(1)
+                    tree.expandRow(1)
+                }
+            }
+            val neverShown = onUiThreadGet {
+                WeakReference(
+                    WTree(model).also { tree ->
+                        tree.cellRenderer = WTreeCellRenderer { _, value, _, _, _, _, _ -> WLabel(value.toString()) }
+                        tree.cellRenderer = null
+                    },
+                )
+            }
+            Reclamation.awaitCollected(shown).shouldBeTrue()
+            Reclamation.awaitCollected(neverShown).shouldBeTrue()
+        }
     }
 }

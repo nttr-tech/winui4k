@@ -268,6 +268,25 @@ class WTree() : WControl(
     /** Keeps the selection model and the TreeView selection in sync. */
     internal val selectionBridge = TreeSelectionBridge(this, anchor, { binding }, inspectable)
 
+    /** The implementation of [cellRenderer]. */
+    internal val cellRendering: TreeCellRendering = TreeCellRendering(this, { binding }) { tree: WTree -> tree.cellRendering }
+
+    /**
+     * TreeCellRenderer-like: the renderer that creates components showing nodes (Swing's `getCellRenderer` / `setCellRenderer`).
+     * null by default, and WinUI shows the node's toString() string ([convertValueToText]) as is (to add icons etc.,
+     * set a [WDefaultTreeCellRenderer]). When set, the renderer is called for visible rows each time a node is assigned to a row (only the visible rows and those around them, including
+     * when rows are reused by scrolling) and on every selection, expansion and change to model nodes (treeNodesChanged etc.).
+     * The renderer must return a new component on each call ([WTreeCellRenderer]). The expand / collapse glyph and selection background are drawn by WinUI.
+     * The UI Automation name (AutomationProperties.Name) is set to the node's display string.
+     * While set, a shown tree is not collected even without references to the wrapper, the same as when listeners are added.
+     * Unlike Swing, there is no cellEditor (editing node text).
+     */
+    var cellRenderer: WTreeCellRenderer?
+        get() = cellRendering.renderer
+        set(value) {
+            cellRendering.renderer = value
+        }
+
     /** The listeners added with addTreeExpansionListener (called in the order added). */
     private val expansionListeners = CopyOnWriteArrayList<TreeExpansionListener>()
 
@@ -381,6 +400,7 @@ class WTree() : WControl(
         val binding = binding as? ModelTreeBinding ?: return
         muted { binding.apply(e) }
         selectionBridge.pushToNative()
+        cellRendering.repaintRealized() // Node text, whether it has children (leaf), and row positions change
     }
 
     /**
@@ -833,12 +853,14 @@ class WTree() : WControl(
 
     /** Calls treeExpanded of TreeExpansionListeners in the order added with an event for [path] (Swing's `fireTreeExpanded`). Does not change the expansion state. */
     fun fireTreeExpanded(path: TreePath?) {
+        cellRendering.repaintRealized() // expanded of the opened node and row of the rows below change
         val event = TreeExpansionEvent(this, path)
         expansionListeners.forEach { it.treeExpanded(event) }
     }
 
     /** Calls treeCollapsed of TreeExpansionListeners in the order added with an event for [path] (Swing's `fireTreeCollapsed`). */
     fun fireTreeCollapsed(path: TreePath?) {
+        cellRendering.repaintRealized()
         val event = TreeExpansionEvent(this, path)
         expansionListeners.forEach { it.treeCollapsed(event) }
     }

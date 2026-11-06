@@ -80,6 +80,49 @@ class WTreeForJavaTest {
     }
 
     @Test
+    void nodesCanBeDrawnWithARendererExtendingDefaultTreeCellRendererAndWithALambdaRenderer() {
+        WTree[] holder = new WTree[1];
+        List<String> selectedTexts = new ArrayList<>();
+        onUiThread(() -> {
+            WTree tree = new WTree(sampleRoot());
+            assertNull(tree.getCellRenderer());
+            WDefaultTreeCellRenderer renderer = new WDefaultTreeCellRenderer() {
+                @Override
+                protected String getText(WTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                    return (leaf ? "Leaf: " : "Branch: ") + value;
+                }
+
+                @Override
+                protected void configure(WLabel label, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                    if (selected) {
+                        selectedTexts.add(label.getText());
+                    }
+                }
+            };
+            renderer.setLeafIcon(Symbol.DOCUMENT);
+            assertSame(Symbol.DOCUMENT, renderer.getLeafIcon());
+            assertNull(renderer.getOpenIcon());
+            assertNull(renderer.getClosedIcon());
+            tree.setCellRenderer(renderer);
+            holder[0] = tree;
+        });
+        WTree tree = holder[0];
+        UiTestHarness.attachAndAwaitLoaded(tree);
+        try {
+            onUiThread(() -> {
+                tree.updateLayout();
+                tree.setSelectionRow(2);
+                assertTrue(selectedTexts.contains("Leaf: Pictures"));
+                WTreeCellRenderer plain = (t, value, selected, expanded, leaf, row, hasFocus) -> new WLabel(String.valueOf(value));
+                tree.setCellRenderer(plain);
+                assertSame(plain, tree.getCellRenderer());
+            });
+        } finally {
+            UiTestHarness.detach(tree);
+        }
+    }
+
+    @Test
     void setRootVisibleFalseHidesTheRootAndGetModelReturnsThePassedModel() {
         onUiThread(() -> {
             DefaultMutableTreeNode root = sampleRoot();

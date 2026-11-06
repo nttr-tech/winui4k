@@ -100,6 +100,7 @@ internal class TreeSelectionBridge(
         // Expand the parents of the selected path first (expandsSelectedPaths; the TreeView cannot select it until expanded)
         tree.expandSelectedParents()
         if (!pulling) pushToNative()
+        tree.cellRendering.repaintRealized() // selected changes for the newly selected and deselected nodes
         val event = e.cloneWithSource(tree) as TreeSelectionEvent
         listeners.forEach { it.valueChanged(event) }
     }

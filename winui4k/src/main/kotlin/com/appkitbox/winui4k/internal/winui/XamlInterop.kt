@@ -756,6 +756,7 @@ internal object XamlInterop {
     const val IContainerContentChangingEventArgs_get_ItemContainer = 6 // get_ItemContainer(out SelectorItem)
     const val IContainerContentChangingEventArgs_get_InRecycleQueue = 7 // get_InRecycleQueue(out boolean)
     const val IContainerContentChangingEventArgs_get_ItemIndex = 8 // get_ItemIndex(out INT32)
+    const val IContainerContentChangingEventArgs_get_Item = 9 // get_Item(out IInspectable)
     const val IContainerContentChangingEventArgs_put_Handled = 12 // put_Handled(boolean)
 
     /** Concrete IID of TypedEventHandler<ListViewBase, ContainerContentChangingEventArgs> (computed at runtime). */
@@ -823,6 +824,7 @@ internal object XamlInterop {
     const val ITreeView_remove_Collapsed = 18          // remove_Collapsed(token)
     const val IID_ITreeView2 = "b947ca7d-0f6f-594c-83ec-14153d343225"
     const val ITreeView2_ContainerFromNode = 7         // ContainerFromNode(TreeViewNode, out DependencyObject) — nullable
+    const val ITreeView2_put_ItemTemplate = 15         // put_ItemTemplate(DataTemplate)
     const val ITreeView2_get_CanDragItems = 10         // get_CanDragItems(out boolean)
     const val ITreeView2_put_CanDragItems = 11         // put_CanDragItems(boolean)
     const val ITreeView2_get_CanReorderItems = 12      // get_CanReorderItems(out boolean)

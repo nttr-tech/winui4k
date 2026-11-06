@@ -295,3 +295,8 @@
   Resources に入れて選び直しても、色は変わらなかった (2026-10-20、Panama で PART_RootBorder の Background を読んで確認)。
   `PART_RootBorder` にローカル値を入れると読み出しはその色になるが、行は ItemsRepeater で使い回されるので行ごとに管理が要る。
   そのため WTable には selectionBackground を足していない (Application.Resources に入れれば効く可能性はあるが、全部の表に効いてしまう。未確認)
+- **TreeView: 中の ListView の ContainerContentChanging の中では TreeView.NodeFromContainer が null を返す**
+  TreeView の行に節を描くとき (テンプレートの部品 ListControl の ContainerContentChanging)、引数の ItemContainer を
+  `TreeView.NodeFromContainer` に渡しても null だった (TreeViewList::NodeFromContainer はコンテナーの位置から節を引くが、
+  この時点ではまだ引けない)。ノードを並べる TreeView では引数の `Item` が TreeViewNode そのものなので、そちらを使う
+  (`TreeCellRendering`、`WTreeCellRendererTest`。2026-10-20、Panama で確認)
