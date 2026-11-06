@@ -1,12 +1,14 @@
 package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +95,72 @@ class WListForJavaTest {
             assertEquals(3, list.getModel().getSize());
             assertTrue(list.getModel() instanceof WDefaultListModel);
             assertEquals(0, new WList().getItemCount());
+        });
+    }
+
+    @Test
+    void listSelectionModelConstantsEnableMultipleIntervalSelectionAndIntervalSelectionAndGetSelectedIndicesWork() {
+        onUiThread(() -> {
+            WList list = new WList(new String[] {"a", "b", "c", "d", "e"});
+            list.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+            list.setSelectionInterval(1, 2);
+            list.addSelectionInterval(4, 4);
+            assertArrayEquals(new int[] {1, 2, 4}, list.getSelectedIndices());
+            assertEquals(1, list.getMinSelectionIndex());
+            assertEquals(4, list.getMaxSelectionIndex());
+            assertEquals(4, list.getLeadSelectionIndex());
+            assertTrue(list.isSelectedIndex(2));
+            assertEquals(Arrays.asList("b", "c", "e"), list.getSelectedValuesList());
+            assertEquals(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION, list.getSelectionModel().getSelectionMode());
+            list.clearSelection();
+            assertTrue(list.isSelectionEmpty());
+        });
+    }
+
+    @Test
+    void aListSelectionListenerLambdaCanCheckGetValueIsAdjustingAndTheSourceIsTheList() {
+        onUiThread(() -> {
+            WList list = new WList(new String[] {"a", "b", "c"});
+            List<String> log = new ArrayList<>();
+            list.addListSelectionListener(e -> {
+                if (!e.getValueIsAdjusting()) {
+                    log.add(e.getFirstIndex() + "-" + e.getLastIndex() + ":" + (e.getSource() == list));
+                }
+            });
+            list.setSelectedIndex(2);
+            list.setSelectedIndex(0);
+            assertEquals(Arrays.asList("2-2:true", "0-2:true"), log);
+            assertEquals(1, list.getListSelectionListeners().length);
+        });
+    }
+
+    @Test
+    void noArgRunnableListenersStillWorkAndAreCalledOnlyOnceForSetSelectedIndices() {
+        onUiThread(() -> {
+            WList list = new WList(new String[] {"a", "b", "c", "d"});
+            list.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+            int[] runs = {0};
+            list.addListSelectionListener(() -> runs[0]++);
+            list.setSelectedIndices(new int[] {0, 3});
+            assertEquals(1, runs[0]);
+            assertArrayEquals(new int[] {0, 3}, list.getSelectedIndices());
+        });
+    }
+
+    @Test
+    void settingACustomDefaultListSelectionModelReflectsItsSelectionAndSetSelectedValueSelectsByValue() {
+        onUiThread(() -> {
+            WList list = new WList(new String[] {"Red", "Green", "Blue"});
+            WDefaultListSelectionModel selection = new WDefaultListSelectionModel();
+            selection.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
+            selection.setSelectionInterval(1, 1);
+            list.setSelectionModel(selection);
+            assertSame(selection, list.getSelectionModel());
+            assertEquals("Green", list.getSelectedValue());
+            list.setSelectedValue("Blue", true);
+            assertEquals(2, list.getSelectedIndex());
+            assertEquals(2, selection.getLeadSelectionIndex());
+            assertThrows(IllegalArgumentException.class, () -> list.setSelectionMode(7));
         });
     }
 }

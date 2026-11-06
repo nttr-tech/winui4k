@@ -34,39 +34,55 @@ internal class ListModelItems(
     /** The identities (IUnknown addresses) of the items put into Items. In the same order as Items. */
     private val identities = ArrayList<Long>()
 
+    /**
+     * The sync with the selection model ([ListSelectionSync]). Set once the Swing-style selection API starts being used.
+     * If set, the selection model is shifted after Items changes, as in Swing's JList.
+     */
+    var selectionSync: ListSelectionSync<*>? = null
+
     private val listener = object : WListDataListener {
         override fun intervalAdded(e: WListDataEvent) {
             // If the range disagrees with Items (the model implementation does not report ranges correctly), rebuild everything
             if (e.index0 !in 0..identities.size || identities.size + e.index1 - e.index0 + 1 != this@ListModelItems.model.getSize()) {
-                reload()
+                change(ListStructureChange.RELOADED, e) { reload() }
                 return
             }
-            for (index in e.index0..e.index1) insert(index)
+            change(ListStructureChange.ADDED, e) { for (index in e.index0..e.index1) insert(index) }
         }
 
         override fun intervalRemoved(e: WListDataEvent) {
             val count = e.index1 - e.index0 + 1
             if (e.index0 < 0 || e.index1 >= identities.size || identities.size - count != this@ListModelItems.model.getSize()) {
-                reload()
+                change(ListStructureChange.RELOADED, e) { reload() }
                 return
             }
-            repeat(count) {
-                items.call(FoundationInterop.IVector_RemoveAt, e.index0)
-                identities.removeAt(e.index0)
+            change(ListStructureChange.REMOVED, e) {
+                repeat(count) {
+                    items.call(FoundationInterop.IVector_RemoveAt, e.index0)
+                    identities.removeAt(e.index0)
+                }
             }
         }
 
         override fun contentsChanged(e: WListDataEvent) {
             val size = this@ListModelItems.model.getSize()
             if (e.index0 < 0 || e.index1 >= identities.size || identities.size != size) {
-                reload()
+                change(ListStructureChange.RELOADED, e) { reload() }
                 return
             }
-            // WinUI deselects replaced items, but Swing keeps the selection at that position, so select them again
-            val selected = selectedIndices().filter { it in e.index0..e.index1 }
-            for (index in e.index0..e.index1) replace(index)
-            if (selected.isNotEmpty()) reselect(selected)
+            change(ListStructureChange.CHANGED, e) {
+                // WinUI deselects a replaced item, but Swing keeps the selection at that position, so select it again
+                val selected = selectedIndices().filter { it in e.index0..e.index1 }
+                for (index in e.index0..e.index1) replace(index)
+                if (selected.isNotEmpty()) reselect(selected)
+            }
         }
+    }
+
+    /** Changes Items with [edit], and if synced with the selection model, also adjusts it according to [kind]. */
+    private fun change(kind: ListStructureChange, e: WListDataEvent, edit: () -> Unit) {
+        val sync = selectionSync
+        if (sync == null) edit() else sync.onStructureChange(kind, e.index0, e.index1, edit)
     }
 
     /** The model of the elements shown. Replacing it rebuilds Items (the selection is cleared; same as Swing's JList.setModel). */
@@ -76,7 +92,8 @@ internal class ListModelItems(
             field.removeListDataListener(listener)
             field = value
             value.addListDataListener(listener)
-            reload()
+            val sync = selectionSync
+            if (sync == null) reload() else sync.onStructureChange(ListStructureChange.REPLACED, -1, -1) { reload() }
         }
 
     init {
@@ -140,6 +157,47 @@ internal class ListModelItems(
             indicesOf(selected)
         } finally {
             selected.release()
+        }
+    }
+
+    /**
+     * In a multiple selection mode, makes the selected items exactly [wanted] (model indices).
+     * Removes only the items to deselect with SelectedItems.RemoveAt, and appends only the missing items with SelectedItems.Append.
+     */
+    fun applySelection(wanted: Collection<Int>) {
+        val selected = selectedItems()
+        try {
+            val missing = LinkedHashSet(wanted.sorted())
+            // Removing shifts the later positions, so look from the back
+            for (position in selected.getInt(FoundationInterop.IVector_get_Size) - 1 downTo 0) {
+                val item = selected.getPtrOrNull(FoundationInterop.IVector_GetAt, position) ?: continue
+                val index = try {
+                    identities.indexOf(identityOf(item))
+                } finally {
+                    item.release()
+                }
+                if (!missing.remove(index)) selected.call(FoundationInterop.IVector_RemoveAt, position)
+            }
+            for (index in missing) {
+                val item = items.getPtr(FoundationInterop.IVector_GetAt, index)
+                try {
+                    selected.call(FoundationInterop.IVector_Append, item.ptr)
+                } finally {
+                    item.release()
+                }
+            }
+        } finally {
+            selected.release()
+        }
+    }
+
+    /** Passes the item at [index] of Items (borrowed) to [block] (for ScrollIntoView etc.). */
+    fun <R> withItem(index: Int, block: (ComPtr) -> R): R {
+        val item = items.getPtr(FoundationInterop.IVector_GetAt, index)
+        return try {
+            block(item)
+        } finally {
+            item.release()
         }
     }
 
@@ -209,3 +267,21 @@ internal class ListModelItems(
 
 /** A [WDefaultListModel] holding [values] in order (used by the array and list constructors of WList / WListBox and by setListData). */
 internal fun defaultListModelOf(values: Collection<*>): WDefaultListModel<Any?> = WDefaultListModel<Any?>().also { it.addAll(values) }
+
+/** The kind of model change that [ListModelItems] copied to Items (used by [ListSelectionSync] to adjust the selection model). */
+internal enum class ListStructureChange {
+    /** Elements were added (intervalAdded). */
+    ADDED,
+
+    /** Elements were removed (intervalRemoved). */
+    REMOVED,
+
+    /** Elements were replaced (contentsChanged). */
+    CHANGED,
+
+    /** A change that did not report its range correctly; everything was re-read. */
+    RELOADED,
+
+    /** The model was replaced. */
+    REPLACED,
+}
