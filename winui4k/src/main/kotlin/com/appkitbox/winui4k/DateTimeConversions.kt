@@ -1,5 +1,8 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,6 +17,16 @@ internal object DateTimeConversions {
 
     /** The number of 100ns ticks per millisecond. */
     private const val TICKS_PER_MILLI = 10_000L
+
+    /**
+     * Calls the method at [slot] of [target] that returns a DateTime / TimeSpan (i8) through its last argument, and returns 100ns ticks
+     * (get_MinDate, IVectorView<DateTime>.GetAt, etc.). [leading] are the arguments before the out argument.
+     */
+    fun readTicks(target: ComPtr, slot: Int, vararg leading: Any?): Long = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(8)
+        target.call(slot, *leading, out)
+        Ffi.backend.memory.getLong(out, 0)
+    }
 
     /** Windows.Foundation.DateTime (100ns ticks) -> LocalDate (in the system time zone). */
     fun ticksToLocalDate(ticks: Long): LocalDate {

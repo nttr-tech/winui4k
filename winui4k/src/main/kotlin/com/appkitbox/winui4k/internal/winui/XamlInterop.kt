@@ -1145,6 +1145,8 @@ internal object XamlInterop {
     const val ICalendarDatePicker_put_Date = 7                // put_Date(IReference<DateTime>)
     const val ICalendarDatePicker_get_IsCalendarOpen = 8      // get_IsCalendarOpen(out boolean)
     const val ICalendarDatePicker_put_IsCalendarOpen = 9      // put_IsCalendarOpen(boolean)
+    const val ICalendarDatePicker_get_DateFormat = 10         // get_DateFormat(out string)
+    const val ICalendarDatePicker_put_DateFormat = 11         // put_DateFormat(string)
     const val ICalendarDatePicker_get_PlaceholderText = 12    // get_PlaceholderText(out string)
     const val ICalendarDatePicker_put_PlaceholderText = 13    // put_PlaceholderText(string)
     const val ICalendarDatePicker_get_Header = 14             // get_Header(out object)
@@ -1167,6 +1169,10 @@ internal object XamlInterop {
     const val ICalendarDatePicker_put_IsGroupLabelVisible = 41 // put_IsGroupLabelVisible(boolean)
     const val ICalendarDatePicker_add_DateChanged = 44        // add_DateChanged(TypedEventHandler, out token)
     const val ICalendarDatePicker_remove_DateChanged = 45     // remove_DateChanged(token)
+    const val ICalendarDatePicker_add_Opened = 46             // add_Opened(EventHandler<Object>, out token)
+    const val ICalendarDatePicker_remove_Opened = 47          // remove_Opened(token)
+    const val ICalendarDatePicker_add_Closed = 48             // add_Closed(EventHandler<Object>, out token)
+    const val ICalendarDatePicker_remove_Closed = 49          // remove_Closed(token)
     const val IID_ICalendarDatePickerDateChangedEventArgs = "57c212d7-c2f2-54a0-9d41-f263b1e5106e"
     const val ICalendarDatePickerDateChangedEventArgs_get_NewDate = 6 // get_NewDate(out IReference<DateTime>)
 
