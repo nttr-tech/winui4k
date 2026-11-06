@@ -700,7 +700,6 @@ internal object XamlInterop {
     const val IID_IListViewFactory = "03ebefb8-f64a-5bf9-9570-cb09eeea2335"
     const val IID_IListView = "f6015db1-df63-52fd-a164-0df44715ee0a" // default interface (no members)
     const val IID_IListViewBase = "775c57ac-abce-5beb-8e34-3b8158aedd80"
-    const val IListViewBase_ScrollIntoView = 44        // ScrollIntoView(object)
     const val IListViewBase_get_SelectedItems = 6      // get_SelectedItems(out IVector<Object>)
     const val IListViewBase_get_SelectionMode = 7      // get_SelectionMode(out ListViewSelectionMode)
     const val IListViewBase_put_SelectionMode = 8      // put_SelectionMode(ListViewSelectionMode)
