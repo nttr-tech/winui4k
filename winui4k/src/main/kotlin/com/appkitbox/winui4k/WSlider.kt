@@ -172,7 +172,7 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
 
     /**
      * JSlider.getValueIsAdjusting / setValueIsAdjusting-style: whether the thumb is being dragged ([model]'s valueIsAdjusting).
-     * Pressing the left button on the slider makes it true, and releasing or losing capture makes it false; each calls the [addChangeListener]
+     * Pressing the left button on the slider's track or thumb makes it true (it does not change over the header), and releasing or losing capture makes it false; each calls the [addChangeListener]
      * listeners as one change (the final value can be read on the false notification at release). WinUI moves the value to the thumb position before
      * reporting the press, so when the track is clicked, the value change notification arrives before the true notification.
      * Pointer detection starts when a listener is added or [model] is read or written.
@@ -400,9 +400,17 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         rangeModel.value = newValue
     }
 
-    /** Pressed with the pointer (true), or released or lost capture (false). */
+    /**
+     * Pressed with the pointer (true), or released or lost capture (false). Only presses that the Slider marked handled on the track (the template's SliderContainer) or
+     * the thumb (Thumb) are counted. Both capture the pointer, so even when released outside the window,
+     * PointerReleased or PointerCaptureLost always arrives (OnPointerPressed in Slider_Partial.cpp). Presses over the header (Header)
+     * are neither marked handled nor captured, so counting them would leave it true when released outside.
+     */
     private fun onPointer(pressed: Boolean, args: Ptr) {
-        if (pressed && !XamlPointerEvent(ComPtr(args)).isLeftButtonPressed) return
+        if (pressed) {
+            val event = XamlPointerEvent(ComPtr(args))
+            if (!event.isLeftButtonPressed || !event.handled) return
+        }
         if (rangeModel.valueIsAdjusting != pressed) rangeModel.valueIsAdjusting = pressed
     }
 
