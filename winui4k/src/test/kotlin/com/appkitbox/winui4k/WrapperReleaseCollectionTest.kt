@@ -98,5 +98,15 @@ class WrapperReleaseCollectionTest : FunSpec() {
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
+
+        test("a WItemsView with a selection listener that does not reference the component is also collected after being put in a window and removed") {
+            val reference = shownAndHidden {
+                WItemsView().also { view ->
+                    view.setItems(listOf(WItemContainer(WLabel("First")), WItemContainer(WLabel("Second"))))
+                    view.addListSelectionListener { }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
     }
 }

@@ -18,6 +18,14 @@ class WItemContainer @JvmOverloads constructor(child: WComponent? = null) : WCon
             inspectable.call(XamlInterop.IItemContainer_put_Child, value?.uiElement?.ptr)
         }
 
+    /**
+     * Whether this container is selected (ItemContainer.IsSelected). If it is in a [WItemsView], assigning changes the view's selection
+     * (also notified to [WItemsView.addListSelectionListener]).
+     */
+    var isSelected: Boolean
+        get() = inspectable.getBool(XamlInterop.IItemContainer_get_IsSelected)
+        set(value) = inspectable.putBool(XamlInterop.IItemContainer_put_IsSelected, value)
+
     init {
         if (child != null) this.child = child
     }

@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
@@ -45,6 +46,15 @@ enum class ItemsViewSelectionMode(internal val native: Int) {
  * Set [setItems] to the row of [WItemContainer]s to lay out, and use [layout]'s
  * [WUniformGridLayout] (or similar) to build a card grid.
  * To subscribe to clicks, set [isItemInvokedEnabled] = true and use [addItemInvokedListener].
+ *
+ * The selection can be handled in the JList form ([selectedIndex] / [selectedIndices] / [setSelectionInterval] / [addSelectionInterval] /
+ * [removeSelectionInterval] / [isSelectedIndex] / [clearSelection] / [selectAll] and [addListSelectionListener]).
+ * Row numbers are positions in the list passed to [setItems]. It does not have a [WListSelectionModel] like [WList]
+ * (the ItemsView selection is managed by WinUI's SelectionModel, so it is not duplicated in a Swing model.
+ * Only the notification types [WListSelectionEvent] and [WListSelectionListener] are shared).
+ * If the selection mode ([selectionMode]) is [ItemsViewSelectionMode.SINGLE], only one row can be selected, as with Swing's SINGLE_SELECTION;
+ * with [ItemsViewSelectionMode.MULTIPLE] and [ItemsViewSelectionMode.EXTENDED], multiple rows can be selected.
+ * While [ItemsViewSelectionMode.NONE], operations that change the selection do nothing.
  */
 class WItemsView : WControl(
     Activation.composeDefault(XamlInterop.CLS_ItemsView, XamlInterop.IID_IItemsViewFactory),
@@ -54,6 +64,9 @@ class WItemsView : WControl(
 
     /** The items set with setItems. Also used for the reverse lookup in ItemInvoked (the handler captures this, not the wrapper). */
     private val items = InvokedItems()
+
+    /** The addListSelectionListener listeners and the SelectionChanged subscription. Not created until the first listener is added. */
+    private var selectionBridge: SelectionBridge? = null
 
     /** The selection mode (ItemsView.SelectionMode). */
     var selectionMode: ItemsViewSelectionMode
@@ -74,6 +87,164 @@ class WItemsView : WControl(
             field = value
             inspectable.call(XamlInterop.IItemsView_put_Layout, value?.layout)
         }
+
+    /** The number of items (the number passed to [setItems]). */
+    private val itemCount: Int get() = items.containers.size
+
+    /** Throws [IndexOutOfBoundsException] unless [index] is in 0 until the item count. */
+    private fun checkIndex(index: Int) {
+        if (index !in 0 until itemCount) throw IndexOutOfBoundsException("index: $index, size: $itemCount")
+    }
+
+    /** The set of selected row numbers (reads the native IsSelected of every row). */
+    internal fun selectedIndexSet(): Set<Int> {
+        val result = LinkedHashSet<Int>()
+        for (index in 0 until itemCount) if (nativeIsSelected(index)) result.add(index)
+        return result
+    }
+
+    private fun nativeIsSelected(index: Int): Boolean = Ffi.backend.withScope { scope ->
+        val out = scope.allocate(1, 1)
+        inspectable.call(XamlInterop.IItemsView_IsSelected, index, out)
+        Ffi.backend.memory.getByte(out, 0).toInt() != 0
+    }
+
+    /**
+     * Sets the selection to [target]. Native Select / Deselect raise SelectionChanged per row, so
+     * the [addListSelectionListener] listeners are notified only once in total.
+     */
+    private fun applySelection(target: Set<Int>) {
+        val current = selectedIndexSet()
+        val bridge = selectionBridge
+        bridge?.suppress()
+        try {
+            for (index in current) if (index !in target) inspectable.call(XamlInterop.IItemsView_Deselect, index)
+            for (index in target) if (index !in current) inspectable.call(XamlInterop.IItemsView_Select, index)
+        } finally {
+            bridge?.resume(this)
+        }
+    }
+
+    /** Whether operations that change the selection are possible. false in [ItemsViewSelectionMode.NONE]. */
+    private val isSelectable: Boolean get() = selectionMode != ItemsViewSelectionMode.NONE
+
+    /** Preparation for operations taking two row numbers, such as [setSelectionInterval]. null (do nothing) if either is -1. */
+    private fun interval(index0: Int, index1: Int): IntRange? {
+        if (index0 == -1 || index1 == -1) return null
+        checkIndex(index0)
+        checkIndex(index1)
+        return minOf(index0, index1)..maxOf(index0, index1)
+    }
+
+    /** The smallest selected row number. -1 if nothing is selected (JList.getMinSelectionIndex). */
+    val minSelectionIndex: Int get() = selectedIndexSet().minOrNull() ?: -1
+
+    /** The largest selected row number. -1 if nothing is selected (JList.getMaxSelectionIndex). */
+    val maxSelectionIndex: Int get() = selectedIndexSet().maxOrNull() ?: -1
+
+    /** true if nothing is selected (JList.isSelectionEmpty). */
+    val isSelectionEmpty: Boolean get() = minSelectionIndex == -1
+
+    /**
+     * The smallest selected row number. -1 if nothing is selected (JList.getSelectedIndex).
+     * Assigning selects only that one row (-1 clears the selection). [IndexOutOfBoundsException] if out of range.
+     */
+    var selectedIndex: Int
+        get() = minSelectionIndex
+        set(value) {
+            if (value == -1) {
+                clearSelection()
+            } else {
+                checkIndex(value)
+                if (isSelectable) applySelection(setOf(value))
+            }
+        }
+
+    /**
+     * The selected row numbers (ascending; JList.getSelectedIndices). Assigning selects only the given rows
+     * (only the last one if [selectionMode] is SINGLE). If any row is out of range, [IndexOutOfBoundsException] and the selection does not change.
+     */
+    var selectedIndices: IntArray
+        get() = selectedIndexSet().toIntArray()
+        set(value) {
+            value.forEach(::checkIndex)
+            if (!isSelectable) return
+            val target = if (selectionMode == ItemsViewSelectionMode.SINGLE) value.takeLast(1).toSet() else value.toSet()
+            applySelection(target)
+        }
+
+    /** true if row [index] is selected. false for out-of-range rows (JList.isSelectedIndex). */
+    fun isSelectedIndex(index: Int): Boolean = index in 0 until itemCount && nativeIsSelected(index)
+
+    /**
+     * Makes the selection only [index0]..[index1] (either may be larger) (JList.setSelectionInterval).
+     * Does nothing if either is -1. Only the one row [index1] if [selectionMode] is SINGLE. [IndexOutOfBoundsException] if out of range.
+     */
+    fun setSelectionInterval(index0: Int, index1: Int) {
+        val range = interval(index0, index1) ?: return
+        if (!isSelectable) return
+        applySelection(if (selectionMode == ItemsViewSelectionMode.SINGLE) setOf(index1) else range.toSet())
+    }
+
+    /**
+     * Adds [index0]..[index1] to the selection (JList.addSelectionInterval). Same as [setSelectionInterval] if [selectionMode] is SINGLE.
+     * Does nothing if either is -1. [IndexOutOfBoundsException] if out of range.
+     */
+    fun addSelectionInterval(index0: Int, index1: Int) {
+        val range = interval(index0, index1) ?: return
+        if (!isSelectable) return
+        applySelection(if (selectionMode == ItemsViewSelectionMode.SINGLE) setOf(index1) else selectedIndexSet() + range)
+    }
+
+    /**
+     * Removes [index0]..[index1] from the selection (JList.removeSelectionInterval).
+     * Does nothing if either is -1. [IndexOutOfBoundsException] if out of range.
+     */
+    fun removeSelectionInterval(index0: Int, index1: Int) {
+        val range = interval(index0, index1) ?: return
+        applySelection(selectedIndexSet() - range.toSet())
+    }
+
+    /** Clears the whole selection (JList.clearSelection). */
+    fun clearSelection() = applySelection(emptySet())
+
+    /**
+     * Selects all rows. Effective only when [selectionMode] is MULTIPLE / EXTENDED, and does nothing for SINGLE / NONE
+     * (Swing's JList has no equivalent operation either).
+     */
+    fun selectAll() {
+        if (selectionMode == ItemsViewSelectionMode.MULTIPLE || selectionMode == ItemsViewSelectionMode.EXTENDED) {
+            applySelection((0 until itemCount).toSet())
+        }
+    }
+
+    /**
+     * Scrolls until row [index] is visible (JList.ensureIndexIsVisible; ItemsView.StartBringItemIntoView).
+     * [IndexOutOfBoundsException] if out of range. Before it is in the visual tree (before the template is applied), WinUI
+     * returns a failure, so it throws.
+     */
+    fun ensureIndexIsVisible(index: Int) {
+        checkIndex(index)
+        inspectable.call(XamlInterop.IItemsView_StartBringItemIntoView, index, null)
+    }
+
+    /**
+     * Subscribes to selection changes (JList.addListSelectionListener; ItemsView.SelectionChanged).
+     * The event's [WListSelectionEvent.source] is this view. [WListSelectionEvent.firstIndex] / [WListSelectionEvent.lastIndex]
+     * are the smallest and largest rows whose selection state changed, found by comparing the selection before and after. The native side does not pass which rows changed,
+     * so every row is read on each notification (a view with many rows pays that cost per notification).
+     * [WListSelectionEvent.valueIsAdjusting] is always false (WinUI has no tentative selection during dragging).
+     * Calls of this API ([setSelectionInterval] etc.) are collapsed into one notification. Listeners are called in the order added.
+     */
+    fun addListSelectionListener(listener: WListSelectionListener) {
+        val bridge = selectionBridge ?: SelectionBridge(ListenerAnchor(this)).also { selectionBridge = it }
+        bridge.add(listener, this)
+    }
+
+    /** Removes a listener added with [addListSelectionListener] (the last one if the same listener was added several times). */
+    fun removeListSelectionListener(listener: WListSelectionListener) {
+        selectionBridge?.remove(listener, this)
+    }
 
     /**
      * Replaces the row of items shown (assigns to ItemsView.ItemsSource).
@@ -128,6 +299,63 @@ class WItemsView : WControl(
     fun removeItemInvokedListenerForJava(listener: IntConsumer) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
+    }
+}
+
+/**
+ * The [WItemsView.addListSelectionListener] listeners and the SelectionChanged subscription (the native handler captures only this object,
+ * and looks up the view weakly through [anchor]; see ListenerAnchor).
+ */
+private class SelectionBridge(private val anchor: ListenerAnchor<WItemsView>) {
+    private val listeners = ArrayList<WListSelectionListener>()
+    private var token: Long? = null
+
+    /** The selection at the time of the last notification (or when the subscription started). */
+    private var previous: Set<Int> = emptySet()
+
+    /** While greater than 0, native notifications are ignored ([resume] notifies once for all of them). */
+    private var suppressed = 0
+
+    fun add(listener: WListSelectionListener, view: WItemsView) {
+        if (token == null) {
+            previous = view.selectedIndexSet()
+            token = view.inspectable.addEventHandler(
+                "WinUI4K.ItemsViewSelectionChangedHandler",
+                XamlInterop.IID_ItemsViewSelectionChangedHandler,
+                XamlInterop.IItemsView_add_SelectionChanged,
+            ) { _, _ -> if (suppressed == 0) anchor.get()?.let { notifyChanged(it) } }
+        }
+        listeners.add(listener)
+        anchor.listenerAdded()
+    }
+
+    fun remove(listener: WListSelectionListener, view: WItemsView) {
+        val index = listeners.indexOfLast { it === listener }
+        if (index < 0) return
+        listeners.removeAt(index)
+        anchor.listenerRemoved()
+        if (listeners.isEmpty()) {
+            token?.let { view.inspectable.removeEventHandler(XamlInterop.IItemsView_remove_SelectionChanged, it) }
+            token = null
+        }
+    }
+
+    fun suppress() {
+        suppressed++
+    }
+
+    fun resume(view: WItemsView) {
+        if (--suppressed == 0) notifyChanged(view)
+    }
+
+    /** Re-reads the selection, and if it differs from the previous one, notifies once with the range of differing rows. */
+    private fun notifyChanged(view: WItemsView) {
+        val current = view.selectedIndexSet()
+        val changed = (current - previous) + (previous - current)
+        previous = current
+        if (changed.isEmpty()) return
+        val event = WListSelectionEvent(view, changed.min(), changed.max(), false)
+        for (listener in ArrayList(listeners)) listener.valueChanged(event)
     }
 }
 

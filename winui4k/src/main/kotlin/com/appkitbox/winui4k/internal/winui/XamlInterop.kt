@@ -2139,11 +2139,32 @@ internal object XamlInterop {
     const val IItemsView_put_IsItemInvokedEnabled = 16
     const val IItemsView_get_SelectionMode = 17         // get_SelectionMode(out ItemsViewSelectionMode)
     const val IItemsView_put_SelectionMode = 18         // put_SelectionMode(ItemsViewSelectionMode enum)
+    const val IItemsView_get_CurrentItemIndex = 21      // get_CurrentItemIndex(out i4)
+    const val IItemsView_StartBringItemIntoView = 25    // StartBringItemIntoView(i4 index, BringIntoViewOptions)
+    const val IItemsView_Select = 26                    // Select(i4)
+    const val IItemsView_Deselect = 27                  // Deselect(i4)
+    const val IItemsView_IsSelected = 28                // IsSelected(i4, out boolean)
+    const val IItemsView_SelectAll = 29
+    const val IItemsView_DeselectAll = 30
+    const val IItemsView_add_SelectionChanged = 34      // add_SelectionChanged(TypedEventHandler<ItemsView, ItemsViewSelectionChangedEventArgs>, out token)
+    const val IItemsView_remove_SelectionChanged = 35
     const val IItemsView_add_ItemInvoked = 32           // add_ItemInvoked(TypedEventHandler<ItemsView, ItemsViewItemInvokedEventArgs>, out token)
     const val IItemsView_remove_ItemInvoked = 33
 
     const val IID_IItemsViewItemInvokedEventArgs = "5a2386e8-15b8-5f25-874b-7912f633ce21"
     const val IItemsViewItemInvokedEventArgs_get_InvokedItem = 6  // get_InvokedItem(out IInspectable)
+
+    const val IID_IItemsViewSelectionChangedEventArgs = "9cd1690f-6c9d-543c-82f2-30cd37d765b3"  // no members
+
+    /** Concrete IID of TypedEventHandler<ItemsView, ItemsViewSelectionChangedEventArgs> (computed at runtime). */
+    val IID_ItemsViewSelectionChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.ItemsView;{$IID_IItemsView});" +
+                "rc(Microsoft.UI.Xaml.Controls.ItemsViewSelectionChangedEventArgs;" +
+                "{$IID_IItemsViewSelectionChangedEventArgs}))",
+        )
+    }
 
     /** The actual IID of TypedEventHandler<ItemsView, ItemsViewItemInvokedEventArgs> (computed at runtime). */
     val IID_ItemsViewItemInvokedHandler: String by lazy {
@@ -2161,6 +2182,8 @@ internal object XamlInterop {
     const val IID_IItemContainer = "6332a67f-7fd9-53c7-afd8-cfa1237cf6d1"
     const val IItemContainer_get_Child = 6              // get_Child(out UIElement)
     const val IItemContainer_put_Child = 7              // put_Child(UIElement)
+    const val IItemContainer_get_IsSelected = 8
+    const val IItemContainer_put_IsSelected = 9
 
     // ---- Microsoft.UI.Xaml.Controls.Layout (the argument type of ItemsView.Layout) ----
     const val IID_ILayout = "24e50c1c-9c51-5144-9ddc-3f500191c262"
