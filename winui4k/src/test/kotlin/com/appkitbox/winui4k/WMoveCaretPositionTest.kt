@@ -135,23 +135,31 @@ class WMoveCaretPositionTest : FunSpec() {
             test("WTextPane: after selecting forward, moving the moving end like Shift+← extends the start side of the selection (the RichEditBox selection direction is matched too)") {
                 val pane = onUiThreadGet { WTextPane().also { it.text = "abcdef" } }
                 UiTestHarness.attachAndAwaitLoaded(pane)
-                onUiThreadGet {
-                    pane.caretPosition = 4
-                    pane.moveCaretPosition(2)
-                    extendLeft(pane)
-                    (pane.selectionStart to pane.selectionEnd) to pane.caretPosition
-                } shouldBe ((1 to 4) to 1)
+                try {
+                    onUiThreadGet {
+                        pane.caretPosition = 4
+                        pane.moveCaretPosition(2)
+                        extendLeft(pane)
+                        (pane.selectionStart to pane.selectionEnd) to pane.caretPosition
+                    } shouldBe ((1 to 4) to 1)
+                } finally {
+                    UiTestHarness.detach(pane)
+                }
             }
 
             test("WTextPane: for a selection the user made from back to front (Shift+← twice), caretPosition is the start of the selection") {
                 val pane = onUiThreadGet { WTextPane().also { it.text = "abcdef" } }
                 UiTestHarness.attachAndAwaitLoaded(pane)
-                onUiThreadGet {
-                    pane.caretPosition = 3
-                    extendLeft(pane)
-                    extendLeft(pane)
-                    listOf(pane.selectionStart to pane.selectionEnd, pane.caretPosition)
-                } shouldBe listOf(1 to 3, 1)
+                try {
+                    onUiThreadGet {
+                        pane.caretPosition = 3
+                        extendLeft(pane)
+                        extendLeft(pane)
+                        listOf(pane.selectionStart to pane.selectionEnd, pane.caretPosition)
+                    } shouldBe listOf(1 to 3, 1)
+                } finally {
+                    UiTestHarness.detach(pane)
+                }
             }
         }
     }

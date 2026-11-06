@@ -77,8 +77,12 @@ class WDocumentFilterTest : FunSpec() {
             }
         }
         UiTestHarness.attachAndAwaitLoaded(field)
+        shown += field
         return field
     }
+
+    /** The text fields placed in the shared window (removed after each test so that later tests' components are not pushed out of the window). */
+    private val shown = mutableListOf<WComponent>()
 
     /** Moves the focus to [field], selects [selection] (start, end), and presses the keys. */
     private fun type(field: WTextField, selection: Pair<Int, Int>, key: Key) {
@@ -90,6 +94,11 @@ class WDocumentFilterTest : FunSpec() {
     }
 
     init {
+        afterTest {
+            shown.forEach { UiTestHarness.detach(it) }
+            shown.clear()
+        }
+
         context("Defaults") {
             test("documentFilter is null by default (the three kinds of text fields)") {
                 onUiThreadGet {

@@ -19,8 +19,12 @@ class WTextPaneFormatTest : FunSpec() {
     private fun shownPane(text: String): WTextPane {
         val pane = onUiThreadGet { WTextPane().also { it.text = text } }
         UiTestHarness.attachAndAwaitLoaded(pane)
+        shown += pane
         return pane
     }
+
+    /** The text panes placed in the shared window (removed after each test so that later tests' components are not pushed out of the window). */
+    private val shown = mutableListOf<WComponent>()
 
     /** Attributes for bold, italic, underline, red, 20 and Consolas. */
     private fun everything(): WSimpleAttributeSet = WSimpleAttributeSet().also {
@@ -59,6 +63,11 @@ class WTextPaneFormatTest : FunSpec() {
     }
 
     init {
+        afterTest {
+            shown.forEach { UiTestHarness.detach(it) }
+            shown.clear()
+        }
+
         context("Defaults") {
             test("unformatted text is not bold, italic or underlined, and its size and font family are the same as the text pane's font (all six attributes present)") {
                 val pane = shownPane("abc")
