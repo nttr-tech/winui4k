@@ -384,7 +384,7 @@ abstract class WComponent internal constructor(
      * The minimum size (equivalent to JComponent.get/setMinimumSize; FrameworkElement.MinWidth / MinHeight).
      * At least this size is reserved even if the content is smaller. The default is (0, 0).
      */
-    var minimumSize: WSize
+    open var minimumSize: WSize
         get() = WSize(
             frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinWidth),
             frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinHeight),
@@ -398,7 +398,7 @@ abstract class WComponent internal constructor(
      * The maximum size (equivalent to JComponent.get/setMaximumSize; FrameworkElement.MaxWidth / MaxHeight).
      * The size is limited to this even if the content is larger. The default is unlimited (Double.POSITIVE_INFINITY).
      */
-    var maximumSize: WSize
+    open var maximumSize: WSize
         get() = WSize(
             frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxWidth),
             frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxHeight),

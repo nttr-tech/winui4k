@@ -118,6 +118,38 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     /**
+     * The minimum size (like Container.getMinimumSize). If [minimumSize] is not set,
+     * the value of [WLayoutManager.minimumLayoutSize]. Without a [layout], stays [WComponent.minimumSize].
+     */
+    override var minimumSize: WSize
+        get() = layoutOverride(super.minimumSize, ZERO_SIZE) { it.minimumLayoutSize(this) }
+        set(value) {
+            super.minimumSize = value
+        }
+
+    /**
+     * The maximum size (like Container.getMaximumSize). If [maximumSize] is not set,
+     * the value of [WLayoutManager.maximumLayoutSize]. Without a [layout], stays [WComponent.maximumSize].
+     */
+    override var maximumSize: WSize
+        get() = layoutOverride(super.maximumSize, UNBOUNDED_SIZE) { it.maximumLayoutSize(this) }
+        set(value) {
+            super.maximumSize = value
+        }
+
+    /** Returns the explicit setting if there is one ([native] other than [unset]), otherwise the layout manager's computed value. */
+    private inline fun layoutOverride(native: WSize, unset: WSize, fromLayout: (WLayoutManager) -> WSize): WSize {
+        val manager = layout
+        return if (manager == null || native != unset) native else fromLayout(manager)
+    }
+
+    /** Like Container.invalidate: in addition to [WComponent.invalidate], notifies [layout] with [WLayoutManager.invalidateLayout]. */
+    override fun invalidate() {
+        super.invalidate()
+        layout?.invalidateLayout(this)
+    }
+
+    /**
      * Assigns a child's position and size (like Component.setBounds). Called by a WLayoutManager
      * implementation from [WLayoutManager.layoutContainer]. Position is the Canvas.SetLeft/SetTop
      * attached properties; size is Width/Height (a put is skipped if the value is unchanged).
@@ -214,6 +246,9 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     private companion object {
+        val ZERO_SIZE = WSize(0.0, 0.0)
+        val UNBOUNDED_SIZE = WSize(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)
+
         /** Attached-property operations for Canvas (ICanvasStatics). */
         val statics: ComPtr by lazy { Activation.factory(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasStatics) }
     }
