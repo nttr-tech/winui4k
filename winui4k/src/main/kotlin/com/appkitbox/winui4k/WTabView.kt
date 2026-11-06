@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import java.util.function.IntConsumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -93,6 +94,12 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     override fun detachChild(child: WComponent) {
         if (this.content === child) this.content = null
     }
+
+    /**
+     * The [WTabView] containing this tab (a weak reference; the tab view holds the tab strongly). Used to remove it from the original first when it is added to another tab view.
+     * It is not made the [WComponent.parent] (the tab view is not exposed as the tab's parent component).
+     */
+    internal var owningTabView: WeakReference<WTabView>? = null
 
     init {
         if (header.isNotEmpty()) this.header = header
@@ -188,7 +195,10 @@ class WTabView : WControl(
             selectedIndex = index
         }
 
-    /** Adds a tab at the end (TabItems.Append). If the tab is already in this tab view, it is removed from its old position and moved to the end. */
+    /**
+     * Adds a tab at the end (TabItems.Append). If the tab is already in this tab view, it is removed from its old position and moved to the end.
+     * If the tab is in another WTabView, it is removed from there first (the same as Swing's add removing it from the original parent; the selection on the removed side also follows Swing's rules).
+     */
     fun addTab(tab: WTabViewItem) {
         val existing = indexOfItem(tab)
         if (existing >= 0) removeTab(existing)
@@ -237,7 +247,7 @@ class WTabView : WControl(
         mutate {
             val selected = selectedIndex
             withTabItemVector(inspectable) { vector ->
-                tabsByIdentity.remove(identityAt(vector, index))
+                tabsByIdentity.remove(identityAt(vector, index))?.owningTabView = null
                 vector.call(FoundationInterop.IVector_RemoveAt, index)
             }
             val count = tabCount
@@ -270,7 +280,7 @@ class WTabView : WControl(
             applySelectedIndex(-1)
             withTabItemVector(inspectable) { vector ->
                 for (index in sizeOf(vector) - 1 downTo 0) {
-                    tabsByIdentity.remove(identityAt(vector, index))
+                    tabsByIdentity.remove(identityAt(vector, index))?.owningTabView = null
                     vector.call(FoundationInterop.IVector_RemoveAt, index)
                 }
             }
@@ -465,6 +475,7 @@ class WTabView : WControl(
      * so it is rewritten to give the same result in both states.
      */
     private fun insertItem(tab: WTabViewItem, index: Int) {
+        tab.owningTabView?.get()?.takeIf { it !== this }?.remove(tab)
         mutate {
             val selected = selectedIndex
             val wasEmpty = tabCount == 0
@@ -472,6 +483,7 @@ class WTabView : WControl(
                 vector.call(FoundationInterop.IVector_InsertAt, index, tab.inspectable.ptr)
             }
             tabsByIdentity[identityOf(tab.inspectable)] = tab
+            tab.owningTabView = WeakReference(this)
             applySelectedIndex(
                 when {
                     wasEmpty -> 0

@@ -328,6 +328,32 @@ class WTabViewTest : FunSpec() {
             index shouldBe 1
         }
 
+        test("adding a tab that is in another WTabView with addTab removes it from the original tab view and moves it (the same as Swing's add)") {
+            onUiThread {
+                val from = WTabView()
+                val to = WTabView()
+                val moved = WTabViewItem("moved")
+                val stays = WTabViewItem("stays")
+                from.addTab(moved)
+                from.addTab(stays)
+                to.addTab(moved)
+                from.tabCount shouldBe 1
+                from.getTab(0).header shouldBe "stays"
+                from.selectedIndex shouldBe 0 // The selected first tab was removed, so the next tab at the same position is selected
+                to.tabCount shouldBe 1
+                to.getTab(0).header shouldBe "moved"
+                // Moving it back to the original tab view removes it from where it moved to
+                from.addTab(moved)
+                to.tabCount shouldBe 0
+                (0 until from.tabCount).map { from.getTab(it).header } shouldBe listOf("stays", "moved")
+                // Adding a tab removed with removeTab to another tab view does not remove the other tabs of the original tab view
+                from.removeTab(1)
+                to.addTab(moved)
+                from.tabCount shouldBe 1
+                to.tabCount shouldBe 1
+            }
+        }
+
         test("indexOfTab and indexOfComponent return the first matching tab, or -1 if none") {
             val result = onUiThreadGet {
                 val tabView = WTabView()
