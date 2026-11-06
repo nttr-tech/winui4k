@@ -206,3 +206,5 @@
   呼び戻していると考えられるが、呼び出し元は特定できていない (hs_err のネイティブのフレームは `jvm.dll` と名前の無いアドレスだけ)。
   どちらのプロセスにも SentinelOne の Java エージェント (`-agentpath:...SentinelJava64.dll`) が入っていた。テストの結果には影響しないが、
   アプリの終了時にも起きうるので、終了前にネイティブへ渡したハンドラを外す、などの対策を別に調べる。
+  UI スレッドが WinUI のループにいるまま別のスレッドから System.exit を呼ぶと、ほぼ必ず再現する (2026-10-20、`ModalLoopProcessTest` の
+  子のプロセス。Panama 8/8・JNR 7/8 で `upcallLinker.cpp:77` か jffi の DLL の中のアクセス違反、JNA は 0/8)。終了コードは System.exit の値のまま。

@@ -222,3 +222,27 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (microsoft-ui-xaml の dxaml/xcp/core/core/elements/uielement.cpp の Canvas_Left / Canvas_Top → OnActualOffsetChanged)。
     FrameworkElement.LayoutUpdated は来ないので、componentMoved は LayoutUpdated に加えて Canvas.Left / Top の変更のコールバックでも位置を比べる
   - Visibility を Collapsed にしても、その要素の SizeChanged は来ない (Swing の setVisible(false) と同じく componentResized は来ない)
+- 閉じるまで呼び出し元を止めるダイアログ (Swing の JOptionPane.showConfirmDialog などの形) のために、UI スレッドで入れ子の
+  メッセージ ループ (`internal.winui.ModalLoop`) を回したときの挙動を E2E テストで確かめた (2.5.4-experimental。`ModalLoopTest` は
+  Panama、`ModalLoopProcessTest` は子のプロセスを Panama・JNA・JNR のそれぞれで起動)
+  - ループは WinUI 自身のループ (`FrameworkApplication_Partial.cpp` の RunDesktopWindowMessageLoop) と同じ
+    GetMessageW → ContentPreTranslateMessage → TranslateMessage → DispatchMessageW で回す。ContentPreTranslateMessage は
+    Microsoft.UI.Windowing.Core.dll が公開している (2.5.1 のランタイムの DLL の公開シンボルで確認)
+  - ループの間も DispatcherQueue (`invokeLater`)・GC 由来の Release (ReleasePump)・キー入力・描画は動く。ボタンの Click・
+    メニュー項目の Click・キーボード アクセラレーターの Invoked の中から ContentDialog を開いて待ち、Esc (結果は None) と
+    Enter (既定のボタン) で閉じると、呼び出し元の続きが動く
+  - SizeChanged と Loaded のハンドラの中でループを回すと、ループの間は XAML のレイアウトが進まない (後から載せた要素が
+    Loaded にならず、ループを抜けると Loaded になる)。SizeChanged と LayoutUpdated は CLayoutManager::UpdateLayout の中で
+    m_isInUpdateLayout を立てたまま呼ばれ (`LayoutManager.cpp`。立っている間の UpdateLayout は何もせずに戻る)、Loaded も
+    フレームの処理 (UIThreadScheduler の Ticking) の中で呼ばれるため。この中で開いたダイアログは現れないまま止まるので、
+    ModalLoop は `addSizeChangedListener` / `addLoadedListener` のリスナーの中からの呼び出しを IllegalStateException で断る
+  - 入れ子 (深さ 2) にできる。ダイアログを待つ間に FileOpenPicker の OS のダイアログを待っても、UI スレッドは内側のループで
+    invokeLater を処理し、OS のダイアログを閉じると内側・外側の順に戻る。外側の条件が先に成り立っても、内側が戻るまで外側は戻らない
+  - ContentDialog を開いたまま持ち主のウィンドウを閉じる (WM_CLOSE) と、ウィンドウは閉じるが ContentDialog.Closed は届かない。
+    持ち主の要素の IsLoaded は false になるので、待つ側はそれ (かウィンドウの Closed) でも待ちを終えること
+  - ループの中で Application.Exit (`WinUiUtilities.exit`) を呼んだときと、ただ 1 つのウィンドウを閉じた (自動終了) ときは、
+    ループが WM_QUIT を受け取る。ModalLoop は同じ終了コードで PostQuitMessage し直して false を返し、WinUI のループも終わって
+    プロセスは終了コード 0 で終わる (3 つのバックエンドとも)
+  - ループの中で別のスレッドから System.exit を呼んでも、プロセスはその終了コードで終わる (止まらない)。ただし Panama と JNR では
+    終了の途中で JVM が落ちて hs_err を残すことがある (2026-10-20 に各 4 回: Panama 4/4、JNR 3/4、JNA 0/4)。ループを回さずに
+    呼んでも同じ割合で落ちる (Panama 4/4、JNR 4/4、JNA 0/4) ので、ModalLoop が原因ではない (doc/troubleshooting.md の upcall の件)
