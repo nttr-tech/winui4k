@@ -56,8 +56,8 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     }
 
     /**
-     * The default root panel corresponding to JFrame's contentPane (a WPanel, that is, a vertical StackPanel). Even after replacing it with [setContentPane],
-     * this returns the default panel (to keep the type WPanel). Swing's `getContentPane().add(...)` form goes into this panel, which is not
+     * The default root panel corresponding to JFrame's contentPane (a WPanel, that is, a vertical StackPanel). Even after replacing it with [setContentPane]
+     * or setting [layout], this returns the default panel (to keep the type WPanel). Swing's `getContentPane().add(...)` form goes into this panel, which is not
      * on screen after the replacement, so use [add] (which goes into the current content) after replacing it.
      */
     val contentPane: WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }
@@ -600,18 +600,52 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
 
     /**
      * Container.add(Component, Object)-like: adds a child with a constraint to the current content (the `frame.add(panel, WBorderLayout.CENTER)` form).
-     * If the content is a [WLayoutPanel], the constraint is passed to its layout manager; other containers do not use it (as in Swing).
+     * If the content is a [WLayoutPanel] with a layout manager (after setting [layout] etc.), the constraint is passed to that manager.
+     *
+     * Difference from Swing: the default content ([contentPane]) is a vertical StackPanel, not a BorderLayout, so set [layout] first.
+     * A non-null constraint passed to content without a layout manager is not silently discarded as in Swing but throws [IllegalArgumentException]
+     * (the child is not added). With a null constraint it is the same as [add].
      */
-    fun add(component: WComponent, constraints: Any?) = currentContainer().addImpl(component, constraints, -1)
+    fun add(component: WComponent, constraints: Any?) = ContentPanes.add(currentContainer(), component, constraints, -1)
 
     /** Container.add(Component, int)-like: adds a child at [index] of the current content (-1 for the end). */
     fun add(component: WComponent, index: Int) = currentContainer().add(component, index)
 
     /**
      * Container.add(Component, Object, int)-like: adds a child with a constraint at [index] of the current content (-1 for the end).
-     * [IllegalArgumentException] if [index] is out of range (as in Swing).
+     * [IllegalArgumentException] if [index] is out of range (as in Swing). Constraints are handled the same as add(component, constraints).
      */
-    fun add(component: WComponent, constraints: Any?, index: Int) = currentContainer().addImpl(component, constraints, index)
+    fun add(component: WComponent, constraints: Any?, index: Int) = ContentPanes.add(currentContainer(), component, constraints, index)
+
+    /**
+     * JFrame.getLayout / setLayout-like: the layout manager that arranges the children of the content. The manager if the content is a [WLayoutPanel],
+     * otherwise (such as the vertical StackPanel of the default [contentPane]) null.
+     *
+     * When set and the content is the default [contentPane], the content is replaced with a [WLayoutPanel] with that manager and the children of [contentPane] are moved
+     * in the same order (null corresponds to Swing's null layout, a WLayoutPanel without a manager). The constraints of the moved children are null
+     * (the center for [WBorderLayout]). If the content is already a [WLayoutPanel], its manager is replaced without replacing the content.
+     *
+     * Differences from Swing:
+     * - The default is null, not BorderLayout (the default content stays a vertical StackPanel as before). To use the `frame.add(c, WBorderLayout.NORTH)`
+     *   form, set this first.
+     * - Because the content is replaced, [contentPane] is not on screen after setting it (to keep the type [WPanel]; the same as after [setContentPane]).
+     *   Add children with `frame.add(...)`.
+     *
+     * @throws IllegalStateException when [setContentPane] has made a component other than a [WLayoutPanel] the content (the content is not replaced)
+     */
+    var layout: WLayoutManager?
+        get() = (content as? WLayoutPanel)?.layout
+        set(value) {
+            val current = content
+            when {
+                current is WLayoutPanel -> current.layout = value
+                current === contentPane -> setContentPane(ContentPanes.movedToLayoutPanel(contentPane, value))
+                else -> throw IllegalStateException(
+                    "A layout manager cannot be attached to the content replaced with setContentPane (${current.javaClass.simpleName}). " +
+                        "Use a WLayoutPanel as the content",
+                )
+            }
+        }
 
     /** Container.remove(Component)-like: removes a child from the current content. */
     fun remove(component: WComponent) = currentContainer().remove(component)
