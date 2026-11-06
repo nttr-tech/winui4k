@@ -371,7 +371,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 
     /**
      * ItemListener-like: receives changes of the selected item as [WItemEvent]s. The previous item's [WItemEvent.DESELECTED] is followed by the new item's
-     * [WItemEvent.SELECTED]; [WItemEvent.item] is the item string and the source is this combo. Called for both user operations and programmatic settings.
+     * [WItemEvent.SELECTED]; [WItemEvent.item] is the model's item itself (not its string display) and the source is this combo. Called for both user operations and programmatic settings.
      */
     @JvmSynthetic
     fun addItemListener(listener: (WItemEvent) -> Unit) {
