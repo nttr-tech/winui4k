@@ -20,10 +20,17 @@ object WBadgeNotification {
         m
     }
 
-    /** Sets the badge to a number (e.g. an unread count). 100 and above shows as "99+". */
+    /**
+     * Sets the badge to a number (e.g. an unread count). 100 and above shows as "99+".
+     * 0 removes the badge, the same as [clear] (Taskbar.setIconBadge(null)-like; a "0" badge is not shown).
+     */
     @JvmStatic
     fun setCount(count: Int) {
         require(count >= 0) { "count must be 0 or greater: $count" }
+        if (count == 0) {
+            clear()
+            return
+        }
         manager.call(NotificationInterop.IBadgeNotificationManager_SetBadgeAsCount, count)
     }
 
