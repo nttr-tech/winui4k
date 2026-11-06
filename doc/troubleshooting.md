@@ -266,3 +266,5 @@
   Slider は押下をテンプレートの SliderContainer (トラック) とつまみの Thumb でだけ処理済みにしてポインターを捕捉する
   (Slider_Partial.cpp の OnPointerPressed)。見出しの上で押してウィンドウの外で離すと PointerReleased も PointerCaptureLost も届かないので、
   ドラッグ中かの判定 (`WSlider.valueIsAdjusting`) は処理済みの押下だけを数える (WinUI のソースから。実際のポインター入力では未確認)。
+- **ほかの Panel の子になっている要素を Window.Content に入れると E_INVALIDARG (0x80070057) で失敗する**
+  Window.put_Content は親を付け替えない。WFrame.setContentPane は先に元のコンテナから外してから入れる (`WFrameTest`。2026-10-20、Panama で確認)。

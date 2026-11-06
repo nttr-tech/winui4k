@@ -9,6 +9,7 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -306,6 +307,25 @@ class WFrameTest : FunSpec() {
             }
             Thread.sleep(SETTLE_MILLIS) // The count must not decrease even when the closed notification (Window.Closed) comes
             onUiThreadGet { WinUiUtilities.openWindowCount } shouldBe before
+        }
+
+        test("setContentPane removes a component that is in another container from there and makes it the content (as in Swing)") {
+            val frame = newFrame()
+            val (holder, pane) = onUiThreadGet {
+                val holder = WPanel()
+                val pane = WPanel()
+                holder.add(pane)
+                frame.setContentPane(pane)
+                holder to pane
+            }
+            onUiThread {
+                holder.componentCount shouldBe 0
+                pane.parent.shouldBeNull()
+                frame.add(WButton("Inner"))
+                pane.componentCount shouldBe 1
+            }
+            showAndAwaitOpened(frame)
+            eventually(5.seconds) { onUiThreadGet { pane.actualWidth } shouldBeGreaterThan 0.0 }
         }
 
         test("add goes into the content container replaced with setContentPane. add with a constraint passes it to that layout manager") {

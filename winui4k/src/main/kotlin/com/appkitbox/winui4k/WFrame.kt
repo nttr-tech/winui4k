@@ -602,10 +602,12 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
      * default [contentPane] (Window.Content). Useful when you want a full-bleed layout with,
      * say, a Grid instead of StackPanel's unconstrained height measurement.
      * Subsequent [add] / [remove] apply to [component] (if it is a container). [contentPane] stays the default panel.
+     * If [component] is in another container, it is removed from there first (as in Swing).
      */
     fun setContentPane(component: WComponent) {
         val grid = rootGrid
         if (grid == null) {
+            component.removeFromParent()
             window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
         } else {
             grid.remove(content)
