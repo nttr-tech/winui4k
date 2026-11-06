@@ -75,6 +75,18 @@ class WKeyStrokeForJavaTest {
     }
 
     @Test
+    void getKeyStrokeForEventCreatesAKeystrokeFromTheEventAKeyListenerReceivedEqualToTheStringForm() {
+        onUiThread(() -> {
+            WPanel panel = new WPanel();
+            WKeyEvent pressed = new WKeyEvent(panel, WKeyEvent.KEY_PRESSED, 0L, WInputEvent.CTRL_DOWN_MASK, WKeyEvent.VK_S,
+                    WKeyEvent.CHAR_UNDEFINED);
+            WKeyEvent typed = new WKeyEvent(panel, WKeyEvent.KEY_TYPED, 0L, WInputEvent.SHIFT_DOWN_MASK, WKeyEvent.VK_UNDEFINED, 'A');
+            assertEquals(WKeyStroke.getKeyStroke("ctrl S"), WKeyStroke.getKeyStrokeForEvent(pressed));
+            assertEquals(WKeyStroke.getKeyStroke("shift typed A"), WKeyStroke.getKeyStrokeForEvent(typed));
+        });
+    }
+
+    @Test
     void releaseKeyStrokeIsReleasedAndCanBeUsedLikeAltF4() {
         WKeyStroke stroke = WKeyStroke.getKeyStroke(WKeyEvent.VK_F4, WKeyEvent.ALT_DOWN_MASK, true);
         assertEquals("alt released F4", stroke.toString());

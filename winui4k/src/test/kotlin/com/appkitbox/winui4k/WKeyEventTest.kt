@@ -286,6 +286,13 @@ class WKeyEventTest : FunSpec() {
                 WKeyEvent.VK_WINDOWS, WKeyEvent.VK_CONTEXT_MENU, WKeyEvent.VK_META, WKeyEvent.VK_UNDEFINED,
             ) shouldBe listOf(10, 127, 155, 0xF000, 0xF00B, 524, 525, 157, 0)
         }
+
+        test("with the AltGraph modifier, only isAltGraphDown is true, and the old-style modifiers are ALT_GRAPH_MASK (32) (as in AWT)") {
+            onUiThreadGet {
+                val e = WKeyEvent(WPanel(), WKeyEvent.KEY_PRESSED, 0L, WInputEvent.ALT_GRAPH_DOWN_MASK, WKeyEvent.VK_Q, WKeyEvent.CHAR_UNDEFINED)
+                listOf(e.isAltGraphDown, e.isAltDown, e.isControlDown, e.isShiftDown, e.isMetaDown) to e.modifiers
+            } shouldBe (listOf(true, false, false, false, false) to 32)
+        }
     }
 
     private companion object {
