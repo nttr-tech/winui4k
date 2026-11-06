@@ -47,7 +47,9 @@ tasks.register<Test>("pureTest") {
     useJUnitPlatform {
         excludeEngines("junit-jupiter")
     }
-    systemProperty("kotest.tags", "Pure")
+    // With an including expression ("Pure"), Kotest also instantiates the specs of the other layers and runs their afterSpec, so write an excluding expression.
+    // As a result, a spec missing its layer tag runs here (always add @Tags to new specs)
+    systemProperty("kotest.tags", "!E2E & !Integration & !Memory & !Process")
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
