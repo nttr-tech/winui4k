@@ -167,7 +167,8 @@ class WList(model: WListModel<*>) : WControl(
      * The default is a [WDefaultListSelectionModel] built from the current native mode and selection. Change the mode with [setSelectionMode]
      * (calling the model's setSelectionMode directly does not change the display mode).
      * Replacing it changes the display mode according to whether the new model is single selection, and copies the new model's selection to the display.
-     * WinUI does not report operations in progress, so valueIsAdjusting of events from display operations is always false.
+     * WinUI does not report operations such as drags in progress. Only when one display operation changes the selection discontiguously is the model changed in several
+     * steps, so events with valueIsAdjusting true arrive first and finally a false event covering the whole (as in Swing, it is enough to look at the false event).
      * Using this API (or another Swing-style selection API) for the first time starts syncing with native, and from then on, as when listeners are added,
      * a shown list is not collected even without references to the wrapper.
      * Also, as in Swing, the selection model references the list through its listener, so the list is not collected while the model is held.
