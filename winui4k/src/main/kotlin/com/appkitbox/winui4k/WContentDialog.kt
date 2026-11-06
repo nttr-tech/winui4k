@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.Guid
 import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
@@ -205,7 +206,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     /**
      * Opens the dialog (ContentDialog.ShowAsync). Shown in the same window as [owner]
      * (inherits its XamlRoot). When closed, [onClosed] is called with the button that was pressed.
-     * Does not block the caller (use [showAndWait] to wait until it closes). When the owner window is closed, [onClosed] is not called and it is released (what the callback refers to can be collected too).
+     * Does not block the caller (use [showAndWait] to wait until it closes). When the owner window is closed, [onClosed] is not called and it is released (what the callback refers to can be collected too; the dialog is also closed).
      * [IllegalStateException] if another ContentDialog is open in the same window or this dialog is already open,
      * and [IllegalArgumentException] if [owner] is not placed in a window.
      */
@@ -262,7 +263,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             }
             throw e
         }
-        state.opened(root, onClosed)
+        state.opened(root, weakReferenceOf(inspectable), onClosed)
     }
 
     /** Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE]. */
@@ -390,19 +391,30 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
      * the window closed hook ([WFrame.addWindowClosedHook]). When that window closes, the dialog is considered closed and the state is released (then
      * ContentDialog.Closed does not arrive; releasing it detaches the [show] callback and the dialog beyond it from the native handlers).
      * Merely replacing the window content (Window.Content) keeps the dialog open, so it is not considered closed.
+     * When the window closes, the native dialog is also Hidden (otherwise the never-ending asynchronous work of ShowAsync keeps holding the dialog,
+     * and the native is not destroyed). The dialog itself is held through a weak reference ([dialog]) (this state is captured by native handlers, so holding it strongly would form a cycle).
      */
     private class ShowState {
         private var xamlRoot: ComPtr? = null
+
+        /** A weak reference (IWeakReference) to the native open dialog. Used to close it when the window closes. */
+        private var dialog: ComPtr? = null
         private var onClosed: Consumer<ContentDialogResult>? = null
 
         private val windowClosed = WindowClosedHook { root ->
             val own = xamlRoot
-            if (own != null && Xaml.sameObject(own, root)) forget()
+            if (own != null && Xaml.sameObject(own, root)) {
+                val weak = dialog
+                dialog = null
+                forget()
+                weak?.let { hideNative(it) }
+            }
         }
 
         /** Opened. This state owns the [xamlRoot] reference and releases it when closed. */
-        fun opened(xamlRoot: ComPtr, onClosed: Consumer<ContentDialogResult>?) {
+        fun opened(xamlRoot: ComPtr, dialog: ComPtr, onClosed: Consumer<ContentDialogResult>?) {
             this.xamlRoot = xamlRoot
+            this.dialog = dialog
             this.onClosed = onClosed
             WFrame.addWindowClosedHook(windowClosed)
         }
@@ -419,11 +431,43 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             if (xamlRoot != null) WFrame.removeWindowClosedHook(windowClosed)
             xamlRoot?.release()
             xamlRoot = null
+            dialog?.release()
+            dialog = null
             onClosed = null
         }
     }
 
     private companion object {
+        /** IWeakReferenceSource (weakreference.h). GetWeakReference(out IWeakReference) is vtbl[3]. */
+        const val IID_IWEAK_REFERENCE_SOURCE = "00000038-0000-0000-c000-000000000046"
+        const val GET_WEAK_REFERENCE = 3
+
+        /** IWeakReference.Resolve(REFIID, out IInspectable) is vtbl[3]. null if already destroyed. */
+        const val RESOLVE = 3
+
+        fun weakReferenceOf(target: ComPtr): ComPtr {
+            val source = target.queryInterface(IID_IWEAK_REFERENCE_SOURCE)
+            return try {
+                source.getPtr(GET_WEAK_REFERENCE)
+            } finally {
+                source.release()
+            }
+        }
+
+        /** Hides the dialog [weak] (released by this function) refers to, if it still exists. */
+        fun hideNative(weak: ComPtr) {
+            try {
+                val native = weak.getPtrOrNull(RESOLVE, Guid.of(XamlInterop.IID_IContentDialog)) ?: return
+                try {
+                    native.call(XamlInterop.IContentDialog_Hide)
+                } finally {
+                    native.release()
+                }
+            } finally {
+                weak.release()
+            }
+        }
+
         /** E_ASYNC_OPERATION_NOT_STARTED. Returned by ShowAsync when another dialog is open (ContentDialog_Partial.cpp). */
         const val E_ASYNC_OPERATION_NOT_STARTED = 0x80000019.toInt()
 
