@@ -2428,6 +2428,11 @@ internal object XamlInterop {
     const val IUIElement_Focus = 226                   // Focus(FocusState, out boolean)
     const val IUIElement_StartBringIntoView = 223      // StartBringIntoView()
 
+    // ---- Microsoft.UI.Xaml.IUIElementProtected (protected for derived classes; obtainable by QI) ----
+    const val IID_IUIElementProtected = "8f69b9e9-1f00-5834-9bf1-a9257bed39f0"
+    const val IUIElementProtected_get_ProtectedCursor = 6 // get_ProtectedCursor(out InputCursor)
+    const val IUIElementProtected_put_ProtectedCursor = 7 // put_ProtectedCursor(InputCursor)
+
     // ---- Microsoft.UI.Xaml.UIElement (statics: routed events) ----
     const val CLS_UIElement = "Microsoft.UI.Xaml.UIElement"
     const val IID_IUIElementStatics = "d2921d87-3584-5e22-8a3a-c2c78dab4f6e"

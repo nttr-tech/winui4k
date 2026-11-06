@@ -251,6 +251,16 @@ internal object WindowingInterop {
     // enum Windows.UI.Core.CoreVirtualKeyStates (flags): None=0, Down=1, Locked=2
     const val CoreVirtualKeyStates_Down = 1
 
+    // ---- Microsoft.UI.Input.InputSystemCursor (statics) ----
+    const val CLS_InputSystemCursor = "Microsoft.UI.Input.InputSystemCursor"
+    const val IID_IInputSystemCursorStatics = "d3860bb6-698a-5814-aedd-c2fa8bba5a02"
+    const val IInputSystemCursorStatics_Create = 6 // Create(InputSystemCursorShape, out InputSystemCursor)
+    const val IID_IInputCursor = "359b15f9-19c2-5714-8432-75176826406b" // Default interface of the base class InputCursor
+
+    // enum Microsoft.UI.Input.InputSystemCursorShape: Arrow=0, ..., SizeNorthSouth=8, ..., SizeWestEast=10
+    const val InputSystemCursorShape_SizeNorthSouth = 8
+    const val InputSystemCursorShape_SizeWestEast = 10
+
     // ---- Microsoft.UI.Input.InputNonClientPointerSource (input regions of the title bar) ----
     const val CLS_InputNonClientPointerSource = "Microsoft.UI.Input.InputNonClientPointerSource"
     const val IID_IInputNonClientPointerSourceStatics = "7d0b775c-1903-5dc7-bd2f-7a4b31f0cff2"
