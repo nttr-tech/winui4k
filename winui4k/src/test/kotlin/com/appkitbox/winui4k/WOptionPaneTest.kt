@@ -7,6 +7,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -289,6 +290,26 @@ class WOptionPaneTest : FunSpec() {
             }
         }
 
+        test("opening the drop-down of the selectionValues combo box and pressing Esc closes only the drop-down, and another Esc closes the dialog with null") {
+            withOwner { owner ->
+                val values = arrayOf<Any?>("S", "M", "L")
+                later { WOptionPane.showInputDialog(owner, "Size", "Choose", WOptionPane.QUESTION_MESSAGE, null, values, values[0]) }
+                awaitOpen(owner)
+                OpenContentDialogs.focusComboBox(owner)
+                TestKeyboard.press(VK_F4, SCAN_F4)
+                eventually(5.seconds) { OpenContentDialogs.isDropDownOpen(owner) shouldBe true }
+                Thread.sleep(OPEN_SETTLE_MILLIS)
+                pressEscape()
+                eventually(5.seconds) { OpenContentDialogs.isDropDownOpen(owner) shouldBe false }
+                Thread.sleep(OPEN_SETTLE_MILLIS)
+                OpenContentDialogs.isOpen(owner).shouldBeTrue()
+                events().shouldBeEmpty()
+                pressEscape()
+                awaitEvents("r:null")
+                awaitClosed(owner)
+            }
+        }
+
         test("showOptionDialog makes options into buttons and returns the position, initialValue is the default button, Esc is CLOSED_OPTION, and null options use the optionType buttons") {
             withOwner { owner ->
                 val options = arrayOf<Any?>("Save", "Don't Save", "Back")
@@ -467,6 +488,8 @@ class WOptionPaneTest : FunSpec() {
     private companion object {
         const val VK_ESCAPE = 0x1B
         const val SCAN_ESCAPE = 0x01
+        const val VK_F4 = 0x73
+        const val SCAN_F4 = 0x3E
         const val OPEN_SETTLE_MILLIS = 600L
         const val OWNER_TITLE = "winui4k option pane owner"
         const val PARENTLESS_TITLE = "winui4k option pane parentless"

@@ -3,6 +3,8 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
@@ -107,6 +109,39 @@ internal object OpenContentDialogs {
             }
         }
         checkNotNull(done) { "no dialog is open" }
+    }
+
+    /** Moves the keyboard focus to the first combo box in the dialog content (so that it can be opened with keys). */
+    @JvmStatic
+    fun focusComboBox(owner: WComponent) = onUiThread {
+        val done = withDialog(owner) { dialog ->
+            val combo = firstOf(dialog, XamlInterop.IID_IComboBox) ?: error("the dialog has no combo box")
+            val element = combo.queryInterface(XamlInterop.IID_IUIElement)
+            try {
+                Ffi.backend.withScope { scope ->
+                    val out = scope.allocate(1, 1)
+                    element.call(XamlInterop.IUIElement_Focus, XamlInterop.FocusState_Keyboard, out)
+                    Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+                }
+            } finally {
+                element.release()
+                combo.release()
+            }
+        }
+        check(done == true) { "Cannot move the focus to the combo box" }
+    }
+
+    /** Whether the drop-down of the first combo box in the dialog content is open (ComboBox.IsDropDownOpen). null if there is no dialog. */
+    @JvmStatic
+    fun isDropDownOpen(owner: WComponent): Boolean? = onUiThreadGet {
+        withDialog(owner) { dialog ->
+            val combo = firstOf(dialog, XamlInterop.IID_IComboBox) ?: error("the dialog has no combo box")
+            try {
+                combo.getBool(XamlInterop.IComboBox_get_IsDropDownOpen)
+            } finally {
+                combo.release()
+            }
+        }
     }
 
     /** Lends [block] the first ContentDialog (IContentDialog) among the children of the Popups open in [owner]'s window. Null if none. */
