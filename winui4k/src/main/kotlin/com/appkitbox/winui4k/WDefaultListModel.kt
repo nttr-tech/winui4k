@@ -159,5 +159,43 @@ open class WDefaultListModel<E> : WAbstractListModel<E>() {
         fireIntervalRemoved(this, fromIndex, toIndex)
     }
 
+    /**
+     * Sets the number of elements to [newSize] (Swing's DefaultListModel.setSize, Vector.setSize). Growing fills with null and reports one addition,
+     * shrinking reports one removal at the end, and the same size reports nothing.
+     * It fills with null even if the element type does not allow null (as in Swing).
+     * @throws ArrayIndexOutOfBoundsException if [newSize] is negative (nothing changes)
+     */
+    fun setSize(newSize: Int) {
+        if (newSize < 0) throw ArrayIndexOutOfBoundsException(newSize)
+        val oldSize = delegate.size
+        delegate.setSize(newSize)
+        if (oldSize > newSize) {
+            fireIntervalRemoved(this, newSize, oldSize - 1)
+        } else if (oldSize < newSize) {
+            fireIntervalAdded(this, oldSize, newSize - 1)
+        }
+    }
+
+    /**
+     * Copies all elements to the start of [anArray] (Swing's DefaultListModel.copyInto).
+     * @throws IndexOutOfBoundsException if [anArray] is shorter than the number of elements
+     */
+    fun copyInto(anArray: Array<Any?>) {
+        delegate.copyInto(anArray)
+    }
+
+    /** The capacity of the inner Vector (Swing's DefaultListModel.capacity). Not the number of elements ([getSize]). */
+    fun capacity(): Int = delegate.capacity()
+
+    /** Makes the capacity of the inner Vector at least [minCapacity] (Swing's DefaultListModel.ensureCapacity). Elements do not change, and nothing is reported. */
+    fun ensureCapacity(minCapacity: Int) {
+        delegate.ensureCapacity(minCapacity)
+    }
+
+    /** Shrinks the capacity of the inner Vector to the number of elements (Swing's DefaultListModel.trimToSize). Elements do not change, and nothing is reported. */
+    fun trimToSize() {
+        delegate.trimToSize()
+    }
+
     override fun toString(): String = delegate.toString()
 }

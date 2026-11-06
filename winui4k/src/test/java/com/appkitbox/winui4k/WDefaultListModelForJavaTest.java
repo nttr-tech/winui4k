@@ -135,4 +135,23 @@ class WDefaultListModelForJavaTest {
         assertEquals(2, event.getType());
         assertEquals("src", event.getSource());
     }
+
+    @Test
+    void vectorDerivedSetSizeCopyIntoEnsureCapacityTrimToSizeAndCapacityCanBeCalledTheSameWayAsSwing() {
+        WDefaultListModel<String> model = new WDefaultListModel<>();
+        List<String> events = new ArrayList<>();
+        model.addElement("a");
+        model.addElement("b");
+        model.addListDataListener(recordingTo(events));
+        model.ensureCapacity(20);
+        assertTrue(model.capacity() >= 20);
+        model.setSize(3);
+        Object[] copy = new Object[model.size()];
+        model.copyInto(copy);
+        assertEquals(Arrays.asList("a", "b", null), Arrays.asList(copy));
+        model.setSize(1);
+        model.trimToSize();
+        assertEquals(1, model.capacity());
+        assertEquals(Arrays.asList("added:2-2", "removed:1-2"), events);
+    }
 }

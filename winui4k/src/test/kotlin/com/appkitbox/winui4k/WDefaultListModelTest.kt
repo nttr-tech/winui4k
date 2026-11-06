@@ -292,6 +292,46 @@ class WDefaultListModelTest : FunSpec() {
             recorder.events shouldContainExactly listOf("A0-2", "R1-4", "C1-1")
             model.getElementAt(2) shouldBe 20
         }
+
+        context("Swing compatibility") {
+            test("growing with setSize fills with null and reports one addition, shrinking reports one removal at the end, and the same size reports nothing") {
+                val (model, recorder) = modelOf("a", "b", "c")
+                model.setSize(5)
+                model.getSize() shouldBe 5
+                model.getElementAt(3) shouldBe null
+                model.setSize(1)
+                model.setSize(1)
+                recorder.events shouldContainExactly listOf("A3-4", "R1-4")
+                model.contents() shouldContainExactly listOf("a")
+            }
+
+            test("setSize(0) reports removing all elements, and a negative size throws ArrayIndexOutOfBoundsException without changing anything") {
+                val (model, recorder) = modelOf("a", "b")
+                shouldThrow<ArrayIndexOutOfBoundsException> { model.setSize(-1) }
+                model.setSize(0)
+                recorder.events shouldContainExactly listOf("R0-1")
+                model.isEmpty() shouldBe true
+            }
+
+            test("copyInto copies elements to the start of the array, and throws IndexOutOfBoundsException if the array is short") {
+                val (model, recorder) = modelOf("a", "b")
+                val target = arrayOfNulls<Any>(3)
+                model.copyInto(target)
+                target.toList() shouldContainExactly listOf("a", "b", null)
+                shouldThrow<IndexOutOfBoundsException> { model.copyInto(arrayOfNulls(1)) }
+                recorder.events.shouldBeEmpty()
+            }
+
+            test("ensureCapacity, trimToSize and capacity change only the capacity, as with Vector, and change neither elements nor events") {
+                val (model, recorder) = modelOf("a", "b")
+                model.ensureCapacity(50)
+                (model.capacity() >= 50) shouldBe true
+                model.trimToSize()
+                model.capacity() shouldBe 2
+                model.contents() shouldContainExactly listOf("a", "b")
+                recorder.events.shouldBeEmpty()
+            }
+        }
     }
 
     private fun listenerNamed(name: String, calls: MutableList<String>) = object : WListDataListener {
