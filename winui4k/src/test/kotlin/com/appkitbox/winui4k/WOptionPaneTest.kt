@@ -478,6 +478,42 @@ class WOptionPaneTest : FunSpec() {
             TopLevelWindows.close(TopLevelWindows.find(null, OWNER_TITLE).shouldNotBeNull())
             awaitEvents("r:${WOptionPane.CLOSED_OPTION}")
         }
+
+        context("Swing compatibility") {
+            test("a WIcon passed as message is shown as an icon (the same as JOptionPane's Icon message). The same for a WIcon in an array") {
+                withOwner { owner ->
+                    later { WOptionPane.showMessageDialog(owner, WFontIcon(CUSTOM_GLYPH), "Heading", WOptionPane.PLAIN_MESSAGE) }
+                    awaitOpen(owner).let { it.glyphs to it.texts } shouldBe (listOf(CUSTOM_GLYPH) to emptyList())
+                    TestKeyboard.pressEnter()
+                    awaitEvents("r:kotlin.Unit")
+                    awaitClosed(owner)
+
+                    later { WOptionPane.showMessageDialog(owner, arrayOf<Any>("Body", WFontIcon(CUSTOM_GLYPH)), "Heading", WOptionPane.PLAIN_MESSAGE) }
+                    awaitOpen(owner).let { it.glyphs to it.texts } shouldBe (listOf(CUSTOM_GLYPH) to listOf("Body"))
+                    TestKeyboard.pressEnter()
+                    awaitEvents("r:kotlin.Unit", "r:kotlin.Unit")
+                    awaitClosed(owner)
+                }
+            }
+
+            test("showInputDialog opens with the initial text selected (the same as JOptionPane). Without initial text there is no selection") {
+                withOwner { owner ->
+                    later { WOptionPane.showInputDialog(owner, "Name", "Brown") }
+                    awaitOpen(owner)
+                    OpenContentDialogs.selectedText(owner) shouldBe "Brown"
+                    TestKeyboard.pressEnter()
+                    awaitEvents("r:Brown")
+                    awaitClosed(owner)
+
+                    later { WOptionPane.showInputDialog(owner, "Name") }
+                    awaitOpen(owner)
+                    OpenContentDialogs.selectedText(owner) shouldBe ""
+                    pressEscape()
+                    awaitEvents("r:Brown", "r:null")
+                    awaitClosed(owner)
+                }
+            }
+        }
     }
 
     /** An option shown by toString (to check that the chosen element itself is returned). */

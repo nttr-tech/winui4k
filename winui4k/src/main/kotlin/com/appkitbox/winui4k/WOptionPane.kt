@@ -10,6 +10,8 @@ import java.util.function.IntConsumer
 /**
  * JOptionPane-style: a collection of static methods that open standard message, confirmation, input and option dialogs with [WContentDialog].
  * The constants have the same values as Swing, so code comparing with JOptionPane's constants can be written as is.
+ * As with Swing's Object, message can be a [WComponent] (placed as is), a [WIcon] (a [WLabel] with the icon), an array (its elements stacked vertically in order)
+ * or anything else (its toString string). In the forms that ask for text input, the dialog opens with the initial text selected (typing replaces it).
  *
  * - The forms that return a value (showConfirmDialog and so on) block the caller until closed, as in Swing
  *   ([WContentDialog.showAndWait]; a nested message loop on the UI thread, during which input, rendering and invokeLater keep working).
@@ -390,7 +392,11 @@ private sealed class InputPart {
     abstract fun value(): Any?
 
     class Text(initial: String) : InputPart() {
-        private val textField = WTextField().also { it.text = initial }
+        // As in Swing, select the initial text (typing replaces it). The input field is the first component in the dialog content, so it gets the focus when opened
+        private val textField = WTextField().also {
+            it.text = initial
+            it.selectAll()
+        }
         override val component: WComponent get() = textField
 
         override fun value(): Any? = textField.text
@@ -484,6 +490,7 @@ internal class OptionDialog(
             null -> Unit
             is WComponent -> panel.add(message)
             is Array<*> -> message.forEach { addMessage(panel, it) }
+            is WIcon -> panel.add(WLabel(message)) // A JLabel with the icon, as in Swing
             else -> panel.add(WLabel(message.toString()).also { it.textWrapping = TextWrapping.WRAP })
         }
     }

@@ -95,6 +95,19 @@ internal object OpenContentDialogs {
         checkNotNull(done) { "no dialog is open" }
     }
 
+    /** The selected text (TextBox.SelectedText) of the first input field (TextBox) in the dialog content. null if there is no dialog. */
+    @JvmStatic
+    fun selectedText(owner: WComponent): String? = onUiThreadGet {
+        withDialog(owner) { dialog ->
+            val box = firstOf(dialog, XamlInterop.IID_ITextBox) ?: error("the dialog has no input field")
+            try {
+                box.getString(XamlInterop.ITextBox_get_SelectedText)
+            } finally {
+                box.release()
+            }
+        }
+    }
+
     /** Selects the [index]th item of the first combo box in the dialog's content. */
     @JvmStatic
     fun select(owner: WComponent, index: Int) = onUiThread {
