@@ -1,14 +1,18 @@
 package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
+import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.appkitbox.winui4k.table.AbstractTableModel;
+import com.appkitbox.winui4k.table.DefaultCellEditor;
+import com.appkitbox.winui4k.table.DefaultTableCellRenderer;
 import com.appkitbox.winui4k.table.DefaultTableModel;
 import com.appkitbox.winui4k.table.RowFilter;
 import com.appkitbox.winui4k.table.RowSorter;
@@ -210,6 +214,54 @@ class WTableForJavaTest {
             WTable table = new WTable(new DefaultTableModel(3, 2), null, selection);
             assertSame(selection, table.getSelectionModel());
             assertEquals(2, table.getColumnCount());
+        });
+    }
+
+    @Test
+    void useColumnMovingAndConversionDefaultRenderersAndEditorsAndGetCellRendererTheSameWayAsJTable() {
+        onUiThread(() -> {
+            WTable table = new WTable(products());
+            table.moveColumn(1, 0);
+            assertEquals("Price", table.getColumnName(0));
+            assertEquals(1, table.convertColumnIndexToModel(0));
+            assertEquals(0, table.convertColumnIndexToView(1));
+            assertEquals(Object.class, table.getColumnClass(1));
+            assertTrue(table.isCellEditable(0, 0));
+
+            DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+            DefaultCellEditor editor = new DefaultCellEditor(new WTextField());
+            table.setDefaultRenderer(Object.class, renderer);
+            table.setDefaultEditor(Object.class, editor);
+            assertSame(renderer, table.getDefaultRenderer(String.class)); // Follows the superclass defaults
+            assertSame(editor, table.getDefaultEditor(Object.class));
+            assertSame(renderer, table.getCellRenderer(0, 0));
+            assertSame(editor, table.getCellEditor(2, 1));
+
+            table.removeColumn(table.getColumnModel().getColumn(0));
+            assertEquals(1, table.getColumnCount());
+            table.createDefaultColumnsFromModel();
+            assertEquals(2, table.getColumnCount());
+            assertEquals("Product", table.getColumnName(0));
+            assertEquals(-1, table.rowAtPoint(new WPoint(0, 0))); // No rows before it is shown
+            assertEquals(-1, table.columnAtPoint(new WPoint(0, 0)));
+        });
+    }
+
+    @Test
+    void selectAllDeselectRowAndSetShowGrid() {
+        WTable table = onUiThreadGet(() -> new WTable(products()));
+        shown(table, () -> {
+            table.selectAll();
+            assertEquals(2, table.getSelectedRow()); // Only one row can be selected, so the last row, as with a single-selection JTable
+            assertEquals(1, table.getSelectedRowCount());
+            table.deselectRow(2);
+            assertEquals(-1, table.getSelectedRow());
+            table.setShowGrid(false);
+            assertFalse(table.getShowHorizontalLines());
+            assertFalse(table.getShowVerticalLines());
+            table.setShowGrid(true);
+            assertTrue(table.getShowHorizontalLines());
+            assertTrue(table.getShowVerticalLines());
         });
     }
 }

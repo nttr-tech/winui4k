@@ -477,6 +477,21 @@ class WTable @JvmOverloads constructor(
      */
     fun columnAtPoint(x: Double, y: Double): Int = TableHitTest.columnAt(uiElement, columnModel.getColumns().map { it.width }, x, y)
 
+    /** The row at [point] (a position in DIP as integers, such as [WMouseEvent.point]) (JTable.rowAtPoint(Point)). See the overload above for details. */
+    fun rowAtPoint(point: WPoint): Int = rowAtPoint(point.x.toDouble(), point.y.toDouble())
+
+    /** The column at [point] (a position in DIP as integers) (JTable.columnAtPoint(Point)). See the overload above for details. */
+    fun columnAtPoint(point: WPoint): Int = columnAtPoint(point.x.toDouble(), point.y.toDouble())
+
+    /**
+     * Selects all rows (JTable.selectAll). As in Swing, if editing, cancels the edit and then selects from row 0 to the last row.
+     * TableView can select only one row, so the last row is selected, as with a single-selection JTable. Does nothing if there are no rows or columns.
+     */
+    fun selectAll() {
+        if (isEditing) cancelCellEditing()
+        if (rowCount > 0 && columnCount > 0) setRowSelectionInterval(0, rowCount - 1)
+    }
+
     /** Subscribes to row selection changes (TableView.SelectionChanged). */
     @JvmSynthetic
     fun addRowSelectionListener(listener: () -> Unit) {
@@ -617,6 +632,23 @@ class WTable @JvmOverloads constructor(
 
     /** The default editor for [columnClass] (superclasses are also searched). null if none. */
     fun getDefaultEditor(columnClass: Class<*>): TableCellEditor? = lookupByClass(defaultEditors, columnClass)
+
+    /**
+     * The renderer that draws the cell at row [row], column [column] (display order) (JTable.getCellRenderer). As in Swing, the column's [TableColumn.cellRenderer],
+     * or if none, [getDefaultRenderer] for the column's value type. null if neither exists (unlike Swing, WinUI draws the value's string or template).
+     * It is decided by the column regardless of the row (to draw rows differently, branch inside the renderer).
+     */
+    @Suppress("UNUSED_PARAMETER") // To match Swing's shape (independent of the row)
+    fun getCellRenderer(row: Int, column: Int): TableCellRenderer? =
+        columnModel.getColumn(column).cellRenderer ?: getDefaultRenderer(getColumnClass(column))
+
+    /**
+     * The editor used to edit the cell at row [row], column [column] (display order) (JTable.getCellEditor(int, int)). As in Swing, the column's
+     * [TableColumn.cellEditor], or if none, [getDefaultEditor] for the column's value type. null if neither exists (WinUI4K's default editing applies).
+     */
+    @Suppress("UNUSED_PARAMETER") // To match Swing's shape (independent of the row)
+    fun getCellEditor(row: Int, column: Int): TableCellEditor? =
+        columnModel.getColumn(column).cellEditor ?: getDefaultEditor(getColumnClass(column))
 
     // ------------------------------------------------------------------
     // Sorting

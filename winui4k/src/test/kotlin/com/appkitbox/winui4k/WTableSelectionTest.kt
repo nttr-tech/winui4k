@@ -1,6 +1,8 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.table.DefaultCellEditor
+import com.appkitbox.winui4k.table.DefaultTableCellRenderer
 import com.appkitbox.winui4k.table.DefaultTableModel
 import com.appkitbox.winui4k.table.RowFilter
 import com.appkitbox.winui4k.table.RowSorter
@@ -262,6 +264,47 @@ class WTableSelectionTest : FunSpec() {
                 table.selectedRow
             } shouldBe 2
             calls shouldBe 1
+        }
+
+        context("Swing compatibility") {
+            test("selectAll selects from row 0 to the last row and the last row ends up selected, as with a single-selection JTable, and does nothing for a table without rows") {
+                shown { table ->
+                    table.selectAll()
+                    listOf(table.selectedRow, table.selectionModel.getLeadSelectionIndex())
+                } shouldBe listOf(3, 3)
+                withShownTable(onUiThreadGet { WTable(DefaultTableModel(listOf("Product"), 0)) }) { table ->
+                    table.selectAll()
+                    table.selectedRow
+                } shouldBe -1
+            }
+
+            test("the WPoint versions of rowAtPoint and columnAtPoint (JTable's Point versions) return the same row and column as the Double versions at the same position") {
+                shown { table ->
+                    val (x, y) = centerOf(table, "480")
+                    val point = WPoint(x.toInt(), y.toInt())
+                    listOf(table.rowAtPoint(point), table.columnAtPoint(point), table.rowAtPoint(WPoint(-5, -5)))
+                } shouldBe listOf(2, 1, -1)
+            }
+
+            test("getCellRenderer and getCellEditor return the column's own first, otherwise the default for the column's type, and null if neither exists") {
+                onUiThreadGet {
+                    val table = WTable(productModel())
+                    val columnRenderer = DefaultTableCellRenderer()
+                    val integerRenderer = DefaultTableCellRenderer()
+                    val integerEditor = DefaultCellEditor(WSpinner())
+                    table.getColumn("Product").cellRenderer = columnRenderer
+                    table.setDefaultRenderer(Integer::class.java, integerRenderer)
+                    table.setDefaultEditor(Integer::class.java, integerEditor)
+                    val before = listOf(table.getCellRenderer(0, 0) === columnRenderer, table.getCellRenderer(3, 1) === integerRenderer)
+                    table.getColumn("Product").cellRenderer = null
+                    before + listOf(
+                        table.getCellRenderer(0, 0) == null,
+                        table.getCellEditor(1, 1) === integerEditor,
+                        table.getCellEditor(1, 0) == null,
+                        table.getDefaultEditor(Integer::class.java) === integerEditor,
+                    )
+                } shouldBe listOf(true, true, true, true, true, true)
+            }
         }
     }
 }
