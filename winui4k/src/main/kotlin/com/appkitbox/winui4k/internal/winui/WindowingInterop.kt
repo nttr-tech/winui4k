@@ -73,7 +73,9 @@ internal object WindowingInterop {
     const val IID_IAppWindowClosingEventArgs = "0e09d90b-2261-590b-9ad1-8504991d8754"
     const val IAppWindowClosingEventArgs_put_Cancel = 7 // put_Cancel(boolean)
     const val IID_IAppWindowChangedEventArgs = "2182bc5d-fdac-5c3e-bf37-7d8d684e9d1d"
+    const val IAppWindowChangedEventArgs_get_DidPositionChange = 6
     const val IAppWindowChangedEventArgs_get_DidPresenterChange = 7
+    const val IAppWindowChangedEventArgs_get_DidSizeChange = 8
     const val IAppWindowChangedEventArgs_get_DidVisibilityChange = 9
 
     /** Concrete IID of TypedEventHandler<AppWindow, AppWindowClosingEventArgs> (computed at runtime). */

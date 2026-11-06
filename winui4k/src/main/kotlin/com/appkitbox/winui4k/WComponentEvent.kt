@@ -7,16 +7,28 @@ import java.util.EventObject
  * ComponentEvent-style: an event that tells a [WComponentListener] that a component's size, position or visibility changed.
  * [getSource] (`source` in Kotlin) and [component] are the component that changed, and [id] is [COMPONENT_MOVED] /
  * [COMPONENT_RESIZED] / [COMPONENT_SHOWN] / [COMPONENT_HIDDEN]. It is also the base of [WContainerEvent] (same as Swing).
+ * In events of [WFrame.addComponentListener], [getSource] is that [WFrame] and [component] is its [WFrame.contentPane]
+ * (Swing's JFrame is a Component, so getComponent is also the window, but WinUI4K's WFrame is not a [WComponent]).
  *
  * This class does not depend on java.awt, so it defines its own constants with the same values as AWT's ComponentEvent.
  */
-open class WComponentEvent(
-    source: WComponent,
+open class WComponentEvent private constructor(
+    source: Any,
     /** The kind of event. `getID()` in Java, as in AWT. */
     @get:JvmName("getID") val id: Int,
+    @Transient private val target: WComponent,
 ) : EventObject(source) {
-    /** The component the event originated from (equivalent to ComponentEvent.getComponent). Same as [getSource]. */
-    val component: WComponent get() = source as WComponent
+    /** Creates an event with [id] from [source] ([component] is also [source]). */
+    constructor(source: WComponent, id: Int) : this(source, id, source)
+
+    /** An event with [id] of the window [window] ([WFrame.addComponentListener]). [component] is [contentPane]. */
+    internal constructor(window: WFrame, id: Int, contentPane: WComponent) : this(window as Any, id, contentPane)
+
+    /**
+     * The component the event originated from (equivalent to ComponentEvent.getComponent). Usually the same as [getSource];
+     * for [WFrame] events, its [WFrame.contentPane].
+     */
+    val component: WComponent get() = target
 
     companion object {
         /** The smallest ID of component events (same value as AWT's ComponentEvent.COMPONENT_FIRST). */

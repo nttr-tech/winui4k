@@ -235,4 +235,36 @@ class WFrameForJavaTest {
         assertSame(field, onUiThreadGet(own::getFocusOwner));
         assertSame(field, onUiThreadGet(own::getMostRecentFocusOwner));
     }
+
+    @Test
+    void anAnonymousWComponentAdapterReceivesWindowSizeAndPositionChanges() throws InterruptedException {
+        onUiThread(() -> {
+            own = new WFrame(TITLE);
+            own.setBounds(100, 100, 400, 300);
+            own.setVisible(true);
+        });
+        Thread.sleep(500); // Wait for the notifications that come with showing to finish
+        onUiThread(() -> {
+            own.addComponentListener(new WComponentAdapter() {
+                @Override
+                public void componentResized(WComponentEvent e) {
+                    if (e.getSource() == own && e.getComponent() == own.getContentPane() && e.getID() == WComponentEvent.COMPONENT_RESIZED) {
+                        events.add("resized");
+                    }
+                }
+
+                @Override
+                public void componentMoved(WComponentEvent e) {
+                    if (e.getSource() == own && e.getComponent() == own.getContentPane()) {
+                        events.add("moved");
+                    }
+                }
+            });
+            assertEquals(1, own.getComponentListeners().length);
+            own.setSize(520, 410);
+        });
+        awaitEvents(Collections.singletonList("resized"));
+        onUiThread(() -> own.setLocation(150, 130));
+        awaitEvents(Arrays.asList("resized", "moved"));
+    }
 }

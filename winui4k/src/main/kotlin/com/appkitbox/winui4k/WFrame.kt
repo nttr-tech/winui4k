@@ -83,6 +83,7 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     private val windowListenerList = ArrayList<WWindowListener>()
     private val windowStateListenerList = ArrayList<WWindowStateListener>()
     private val windowFocusListenerList = ArrayList<WWindowFocusListener>()
+    private val componentEvents = FrameComponentEvents(this)
 
     /** true if closed (Window.Closed, or Close was called by [dispose]). */
     private var closed = false
@@ -189,8 +190,12 @@ class WFrame @JvmOverloads constructor(title: String = "") :
             WindowingInterop.IID_AppWindowChangedHandler,
             WindowingInterop.IAppWindow_add_Changed,
         ) { _, args ->
-            val visibilityChanged = ComPtr(args).getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidVisibilityChange)
-            self.get()?.onChanged(visibilityChanged)
+            val changed = ComPtr(args) // Borrowed (not Released)
+            self.get()?.onChanged(
+                visibilityChanged = changed.getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidVisibilityChange),
+                sizeChanged = changed.getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidSizeChange),
+                positionChanged = changed.getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidPositionChange),
+            )
         }
     }
 
@@ -268,14 +273,18 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         }
     }
 
-    /** AppWindow.Changed. Fires windowOpened when shown, and iconify / maximize events when the presenter state changes. */
-    private fun onChanged(visibilityChanged: Boolean) {
+    /**
+     * AppWindow.Changed. Fires windowOpened when shown, iconify / maximize events when the presenter state changes,
+     * and componentResized / componentMoved when the size or position changes.
+     */
+    private fun onChanged(visibilityChanged: Boolean, sizeChanged: Boolean, positionChanged: Boolean) {
         if (closed) return
         if (visibilityChanged && appWindow.isVisible) {
             registerOpen()
             fireOpenedOnce()
         }
         if (!applyingState) syncState()
+        componentEvents.fire(sizeChanged, positionChanged)
     }
 
     /** Compares OverlappedPresenter.State with the previously read value, and fires iconify / maximize events if it changed. */
@@ -392,6 +401,27 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     /** Window.getWindowFocusListeners-like: the added listeners (in the order added). */
     val windowFocusListeners: Array<WWindowFocusListener>
         get() = windowFocusListenerList.toTypedArray()
+
+    /**
+     * Component.addComponentListener-like: adds a listener called after the window's size or position changes (DidSizeChange / DidPositionChange
+     * of AppWindow.Changed). Does nothing if null. Adding the same listener twice makes it called twice. Listeners are called in the order added.
+     * - componentResized: after the size of the whole window changes ([setSize], [pack], the user dragging the frame, maximizing, etc.)
+     * - componentMoved: after the window's position on the screen changes ([setLocation], the user dragging the title bar, etc.)
+     *
+     * Differences from Swing:
+     * - The event's source ([WComponentEvent.getSource]) is this WFrame, but [WComponentEvent.component] is [contentPane]
+     *   (because WFrame is not a [WComponent]).
+     * - componentShown / componentHidden are not called (receive showing with [WWindowListener.windowOpened] etc.).
+     * - Swing calls later from the event queue, but this calls immediately within AppWindow.Changed (it may be called from within [setSize] etc.).
+     */
+    fun addComponentListener(listener: WComponentListener?) = componentEvents.add(listener)
+
+    /** Component.removeComponentListener-like: removes one listener added with [addComponentListener]. Does nothing if it is not attached. */
+    fun removeComponentListener(listener: WComponentListener?) = componentEvents.remove(listener)
+
+    /** Component.getComponentListeners-like: the attached size and position listeners (in the order added). */
+    val componentListeners: Array<WComponentListener>
+        get() = componentEvents.listeners()
 
     /**
      * JFrame.setDefaultCloseOperation-like: the action when the user tries to close with × or Alt+F4. Performed after the windowClosing listeners.

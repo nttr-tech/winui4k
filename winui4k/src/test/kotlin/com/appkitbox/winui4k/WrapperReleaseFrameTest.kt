@@ -82,6 +82,7 @@ class WrapperReleaseFrameTest : FunSpec() {
                 frame.add(WButton("Before"))
                 frame.add(field)
                 frame.jMenuBar = WMenuBar() // The root subscribed to GotFocus changes to the menu's Grid
+                frame.addComponentListener(object : WComponentAdapter() {})
                 frame.isVisible = true
                 Built(WeakReference(frame), WeakReference(WButton("Unused")), NativeProbe(frame.window)) to WeakReference(field)
             }
