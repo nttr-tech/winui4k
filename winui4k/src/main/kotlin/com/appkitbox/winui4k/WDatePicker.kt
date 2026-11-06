@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.time.LocalDate
 import java.util.function.Consumer
@@ -26,6 +27,15 @@ class WDatePicker : WControl(
     override val focusIsDelegated: Boolean get() = true
 
     private val selectedDateChangedTokens = ListenerTokens<Consumer<LocalDate?>>()
+
+    /** The ChangeListeners. One pair of native handlers (SelectedDateChanged and Loaded) is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addChangeHandlers() }
+
+    /** The [date] last notified to the ChangeListeners (or when they were added). Compared from both the native notification and the setter so each change is notified only once. */
+    private var notifiedDate: LocalDate? = null
+
+    /** Whether [addChangeHandlers] has been done (until it has, [notifiedDate] is not used). */
+    private var changeHandlersAdded = false
 
     /** The heading text (DatePicker.Header). */
     var header: String
@@ -46,7 +56,7 @@ class WDatePicker : WControl(
      * Setting null goes back to unselected (sets SelectedDate to null). WinUI keeps Date and [selectedDate] in sync, so this always returns the same value as [selectedDate].
      *
      * Dates outside [minYear] / [maxYear] are pulled into the range by the native side after the template is applied (after it is placed on screen).
-     * Before it is placed they are returned as is, and pulled in when it is placed.
+     * Before it is placed they are returned as is, and pulled in when it is placed (the ChangeListeners are notified then).
      */
     var date: LocalDate?
         get() {
@@ -63,6 +73,7 @@ class WDatePicker : WControl(
             } else {
                 inspectable.call(XamlInterop.IDatePicker_put_Date, DateTimeConversions.localDateToTicks(value))
             }
+            notifyIfDateChanged()
         }
 
     /** The selected date (DatePicker.SelectedDate, null = unselected). WinUI keeps it in sync with Date, so it is the same value as [date]. */
@@ -86,6 +97,7 @@ class WDatePicker : WControl(
                     boxed.release()
                 }
             }
+            notifyIfDateChanged()
         }
 
     /** Whether the day spinner is shown (DatePicker.DayVisible). */
@@ -118,7 +130,10 @@ class WDatePicker : WControl(
             }
             return DateTimeConversions.ticksToLocalDate(ticks)
         }
-        set(value) = inspectable.call(XamlInterop.IDatePicker_put_MinYear, DateTimeConversions.localDateToTicks(value))
+        set(value) {
+            inspectable.call(XamlInterop.IDatePicker_put_MinYear, DateTimeConversions.localDateToTicks(value))
+            notifyIfDateChanged()
+        }
 
     /** The latest selectable year (DatePicker.MaxYear). */
     var maxYear: LocalDate
@@ -130,12 +145,63 @@ class WDatePicker : WControl(
             }
             return DateTimeConversions.ticksToLocalDate(ticks)
         }
-        set(value) = inspectable.call(XamlInterop.IDatePicker_put_MaxYear, DateTimeConversions.localDateToTicks(value))
+        set(value) {
+            inspectable.call(XamlInterop.IDatePicker_put_MaxYear, DateTimeConversions.localDateToTicks(value))
+            notifyIfDateChanged()
+        }
 
     /** The picker's orientation (DatePicker.Orientation). */
     var orientation: Orientation
         get() = Orientation.of(inspectable.getInt(XamlInterop.IDatePicker_get_Orientation))
         set(value) = inspectable.call(XamlInterop.IDatePicker_put_Orientation, value.native)
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this DatePicker) every time [date] changes. Corresponds to the ChangeListener of Swing's date
+     * JSpinner (SpinnerDateModel). Called once per change of the value, whether by the user's choice, setting [date] / [selectedDate], clearing to null,
+     * or being pulled into the [minYear] / [maxYear] range. When it is called, [date] returns the new value.
+     * Setting the same date again does not call it.
+     *
+     * Also called for changes before it is placed on screen (WinUI sends no SelectedDateChanged before the template is applied, so the value is compared after the setter and notified).
+     * If a date outside [minYear] / [maxYear] before placement is pulled in when placed, that is notified at Loaded too.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun addChangeHandlers() {
+        notifiedDate = date
+        changeHandlersAdded = true
+        // The handlers stay on the native side, so do not strongly capture the DatePicker; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.DatePickerSelectedDateChangedHandler",
+            XamlInterop.IID_DatePickerSelectedDateChangedHandler,
+            XamlInterop.IDatePicker_add_SelectedDateChanged,
+        ) { _, _ -> (anchor.get() as? WDatePicker)?.notifyIfDateChanged() }
+        // When the date is pulled into the range when the template is applied (OnApplyTemplate), no SelectedDateChanged arrives, so compare again at Loaded
+        frameworkElement.addEventHandler(
+            "WinUI4K.LoadedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
+        ) { _, _ -> ModalLoop.duringLayout { (anchor.get() as? WDatePicker)?.notifyIfDateChanged() } }
+    }
+
+    /** If ChangeListeners are added, compares the current [date] with the value last notified and notifies if it changed. */
+    private fun notifyIfDateChanged() {
+        if (!changeHandlersAdded) return
+        val current = date
+        val old = notifiedDate
+        notifiedDate = current
+        changeListeners.fireIfChanged(old, current)
+    }
 
     /** Registers a listener for when the selected date changes (DatePicker.SelectedDateChanged). */
     @JvmSynthetic

@@ -246,3 +246,15 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - ループの中で別のスレッドから System.exit を呼んでも、プロセスはその終了コードで終わる (止まらない)。ただし Panama と JNR では
     終了の途中で JVM が落ちて hs_err を残すことがある (2026-10-20 に各 4 回: Panama 4/4、JNR 3/4、JNA 0/4)。ループを回さずに
     呼んでも同じ割合で落ちる (Panama 4/4、JNR 4/4、JNA 0/4) ので、ModalLoop が原因ではない (doc/troubleshooting.md の upcall の件)
+- 日付と時刻のピッカーの未選択 (null) と ChangeListener のために、DatePicker / TimePicker / CalendarDatePicker / CalendarView の
+  通知の届き方を E2E テストと WinUI のソースで確かめた (`WDatePickerTest` / `WTimePickerTest` / `WCalendarDatePickerTest` / `WCalendarViewTest`)
+  - DatePicker の既定の Date は未選択を表す番兵値 0 (1601-01-01 UTC)、TimePicker の既定の Time は番兵値 -1 (TimeSpan)。
+    SelectedDate / SelectedTime を null にすると Date / Time も番兵値になる (DatePicker_Partial.cpp / TimePicker_Partial.cpp の
+    OnPropertyChanged2)。WinUI4K はこの番兵値を null として返す
+  - DatePicker はテンプレートを適用する (OnApplyTemplate が終わる) までは Date を MinYear / MaxYear に寄せず、DateChanged /
+    SelectedDateChanged も送らない (OnPropertyChanged2 の m_isInitializing)。適用の途中で範囲外の Date を寄せる (RefreshSetup の
+    put_Date) ときも m_isInitializing のままなので通知は無い。WDatePicker の ChangeListener は setter の後と Loaded で値を比べて知らせる。
+    適用後は範囲外の Date を寄せてから寄せた値で 1 回だけ通知し、MinYear / MaxYear の変更で Date が動いたときも通知する
+  - TimePicker は載る前でも Time の変更で TimeChanged / SelectedTimeChanged を送り、MinuteIncrement の刻みに切り捨てる
+    (TimePicker_Partial.cpp の OnTimeChanged と CheckAndCoerceTime)。00:00 は番兵値と区別される
+  - CalendarView.SelectedDates (IVector<DateTime>) の Append / Clear は、載る前でもそれぞれ SelectedDatesChanged を 1 回送る
