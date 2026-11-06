@@ -609,7 +609,10 @@ internal object XamlInterop {
     const val CLS_ContentDialog = "Microsoft.UI.Xaml.Controls.ContentDialog"
     const val IID_IContentDialogFactory = "a05b3ad7-c60e-545a-9ee4-f098220ed816"
     const val IID_IContentDialog = "ac2145a3-4a32-5305-a81d-47509515bfce"
+    const val IContentDialog_get_Title = 6             // get_Title(out IInspectable)
     const val IContentDialog_put_Title = 7             // put_Title(IInspectable)
+    const val IContentDialog_get_FullSizeDesired = 10  // get_FullSizeDesired(out boolean)
+    const val IContentDialog_put_FullSizeDesired = 11  // put_FullSizeDesired(boolean)
     const val IContentDialog_get_PrimaryButtonText = 12 // get_PrimaryButtonText(out HSTRING)
     const val IContentDialog_put_PrimaryButtonText = 13 // put_PrimaryButtonText(HSTRING)
     const val IContentDialog_get_SecondaryButtonText = 14 // get_SecondaryButtonText(out HSTRING)
@@ -622,12 +625,30 @@ internal object XamlInterop {
     const val IContentDialog_put_IsSecondaryButtonEnabled = 33 // put_IsSecondaryButtonEnabled(boolean)
     const val IContentDialog_get_DefaultButton = 40    // get_DefaultButton(out ContentDialogButton)
     const val IContentDialog_put_DefaultButton = 41    // put_DefaultButton(ContentDialogButton)
+    const val IContentDialog_add_Closing = 42          // add_Closing(TypedEventHandler, out token)
+    const val IContentDialog_remove_Closing = 43       // remove_Closing(token)
     const val IContentDialog_add_Closed = 44           // add_Closed(TypedEventHandler, out token)
     const val IContentDialog_remove_Closed = 45        // remove_Closed(token)
+    const val IContentDialog_add_Opened = 46           // add_Opened(TypedEventHandler, out token)
+    const val IContentDialog_remove_Opened = 47        // remove_Opened(token)
+    const val IContentDialog_add_PrimaryButtonClick = 48 // add_PrimaryButtonClick(TypedEventHandler, out token)
+    const val IContentDialog_remove_PrimaryButtonClick = 49
+    const val IContentDialog_add_SecondaryButtonClick = 50 // add_SecondaryButtonClick(TypedEventHandler, out token)
+    const val IContentDialog_remove_SecondaryButtonClick = 51
+    const val IContentDialog_add_CloseButtonClick = 52 // add_CloseButtonClick(TypedEventHandler, out token)
+    const val IContentDialog_remove_CloseButtonClick = 53
     const val IContentDialog_Hide = 54                 // Hide()
     const val IContentDialog_ShowAsync = 55            // ShowAsync(out IAsyncOperation<ContentDialogResult>)
     const val IID_IContentDialogClosedEventArgs = "9b84e681-1ab6-5485-88b2-d0d3c05b29f3"
     const val IContentDialogClosedEventArgs_get_Result = 6 // get_Result(out ContentDialogResult)
+    const val IID_IContentDialogClosingEventArgs = "12782103-3b80-511c-9128-12cb8cdac444"
+    const val IContentDialogClosingEventArgs_get_Result = 6 // get_Result(out ContentDialogResult)
+    const val IContentDialogClosingEventArgs_get_Cancel = 7 // get_Cancel(out boolean)
+    const val IContentDialogClosingEventArgs_put_Cancel = 8 // put_Cancel(boolean)
+    const val IID_IContentDialogButtonClickEventArgs = "bae6261c-362f-5342-ba26-5f6990ef726c"
+    const val IContentDialogButtonClickEventArgs_get_Cancel = 6 // get_Cancel(out boolean)
+    const val IContentDialogButtonClickEventArgs_put_Cancel = 7 // put_Cancel(boolean)
+    const val IID_IContentDialogOpenedEventArgs = "d1355ed8-64ed-5bbc-9411-5f4dbca7d93f"
 
     // ---- Microsoft.UI.Xaml.Controls.Primitives.Popup ----
     const val CLS_Popup = "Microsoft.UI.Xaml.Controls.Primitives.Popup"
@@ -1486,6 +1507,36 @@ internal object XamlInterop {
                 "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
                 "rc(Microsoft.UI.Xaml.Controls.TreeViewCollapsedEventArgs;" +
                 "{$IID_ITreeViewCollapsedEventArgs}))",
+        )
+    }
+
+    /** The actual IID of TypedEventHandler<ContentDialog, ContentDialogClosingEventArgs> (computed at runtime). */
+    val IID_ContentDialogClosingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialogClosingEventArgs;" +
+                "{$IID_IContentDialogClosingEventArgs}))",
+        )
+    }
+
+    /** The actual IID of TypedEventHandler<ContentDialog, ContentDialogOpenedEventArgs> (computed at runtime). */
+    val IID_ContentDialogOpenedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialogOpenedEventArgs;" +
+                "{$IID_IContentDialogOpenedEventArgs}))",
+        )
+    }
+
+    /** The actual IID of TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> (computed at runtime). */
+    val IID_ContentDialogButtonClickHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
+                "rc(Microsoft.UI.Xaml.Controls.ContentDialogButtonClickEventArgs;" +
+                "{$IID_IContentDialogButtonClickEventArgs}))",
         )
     }
 
