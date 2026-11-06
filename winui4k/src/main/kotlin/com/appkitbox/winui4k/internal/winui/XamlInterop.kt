@@ -1271,6 +1271,7 @@ internal object XamlInterop {
     const val ISemanticZoom_put_CanChangeViews = 13       // put_CanChangeViews(boolean)
     const val ISemanticZoom_add_ViewChangeStarted = 14    // add_ViewChangeStarted(SemanticZoomViewChangedEventHandler, out token)
     const val ISemanticZoom_remove_ViewChangeStarted = 15 // remove_ViewChangeStarted(token)
+    const val ISemanticZoom_add_ViewChangeCompleted = 16  // add_ViewChangeCompleted(SemanticZoomViewChangedEventHandler, out token)
     const val ISemanticZoom_ToggleActiveView = 18         // ToggleActiveView()
     const val ISemanticZoom_get_IsZoomOutButtonEnabled = 19 // get_IsZoomOutButtonEnabled(out boolean)
     const val ISemanticZoom_put_IsZoomOutButtonEnabled = 20 // put_IsZoomOutButtonEnabled(boolean)
@@ -1337,11 +1338,14 @@ internal object XamlInterop {
     const val INavigationViewSelectionChangedEventArgs_get_SelectedItem = 6 // get_SelectedItem(out IInspectable)
     const val IID_INavigationViewItemInvokedEventArgs = "074cebaa-5d05-547b-8cd6-d19ac2d9bb3b"
     const val INavigationViewItemInvokedEventArgs_get_InvokedItem = 6 // get_InvokedItem(out IInspectable)
+    const val IID_INavigationViewItemInvokedEventArgs2 = "e1cbb99f-19eb-5c7b-b982-854bb08d5eb7"
+    const val INavigationViewItemInvokedEventArgs2_get_InvokedItemContainer = 6 // get_InvokedItemContainer(out NavigationViewItemBase)
 
     // ---- Microsoft.UI.Xaml.Controls.NavigationViewItem ----
     const val CLS_NavigationViewItem = "Microsoft.UI.Xaml.Controls.NavigationViewItem"
     const val IID_INavigationViewItemFactory = "de60a001-9385-5535-80e1-2b68f4bfde26"
     const val IID_INavigationViewItem = "3ab3d503-a37c-5836-8adb-2882062e73a1"
+    const val INavigationViewItem_get_Icon = 6         // get_Icon(out IconElement)
     const val INavigationViewItem_put_Icon = 7         // put_Icon(IconElement)
     const val IID_INavigationViewItem2 = "2d5bd889-9dac-5675-b254-68226f077a61"
     const val INavigationViewItem2_get_SelectsOnInvoked = 6 // get_SelectsOnInvoked(out boolean)
