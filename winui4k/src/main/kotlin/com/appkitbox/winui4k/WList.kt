@@ -118,7 +118,7 @@ class WList(model: WListModel<*>) : WControl(
         }
 
     /**
-     * The selected element (JList.getSelectedValue). The frontmost element when several are selected, null when nothing is selected.
+     * The selected element (JList.getSelectedValue). The frontmost element (at the [selectedIndex] position) when several are selected, null when nothing is selected.
      * Returns the model's element itself, not a string.
      */
     val selectedValue: Any?
@@ -357,11 +357,12 @@ class WList(model: WListModel<*>) : WControl(
         get() = listItems.size
 
     /**
-     * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
-     * With multiple selection, the first selected position. After Swing-style selection starts being used, reads from the selection model, as in JList.
+     * The smallest selected index. -1 if nothing is selected (getMinSelectionIndex, the same as JList.getSelectedIndex).
+     * Even with multiple selection, it is the smallest position regardless of the selection order, and [selectedItem] / [selectedValue] are the element at this position.
+     * After Swing-style selection starts being used, it is read from the selection model, as in JList. Setting uses Selector.SelectedIndex.
      */
     var selectedIndex: Int
-        get() = if (selectionSyncHolder.isInitialized()) currentSelection().firstOrNull() ?: -1 else selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        get() = currentSelection().firstOrNull() ?: -1
         set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
     /** The string of the selected item (toString() of [selectedValue]). Null when nothing is selected. */

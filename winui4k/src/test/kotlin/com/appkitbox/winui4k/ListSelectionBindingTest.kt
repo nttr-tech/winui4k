@@ -12,6 +12,8 @@ private interface SelectableList {
     var selectionModel: WListSelectionModel
     var selectedIndices: IntArray
     var selectedIndex: Int
+    val selectedItem: String?
+    val selectedValue: Any?
     val selectedValuesList: List<Any?>
     val isSelectionEmpty: Boolean
     val minSelectionIndex: Int
@@ -48,6 +50,9 @@ private interface SelectableList {
 
     /** Sets the native selection directly to [indices] (instead of a display operation). */
     fun selectNatively(indices: List<Int>)
+
+    /** Sets the WinUI enumeration mode to Ctrl / Shift multiple selection (EXTENDED) (without starting the Swing-style sync). */
+    fun useNativeExtended()
 }
 
 private class ListViewSelection(val list: WList) : SelectableList {
@@ -55,6 +60,8 @@ private class ListViewSelection(val list: WList) : SelectableList {
     override var selectionModel: WListSelectionModel by list::selectionModel
     override var selectedIndices: IntArray by list::selectedIndices
     override var selectedIndex: Int by list::selectedIndex
+    override val selectedItem: String? get() = list.selectedItem
+    override val selectedValue: Any? get() = list.selectedValue
     override val selectedValuesList: List<Any?> get() = list.selectedValuesList
     override val isSelectionEmpty: Boolean get() = list.isSelectionEmpty
     override val minSelectionIndex: Int get() = list.minSelectionIndex
@@ -86,6 +93,10 @@ private class ListViewSelection(val list: WList) : SelectableList {
     override fun addRunnableListener(listener: () -> Unit) = list.addListSelectionListener(listener)
 
     override fun selectNatively(indices: List<Int>) = list.listItems.applySelection(indices)
+
+    override fun useNativeExtended() {
+        list.selectionMode = ListViewSelectionMode.EXTENDED
+    }
 }
 
 private class ListBoxSelection(val list: WListBox) : SelectableList {
@@ -93,6 +104,8 @@ private class ListBoxSelection(val list: WListBox) : SelectableList {
     override var selectionModel: WListSelectionModel by list::selectionModel
     override var selectedIndices: IntArray by list::selectedIndices
     override var selectedIndex: Int by list::selectedIndex
+    override val selectedItem: String? get() = list.selectedItem
+    override val selectedValue: Any? get() = list.selectedValue
     override val selectedValuesList: List<Any?> get() = list.selectedValuesList
     override val isSelectionEmpty: Boolean get() = list.isSelectionEmpty
     override val minSelectionIndex: Int get() = list.minSelectionIndex
@@ -124,6 +137,10 @@ private class ListBoxSelection(val list: WListBox) : SelectableList {
     override fun addRunnableListener(listener: () -> Unit) = list.addListSelectionListener(listener)
 
     override fun selectNatively(indices: List<Int>) = list.listItems.applySelection(indices)
+
+    override fun useNativeExtended() {
+        list.selectionMode = SelectionMode.EXTENDED
+    }
 }
 
 /** A record of events (whether the source is the list, the changed range, whether adjusting). */
@@ -338,6 +355,18 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
                 list.clearSelection()
                 Triple(before, list.isSelectedIndex(3), list.nativeSelection)
             } shouldBe Triple(true, false, emptyList())
+        }
+
+        test("selectedIndex is the smallest selection both before and after the Swing-style sync starts, and selectedItem and selectedValue are the element at that position (as in JList)") {
+            onUiThreadGet {
+                val list = listOf5()
+                list.useNativeExtended()
+                list.selectedIndex = 3 // Select d first, then add b (the native SelectedIndex stays d)
+                list.selectNatively(listOf(1, 3))
+                val before = listOf(list.selectedIndex, list.selectedItem, list.selectedValue)
+                list.isSelectedIndex(1) // Starts the sync
+                before to listOf(list.selectedIndex, list.selectedItem, list.selectedValue)
+            } shouldBe (listOf(1, "b", "b") to listOf(1, "b", "b"))
         }
 
         test("passing a non-constant to setSelectionMode throws IllegalArgumentException") {
