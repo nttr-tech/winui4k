@@ -258,3 +258,20 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - TimePicker は載る前でも Time の変更で TimeChanged / SelectedTimeChanged を送り、MinuteIncrement の刻みに切り捨てる
     (TimePicker_Partial.cpp の OnTimeChanged と CheckAndCoerceTime)。00:00 は番兵値と区別される
   - CalendarView.SelectedDates (IVector<DateTime>) の Append / Clear は、載る前でもそれぞれ SelectedDatesChanged を 1 回送る
+- WTabView の JTabbedPane の形の API と、ナビゲーション系のリスナーのために、TabView・NavigationView などの動作を E2E テストと
+  WinUI のソースで確かめた (`WTabViewTest` / `WNavigationViewTest` / `WBreadcrumbBarTest` / `WSemanticZoomTest`)
+  - TabView.SelectedIndex の既定値は 0 (controls/dev/TabView/TabView.idl の MUX_DEFAULT_VALUE("0"))。読み込む前はタブが無くても 0 を返し、
+    読み込み (内部の ListView の Loaded) で ListView の選択から読み直す。読み込んだ後の空の TabView の TabItems にタブを足しても選ばれない
+    (SelectedIndex は -1 のまま)。選択中のタブを外すと、TabView は同じ位置 (末尾なら 1 つ前) の、押せて見えているタブを選ぶ
+    (TabView.cpp の OnItemsChanged)。WTabView は読み込みの前後どちらでも Swing と同じ規則になるよう、足す・外すたびに SelectedIndex を書き直す
+  - TabView のインデックスは TabItems の並び。ドラッグでの並べ替えは TabItems (読み込み後は ListView.Items) の中で動かすので、
+    ラッパーの側で並びを持つとずれる。TabItemsChanged は SelectedIndex を ListView から読み直す前に送られる (OnItemsChanged の先頭) ので、
+    選択の変化を知るのには使えない。TabDragCompleted は読み直した後に送られる (OnListViewDragItemsCompleted)
+  - TabViewItem の閉じるボタン (テンプレートの部品 CloseButton) をオートメーションの Invoke で押すと TabCloseRequested が届く
+  - NavigationViewItem のオートメーションのピアは Invoke を持たず、SelectionItem の Select でクリックと同じ ItemInvoked と選択が起きる
+    (NavigationViewItemAutomationPeer.cpp の ChangeSelection)。ItemInvoked の InvokedItemContainer (INavigationViewItemInvokedEventArgs2) は
+    子の項目のクリックでは子の項目を指す。項目のコンテナがまだ無いと、SelectionChanged は後で (DispatcherQueue の Low で) 送られる
+    (NavigationView.cpp の ChangeSelection)
+  - BreadcrumbBarItem のピアは Invoke を持ち、押すと ItemClicked が届く。VisualTreeHelper には DependencyObject のビューを渡すこと
+    (コントロールの既定のインターフェースのポインタを渡すと Microsoft.UI.Xaml.dll の中でアクセス違反になる)
+  - SemanticZoom.ViewChangeCompleted は ToggleActiveView と IsZoomedInViewActive の設定のどちらでも、切り替えの後に届く
