@@ -224,17 +224,15 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      * the state.
      * [WAppBarToggleButton] has no per-visual-state colors and the color affects only the normal state.
      */
-    var background: WColor?
-        get() = customBackground ?: nativeBackground()
+    override var background: WColor?
+        get() = super.background
         set(value) {
-            customBackground = value
-            val keys = stateColors.background
-            if (value == null) keys.remove(this) else keys.put(this, value)
-            putLocalBackground(value)
+            super.background = value
         }
 
-    /** The color set to [background]. null means unset (the theme default). */
-    private var customBackground: WColor? = null
+    /** The background is put into the keys of [stateColors] (the mechanism is the same as [WControl.background]). */
+    override val backgroundStateKeys: StateColorKeys
+        get() = stateColors.background
 
     /**
      * JComponent.getForeground / setForeground-style: the text color. Like [background], it is also put in the keys for

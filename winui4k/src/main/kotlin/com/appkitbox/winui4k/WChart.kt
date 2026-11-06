@@ -90,8 +90,9 @@ class WChart : WControl(create()) {
     /**
      * The background color of the whole chart (Control.Background). Until it is set, the theme's default background
      * is used; setting null draws no background (Background = null).
+     * Unlike [WControl.background], reading returns the set value as is (null if unset), and null does not return to the theme default (the behavior of earlier versions).
      */
-    var background: WColor? = null
+    override var background: WColor? = null
         set(value) {
             field = value
             control.putColor(XamlInterop.IControl_put_Background, value)

@@ -111,7 +111,7 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
      * Not painted while [isContentAreaFilled] is false (the color is kept and painted again when set back to true).
      * Setting null removes the Resources keys and the Control.Background value and returns to the theme default.
      */
-    var background: WColor?
+    override var background: WColor?
         get() = customBackground ?: nativeBackground()
         set(value) {
             customBackground = value

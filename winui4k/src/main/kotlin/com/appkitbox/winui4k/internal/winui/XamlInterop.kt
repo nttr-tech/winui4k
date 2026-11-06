@@ -172,6 +172,7 @@ internal object XamlInterop {
     const val IID_IBorder = "1ca13b47-ff5c-5abc-a411-a177df9482a9"
     const val IBorder_put_BorderBrush = 7              // put_BorderBrush(Brush)
     const val IBorder_put_BorderThickness = 9          // put_BorderThickness(Thickness) — struct passed by value
+    const val IBorder_get_Background = 10              // get_Background(out Brush)
     const val IBorder_put_Background = 11              // put_Background(Brush)
     const val IBorder_put_CornerRadius = 15            // put_CornerRadius(CornerRadius) — struct passed by value
     const val IBorder_put_Padding = 17                 // put_Padding(Thickness) — struct passed by value

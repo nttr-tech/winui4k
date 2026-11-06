@@ -112,6 +112,38 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             }
         }
 
+    /**
+     * JComponent.getBackground / setBackground-like: the background color (Control.Background). Converted to a SolidColorBrush and passed.
+     * Reading returns the set color, or if unset the native effective value (the theme's default color; null if it is not a solid color brush).
+     * Setting null clears the setting and returns to the theme default (DependencyObject.ClearValue; in Swing null means "inherit the parent's color").
+     *
+     * Many WinUI templates paint the background with the pointer over it or with the focus not with Control.Background but with the color of
+     * a theme resource. Text fields ([WTextField] / [WPasswordField] / [WTextPane] / [WAutoSuggestBox] / [WSpinner]) put
+     * TextControlBackground / TextControlBackgroundPointerOver / TextControlBackgroundFocused with the same color into the control's own Resources
+     * (WinUI lightweight styling), so they are painted with this color also with the pointer over them and with the focus (the background color of Swing's JTextField
+     * does not change with the focus). The disabled look stays the theme default.
+     * Other controls apply it only in the normal state, and colors such as with the pointer over them stay the theme default.
+     * Buttons ([WButton.background] / [WToggleButton.background]) decide the colors per visual state themselves.
+     */
+    open var background: WColor?
+        get() = customBackground ?: nativeBackground()
+        set(value) {
+            customBackground = value
+            val keys = backgroundStateKeys
+            if (value == null) keys.remove(this) else keys.put(this, value)
+            putLocalBackground(value)
+        }
+
+    /** The color set to [background]. null means unset (the theme default). */
+    private var customBackground: WColor? = null
+
+    /** The theme resource keys of the backgrounds per visual state into which the [background] color is put. */
+    internal open val backgroundStateKeys: StateColorKeys
+        get() = when (this) {
+            is WTextField, is WPasswordField, is WTextPane, is WAutoSuggestBox, is WSpinner -> TEXT_CONTROL_BACKGROUND_KEYS
+            else -> StateColorKeys.NONE
+        }
+
     /** The border last set to [border]. */
     private var borderValue: WControlBorder? = null
 
@@ -176,3 +208,12 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         clearDependencyProperty(dependencyObject, XamlInterop.CLS_Control, XamlInterop.IID_IControlStatics, staticsSlot)
     }
 }
+
+/**
+ * The keys the templates of text fields (TextBox, PasswordBox, RichEditBox, and AutoSuggestBox and NumberBox, which contain them) look up for the backgrounds in the normal,
+ * pointer-over and focused states (TextControlBackground* in controls/dev/CommonStyles/TextBox_themeresources.xaml etc.).
+ * The disabled state (TextControlBackgroundDisabled) is not put in.
+ */
+private val TEXT_CONTROL_BACKGROUND_KEYS = StateColorKeys.uniform(
+    listOf("TextControlBackground", "TextControlBackgroundPointerOver", "TextControlBackgroundFocused"),
+)
