@@ -203,6 +203,15 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     }
 
     /**
+     * AbstractButton.doClick(int pressTime)-like: chooses it once, the same as [doClick]. WinUI's Invoke does not create a pressed look, so
+     * [pressTime] is not used (and the UI thread is not stopped, the same as [WButtonBase.doClick]).
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun doClick(pressTime: Int) {
+        doClick()
+    }
+
+    /**
      * AbstractButton.getAction / setAction-like: the [WAction] bound to the item. null (default) means no binding.
      * When set, copies the action's values to the item as follows and keeps following every change of the action's values. Items without a value are unset
      * (text is "", icon, tooltip, action command and accelerator are null, mnemonic is 0). Same as Swing's JMenuItem.
@@ -317,6 +326,14 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
     fun removeActionListenerForJava(listener: WActionListener) {
         clickListeners.remove(listener)
     }
+
+    /**
+     * AbstractButton.getActionListeners-like: the listeners added with [addActionListener] (in the order added). Kotlin lambdas and [Runnable]s appear as
+     * wrapping [WActionListener]s, and any of them can be passed to `removeActionListener` to remove it. While an [action] is bound,
+     * one internal listener that calls the action is included too (as with Swing's setAction, the same as [WButtonBase.actionListeners]).
+     */
+    val actionListeners: Array<WActionListener>
+        get() = clickListeners.listeners()
 }
 
 /** ABI values for MenuFlyoutItem.Click (RoutedEventHandler). */
@@ -417,6 +434,13 @@ class WToggleMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFly
         menuSelection.itemListeners.remove(listener)
     }
 
+    /** AbstractButton.getItemListeners-like: the ItemListeners currently attached (in the order added). */
+    fun getItemListeners(): Array<WItemListener> = menuSelection.itemListeners.toArray()
+
+    /** ItemSelectable.getSelectedObjects-like (the same as AbstractButton's implementation): an array holding only [text] if selected, otherwise null. */
+    val selectedObjects: Array<Any>?
+        get() = if (isSelected) arrayOf(text) else null
+
     override fun applyActionSelected(action: WAction?) = menuSelection.applyActionSelected(action)
 
     override fun onActionChanged(action: WAction?) = menuSelection.onActionChanged(action)
@@ -452,6 +476,11 @@ class WRadioMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyo
     /** JRadioButtonMenuItem(Icon)-like: an item with only an icon. */
     constructor(icon: WIcon) : this("") {
         this.icon = icon
+    }
+
+    /** JRadioButtonMenuItem(Icon, boolean)-like: an item with only an icon and the specified selection state. */
+    constructor(icon: WIcon, selected: Boolean) : this(icon) {
+        if (selected) isSelected = true
     }
 
     /**
@@ -528,6 +557,13 @@ class WRadioMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyo
     override fun removeItemListener(listener: WItemListener) {
         menuSelection.itemListeners.remove(listener)
     }
+
+    /** AbstractButton.getItemListeners-like: the ItemListeners currently attached (in the order added). */
+    fun getItemListeners(): Array<WItemListener> = menuSelection.itemListeners.toArray()
+
+    /** ItemSelectable.getSelectedObjects-like (the same as AbstractButton's implementation): an array holding only [text] if selected, otherwise null. */
+    val selectedObjects: Array<Any>?
+        get() = if (isSelected) arrayOf(text) else null
 
     override fun applyActionSelected(action: WAction?) = menuSelection.applyActionSelected(action)
 
