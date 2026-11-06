@@ -102,6 +102,7 @@ internal object XamlInterop {
     const val IFrameworkElement_put_HorizontalAlignment = 28 // put_HorizontalAlignment(HorizontalAlignment)
     const val IFrameworkElement_get_VerticalAlignment = 29   // get_VerticalAlignment(out VerticalAlignment)
     const val IFrameworkElement_put_VerticalAlignment = 30   // put_VerticalAlignment(VerticalAlignment)
+    const val IFrameworkElement_get_Margin = 31        // get_Margin(out Thickness)
     const val IFrameworkElement_put_Margin = 32        // put_Margin(Thickness) — struct passed by value
     const val IFrameworkElement_get_Resources = 7      // get_Resources(out ResourceDictionary) — per-element dictionary (for lightweight styling)
     const val IFrameworkElement_get_Style = 52         // get_Style(out Style)
