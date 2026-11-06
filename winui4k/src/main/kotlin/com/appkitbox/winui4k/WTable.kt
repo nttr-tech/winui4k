@@ -818,6 +818,7 @@ class WTable @JvmOverloads constructor(
                 selection.modelRowsChanged(event.firstRow, event.lastRow, inserted = true)
             }
             event.type == TableModelEvent.DELETE -> {
+                selection.beforeModelRowsRemoved(event.firstRow, event.lastRow)
                 selection.quietly { rows.remove(event.firstRow, event.lastRow - event.firstRow + 1) }
                 selection.modelRowsChanged(event.firstRow, event.lastRow, inserted = false)
             }
@@ -962,22 +963,28 @@ class WTable @JvmOverloads constructor(
         }
         // Do not copy the selection during sorting, and reselect the same model row when it ends (ends with Sorted)
         selection.beginUserReorder()
-        // A single-column sort from clicking a column header replaces any previous multi-key sort
-        if (multiSortKeys.isNotEmpty()) {
-            multiSortKeys = emptyList()
-            clearSourceSort()
+        try {
+            // A single-column sort by clicking a column header replaces the previous multi-key sort
+            if (multiSortKeys.isNotEmpty()) {
+                multiSortKeys = emptyList()
+                clearSourceSort()
+            }
+            sorter?.notifySortOrderChanged()
+        } catch (e: RuntimeException) {
+            selection.endUserReorder() // Do not leave syncing stopped even if a user listener throws
+            throw e
         }
-        sorter?.notifySortOrderChanged()
     }
 
     private fun onSorted(args: ComPtr) {
+        // Restore syncing first and reselect the same model row (syncing is not left stopped even if a listener throws, and listeners see the new selection)
+        selection.endUserReorder()
         val peer = args.getPtrOrNull(TabularInterop.ITableViewSortedEventArgs_get_Column)?.let { peerOf(it) }
         if (peer != null && sortedListeners.isNotEmpty()) {
             val order = sortOrderOf(args.getInt(TabularInterop.ITableViewSortedEventArgs_get_Direction))
             val event = TableSortEvent(peers.indexOf(peer), peer.column.modelIndex, order)
             for (listener in sortedListeners.toList()) listener.sorting(event)
         }
-        selection.endUserReorder()
         sorter?.notifySorted()
     }
 

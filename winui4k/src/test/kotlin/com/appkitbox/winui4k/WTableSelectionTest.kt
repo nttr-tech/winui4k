@@ -191,6 +191,36 @@ class WTableSelectionTest : FunSpec() {
             } shouldBe listOf(2 to "Orange", -1 to true)
         }
 
+        test("when filtering or removing rows clears the selection, selectedRow read from a Runnable selection listener is -1") {
+            val model = productModel()
+            val seen = mutableListOf<Int>()
+            withShownTable(onUiThreadGet { WTable(model) }) { table ->
+                val sorter = TableRowSorter(model)
+                table.rowSorter = sorter
+                table.selectRow(3) // Peach (320)
+                table.addRowSelectionListener { seen += table.selectedRow }
+                sorter.setRowFilter(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 400, 1)) // Only Grape remains
+                val filtered = seen.toList()
+                sorter.setRowFilter(null)
+                table.selectRow(1) // Orange
+                seen.clear()
+                model.removeRow(1)
+                listOf(filtered, seen.toList(), table.selectedRow)
+            } shouldBe listOf(listOf(-1), listOf(-1), -1)
+        }
+
+        test("even if a listener after sorting throws, later selections in the display are copied to the model") {
+            val model = productModel()
+            withShownTable(onUiThreadGet { WTable(model) }) { table ->
+                val sorter = TableRowSorter(model)
+                table.rowSorter = sorter
+                table.addSortedListener { error("Failure of the listener after sorting") }
+                runCatching { sorter.setSortKeys(listOf(RowSorter.SortKey(1, SortOrder.ASCENDING))) }
+                table.selectRow(2)
+                listOf(table.selectedRow, table.selectionModel.getMinSelectionIndex())
+            } shouldBe listOf(2, 2)
+        }
+
         test("rowAtPoint and columnAtPoint return the row and column from a cell position, and -1 for the column header row and outside the table") {
             shown { table ->
                 val (grapeX, grapeY) = centerOf(table, "Grape")

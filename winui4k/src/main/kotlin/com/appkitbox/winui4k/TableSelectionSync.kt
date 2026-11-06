@@ -119,6 +119,14 @@ internal class TableSelectionSync(
         reselect()
     }
 
+    /**
+     * Before model rows [first]..[last] are removed, if the selected row disappears, clears the model's selection first
+     * (so that listeners of the SelectionChanged the native side raises on row removal do not read the vanished row with [selectedRow]).
+     */
+    fun beforeModelRowsRemoved(first: Int, last: Int) {
+        if (selectedModelRow in first..last) guarded { model.clearSelection() }
+    }
+
     /** Model rows [first]..[last] were added (if [inserted] is true) or removed. Shifts or clears the selected row. */
     fun modelRowsChanged(first: Int, last: Int, inserted: Boolean) {
         val row = selectedModelRow
@@ -161,14 +169,16 @@ internal class TableSelectionSync(
     private fun reselect() {
         val view = if (selectedModelRow < 0) -1 else table.convertRowIndexToView(selectedModelRow)
         guarded {
-            if (nativeRow() != view) {
-                if (view < 0) tableView.call(TabularInterop.ITableView_DeselectAll) else tableView.call(TabularInterop.ITableView_Select, view)
-            }
+            // Fix the model first (the native Select raises SelectionChanged, and its Runnable listeners read selectedRow
+            // from the model, so doing it later would show the old row)
             val selected = model.getSelectedIndices()
             if (view < 0) {
                 model.clearSelection()
             } else if (!(selected.size == 1 && selected[0] == view)) {
                 model.setSelectionInterval(view, view)
+            }
+            if (nativeRow() != view) {
+                if (view < 0) tableView.call(TabularInterop.ITableView_DeselectAll) else tableView.call(TabularInterop.ITableView_Select, view)
             }
             lastNative = nativeRow()
         }
