@@ -899,6 +899,7 @@ internal object XamlInterop {
     const val ISlider_put_Orientation = 17             // put_Orientation(Orientation)
     const val ISlider_get_IsDirectionReversed = 18     // get_IsDirectionReversed(out boolean)
     const val ISlider_put_IsDirectionReversed = 19     // put_IsDirectionReversed(boolean)
+    const val ISlider_get_Header = 24                  // get_Header(out IInspectable)
     const val ISlider_put_Header = 25                  // put_Header(IInspectable)
 
     // ---- Microsoft.UI.Xaml.Controls.ToggleSwitch ----

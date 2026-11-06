@@ -213,7 +213,8 @@ final class StatusInfoPages {
         WLabel label = new WLabel("40 %");
         WSlider slider = new WSlider(0.0, 100.0, 40.0);
         slider.setWidth(300.0);
-        slider.addChangeListener(value -> {
+        slider.addChangeListener(e -> {
+            double value = slider.getValue();
             progressBar.setValue(value);
             label.setText((int) value + " %");
         });
@@ -317,7 +318,8 @@ final class StatusInfoPages {
         WLabel label = new WLabel("40 %");
         WSlider slider = new WSlider(0.0, 100.0, 40.0);
         slider.setWidth(300.0);
-        slider.addChangeListener(value -> {
+        slider.addChangeListener(e -> {
+            double value = slider.getValue();
             progressRing.setValue(value);
             label.setText((int) value + " %");
         });

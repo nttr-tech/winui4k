@@ -205,3 +205,15 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - WinUI4K は UIElement.Measure を呼ばない (float の Size の値渡しを避ける) ため、'm' の幅は見えない Popup に TextBlock を入れて
     表示中のウィンドウで開き、UpdateLayout の後の DesiredSize で測る (TextMetrics)。Yu Gothic UI 14 の 'm' は 12.67 DIP、
     'm' を 10 個並べると 120.67 DIP で、1 個の 10 倍 (126.7) より狭い。columns は Swing と同じく 1 個の幅 × 列数で決める
+- WSlider の ChangeListener とモデル、WRatingControl の ChangeListener のために、RangeBase と RatingControl の通知の届き方を
+  E2E テストと WinUI のソースで確かめた (`WSliderTest` / `WRatingControlTest`)
+  - RangeBase (Slider / ProgressBar) は Value の設定で切り詰める前の値を覚えていて (core/core/elements/RangeBase.cpp の
+    m_uncoercedValue)、Minimum / Maximum で範囲を広げるとその値へ戻す (0..100 で 150 を入れて 100 になった後、Maximum を 200 にすると 150)。
+    Swing のモデルは戻さないので、WSlider は範囲を書くたびにモデルの値を Value に書き直す。Minimum / Maximum の変更で Value が
+    動かなければ ValueChanged は届かない
+  - Slider は押下を SliderContainer (テンプレートの部品) やつまみ (Thumb) で処理済みにする (Slider_Partial.cpp の OnPointerPressed)。
+    スライダー自身でドラッグの始まりと終わりを知るには、処理済みのものも受け取る AddHandler で PointerPressed / PointerReleased /
+    PointerCaptureLost を購読する。押下の処理で値を先に動かす (MoveThumbToPoint) ので、値の通知が押下の通知より先に届く
+    (ソースを読んだだけ。ポインターの入力は E2E テストから送れない (TestMouse 参照) ので、実際のドラッグでは確かめていない)
+  - RatingControl.ValueChanged はユーザーの入力 (RatingControl.cpp の SetRatingTo) でだけ届き、Value の設定では届かない。
+    最大の星でさらに増やすキーを押したときなど、値が変わらなくても届く。WRatingControl は設定でも自分で知らせ、同じ値の通知は捨てる

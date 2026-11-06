@@ -631,6 +631,47 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(split).shouldBeTrue()
         }
 
+        test("a WSlider and a WRatingControl with a ChangeListener that does not reference the component are also collected after being placed in the window and removed") {
+            val sources = itemSources
+            val slider = shownAndHidden { WSlider().also { it.addChangeListener { value -> sources += value } } }
+            val rating = shownAndHidden { WRatingControl().also { it.addChangeListener { value -> sources += value } } }
+            val changeSlider = shownAndHidden { WSlider().also { it.addChangeListener(WChangeListener { e -> sources += e.source }) } }
+            val changeRating = shownAndHidden { WRatingControl().also { it.addChangeListener(WChangeListener { e -> sources += e.source }) } }
+            listOf(slider, rating, changeSlider, changeRating).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
+
+        test("a slider with a shared model is collected after being placed in the window and removed if released together with the model (the native side does not reference the model)") {
+            val sources = itemSources
+            var model: WeakReference<WBoundedRangeModel>? = null
+            val slider = shownAndHidden {
+                val shared = WDefaultBoundedRangeModel()
+                model = WeakReference(shared)
+                WSlider(shared).also { it.addChangeListener(WChangeListener { e -> sources += e.source }) }
+            }
+            Reclamation.awaitCollected(slider).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
+
+        test("a WSlider with a ChangeListener is not collected while it is placed even without references, and the ChangeEvent source is that slider") {
+            val sources = itemSources
+            // A slider with listeners is held by the ListenerAnchor until it is placed, so it can be passed with only a weak reference
+            val reference = onUiThreadGet { WeakReference(WSlider().also { it.addChangeListener(WChangeListener { e -> sources += e.source }) }) }
+            UiTestHarness.attachAndAwaitLoaded(checkNotNull(reference.get()))
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                val described = onUiThreadGet {
+                    itemSources.clear()
+                    val target = checkNotNull(reference.get())
+                    target.model.value = 30.0
+                    itemSources.map { if (it === target) "slider" else it.javaClass.name }.also { itemSources.clear() }
+                }
+                described shouldContainExactly listOf("slider")
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a WCheckBox bound to a shared WAction with SELECTED_KEY is collected after being removed from the window even if the action remains") {
             val action = object : WAbstractAction("Shared") {
                 override fun actionPerformed(e: WActionEvent) = Unit

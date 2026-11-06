@@ -726,7 +726,8 @@ final class LayoutPages {
         WLabel widthLabel = new WLabel("Card width: " + (int) SETTINGS_CARD_DEMO_WIDTH + "px");
         WSlider slider = new WSlider(200.0, SETTINGS_CARD_DEMO_WIDTH, SETTINGS_CARD_DEMO_WIDTH);
         slider.setWidth(SETTINGS_CARD_DEMO_WIDTH);
-        slider.addChangeListener((value) -> {
+        slider.addChangeListener(e -> {
+            double value = slider.getValue();
             card.setWidth(value);
             widthLabel.setText("Card width: " + (int) value + "px");
         });

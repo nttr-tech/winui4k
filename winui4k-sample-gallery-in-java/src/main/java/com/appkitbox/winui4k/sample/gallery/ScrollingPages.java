@@ -183,8 +183,8 @@ final class ScrollingPages {
         WSlider heightSlider = new WSlider(100.0, 500.0, 500.0);
         heightSlider.setHeader("AnnotatedScrollBar height");
         heightSlider.setWidth(240.0);
-        heightSlider.addChangeListener(value -> {
-            annotatedScrollBar.setHeight(value);
+        heightSlider.addChangeListener(e -> {
+            annotatedScrollBar.setHeight(heightSlider.getValue());
         });
 
         WPanel options = new WPanel(12.0);
