@@ -31,8 +31,10 @@ enum class SelectionMode(internal val native: Int) {
 }
 
 /**
- * JList-like: WinUI 3's ListBox (a Selector subclass).
- * Unlike ListView, its items are always visible as a simple selection list, with no swipe or similar gestures.
+ * A simplified JList: WinUI 3's ListBox (a Selector subclass).
+ * What corresponds one to one to Swing's JList is [WList] (WinUI's ListView, the list Microsoft recommends for new apps); if in doubt, use [WList].
+ * ListBox is a simple list for just selecting items, and does not have the item click notification (ItemClick), the non-selectable mode (ListView's None)
+ * or the check box multiple selection of [WList]. The JList-style API is shared with [WList], and [selectedItems] and [scrollIntoView] exist only here.
  *
  * Provides displaying and selecting a list of string items:
  * [addItem] / [getItem] / [removeItem] / [removeAllItems] / [itemCount],
@@ -64,9 +66,9 @@ enum class SelectionMode(internal val native: Int) {
  *
  * The display can also be handled with the same names as JList: [visibleRowCount], [firstVisibleIndex] / [lastVisibleIndex],
  * [locationToIndex] / [indexToLocation] / [getCellBounds] (DIP with the list's top-left as the origin).
- * The default selection mode is single selection, as in WinUI (Swing's JList defaults to multiple interval selection). WinUI's MULTIPLE (check boxes
- * toggled by clicking) is not Swing's MULTIPLE_INTERVAL_SELECTION; Swing's MULTIPLE_INTERVAL_SELECTION corresponds to
- * WinUI's EXTENDED (Ctrl / Shift). [selectionMode] stays the WinUI enumeration, and MULTIPLE can also be chosen with [selectionMode]
+ * The default selection mode is single selection, as in WinUI (Swing's JList defaults to multiple interval selection). WinUI's MULTIPLE (each click
+ * toggles the selection; unlike ListView no check boxes are shown) is not Swing's MULTIPLE_INTERVAL_SELECTION;
+ * Swing's MULTIPLE_INTERVAL_SELECTION corresponds to WinUI's EXTENDED (Ctrl / Shift). [selectionMode] stays the WinUI enumeration, and MULTIPLE can also be chosen with [selectionMode]
  * (the selectionModel's selection mode is then MULTIPLE_INTERVAL_SELECTION).
  */
 class WListBox(model: WListModel<*>) : WControl(
