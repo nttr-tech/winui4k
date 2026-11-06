@@ -314,6 +314,16 @@ abstract class WComponent internal constructor(
         get() = WRectangle(x, y, Math.round(actualWidth).toInt(), Math.round(actualHeight).toInt())
 
     /**
+     * Component.contains(int, int)-like: whether the position ([x], [y], DIP) seen from this component's top-left is inside it.
+     * As in Swing, 0 <= x < width and 0 <= y < height (the width and height are the laid-out [size]). A component not in a window or
+     * before layout has size 0, so it is always false. The shape is treated as a rectangle (including rounded corners and transparent parts).
+     */
+    fun contains(x: Int, y: Int): Boolean = x >= 0 && y >= 0 && x < actualWidth && y < actualHeight
+
+    /** Component.contains(Point)-like: the same as [contains] (x, y) (a [WMouseEvent.point] can be passed as is). */
+    fun contains(point: WPoint): Boolean = contains(point.x, point.y)
+
+    /**
      * Like Component.setBounds: sets the position relative to the parent ([x], [y]) and the size ([width] x [height]) in DIP ([setLocation] and [setSize]).
      * From Java, ints can be passed too, as in Swing.
      *
