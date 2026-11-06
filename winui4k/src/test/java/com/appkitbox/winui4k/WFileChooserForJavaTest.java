@@ -179,6 +179,32 @@ class WFileChooserForJavaTest {
         }
     }
 
+    @Test
+    void showSaveDialogCanBeWrittenWithAWFrameAsTheParent() throws InterruptedException {
+        WFrame frame = UiTestHarness.sharedFrame();
+        List<String> events = Collections.synchronizedList(new ArrayList<>());
+        WFileChooser chooser = new WFileChooser();
+        String title = "WFileChooserForJavaTest dialog with a frame parent";
+        chooser.setDialogTitle(title);
+        WinUiUtilities.invokeLater(() -> chooser.showSaveDialog(frame, result -> events.add("r:" + result)));
+        long deadline = System.currentTimeMillis() + 10_000;
+        boolean closed = false;
+        while (!closed && System.currentTimeMillis() < deadline) {
+            try {
+                TopLevelWindows.closeByTitle(title);
+                closed = true;
+            } catch (IllegalStateException notYet) {
+                Thread.sleep(100);
+            }
+        }
+        assertTrue(closed);
+        List<String> expected = Arrays.asList("r:" + WFileChooser.CANCEL_OPTION);
+        while (!snapshot(events).equals(expected) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+        assertEquals(expected, snapshot(events));
+    }
+
     private static List<String> snapshot(List<String> events) {
         synchronized (events) {
             return new ArrayList<>(events);

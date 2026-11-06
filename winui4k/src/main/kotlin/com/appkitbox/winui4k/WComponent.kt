@@ -109,7 +109,7 @@ enum class ElementTheme(internal val native: Int) {
 abstract class WComponent internal constructor(
     /** The control's default interface pointer (ITextBox, IButton, ...) */
     internal val inspectable: ComPtr,
-) {
+) : WDialogParent {
     /**
      * The record of COM references this wrapper owns. When this wrapper becomes GC-unreachable,
      * its owned references (inspectable and each QI'd view) are released on the UI thread.

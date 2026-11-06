@@ -233,6 +233,40 @@ class WOptionPaneForJavaTest {
     }
 
     @Test
+    void showMessageDialogAndShowConfirmDialogCanBeWrittenWithAWFrameAsTheParent() throws InterruptedException {
+        WFrame frame = onUiThreadGet(() -> new WFrame("winui4k option pane frame parent java"));
+        WButton attached = owner;
+        try {
+            CountDownLatch loaded = new CountDownLatch(1);
+            WButton here = onUiThreadGet(() -> {
+                WButton button = new WButton("This window");
+                button.addLoadedListener(loaded::countDown);
+                frame.add(button);
+                frame.setVisible(true);
+                return button;
+            });
+            assertTrue(loaded.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS));
+            owner = here;
+            onUiThread(() -> WOptionPane.showMessageDialog(frame, "Saved", "Notice", WOptionPane.INFORMATION_MESSAGE, null,
+                    () -> events.add("closed")));
+            awaitOpen();
+            OpenContentDialogs.press(owner, "PrimaryButton");
+            awaitEvents(Arrays.asList("closed"));
+            awaitClosed();
+
+            events.clear();
+            WinUiUtilities.invokeLater(() -> events.add("r:" + WOptionPane.showConfirmDialog(frame, "Close?")));
+            awaitOpen();
+            OpenContentDialogs.press(owner, "PrimaryButton");
+            awaitEvents(Arrays.asList("r:" + WOptionPane.YES_OPTION));
+            awaitClosed();
+        } finally {
+            owner = attached;
+            onUiThread(frame::dispose);
+        }
+    }
+
+    @Test
     void showInputDialogWithoutAParentAndANullParentOpenOnTheShownWindow() throws InterruptedException {
         WFrame frame = onUiThreadGet(() -> new WFrame("winui4k option pane parentless java"));
         WButton attached = owner;

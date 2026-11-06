@@ -30,6 +30,8 @@ import java.util.function.IntConsumer
  * - If the parent (parentComponent) is null, it opens on the active [WFrame] (if none, the shown [WFrame] that became active last
  *   or was created last). Unlike Swing, no invisible shared frame is created, so if no window is shown at all it throws
  *   [IllegalStateException]. A parent that is not in a window throws [IllegalArgumentException].
+ * - Besides a [WComponent], a [WFrame] can also be passed as the parent ([WDialogParent]). Swing's JFrame is a Component, so
+ *   `showMessageDialog(frame, …)` can be written, but WinUI4K's WFrame is not a WComponent, so the type accepts both.
  * - [showOptionDialog] supports up to 3 options (a ContentDialog has 3 buttons).
  */
 // The arguments correspond 1:1 to JOptionPane's static methods of the same names (so Swing code can be written as is)
@@ -136,46 +138,46 @@ object WOptionPane {
 
     /** Shows an information message with the title "Message" (or its Japanese equivalent) and an OK button, and waits until it is closed. */
     @JvmStatic
-    fun showMessageDialog(parent: WComponent?, message: Any?) {
+    fun showMessageDialog(parent: WDialogParent?, message: Any?) {
         showMessageDialog(parent, message, messageTitle, INFORMATION_MESSAGE)
     }
 
     /** Shows a message with [title] and the icon of [messageType], and waits until it is closed. */
     @JvmStatic
-    fun showMessageDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int) {
+    fun showMessageDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int) {
         showMessageDialog(parent, message, title, messageType, null)
     }
 
     /** Shows a message with [title] and waits until it is closed. If [icon] is not null, it is used instead of the icon of [messageType]. */
     @JvmStatic
-    fun showMessageDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int, icon: WIcon?) {
+    fun showMessageDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int, icon: WIcon?) {
         messageDialog(parent, message, title, messageType, icon).showAndWait()
     }
 
     /** [showMessageDialog] that opens without blocking. [onClosed] is called when it is closed. */
     @JvmStatic
-    fun showMessageDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int, icon: WIcon?, onClosed: Runnable) {
+    fun showMessageDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int, icon: WIcon?, onClosed: Runnable) {
         messageDialog(parent, message, title, messageType, icon).show { onClosed.run() }
     }
 
-    private fun messageDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int, icon: WIcon?) =
+    private fun messageDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int, icon: WIcon?) =
         OptionDialog(WFrame.dialogOwnerOf(parent), message, title, iconOf(messageType, icon), listOf(okButtonText), 0, null)
 
     // ---- showConfirmDialog ----
 
     /** Asks with Yes, No and Cancel and returns the button pressed ([YES_OPTION], [NO_OPTION], [CANCEL_OPTION], [CLOSED_OPTION]). */
     @JvmStatic
-    fun showConfirmDialog(parent: WComponent?, message: Any?): Int =
+    fun showConfirmDialog(parent: WDialogParent?, message: Any?): Int =
         showConfirmDialog(parent, message, confirmTitle, YES_NO_CANCEL_OPTION)
 
     /** Asks with the buttons of [optionType] (the icon is a question) and returns the button pressed. */
     @JvmStatic
-    fun showConfirmDialog(parent: WComponent?, message: Any?, title: String?, optionType: Int): Int =
+    fun showConfirmDialog(parent: WDialogParent?, message: Any?, title: String?, optionType: Int): Int =
         showConfirmDialog(parent, message, title, optionType, QUESTION_MESSAGE)
 
     /** Asks with the buttons of [optionType] and the icon of [messageType] and returns the button pressed. */
     @JvmStatic
-    fun showConfirmDialog(parent: WComponent?, message: Any?, title: String?, optionType: Int, messageType: Int): Int =
+    fun showConfirmDialog(parent: WDialogParent?, message: Any?, title: String?, optionType: Int, messageType: Int): Int =
         showConfirmDialog(parent, message, title, optionType, messageType, null)
 
     /**
@@ -183,13 +185,13 @@ object WOptionPane {
      * Cancel is [CANCEL_OPTION], and the Esc key and closing the window give [CLOSED_OPTION].
      */
     @JvmStatic
-    fun showConfirmDialog(parent: WComponent?, message: Any?, title: String?, optionType: Int, messageType: Int, icon: WIcon?): Int =
+    fun showConfirmDialog(parent: WDialogParent?, message: Any?, title: String?, optionType: Int, messageType: Int, icon: WIcon?): Int =
         confirmDialog(parent, message, title, optionType, messageType, icon).showAndWait()
 
     /** [showConfirmDialog] that opens without blocking. When it is closed, the button pressed (the same value as the return value) is passed to [onResult]. */
     @JvmStatic
     fun showConfirmDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         optionType: Int,
@@ -200,7 +202,7 @@ object WOptionPane {
         confirmDialog(parent, message, title, optionType, messageType, icon).show { onResult.accept(it) }
     }
 
-    private fun confirmDialog(parent: WComponent?, message: Any?, title: String?, optionType: Int, messageType: Int, icon: WIcon?): OptionDialog {
+    private fun confirmDialog(parent: WDialogParent?, message: Any?, title: String?, optionType: Int, messageType: Int, icon: WIcon?): OptionDialog {
         val buttons = buttonsOf(optionType)
         return OptionDialog(WFrame.dialogOwnerOf(parent), message, title, iconOf(messageType, icon), buttons, 0, null)
     }
@@ -209,7 +211,7 @@ object WOptionPane {
 
     /** Has the user enter text (the title is "Input" or its Japanese equivalent; the icon is a question), and returns the entered text on OK, or null on Cancel or Esc. */
     @JvmStatic
-    fun showInputDialog(parent: WComponent?, message: Any?): String? = showInputDialog(parent, message, null as Any?)
+    fun showInputDialog(parent: WDialogParent?, message: Any?): String? = showInputDialog(parent, message, null as Any?)
 
     /** Same as JOptionPane.showInputDialog(Object) without a parent: opens on the active window and asks for text input (same as a null parent). */
     @JvmStatic
@@ -221,12 +223,12 @@ object WOptionPane {
 
     /** Has the user enter text with the input field initially set to (the toString of) [initialSelectionValue]. */
     @JvmStatic
-    fun showInputDialog(parent: WComponent?, message: Any?, initialSelectionValue: Any?): String? =
+    fun showInputDialog(parent: WDialogParent?, message: Any?, initialSelectionValue: Any?): String? =
         showInputDialog(parent, message, inputTitle, QUESTION_MESSAGE, null, null, initialSelectionValue) as String?
 
     /** Has the user enter text with [title] and the icon of [messageType]. */
     @JvmStatic
-    fun showInputDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int): String? =
+    fun showInputDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int): String? =
         showInputDialog(parent, message, title, messageType, null, null, null) as String?
 
     /**
@@ -236,7 +238,7 @@ object WOptionPane {
      */
     @JvmStatic
     fun showInputDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         messageType: Int,
@@ -249,7 +251,7 @@ object WOptionPane {
 
     /** The input-field [showInputDialog] that opens without blocking. When it is closed, the entered text (null on Cancel or Esc) is passed to [onResult]. */
     @JvmStatic
-    fun showInputDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int, onResult: Consumer<String?>) {
+    fun showInputDialog(parent: WDialogParent?, message: Any?, title: String?, messageType: Int, onResult: Consumer<String?>) {
         val (dialog, input) = inputDialog(parent, message, title, messageType, null, null, null)
         dialog.show { onResult.accept(if (it == OK_OPTION) input.value() as String? else null) }
     }
@@ -257,7 +259,7 @@ object WOptionPane {
     /** [showInputDialog] with options that opens without blocking. When it is closed, the value (null on Cancel or Esc) is passed to [onResult]. */
     @JvmStatic
     fun showInputDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         messageType: Int,
@@ -271,7 +273,7 @@ object WOptionPane {
     }
 
     private fun inputDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         messageType: Int,
@@ -298,7 +300,7 @@ object WOptionPane {
      */
     @JvmStatic
     fun showOptionDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         optionType: Int,
@@ -311,7 +313,7 @@ object WOptionPane {
     /** [showOptionDialog] that opens without blocking. When it is closed, the position of the button pressed (the same value as the return value) is passed to [onResult]. */
     @JvmStatic
     fun showOptionDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         optionType: Int,
@@ -325,7 +327,7 @@ object WOptionPane {
     }
 
     private fun optionDialog(
-        parent: WComponent?,
+        parent: WDialogParent?,
         message: Any?,
         title: String?,
         optionType: Int,

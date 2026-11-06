@@ -23,7 +23,8 @@ import java.util.function.IntConsumer
  * Differences from Swing (constraints of the OS dialogs):
  * - If the parent is null, it opens on the active [WFrame] (if none, the shown [WFrame] that became active last or
  *   was created last), the same as [WOptionPane]. Unlike Swing, no invisible shared frame is created, so if no window is shown at all
- *   it throws [IllegalStateException]. A parent that is not in a window throws [IllegalArgumentException].
+ *   it throws [IllegalStateException]. A parent that is not in a window throws [IllegalArgumentException]. Besides a [WComponent], a [WFrame]
+ *   can also be passed as the parent ([WDialogParent]; it can be written the same way as with Swing's JFrame, which is a Component).
  * - The OS dialogs have no [FILES_AND_DIRECTORIES], so it selects files, the same as [FILES_ONLY].
  * - Only [WFileNameExtensionFilter] and [acceptAllFileFilter] appear in "file type" (other [WFileFilter]s do not).
  *   If two file types have the same description, only the later one remains.
@@ -186,25 +187,25 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
     // ---- Opening ----
 
     /** Opens the "Open" dialog (sets [dialogType] to [OPEN_DIALOG]), waits until it is closed, and returns the result. */
-    fun showOpenDialog(parent: WComponent?): Int {
+    fun showOpenDialog(parent: WDialogParent?): Int {
         dialogType = OPEN_DIALOG
         return showAndWait(parent)
     }
 
     /** [showOpenDialog] that opens without blocking. Passes the result to [onResult] when closed. */
-    fun showOpenDialog(parent: WComponent?, onResult: IntConsumer) {
+    fun showOpenDialog(parent: WDialogParent?, onResult: IntConsumer) {
         dialogType = OPEN_DIALOG
         start(parent, onResult)
     }
 
     /** Opens the "Save" dialog (sets [dialogType] to [SAVE_DIALOG]), waits until it is closed, and returns the result. */
-    fun showSaveDialog(parent: WComponent?): Int {
+    fun showSaveDialog(parent: WDialogParent?): Int {
         dialogType = SAVE_DIALOG
         return showAndWait(parent)
     }
 
     /** [showSaveDialog] that opens without blocking. Passes the result to [onResult] when closed. */
-    fun showSaveDialog(parent: WComponent?, onResult: IntConsumer) {
+    fun showSaveDialog(parent: WDialogParent?, onResult: IntConsumer) {
         dialogType = SAVE_DIALOG
         start(parent, onResult)
     }
@@ -213,13 +214,13 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
      * Opens a dialog with the approve button set to [approveButtonText], waits until it is closed, and returns the result. If [approveButtonText] is not null,
      * sets [dialogType] to [CUSTOM_DIALOG] (it becomes an open dialog). If null, keeps the current [dialogType] and [approveButtonText].
      */
-    fun showDialog(parent: WComponent?, approveButtonText: String?): Int {
+    fun showDialog(parent: WDialogParent?, approveButtonText: String?): Int {
         customize(approveButtonText)
         return showAndWait(parent)
     }
 
     /** [showDialog] that opens without blocking. Passes the result to [onResult] when closed. */
-    fun showDialog(parent: WComponent?, approveButtonText: String?, onResult: IntConsumer) {
+    fun showDialog(parent: WDialogParent?, approveButtonText: String?, onResult: IntConsumer) {
         customize(approveButtonText)
         start(parent, onResult)
     }
@@ -231,7 +232,7 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
         }
     }
 
-    private fun showAndWait(parent: WComponent?): Int {
+    private fun showAndWait(parent: WDialogParent?): Int {
         ModalLoop.checkRunnable()
         var result: Int? = null
         start(parent) { result = it }
@@ -239,8 +240,9 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
         return result ?: CANCEL_OPTION
     }
 
-    private fun start(parent: WComponent?, onResult: IntConsumer) {
-        val windowId = StoragePickers.windowIdOf(WFrame.dialogOwnerOf(parent))
+    private fun start(parent: WDialogParent?, onResult: IntConsumer) {
+        // A WFrame makes its window the owner directly (it can open even if the content is not placed yet)
+        val windowId = (parent as? WFrame)?.appWindow?.id ?: StoragePickers.windowIdOf(WFrame.dialogOwnerOf(parent))
         val onError: (RuntimeException) -> Unit = { finish(null, onResult) }
         val onPicked: (List<String>) -> Unit = { paths -> finish(paths, onResult) }
         when (val picker = createPicker(windowId)) {

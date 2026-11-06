@@ -379,6 +379,29 @@ class WFileChooserTest : FunSpec() {
         }
 
         context("Swing compatibility") {
+            test("passing a WFrame as the parent (the JFileChooser.showOpenDialog(frame) form) makes that window the owner, not the active window") {
+                val frameTitle = "WFileChooserTest parent frame"
+                val dialogTitle = "WFileChooserTest dialog with a frame parent"
+                val frame = onUiThreadGet { WFrame(frameTitle) }
+                var result: Int? = null
+                try {
+                    onUiThread {
+                        frame.isAutoRequestFocus = false // Keep the shared window active
+                        frame.isVisible = true
+                    }
+                    val chooser = WFileChooser(tempDir)
+                    chooser.dialogTitle = dialogTitle
+                    WinUiUtilities.invokeLater { result = chooser.showOpenDialog(frame) }
+                    val dialog = eventually(10.seconds) { TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle).shouldNotBeNull() }
+                    TopLevelWindows.owner(dialog) shouldBe TopLevelWindows.find(null, frameTitle).shouldNotBeNull()
+                    TopLevelWindows.close(dialog)
+                    eventually(5.seconds) { result shouldBe WFileChooser.CANCEL_OPTION }
+                } finally {
+                    TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle)?.let { TopLevelWindows.close(it) }
+                    onUiThread { frame.dispose() }
+                }
+            }
+
             test("accept decides by the selected type (fileFilter) and includes everything if fileFilter is null (JFileChooser.accept)") {
                 val chooser = WFileChooser()
                 chooser.accept(File(tempDir, "a.csv")) shouldBe true // The default is all files

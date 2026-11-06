@@ -35,7 +35,9 @@ import kotlin.math.roundToInt
  * - A [dispose]d window cannot be shown again ([isVisible] = true throws [IllegalStateException]).
  */
 @Suppress("TooManyFunctions") // Lists the JFrame / Window APIs in one class
-class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
+class WFrame @JvmOverloads constructor(title: String = "") :
+    WWindowConstants,
+    WDialogParent {
     internal val window: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_Window, XamlInterop.IID_IWindowFactory) // IWindow
 
@@ -1068,15 +1070,22 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
             openFrames.firstOrNull { it.isActive && it.isVisible } ?: openFrames.lastOrNull { it.isVisible }
 
         /**
-         * The component of the window to open a dialog ([WOptionPane], [WFileChooser]) on: [parent] if given, otherwise
-         * the content of [activeOrRecentFrame]. [IllegalStateException] if neither exists. Call on the UI thread.
+         * The component of the window to open a dialog ([WOptionPane], [WFileChooser]) on: [parent] if it is a component,
+         * the content of a [WFrame] ([componentOf]), and the content of [activeOrRecentFrame] if null. [IllegalStateException] if none exists.
+         * Call on the UI thread.
          */
-        internal fun dialogOwnerOf(parent: WComponent?): WComponent {
-            if (parent != null) return parent
+        internal fun dialogOwnerOf(parent: WDialogParent?): WComponent {
+            if (parent != null) return componentOf(parent)
             val frame = checkNotNull(activeOrRecentFrame()) {
                 "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
             }
             return frame.content
+        }
+
+        /** The component placed in the window of the dialog parent [parent] (itself for a component, the current content for a [WFrame]). */
+        internal fun componentOf(parent: WDialogParent): WComponent = when (parent) {
+            is WComponent -> parent
+            is WFrame -> parent.content
         }
     }
 }

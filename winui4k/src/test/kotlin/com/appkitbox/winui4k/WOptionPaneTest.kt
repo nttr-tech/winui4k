@@ -482,6 +482,28 @@ class WOptionPaneTest : FunSpec() {
         }
 
         context("Swing compatibility") {
+            test("passing a WFrame as the parent (the JOptionPane.showMessageDialog(frame, …) form) opens on that window, not the active window") {
+                val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
+                try {
+                    val button = onUiThreadGet { WButton("This window").also { frame.add(it) } }
+                    val loaded = CountDownLatch(1)
+                    onUiThread {
+                        button.addLoadedListener { loaded.countDown() }
+                        frame.isAutoRequestFocus = false // Keep the shared window active
+                        frame.isVisible = true
+                    }
+                    loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    later { WOptionPane.showConfirmDialog(frame, "Ask in this window") }
+                    awaitOpen(button).texts.joinToString() shouldContain "Ask in this window"
+                    OpenContentDialogs.isOpen(UiTestHarness.sharedFrame().contentPane).shouldBeFalse()
+                    OpenContentDialogs.press(button, "SecondaryButton")
+                    awaitEvents("r:${WOptionPane.NO_OPTION}")
+                    awaitClosed(button)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
             test("a WIcon passed as message is shown as an icon (the same as JOptionPane's Icon message). The same for a WIcon in an array") {
                 withOwner { owner ->
                     later { WOptionPane.showMessageDialog(owner, WFontIcon(CUSTOM_GLYPH), "Heading", WOptionPane.PLAIN_MESSAGE) }
