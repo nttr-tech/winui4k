@@ -1133,12 +1133,16 @@ class WFrame @JvmOverloads constructor(title: String = "") :
          * the content of a [WFrame] ([componentOf]), and the content of [activeOrRecentFrame] if null. [IllegalStateException] if none exists.
          * Call on the UI thread.
          */
-        internal fun dialogOwnerOf(parent: WDialogParent?): WComponent {
-            if (parent != null) return componentOf(parent)
-            val frame = checkNotNull(activeOrRecentFrame()) {
-                "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
-            }
-            return frame.content
+        internal fun dialogOwnerOf(parent: WDialogParent?): WComponent =
+            if (parent != null) componentOf(parent) else dialogFrameForNullParent().content
+
+        /**
+         * The window on which a dialog with a null parent opens ([activeOrRecentFrame]). [IllegalStateException] if none. Right after being shown,
+         * a window's content is not laid out yet and has no XamlRoot, so dialogs that can open with just the window (AppWindow)
+         * ([WFileChooser]) use this instead of the content. Call on the UI thread.
+         */
+        internal fun dialogFrameForNullParent(): WFrame = checkNotNull(activeOrRecentFrame()) {
+            "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
         }
 
         /** The component placed in the window of the dialog parent [parent] (itself for a component, the current content for a [WFrame]). */

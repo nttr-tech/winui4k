@@ -241,8 +241,12 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
     }
 
     private fun start(parent: WDialogParent?, onResult: IntConsumer) {
-        // A WFrame makes its window the owner directly (it can open even if the content is not placed yet)
-        val windowId = (parent as? WFrame)?.appWindow?.id ?: StoragePickers.windowIdOf(WFrame.dialogOwnerOf(parent))
+        // For a WFrame, or when the parent is null, make that window the owner directly (it can open even right after showing, before the content is placed)
+        val windowId = when (parent) {
+            is WFrame -> parent.appWindow.id
+            null -> WFrame.dialogFrameForNullParent().appWindow.id
+            is WComponent -> StoragePickers.windowIdOf(parent)
+        }
         val onError: (RuntimeException) -> Unit = { finish(null, onResult) }
         val onPicked: (List<String>) -> Unit = { paths -> finish(paths, onResult) }
         when (val picker = createPicker(windowId)) {

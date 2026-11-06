@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.annotation.Tags
@@ -326,6 +327,33 @@ class WFileChooserTest : FunSpec() {
                 TopLevelWindows.owner(dialog) shouldBe frameWindow
                 TopLevelWindows.close(dialog)
                 eventually(5.seconds) { result shouldBe WFileChooser.CANCEL_OPTION }
+            } finally {
+                TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle)?.let { TopLevelWindows.close(it) }
+                onUiThread { frame.dispose() }
+            }
+        }
+
+        test("if the parent is null, it opens with a WFrame as the owner even right after the frame is shown, while its content has no XamlRoot yet") {
+            val frameTitle = "WFileChooserTest just-shown frame"
+            val dialogTitle = "WFileChooserTest just-shown dialog"
+            val frame = onUiThreadGet { WFrame(frameTitle) }
+            val results = Collections.synchronizedList(mutableListOf<Int>())
+            try {
+                val chooser = WFileChooser(tempDir)
+                chooser.dialogTitle = dialogTitle
+                // Open within the same UI thread processing as showing (the content is not laid out yet and has no XamlRoot)
+                val hadXamlRoot = onUiThreadGet {
+                    frame.isVisible = true
+                    val root = frame.contentPane.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)
+                    root?.release()
+                    chooser.showOpenDialog(null) { results += it }
+                    root != null
+                }
+                hadXamlRoot shouldBe false
+                val dialog = eventually(10.seconds) { TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle).shouldNotBeNull() }
+                TopLevelWindows.owner(dialog) shouldBe TopLevelWindows.find(null, frameTitle).shouldNotBeNull()
+                TopLevelWindows.close(dialog)
+                eventually(5.seconds) { results.toList() shouldContainExactly listOf(WFileChooser.CANCEL_OPTION) }
             } finally {
                 TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle)?.let { TopLevelWindows.close(it) }
                 onUiThread { frame.dispose() }
