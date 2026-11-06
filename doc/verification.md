@@ -322,3 +322,15 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   (WFrameTest で WM_CLOSE の 4 回だけ来て、dispose の Close では 1 回も来なかった)。Closing の Cancel を true にすると
   Window.Closed も来ずウィンドウは開いたまま、Closing の中で AppWindow.Hide を呼ぶと隠れて開いたままになる
   (WFrame の DO_NOTHING_ON_CLOSE / HIDE_ON_CLOSE)
+- WScrollPane / WScrollView の JScrollPane の形の API のために、ScrollViewer と ScrollView の動作を E2E テストと WinUI のソースで確かめた
+  (`WScrollPaneTest` / `WScrollPaneBarTest` / `WScrollViewTest`)
+  - ScrollViewer.ChangeView を disableAnimation = true で呼んでも、HorizontalOffset / VerticalOffset はその場では変わらない
+    (オフセットは ScrollContentPresenter に書かれ、再配置の後に読める。ScrollViewer_Partial.cpp の ChangeViewInternal)。
+    続けて UpdateLayout を呼ぶと戻った時点で新しい位置を読める。ViewChanged はその後に非同期に届き、最後の通知の IsIntermediate は false
+  - HorizontalScrollBarVisibility が Hidden なら中身は横に無制限で測られ (ExtentWidth = 中身の幅)、Disabled なら表示領域の幅で測られる
+  - 見出し (TopHeader / LeftHeader / TopLeftHeader) があると、中身が左上寄せでないと測る段階で E_NOT_SUPPORTED になりプロセスが落ちる
+    (ScrollContentPresenter_Partial.cpp の MeasureOverride、doc/troubleshooting.md)
+  - UIElement.StartBringIntoView に TargetRect を渡すと、祖先の ScrollViewer は四角が見える最小の量だけスクロールする (Swing の scrollRectToVisible と同じ)。
+    スクロールは呼んだ後に起きる
+  - ScrollView.ScrollTo を AnimationMode = Disabled の ScrollingScrollOptions で呼んでも位置は InteractionTracker の非同期の更新で変わる
+    (ScrollPresenter.cpp の TryUpdatePosition)。UpdateLayout では読み戻せない
