@@ -88,7 +88,17 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
     /** Whether it's always shown on top. */
     var isAlwaysOnTop: Boolean
         get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_IsAlwaysOnTop)
-        set(value) = presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, value)
+        set(value) {
+            if (value == isAlwaysOnTop) {
+                presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, value)
+                return
+            }
+            // After a windowed Popup (such as a ComboBox drop-down) has been opened, the first change may read back as changed while
+            // WS_EX_TOPMOST does not change (doc/troubleshooting.md). It works from the second time on, so revert it once and set it again
+            presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, value)
+            presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, !value)
+            presenterPtr.putBool(WindowingInterop.IOverlappedPresenter_put_IsAlwaysOnTop, value)
+        }
 
     /** Whether the maximize button/action is enabled. */
     var isMaximizable: Boolean

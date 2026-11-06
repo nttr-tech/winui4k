@@ -145,6 +145,13 @@
   (`Dispatcher`、ApplicationUnhandledExceptionTest)。落ちた側は WER のダンプ (`%LOCALAPPDATA%\CrashDumps\java.exe.*.dmp`) を
   `cdb -z <dmp> -c ".ecxr; kn 40; !analyze -v; q"` で読むと分かる。どの例外だったかは、テストなら Gradle の
   `build/test-results/test/binary/output-events.bin` に残る「[winui4k] exception escaped from COM upcall」の後のスタックで分かる。
+- **OverlappedPresenter: ComboBox のドロップダウンを開いた後の最初の IsAlwaysOnTop = true で最前面にならない**
+  共有ウィンドウで ComboBox のドロップダウン (ウィンドウを持つ Popup) を開いて閉じた後、別の新しいウィンドウで
+  `OverlappedPresenter.IsAlwaysOnTop = true` にすると、読み戻すと true なのに HWND に WS_EX_TOPMOST が付かなかった
+  (1.5 秒待っても付かない。ウィンドウがアクティブかどうか・前面かどうかに依らない)。その直後に false → true とやり直すと付き、
+  以後のウィンドウでは 1 回で効く。原因は Windows App SDK のウィンドウ管理 (ソースが無い) の中で、確かめられていない。
+  `WOverlappedPresenter.isAlwaysOnTop` (WFrame.isAlwaysOnTop も通る) は値を変える時に、設定 → 戻す → 設定し直す の 3 回を書く
+  (WFrameStateTest。全部の E2E では WFocusEventTest の後の WFrameStateTest がこれを踏んだ。2026-10-21、Panama で確認)。
 - **InkCanvas: マウスやタッチで線が描けない**
   InkCanvas の既定の入力機器はペンだけである。`canvas.inkPresenter.inputDeviceTypes = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOUSE, CoreInputDeviceType.TOUCH)` のように設定する。
 - **InkCanvas: `activateCustomDrying` が E_ILLEGAL_METHOD_CALL (0x8000000E) で失敗する**

@@ -181,6 +181,30 @@ class WFrameStateTest : FunSpec() {
             }
         }
 
+        test("even after opening and closing a WComboBox drop-down in the shared window, isAlwaysOnTop = true makes it topmost (WS_EX_TOPMOST)") {
+            // After a drop-down (a windowed Popup) had been opened, the first OverlappedPresenter.IsAlwaysOnTop = true
+            // read back as true but WS_EX_TOPMOST was not set (doc/troubleshooting.md)
+            val combo = onUiThreadGet { WComboBox().also { c -> listOf("Small", "Large").forEach { c.addItem(it) } } }
+            UiTestHarness.attachAndAwaitLoaded(combo)
+            try {
+                // Wait a little after each so that the opening and closing animations progress
+                onUiThread { combo.isDropDownOpen = true }
+                Thread.sleep(POPUP_SETTLE_MILLIS)
+                onUiThread { combo.isDropDownOpen = false }
+                Thread.sleep(POPUP_SETTLE_MILLIS)
+            } finally {
+                UiTestHarness.detach(combo)
+            }
+            val frame = newFrame()
+            show(frame)
+            onUiThread {
+                frame.isAlwaysOnTop = true
+                (WindowNatives.exStyle(frame) and WindowNatives.WS_EX_TOPMOST) shouldBe WindowNatives.WS_EX_TOPMOST
+                frame.isAlwaysOnTop = false
+                (WindowNatives.exStyle(frame) and WindowNatives.WS_EX_TOPMOST) shouldBe 0L
+            }
+        }
+
         test("isUndecorated = true removes the title bar and false restores it. It can be changed before or after it is shown") {
             val frame = newFrame()
             onUiThread {
@@ -405,5 +429,6 @@ class WFrameStateTest : FunSpec() {
 
     private companion object {
         const val TITLE = "winui4k frame state test"
+        const val POPUP_SETTLE_MILLIS = 500L
     }
 }
