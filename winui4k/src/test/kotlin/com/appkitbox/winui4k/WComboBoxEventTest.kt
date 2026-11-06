@@ -102,6 +102,43 @@ class WComboBoxEventTest : FunSpec() {
             }
         }
 
+        test("selectedIndex set while there are no items is remembered and selects the item at that position when it is added (the previous WinUI behavior; only once)") {
+            onUiThreadGet {
+                val combo = recorded()
+                combo.comboBox.selectedIndex = 2
+                val states = mutableListOf(combo.comboBox.selectedIndex)
+                combo.comboBox.addItem("Red")
+                combo.comboBox.addItem("Green")
+                states += combo.comboBox.selectedIndex
+                combo.comboBox.addItem("Blue")
+                states += combo.comboBox.selectedIndex
+                val events = combo.events.toList()
+                combo.comboBox.removeAllItems()
+                for (item in listOf("Red", "Green", "Blue")) combo.comboBox.addItem(item)
+                states += combo.comboBox.selectedIndex
+                Triple(states, events, combo.comboBox.selectedItem)
+            }.let { (states, events, selected) ->
+                states shouldContainExactly listOf(-1, -1, 2, -1)
+                events shouldContainExactly listOf("SELECTED:Blue", "action:comboBoxChanged")
+                selected.shouldBeNull()
+            }
+        }
+
+        test("selectedIndex remembered while there were no items is replaced by selectedIndex set later (including -1). -2 throws even without items") {
+            onUiThreadGet {
+                val cleared = WComboBox()
+                cleared.selectedIndex = 1
+                cleared.selectedIndex = -1
+                for (item in listOf("Red", "Green")) cleared.addItem(item)
+                val replaced = WComboBox()
+                replaced.selectedIndex = 1
+                replaced.selectedIndex = 0
+                replaced.addItem("Red")
+                shouldThrow<IllegalArgumentException> { WComboBox().selectedIndex = -2 }
+                cleared.selectedIndex to replaced.selectedItem
+            } shouldBe (-1 to "Red")
+        }
+
         test("setSelectedItem selects the matching item, and ignores strings not in the list if non-editable (no events either)") {
             onUiThreadGet {
                 val combo = recorded("Red", "Green", "Blue")

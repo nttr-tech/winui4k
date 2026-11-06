@@ -121,6 +121,9 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 
     private var loadedHandlerAdded = false
 
+    /** The [selectedIndex] set while there were no items (selected when an item at that position is added). -1 if none. */
+    private var pendingSelectedIndex = -1
+
     /** Whether [model] has been read or written (the first time, the combo is pinned with ListenerAnchor; [pinForModel]). */
     private var modelExposed = false
 
@@ -154,6 +157,10 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
      * The selected index. -1 if unselected or if a value not in the list is selected.
      * As with JComboBox.setSelectedIndex, values outside -1 to `itemCount - 1` throw [IllegalArgumentException], and like [setSelectedItem]
      * it selects that item (the [addActionListener] listeners are called once even if the selection does not change).
+     *
+     * Difference from Swing: setting 0 or more while there are no items does not throw; the value is remembered and the item at that position is selected once when it is added
+     * (the same as the previous WComboBox and WinUI's Selector; `WComboBox().apply { selectedIndex = 2; addItem("a"); addItem("b"); addItem("c") }`
+     * selects "c"). While remembered it reads as -1, and setting it again (including -1) replaces it. -2 or less throws even without items.
      */
     var selectedIndex: Int
         get() {
@@ -163,7 +170,12 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             return indexOfItem(selected)
         }
         set(value) {
+            if (value >= 0 && itemCount == 0) {
+                pendingSelectedIndex = value
+                return
+            }
             require(value in -1 until itemCount) { "setSelectedIndex: $value out of bounds" }
+            pendingSelectedIndex = -1
             if (value == -1) {
                 setSelectedItem(null)
                 return
@@ -506,6 +518,12 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             rebuildNative()
         }
         if (selectedItemReminder !== dataModel.selectedItem) selectedItemChanged()
+        selectPendingIndex()
+    }
+
+    /** Selects the item when an item comes to the position of the [selectedIndex] set while there were no items (same as m_selectedIndexValueSetBeforeItemsAvailable of WinUI's Selector). */
+    private fun selectPendingIndex() {
+        if (pendingSelectedIndex in 0 until itemCount) selectedIndex = pendingSelectedIndex
     }
 
     private fun onIntervalRemoved(e: WListDataEvent) {
@@ -709,6 +727,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         newModel.addListDataListener(modelListener)
         selectedItemReminder = newModel.selectedItem
         rebuildNative()
+        selectPendingIndex()
     }
 
     /**
