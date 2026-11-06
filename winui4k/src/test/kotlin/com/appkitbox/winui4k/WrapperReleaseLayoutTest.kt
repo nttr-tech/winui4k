@@ -173,6 +173,15 @@ class WrapperReleaseLayoutTest : FunSpec() {
                 Reclamation.awaitDestroyed(probe).shouldBeTrue()
             }
 
+            test("a WSettingsCard that was never placed has the card collected and the Canvas destroyed once the reference is dropped") {
+                val (card, probe) = onUiThreadGet {
+                    val card = WSettingsCard("Heading", "Description")
+                    WeakReference(card) to NativeProbe(card.inspectable)
+                }
+                Reclamation.awaitCollected(card).shouldBeTrue()
+                Reclamation.awaitDestroyed(probe).shouldBeTrue()
+            }
+
             test("a WLayoutPanel with a child placed in the shared window and removed has the panel and the child collected and the Canvas destroyed once the reference is dropped") {
                 val (panel, child, probe) = shownAndHiddenLayoutPanel()
                 Reclamation.awaitCollected(panel).shouldBeTrue()

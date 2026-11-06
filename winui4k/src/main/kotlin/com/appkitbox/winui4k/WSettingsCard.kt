@@ -6,8 +6,10 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -235,9 +237,17 @@ class WSettingsCard @JvmOverloads constructor(header: String = "", description: 
         if (description.isNotEmpty()) this.description = description
 
         // Automatic wrapping based on width (the Toolkit uses ControlSizeTrigger; here it is reproduced with SizeChanged)
-        addSizeChangedListener {
-            if (computeLayoutState() != appliedState) applyLayoutState()
-        }
+        // The handler stays in native code, so refer to the card weakly (capturing it strongly would form the cycle "native → handler → card → native" and it would not be collected)
+        val card = WeakReference(this)
+        frameworkElement.addEventHandler(
+            "WinUI4K.SettingsCardSizeChangedHandler",
+            XamlInterop.IID_SizeChangedEventHandler,
+            XamlInterop.IFrameworkElement_add_SizeChanged,
+        ) { _, _ -> ModalLoop.duringLayout { card.get()?.updateLayoutState() } }
+    }
+
+    private fun updateLayoutState() {
+        if (computeLayoutState() != appliedState) applyLayoutState()
     }
 
     /** Subscribes to clicks on the card. Use it when [isClickEnabled] is on. */
