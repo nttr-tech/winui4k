@@ -185,8 +185,18 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     private var viewChangedHandlerAdded = false
 
+    /** IsIntermediate of the latest ViewChanged ([WScrollPaneBar.valueIsAdjusting]). */
+    private var lastViewChangeIntermediate = false
+
+    /** Whether scrolling is in progress (IsIntermediate of the latest ViewChanged). Reading it starts the ViewChanged subscription. */
+    internal val viewIsAdjusting: Boolean
+        get() {
+            ensureViewChangedHandler()
+            return lastViewChangeIntermediate
+        }
+
     /** Registers the ViewChanged handler (shared by viewport and scroll bar notifications) if not registered yet. */
-    private fun ensureViewChangedHandler() {
+    internal fun ensureViewChangedHandler() {
         if (viewChangedHandlerAdded) return
         viewChangedHandlerAdded = true
         // The handler stays on the native side, so it does not capture this control strongly but looks it up from the anchor (see ListenerAnchor)
@@ -201,9 +211,85 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
         }
     }
 
-    private fun onViewChanged(@Suppress("UNUSED_PARAMETER") intermediate: Boolean) {
+    private fun onViewChanged(intermediate: Boolean) {
+        lastViewChangeIntermediate = intermediate
         viewportChangeListeners.fire(WChangeEvent(viewport))
+        createdVerticalScrollBar?.onViewChanged(intermediate)
+        createdHorizontalScrollBar?.onViewChanged(intermediate)
     }
+
+    private var createdVerticalScrollBar: WScrollPaneBar? = null
+    private var createdHorizontalScrollBar: WScrollPaneBar? = null
+
+    /** JScrollPane.getVerticalScrollBar-like: the point for reading and writing the vertical scroll position as a scroll bar value ([WScrollPaneBar]). */
+    val verticalScrollBar: WScrollPaneBar
+        get() = createdVerticalScrollBar ?: WScrollPaneBar(this, WAdjustable.VERTICAL).also { createdVerticalScrollBar = it }
+
+    /** JScrollPane.getHorizontalScrollBar-like: the point for reading and writing the horizontal scroll position as a scroll bar value ([WScrollPaneBar]). */
+    val horizontalScrollBar: WScrollPaneBar
+        get() = createdHorizontalScrollBar ?: WScrollPaneBar(this, WAdjustable.HORIZONTAL).also { createdHorizontalScrollBar = it }
+
+    /**
+     * JScrollPane.setColumnHeaderView-like: the top header (ScrollViewer.TopHeader). It scrolls only horizontally with the content and does not move vertically (same as Swing's column header).
+     * While there are headers ([rowHeaderView] and the corner too), ScrollViewer crashes unless the content is aligned top-left, so the content's
+     * [WComponent.horizontalAlignment] is rewritten to LEFT and [WComponent.verticalAlignment] to TOP (content smaller than the viewport is not stretched).
+     * Do not change the content's alignment while there are headers.
+     */
+    var columnHeaderView: WComponent? = null
+        set(value) {
+            replaceChild(field, value)
+            field = value
+            alignContentForHeaders()
+            inspectable.call(XamlInterop.IScrollViewer_put_TopHeader, value?.uiElement?.ptr)
+        }
+
+    /**
+     * JScrollPane.setRowHeaderView-like: the left header (ScrollViewer.LeftHeader). It scrolls only vertically with the content and does not move horizontally (same as Swing's row header).
+     */
+    var rowHeaderView: WComponent? = null
+        set(value) {
+            replaceChild(field, value)
+            field = value
+            alignContentForHeaders()
+            inspectable.call(XamlInterop.IScrollViewer_put_LeftHeader, value?.uiElement?.ptr)
+        }
+
+    /** The top-left corner (ScrollViewer.TopLeftHeader). */
+    private var upperLeadingCorner: WComponent? = null
+        set(value) {
+            replaceChild(field, value)
+            field = value
+            alignContentForHeaders()
+            inspectable.call(XamlInterop.IScrollViewer_put_TopLeftHeader, value?.uiElement?.ptr)
+        }
+
+    /**
+     * When there is a header or a corner, aligns the content to the top-left (HorizontalAlignment = Left, VerticalAlignment = Top). With headers, ScrollViewer
+     * raises E_NOT_SUPPORTED in the measure pass when the content has any other alignment, and XAML crashes the process
+     * (MeasureOverride in microsoft-ui-xaml's ScrollContentPresenter_Partial.cpp; doc/troubleshooting.md).
+     */
+    private fun alignContentForHeaders() {
+        val view = content ?: return
+        if (columnHeaderView == null && rowHeaderView == null && upperLeadingCorner == null) return
+        view.horizontalAlignment = HorizontalAlignment.LEFT
+        view.verticalAlignment = VerticalAlignment.TOP
+    }
+
+    /**
+     * JScrollPane.setCorner-like: sets the component placed in a corner. ScrollViewer has only the corner where the top header and left header meet
+     * (TopLeftHeader), so only [UPPER_LEADING_CORNER] and [UPPER_LEFT_CORNER] are accepted, and both refer to the same corner
+     * (when FlowDirection is right-to-left, the whole ScrollViewer is mirrored, so it appears at the top-right).
+     *
+     * @throws UnsupportedOperationException for other corners (LOWER_* / UPPER_RIGHT_CORNER / UPPER_TRAILING_CORNER)
+     * @throws IllegalArgumentException if it is not a corner name (as in Swing)
+     */
+    fun setCorner(key: String, corner: WComponent?) {
+        checkCornerKey(key)
+        upperLeadingCorner = corner
+    }
+
+    /** JScrollPane.getCorner-like: the component placed with [setCorner]. Always null for unaccepted corners (Swing returns null if it is not a corner name). */
+    fun getCorner(key: String): WComponent? = if (key == UPPER_LEADING_CORNER || key == UPPER_LEFT_CORNER) upperLeadingCorner else null
 
     /**
      * Changes the scroll position without animation (disableAnimation = true of ScrollViewer.ChangeView).
@@ -284,6 +370,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
         set(value) {
             replaceChild(field, value)
             field = value
+            alignContentForHeaders()
             contentControl.call(
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
@@ -292,6 +379,9 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     override fun detachChild(child: WComponent) {
         if (this.content === child) this.content = null
+        if (columnHeaderView === child) columnHeaderView = null
+        if (rowHeaderView === child) rowHeaderView = null
+        if (upperLeadingCorner === child) upperLeadingCorner = null
     }
 
     init {
@@ -317,6 +407,45 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
         /** Same as [WScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS]. */
         const val HORIZONTAL_SCROLLBAR_ALWAYS = WScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
+
+        /** Same as [WScrollPaneConstants.UPPER_LEFT_CORNER]. */
+        const val UPPER_LEFT_CORNER = WScrollPaneConstants.UPPER_LEFT_CORNER
+
+        /** Same as [WScrollPaneConstants.UPPER_RIGHT_CORNER]. */
+        const val UPPER_RIGHT_CORNER = WScrollPaneConstants.UPPER_RIGHT_CORNER
+
+        /** Same as [WScrollPaneConstants.LOWER_LEFT_CORNER]. */
+        const val LOWER_LEFT_CORNER = WScrollPaneConstants.LOWER_LEFT_CORNER
+
+        /** Same as [WScrollPaneConstants.LOWER_RIGHT_CORNER]. */
+        const val LOWER_RIGHT_CORNER = WScrollPaneConstants.LOWER_RIGHT_CORNER
+
+        /** Same as [WScrollPaneConstants.UPPER_LEADING_CORNER]. */
+        const val UPPER_LEADING_CORNER = WScrollPaneConstants.UPPER_LEADING_CORNER
+
+        /** Same as [WScrollPaneConstants.UPPER_TRAILING_CORNER]. */
+        const val UPPER_TRAILING_CORNER = WScrollPaneConstants.UPPER_TRAILING_CORNER
+
+        /** Same as [WScrollPaneConstants.LOWER_LEADING_CORNER]. */
+        const val LOWER_LEADING_CORNER = WScrollPaneConstants.LOWER_LEADING_CORNER
+
+        /** Same as [WScrollPaneConstants.LOWER_TRAILING_CORNER]. */
+        const val LOWER_TRAILING_CORNER = WScrollPaneConstants.LOWER_TRAILING_CORNER
+
+        private val UNSUPPORTED_CORNERS = setOf(
+            UPPER_RIGHT_CORNER,
+            LOWER_LEFT_CORNER,
+            LOWER_RIGHT_CORNER,
+            UPPER_TRAILING_CORNER,
+            LOWER_LEADING_CORNER,
+            LOWER_TRAILING_CORNER,
+        )
+
+        private fun checkCornerKey(key: String) {
+            if (key == UPPER_LEADING_CORNER || key == UPPER_LEFT_CORNER) return
+            if (key in UNSUPPORTED_CORNERS) throw UnsupportedOperationException("ScrollViewer has only the upper leading corner: $key")
+            throw IllegalArgumentException("invalid corner key: $key")
+        }
 
         /** ChangeView(this, IReference<double>, IReference<double>, IReference<float>, boolean, out boolean). A WinRT boolean is 1 byte. */
         private val CHANGE_VIEW_WITH_DISABLE_ANIMATION = CallDescriptor(

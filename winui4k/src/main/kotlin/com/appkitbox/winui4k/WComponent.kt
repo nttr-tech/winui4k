@@ -374,6 +374,33 @@ abstract class WComponent internal constructor(
         }
 
     /**
+     * JComponent.scrollRectToVisible-like: scrolls the ancestor scrolling controls ([WScrollPane] etc.) so that [rect] in this element
+     * (DIP from the top-left of this element) is visible (passes TargetRect to UIElement.StartBringIntoView, without animation).
+     * Every ancestor moves, so nested scroll panes each move too. Scrolling happens at the next layout, so
+     * the position may not have changed yet when the call returns (Swing moves it inside the call). Does nothing when not in a window.
+     */
+    fun scrollRectToVisible(rect: WRectangle) {
+        val options = Activation.activate(XamlInterop.CLS_BringIntoViewOptions, XamlInterop.IID_IBringIntoViewOptions)
+        try {
+            options.putBool(XamlInterop.IBringIntoViewOptions_put_AnimationDesired, false)
+            val boxed = PropertyValues.boxRect(rect.x.toDouble(), rect.y.toDouble(), rect.width.toDouble(), rect.height.toDouble())
+            val target = try {
+                boxed.queryInterface(FoundationInterop.IID_IReference_Rect)
+            } finally {
+                boxed.release()
+            }
+            try {
+                options.call(XamlInterop.IBringIntoViewOptions_put_TargetRect, target.ptr)
+            } finally {
+                target.release()
+            }
+            uiElement.call(XamlInterop.IUIElement_StartBringIntoViewWithOptions, options.ptr)
+        } finally {
+            options.release()
+        }
+    }
+
+    /**
      * Sets the size a layout manager assigns. Does not change [width] / [height] (the record of the
      * user's intent). Called from [WLayoutPanel.setBounds].
      */

@@ -278,6 +278,13 @@ internal object FoundationInterop {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};f8)")
     }
 
+    // ---- Windows.Foundation.IReference<Windows.Foundation.Rect> (boxed with PropertyValue.CreateRect) ----
+
+    /** Used for BringIntoViewOptions.TargetRect ([com.appkitbox.winui4k.WComponent.scrollRectToVisible]). */
+    val IID_IReference_Rect: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.Rect;f4;f4;f4;f4))")
+    }
+
     // ---- Windows.Foundation.IReference<Windows.UI.Color> (PropertyValue has no CreateColor, so implemented ourselves) ----
 
     /** Used by AppWindowTitleBar's 12 color properties. Implementation is internal.winui.ColorReference. */

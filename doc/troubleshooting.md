@@ -227,3 +227,9 @@
   `Microsoft.UI.Xaml.Controls.dll` の中で `EXCEPTION_ACCESS_VIOLATION` になり、JVM ごと終わる (2026-10-20、`WTreeTest` の最初の版で再現)。
   Expand / Collapse の中身は `TreeViewNode.IsExpanded` の設定だけ (`ViewModel.cpp:264-272`) なので、`WTree` はノードの IsExpanded を
   直接設定する。SelectAll はテンプレートの適用前なら SelectedNodes (適用前は保留の一覧) にノードを加える。
+- **ScrollViewer: 見出し (TopHeader / LeftHeader / TopLeftHeader) を付けると測る段階でプロセスが落ちる (終了コード 0xC000027B)**
+  見出しがあると、ScrollContentPresenter は中身の HorizontalAlignment が Left、VerticalAlignment が Top 以外のとき
+  MeasureOverride で E_NOT_SUPPORTED を出す (microsoft-ui-xaml `dxaml/xcp/dxaml/lib/ScrollContentPresenter_Partial.cpp` の
+  ERROR_SCROLLVIEWER_UNSUPPORTED_HORIZONTALALIGNMENT_WITH_HEADER)。レイアウト中のエラーなので XAML がプロセスを落とす。
+  `WScrollPane` は `columnHeaderView` / `rowHeaderView` / `setCorner` で見出しを付けると中身を左上寄せに書き換える。
+  見出しがあるあいだに中身の寄せ方を変えると同じように落ちる。

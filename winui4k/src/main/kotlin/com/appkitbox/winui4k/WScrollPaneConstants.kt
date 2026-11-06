@@ -1,7 +1,7 @@
 package com.appkitbox.winui4k
 
 /**
- * ScrollPaneConstants-like: the scroll bar policy constants of [WScrollPane]. The values are the same as Swing's ScrollPaneConstants.
+ * ScrollPaneConstants-like: constants for the scroll bar policies and corner names of [WScrollPane]. The values are the same as Swing's ScrollPaneConstants.
  * [WScrollPane] implements this interface, so Java can write `WScrollPane.VERTICAL_SCROLLBAR_ALWAYS`.
  * In Kotlin, companion members are not inherited, so `WScrollPane.VERTICAL_SCROLLBAR_ALWAYS` refers to the same value in [WScrollPane]'s own companion.
  */
@@ -24,5 +24,29 @@ interface WScrollPaneConstants {
 
         /** Always shows the horizontal scroll bar (ScrollBarVisibility.Visible). */
         const val HORIZONTAL_SCROLLBAR_ALWAYS = 32
+
+        /** The top-left corner (a name for [WScrollPane.setCorner]; in ScrollViewer, the same corner as [UPPER_LEADING_CORNER]). */
+        const val UPPER_LEFT_CORNER = "UPPER_LEFT_CORNER"
+
+        /** The top-right corner (not supported in WinUI4K). */
+        const val UPPER_RIGHT_CORNER = "UPPER_RIGHT_CORNER"
+
+        /** The bottom-left corner (not supported in WinUI4K). */
+        const val LOWER_LEFT_CORNER = "LOWER_LEFT_CORNER"
+
+        /** The bottom-right corner (not supported in WinUI4K). */
+        const val LOWER_RIGHT_CORNER = "LOWER_RIGHT_CORNER"
+
+        /** The top corner on the leading side of lines (ScrollViewer.TopLeftHeader). */
+        const val UPPER_LEADING_CORNER = "UPPER_LEADING_CORNER"
+
+        /** The top corner on the trailing side of lines (not supported in WinUI4K). */
+        const val UPPER_TRAILING_CORNER = "UPPER_TRAILING_CORNER"
+
+        /** The bottom corner on the leading side of lines (not supported in WinUI4K). */
+        const val LOWER_LEADING_CORNER = "LOWER_LEADING_CORNER"
+
+        /** The bottom corner on the trailing side of lines (not supported in WinUI4K). */
+        const val LOWER_TRAILING_CORNER = "LOWER_TRAILING_CORNER"
     }
 }

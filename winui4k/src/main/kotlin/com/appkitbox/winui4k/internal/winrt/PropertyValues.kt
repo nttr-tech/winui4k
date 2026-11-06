@@ -5,8 +5,10 @@ import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.appkitbox.winui4k.internal.ffi.api.allocate
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
  * Conversion between Kotlin values and IInspectable (boxing via Windows.Foundation.PropertyValue).
@@ -37,6 +39,7 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateDouble = 15 // CreateDouble(r8, out IInspectable)
     private const val IPropertyValueStatics_CreateDateTime = 21 // CreateDateTime(DateTime i8, out IInspectable)
     private const val IPropertyValueStatics_CreateTimeSpan = 22 // CreateTimeSpan(TimeSpan i8, out IInspectable)
+    private const val IPropertyValueStatics_CreateRect = 25 // CreateRect(Rect by value, out IInspectable)
 
     /**
      * Process-lifetime cache of the PropertyValue statics factory. box is a hot path used by
@@ -106,6 +109,20 @@ internal object PropertyValues {
      * Used to pass it to an IReference<Double>-typed parameter (ScrollViewer.ChangeView's offset).
      */
     fun boxDouble(value: Double): ComPtr = statics.getPtr(IPropertyValueStatics_CreateDouble, value)
+
+    /**
+     * Boxes a Windows.Foundation.Rect (float x 4) into an IInspectable (PropertyValue.CreateRect).
+     * Used to pass it to an IReference<Rect> property (BringIntoViewOptions.TargetRect).
+     */
+    fun boxRect(x: Double, y: Double, width: Double, height: Double): ComPtr = Ffi.backend.withScope { scope ->
+        val memory = Ffi.backend.memory
+        val rect = scope.allocate(XamlStructs.RECT_FLOAT)
+        memory.putFloat(rect.ptr, 0, x.toFloat())
+        memory.putFloat(rect.ptr, 4, y.toFloat())
+        memory.putFloat(rect.ptr, 8, width.toFloat())
+        memory.putFloat(rect.ptr, 12, height.toFloat())
+        statics.getPtr(IPropertyValueStatics_CreateRect, rect)
+    }
 
     /**
      * The reverse of [boxInt]: extracts the Int if the IInspectable is a boxed Int32.

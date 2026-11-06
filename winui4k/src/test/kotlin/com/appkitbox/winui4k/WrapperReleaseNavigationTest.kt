@@ -107,6 +107,16 @@ class WrapperReleaseNavigationTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a WScrollPane with a scroll bar AdjustmentListener is also collected after being put in a window and removed") {
+            val sink = received
+            val reference = shownAndHidden {
+                WScrollPane(WLabel("a")).also { pane ->
+                    pane.verticalScrollBar.addAdjustmentListener { e -> sink += e.value }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a WTabView that was never placed is also collected once all its ChangeListeners are removed") {
             val reference = onUiThreadGet {
                 val tabView = WTabView()

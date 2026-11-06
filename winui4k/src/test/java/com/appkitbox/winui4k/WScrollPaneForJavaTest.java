@@ -86,4 +86,74 @@ class WScrollPaneForJavaTest {
         }
         assertEquals(new WPoint(40, 60), positions.get(positions.size() - 1));
     }
+
+    @Test
+    void anAnonymousAdjustmentListenerOnGetVerticalScrollBarReceivesTheValueAndType() throws InterruptedException {
+        WScrollPane pane = onUiThreadGet(() -> {
+            WScrollPane p = new WScrollPane(content(), WScrollPane.VERTICAL_SCROLLBAR_ALWAYS, WScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            p.setWidth(200);
+            p.setHeight(150);
+            WLabel header = new WLabel("Column");
+            p.setColumnHeaderView(header);
+            p.setRowHeaderView(new WLabel("Row"));
+            p.setCorner(WScrollPane.UPPER_LEFT_CORNER, new WLabel("Corner"));
+            assertSame(header, p.getColumnHeaderView());
+            assertThrows(UnsupportedOperationException.class, () -> p.setCorner(WScrollPaneConstants.LOWER_LEFT_CORNER, new WLabel("x")));
+            return p;
+        });
+        List<WAdjustmentEvent> events = new CopyOnWriteArrayList<>();
+        UiTestHarness.attachAndAwaitLoaded(pane);
+        try {
+            onUiThread(() -> {
+                pane.updateLayout();
+                WScrollPaneBar bar = pane.getVerticalScrollBar();
+                assertEquals(WAdjustable.VERTICAL, bar.getOrientation());
+                bar.addAdjustmentListener(new WAdjustmentListener() {
+                    @Override
+                    public void adjustmentValueChanged(WAdjustmentEvent e) {
+                        events.add(e);
+                    }
+                });
+                bar.setValue(100);
+                assertEquals(100, bar.getValue());
+            });
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (events.stream().noneMatch(e -> e.getValue() == 100 && !e.getValueIsAdjusting()) && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+                onUiThread(() -> { });
+            }
+        } finally {
+            UiTestHarness.detach(pane);
+        }
+        WAdjustmentEvent last = events.get(events.size() - 1);
+        assertEquals(WAdjustmentEvent.ADJUSTMENT_VALUE_CHANGED, last.getID());
+        assertEquals(WAdjustmentEvent.TRACK, last.getAdjustmentType());
+        assertEquals(100, last.getValue());
+        assertSame(onUiThreadGet(pane::getVerticalScrollBar), last.getAdjustable());
+    }
+
+    @Test
+    void scrollRectToVisibleScrollsUntilTheRectangleInTheContentIsVisible() throws InterruptedException {
+        WCanvas view = onUiThreadGet(WScrollPaneForJavaTest::content);
+        WScrollPane pane = onUiThreadGet(() -> {
+            WScrollPane p = new WScrollPane(view, WScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, WScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            p.setWidth(200);
+            p.setHeight(150);
+            return p;
+        });
+        UiTestHarness.attachAndAwaitLoaded(pane);
+        try {
+            onUiThread(() -> {
+                pane.updateLayout();
+                view.scrollRectToVisible(new WRectangle(0, 700, 10, 100));
+            });
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (!onUiThreadGet(() -> pane.getViewport().getViewPosition()).equals(new WPoint(0, 650)) && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+            }
+            assertEquals(new WPoint(0, 650), onUiThreadGet(() -> pane.getViewport().getViewPosition()));
+        } finally {
+            UiTestHarness.detach(pane);
+        }
+    }
 }
