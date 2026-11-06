@@ -12,7 +12,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -21,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Tests the JDialog-style [WContentDialog]: reading back the title and others from the native side, [WContentDialog.showAndWait] blocking until closed
  * (the result for each button pressed with Esc or Enter, and when the owner window is closed), the order and canceling of the open/close and button listeners,
- * the exception for a second dialog, and that the handlers do not capture the wrapper (GC). Keys are sent to the shared window with [TestKeyboard].
+ * the exception for a second dialog. That the handlers do not capture the wrapper (GC) is in [WrapperReleaseDialogTest]. Keys are sent to the shared window with [TestKeyboard].
  */
 class WContentDialogTest : FunSpec() {
     /** Events recorded on the UI thread and read from the test thread (guarded by a lock). */
@@ -61,7 +60,7 @@ class WContentDialogTest : FunSpec() {
         dialog.addButtonClickListener { e -> events += "button:${e.button}" }
     }
 
-    private fun isLoaded(dialog: WContentDialog): Boolean = DialogTestSupport.isLoadedOnUi(dialog)
+    private fun isLoaded(dialog: WContentDialog): Boolean = OpenContentDialogs.isLoadedOnUi(dialog)
 
     /** Waits until [dialog] opens, becomes Loaded and can receive key input. */
     private suspend fun awaitOpen(dialog: WContentDialog) {
@@ -292,38 +291,6 @@ class WContentDialogTest : FunSpec() {
             awaitEvents("returned:NONE")
             onUiThreadGet { dialog.isVisible } shouldBe false
         }
-
-        test("a dialog that was never opened, with listeners that do not reference it, is collected and its native object destroyed once all listeners are removed") {
-            val (reference, probe) = onUiThreadGet {
-                val dialog = dialog()
-                val listener = object : WContentDialogAdapter() {}
-                val button: (WContentDialogButtonEvent) -> Unit = { }
-                dialog.addDialogListener(listener)
-                dialog.addButtonClickListener(button)
-                dialog.removeDialogListener(listener)
-                dialog.removeButtonClickListener(button)
-                WeakReference(dialog) to NativeProbe(dialog.inspectable)
-            }
-            Reclamation.awaitCollected(reference).shouldBeTrue()
-            Reclamation.awaitDestroyed(probe).shouldBeTrue()
-        }
-
-        test("a dialog with listeners that do not reference it is collected when its references are dropped after opening and closing it") {
-            withOwner { owner ->
-                val reference = onUiThreadGet {
-                    val dialog = dialog()
-                    recordListeners(dialog)
-                    dialog.show(owner) { events += "callback:$it" }
-                    WeakReference(dialog)
-                }
-                awaitOpen(checkNotNull(reference.get()))
-                pressEscape()
-                eventually(5.seconds) { events().takeLast(2) shouldBe listOf("callback:NONE", "closed:NONE") }
-                eventually(5.seconds) { onUiThreadGet { reference.get()?.let { isLoaded(it) } ?: false }.shouldBeFalse() }
-                onUiThread { } // Wait for the Unloaded handler to finish running
-                Reclamation.awaitCollected(reference).shouldBeTrue()
-            }
-        }
     }
 
     private companion object {
@@ -333,14 +300,4 @@ class WContentDialogTest : FunSpec() {
         const val SETTLE_MILLIS = 500L
         const val OWNER_TITLE = "winui4k dialog owner"
     }
-}
-
-/** Helpers for the dialog tests (Kotlin and Java) that read whether a dialog has opened and become Loaded or has finished closing. */
-internal object DialogTestSupport {
-    /** Call on the UI thread; returns whether [component] is Loaded (FrameworkElement.IsLoaded). */
-    fun isLoadedOnUi(component: WComponent): Boolean = component.frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
-
-    /** [isLoadedOnUi] callable from any thread. */
-    @JvmStatic
-    fun isLoaded(component: WComponent): Boolean = onUiThreadGet { isLoadedOnUi(component) }
 }

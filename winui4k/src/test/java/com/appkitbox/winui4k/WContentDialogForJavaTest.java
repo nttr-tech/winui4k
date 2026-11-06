@@ -40,7 +40,7 @@ class WContentDialogForJavaTest {
     }
 
     private static boolean isLoaded(WContentDialog dialog) {
-        return DialogTestSupport.isLoaded(dialog);
+        return OpenContentDialogs.isLoaded(dialog);
     }
 
     /** Waits until the dialog opens and can receive keys. */
