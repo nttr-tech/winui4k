@@ -30,6 +30,22 @@ class WrapperReleaseTreeTest : FunSpec() {
     }
 
     init {
+        test("a WTree never shown is collected whether it builds nodes or mirrors a model (even if the user keeps holding the model)") {
+            val model = onUiThreadGet { DefaultTreeModel(DefaultMutableTreeNode("Root").also { it.add(DefaultMutableTreeNode("Child")) }) }
+            val references = onUiThreadGet {
+                val plain = WTree()
+                val nodes = WTree().also { tree ->
+                    tree.addRootNode(WTreeNode("Root").also { it.add(WTreeNode("Child")) })
+                    tree.selectionMode = TreeViewSelectionMode.MULTIPLE
+                    tree.selectAll()
+                }
+                val modelled = WTree(model).also { it.setSelectionRow(0) }
+                listOf(WeakReference(plain), WeakReference(nodes), WeakReference(modelled))
+            }
+            references.forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+            onUiThreadGet { model.getChildCount(checkNotNull(model.getRoot())) } shouldBe 1
+        }
+
         test("a WTree mirroring a model the user keeps holding is also collected after being put in a window and removed, and the model can still be used") {
             val root = DefaultMutableTreeNode("Root")
             val model = onUiThreadGet { DefaultTreeModel(root.also { it.add(DefaultMutableTreeNode("Child")) }) }

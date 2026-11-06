@@ -211,8 +211,11 @@ class WTree() : WControl(
     /** The mapping between displayed nodes and paths (either the node-building usage or the model-mirroring usage). */
     private var binding: TreeBinding = NodeTreeBinding(roots)
 
-    /** Looks up this tree from the resident native handlers (a cycle forms if a handler captures the tree strongly). */
-    private val anchor = ListenerAnchor(this).also { it.listenerAdded() }
+    /**
+     * Looks up this tree from the resident native handlers (a cycle forms if a handler captures the tree strongly).
+     * It is held strongly from when it is first shown, so a tree never shown is collected.
+     */
+    private val anchor = ListenerAnchor(this).also { it.listenerAddedFromFirstLoaded() }
 
     /** The listener that mirrors model changes (looks up the tree weakly). */
     private val modelListener: TreeModelListener = AnchoredTreeModelListener(anchor)

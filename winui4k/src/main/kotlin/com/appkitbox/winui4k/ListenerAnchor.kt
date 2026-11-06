@@ -39,6 +39,9 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
 
     private var listenerCount = 0
 
+    /** If true, treat the next Loaded as adding one listener ([listenerAddedFromFirstLoaded]). */
+    private var addOnLoaded = false
+
     /**
      * IWeakReferences to the ancestors (from parent to root) while in the tree. Used on Unloaded to find the root of the
      * detached subtree.
@@ -76,6 +79,15 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
         if (isLoaded(owner.frameworkElement)) recordAncestors(owner.frameworkElement)
     }
 
+    /**
+     * Treats it as having one listener added from the first Loaded on (never removed). For wrappers with resident handlers:
+     * it is held strongly while shown (and while the detached subtree remains), but a wrapper never put in the tree can be collected.
+     */
+    fun listenerAddedFromFirstLoaded() {
+        val owner = reference.get() ?: return
+        if (isLoaded(owner.frameworkElement)) listenerAdded() else addOnLoaded = true
+    }
+
     /** A listener was removed. If it was the last listener, stop holding the wrapper strongly. */
     fun listenerRemoved() {
         if (listenerCount > 0 && --listenerCount == 0) {
@@ -90,6 +102,10 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
     }
 
     private fun onLoaded(element: ComPtr) { // element is borrowed (do not Release)
+        if (addOnLoaded) {
+            addOnLoaded = false
+            listenerCount++
+        }
         if (listenerCount == 0) return
         pinned = reference.get()
         recordAncestors(element)
