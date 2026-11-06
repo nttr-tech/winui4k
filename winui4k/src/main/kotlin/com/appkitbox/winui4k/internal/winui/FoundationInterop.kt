@@ -235,6 +235,10 @@ internal object FoundationInterop {
     // IIterable: First=6. IIterator: get_Current=6 get_HasCurrent=7 MoveNext=8 GetMany=9
     internal const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // Base IID of IIterable`1
     internal const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // Base IID of IIterator`1
+    const val IIterable_First = 6
+    const val IIterator_get_Current = 6
+    const val IIterator_get_HasCurrent = 7
+    const val IIterator_MoveNext = 8
 
     /** Concrete IID of IIterable<Object> (passed to ItemsControl.ItemsSource). */
     val IID_IIterable_Object: String by lazy {

@@ -49,6 +49,16 @@ class WrapperReleaseListTest : FunSpec() {
             Reclamation.awaitCollected(listBox).shouldBeTrue()
         }
 
+        test("a WTable with a listener on selectionModel and a selected row is collected after being put in a window and removed") {
+            val reference = shownAndHidden {
+                WTable(arrayOf(arrayOf<Any?>("Apple"), arrayOf<Any?>("Orange")), arrayOf<Any?>("Name")).also { table ->
+                    table.selectionModel.addListSelectionListener { }
+                    table.setRowSelectionInterval(1, 1)
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a shown WList is not collected even when only its selectionModel is held, display-side selection reaches the model, and it is collected once the model is also released and the list removed") {
             val selection = arrayOfNulls<WListSelectionModel>(1)
             val reference = onUiThreadGet {

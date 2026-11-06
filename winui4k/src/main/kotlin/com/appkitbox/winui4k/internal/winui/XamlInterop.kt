@@ -2315,6 +2315,8 @@ internal object XamlInterop {
 
     // ---- Microsoft.UI.Xaml.Media.VisualTreeHelper (statics) ----
     const val CLS_VisualTreeHelper = "Microsoft.UI.Xaml.Media.VisualTreeHelper"
+    const val IID_IGeneralTransform = "04eedeeb-31e5-54c0-ae3f-8bd06645d339" // Microsoft.UI.Xaml.Media
+    const val IGeneralTransform_TransformPoint = 7     // TransformPoint(Point, out Point)
     const val IID_IVisualTreeHelperStatics = "5aece43c-7651-5bb5-855c-2198496e455e"
     const val IVisualTreeHelperStatics_FindElementsInHostCoordinates = 6 // (Point, UIElement subtree, out IIterable<UIElement>)
     const val IVisualTreeHelperStatics_GetChild = 10          // GetChild(DependencyObject, i4, out DependencyObject)
@@ -2383,6 +2385,7 @@ internal object XamlInterop {
     const val IUIElement_ReleasePointerCaptures = 214  // ReleasePointerCaptures()
     const val IUIElement_AddHandler = 215              // AddHandler(RoutedEvent, Object handler, boolean handledEventsToo)
     const val IUIElement_RemoveHandler = 216           // RemoveHandler(RoutedEvent, Object handler)
+    const val IUIElement_TransformToVisual = 217       // TransformToVisual(UIElement, out GeneralTransform)
     const val IUIElement_InvalidateMeasure = 218       // InvalidateMeasure()
     const val IUIElement_Focus = 226                   // Focus(FocusState, out boolean)
     const val IUIElement_StartBringIntoView = 223      // StartBringIntoView()

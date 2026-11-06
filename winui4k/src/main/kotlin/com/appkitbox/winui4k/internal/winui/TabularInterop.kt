@@ -77,6 +77,7 @@ internal object TabularInterop {
     // base: DependencyObject / composable factory: ITableViewColumnFactory (overridable: ITableViewColumnOverrides)
     const val CLS_TableViewColumn = "$NS.TableViewColumn"
     const val IID_ITableViewColumn = "12752b5d-4809-5d2c-8d37-b53e1e9c2a1f"
+    const val IID_ITableViewCellsPanel = "ebd93156-d2dc-59b6-b3c5-bb1376c7b6d0" // The panel that lays out the cells of rows and the column header in column order
     const val IID_ITableViewColumnFactory = "d50f67a6-cc5b-5946-8394-c61f5725bf6d"
     const val ITableViewColumnFactory_CreateInstance = 6    // CreateInstance(outer, out inner, out TableViewColumn)
     const val ITableViewColumn_get_Header = 6               // get_Header(out object)

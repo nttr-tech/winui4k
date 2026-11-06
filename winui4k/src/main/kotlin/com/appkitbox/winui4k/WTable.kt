@@ -48,6 +48,9 @@ import kotlin.jvm.JvmSynthetic
  * - Editing: starts with double-click / F2, Enter commits, Esc cancels. Committed values are written back to [TableModel.setValueAt].
  *   [isEditing] / [stopCellEditing] / [cancelCellEditing] / [addBeginningEditListener] / [addCellEditEndingListener]
  * - Selection: single selection ([selectionMode] / [selectedRow] / [selectRow] / [clearSelection] / [addRowSelectionListener])
+ *   and the JTable-style [selectionModel] ([WListSelectionModel]) / [setRowSelectionInterval] / [changeSelection] / [rowSelectionAllowed].
+ *   TableView can select only one row, so intervals and multiple rows are shrunk to the single lead row, and there is never a column or cell selection ([selectedColumn] etc.)
+ * - Row and column from a point: [rowAtPoint] / [columnAtPoint] (DIP)
  * - Row double-click: [addRowInvokedListener]
  * - Sorting: clicking column headers (enabled when [rowSorter] is set) / [TableRowSorter.setSortKeys] /
  *   [addSortingListener] (cancelable) / [addSortedListener]
@@ -60,6 +63,7 @@ import kotlin.jvm.JvmSynthetic
  * those whose names contain model. Conversion to and from the model is done with [convertRowIndexToModel] /
  * [convertColumnIndexToModel] and so on (as in Swing).
  */
+@Suppress("LargeClass") // Holds the same public API as JTable in one class (internal processing is split into TableRows, TableViewColumnPeer, TableSelectionSync, etc.)
 class WTable @JvmOverloads constructor(
     model: TableModel = DefaultTableModel(),
     columnModel: TableColumnModel? = null,
@@ -68,6 +72,19 @@ class WTable @JvmOverloads constructor(
 ) {
     /** A table of row data [rowData] and column names [columnNames] (equivalent to JTable(Object[][], Object[])). */
     constructor(rowData: List<List<Any?>>, columnNames: List<Any?>) : this(DefaultTableModel(rowData, columnNames))
+
+    /** A table of the arrays of row data [rowData] and column names [columnNames] (equivalent to JTable(Object[][], Object[])). */
+    constructor(rowData: Array<out Array<out Any?>>, columnNames: Array<out Any?>) : this(
+        DefaultTableModel(rowData.map { it.toList() }, columnNames.toList()),
+    )
+
+    /**
+     * A table of [model], the column model [columnModel] (columns are created from the model if null) and the selection model [selectionModel] (the default if null)
+     * (equivalent to JTable(TableModel, TableColumnModel, ListSelectionModel)).
+     */
+    constructor(model: TableModel, columnModel: TableColumnModel?, selectionModel: WListSelectionModel?) : this(model, columnModel) {
+        if (selectionModel != null) this.selectionModel = selectionModel
+    }
 
     /** A table of [rowCount] rows × [columnCount] columns with all values null (equivalent to JTable(int, int)). */
     constructor(rowCount: Int, columnCount: Int) : this(DefaultTableModel(rowCount, columnCount))
@@ -83,6 +100,9 @@ class WTable @JvmOverloads constructor(
      * A table that is never placed in a window is not collected.
      */
     private val anchor = ListenerAnchor(this).also { it.listenerAdded() }
+
+    /** Sync between the row selection and [selectionModel]. */
+    private val selection = TableSelectionSync(this, inspectable)
 
     /** TableView.Columns (IVector<TableViewColumn>). */
     private val nativeColumns: ComPtr by lazy { own(tableView.getPtr(TabularInterop.ITableView_get_Columns)) }
@@ -174,6 +194,8 @@ class WTable @JvmOverloads constructor(
             if (old === value) return
             old.removeTableModelListener(modelListener)
             field = value
+            // Clear the selection, as Swing's JTable.setModel does
+            selection.reset()
             attachModel()
             if (autoCreateRowSorter) rowSorter = TableRowSorter(value)
         }
@@ -245,8 +267,19 @@ class WTable @JvmOverloads constructor(
         columnModel.moveColumn(column, targetColumn)
     }
 
-    /** The column for [identifier] (looked up by [TableColumn.identifier]). */
-    fun getColumn(identifier: Any?): TableColumn = columnModel.getColumn(columnModel.getColumnIndex(identifier))
+    /**
+     * The column of [identifier] (JTable.getColumn). Looks for a column whose [TableColumn.identifier] is equal, and if none, returns the displayed column
+     * whose model column name ([TableModel.getColumnName]) is equal. Columns created automatically from the model have no headerValue
+     * (the heading follows the model's column name), so this is a fallback so that they can be looked up by column name as in Swing (headerValue is not changed).
+     * @throws IllegalArgumentException if not found either way
+     */
+    fun getColumn(identifier: Any?): TableColumn {
+        val columns = columnModel.getColumns()
+        val byIdentifier = columns.firstOrNull { it.identifier == identifier }
+        if (byIdentifier != null) return byIdentifier
+        return columns.firstOrNull { it.identifier == null && it.modelIndex in 0 until model.getColumnCount() && model.getColumnName(it.modelIndex) == identifier }
+            ?: throw IllegalArgumentException("Identifier not found: $identifier")
+    }
 
     /** The number of visible columns. */
     val columnCount: Int
@@ -302,9 +335,9 @@ class WTable @JvmOverloads constructor(
         get() = TableSelectionMode.of(tableView.getInt(TabularInterop.ITableView_get_SelectionMode))
         set(value) = tableView.call(TabularInterop.ITableView_put_SelectionMode, value.native)
 
-    /** The selected row (view index; TableView.SelectedIndex). -1 if nothing is selected. */
+    /** The selected row (a view index; JTable.getSelectedRow). -1 if unselected. Read from [selectionModel], so the new selection is visible even inside its listeners. */
     val selectedRow: Int
-        get() = tableView.getInt(TabularInterop.ITableView_get_SelectedIndex)
+        get() = selection.selectedRow()
 
     /** An array of the selected row indices (0 or 1 elements because of single selection; equivalent to JTable.getSelectedRows). */
     val selectedRows: IntArray
@@ -324,13 +357,116 @@ class WTable @JvmOverloads constructor(
         tableView.call(TabularInterop.ITableView_Deselect, row)
     }
 
-    /** Whether row [row] (view) is selected (TableView.IsSelected). */
-    fun isRowSelected(row: Int): Boolean = callBool(TabularInterop.ITableView_IsSelected, row)
+    /** Whether row [row] (view) is selected (JTable.isRowSelected; read from [selectionModel] like [selectedRow]). */
+    fun isRowSelected(row: Int): Boolean = row >= 0 && row == selectedRow
 
     /** Clears the selection (TableView.DeselectAll). */
     fun clearSelection() {
         tableView.call(TabularInterop.ITableView_DeselectAll)
     }
+
+    /**
+     * The row selection model (JTable.getSelectionModel / setSelectionModel). Indices are view rows, and it is synced with the display selection both ways.
+     * TableView can select only one row, so even if the model selects intervals or several rows, it is shrunk to the lead row only (the smallest row if the lead is not selected).
+     * The default is a single selection [WDefaultListSelectionModel] (Swing's JTable defaults to multiple intervals). After sorting, filtering, and adding or removing rows,
+     * the same model row stays selected as in Swing (the selection of rows that disappeared from the display or were removed is cleared).
+     * WinUI does not report operations in progress, so valueIsAdjusting of events is always false.
+     * As in Swing, the selection model references the table through its listener, so the table is not collected while the model is held.
+     */
+    var selectionModel: WListSelectionModel
+        get() = selection.call { it }
+        set(value) {
+            selection.model = value
+        }
+
+    /**
+     * Sets the Swing selection mode (a ListSelectionModel constant) (JTable.setSelectionMode). TableView can select only one row, so
+     * the [selectionModel]'s selection mode becomes SINGLE_SELECTION for any value. Make a non-selectable table with [selectionMode] NONE or
+     * [rowSelectionAllowed].
+     * @throws IllegalArgumentException if it is none of the constants
+     */
+    fun setSelectionMode(selectionMode: Int) {
+        require(selectionMode in WListSelectionModel.SINGLE_SELECTION..WListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
+            "invalid selectionMode: $selectionMode"
+        }
+        selection.call { it.setSelectionMode(WListSelectionModel.SINGLE_SELECTION) }
+    }
+
+    /** Whether rows can be selected (JTable.getRowSelectionAllowed / setRowSelectionAllowed). false sets [selectionMode] to NONE, true to SINGLE. */
+    var rowSelectionAllowed: Boolean
+        get() = selectionMode != TableSelectionMode.NONE
+        set(value) {
+            selectionMode = if (value) TableSelectionMode.SINGLE else TableSelectionMode.NONE
+        }
+
+    /**
+     * Selects rows [index0]..[index1] (JTable.setRowSelectionInterval). Only one row can be selected, so it becomes row [index1].
+     * @throws IllegalArgumentException if a row is out of range
+     */
+    fun setRowSelectionInterval(index0: Int, index1: Int) = selection.call { it.setSelectionInterval(selection.boundRow(index0), selection.boundRow(index1)) }
+
+    /**
+     * Adds rows [index0]..[index1] to the selection (JTable.addRowSelectionInterval). Only one row can be selected, so only row [index1] remains.
+     * @throws IllegalArgumentException if a row is out of range
+     */
+    fun addRowSelectionInterval(index0: Int, index1: Int) = selection.call { it.addSelectionInterval(selection.boundRow(index0), selection.boundRow(index1)) }
+
+    /**
+     * Removes rows [index0]..[index1] from the selection (JTable.removeRowSelectionInterval).
+     * @throws IllegalArgumentException if a row is out of range
+     */
+    fun removeRowSelectionInterval(index0: Int, index1: Int) = selection.call { it.removeSelectionInterval(selection.boundRow(index0), selection.boundRow(index1)) }
+
+    /**
+     * Changes the selection by the same rules as Swing's JTable.changeSelection ([columnIndex] is not used since there is no column selection).
+     * If neither toggle nor extend, selects only [rowIndex]; toggle only toggles the selection of [rowIndex]; extend only selects from
+     * the anchor to [rowIndex] (only one row can be selected, so [rowIndex]); both extend the anchor's selection state to anchor..[rowIndex].
+     */
+    fun changeSelection(rowIndex: Int, columnIndex: Int, toggle: Boolean, extend: Boolean) {
+        selection.changeSelection(rowIndex, toggle, extend) { isCellSelected(it, columnIndex) }
+    }
+
+    /** The selected column (JTable.getSelectedColumn). TableView cannot select columns, so always -1. */
+    val selectedColumn: Int
+        get() = -1
+
+    /** The selected columns (JTable.getSelectedColumns). TableView cannot select columns, so always empty. */
+    val selectedColumns: IntArray
+        get() = IntArray(0)
+
+    /** The number of selected columns (JTable.getSelectedColumnCount). TableView cannot select columns, so always 0. */
+    val selectedColumnCount: Int
+        get() = 0
+
+    /** Whether column [column] is selected (JTable.isColumnSelected). TableView cannot select columns, so always false. */
+    @Suppress("UNUSED_PARAMETER", "FunctionOnlyReturningConstant") // To match Swing's shape
+    fun isColumnSelected(column: Int): Boolean = false
+
+    /** Whether the cell at row [row], column [column] is selected (JTable.isCellSelected). Columns cannot be selected, so it is decided by the row selection. */
+    @Suppress("UNUSED_PARAMETER") // To match Swing's shape
+    fun isCellSelected(row: Int, column: Int): Boolean = rowSelectionAllowed && row >= 0 && isRowSelected(row)
+
+    /** Whether columns can be selected (JTable.getColumnSelectionAllowed). TableView cannot select columns, so always false, and setting true does nothing. */
+    var columnSelectionAllowed: Boolean
+        get() = false
+        set(@Suppress("UNUSED_PARAMETER") value) = Unit
+
+    /** Whether cells can be selected individually (JTable.getCellSelectionEnabled). TableView cannot select cells, so always false, and setting true does nothing. */
+    var cellSelectionEnabled: Boolean
+        get() = false
+        set(@Suppress("UNUSED_PARAMETER") value) = Unit
+
+    /**
+     * The view index of the row at the table coordinates ([x], [y]) (DIP; the table's top-left is the origin) (JTable.rowAtPoint).
+     * -1 if not over a row (column header, area without rows, outside the table, not shown).
+     */
+    fun rowAtPoint(x: Double, y: Double): Int = TableHitTest.rowAt(uiElement, rowInvoker, x, y)
+
+    /**
+     * The display-order index of the column at the table coordinates ([x], [y]) (DIP; the table's top-left is the origin) (JTable.columnAtPoint).
+     * Horizontal scrolling is taken into account over rows and the column header. -1 outside the columns (right of the last column, outside the table, not shown).
+     */
+    fun columnAtPoint(x: Double, y: Double): Int = TableHitTest.columnAt(uiElement, columnModel.getColumns().map { it.width }, x, y)
 
     /** Subscribes to row selection changes (TableView.SelectionChanged). */
     @JvmSynthetic
@@ -676,11 +812,18 @@ class WTable @JvmOverloads constructor(
 
     internal fun onTableChanged(event: TableModelEvent) {
         when {
-            event.firstRow == TableModelEvent.HEADER_ROW -> onStructureChanged()
-            event.type == TableModelEvent.INSERT -> rows.insert(event.firstRow, event.lastRow - event.firstRow + 1)
-            event.type == TableModelEvent.DELETE -> rows.remove(event.firstRow, event.lastRow - event.firstRow + 1)
-            event.lastRow == Int.MAX_VALUE -> onDataChanged()
-            else -> for (row in event.firstRow..minOf(event.lastRow, rows.size - 1)) updateRow(row, event.column)
+            event.firstRow == TableModelEvent.HEADER_ROW -> selection.reordering { onStructureChanged() }.also { selectionModel.clearSelection() }
+            event.type == TableModelEvent.INSERT -> {
+                selection.quietly { rows.insert(event.firstRow, event.lastRow - event.firstRow + 1) }
+                selection.modelRowsChanged(event.firstRow, event.lastRow, inserted = true)
+            }
+            event.type == TableModelEvent.DELETE -> {
+                selection.quietly { rows.remove(event.firstRow, event.lastRow - event.firstRow + 1) }
+                selection.modelRowsChanged(event.firstRow, event.lastRow, inserted = false)
+            }
+            // As with Swing's JTable, a full change (fireTableDataChanged) clears the selection
+            event.lastRow == Int.MAX_VALUE -> selection.reordering { onDataChanged() }.also { selectionModel.clearSelection() }
+            else -> selection.reordering { for (row in event.firstRow..minOf(event.lastRow, rows.size - 1)) updateRow(row, event.column) }
         }
     }
 
@@ -759,6 +902,11 @@ class WTable @JvmOverloads constructor(
             TabularInterop.IID_SortedHandler,
             TabularInterop.ITableView_add_Sorted,
         ) { _, args -> anchor.get()?.onSorted(ComPtr(args)) }
+        tableView.addEventHandler(
+            "WinUI4K.TableViewSelectionSyncHandler",
+            TabularInterop.IID_SelectionChangedHandler,
+            TabularInterop.ITableView_add_SelectionChanged,
+        ) { _, _ -> anchor.get()?.selection?.pullFromNative() }
     }
 
     private fun onBeginningEdit(args: ComPtr) {
@@ -812,6 +960,8 @@ class WTable @JvmOverloads constructor(
             args.putBool(TabularInterop.ITableViewSortingEventArgs_put_Cancel, true)
             return
         }
+        // Do not copy the selection during sorting, and reselect the same model row when it ends (ends with Sorted)
+        selection.beginUserReorder()
         // A single-column sort from clicking a column header replaces any previous multi-key sort
         if (multiSortKeys.isNotEmpty()) {
             multiSortKeys = emptyList()
@@ -827,6 +977,7 @@ class WTable @JvmOverloads constructor(
             val event = TableSortEvent(peers.indexOf(peer), peer.column.modelIndex, order)
             for (listener in sortedListeners.toList()) listener.sorting(event)
         }
+        selection.endUserReorder()
         sorter?.notifySorted()
     }
 
@@ -917,12 +1068,14 @@ class WTable @JvmOverloads constructor(
      */
     private fun sortByKeys(keys: List<RowSorter.SortKey>) {
         val currentSource = source ?: return
-        callBool(TabularInterop.ITableView_ClearSort)
-        for (key in keys) {
-            val result = Hstring.use(TableRowItem.keyOf(key.column)) { path ->
-                currentSource.getPtr(TabularInterop.ITableViewSource_SortByPath, path, directionOf(key.sortOrder))
+        selection.reordering {
+            callBool(TabularInterop.ITableView_ClearSort)
+            for (key in keys) {
+                val result = Hstring.use(TableRowItem.keyOf(key.column)) { path ->
+                    currentSource.getPtr(TabularInterop.ITableViewSource_SortByPath, path, directionOf(key.sortOrder))
+                }
+                result.release()
             }
-            result.release()
         }
         multiSortKeys = keys
         sorter?.notifySortOrderChanged()
@@ -937,7 +1090,13 @@ class WTable @JvmOverloads constructor(
     /** Sets the filter of the current [rowSorter] on TableViewSource (clears it if there is none). */
     private fun applyRowFilter() {
         val currentSource = source ?: return
-        val result = if (sorter?.getRowFilter() == null) {
+        val result = selection.reordering { filterResult(currentSource) }
+        result.release()
+        sorter?.notifySorted()
+    }
+
+    private fun filterResult(currentSource: ComPtr): ComPtr {
+        return if (sorter?.getRowFilter() == null) {
             currentSource.getPtr(TabularInterop.ITableViewSource_ClearFilter)
         } else {
             val predicate = anchoredRowFilter(anchor)
@@ -947,15 +1106,18 @@ class WTable @JvmOverloads constructor(
                 predicate.release()
             }
         }
-        result.release()
-        sorter?.notifySorted()
     }
 
     /** Groups TableViewSource by the current [groupKey] (clears the grouping if there is none). */
     private fun applyGrouping() {
         val currentSource = source ?: return
         val key = groupKey
-        val result = if (key == null) {
+        val result = selection.reordering { groupResult(currentSource, key) }
+        result.release()
+    }
+
+    private fun groupResult(currentSource: ComPtr, key: TableGroupKey?): ComPtr {
+        return if (key == null) {
             currentSource.getPtr(TabularInterop.ITableViewSource_ClearGroupBy)
         } else {
             val selector = anchoredGroupKeySelector(anchor, key)
@@ -965,7 +1127,6 @@ class WTable @JvmOverloads constructor(
                 selector.release()
             }
         }
-        result.release()
     }
 
     // ------------------------------------------------------------------
