@@ -51,13 +51,28 @@ open class WDefaultListSelectionModel : WListSelectionModel {
 
     override fun getSelectionMode(): Int = selectionMode
 
+    /**
+     * Changes the selection mode. As with Swing since JDK 9, changing to a narrower mode shrinks the current selection
+     * (to only the smallest row for SINGLE_SELECTION, and to only the range continuing from the smallest row for SINGLE_INTERVAL_SELECTION).
+     * @throws IllegalArgumentException if it is none of the three constants
+     */
     override fun setSelectionMode(selectionMode: Int) {
         require(
             selectionMode == WListSelectionModel.SINGLE_SELECTION ||
                 selectionMode == WListSelectionModel.SINGLE_INTERVAL_SELECTION ||
                 selectionMode == WListSelectionModel.MULTIPLE_INTERVAL_SELECTION,
         ) { "invalid selectionMode" }
+        val oldMode = this.selectionMode
         this.selectionMode = selectionMode
+        // As since JDK 9, changing to a narrower mode shrinks the current selection to that mode (the smallest row, or the range continuing from it)
+        if (oldMode <= selectionMode || isSelectionEmpty()) return
+        if (selectionMode == WListSelectionModel.SINGLE_SELECTION) {
+            setSelectionInterval(minIndex, minIndex)
+        } else {
+            var end = minIndex
+            while (value.get(end + 1)) end++
+            setSelectionInterval(minIndex, end)
+        }
     }
 
     override fun getSelectedIndices(): IntArray {
@@ -234,7 +249,9 @@ open class WDefaultListSelectionModel : WListSelectionModel {
         changeSelection(clearMin, clearMax, MAX, MIN)
     }
 
+    /** @throws IndexOutOfBoundsException if [index] or [length] is negative (as in Swing) */
     override fun insertIndexInterval(index: Int, length: Int, before: Boolean) {
+        if (!needsInsert(index, length)) return
         val insMinIndex = if (before) index else index + 1
         val insMaxIndex = insMinIndex + length - 1
         // Shift the selection after the insertion point back by length
@@ -250,7 +267,15 @@ open class WDefaultListSelectionModel : WListSelectionModel {
         fireValueChanged()
     }
 
+    /** Checks the arguments of [insertIndexInterval], and returns true if the selection needs to change (negative values throw IndexOutOfBoundsException, as in Swing). */
+    private fun needsInsert(index: Int, length: Int): Boolean {
+        if (length < 0 || index < 0) throw IndexOutOfBoundsException("index or length is negative")
+        return index != MAX && length != 0
+    }
+
+    /** @throws IndexOutOfBoundsException if either row is negative (as in Swing) */
     override fun removeIndexInterval(index0: Int, index1: Int) {
+        if (index0 < 0 || index1 < 0) throw IndexOutOfBoundsException("index is negative")
         val rmMinIndex = minOf(index0, index1)
         val rmMaxIndex = maxOf(index0, index1)
         val gapLength = rmMaxIndex - rmMinIndex + 1

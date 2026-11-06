@@ -56,6 +56,34 @@ class WDefaultListSelectionModelTest : FunSpec() {
             m.getSelectionMode() shouldBe 2
         }
 
+        test("changing to a narrower mode shrinks the selection to the smallest row (SINGLE) or the range continuing from the smallest row (SINGLE_INTERVAL) (as since JDK 9)") {
+            val m = model()
+            m.setSelectionInterval(1, 2)
+            m.addSelectionInterval(5, 6)
+            val events = m.record()
+            m.setSelectionMode(WListSelectionModel.SINGLE_INTERVAL_SELECTION)
+            val interval = listOf(m.indices(), m.getAnchorSelectionIndex(), m.getLeadSelectionIndex())
+            m.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
+            val single = listOf(m.indices(), m.getAnchorSelectionIndex(), m.getLeadSelectionIndex())
+            listOf(interval, single, events) shouldBe listOf(
+                listOf(listOf(1, 2), 1, 2),
+                listOf(listOf(1), 1, 1),
+                listOf(Triple(1, 6, false), Triple(1, 2, false)),
+            )
+        }
+
+        test("changing to a wider mode, or when the selection is empty, does not change the selection or fire events") {
+            val m = model(WListSelectionModel.SINGLE_SELECTION)
+            m.setSelectionInterval(3, 3)
+            val events = m.record()
+            m.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION)
+            m.addSelectionInterval(5, 5)
+            m.clearSelection()
+            events.clear()
+            m.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
+            listOf(m.indices(), events) shouldBe listOf(emptyList<Int>(), emptyList<Triple<Int, Int, Boolean>>())
+        }
+
         test("setSelectionInterval selects the range even with index0 > index1, with anchor=index0 and lead=index1, and fires one event") {
             val m = model()
             val events = m.record()
@@ -281,6 +309,19 @@ class WDefaultListSelectionModelTest : FunSpec() {
             inside.removeIndexInterval(3, 5)
             listOf(inside.getAnchorSelectionIndex(), inside.getLeadSelectionIndex()) shouldBe listOf(2, 2)
             inside.indices() shouldBe listOf(2)
+        }
+
+        test("insertIndexInterval and removeIndexInterval throw IndexOutOfBoundsException for negative rows and lengths, and an insertion of length 0 does nothing (as in Swing)") {
+            val m = model()
+            m.setSelectionInterval(2, 3)
+            val events = m.record()
+            shouldThrow<IndexOutOfBoundsException> { m.insertIndexInterval(-1, 1, true) }
+            shouldThrow<IndexOutOfBoundsException> { m.insertIndexInterval(1, -1, true) }
+            shouldThrow<IndexOutOfBoundsException> { m.removeIndexInterval(-1, 2) }
+            shouldThrow<IndexOutOfBoundsException> { m.removeIndexInterval(2, -3) }
+            m.insertIndexInterval(1, 0, true)
+            listOf(m.indices(), m.getAnchorSelectionIndex(), m.getLeadSelectionIndex(), events) shouldBe
+                listOf(listOf(2, 3), 2, 3, emptyList<Triple<Int, Int, Boolean>>())
         }
 
         test("removeIndexInterval treats index0 > index1 as the same range") {
