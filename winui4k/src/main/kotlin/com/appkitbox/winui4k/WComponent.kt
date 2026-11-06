@@ -830,6 +830,79 @@ abstract class WComponent internal constructor(
     val keyListeners: Array<WKeyListener>
         get() = inputOrNull?.keys?.keyListeners() ?: emptyArray()
 
+    /** The key binding mappings and native handlers (created when the first map is created). */
+    internal var keyBindingsOrNull: KeyBindings? = null
+        private set
+
+    private val keyBindings: KeyBindings
+        get() = keyBindingsOrNull ?: KeyBindings(this).also { keyBindingsOrNull = it }
+
+    /**
+     * JComponent.getInputMap()-like: the [WInputMap] for [WHEN_FOCUSED] (created when first read; always the same instance).
+     * Used together with [actionMap] to run actions by keystroke. See [getInputMap] (Int) for the differences from Swing.
+     */
+    val inputMap: WInputMap
+        get() = getInputMap(WHEN_FOCUSED)
+
+    /**
+     * JComponent.getInputMap(int)-like: the [WInputMap] for [condition] ([WHEN_FOCUSED] / [WHEN_ANCESTOR_OF_FOCUSED_COMPONENT] / [WHEN_IN_FOCUSED_WINDOW])
+     * (created when first read). When a key is pressed, released or a character is typed, as in Swing, keys not consumed by the key listeners are looked up
+     * in [WHEN_FOCUSED] of the focused component, then in
+     * [WHEN_ANCESTOR_OF_FOCUSED_COMPONENT] of each component from the focus up through its parents, then in [WHEN_IN_FOCUSED_WINDOW] of components on screen ([isShowing]) in the same window,
+     * and if the [actionMap] action is enabled it is called and the key is consumed (if disabled, the key is not consumed and the next is looked up).
+     * The source of the action's [WActionEvent] is this component, and actionCommand is the action's [WAction.ACTION_COMMAND_KEY],
+     * or if absent the character of a character-input keystroke (null otherwise). Not looked up in a disabled [WControl].
+     *
+     * Differences from Swing:
+     * - The controls' default key operations (a button's Space, a text field's arrows, etc.) are not in the maps (the maps start empty)
+     * - [WHEN_FOCUSED] is looked up before the control's own key handling, but [WHEN_ANCESTOR_OF_FOCUSED_COMPONENT] and
+     *   [WHEN_IN_FOCUSED_WINDOW] are looked up after it, so they do not work for keys a child control handles itself (a button's Space, a text field's arrows,
+     *   Ctrl+C, etc.)
+     * - Character-input keystrokes in a text field ("typed a") run after the character is inserted (the insertion cannot be stopped)
+     * - [WHEN_IN_FOCUSED_WINDOW] is looked up only when the focus is inside the window content (not inside flyouts or dialogs).
+     *   When several components have the same keystroke, which one runs is undefined (the same as Swing)
+     * - Swing's KEY_PRESSED events carry the key's character, which can become the actionCommand, but here they do not
+     * - There is no setInputMap / setActionMap / getActionForKeyStroke (share maps through [WInputMap.parent])
+     *
+     * @throws IllegalArgumentException if [condition] is none of the three (the same as Swing)
+     */
+    fun getInputMap(condition: Int): WInputMap = checkNotNull(keyBindings.inputMap(condition, true))
+
+    /** JComponent.getActionMap-like: the [WActionMap] that looks up actions from the keys of [getInputMap] (created when first read). */
+    val actionMap: WActionMap
+        get() = checkNotNull(keyBindings.actionMap(true))
+
+    /**
+     * JComponent.registerKeyboardAction-like: maps [keyStroke] to [listener] in the [WInputMap] for [condition]
+     * (puts an action wrapping [listener] into [actionMap]). The actionCommand when it runs is [command].
+     * If [listener] is null, that keystroke runs nothing and does not let the parent map's mapping be looked up either (the same as Swing).
+     *
+     * @throws IllegalArgumentException if [condition] is none of the three
+     */
+    fun registerKeyboardAction(listener: WActionListener?, command: String?, keyStroke: WKeyStroke?, condition: Int) =
+        keyBindings.register(listener, command, keyStroke, condition)
+
+    /** JComponent.registerKeyboardAction(ActionListener, KeyStroke, int)-like: [registerKeyboardAction] with a null actionCommand. */
+    fun registerKeyboardAction(listener: WActionListener?, keyStroke: WKeyStroke?, condition: Int) =
+        keyBindings.register(listener, null, keyStroke, condition)
+
+    /** JComponent.unregisterKeyboardAction-like: removes the mapping of [keyStroke] from the maps of the three conditions and the action it points to. */
+    fun unregisterKeyboardAction(keyStroke: WKeyStroke?) {
+        keyBindingsOrNull?.unregister(keyStroke)
+    }
+
+    /** JComponent.getRegisteredKeyStrokes-like: the keystrokes of the maps of the three conditions (including parents) (in condition order from [WHEN_FOCUSED]). */
+    val registeredKeyStrokes: Array<WKeyStroke>
+        get() = keyBindingsOrNull?.registeredKeyStrokes() ?: emptyArray()
+
+    /** JComponent.getConditionForKeyStroke-like: the first condition that maps [keyStroke]. [UNDEFINED_CONDITION] if none. */
+    fun getConditionForKeyStroke(keyStroke: WKeyStroke?): Int = keyBindingsOrNull?.conditionFor(keyStroke) ?: UNDEFINED_CONDITION
+
+    /** JComponent.resetKeyboardActions-like: empties the maps of the three conditions and [actionMap] (the maps' parents are not removed). */
+    fun resetKeyboardActions() {
+        keyBindingsOrNull?.reset()
+    }
+
     /** The size, position and visibility listeners (created when the first listener is added). */
     internal var componentEventsOrNull: ComponentEvents? = null
         private set
@@ -1287,7 +1360,7 @@ abstract class WComponent internal constructor(
      * Adds a keyboard shortcut that calls [action] when [keyStroke] is pressed
      * (the [WKeyStroke] version of [addKeyboardAccelerator] (VirtualKey, ..., Runnable)). It sets Handled, so
      * default behavior such as invoking a click does not happen. Unusable key strokes are the same as for [addKeyboardAccelerator] (WKeyStroke).
-     * Use it instead of Swing's InputMap and ActionMap (close to WHEN_IN_FOCUSED_WINDOW; works even when this element does not have focus).
+     * It works even if this element does not have the focus (close to WHEN_IN_FOCUSED_WINDOW). Swing-style key bindings are [getInputMap] and [actionMap].
      */
     fun addKeyboardAccelerator(keyStroke: WKeyStroke, action: Runnable) {
         val (key, modifiers) = keyStroke.toAccelerator()
@@ -1319,6 +1392,18 @@ abstract class WComponent internal constructor(
         ComponentSupport.removeKeyboardAccelerator(uiElement, key, modifiers)
 
     companion object {
+        /** JComponent.WHEN_FOCUSED-like: key bindings while it has the focus (a [getInputMap] condition; the value is 0, the same as Swing). */
+        const val WHEN_FOCUSED: Int = 0
+
+        /** JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT-like: key bindings while it or a descendant has the focus (the value is 1). */
+        const val WHEN_ANCESTOR_OF_FOCUSED_COMPONENT: Int = 1
+
+        /** JComponent.WHEN_IN_FOCUSED_WINDOW-like: key bindings while somewhere in the same window has the focus (the value is 2). */
+        const val WHEN_IN_FOCUSED_WINDOW: Int = 2
+
+        /** JComponent.UNDEFINED_CONDITION-like: "no mapping" for [getConditionForKeyStroke] (the value is -1, the same as Swing). */
+        const val UNDEFINED_CONDITION: Int = -1
+
         /** Like Component.TOP_ALIGNMENT: top alignment for [alignmentY]. */
         const val TOP_ALIGNMENT: Float = 0.0f
 

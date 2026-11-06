@@ -16,16 +16,14 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  *   the input
  * - All of them are called only when the focused element is this component itself (or a part of its template); they
  *   are not called while a child has focus
+ * - For keys the listeners did not consume, the WHEN_FOCUSED key bindings ([KeyBindings]) of this component are looked up (the same order as Swing)
  */
 internal class KeyInput(private val owner: WComponent) {
     private val listeners = ArrayList<WKeyListener>()
     private var handlersAdded = false
 
     fun addKeyListener(listener: WKeyListener) {
-        if (!handlersAdded) {
-            addHandlers()
-            handlersAdded = true
-        }
+        ensureHandlers()
         listeners += listener
         owner.listenerAnchor.listenerAdded()
     }
@@ -38,6 +36,13 @@ internal class KeyInput(private val owner: WComponent) {
     }
 
     fun keyListeners(): Array<WKeyListener> = listeners.toTypedArray()
+
+    /** Attaches the native handlers if not attached yet (the WHEN_FOCUSED of [KeyBindings] is also looked up from these handlers). */
+    fun ensureHandlers() {
+        if (handlersAdded) return
+        handlersAdded = true
+        addHandlers()
+    }
 
     private fun addHandlers() {
         val anchor = owner.listenerAnchor
@@ -63,21 +68,15 @@ internal class KeyInput(private val owner: WComponent) {
     private fun onKey(id: Int, args: Ptr) {
         val event = XamlKeyEvent(ComPtr(args))
         if (id == WKeyEvent.KEY_PRESSED) ConsumedKeyPresses.clear()
-        if (listeners.isEmpty() || !isFromOwnPart(args)) return
+        val bindings = owner.keyBindingsOrNull
+        if ((listeners.isEmpty() && bindings == null) || !isFromOwnPart(args)) return
         val key = event.key
-        val keyEvent = WKeyEvent(
-            owner,
-            id,
-            System.currentTimeMillis(),
-            WInputEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()),
-            WKeyEvent.keyCodeOf(key),
-            WKeyEvent.CHAR_UNDEFINED,
-            virtualKeyOf(key),
-        )
-        keyEvent.onConsume = {
+        val keyEvent = KeyBindings.keyEvent(owner, id, key)
+        val consume = {
             event.handled = true
             if (id == WKeyEvent.KEY_PRESSED) ConsumedKeyPresses.mark(owner, key)
         }
+        keyEvent.onConsume = consume
         try {
             for (listener in listeners.toList()) {
                 if (id == WKeyEvent.KEY_PRESSED) listener.keyPressed(keyEvent) else listener.keyReleased(keyEvent)
@@ -85,28 +84,24 @@ internal class KeyInput(private val owner: WComponent) {
         } finally {
             keyEvent.onConsume = null
         }
+        // As in Swing, only keys not consumed by the listeners (or other elements) are looked up in the WHEN_FOCUSED key bindings
+        if (bindings != null && !event.handled && bindings.process(WComponent.WHEN_FOCUSED, keyEvent)) consume()
     }
 
     private fun onCharacter(args: Ptr) {
-        if (listeners.isEmpty() || !isFromOwnPart(args)) return
+        val bindings = owner.keyBindingsOrNull
+        if ((listeners.isEmpty() && bindings == null) || !isFromOwnPart(args)) return
         val character = ComPtr(args)
-        val code = character.getInt(XamlInterop.ICharacterReceivedRoutedEventArgs_get_Character) and CHAR16_MASK
-        // AWT's KEY_TYPED for Enter is '\n' (Windows' WM_CHAR is '\r')
-        val typed = if (code == CARRIAGE_RETURN) '\n' else code.toChar()
-        val keyEvent = WKeyEvent(
-            owner,
-            WKeyEvent.KEY_TYPED,
-            System.currentTimeMillis(),
-            WInputEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()),
-            WKeyEvent.VK_UNDEFINED,
-            typed,
-        )
-        keyEvent.onConsume = { character.putBool(XamlInterop.ICharacterReceivedRoutedEventArgs_put_Handled, true) }
+        val keyEvent = KeyBindings.typedEvent(owner, character.getInt(XamlInterop.ICharacterReceivedRoutedEventArgs_get_Character))
+        val consume = { character.putBool(XamlInterop.ICharacterReceivedRoutedEventArgs_put_Handled, true) }
+        keyEvent.onConsume = consume
         try {
             for (listener in listeners.toList()) listener.keyTyped(keyEvent)
         } finally {
             keyEvent.onConsume = null
         }
+        val handled = character.getBool(XamlInterop.ICharacterReceivedRoutedEventArgs_get_Handled)
+        if (bindings != null && !handled && bindings.process(WComponent.WHEN_FOCUSED, keyEvent)) consume()
     }
 
     private fun isFromOwnPart(args: Ptr): Boolean {
@@ -116,11 +111,6 @@ internal class KeyInput(private val owner: WComponent) {
         } finally {
             source.release()
         }
-    }
-
-    private companion object {
-        const val CHAR16_MASK = 0xFFFF
-        const val CARRIAGE_RETURN = 13
     }
 }
 
