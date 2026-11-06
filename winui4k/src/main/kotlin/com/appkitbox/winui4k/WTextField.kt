@@ -27,6 +27,14 @@ import kotlin.jvm.JvmSynthetic
  * Pressing Enter with no modifier keys in a single-line field ([acceptsReturn] = false) calls the listeners from
  * [addActionListener]; if there are no listeners, the default button of the same window ([WFrame.defaultButton]) is
  * pressed (same as JTextField).
+ *
+ * **Difference from Swing**: unlike JTextField(String text), the `(String)` constructor takes not the field's text but the placeholder text
+ * ([placeholderText]; the faint text shown while nothing is entered) (to keep the form from earlier versions). To initialize it with text,
+ * set [text] (`WTextField().apply { text = "..." }`, or `field.setText("...")` in Java). For the same reason, no constructor corresponding to Swing's
+ * JTextField(String text, int columns) is provided (so that the meaning of String does not change between constructors).
+ * `(Int)`, which takes only the number of columns, is the same as JTextField(int columns).
+ *
+ * @param placeholder the placeholder text ([placeholderText]). Not the field's text (unlike JTextField(String))
  */
 class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory), // default interface = ITextBox

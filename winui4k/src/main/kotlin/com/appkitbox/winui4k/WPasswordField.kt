@@ -45,6 +45,12 @@ enum class PasswordRevealMode(internal val native: Int) {
  * Filling the array received from [getPassword] with 0 after use, as with Swing's JPasswordField, cannot erase these copies
  * (immutable strings cannot be overwritten, and PasswordBox exposes no way to zero out its string). It shortens the time
  * the password stays in memory, but cannot guarantee that the password is unreadable from a memory dump or the like.
+ *
+ * **Difference from Swing**: unlike JPasswordField(String text), the `(String)` constructor takes not the password but the placeholder text
+ * ([placeholderText]) (the same as [WTextField]). To initialize it with a password, call [setText].
+ * No constructor corresponding to JPasswordField(String text, int columns) is provided.
+ *
+ * @param placeholder the placeholder text ([placeholderText]). Not the password (unlike JPasswordField(String))
  */
 class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBox),
