@@ -7,7 +7,9 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
+import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.TextInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.io.IOException
@@ -70,7 +72,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         val old = nativeText()
         val (dot, mark) = nativeCaret()
         val replaced = old.substring(0, offset) + inserted + old.substring(offset + length)
-        Hstring.use(replaced) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) }
+        writeNative { Hstring.use(replaced) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
         // TextBox may adjust the inserted text, so the number of inserted characters is computed from the lengths before and after
         val added = nativeText().length - old.length + length
         setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
@@ -86,10 +88,16 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * JTextComponent.getText / setText-style: the text of the field (TextBox.Text).
      * When set, the [addDocumentListener] listeners receive removeUpdate for the whole old text and then insertUpdate for
      * the whole new text, as Swing's setText does (nothing is delivered if the text is the same).
+     * If there is a [WDocument.documentFilter], it goes through the filter as `replace(0, old length, value)`, as with Swing's setText
+     * (then it is delivered even for the same text, and the caret moves to the end of the text, as with DefaultCaret).
      */
     var text: String
         get() = nativeText()
         set(value) {
+            if (document.documentFilter != null) {
+                document.replace(0, nativeText().length, value, null)
+                return
+            }
             documentEvents.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
             caret.check()
         }
@@ -267,6 +275,11 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
+        if (document.documentFilter != null) {
+            // As in Swing, go through the Document's replace (the caret moves after the inserted text, as with DefaultCaret)
+            document.replace(selectionStart, selectionLength, content, null)
+            return
+        }
         val start = selectionStart
         val selected = selectionLength
         val before = text.length
@@ -310,12 +323,12 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * Does nothing if there is no edit to undo (unlike UndoManager, it does not throw).
      */
     fun undo() {
-        inspectable.call(XamlInterop.ITextBox_Undo)
+        writeNative { inspectable.call(XamlInterop.ITextBox_Undo) }
     }
 
     /** UndoManager.redo-style: redoes an edit undone by [undo] (TextBox.Redo). Does nothing if there is no edit to redo. */
     fun redo() {
-        inspectable.call(XamlInterop.ITextBox_Redo)
+        writeNative { inspectable.call(XamlInterop.ITextBox_Redo) }
     }
 
     /** UndoManager.canUndo-style: whether there is an edit that [undo] can undo (TextBox.CanUndo). */
@@ -334,6 +347,81 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
         actions.install()
+        document.filterChanged = ::documentFilterChanged
+    }
+
+    /** Whether TextBox.BeforeTextChanging has been subscribed to (subscribed only once, when [WDocument.documentFilter] is first set). */
+    private var beforeTextChangingSubscribed = false
+
+    /** Whether the wrapper is kept by [listenerAnchor] for the native handler while there is a filter. */
+    private var filterAnchored = false
+
+    /** Whether the program is in the middle of rewriting the native text (it has already gone through the filter, so BeforeTextChanging does not pass it through). */
+    private var writingNative = false
+
+    private fun documentFilterChanged(filter: WDocumentFilter?) {
+        if (filter != null && !filterAnchored) {
+            if (!beforeTextChangingSubscribed) {
+                subscribeBeforeTextChanging()
+                beforeTextChangingSubscribed = true
+            }
+            filterAnchored = true
+            listenerAnchor.listenerAdded()
+        } else if (filter == null && filterAnchored) {
+            filterAnchored = false
+            listenerAnchor.listenerRemoved()
+        }
+    }
+
+    /** Subscribes to TextBox.BeforeTextChanging. The handler stays in the native object, so the field is looked up from [listenerAnchor]. */
+    private fun subscribeBeforeTextChanging() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.DocumentFilterBeforeTextChanging",
+            TextInterop.IID_TextBoxBeforeTextChangingHandler,
+            TextInterop.ITextBox_add_BeforeTextChanging,
+        ) { _, args -> (anchor.get() as? WTextField)?.filterUserEdit(ComPtr(args)) }
+    }
+
+    /**
+     * Passes a user edit (TextBox.BeforeTextChanging) through [WDocument.documentFilter]. The filter runs on a copy of the text before the change,
+     * and the edit is accepted if the result is the same as the input, otherwise rejected. If the filter rewrote it, the result is put in after rejecting. [args] is borrowed.
+     */
+    private fun filterUserEdit(args: ComPtr) {
+        val filter = document.documentFilter ?: return
+        if (writingNative) return
+        val old = nativeText()
+        val new = args.getString(TextInterop.ITextBoxBeforeTextChangingEventArgs_get_NewText)
+        if (old == new) return
+        val edit = UserEdit.between(old, new, selectionEnd)
+        val bypass = SimulatedBypass(document, old)
+        if (edit.inserted.isEmpty()) {
+            filter.remove(bypass, edit.offset, edit.removed)
+        } else {
+            filter.replace(bypass, edit.offset, edit.removed, edit.inserted, null)
+        }
+        val result = bypass.result
+        if (result == new) return
+        args.putBool(TextInterop.ITextBoxBeforeTextChangingEventArgs_put_Cancel, true)
+        if (result == old) return
+        // It cannot be rewritten inside BeforeTextChanging, so put the result in after rejecting (on the next turn of the message loop)
+        Dispatcher.invokeLater {
+            if (nativeText() == old) {
+                val diff = TextDiff.between(old, result) ?: return@invokeLater
+                document.bypass.replace(diff.offset, diff.removedLength, result.substring(diff.offset, diff.offset + diff.insertedLength), null)
+            }
+        }
+    }
+
+    /** Rewrites the native text with [block] without going through the filter (BeforeTextChanging in the meantime does not go through the filter). */
+    private fun writeNative(block: () -> Unit) {
+        val was = writingNative
+        writingNative = true
+        try {
+            block()
+        } finally {
+            writingNative = was
+        }
     }
 
     /**

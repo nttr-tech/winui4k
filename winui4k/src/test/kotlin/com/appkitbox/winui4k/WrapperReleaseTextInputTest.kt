@@ -172,5 +172,22 @@ class WrapperReleaseTextInputTest : FunSpec() {
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
+
+        test("a WTextField with a DocumentFilter (a TextBox.BeforeTextChanging handler) that does not reference the field is also collected after being placed in the window and removed") {
+            val reference = shownAndHidden {
+                WTextField().also { it.document.documentFilter = WDocumentFilter() }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WTextField that was never placed is also collected once its DocumentFilter is reset to null") {
+            val reference = onUiThreadGet {
+                val field = WTextField()
+                field.document.documentFilter = WDocumentFilter()
+                field.document.documentFilter = null
+                WeakReference(field)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
     }
 }

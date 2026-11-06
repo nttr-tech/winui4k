@@ -233,3 +233,17 @@ internal fun caretAfterEdit(position: Int, offset: Int, removed: Int, inserted: 
     if (inserted > 0 && p >= offset) p += inserted
     return p
 }
+
+/**
+ * One user edit (from the text before the change to the text after it) in the form passed to Swing's filter (position, number of removed characters, inserted text).
+ * The position is the difference excluding the common prefix and suffix ([TextDiff]); where the same character repeats, it is decided by the caret position after the change [caretAfter]
+ * (at the time of TextBox.BeforeTextChanging, TextBox's SelectionStart is already the position after the change).
+ */
+internal class UserEdit(val offset: Int, val removed: Int, val inserted: String) {
+    companion object {
+        fun between(old: String, new: String, caretAfter: Int): UserEdit {
+            val diff = TextDiff.between(old, new, caretAfter) ?: return UserEdit(0, 0, "")
+            return UserEdit(diff.offset, diff.removedLength, new.substring(diff.offset, diff.offset + diff.insertedLength))
+        }
+    }
+}

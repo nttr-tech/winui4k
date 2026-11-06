@@ -124,6 +124,10 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     var text: String
         get() = nativeText()
         set(value) {
+            if (document.documentFilter != null) {
+                document.replace(0, length, value, null)
+                return
+            }
             // Append the final paragraph mark ourselves. Otherwise a trailing line break is used as the final paragraph mark and lost (text ending with a line break would lose it)
             val paragraphs = paragraphsOf(value) + "\r"
             documentEvents.replaceAll {
@@ -394,6 +398,10 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     fun append(str: String?) {
         if (str.isNullOrEmpty()) return
         val end = length
+        if (document.documentFilter != null) {
+            document.insertString(end, str, null)
+            return
+        }
         replaceRange(str, end, end)
     }
 
@@ -407,6 +415,10 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     fun insert(str: String?, position: Int) {
         if (str.isNullOrEmpty()) return
         require(position in 0..length) { "Position out of range: $position (length $length)" }
+        if (document.documentFilter != null) {
+            document.insertString(position, str, null)
+            return
+        }
         replaceRange(str, position, position)
     }
 
@@ -423,6 +435,10 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         if (start == end && str.isNullOrEmpty()) return
         val content = length
         require(start >= 0 && end <= content) { "Range outside the text: $start..$end (length $content)" }
+        if (document.documentFilter != null) {
+            document.replace(start, end - start, str, null)
+            return
+        }
         val paragraphs = insertedParagraphs(str.orEmpty())
         documentEvents.replaceRange(start, end - start) {
             writable {
@@ -552,6 +568,10 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
+        if (document.documentFilter != null) {
+            document.replace(selectionStart, selectionEnd - selectionStart, content, null)
+            return
+        }
         val start = selectionStart
         val selected = selectionEnd - start
         val before = length

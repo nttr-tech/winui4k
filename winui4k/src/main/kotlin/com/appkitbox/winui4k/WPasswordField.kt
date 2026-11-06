@@ -89,6 +89,8 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
      * The entered password (PasswordBox.Password). When set, the [addDocumentListener] listeners receive, as with
      * [WTextField.text], removeUpdate for the whole old string followed by insertUpdate for the whole new string (nothing
      * if the string is the same).
+     * If there is a [WDocument.documentFilter], it goes through the filter as `replace(0, old length, value)`, as with Swing's setText.
+     * User input does not go through the filter (PasswordBox has no way to reject a change before it happens; see [WDocumentFilter]).
      *
      * From Java, `getPassword()` returns a `char[]` as in JPasswordField, so this getter returning a string is not visible
      * from Java (it is kept on the JVM as a synthetic method, so calls compiled against earlier versions still work). When
@@ -98,6 +100,10 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     var password: String
         get() = nativePassword()
         set(value) {
+            if (document.documentFilter != null) {
+                document.replace(0, nativePassword().length, value, null)
+                return
+            }
             documentEvents.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_Password, h) } }
         }
 

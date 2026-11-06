@@ -305,3 +305,8 @@
   最後の段落記号になる。`GetText` は `"a\r"` を返し、最後の段落記号を外すと `"a"` になって改行が消える (`append("1 行目\n")` を続けると
   1 行目と 2 行目がつながる)。一度でも文字を入れた後や `SetText` で空にした後は消えない。`WTextPane` は文書が空のときだけ、改行で終わる文字列に
   段落記号を 1 つ足して入れる (`WDocumentTest`。2026-10-20、Panama で確認)。
+- **TextBox.BeforeTextChanging の時点で、SelectionStart / SelectionLength はもう変更の後のキャレットになっている**
+  `"abcd"` のキャレット 2 で Backspace を押すと、BeforeTextChanging の中の SelectionStart は 1 (NewText は `"acd"`)、選択 (1, 3) を打ち替えると
+  SelectionStart は 2 で選択は無い。変更の前の選択から編集の位置を求めると、同じ文字が続く所 (`"aad"` の 2 文字目の Backspace など) で位置を
+  取り違える。`WDocumentFilter` に渡す位置は、前後の文字列の違いと、変更の後のキャレットの位置から求める (`WDocumentFilterTest`。
+  2026-10-20、Panama で確認)。
