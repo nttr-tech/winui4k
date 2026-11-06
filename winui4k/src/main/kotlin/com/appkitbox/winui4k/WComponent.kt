@@ -908,12 +908,14 @@ abstract class WComponent internal constructor(
         get() = VerticalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_VerticalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_VerticalAlignment, value.native)
 
-    /** A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. Use [setMargin] to set each side individually. */
-    var margin: Double = 0.0
-        set(value) {
-            field = value
-            setMargin(value, value, value, value)
-        }
+    /**
+     * A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. Use [setMargin] to set each side individually.
+     * Reading returns the native FrameworkElement.Margin: its value if all four sides are equal, otherwise NaN
+     * (for example after setting different values with [setMargin], since they cannot be expressed as one number).
+     */
+    var margin: Double
+        get() = uniformThickness(XamlStructs.getThickness(frameworkElement, XamlInterop.IFrameworkElement_get_Margin))
+        set(value) = setMargin(value, value, value, value)
 
     /** Sets the margin on each side individually (FrameworkElement.Margin). */
     fun setMargin(left: Double, top: Double, right: Double, bottom: Double) {
@@ -1307,3 +1309,7 @@ internal fun createKeyboardAccelerator(key: Int, modifiers: Int): ComPtr {
     if (modifiers != 0) accelerator.call(XamlInterop.IKeyboardAccelerator_put_Modifiers, modifiers)
     return accelerator
 }
+
+/** The value if all four of a Thickness (left, top, right, bottom) are equal, otherwise NaN (for reading [WComponent.margin] / [WControl.padding]). */
+internal fun uniformThickness(thickness: DoubleArray): Double =
+    if (thickness.all { it == thickness[0] }) thickness[0] else Double.NaN

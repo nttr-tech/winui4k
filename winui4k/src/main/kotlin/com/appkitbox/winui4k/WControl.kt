@@ -33,12 +33,14 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             XamlStructs.putCornerRadius(control, XamlInterop.IControl_put_CornerRadius, value)
         }
 
-    /** A uniform inner padding on all four sides (Control.Padding). Use [setPadding] to set each side individually. */
-    var padding: Double = 0.0
-        set(value) {
-            field = value
-            setPadding(value, value, value, value)
-        }
+    /**
+     * A uniform inner padding on all four sides (Control.Padding). Use [setPadding] to set each side individually.
+     * Reading returns the native effective value: its value if all four sides are equal, otherwise NaN (for example after setting different values with [setPadding],
+     * or the theme padding 11, 5, 11, 6 of a WButton placed in a window, since they cannot be expressed as one number). An empty [border] also shows up here.
+     */
+    var padding: Double
+        get() = uniformThickness(XamlStructs.getThickness(control, XamlInterop.IControl_get_Padding))
+        set(value) = setPadding(value, value, value, value)
 
     /** Sets the inner padding on each side individually (Control.Padding). */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
