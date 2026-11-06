@@ -961,6 +961,33 @@ abstract class WComponent internal constructor(
         set(value) = uiElement.call(XamlInterop.IUIElement_put_Visibility, if (value) 0 else 1)
 
     /**
+     * Component.isDisplayable-like: whether it is connected to the tree of a displayable window (FrameworkElement.IsLoaded).
+     * As in Swing, it is true inside a hidden window ([WFrame.isVisible] = false) and when it or a parent is hidden ([isVisible] = false),
+     * and becomes false when removed from the window and when the window is closed ([WFrame.dispose]).
+     * Unlike Swing, it is false after being placed in a window until XAML loads it (Loaded), in a window before it is shown (true after pack in Swing),
+     * and inside closed flyouts and popups. Right after removal, it can stay true until XAML finishes unloading it (Unloaded).
+     */
+    val isDisplayable: Boolean
+        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
+
+    /**
+     * Component.isShowing-like: whether it is on screen. true when it is [isDisplayable], it and all its parents in the visual tree are visible (Visibility.Visible),
+     * and the window it is placed in ([topLevelAncestor]) is not hidden. Inside a hidden [WFrame] it is false as in Swing
+     * ([isDisplayable] stays true). It is true even if the window is minimized or behind other windows (the same as Swing).
+     * It is also true when transparent ([opacity] = 0) or scrolled out of view.
+     */
+    val isShowing: Boolean
+        get() = isDisplayable && ComponentShowing.isVisibleInTree(this) && topLevelAncestor?.isVisible != false
+
+    /**
+     * JComponent.getTopLevelAncestor-like: the window this component is placed in. Unlike Swing's Container, the window is returned
+     * as a [WFrame]. For a component in a dialog ([WContentDialog] etc.) or a flyout, the window showing it is returned.
+     * null when [isDisplayable] is false (not placed, before XAML loads it, or a closed window) (Swing also returns a window before it is shown).
+     */
+    val topLevelAncestor: WFrame?
+        get() = if (isDisplayable) ComponentShowing.frameOf(this) else null
+
+    /**
      * The theme applied to this element and everything below it (FrameworkElement.RequestedTheme).
      * Setting it on the root element makes it the whole app's theme. [ElementTheme.DEFAULT] follows the OS setting.
      */
