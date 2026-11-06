@@ -3,7 +3,6 @@ package com.appkitbox.winui4k;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -11,6 +10,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -188,7 +189,37 @@ class WOptionPaneForJavaTest {
     }
 
     @Test
-    void nullParentThrowsIllegalArgumentException() {
-        onUiThread(() -> assertThrows(IllegalArgumentException.class, () -> WOptionPane.showMessageDialog(null, "No parent")));
+    void showInputDialogWithoutAParentAndANullParentOpenOnTheShownWindow() throws InterruptedException {
+        WFrame frame = onUiThreadGet(() -> new WFrame("winui4k option pane parentless java"));
+        WButton attached = owner;
+        try {
+            CountDownLatch loaded = new CountDownLatch(1);
+            WButton here = onUiThreadGet(() -> {
+                WButton button = new WButton("This window");
+                button.addLoadedListener(loaded::countDown);
+                frame.add(button);
+                frame.setVisible(true);
+                return button;
+            });
+            assertTrue(loaded.await(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS));
+            owner = here;
+            WinUiUtilities.invokeLater(() -> events.add("r:" + WOptionPane.showInputDialog("Name")));
+            awaitOpen();
+            OpenContentDialogs.setText(owner, "Smith");
+            OpenContentDialogs.press(owner, "PrimaryButton");
+            awaitEvents(Arrays.asList("r:Smith"));
+            awaitClosed();
+
+            events.clear();
+            onUiThread(() -> WOptionPane.showMessageDialog(null, "No parent", "Notice", WOptionPane.INFORMATION_MESSAGE, null,
+                    () -> events.add("closed")));
+            awaitOpen();
+            OpenContentDialogs.press(owner, "PrimaryButton");
+            awaitEvents(Arrays.asList("closed"));
+            awaitClosed();
+        } finally {
+            owner = attached;
+            onUiThread(frame::dispose);
+        }
     }
 }

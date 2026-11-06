@@ -381,10 +381,9 @@ class WOptionPaneTest : FunSpec() {
             }
         }
 
-        test("wrong arguments: a null parent, unknown optionType and messageType, and 4 or more options throw IllegalArgumentException") {
+        test("wrong arguments: unknown optionType and messageType, and 4 or more options throw IllegalArgumentException") {
             withOwner { owner ->
                 onUiThread {
-                    shouldThrow<IllegalArgumentException> { WOptionPane.showMessageDialog(null, "No parent") }.message shouldContain "parent"
                     shouldThrow<IllegalArgumentException> { WOptionPane.showConfirmDialog(owner, "x", "t", 5) }.message shouldContain "optionType"
                     shouldThrow<IllegalArgumentException> { WOptionPane.showMessageDialog(owner, "x", "t", 4) }.message shouldContain "messageType"
                     shouldThrow<IllegalArgumentException> {
@@ -392,6 +391,42 @@ class WOptionPaneTest : FunSpec() {
                     }.message shouldContain "at most 3"
                 }
                 OpenContentDialogs.isOpen(owner).shouldBeFalse()
+            }
+        }
+
+        test("a null parent and showInputDialog(message) without a parent open on the last shown window (Swing's parentless form)") {
+            val frame = onUiThreadGet { WFrame(PARENTLESS_TITLE) }
+            try {
+                val button = onUiThreadGet { WButton("This window").also { frame.add(it) } }
+                val loaded = CountDownLatch(1)
+                onUiThread {
+                    button.addLoadedListener { loaded.countDown() }
+                    frame.isVisible = true
+                }
+                loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+                later { WOptionPane.showInputDialog("Name") }
+                awaitOpen(button).texts.joinToString() shouldContain "Name"
+                OpenContentDialogs.setText(button, "Smith")
+                OpenContentDialogs.press(button, "PrimaryButton")
+                awaitEvents("r:Smith")
+                awaitClosed(button)
+
+                events.clear()
+                later { WOptionPane.showInputDialog("With an initial value", "Jones") }
+                awaitOpen(button)
+                OpenContentDialogs.press(button, "PrimaryButton")
+                awaitEvents("r:Jones")
+                awaitClosed(button)
+
+                events.clear()
+                onUiThread { WOptionPane.showMessageDialog(null, "No parent", "Notice", WOptionPane.INFORMATION_MESSAGE, null) { events += "closed" } }
+                awaitOpen(button).texts.joinToString() shouldContain "No parent"
+                OpenContentDialogs.press(button, "PrimaryButton")
+                awaitEvents("closed")
+                awaitClosed(button)
+            } finally {
+                onUiThread { frame.dispose() }
             }
         }
 
@@ -421,6 +456,7 @@ class WOptionPaneTest : FunSpec() {
         const val SCAN_ESCAPE = 0x01
         const val OPEN_SETTLE_MILLIS = 600L
         const val OWNER_TITLE = "winui4k option pane owner"
+        const val PARENTLESS_TITLE = "winui4k option pane parentless"
         const val CUSTOM_GLYPH = "\uE8A5"
     }
 }

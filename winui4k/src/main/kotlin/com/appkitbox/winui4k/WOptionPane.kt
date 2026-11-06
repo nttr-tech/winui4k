@@ -25,8 +25,9 @@ import java.util.function.IntConsumer
  * Differences from Swing:
  * - WinUI can open only one ContentDialog at a time in a window, so opening another one while a dialog is open (from inside it)
  *   throws [IllegalStateException] (they do not nest). Close the open dialog before opening another.
- * - The parent (parentComponent) must be a component placed in a window, to decide the window the dialog opens in.
- *   Null and components that are not placed throw [IllegalArgumentException] (there is no mechanism yet to find the active window).
+ * - If the parent (parentComponent) is null, it opens on the active [WFrame] (if none, the shown [WFrame] that became active last
+ *   or was created last). Unlike Swing, no invisible shared frame is created, so if no window is shown at all it throws
+ *   [IllegalStateException]. A parent that is not in a window throws [IllegalArgumentException].
  * - [showOptionDialog] supports up to 3 options (a ContentDialog has 3 buttons).
  */
 // The arguments correspond 1:1 to JOptionPane's static methods of the same names (so Swing code can be written as is)
@@ -208,6 +209,14 @@ object WOptionPane {
     @JvmStatic
     fun showInputDialog(parent: WComponent?, message: Any?): String? = showInputDialog(parent, message, null as Any?)
 
+    /** Same as JOptionPane.showInputDialog(Object) without a parent: opens on the active window and asks for text input (same as a null parent). */
+    @JvmStatic
+    fun showInputDialog(message: Any?): String? = showInputDialog(null, message, null as Any?)
+
+    /** Same as JOptionPane.showInputDialog(Object, Object) without a parent: sets the initial text of the input field to [initialSelectionValue]. */
+    @JvmStatic
+    fun showInputDialog(message: Any?, initialSelectionValue: Any?): String? = showInputDialog(null, message, initialSelectionValue)
+
     /** Has the user enter text with the input field initially set to (the toString of) [initialSelectionValue]. */
     @JvmStatic
     fun showInputDialog(parent: WComponent?, message: Any?, initialSelectionValue: Any?): String? =
@@ -361,11 +370,13 @@ object WOptionPane {
         return icon ?: glyph?.let { WFontIcon(it) }
     }
 
+    /** The component of the window to open the dialog on. If [parent] is null, the content of the active window (or the last shown window). */
     private fun ownerOf(parent: WComponent?): WComponent {
-        requireNotNull(parent) {
-            "the parent is null; pass a component placed in a window to decide the window the dialog opens in"
+        if (parent != null) return parent
+        val frame = checkNotNull(WFrame.activeOrRecentFrame()) {
+            "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
         }
-        return parent
+        return frame.content
     }
 
     /** ErrorBadge. */
