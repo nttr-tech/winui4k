@@ -97,6 +97,16 @@ class WrapperReleaseNavigationTest : FunSpec() {
             Reclamation.awaitCollected(zoom).shouldBeTrue()
         }
 
+        test("a WScrollPane with a viewport ChangeListener is also collected after being put in a window and removed (the handler does not capture the scroll pane)") {
+            val sink = received
+            val reference = shownAndHidden {
+                WScrollPane(WLabel("a")).also { pane ->
+                    pane.viewport.addChangeListener { e -> sink += e.source.javaClass }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a WTabView that was never placed is also collected once all its ChangeListeners are removed") {
             val reference = onUiThreadGet {
                 val tabView = WTabView()

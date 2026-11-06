@@ -2714,6 +2714,27 @@ internal object XamlInterop {
     const val IScrollViewer_get_ViewportHeight = 46
     const val IScrollViewer_get_ScrollableHeight = 47
     const val IScrollViewer_get_ExtentHeight = 49
+    const val IScrollViewer_put_TopLeftHeader = 57          // put_TopLeftHeader(UIElement)
+    const val IScrollViewer_put_LeftHeader = 59             // put_LeftHeader(UIElement)
+    const val IScrollViewer_put_TopHeader = 61              // put_TopHeader(UIElement)
+    const val IScrollViewer_ChangeViewWithDisableAnimation = 84 // ChangeView(IReference<double>, IReference<double>, IReference<float>, boolean disableAnimation, out boolean)
+    const val IScrollViewerViewChangedEventArgs_get_IsIntermediate = 6 // get_IsIntermediate(out boolean)
+
+    // ---- Microsoft.UI.Xaml.BringIntoViewOptions (the argument of UIElement.StartBringIntoView) ----
+    const val CLS_BringIntoViewOptions = "Microsoft.UI.Xaml.BringIntoViewOptions" // activatable (default factory)
+    const val IID_IBringIntoViewOptions = "eeb4a447-eb9e-5003-a479-b9e3a886b708"
+    const val IBringIntoViewOptions_put_AnimationDesired = 7 // put_AnimationDesired(boolean)
+    const val IBringIntoViewOptions_put_TargetRect = 9       // put_TargetRect(IReference<Rect>)
+    const val IUIElement_StartBringIntoViewWithOptions = 224 // StartBringIntoView(BringIntoViewOptions)
+
+    // ---- Microsoft.UI.Xaml.Controls.ScrollView (additions of IScrollView) / ScrollingScrollOptions ----
+    const val IScrollView_get_ExtentWidth = 14                  // get_ExtentWidth(out double)
+    const val IScrollView_get_ExtentHeight = 15                 // get_ExtentHeight(out double)
+    const val IScrollView_ScrollToWithOptions = 60              // ScrollTo(double h, double v, ScrollingScrollOptions, out int correlationId)
+    const val CLS_ScrollingScrollOptions = "Microsoft.UI.Xaml.Controls.ScrollingScrollOptions"
+    const val IID_IScrollingScrollOptionsFactory = "31eb58fe-0f6a-51ec-90db-5ccaa0a288a6" // composable factory
+    const val IScrollingScrollOptionsFactory_CreateInstance = 6 // CreateInstance(ScrollingAnimationMode, outer, out inner, out instance)
+    const val ScrollingAnimationMode_Disabled = 0               // ScrollingAnimationMode.Disabled
 
     // ---- Microsoft.UI.Xaml.ResourceDictionary (additions to IResourceDictionary) ----
     const val IResourceDictionary_get_ThemeDictionaries = 9 // get_ThemeDictionaries(out IMap<Object, Object>)
