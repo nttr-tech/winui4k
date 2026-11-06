@@ -881,7 +881,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
  * A list of a component's Swing-style listeners (in the order added). Calls [addNativeHandler] only once when the first listener is added,
  * and keeps the component with [WComponent.listenerAnchor] while there are listeners. Kotlin lambdas are stored wrapped as [L] and remembered so they can be removed by the original lambda.
  */
-private class AnchoredListeners<L : Any>(private val owner: WComponent, private val addNativeHandler: () -> Unit) {
+internal class AnchoredListeners<L : Any>(private val owner: WComponent, private val addNativeHandler: () -> Unit) {
     private val listeners = ArrayList<L>()
     private val adapters = KotlinListenerAdapters<L>()
     private var handlerAdded = false

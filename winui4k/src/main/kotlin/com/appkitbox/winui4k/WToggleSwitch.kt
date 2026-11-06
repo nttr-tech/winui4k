@@ -12,18 +12,56 @@ import kotlin.jvm.JvmSynthetic
  * A two-state on/off switch: WinUI 3's ToggleSwitch.
  * Subscribe to changes in [isOn] via [addItemListener] (Toggled).
  * Customize the displayed text with [header] / [onContent] / [offContent] (all read back from WinUI).
- * [isSelected] / [doClick] / [mnemonic] are aliases and operations matching JToggleButton.
+ * [isSelected] / [doClick] / [mnemonic] / [text] / [actionCommand] / [addActionListener] are aliases and operations matching JToggleButton
+ * (AbstractButton).
+ *
+ * Differences from Swing: it is not derived from AbstractButton and cannot be put in a [WButtonGroup] (a switch is a component toggled independently one by one).
+ * It has no icon ([WButtonBase.icon]) or Action ([WButtonBase.action]).
  */
 class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_ToggleSwitch, XamlInterop.IID_IToggleSwitch), // created via the default factory
 ) {
     /** The list of ItemListeners. Only one Toggled handler is registered, when the first listener is added. */
-    private val itemListeners = ItemListeners(this) { addToggledHandler() }
+    private val itemListeners = ItemListeners(this) { ensureToggledHandler() }
 
-    /** Whether the switch is on (ToggleSwitch.IsOn). */
+    /** The list of ActionListeners. The Toggled handler is shared with [itemListeners]. */
+    private val actionListenerList = AnchoredListeners<WActionListener>(this) { ensureToggledHandler() }
+
+    /** Whether the Toggled handler has been registered. */
+    private var toggledHandlerAdded = false
+
+    /** Whether the program is in the middle of changing [isOn] (ActionListeners are not called for Toggled in the meantime). */
+    private var settingProgrammatically = false
+
+    /**
+     * Whether the switch is on (ToggleSwitch.IsOn). Changing it from the program calls ItemListeners but not ActionListeners
+     * (the same as Swing's setSelected; ToggleSwitch raises Toggled synchronously within the IsOn change).
+     */
     var isOn: Boolean
         get() = inspectable.getBool(XamlInterop.IToggleSwitch_get_IsOn)
-        set(value) = inspectable.putBool(XamlInterop.IToggleSwitch_put_IsOn, value)
+        set(value) {
+            val was = settingProgrammatically
+            settingProgrammatically = true
+            try {
+                inspectable.putBool(XamlInterop.IToggleSwitch_put_IsOn, value)
+            } finally {
+                settingProgrammatically = was
+            }
+        }
+
+    /** AbstractButton.getText / setText-like: an alias of [header] (the text above the switch; corresponds to the text of a JToggleButton). */
+    var text: String
+        get() = header
+        set(value) {
+            header = value
+        }
+
+    /**
+     * AbstractButton.getActionCommand-like: the [WActionEvent.actionCommand] passed to the [addActionListener] listeners.
+     * While unset (null), returns [text]. Setting null returns it to unset.
+     */
+    var actionCommand: String? = null
+        get() = field ?: text
 
     /** AbstractButton.isSelected-like: same as [isOn]. */
     var isSelected: Boolean
@@ -85,8 +123,8 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
 
     /**
      * AbstractButton.doClick-like: clicks the switch once programmatically to toggle it on or off.
-     * It is implemented with UI Automation's Toggle, so it runs through to the Toggled listeners ([addItemListener]) just
-     * like a normal click. Does nothing when disabled ([isEnabled] is false), as in Swing.
+     * Implemented with UI Automation's Toggle, so ItemListeners ([addItemListener]) and then ActionListeners ([addActionListener]) run in order,
+     * exactly like a normal click. Does nothing when disabled ([isEnabled] is false), as in Swing.
      */
     fun doClick() {
         if (!isEnabled) return
@@ -138,20 +176,56 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
         itemListeners.add(listener)
     }
 
-    private fun addToggledHandler() {
+    private fun ensureToggledHandler() {
+        if (toggledHandlerAdded) return
+        toggledHandlerAdded = true
         // The handler stays in the native object, so the switch is not captured strongly but looked up from anchor (see ListenerAnchor)
         val anchor = listenerAnchor
         inspectable.addEventHandler(
             "WinUI4K.ToggledHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IToggleSwitch_add_Toggled,
-        ) { _, _ ->
-            (anchor.get() as? WToggleSwitch)?.let { toggleSwitch ->
-                val state = if (toggleSwitch.isOn) WItemEvent.SELECTED else WItemEvent.DESELECTED
-                toggleSwitch.itemListeners.fire(WItemEvent(toggleSwitch, state))
-            }
-        }
+        ) { _, _ -> (anchor.get() as? WToggleSwitch)?.onToggled() }
     }
+
+    /** Toggled. Calls the ItemListeners, and the ActionListeners only for user operations and [doClick]. */
+    private fun onToggled() {
+        val state = if (isOn) WItemEvent.SELECTED else WItemEvent.DESELECTED
+        itemListeners.fire(WItemEvent(this, state))
+        if (settingProgrammatically || actionListenerList.isEmpty()) return
+        val event = WActionEvent(this, actionCommand, WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()))
+        for (listener in actionListenerList.toList()) listener.actionPerformed(event)
+    }
+
+    /**
+     * ActionListener-like: receives a [WActionEvent] when the user toggles the switch (click, keys, UI Automation) and on [doClick]
+     * (the source is this switch and [WActionEvent.actionCommand] is [actionCommand]). Not called when [isOn] / [isSelected] is changed from the program
+     * (the same as Swing). Called in the order added, after the ItemListeners for the same toggle.
+     */
+    @JvmSynthetic
+    fun addActionListener(listener: (WActionEvent) -> Unit) {
+        actionListenerList.addAdapter(listener, WActionListener(listener))
+    }
+
+    /** ActionListener-like: receives toggles with a [WActionListener] (the same as the Kotlin lambda form). */
+    fun addActionListener(listener: WActionListener) {
+        actionListenerList.add(listener)
+    }
+
+    /** Removes one lambda added with [addActionListener]. */
+    @JvmSynthetic
+    fun removeActionListener(listener: (WActionEvent) -> Unit) {
+        actionListenerList.removeAdapter(listener)
+    }
+
+    /** Removes one [WActionListener] added with [addActionListener]. Does nothing if it is not attached. */
+    fun removeActionListener(listener: WActionListener) {
+        actionListenerList.remove(listener)
+    }
+
+    /** AbstractButton.getActionListeners-like: the ActionListeners currently attached (in the order added; Kotlin lambdas appear wrapped). */
+    val actionListeners: Array<WActionListener>
+        get() = actionListenerList.toList().toTypedArray()
 
     /** Unsubscribes a listener registered via [addItemListener]. */
     @JvmSynthetic

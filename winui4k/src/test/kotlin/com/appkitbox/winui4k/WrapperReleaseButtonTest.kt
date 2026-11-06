@@ -58,5 +58,16 @@ class WrapperReleaseButtonTest : FunSpec() {
             }
             Reclamation.awaitCollected(toggle).shouldBeTrue()
         }
+
+        test("a WToggleSwitch with an ActionListener that was toggled is collected after being placed in the window and removed") {
+            val log = received
+            val toggleSwitch = shownAndHidden {
+                WToggleSwitch("Wi-Fi").also {
+                    it.addActionListener { log += "action" }
+                    it.isOn = true
+                }
+            }
+            Reclamation.awaitCollected(toggleSwitch).shouldBeTrue()
+        }
     }
 }
