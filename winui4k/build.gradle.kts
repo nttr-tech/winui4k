@@ -137,6 +137,9 @@ dependencies {
     testFixturesImplementation(libs.kotest.runner.junit5)
     // For UiTestSessionListener (LauncherSessionListener)
     testFixturesCompileOnly(libs.junit.platform.launcher)
+    // The nested message loop check (ModalLoopProcessTest) also launches child processes with -Dwinui4k.ffi=jnr.
+    // Its priority is lower than Panama and JNA, so the backend of the other tests does not change
+    testRuntimeOnly(project(":winui4k-ffi-jnr"))
 }
 
 // testFixtures are for tests only, so they are not published to Maven

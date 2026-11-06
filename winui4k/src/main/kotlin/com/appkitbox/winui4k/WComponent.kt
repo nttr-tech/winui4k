@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.lang.ref.WeakReference
@@ -815,7 +816,11 @@ abstract class WComponent internal constructor(
     /** Event tokens registered via addSizeChangedListener. */
     private val sizeChangedTokens = ListenerTokens<Runnable>()
 
-    /** Subscribes to post-layout size changes (FrameworkElement.SizeChanged). */
+    /**
+     * Subscribes to post-layout size changes (FrameworkElement.SizeChanged).
+     * The listener is called in the middle of XAML's layout, so a dialog that waits until it is closed cannot be opened from inside it
+     * ([IllegalStateException]; open it later with WinUiUtilities.invokeLater).
+     */
     @JvmSynthetic
     fun addSizeChangedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
@@ -829,7 +834,7 @@ abstract class WComponent internal constructor(
             "WinUI4K.SizeChangedHandler",
             XamlInterop.IID_SizeChangedEventHandler,
             XamlInterop.IFrameworkElement_add_SizeChanged,
-        ) { _, _ -> listener.run() }
+        ) { _, _ -> ModalLoop.duringLayout { listener.run() } }
         sizeChangedTokens.add(listener, token)
     }
 
@@ -853,6 +858,8 @@ abstract class WComponent internal constructor(
      * Subscribes to the moment the element is added to the visual tree and ready to render
      * (FrameworkElement.Loaded). Useful for initializing parts that are only reachable after the
      * template is applied (e.g. ScrollView.ScrollPresenter).
+     * The listener is called in the middle of XAML's frame processing, so a dialog that waits until it is closed cannot be opened from inside it
+     * ([IllegalStateException]; open it later with WinUiUtilities.invokeLater).
      */
     @JvmSynthetic
     fun addLoadedListener(listener: () -> Unit) {
@@ -867,7 +874,7 @@ abstract class WComponent internal constructor(
             "WinUI4K.LoadedHandler",
             XamlInterop.IID_RoutedEventHandler,
             XamlInterop.IFrameworkElement_add_Loaded,
-        ) { _, _ -> listener.run() }
+        ) { _, _ -> ModalLoop.duringLayout { listener.run() } }
         loadedTokens.add(listener, token)
     }
 
