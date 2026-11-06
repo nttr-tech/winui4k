@@ -2,6 +2,7 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -78,6 +79,50 @@ class WContentDialogForJavaTest {
             assertThrows(IllegalArgumentException.class, () -> dialog.setModal(false));
             dialog.setFullSizeDesired(true);
             assertTrue(dialog.isFullSizeDesired());
+        });
+    }
+
+    @Test
+    void buttonAndContentGettersAndSetters_addingAndRemovingListenersCanBeWrittenInJava() {
+        onUiThread(() -> {
+            WContentDialog dialog = new WContentDialog();
+            assertEquals("", dialog.getPrimaryButtonText());
+            assertTrue(dialog.isPrimaryButtonEnabled());
+            assertEquals(ContentDialogButton.NONE, dialog.getDefaultButton());
+            assertNull(dialog.getContent());
+
+            WLabel body = new WLabel("Body");
+            dialog.setContent(body);
+            dialog.setPrimaryButtonText("Save");
+            dialog.setSecondaryButtonText("Don't Save");
+            dialog.setCloseButtonText("Cancel");
+            dialog.setPrimaryButtonEnabled(false);
+            dialog.setSecondaryButtonEnabled(false);
+            dialog.setDefaultButton(ContentDialogButton.CLOSE);
+            assertSame(body, dialog.getContent());
+            assertEquals("Save", dialog.getPrimaryButtonText());
+            assertEquals("Don't Save", dialog.getSecondaryButtonText());
+            assertEquals("Cancel", dialog.getCloseButtonText());
+            assertFalse(dialog.isPrimaryButtonEnabled());
+            assertFalse(dialog.isSecondaryButtonEnabled());
+            assertEquals(ContentDialogButton.CLOSE, dialog.getDefaultButton());
+
+            WContentDialogListener listener = new WContentDialogAdapter() {
+                @Override
+                public void dialogClosing(WContentDialogEvent e) {
+                    e.setCancel(true);
+                }
+            };
+            WContentDialogButtonListener buttons = e -> e.setCancel(e.getButton() == ContentDialogButton.PRIMARY);
+            dialog.addDialogListener(listener);
+            dialog.addButtonClickListener(buttons);
+            assertArrayEquals(new WContentDialogListener[] {listener}, dialog.getDialogListeners());
+            dialog.removeDialogListener(listener);
+            assertEquals(0, dialog.getDialogListeners().length);
+            dialog.removeButtonClickListener(buttons);
+            dialog.removeButtonClickListener(buttons); // Removing one that is not attached does nothing
+            dialog.hide(); // No exception even when not open
+            assertFalse(dialog.isVisible());
         });
     }
 

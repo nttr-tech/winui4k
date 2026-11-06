@@ -80,6 +80,16 @@ class WContentDialogTest : FunSpec() {
 
     private fun pressEscape() = TestKeyboard.press(VK_ESCAPE, SCAN_ESCAPE)
 
+    /** Whether something is attached to the native ContentControl.Content (call on the UI thread). */
+    private fun nativeContent(dialog: WContentDialog): Boolean {
+        val control = dialog.inspectable.queryInterface(XamlInterop.IID_IContentControl)
+        return try {
+            control.getPtrOrNull(XamlInterop.IContentControl_get_Content)?.also { it.release() } != null
+        } finally {
+            control.release()
+        }
+    }
+
     /** Places an owner button in the shared window, runs [block], and removes it at the end. */
     private suspend fun withOwner(block: suspend (WButton) -> Unit) {
         val owner = onUiThreadGet { WButton("Owner") }
@@ -290,6 +300,87 @@ class WContentDialogTest : FunSpec() {
             TopLevelWindows.close(TopLevelWindows.find(null, OWNER_TITLE).shouldNotBeNull())
             awaitEvents("returned:NONE")
             onUiThreadGet { dialog.isVisible } shouldBe false
+        }
+
+        context("Defaults") {
+            test("button texts are empty, buttons are enabled, the default button is NONE, content and owner are null, and isModal is true") {
+                onUiThreadGet {
+                    val dialog = WContentDialog()
+                    listOf(
+                        dialog.primaryButtonText,
+                        dialog.secondaryButtonText,
+                        dialog.closeButtonText,
+                        dialog.isPrimaryButtonEnabled,
+                        dialog.isSecondaryButtonEnabled,
+                        dialog.defaultButton,
+                        dialog.content,
+                        dialog.owner,
+                        dialog.isModal,
+                        nativeContent(dialog),
+                    )
+                } shouldBe listOf("", "", "", true, true, ContentDialogButton.NONE, null, null, true, false)
+            }
+        }
+
+        context("Reading and writing") {
+            test("button texts, whether they are enabled and the default button (all values) read back from the native, and content attaches to the native Content and null removes it") {
+                onUiThread {
+                    val dialog = WContentDialog()
+                    dialog.primaryButtonText = "Save"
+                    dialog.secondaryButtonText = "Don't Save"
+                    dialog.closeButtonText = "Cancel"
+                    dialog.isPrimaryButtonEnabled = false
+                    dialog.isSecondaryButtonEnabled = false
+                    listOf(dialog.primaryButtonText, dialog.secondaryButtonText, dialog.closeButtonText) shouldBe
+                        listOf("Save", "Don't Save", "Cancel")
+                    listOf(dialog.isPrimaryButtonEnabled, dialog.isSecondaryButtonEnabled) shouldBe listOf(false, false)
+                    ContentDialogButton.entries.map { button ->
+                        dialog.defaultButton = button
+                        dialog.defaultButton
+                    } shouldBe ContentDialogButton.entries
+                    val label = WLabel("Body")
+                    dialog.content = label
+                    (dialog.content === label).shouldBeTrue()
+                    nativeContent(dialog).shouldBeTrue()
+                    dialog.content = null
+                    listOf(dialog.content, nativeContent(dialog)) shouldBe listOf(null, false)
+                    (WContentDialog("Heading", label).content === label).shouldBeTrue()
+                }
+            }
+        }
+
+        context("Events") {
+            test("dialogListeners are the listeners in the order added (getWindowListeners-like, a copy) and disappear when removed") {
+                onUiThread {
+                    val dialog = WContentDialog()
+                    val first = object : WContentDialogAdapter() {}
+                    val second = object : WContentDialogAdapter() {}
+                    dialog.dialogListeners.size shouldBe 0
+                    dialog.addDialogListener(first)
+                    dialog.addDialogListener(second)
+                    dialog.dialogListeners.toList() shouldBe listOf(first, second)
+                    dialog.removeDialogListener(first)
+                    dialog.dialogListeners.toList() shouldBe listOf(second)
+                }
+            }
+
+            test("a lambda removed with removeButtonClickListener is not called, and the remaining listeners and the result are unchanged") {
+                withOwner { owner ->
+                    val dialog = onUiThreadGet { dialog() }
+                    val removed: (WContentDialogButtonEvent) -> Unit = { events += "removed" }
+                    onUiThread {
+                        dialog.addButtonClickListener(removed)
+                        dialog.addButtonClickListener { e -> events += "kept:${e.button}" }
+                        dialog.removeButtonClickListener(removed)
+                        dialog.removeButtonClickListener(removed) // The second time does nothing
+                    }
+                    showAndWaitLater(dialog, owner)
+                    awaitOpen(dialog)
+                    OpenContentDialogs.press(owner, "SecondaryButton")
+                    awaitEvents("kept:SECONDARY", "returned:SECONDARY")
+                    awaitClosed(dialog)
+                }
+            }
         }
 
         context("Threads and reentrancy") {

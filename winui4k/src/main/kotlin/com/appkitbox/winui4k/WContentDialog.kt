@@ -95,7 +95,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     private val state = ShowState()
 
     /** The listeners added with [addDialogListener] and the tokens of Opened, Closing and Closed. */
-    private val dialogListeners = ArrayList<Pair<WContentDialogListener, LongArray>>()
+    private val dialogListenerTokens = ArrayList<Pair<WContentDialogListener, LongArray>>()
 
     /** The listeners added with [addButtonClickListener] and the tokens of the primary, secondary and close buttons. */
     private val buttonListeners = ArrayList<Pair<WContentDialogButtonListener, LongArray>>()
@@ -315,15 +315,19 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
                 listener.dialogClosed(WContentDialogEvent(dialog, result))
             }
         }
-        dialogListeners += listener to longArrayOf(opened, closing, closed)
+        dialogListenerTokens += listener to longArrayOf(opened, closing, closed)
         anchor.listenerAdded()
     }
 
+    /** Like WindowListener's getWindowListeners: the listeners attached with [addDialogListener] (in the order added, a copy). */
+    val dialogListeners: Array<WContentDialogListener>
+        get() = dialogListenerTokens.map { it.first }.toTypedArray()
+
     /** Removes a listener added with [addDialogListener] (does nothing if not registered). */
     fun removeDialogListener(listener: WContentDialogListener) {
-        val index = dialogListeners.indexOfLast { it.first === listener }
+        val index = dialogListenerTokens.indexOfLast { it.first === listener }
         if (index < 0) return
-        val tokens = dialogListeners.removeAt(index).second
+        val tokens = dialogListenerTokens.removeAt(index).second
         inspectable.removeEventHandler(XamlInterop.IContentDialog_remove_Opened, tokens[0])
         inspectable.removeEventHandler(XamlInterop.IContentDialog_remove_Closing, tokens[1])
         inspectable.removeEventHandler(XamlInterop.IContentDialog_remove_Closed, tokens[2])
