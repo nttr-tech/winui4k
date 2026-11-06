@@ -80,7 +80,7 @@ final class WindowingPages {
     private static void addCloseButton(WFrame frame) {
         WButton closeButton = new WButton("Close this window");
         closeButton.addActionListener(() -> {
-            frame.setVisible(false);
+            frame.dispose();
         });
         frame.add(closeButton);
     }
@@ -406,7 +406,7 @@ final class WindowingPages {
         WButton closeButton = new WButton("Close this window");
         closeButton.addActionListener(() -> {
             if (child[0] != null) {
-                child[0].setVisible(false);
+                child[0].dispose();
             }
         });
 
@@ -734,7 +734,7 @@ final class WindowingPages {
         WLabel count = new WLabel("Open windows: 0");
 
         Runnable updateCount = () -> {
-            children.removeIf(frame -> !frame.isVisible());
+            children.removeIf(frame -> !frame.isDisplayable());
             count.setText("Open windows: " + children.size());
         };
 
@@ -745,7 +745,7 @@ final class WindowingPages {
             frame.setExtendsContentIntoTitleBar(true);
             WButton closeButton = new WButton("Close this window");
             closeButton.addActionListener(() -> {
-                frame.setVisible(false);
+                frame.dispose();
                 updateCount.run();
             });
             frame.add(new WLabel("This window is a WFrame independent of the Gallery itself."));
@@ -759,7 +759,7 @@ final class WindowingPages {
         WButton closeAllButton = new WButton("Close all");
         closeAllButton.addActionListener(() -> {
             for (WFrame frame : children) {
-                frame.setVisible(false);
+                frame.dispose();
             }
             updateCount.run();
         });

@@ -70,7 +70,7 @@ private fun openChildFrame(title: String): WFrame {
 /** The "close" button always placed at the top of a child window's content. */
 private fun WFrame.addCloseButton() {
     val closeButton = WButton("Close this window")
-    closeButton.addActionListener { isVisible = false }
+    closeButton.addActionListener { dispose() }
     add(closeButton)
 }
 
@@ -352,7 +352,7 @@ private fun buildAppWindowFullScreenExample(): WComponent {
     }
 
     val closeButton = WButton("Close this window")
-    closeButton.addActionListener { child?.isVisible = false }
+    closeButton.addActionListener { child?.dispose() }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     buttons.add(openButton)
@@ -650,7 +650,7 @@ private fun buildMultipleWindowsExample(): WComponent {
     val count = WLabel("Open windows: 0")
 
     fun updateCount() {
-        children.removeAll { !it.isVisible }
+        children.removeAll { !it.isDisplayable }
         count.text = "Open windows: ${children.size}"
     }
 
@@ -661,7 +661,7 @@ private fun buildMultipleWindowsExample(): WComponent {
         frame.extendsContentIntoTitleBar = true
         val closeButton = WButton("Close this window")
         closeButton.addActionListener {
-            frame.isVisible = false
+            frame.dispose()
             updateCount()
         }
         frame.add(WLabel("This window is a WFrame independent of the Gallery itself."))
@@ -674,7 +674,7 @@ private fun buildMultipleWindowsExample(): WComponent {
 
     val closeAllButton = WButton("Close all")
     closeAllButton.addActionListener {
-        for (frame in children) frame.isVisible = false
+        for (frame in children) frame.dispose()
         updateCount()
     }
 
