@@ -131,7 +131,7 @@ object UiTestHarness {
         val frame = this.frame
         if (frame != null) {
             this.frame = null
-            onUiThread { frame.isVisible = false } // the last window closing triggers auto-exit
+            onUiThread { frame.dispose() } // The last window closing triggers auto-exit
         } else {
             // The message loop is still running even if only window-free tests ran, so exit explicitly.
             // Swallow the IllegalStateException that exit() throws if it has already exited

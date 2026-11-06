@@ -22,7 +22,7 @@ data class WDimension(val width: Int, val height: Int)
  * Provides [title] / [size] / [clientSize] / [position] / [titleBar], plus
  * [show] / [hide] / [resize] / [resizeClient] / [move] / [setIcon] / [setPresenter].
  */
-class WAppWindow internal constructor(private val appWindow: ComPtr) {
+class WAppWindow internal constructor(internal val appWindow: ComPtr) {
     /** An IAppWindow2 view for ClientSize / ResizeClient. */
     private val appWindow2: ComPtr by lazy { appWindow.queryInterface(WindowingInterop.IID_IAppWindow2) }
 
@@ -66,6 +66,10 @@ class WAppWindow internal constructor(private val appWindow: ComPtr) {
 
     /** Hides the window without closing it (AppWindow.Hide). Can be shown again via [show]. */
     fun hide() = appWindow.call(WindowingInterop.IAppWindow_Hide)
+
+    /** true if the window is shown (AppWindow.IsVisible). Changed by [show] / [hide]. */
+    val isVisible: Boolean
+        get() = appWindow.getBool(WindowingInterop.IAppWindow_get_IsVisible)
 
     /** Changes the whole window's size (title bar included) (AppWindow.Resize). */
     fun resize(width: Int, height: Int) = XamlStructs.putSizeInt32(appWindow, WindowingInterop.IAppWindow_Resize, width, height)

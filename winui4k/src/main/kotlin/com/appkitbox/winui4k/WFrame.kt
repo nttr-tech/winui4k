@@ -4,22 +4,85 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
 
-/** JFrame-like: WinUI 3's Window. */
-class WFrame @JvmOverloads constructor(title: String = "") {
+/**
+ * JFrame-like: WinUI 3's Window.
+ *
+ * As in Swing, open (not yet closed) WFrames are held by [frames], so they are not removed by GC even if not kept in a variable,
+ * and are released when closed (Window.Closed). A window that is only hidden ([isVisible] = false) is considered still open, and
+ * the automatic app exit when the last window closes ([WinUiUtilities.exitOnLastWindowClosed]) does not happen either (as in Swing).
+ *
+ * Differences from Swing:
+ * - The default of [defaultCloseOperation] is [DISPOSE_ON_CLOSE], not Swing's HIDE_ON_CLOSE (so that no invisible
+ *   process remains after closing with ×).
+ * - A [dispose]d window cannot be shown again ([isVisible] = true throws [IllegalStateException]).
+ */
+@Suppress("TooManyFunctions") // Lists the JFrame / Window APIs in one class
+class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     private val window: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_Window, XamlInterop.IID_IWindowFactory) // IWindow
 
-    /** The root panel corresponding to JFrame's contentPane. */
+    private val window2: ComPtr by lazy { window.queryInterface(XamlInterop.IID_IWindow2) }
+
+    /** An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.). */
+    val appWindow: WAppWindow by lazy {
+        WAppWindow(window2.getPtr(XamlInterop.IWindow2_get_AppWindow))
+    }
+
+    /**
+     * The default root panel corresponding to JFrame's contentPane (a WPanel, that is, a vertical StackPanel). Even after replacing it with [setContentPane],
+     * this returns the default panel (to keep the type WPanel). Swing's `getContentPane().add(...)` form goes into this panel, which is not
+     * on screen after the replacement, so use [add] (which goes into the current content) after replacing it.
+     */
     val contentPane: WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }
+
+    /** The current window content (Window.Content). Initially [contentPane], replaced by [setContentPane]. */
+    internal var content: WComponent = contentPane
+        private set
 
     var title: String = ""
         set(value) {
             field = value
             Hstring.use(value) { h -> window.call(XamlInterop.IWindow_put_Title, h) }
         }
+
+    private val windowListenerList = ArrayList<WWindowListener>()
+    private val windowStateListenerList = ArrayList<WWindowStateListener>()
+    private val windowFocusListenerList = ArrayList<WWindowFocusListener>()
+
+    /** true if closed (Window.Closed, or Close was called by [dispose]). */
+    private var closed = false
+
+    /** true if windowOpened has been fired (fired only once). */
+    private var opened = false
+
+    /** true while windowClosing listeners are being called ([dispose] inside them works by not stopping the close). */
+    private var inClosing = false
+
+    /** true if [dispose] was called inside windowClosing. */
+    private var disposeRequestedInClosing = false
+
+    /**
+     * true while [dispose] is calling Window.Close. AppWindow.Closing does not come with Window.Close (doc/verification.md), but
+     * this guards against turning it into windowClosing if it ever comes.
+     */
+    private var disposing = false
+
+    /** The last read state ([NORMAL] / [ICONIFIED] / [MAXIMIZED_BOTH]). */
+    private var lastState = NORMAL
+
+    /**
+     * Window.isActive-like: true if this window is active (tracked with Window.Activated). A window shown with [WAppWindow.show]
+     * with activate = false does not become active until the user selects it.
+     */
+    var isActive: Boolean = false
+        private set
+
+    /** Window.isFocused-like: true if this window has the focus. Same as [isActive] in WinUI. */
+    val isFocused: Boolean get() = isActive
 
     init {
         window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
@@ -28,27 +91,286 @@ class WFrame @JvmOverloads constructor(title: String = "") {
         // (see WinUiUtilities.exitOnLastWindowClosed). Closed fires exactly once whether via
         // Close() or the title bar's close button
         WinUiUtilities.noteWindowCreated()
-        // The handler stays on the window (the native object), so this WFrame is referenced weakly
+        openFrames.add(this)
+        subscribeNativeEvents()
+    }
+
+    /**
+     * Subscribes to window notifications. The handlers stay in the window (native), so they reference the WFrame weakly. Until it is closed,
+     * [openFrames] holds it strongly, so the weak reference is never cleared during that time.
+     */
+    private fun subscribeNativeEvents() {
         val self = WeakReference(this)
         window.addEventHandler(
             "WinUI4K.WindowClosedHandler",
             XamlInterop.IID_WindowClosedHandler,
             XamlInterop.IWindow_add_Closed,
         ) { _, _ ->
-            self.get()?.let { DefaultButtons.forget(it) }
+            val frame = self.get()
+            if (frame != null) {
+                DefaultButtons.forget(frame)
+                frame.onClosed()
+            }
             WinUiUtilities.noteWindowClosed()
+        }
+        window.addEventHandler(
+            "WinUI4K.WindowActivatedHandler",
+            XamlInterop.IID_WindowActivatedHandler,
+            XamlInterop.IWindow_add_Activated,
+        ) { _, args ->
+            val state = ComPtr(args).getInt(XamlInterop.IWindowActivatedEventArgs_get_WindowActivationState)
+            self.get()?.onActivated(state != XamlInterop.WINDOW_ACTIVATION_STATE_DEACTIVATED)
+        }
+        val native = appWindow.appWindow
+        native.addEventHandler(
+            "WinUI4K.AppWindowClosingHandler",
+            WindowingInterop.IID_AppWindowClosingHandler,
+            WindowingInterop.IAppWindow_add_Closing,
+        ) { _, args ->
+            if (self.get()?.onClosing() == true) {
+                ComPtr(args).putBool(WindowingInterop.IAppWindowClosingEventArgs_put_Cancel, true)
+            }
+        }
+        native.addEventHandler(
+            "WinUI4K.AppWindowChangedHandler",
+            WindowingInterop.IID_AppWindowChangedHandler,
+            WindowingInterop.IAppWindow_add_Changed,
+        ) { _, args ->
+            val visibilityChanged = ComPtr(args).getBool(WindowingInterop.IAppWindowChangedEventArgs_get_DidVisibilityChange)
+            self.get()?.onChanged(visibilityChanged)
         }
     }
 
-    fun add(component: WComponent) = contentPane.add(component)
+    private fun onClosed() {
+        closed = true
+        openFrames.remove(this)
+        if (isActive) onActivated(false)
+        fireWindow(WWindowEvent.WINDOW_CLOSED) { l, e -> l.windowClosed(e) }
+    }
+
+    private fun onActivated(active: Boolean) {
+        if (active) {
+            fireOpenedOnce()
+            // Put the one that became active last at the end (used to decide where a WOptionPane without a parent opens)
+            if (!closed && openFrames.remove(this)) openFrames.add(this)
+        }
+        if (active == isActive) return
+        isActive = active
+        if (active) {
+            fireWindow(WWindowEvent.WINDOW_ACTIVATED) { l, e -> l.windowActivated(e) }
+            fireFocus(WWindowEvent.WINDOW_GAINED_FOCUS) { l, e -> l.windowGainedFocus(e) }
+        } else {
+            fireFocus(WWindowEvent.WINDOW_LOST_FOCUS) { l, e -> l.windowLostFocus(e) }
+            fireWindow(WWindowEvent.WINDOW_DEACTIVATED) { l, e -> l.windowDeactivated(e) }
+        }
+    }
+
+    private fun fireOpenedOnce() {
+        if (opened || closed) return
+        opened = true
+        fireWindow(WWindowEvent.WINDOW_OPENED) { l, e -> l.windowOpened(e) }
+    }
+
+    /** AppWindow.Closing. Returns true to cancel the close. */
+    private fun onClosing(): Boolean {
+        if (disposing || closed) return false
+        inClosing = true
+        disposeRequestedInClosing = false
+        try {
+            fireWindow(WWindowEvent.WINDOW_CLOSING) { l, e -> l.windowClosing(e) }
+        } finally {
+            inClosing = false
+        }
+        if (disposeRequestedInClosing) return false
+        return when (defaultCloseOperation) {
+            DO_NOTHING_ON_CLOSE -> true
+            HIDE_ON_CLOSE -> {
+                appWindow.hide()
+                true
+            }
+            EXIT_ON_CLOSE -> {
+                WinUiUtilities.exit()
+                false
+            }
+            else -> false
+        }
+    }
+
+    /** AppWindow.Changed. Fires windowOpened when shown, and iconify / maximize events when the presenter state changes. */
+    private fun onChanged(visibilityChanged: Boolean) {
+        if (closed) return
+        if (visibilityChanged && appWindow.isVisible) fireOpenedOnce()
+        val state = readState() ?: return
+        val old = lastState
+        if (state == old) return
+        lastState = state
+        if (state == ICONIFIED) {
+            fireWindow(WWindowEvent.WINDOW_ICONIFIED) { l, e -> l.windowIconified(e) }
+        } else if (old == ICONIFIED) {
+            fireWindow(WWindowEvent.WINDOW_DEICONIFIED) { l, e -> l.windowDeiconified(e) }
+        }
+        if (windowStateListenerList.isEmpty()) return
+        val event = WWindowEvent(this, WWindowEvent.WINDOW_STATE_CHANGED, old, state)
+        windowStateListenerList.toList().forEach { it.windowStateChanged(event) }
+    }
+
+    /** Reads OverlappedPresenter.State as [NORMAL] / [ICONIFIED] / [MAXIMIZED_BOTH]. null for other presenters. */
+    private fun readState(): Int? {
+        val presenter = appWindow.appWindow.getPtrOrNull(WindowingInterop.IAppWindow_get_Presenter) ?: return null
+        val overlapped = try {
+            presenter.queryInterfaceOrNull(WindowingInterop.IID_IOverlappedPresenter)
+        } finally {
+            presenter.release()
+        } ?: return null
+        val native = try {
+            overlapped.getInt(WindowingInterop.IOverlappedPresenter_get_State)
+        } finally {
+            overlapped.release()
+        }
+        return when (OverlappedPresenterState.of(native)) {
+            OverlappedPresenterState.MAXIMIZED -> MAXIMIZED_BOTH
+            OverlappedPresenterState.MINIMIZED -> ICONIFIED
+            OverlappedPresenterState.RESTORED -> NORMAL
+        }
+    }
+
+    private inline fun fireWindow(id: Int, call: (WWindowListener, WWindowEvent) -> Unit) {
+        if (windowListenerList.isEmpty()) return
+        val event = WWindowEvent(this, id)
+        windowListenerList.toList().forEach { call(it, event) }
+    }
+
+    private inline fun fireFocus(id: Int, call: (WWindowFocusListener, WWindowEvent) -> Unit) {
+        if (windowFocusListenerList.isEmpty()) return
+        val event = WWindowEvent(this, id)
+        windowFocusListenerList.toList().forEach { call(it, event) }
+    }
+
+    /**
+     * Window.addWindowListener-like: adds a listener for opened, closing, closed, iconified and activated.
+     * Does nothing if null. Adding the same listener twice calls it twice (as in Swing). Called in the order added.
+     *
+     * - windowOpened: once, when first shown (the show in AppWindow.Changed, or the first Window.Activated)
+     * - windowClosing: when the user tries to close with × or Alt+F4 (AppWindow.Closing). [defaultCloseOperation] is performed after it.
+     *   Calling [dispose] inside it closes the window as is. Not fired when closed with [dispose] or when the app exits (as in Swing)
+     * - windowClosed: after closing (Window.Closed). Fired both for [dispose] and ×
+     * - windowIconified / windowDeiconified: when iconified or restored (compares OverlappedPresenter.State on AppWindow.Changed)
+     * - windowActivated / windowDeactivated: Window.Activated
+     */
+    fun addWindowListener(listener: WWindowListener?) {
+        if (listener != null) windowListenerList.add(listener)
+    }
+
+    /** Window.removeWindowListener-like: removes one listener added with [addWindowListener]. Does nothing if it was not added. */
+    fun removeWindowListener(listener: WWindowListener?) {
+        windowListenerList.remove(listener)
+    }
+
+    /** Window.getWindowListeners-like: the added listeners (in the order added). */
+    val windowListeners: Array<WWindowListener>
+        get() = windowListenerList.toTypedArray()
+
+    /**
+     * Window.addWindowStateListener-like: adds a listener for when the state changes between normal ([NORMAL]), iconified ([ICONIFIED])
+     * and maximized ([MAXIMIZED_BOTH]). On iconifying and restoring it is called after [WWindowListener.windowIconified] / [WWindowListener.windowDeiconified].
+     * When iconified from maximized, the new state is only [ICONIFIED] (not Swing's ICONIFIED | MAXIMIZED_BOTH).
+     */
+    fun addWindowStateListener(listener: WWindowStateListener?) {
+        if (listener != null) windowStateListenerList.add(listener)
+    }
+
+    /** Window.removeWindowStateListener-like: removes one listener added with [addWindowStateListener]. */
+    fun removeWindowStateListener(listener: WWindowStateListener?) {
+        windowStateListenerList.remove(listener)
+    }
+
+    /** Window.getWindowStateListeners-like: the added listeners (in the order added). */
+    val windowStateListeners: Array<WWindowStateListener>
+        get() = windowStateListenerList.toTypedArray()
+
+    /**
+     * Window.addWindowFocusListener-like: adds a listener for when the window gains or loses the focus. In WinUI this is the same time
+     * as activation (Window.Activated); gaining is called after windowActivated and losing before windowDeactivated (the same order as Swing).
+     */
+    fun addWindowFocusListener(listener: WWindowFocusListener?) {
+        if (listener != null) windowFocusListenerList.add(listener)
+    }
+
+    /** Window.removeWindowFocusListener-like: removes one listener added with [addWindowFocusListener]. */
+    fun removeWindowFocusListener(listener: WWindowFocusListener?) {
+        windowFocusListenerList.remove(listener)
+    }
+
+    /** Window.getWindowFocusListeners-like: the added listeners (in the order added). */
+    val windowFocusListeners: Array<WWindowFocusListener>
+        get() = windowFocusListenerList.toTypedArray()
+
+    /**
+     * JFrame.setDefaultCloseOperation-like: the action when the user tries to close with × or Alt+F4. Performed after the windowClosing listeners.
+     * [DO_NOTHING_ON_CLOSE] does not close, [HIDE_ON_CLOSE] hides (AppWindow.Hide; stays open), [DISPOSE_ON_CLOSE] closes,
+     * and [EXIT_ON_CLOSE] closes and exits the app ([WinUiUtilities.exit]). Other values throw [IllegalArgumentException] (as in Swing).
+     * Unlike Swing's HIDE_ON_CLOSE, the default is [DISPOSE_ON_CLOSE] (keeping WinUI4K's previous behavior).
+     */
+    var defaultCloseOperation: Int = DISPOSE_ON_CLOSE
+        set(value) {
+            require(value in DO_NOTHING_ON_CLOSE..EXIT_ON_CLOSE) {
+                "defaultCloseOperation must be one of DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE, DISPOSE_ON_CLOSE or EXIT_ON_CLOSE: $value"
+            }
+            field = value
+        }
+
+    /**
+     * Window.dispose-like: closes and disposes of the window (Window.Close). windowClosing is not fired, and windowClosed is.
+     * Does nothing from the second time on. Called from inside a windowClosing listener, it lets the user's close go through as is.
+     * If it is the last window, the app exits according to [WinUiUtilities.exitOnLastWindowClosed].
+     */
+    fun dispose() {
+        if (closed) return
+        if (inClosing) {
+            disposeRequestedInClosing = true
+            return
+        }
+        disposing = true
+        try {
+            window.call(XamlInterop.IWindow_Close)
+        } finally {
+            disposing = false
+        }
+        closed = true
+        openFrames.remove(this)
+    }
+
+    /** Component.isDisplayable-like: true if not yet closed (neither [dispose]d nor disposed with ×). true if only hidden. */
+    val isDisplayable: Boolean get() = !closed
+
+    /** Container.add(Component)-like: adds a child to the current content ([contentPane], or the container replaced with [setContentPane]). */
+    fun add(component: WComponent) = currentContainer().add(component)
+
+    /**
+     * Container.add(Component, Object)-like: adds a child with a constraint to the current content (the `frame.add(panel, WBorderLayout.CENTER)` form).
+     * If the content is a [WLayoutPanel], the constraint is passed to its layout manager; other containers do not use it (as in Swing).
+     */
+    fun add(component: WComponent, constraints: Any?) = currentContainer().addImpl(component, constraints, -1)
+
+    /** Container.add(Component, int)-like: adds a child at [index] of the current content (-1 for the end). */
+    fun add(component: WComponent, index: Int) = currentContainer().add(component, index)
+
+    /** Container.remove(Component)-like: removes a child from the current content. */
+    fun remove(component: WComponent) = currentContainer().remove(component)
+
+    private fun currentContainer(): WContainer = content as? WContainer ?: error(
+        "The content replaced with setContentPane (${content.javaClass.simpleName}) is not a container, so children cannot be added. Add them to the content's container directly",
+    )
 
     /**
      * Equivalent to JFrame.setContentPane: replaces the root with [component] instead of the
      * default [contentPane] (Window.Content). Useful when you want a full-bleed layout with,
      * say, a Grid instead of StackPanel's unconstrained height measurement.
+     * Subsequent [add] / [remove] apply to [component] (if it is a container). [contentPane] stays the default panel.
      */
     fun setContentPane(component: WComponent) {
         window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
+        content = component
     }
 
     /**
@@ -71,19 +393,22 @@ class WFrame @JvmOverloads constructor(title: String = "") {
             value?.becomeDefaultButton(this)
         }
 
-    /** Setting this to true shows (activates) the window. */
-    var isVisible: Boolean = false
+    /**
+     * Component.setVisible / isVisible-like: true shows the window and brings it to the front (Window.Activate), and false hides it without closing
+     * (AppWindow.Hide; as in Swing, a hidden window can be shown again with true). Use [dispose] to close it.
+     * Reading returns the native visibility (AppWindow.IsVisible), and false after it is closed.
+     * Setting true after it is closed throws [IllegalStateException] (unlike Swing, it cannot be shown again), and setting false does nothing.
+     */
+    var isVisible: Boolean
+        get() = !closed && appWindow.isVisible
         set(value) {
-            field = value
-            if (value) window.call(XamlInterop.IWindow_Activate) else window.call(XamlInterop.IWindow_Close)
+            if (value) {
+                check(!closed) { "A closed (disposed) WFrame cannot be shown again" }
+                window.call(XamlInterop.IWindow_Activate)
+            } else if (!closed) {
+                appWindow.hide()
+            }
         }
-
-    private val window2: ComPtr by lazy { window.queryInterface(XamlInterop.IID_IWindow2) }
-
-    /** An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.). */
-    val appWindow: WAppWindow by lazy {
-        WAppWindow(window2.getPtr(XamlInterop.IWindow2_get_AppWindow))
-    }
 
     /**
      * The window background's system material (Window.SystemBackdrop).
@@ -125,9 +450,54 @@ class WFrame @JvmOverloads constructor(title: String = "") {
         window.call(XamlInterop.IWindow_SetTitleBar, component?.uiElement?.ptr)
     }
 
-    private companion object {
+    companion object {
+        /** The same value as Frame.NORMAL: the normal state. */
+        const val NORMAL: Int = 0
+
+        /** The same value as Frame.ICONIFIED: the iconified state. */
+        const val ICONIFIED: Int = 1
+
+        /** The same value as Frame.MAXIMIZED_HORIZ (Windows has no horizontal-only maximization). */
+        const val MAXIMIZED_HORIZ: Int = 2
+
+        /** The same value as Frame.MAXIMIZED_VERT (Windows has no vertical-only maximization). */
+        const val MAXIMIZED_VERT: Int = 4
+
+        /** The same value as Frame.MAXIMIZED_BOTH: the maximized state. */
+        const val MAXIMIZED_BOTH: Int = 6
+
+        /** Same as [WWindowConstants.DO_NOTHING_ON_CLOSE] (so that Kotlin can write `WFrame.DO_NOTHING_ON_CLOSE`). */
+        const val DO_NOTHING_ON_CLOSE: Int = WWindowConstants.DO_NOTHING_ON_CLOSE
+
+        /** Same as [WWindowConstants.HIDE_ON_CLOSE]. */
+        const val HIDE_ON_CLOSE: Int = WWindowConstants.HIDE_ON_CLOSE
+
+        /** Same as [WWindowConstants.DISPOSE_ON_CLOSE]. */
+        const val DISPOSE_ON_CLOSE: Int = WWindowConstants.DISPOSE_ON_CLOSE
+
+        /** Same as [WWindowConstants.EXIT_ON_CLOSE]. */
+        const val EXIT_ON_CLOSE: Int = WWindowConstants.EXIT_ON_CLOSE
+
         /** MicaKind.BaseAlt (value extracted from the winmd). */
-        const val MICA_KIND_BASE_ALT = 1
+        private const val MICA_KIND_BASE_ALT = 1
+
+        /**
+         * The open (not closed) WFrames. In creation order, with ones that become active moved to the end. Holds WFrames strongly until closed
+         * so that the native handlers (weak references) can reach them. Read and written only by the UI thread.
+         */
+        private val openFrames = LinkedHashSet<WFrame>()
+
+        /**
+         * Frame.getFrames-like: an array of the open (not yet closed) WFrames, including hidden ones. Unlike Swing, closed ones are
+         * not included. Call it on the UI thread.
+         */
+        @JvmStatic
+        val frames: Array<WFrame>
+            get() = openFrames.toTypedArray()
+
+        /** The active window. If none, the shown window that became active (or was created) last. null if neither exists. */
+        internal fun activeOrRecentFrame(): WFrame? =
+            openFrames.firstOrNull { it.isActive } ?: openFrames.lastOrNull { it.isVisible }
     }
 }
 

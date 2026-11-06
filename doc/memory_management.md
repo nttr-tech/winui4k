@@ -298,6 +298,12 @@ Flyout やタブのようにネイティブが部分木を取っておく間は�
 親から子へは `WContainer` の子の一覧や `WBorder.child` などのフィールドが強く持つ。
 子から親を強く持つと、根のハンドラに預けた子から根のラッパーへ戻る道ができ、根のネイティブを含む循環になる。
 
+ウィンドウ (`WFrame`) は Swing の `Frame.getFrames()` と同じく、開いている間は静的な登録表 (`WFrame.frames`) が強く持つ。
+呼び出し側が変数に残さなくても、表示中のウィンドウのラッパーが GC で消えてウィンドウのリスナーが呼ばれなくなることはない。
+Window.Closed / Activated と AppWindow.Closing / Changed のハンドラは `WFrame` を弱参照で持ち、登録表の強参照がそれを支える。
+閉じた (Window.Closed、または `dispose`) 時に登録表から外すので、その後はハンドラからラッパーへ戻る強い道が無く、循環にならない。
+隠した (`isVisible = false`) だけのウィンドウは開いたままとして登録表に残る。
+
 ### 逆方向 KComObject の参照カウント
 
 ここまではネイティブのオブジェクトを Kotlin から使う方向 (いわゆる **RCW**、runtime callable wrapper) の話だった。

@@ -54,6 +54,10 @@ internal object TopLevelWindows {
         check(postMessageW(window, WM_CLOSE, 0L, 0L) as Int != 0) { "cannot send WM_CLOSE" }
     }
 
+    /** For Java tests: sends WM_CLOSE to the shown window titled [title]. [IllegalStateException] if not found. */
+    @JvmStatic
+    fun closeByTitle(title: String) = close(checkNotNull(find(null, title)) { "Window \"$title\" not found" })
+
     private fun utf16(scope: MemoryScope, text: String): Ptr {
         val buffer = scope.allocate((text.length + 1).toLong() * 2, 2)
         Ffi.backend.memory.putUtf16z(buffer, 0, text)

@@ -318,3 +318,7 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (`Selector::OnSelectedItemChanged`、Selector_Partial.cpp:633 の中の :671)。覚えた値は、あとで ItemsSource が (null 以外に) 設定され、
     その項目に含まれていたときに `Selector::OnItemsSourceChanged` (:404 の中の :466-481) が選び直す。つまり項目外の値を一度
     ネイティブへ送ると、後から ItemsSource を設定したときに思わぬ選択が起きうる。WComboBox は項目外の値をネイティブへ送らず、選択はモデル側で持つ
+- AppWindow.Closing は利用者の閉じる操作 (WM_CLOSE、タイトル バーの ×) では来るが、Window.Close() では来ない
+  (WFrameTest で WM_CLOSE の 4 回だけ来て、dispose の Close では 1 回も来なかった)。Closing の Cancel を true にすると
+  Window.Closed も来ずウィンドウは開いたまま、Closing の中で AppWindow.Hide を呼ぶと隠れて開いたままになる
+  (WFrame の DO_NOTHING_ON_CLOSE / HIDE_ON_CLOSE)
