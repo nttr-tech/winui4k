@@ -605,6 +605,10 @@ internal object XamlInterop {
     const val IButtonBase_put_CommandParameter = 13    // put_CommandParameter(IInspectable)
     const val IButtonBase_add_Click = 14               // add_Click(RoutedEventHandler, out token)
     const val IButtonBase_remove_Click = 15            // remove_Click(token)
+    const val CLS_ButtonBase = "Microsoft.UI.Xaml.Controls.Primitives.ButtonBase"
+    const val IID_IButtonBaseStatics = "dbe812f6-adf8-51d3-8137-a8fbf6445b3c"
+    const val IButtonBaseStatics_get_IsPointerOverProperty = 7 // get_IsPointerOverProperty(out DependencyProperty)
+    const val IButtonBaseStatics_get_IsPressedProperty = 8 // get_IsPressedProperty(out DependencyProperty)
 
     /** delegate Microsoft.UI.Xaml.RoutedEventHandler(sender, RoutedEventArgs) — Invoke is vtbl[3] */
     const val IID_RoutedEventHandler = "dae23d85-69ca-5bdf-805b-6161a3a215cc"
@@ -872,6 +876,8 @@ internal object XamlInterop {
     const val IToggleButton_remove_Unchecked = 13
     const val IToggleButton_add_Indeterminate = 14     // add_Indeterminate(RoutedEventHandler, out token)
     const val IToggleButton_remove_Indeterminate = 15
+    const val IID_IToggleButtonStatics = "4b8397e3-76fd-59df-824f-40ae339fb00b"
+    const val IToggleButtonStatics_get_IsCheckedProperty = 6 // get_IsCheckedProperty(out DependencyProperty)
 
     // ---- Microsoft.UI.Xaml.Controls.CheckBox ----
     const val CLS_CheckBox = "Microsoft.UI.Xaml.Controls.CheckBox"
@@ -2598,6 +2604,7 @@ internal object XamlInterop {
     const val IControlStatics_get_FontWeightProperty = 11
     const val IControlStatics_get_FontStyleProperty = 12
     const val IControlStatics_get_ForegroundProperty = 15
+    const val IControlStatics_get_IsEnabledProperty = 17
     const val IControlStatics_get_PaddingProperty = 20
     const val IControlStatics_get_BackgroundProperty = 23
     const val IControlStatics_get_BorderThicknessProperty = 25

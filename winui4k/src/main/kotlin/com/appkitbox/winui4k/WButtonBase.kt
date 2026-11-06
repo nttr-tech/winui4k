@@ -383,6 +383,38 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      */
     val actionListeners: Array<WActionListener>
         get() = clickListeners.listeners()
+
+    /** The callbacks for state changes (pressed, pointer, enabled, selected). Registered when first needed. */
+    internal val stateChanges: ButtonStateChanges by lazy { ButtonStateChanges(this, this is WToggleButton) }
+
+    /** The ChangeListeners. The state change callbacks are registered when the first listener is added. */
+    private val changeListeners: ChangeListeners by lazy { ChangeListeners(this) { stateChanges.ensureRegistered() } }
+
+    /**
+     * AbstractButton.addChangeListener-like: receives a [WChangeEvent] (whose source is this button) every time the button's state changes.
+     * The states, corresponding to Swing's ButtonModel, are four: pressed ([isPressed]), pointer over ([isPointerOver]), enabled ([isEnabled]) and
+     * selected ([WToggleButton.isChecked], including changes to indeterminate); an event arrives once every time any one of them changes
+     * (both for changes from the program and for user operations). Implemented with the change callbacks of the respective dependency properties.
+     *
+     * Differences from Swing: there is no Swing armed (pressed and still over the button); it changes together with pressed. The order relative to
+     * [WToggleButton.addItemListener] and [addActionListener] for the same change is WinUI's notification order, not necessarily Swing's order (stateChanged → itemStateChanged → actionPerformed).
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** AbstractButton.removeChangeListener-like: removes one listener added with [addChangeListener]. Does nothing if it is not attached. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** AbstractButton.getChangeListeners-like: the ChangeListeners currently attached (in the order added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    /** The state (pressed, pointer, enabled, selected) changed (called from the [ButtonStateChanges] callbacks). */
+    internal fun onButtonStateChanged() {
+        changeListeners.fire()
+    }
 }
 
 /** ABI values of ButtonBase.Click (RoutedEventHandler). */

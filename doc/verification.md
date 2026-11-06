@@ -418,3 +418,6 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   回収されなかった (WFrame.setLayout・setContentPane(WLayoutPanel) のどちらでも。既定の WPanel やメニュー バーの Grid の根なら回収される)。
   Window.Closed で Window.Content を null にしても変わらない。根の Unloaded が届かず ListenerAnchor が強く持ったままになっていると
   見られる (未確認)
+- Control.IsEnabled の依存関係プロパティの変更のコールバック (DependencyObject.RegisterPropertyChangedCallback) には、値の変わらない
+  通知も来る。ボタンの isEnabled を false にすると 2 回、同じ false を設定し直しても 1 回呼ばれる (WButtonChangeListenerTest で確認)。
+  WButtonBase.addChangeListener は押下・ポインター・有効・選択の 4 つをまとめて前回の値と比べ、変わったときだけ知らせる (ButtonStateChanges)
