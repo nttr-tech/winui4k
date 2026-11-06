@@ -401,5 +401,55 @@ class WSplitPaneTest : FunSpec() {
                 }
             }
         }
+        context("Swing compatibility") {
+            test("isEnabled defaults to true. While false, dragging the divider does not change the position, and setting it back to true allows dragging (the same as JSplitPane.setEnabled)") {
+                val s = scene()
+                shown(s) {
+                    val mouse = TestMouse()
+                    val divider = listOf(s.pane.divider)
+                    fun drag() = onUiThread {
+                        mouse.press(5.0, 50.0, WMouseEvent.BUTTON1, divider)
+                        mouse.move(25.0, 50.0, divider)
+                        mouse.release(25.0, 50.0, WMouseEvent.BUTTON1, divider)
+                    }
+                    onUiThread {
+                        s.pane.isEnabled.shouldBeTrue()
+                        s.pane.dividerLocation = 100
+                        s.pane.isEnabled = false
+                    }
+                    settle(s.pane)
+                    drag()
+                    settle(s.pane)
+                    onUiThreadGet { s.pane.dividerLocation } shouldBe 100
+                    onUiThread { s.pane.isEnabled = true }
+                    drag()
+                    settle(s.pane)
+                    onUiThreadGet { s.pane.dividerLocation } shouldBe 120
+                }
+            }
+
+            test("setting dividerLocation works even with isEnabled = false (as in Swing, only user drags are stopped)") {
+                onUiThread {
+                    val pane = WSplitPane(WSplitPane.HORIZONTAL_SPLIT, WLabel("a"), WLabel("b"))
+                    pane.isEnabled = false
+                    pane.dividerLocation = 30
+                    pane.dividerLocation shouldBe 30
+                    pane.isEnabled.shouldBeFalse()
+                }
+            }
+
+            test("removeAll removes the left and right children, and the children's parent becomes null too") {
+                onUiThread {
+                    val a = WLabel("a")
+                    val b = WLabel("b")
+                    val pane = WSplitPane(WSplitPane.VERTICAL_SPLIT, a, b)
+                    pane.removeAll()
+                    pane.topComponent.shouldBeNull()
+                    pane.bottomComponent.shouldBeNull()
+                    a.parent.shouldBeNull()
+                    b.parent.shouldBeNull()
+                }
+            }
+        }
     }
 }

@@ -231,6 +231,13 @@ class WSplitPane @JvmOverloads constructor(
     var isContinuousLayout: Boolean = true
 
     /**
+     * JSplitPane.isEnabled / setEnabled-like: whether the user can drag the divider (true by default). While false the divider cannot be grabbed
+     * (the same as Swing's BasicSplitPaneDivider; setting false in the middle of a drag lets that drag continue until released).
+     * It does not stop programmatic changes such as setting [dividerLocation]. It does not disable the children (as in Swing, it is not propagated to them).
+     */
+    var isEnabled: Boolean = true
+
+    /**
      * JSplitPane.getMinimumDividerLocation-like: the leftmost (topmost) position the divider can be dragged to. If there is a shown left child,
      * its minimum size (the width of [WComponent.minimumSize], the height in a vertical split), otherwise 0.
      */
@@ -628,7 +635,7 @@ class WSplitPane @JvmOverloads constructor(
     }
 
     internal fun startDrag(event: WMouseEvent) {
-        if (lastSplitPaneSize <= 0) return
+        if (!isEnabled || lastSplitPaneSize <= 0) return
         dragOffset = if (horizontal) event.x else event.y
         dragMin = minimumDividerLocation
         dragMax = maximumDividerLocation

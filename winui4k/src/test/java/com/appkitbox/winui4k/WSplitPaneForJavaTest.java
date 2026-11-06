@@ -99,4 +99,28 @@ class WSplitPaneForJavaTest {
             UiTestHarness.detach(split);
         }
     }
+
+    @Test
+    void setEnabledAndRemoveAllHaveTheSameShapeAsJSplitPane() {
+        onUiThread(() -> {
+            WLabel left = new WLabel("left");
+            WLabel right = new WLabel("right");
+            WSplitPane split = new WSplitPane(WSplitPane.HORIZONTAL_SPLIT, left, right);
+            assertTrue(split.isEnabled());
+            split.setEnabled(false);
+            assertFalse(split.isEnabled());
+            split.setContinuousLayout(false);
+            assertFalse(split.isContinuousLayout());
+            split.setDividerSize(4);
+            assertEquals(4, split.getDividerSize());
+            split.removeAll();
+            assertNull(split.getLeftComponent());
+            assertNull(split.getRightComponent());
+            assertNull(left.getParent());
+            split.setTopComponent(left);
+            split.setBottomComponent(right);
+            assertSame(left, split.getLeftComponent());
+            assertSame(right, split.getRightComponent());
+        });
+    }
 }
