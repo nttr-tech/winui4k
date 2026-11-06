@@ -129,6 +129,22 @@
   テストの JVM に `cdb -p <pid>` を付け、`sxe -c ".echo; kc 40; gn" 40080201` (WinRT の RoOriginateError) で失敗した
   呼び出しのスタックを、`sxe -c2 "!analyze -v; ~*kn 60" c000027b` で落ちた側のスタックを記録する
   (JVM が使うアクセス違反は `sxd av` で流し、`sxn epr` でプロセス終了では止めない)。
+- **表示した直後のウィンドウの中身は XamlRoot を持たない (親が null の WFileChooser が開けなかった)**
+  Window.Content は WindowChrome (ContentControl) のテンプレートの ContentPresenter に入るので、中身が生きたツリーに入って
+  XamlRoot を持つのは、表示した後の最初のレイアウトのときである。Window.Activated はそれより先に届くことがあり、
+  `isVisible = true` と同じ UI スレッドの処理の中ではまだ必ず null になる。親が null の `WFileChooser` は以前は
+  アクティブな WFrame の中身の XamlRoot からウィンドウを引いていたため、この間に呼ぶと IllegalArgumentException
+  (「親 (parent) がウィンドウに載っていない」) になった。今は WFrame の AppWindow の Id をそのまま使う (WFileChooserTest)。
+  全部の E2E を流した時だけ、負荷でレイアウトが Activated より遅れて WFileChooserTest がこれを踏み、invokeLater の中の例外で
+  テストの JVM ごと 0xC000027B で落ちた (次の項目)。
+- **invokeLater の中から例外が出るとプロセスが落ちる (0xC000027B、CoreMessagingXP の DispatcherQueue::DeferInvokeCallback)**
+  DispatcherQueue は DispatcherQueueHandler (と DispatcherQueueTimer の Tick) が失敗の HRESULT を返すと、
+  Application.UnhandledException を通さずに `RoFailFastWithErrorContext` でプロセスを強制終了する。以前の winui4k は
+  `WinUiUtilities.invokeLater` / `schedule` の処理から出た例外を KComObject の上り呼び出しで E_FAIL にして返していたので、
+  利用者の処理の例外 1 つでアプリが落ちた。今は Swing の EDT と同じく UI スレッドの未捕捉例外ハンドラーへ渡して S_OK を返す
+  (`Dispatcher`、ApplicationUnhandledExceptionTest)。落ちた側は WER のダンプ (`%LOCALAPPDATA%\CrashDumps\java.exe.*.dmp`) を
+  `cdb -z <dmp> -c ".ecxr; kn 40; !analyze -v; q"` で読むと分かる。どの例外だったかは、テストなら Gradle の
+  `build/test-results/test/binary/output-events.bin` に残る「[winui4k] exception escaped from COM upcall」の後のスタックで分かる。
 - **InkCanvas: マウスやタッチで線が描けない**
   InkCanvas の既定の入力機器はペンだけである。`canvas.inkPresenter.inputDeviceTypes = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOUSE, CoreInputDeviceType.TOUCH)` のように設定する。
 - **InkCanvas: `activateCustomDrying` が E_ILLEGAL_METHOD_CALL (0x8000000E) で失敗する**
