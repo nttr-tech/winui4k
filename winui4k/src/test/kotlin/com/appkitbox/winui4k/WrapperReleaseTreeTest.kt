@@ -5,6 +5,9 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.tree.DefaultMutableTreeNode
 import com.appkitbox.winui4k.tree.DefaultTreeModel
+import com.appkitbox.winui4k.tree.DefaultTreeSelectionModel
+import com.appkitbox.winui4k.tree.TreeExpansionEvent
+import com.appkitbox.winui4k.tree.TreeExpansionListener
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -36,6 +39,29 @@ class WrapperReleaseTreeTest : FunSpec() {
                 model.insertNodeInto(DefaultMutableTreeNode("Later"), root, 0)
                 root.getChildCount()
             } shouldBe 2
+        }
+
+        test("a WTree with a shared selection model and expansion and selection listeners is also collected after being put in a window and removed while the model is kept") {
+            val selection = onUiThreadGet { DefaultTreeSelectionModel() }
+            val calls = mutableListOf<String>()
+            val reference = shownAndHidden {
+                WTree(DefaultMutableTreeNode("Root").also { it.add(DefaultMutableTreeNode("Child")) }).also { tree ->
+                    tree.selectionModel = selection
+                    tree.addTreeSelectionListener { calls += "selection" }
+                    tree.addTreeExpansionListener(object : TreeExpansionListener {
+                        override fun treeExpanded(event: TreeExpansionEvent) {
+                            calls += "expanded"
+                        }
+
+                        override fun treeCollapsed(event: TreeExpansionEvent) {
+                            calls += "collapsed"
+                        }
+                    })
+                    tree.setSelectionRow(1)
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            onUiThreadGet { selection.getSelectionCount() } shouldBe 1
         }
     }
 }

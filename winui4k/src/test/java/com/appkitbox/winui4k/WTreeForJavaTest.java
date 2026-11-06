@@ -10,8 +10,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.appkitbox.winui4k.tree.DefaultMutableTreeNode;
 import com.appkitbox.winui4k.tree.DefaultTreeModel;
+import com.appkitbox.winui4k.tree.ExpandVetoException;
+import com.appkitbox.winui4k.tree.TreeExpansionEvent;
+import com.appkitbox.winui4k.tree.TreeExpansionListener;
 import com.appkitbox.winui4k.tree.TreeModel;
 import com.appkitbox.winui4k.tree.TreePath;
+import com.appkitbox.winui4k.tree.TreeSelectionModel;
+import com.appkitbox.winui4k.tree.TreeWillExpandListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -90,6 +98,72 @@ class WTreeForJavaTest {
             tree.addRootNode(new WTreeNode("Node"));
             assertEquals(1, tree.getRowCount());
             assertEquals("", tree.convertValueToText(null, false, false, true, 0, false));
+        });
+    }
+
+    @Test
+    void addTreeSelectionListenerLambdasAndGetSelectionModelModeConstantsCanBeUsedTheSameWayAsSwing() {
+        onUiThread(() -> {
+            DefaultMutableTreeNode root = sampleRoot();
+            WTree tree = new WTree(root);
+            List<String> selected = new ArrayList<>();
+            tree.addTreeSelectionListener(e -> {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                selected.add(node == null ? "none" : node.getUserObject() + (e.isAddedPath() ? "+" : "-"));
+                assertSame(tree, e.getSource());
+            });
+            tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+            tree.setSelectionPath(tree.getPathForRow(2));
+            tree.clearSelection();
+            assertEquals(Arrays.asList("Pictures+", "none"), selected);
+            assertNull(tree.getSelectionPaths());
+            assertTrue(tree.isSelectionEmpty());
+
+            tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+            assertEquals(TreeViewSelectionMode.MULTIPLE, tree.getSelectionMode());
+            tree.setSelectionRows(new int[] {1, 2});
+            assertEquals(2, tree.getSelectionCount());
+            assertEquals(1, tree.getMinSelectionRow());
+            assertEquals(2, tree.getMaxSelectionRow());
+        });
+    }
+
+    @Test
+    void anAnonymousTreeWillExpandListenerThrowingExpandVetoExceptionPreventsExpansion() {
+        onUiThread(() -> {
+            DefaultMutableTreeNode root = sampleRoot();
+            WTree tree = new WTree(root);
+            List<String> calls = new ArrayList<>();
+            tree.addTreeWillExpandListener(new TreeWillExpandListener() {
+                @Override
+                public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+                    calls.add("will " + event.getPath().getLastPathComponent());
+                    if (event.getPath().getLastPathComponent().toString().equals("Documents")) {
+                        throw new ExpandVetoException(event, "Do not open");
+                    }
+                }
+
+                @Override
+                public void treeWillCollapse(TreeExpansionEvent event) {
+                    calls.add("will collapse " + event.getPath().getLastPathComponent());
+                }
+            });
+            tree.addTreeExpansionListener(new TreeExpansionListener() {
+                @Override
+                public void treeExpanded(TreeExpansionEvent event) {
+                    calls.add("expanded " + event.getPath().getLastPathComponent());
+                }
+
+                @Override
+                public void treeCollapsed(TreeExpansionEvent event) {
+                    calls.add("collapsed " + event.getPath().getLastPathComponent());
+                }
+            });
+            tree.expandRow(1);
+            assertFalse(tree.isExpanded(1));
+            tree.collapseRow(0);
+            assertEquals(Arrays.asList("will Documents", "will collapse Folder", "collapsed Folder"), calls);
+            assertEquals(1, tree.getRowCount());
         });
     }
 }

@@ -11,11 +11,19 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.tree.DefaultTreeModel
+import com.appkitbox.winui4k.tree.DefaultTreeSelectionModel
+import com.appkitbox.winui4k.tree.ExpandVetoException
+import com.appkitbox.winui4k.tree.TreeExpansionEvent
+import com.appkitbox.winui4k.tree.TreeExpansionListener
 import com.appkitbox.winui4k.tree.TreeModel
 import com.appkitbox.winui4k.tree.TreeModelEvent
 import com.appkitbox.winui4k.tree.TreeModelListener
 import com.appkitbox.winui4k.tree.TreeNode
 import com.appkitbox.winui4k.tree.TreePath
+import com.appkitbox.winui4k.tree.TreeSelectionListener
+import com.appkitbox.winui4k.tree.TreeSelectionModel
+import com.appkitbox.winui4k.tree.TreeWillExpandListener
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -228,12 +236,44 @@ class WTree() : WControl(
             XamlInterop.IID_TreeViewExpandingHandler,
             XamlInterop.ITreeView_add_Expanding,
         ) { _, args -> anchor.get()?.onNativeExpanding(ComPtr(args)) }
+        inspectable.addEventHandler(
+            "WinUI4K.TreeViewHandler",
+            XamlInterop.IID_TreeViewCollapsedHandler,
+            XamlInterop.ITreeView_add_Collapsed,
+        ) { _, args -> anchor.get()?.onNativeCollapsed(ComPtr(args)) }
+        val treeView3 = inspectable.queryInterface(XamlInterop.IID_ITreeView3)
+        try {
+            treeView3.addEventHandler(
+                "WinUI4K.TreeViewHandler",
+                XamlInterop.IID_TreeViewSelectionChangedHandler,
+                XamlInterop.ITreeView3_add_SelectionChanged,
+            ) { _, _ -> anchor.get()?.selectionBridge?.onNativeSelectionChanged() }
+        } finally {
+            treeView3.release()
+        }
     }
 
-    /** Selection mode (TreeView.SelectionMode). MULTIPLE adds a checkbox to each node. */
+    /** Keeps the selection model and the TreeView selection in sync. */
+    internal val selectionBridge = TreeSelectionBridge(this, anchor, { binding }, inspectable)
+
+    /** The listeners added with addTreeExpansionListener (called in the order added). */
+    private val expansionListeners = CopyOnWriteArrayList<TreeExpansionListener>()
+
+    /** The listeners added with addTreeWillExpandListener (called in the order added). */
+    private val willExpandListeners = CopyOnWriteArrayList<TreeWillExpandListener>()
+
+    /**
+     * The selection mode (TreeView.SelectionMode). In MULTIPLE, each node gets a check box.
+     * The mode of [selectionModel] is matched too (SINGLE → SINGLE_TREE_SELECTION, MULTIPLE → DISCONTIGUOUS_TREE_SELECTION if it was SINGLE,
+     * NONE → clears the selection. NONE has no Swing counterpart, and the selection model's mode is not changed).
+     * To decide in Swing terms, use `selectionModel.setSelectionMode(...)` (it is reflected here too).
+     */
     var selectionMode: TreeViewSelectionMode
         get() = TreeViewSelectionMode.of(inspectable.getInt(XamlInterop.ITreeView_get_SelectionMode))
-        set(value) = inspectable.call(XamlInterop.ITreeView_put_SelectionMode, value.native)
+        set(value) {
+            inspectable.call(XamlInterop.ITreeView_put_SelectionMode, value.native)
+            selectionBridge.onNativeModeSet(value)
+        }
 
     /**
      * Whether a node can be dragged out (TreeView.CanDragItems).
@@ -295,6 +335,7 @@ class WTree() : WControl(
         } else {
             muted { ModelTreeBinding(newModel, newRootVisible, rootVector) }.also { newModel.addTreeModelListener(modelListener) }
         }
+        selectionModel.clearSelection() // Clear the selection, as Swing's setModel does
     }
 
     /** The node APIs cannot be used while a model is mirrored. */
@@ -306,6 +347,19 @@ class WTree() : WControl(
     private fun onModelChanged(e: TreeModelEvent, apply: ModelTreeBinding.(TreeModelEvent) -> Unit) {
         val binding = binding as? ModelTreeBinding ?: return
         muted { binding.apply(e) }
+        selectionBridge.pushToNative()
+    }
+
+    /**
+     * As with Swing's TreeModelHandler, deselects the removed nodes (the children of [e]) and their descendants
+     * (only below the path's node if [includeSelf] is false; for structure changes).
+     */
+    private fun removeDescendantSelectedPaths(e: TreeModelEvent, includeSelf: Boolean) {
+        val parent = e.getTreePath() ?: return
+        val roots = if (includeSelf) e.getChildren().orEmpty().filterNotNull().map(parent::pathByAddingChild) else listOf(parent)
+        val selected = selectionModel.getSelectionPaths().orEmpty()
+        val removed = selected.filter { path -> roots.any { it.isDescendant(path) && (includeSelf || it != path) } }
+        if (removed.isNotEmpty()) selectionModel.removeSelectionPaths(removed.toTypedArray())
     }
 
     /**
@@ -336,6 +390,7 @@ class WTree() : WControl(
         set(value) {
             requireNodeMode()
             treeView2.call(XamlInterop.ITreeView2_put_SelectedNode, value?.inspectable?.ptr)
+            selectionBridge.onNativeSelectionChanged() // SelectionChanged does not come before it is shown, so mirror to the selection model here
         }
 
     /**
@@ -574,19 +629,31 @@ class WTree() : WControl(
         }
     }
 
-    /** Expands one node of [path] (creating its children if not created yet). false if it cannot be expanded. */
+    /** Expands one node of [path] (creating its children if not created yet). false if it cannot be expanded or was vetoed. */
     private fun expandOne(path: TreePath): Boolean {
         val node = binding.nodeOf(path, true) ?: return false
+        if (isVetoed { it.treeWillExpand(TreeExpansionEvent(this, path)) }) return false
         binding.realize(node)
         muted { node.isExpanded = true }
+        expansionListeners.forEach { it.treeExpanded(TreeExpansionEvent(this, path)) }
         return true
     }
 
     /** Collapses one node of [path]. A hidden root cannot be collapsed. */
     private fun collapseOne(path: TreePath): Boolean {
         val node = binding.nodeOf(path, false) ?: return false
+        if (isVetoed { it.treeWillCollapse(TreeExpansionEvent(this, path)) }) return false
         muted { node.isExpanded = false }
+        expansionListeners.forEach { it.treeCollapsed(TreeExpansionEvent(this, path)) }
         return true
+    }
+
+    /** Calls TreeWillExpandListeners in the order added, and returns true if one of them throws [ExpandVetoException] (without calling the rest). */
+    private fun isVetoed(call: (TreeWillExpandListener) -> Unit): Boolean = try {
+        willExpandListeners.forEach(call)
+        false
+    } catch (_: ExpandVetoException) {
+        true
     }
 
     private inline fun <T> muted(block: () -> T): T {
@@ -606,8 +673,161 @@ class WTree() : WControl(
         } finally {
             pointer.release()
         }
-        node?.let(binding::realize)
+        node ?: return
+        binding.realize(node)
+        if (expansionMuted > 0) return
+        val path = binding.pathOf(node) ?: return
+        // A veto collapses it again within the same notification right after expanding (before drawing, so the expanded state never appears on screen)
+        if (isVetoed { it.treeWillExpand(TreeExpansionEvent(this, path)) }) {
+            muted { node.isExpanded = false }
+            return
+        }
+        expansionListeners.forEach { it.treeExpanded(TreeExpansionEvent(this, path)) }
     }
+
+    /** Native Collapsed (after collapsing, by user operation etc.): notifies TreeExpansionListeners. */
+    private fun onNativeCollapsed(args: ComPtr) {
+        if (expansionMuted > 0) return
+        val pointer = args.getPtrOrNull(XamlInterop.ITreeViewCollapsedEventArgs_get_Node) ?: return
+        val node = try {
+            binding.resolve(pointer)
+        } finally {
+            pointer.release()
+        }
+        val path = node?.let(binding::pathOf) ?: return
+        expansionListeners.forEach { it.treeCollapsed(TreeExpansionEvent(this, path)) }
+    }
+
+    // ---- Expansion and selection listeners ----
+
+    /** Adds a listener called after expansion and collapse (Swing's `addTreeExpansionListener`). Called in the order added. */
+    fun addTreeExpansionListener(listener: TreeExpansionListener) {
+        expansionListeners += listener
+    }
+
+    /** Removes a listener added with [addTreeExpansionListener]. */
+    fun removeTreeExpansionListener(listener: TreeExpansionListener) {
+        expansionListeners.remove(listener)
+    }
+
+    /** The added TreeExpansionListeners (in the order added). */
+    fun getTreeExpansionListeners(): Array<TreeExpansionListener> = expansionListeners.toTypedArray()
+
+    /**
+     * Adds a listener called before expansion and collapse (Swing's `addTreeWillExpandListener`). Called in the order added.
+     * For expansion by user operation it is called right after WinUI expands, and a veto collapses it again. For collapsing by user operation,
+     * [TreeWillExpandListener.treeWillCollapse] cannot be called (WinUI has no notification before collapsing).
+     */
+    fun addTreeWillExpandListener(listener: TreeWillExpandListener) {
+        willExpandListeners += listener
+    }
+
+    /** Removes a listener added with [addTreeWillExpandListener]. */
+    fun removeTreeWillExpandListener(listener: TreeWillExpandListener) {
+        willExpandListeners.remove(listener)
+    }
+
+    /** The added TreeWillExpandListeners (in the order added). */
+    fun getTreeWillExpandListeners(): Array<TreeWillExpandListener> = willExpandListeners.toTypedArray()
+
+    /** Adds a listener that receives selection changes (Swing's `addTreeSelectionListener`). The event source is this tree, and listeners are called in the order added. */
+    fun addTreeSelectionListener(listener: TreeSelectionListener) = selectionBridge.addListener(listener)
+
+    /** Removes a listener added with [addTreeSelectionListener]. */
+    fun removeTreeSelectionListener(listener: TreeSelectionListener) = selectionBridge.removeListener(listener)
+
+    /** The added TreeSelectionListeners (in the order added). */
+    fun getTreeSelectionListeners(): Array<TreeSelectionListener> = selectionBridge.listeners()
+
+    // ---- Selection ----
+
+    /**
+     * The selection state (Swing's `getSelectionModel` / `setSelectionModel`). The default is a SINGLE_TREE_SELECTION [DefaultTreeSelectionModel]
+     * (same as the TreeView default; Swing's default is DISCONTIGUOUS). The RowMapper that converts paths to rows is set by this tree.
+     * The mode is mirrored to the TreeView (SINGLE → SINGLE, CONTIGUOUS / DISCONTIGUOUS → MULTIPLE with check boxes).
+     * In MULTIPLE, the TreeView also selects descendants when a parent is checked, so the selection after a user operation includes descendants too.
+     * The selection of children hidden by collapsing follows the TreeView behavior (unlike Swing, the selection is not moved to the collapsed node).
+     */
+    var selectionModel: TreeSelectionModel
+        get() = selectionBridge.model
+        set(value) {
+            selectionBridge.model = value
+        }
+
+    /** The first selected path (Swing's `getSelectionPath` / `setSelectionPath`). null if none. */
+    var selectionPath: TreePath?
+        get() = selectionModel.getSelectionPath()
+        set(value) = selectionModel.setSelectionPath(value)
+
+    /** The selected paths. null if nothing is selected (same as Swing's JTree). */
+    fun getSelectionPaths(): Array<TreePath>? = selectionModel.getSelectionPaths()?.takeIf { it.isNotEmpty() }
+
+    /** Selects only [paths]. */
+    fun setSelectionPaths(paths: Array<out TreePath?>?) = selectionModel.setSelectionPaths(paths)
+
+    /** Adds [path] to the selection. */
+    fun addSelectionPath(path: TreePath?) = selectionModel.addSelectionPath(path)
+
+    /** Adds [paths] to the selection. */
+    fun addSelectionPaths(paths: Array<out TreePath?>?) = selectionModel.addSelectionPaths(paths)
+
+    /** Removes [path] from the selection. */
+    fun removeSelectionPath(path: TreePath?) = selectionModel.removeSelectionPath(path)
+
+    /** Removes [paths] from the selection. */
+    fun removeSelectionPaths(paths: Array<out TreePath?>?) = selectionModel.removeSelectionPaths(paths)
+
+    /** true if [path] is selected. */
+    fun isPathSelected(path: TreePath?): Boolean = selectionModel.isPathSelected(path)
+
+    /** Clears the whole selection. */
+    fun clearSelection() = selectionModel.clearSelection()
+
+    /** true if nothing is selected. */
+    val isSelectionEmpty: Boolean
+        get() = selectionModel.isSelectionEmpty()
+
+    /** The number of selected paths. */
+    val selectionCount: Int
+        get() = selectionModel.getSelectionCount()
+
+    /** The last node of the first selected path (Swing's `getLastSelectedPathComponent`). null if none. */
+    val lastSelectedPathComponent: Any?
+        get() = selectionModel.getSelectionPath()?.getLastPathComponent()
+
+    /** The lead (last added) path. */
+    val leadSelectionPath: TreePath?
+        get() = selectionModel.getLeadSelectionPath()
+
+    /** The row of the lead path. -1 if none. */
+    val leadSelectionRow: Int
+        get() = selectionModel.getLeadSelectionRow()
+
+    /** The minimum row of the selected paths. -1 if none. */
+    val minSelectionRow: Int
+        get() = selectionModel.getMinSelectionRow()
+
+    /** The maximum row of the selected paths. -1 if none. */
+    val maxSelectionRow: Int
+        get() = selectionModel.getMaxSelectionRow()
+
+    /** The rows of the selected paths (excluding invisible ones). */
+    fun getSelectionRows(): IntArray? = selectionModel.getSelectionRows()
+
+    /** Selects only row [row]. */
+    fun setSelectionRow(row: Int) = setSelectionRows(intArrayOf(row))
+
+    /** Selects only the rows in [rows] (out-of-range rows are ignored). */
+    fun setSelectionRows(rows: IntArray?) = selectionModel.setSelectionPaths(rows?.toList()?.mapNotNull(::getPathForRow)?.toTypedArray())
+
+    /** Adds row [row] to the selection. */
+    fun addSelectionRow(row: Int) = addSelectionRows(intArrayOf(row))
+
+    /** Adds the rows in [rows] to the selection (out-of-range rows are ignored). */
+    fun addSelectionRows(rows: IntArray?) = selectionModel.addSelectionPaths(rows?.toList()?.mapNotNull(::getPathForRow)?.toTypedArray())
+
+    /** true if row [row] is selected. */
+    fun isRowSelected(row: Int): Boolean = selectionModel.isRowSelected(row)
 
     /**
      * Subscribes to node clicks (TreeView.ItemInvoked).
@@ -738,11 +958,15 @@ class WTree() : WControl(
         }
 
         override fun treeNodesRemoved(e: TreeModelEvent) {
-            anchor.get()?.onModelChanged(e, ModelTreeBinding::nodesRemoved)
+            val tree = anchor.get() ?: return
+            tree.removeDescendantSelectedPaths(e, includeSelf = true)
+            tree.onModelChanged(e, ModelTreeBinding::nodesRemoved)
         }
 
         override fun treeStructureChanged(e: TreeModelEvent) {
-            anchor.get()?.onModelChanged(e, ModelTreeBinding::structureChanged)
+            val tree = anchor.get() ?: return
+            tree.removeDescendantSelectedPaths(e, includeSelf = false)
+            tree.onModelChanged(e, ModelTreeBinding::structureChanged)
         }
     }
 
