@@ -159,7 +159,13 @@ class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresent
     private fun getPreferredInt(slot: Int): Int? {
         val boxed = presenter3.getPtrOrNull(slot) ?: return null
         return try {
-            PropertyValues.unboxInt(boxed)
+            // The IReference<Int32> WinAppSDK returns does not implement IPropertyValue, so read IReference<Int32>.Value (vtbl[6]) directly
+            val reference = boxed.queryInterface(FoundationInterop.IID_IReference_Int32)
+            try {
+                reference.getInt(FoundationInterop.IReference_Color_get_Value)
+            } finally {
+                reference.release()
+            }
         } finally {
             boxed.release()
         }

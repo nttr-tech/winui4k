@@ -128,7 +128,8 @@ class WAppWindowTitleBar internal constructor(private val titleBar: ComPtr) {
 
     /**
      * Whether the app's content extends into the title bar area (AppWindowTitleBar.ExtendsContentIntoTitleBar).
-     * Paired with [WFrame.extendsContentIntoTitleBar] (setting either one keeps them in sync).
+     * The value of [WFrame.extendsContentIntoTitleBar] is reflected here (changing it on the WFrame changes this too).
+     * Changing this directly does not change the WFrame's value (measured). Switch to a custom title bar on the WFrame side.
      */
     var extendsContentIntoTitleBar: Boolean
         get() = titleBar.getBool(WindowingInterop.IAppWindowTitleBar_get_ExtendsContentIntoTitleBar)
