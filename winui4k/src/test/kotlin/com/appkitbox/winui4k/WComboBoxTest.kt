@@ -144,5 +144,27 @@ class WComboBoxTest : FunSpec() {
                 comboBox.text
             } shouldBe "Freeform input"
         }
+
+        context("Lifetime") {
+            test("even after adding a listener that adds a Loaded handler to a shown editable combo box, choosing a value not in the list makes it appear in text") {
+                val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")).also { it.isEditable = true } }
+                UiTestHarness.attachAndAwaitLoaded(comboBox)
+                onUiThread {
+                    // Adding an ancestor listener adds a Loaded handler and temporarily makes IsLoaded of the loaded element false
+                    comboBox.addAncestorListener(
+                        object : WAncestorListener {
+                            override fun ancestorAdded(event: WAncestorEvent) = Unit
+
+                            override fun ancestorRemoved(event: WAncestorEvent) = Unit
+
+                            override fun ancestorMoved(event: WAncestorEvent) = Unit
+                        },
+                    )
+                    comboBox.setSelectedItem("Unregistered value")
+                }
+                onUiThreadGet { comboBox.text } shouldBe "Unregistered value"
+                UiTestHarness.detach(comboBox)
+            }
+        }
     }
 }

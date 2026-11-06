@@ -725,7 +725,9 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     private val isLoaded: Boolean
-        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
+        // Not decided by IsLoaded alone. Adding a Loaded handler (an ancestor listener etc.) to an already loaded element makes IsLoaded return false until some element enters the tree next,
+        // and Loaded does not arrive either while the custom value is not passed (doc/verification.md; the same decision as ListenerAnchor.isLive)
+        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded) || ComponentShowing.isConnected(frameworkElement)
 
     private fun fireActionEvent(command: String) {
         if (actionListeners.isEmpty() || firingActionEvent) return
