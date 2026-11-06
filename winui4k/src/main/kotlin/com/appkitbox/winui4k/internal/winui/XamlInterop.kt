@@ -2598,6 +2598,8 @@ internal object XamlInterop {
     const val IAutomationPropertiesStatics_SetAutomationId = 14
     const val IAutomationPropertiesStatics_GetHelpText = 16
     const val IAutomationPropertiesStatics_SetHelpText = 17
+    const val IAutomationPropertiesStatics_GetItemStatus = 22 // (DependencyObject) -> HSTRING
+    const val IAutomationPropertiesStatics_SetItemStatus = 23 // (DependencyObject, HSTRING)
     const val IAutomationPropertiesStatics_GetName = 31
     const val IAutomationPropertiesStatics_SetName = 32
     const val IAutomationPropertiesStatics_GetLabeledBy = 28 // (DependencyObject) -> UIElement

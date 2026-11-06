@@ -8,7 +8,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
 
 /**
- * Tests that value components (WSpinner and others) with a ChangeListener or a shared model attached are not strongly captured by the handlers or the model
+ * Tests that value components (WSpinner, WProgressBar, WProgressRing) with a ChangeListener or a shared model attached are not strongly captured by the handlers or the model,
  * and are collected after being removed (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass).
  * Waits for collection while prompting GC ([Reclamation]).
  */
@@ -44,6 +44,21 @@ class WrapperReleaseValueTest : FunSpec() {
             }
             Reclamation.awaitCollected(plain).shouldBeTrue()
             Reclamation.awaitCollected(modelled).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
+
+        test("a WProgressBar and a WProgressRing with a ChangeListener and a shared model are collected after being placed in the window and removed if released together with the model") {
+            val sources = changeSources
+            var model: WeakReference<WBoundedRangeModel>? = null
+            var ring: WeakReference<WProgressRing>? = null
+            val bar = shownAndHidden {
+                val shared = WDefaultBoundedRangeModel()
+                model = WeakReference(shared)
+                ring = WeakReference(WProgressRing(shared).also { it.addChangeListener(WChangeListener { e -> sources += e.source }) })
+                WProgressBar(shared).also { it.addChangeListener(WChangeListener { e -> sources += e.source }) }
+            }
+            Reclamation.awaitCollected(bar).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(ring)).shouldBeTrue()
             Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
         }
     }

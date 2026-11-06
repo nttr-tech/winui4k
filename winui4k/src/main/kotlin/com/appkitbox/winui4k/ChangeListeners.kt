@@ -14,8 +14,15 @@ package com.appkitbox.winui4k
  *
  * For controls whose native side sends notifications even when the value has not changed (RatingControl and so
  * on), [fireIfChanged] compares with the previous value and drops notifications of the same value.
+ *
+ * Components that receive no notifications from the native side (progress bars whose value changes only through the model, and so on) set [anchored] to false
+ * so that adding listeners does not keep the component alive through [WComponent.listenerAnchor] (there is no reason to keep it, and components not yet placed would stay alive).
  */
-internal class ChangeListeners(private val owner: WComponent, private val addNativeHandler: () -> Unit) {
+internal class ChangeListeners(
+    private val owner: WComponent,
+    private val anchored: Boolean = true,
+    private val addNativeHandler: () -> Unit,
+) {
     private val listeners = ArrayList<WChangeListener>()
     private val adapters = KotlinListenerAdapters<WChangeListener>()
     private var handlerAdded = false
@@ -30,7 +37,7 @@ internal class ChangeListeners(private val owner: WComponent, private val addNat
     fun add(listener: WChangeListener) {
         ensureNativeHandler()
         listeners += listener
-        owner.listenerAnchor.listenerAdded()
+        if (anchored) owner.listenerAnchor.listenerAdded()
     }
 
     /** Adds [adapter], which wraps [key] (a Kotlin lambda or Consumer). To remove it, pass [key] to [removeAdapter]. */
@@ -44,7 +51,7 @@ internal class ChangeListeners(private val owner: WComponent, private val addNat
         val index = listeners.indexOfLast { it === listener }
         if (index < 0) return
         listeners.removeAt(index)
-        owner.listenerAnchor.listenerRemoved()
+        if (anchored) owner.listenerAnchor.listenerRemoved()
     }
 
     /** Removes one listener added for [key] with [addAdapter]. */

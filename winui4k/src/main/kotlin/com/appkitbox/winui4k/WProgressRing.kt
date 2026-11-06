@@ -11,12 +11,26 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * true and it keeps spinning to indicate "working", but setting it to false turns it into a
  * determinate progress ring driven by [value] / [minimum] / [maximum].
  *
+ * As with [WProgressBar], the range of values is held by the JProgressBar-style [model] (a [WBoundedRangeModel]), and [addChangeListener] /
+ * [percentComplete] / [string] / [isStringPainted] can be used with the same meaning.
  * ProgressRing is not a RangeBase subclass; it holds Value / Minimum / Maximum on IProgressRing
- * itself (confirmed against the winmd), so they're called directly.
+ * (confirmed in the winmd), so the model state is copied to them directly. ProgressRing has no value change event, but
+ * the value changes only through the model, so the listeners are called from model changes.
  */
-class WProgressRing : WControl(
+class WProgressRing() : WControl(
     Activation.composeDefault(XamlInterop.CLS_ProgressRing, XamlInterop.IID_IProgressRingFactory), // default interface = IProgressRing
 ) {
+    /** Creates a progress ring that uses [model] for its range of values (the model's extent is set to 0; same as the same form of [WProgressBar]). */
+    constructor(model: WBoundedRangeModel) : this() {
+        this.model = model
+    }
+
+    private val range = ProgressRange(this) { min, max, v ->
+        inspectable.call(XamlInterop.IProgressRing_put_Minimum, min)
+        inspectable.call(XamlInterop.IProgressRing_put_Maximum, max)
+        inspectable.call(XamlInterop.IProgressRing_put_Value, v)
+    }
+
     /**
      * Whether the ring is shown and animating (ProgressRing.IsActive).
      * Setting this to false makes the ring itself disappear.
@@ -33,18 +47,68 @@ class WProgressRing : WControl(
         get() = inspectable.getBool(XamlInterop.IProgressRing_get_IsIndeterminate)
         set(value) = inspectable.putBool(XamlInterop.IProgressRing_put_IsIndeterminate, value)
 
-    /** The current value (ProgressRing.Value). Reflected when [isIndeterminate] = false. */
+    /**
+     * Like JProgressBar.getModel / setModel: the range model. [WDefaultBoundedRangeModel] by default (0..100, value 0; the same as ProgressRing's default).
+     * The rules for sharing and replacing are the same as [WProgressBar.model].
+     */
+    var model: WBoundedRangeModel
+        get() = range.model
+        set(value) {
+            range.model = value
+        }
+
+    /** The current value ([model]'s value). Reflected when [isIndeterminate] = false. Values outside the range are clamped (with [WDefaultBoundedRangeModel]). */
     var value: Double
-        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Value)
-        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Value, value)
+        get() = range.model.value
+        set(value) {
+            range.model.value = value
+        }
 
-    /** The minimum value (ProgressRing.Minimum). */
+    /** The minimum ([model]'s minimum). */
     var minimum: Double
-        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Minimum)
-        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Minimum, value)
+        get() = range.model.minimum
+        set(value) {
+            range.model.minimum = value
+        }
 
-    /** The maximum value (ProgressRing.Maximum). */
+    /** The maximum ([model]'s maximum). */
     var maximum: Double
-        get() = inspectable.getDouble(XamlInterop.IProgressRing_get_Maximum)
-        set(value) = inspectable.call(XamlInterop.IProgressRing_put_Maximum, value)
+        get() = range.model.maximum
+        set(value) {
+            range.model.maximum = value
+        }
+
+    /** Like JProgressBar.getPercentComplete: the fraction completed, `(value - minimum) / (maximum - minimum)`. NaN if the minimum and maximum are the same. */
+    val percentComplete: Double get() = range.percentComplete
+
+    /** Like JProgressBar.getString / setString: the progress string (null goes back to the default such as "50%"; same as [WProgressBar.string]). */
+    var string: String?
+        get() = range.string
+        set(value) {
+            range.string = value
+        }
+
+    /** Like JProgressBar.isStringPainted / setStringPainted: if true, [string] is exposed as the UI Automation ItemStatus (not drawn on the ring). */
+    var isStringPainted: Boolean
+        get() = range.isStringPainted
+        set(value) {
+            range.isStringPainted = value
+        }
+
+    init {
+        range.push()
+    }
+
+    /** ChangeListener-style: receives a [WChangeEvent] (whose source is this progress ring) every time [model] changes. */
+    fun addChangeListener(listener: WChangeListener) {
+        range.changeListeners.add(listener)
+    }
+
+    /** Removes one listener added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        range.changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = range.changeListeners.toArray()
 }
