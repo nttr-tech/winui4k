@@ -291,6 +291,38 @@ class WContentDialogTest : FunSpec() {
             awaitEvents("returned:NONE")
             onUiThreadGet { dialog.isVisible } shouldBe false
         }
+
+        context("Threads and reentrancy") {
+            test("replacing the owner window's content while open does not make showAndWait return, and pressing a button afterwards returns with that button's result") {
+                val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
+                try {
+                    val owner = onUiThreadGet { WButton("Open").also { frame.add(it) } }
+                    val loaded = CountDownLatch(1)
+                    onUiThread {
+                        owner.addLoadedListener { loaded.countDown() }
+                        frame.isVisible = true
+                    }
+                    loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    val dialog = onUiThreadGet { dialog() }
+                    showAndWaitLater(dialog, owner)
+                    awaitOpen(dialog)
+                    val replacement = onUiThreadGet { WButton("New content") }
+                    val replaced = CountDownLatch(1)
+                    onUiThread {
+                        replacement.addLoadedListener { replaced.countDown() }
+                        frame.setContentPane(replacement)
+                    }
+                    replaced.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    Thread.sleep(SETTLE_MILLIS)
+                    events() shouldBe emptyList()
+                    onUiThreadGet { dialog.isVisible } shouldBe true
+                    OpenContentDialogs.press(replacement, "PrimaryButton")
+                    awaitEvents("returned:PRIMARY")
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+        }
     }
 
     private companion object {

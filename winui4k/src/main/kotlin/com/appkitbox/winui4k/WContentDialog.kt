@@ -248,18 +248,11 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         val root = requireNotNull(owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)) {
             "the owner is not placed in a window, so the dialog cannot be opened"
         }
-        var contentRead = false
-        val rootContent = try {
-            uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
-            root.getPtr(XamlInterop.IXamlRoot_get_Content).also { contentRead = true }
-        } finally {
-            if (!contentRead) root.release() // If it could be read, the state owns root
-        }
         try {
+            uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
             // Completion (= the dialog closing) is received through the Closed event, so the async object is not used
             inspectable.getPtr(XamlInterop.IContentDialog_ShowAsync).release()
         } catch (e: WindowsRuntimeException) {
-            rootContent.release()
             root.release()
             if (e.hresult == E_ASYNC_OPERATION_NOT_STARTED) {
                 throw IllegalStateException(
@@ -269,7 +262,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             }
             throw e
         }
-        state.opened(root, rootContent, onClosed)
+        state.opened(root, onClosed)
     }
 
     /** Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE]. */
@@ -393,14 +386,13 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     }
 
     /**
-     * The state while it is open (read and written only by the UI thread). Keeps the content of the window it opened in (XamlRoot.Content),
-     * and when that is no longer Loaded, the window is considered closed (ContentDialog.Closed does not arrive then).
-     * While open it is registered with the window closed hook ([WFrame.addWindowClosedHook]), and the state is released when that window closes
-     * (Closed does not arrive, so this detaches the [show] callback and the dialog beyond it from the native handlers).
+     * The state while it is open (read and written only by the UI thread). It holds the XamlRoot of the window it opened in, and while open it is registered with
+     * the window closed hook ([WFrame.addWindowClosedHook]). When that window closes, the dialog is considered closed and the state is released (then
+     * ContentDialog.Closed does not arrive; releasing it detaches the [show] callback and the dialog beyond it from the native handlers).
+     * Merely replacing the window content (Window.Content) keeps the dialog open, so it is not considered closed.
      */
     private class ShowState {
         private var xamlRoot: ComPtr? = null
-        private var rootContent: ComPtr? = null
         private var onClosed: Consumer<ContentDialogResult>? = null
 
         private val windowClosed = WindowClosedHook { root ->
@@ -408,25 +400,14 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             if (own != null && Xaml.sameObject(own, root)) forget()
         }
 
-        /** Opened. This state owns the [xamlRoot] and [rootContent] references and releases them when closed. */
-        fun opened(xamlRoot: ComPtr, rootContent: ComPtr, onClosed: Consumer<ContentDialogResult>?) {
+        /** Opened. This state owns the [xamlRoot] reference and releases it when closed. */
+        fun opened(xamlRoot: ComPtr, onClosed: Consumer<ContentDialogResult>?) {
             this.xamlRoot = xamlRoot
-            this.rootContent = rootContent
             this.onClosed = onClosed
             WFrame.addWindowClosedHook(windowClosed)
         }
 
-        fun isShowing(): Boolean {
-            val content = rootContent ?: return false
-            val element = content.queryInterface(XamlInterop.IID_IFrameworkElement)
-            val loaded = try {
-                element.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
-            } finally {
-                element.release()
-            }
-            if (!loaded) forget()
-            return loaded
-        }
+        fun isShowing(): Boolean = xamlRoot != null
 
         fun closed(result: ContentDialogResult) {
             val callback = onClosed
@@ -438,8 +419,6 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             if (xamlRoot != null) WFrame.removeWindowClosedHook(windowClosed)
             xamlRoot?.release()
             xamlRoot = null
-            rootContent?.release()
-            rootContent = null
             onClosed = null
         }
     }
