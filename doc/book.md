@@ -861,7 +861,7 @@ No app-side work is involved.
 On top of that, the main appearance-related APIs are the following.
 
 - **Accent color**: Setting `isAccent = true` on a `WButton` turns it into an emphasized button using the OS accent color (`AccentButtonStyle`). Use it for things like a dialog's default action.
-- **Backdrop material**: `WFrame.systemBackdrop` applies a Windows 11 material to the window background. Four choices: `MICA` (a faint translucency of the desktop wallpaper), `MICA_ALT`, `ACRYLIC` (frosted glass), and `NONE` (default). Gallery and Filer use `MICA`.
+- **Backdrop material**: `WFrame.systemBackdrop` applies a Windows 11 material to the window background. Four choices: `MICA` (a faint translucency of the desktop wallpaper; the default), `MICA_ALT`, `ACRYLIC` (frosted glass), and `NONE` (a solid theme background).
 - **Extending into the title bar**: `WFrame.extendsContentIntoTitleBar = true` extends the content area into the title bar, and `setTitleBar(component)` designates the drag region. You can build layouts like Gallery's, which embeds a search box in the title bar.
 
 ### 11.2 Dark Mode Support

@@ -861,7 +861,7 @@ WinRT の API には `IAsyncOperation<T>` / `IAsyncAction` を返す非同期メ
 そのうえで、外観に関わる主な API は次のとおりです。
 
 - **アクセントカラー**:`WButton` の `isAccent = true` で、OS のアクセントカラーを使う強調ボタン (`AccentButtonStyle`) になります。ダイアログの既定アクションなどに使います。
-- **背景素材 (backdrop)**:`WFrame.systemBackdrop` で、ウィンドウ背景に Windows 11 の素材を適用できます。`MICA` (デスクトップ壁紙を淡く透過)、`MICA_ALT`、`ACRYLIC` (すりガラス)、`NONE` (既定) の 4 択です。Gallery / Filer は `MICA` を使っています。
+- **背景素材 (backdrop)**:`WFrame.systemBackdrop` で、ウィンドウ背景に Windows 11 の素材を適用できます。`MICA` (デスクトップ壁紙を淡く透過。既定)、`MICA_ALT`、`ACRYLIC` (すりガラス)、`NONE` (テーマの単色の背景) の 4 択です。
 - **タイトルバーへの拡張**:`WFrame.extendsContentIntoTitleBar = true` でコンテンツ領域をタイトルバーまで広げ、`setTitleBar(component)` でドラッグ領域を指定します。Gallery のように検索ボックスをタイトルバーに埋め込む構成が作れます。
 
 ### 11.2 ダークモード対応

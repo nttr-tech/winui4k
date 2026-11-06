@@ -1013,11 +1013,9 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     }
 
     /**
-     * The window background's system material (Window.SystemBackdrop).
-     * Setting [SystemBackdropType.MICA] or similar gives the Windows 11 look where the desktop
-     * wallpaper's color shows through faintly on the window background.
-     * Components in the areas you want to show through should leave their background unpainted
-     * (or make it translucent).
+     * The window background's system material (Window.SystemBackdrop). The default is [SystemBackdropType.MICA], which gives the standard Windows 11 look where the desktop
+     * wallpaper's color shows through faintly on the window background (where Mica is unavailable, WinUI uses a solid-color background).
+     * Components in the areas you want to show through should leave their background unpainted (or make it translucent). For a solid-color background, use [SystemBackdropType.NONE].
      */
     var systemBackdrop: SystemBackdropType = SystemBackdropType.NONE
         set(value) {
@@ -1035,6 +1033,11 @@ class WFrame @JvmOverloads constructor(title: String = "") :
             window2.call(XamlInterop.IWindow2_put_SystemBackdrop, backdrop)
             backdrop?.release() // the put side keeps its own reference, so release the one we created
         }
+
+    init {
+        // The default background is Mica (set through the setter rather than as the initial value, so that it is also set on the native side)
+        systemBackdrop = SystemBackdropType.MICA
+    }
 
     /**
      * Whether the app's content extends into the system title bar area (Window.ExtendsContentIntoTitleBar).
@@ -1158,10 +1161,10 @@ class WFrame @JvmOverloads constructor(title: String = "") :
  * Corresponds to WinUI 3's SystemBackdrop subclasses (MicaBackdrop / DesktopAcrylicBackdrop).
  */
 enum class SystemBackdropType {
-    /** No backdrop (default: the theme's solid-color background). */
+    /** No backdrop (the theme's solid-color background). */
     NONE,
 
-    /** Mica: a material for main windows that shows a faint tint of the wallpaper (MicaKind.Base). */
+    /** Mica: a material for main windows that shows a faint tint of the wallpaper (MicaKind.Base). The default of [WFrame.systemBackdrop]. */
     MICA,
 
     /** Mica Alt: shows a stronger tint of the wallpaper than Mica (MicaKind.BaseAlt). For tabbed windows. */

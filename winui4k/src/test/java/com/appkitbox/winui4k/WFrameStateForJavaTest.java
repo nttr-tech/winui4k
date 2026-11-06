@@ -120,8 +120,9 @@ class WFrameStateForJavaTest {
             assertEquals(WFrame.NORMAL, frame.getState());
             frame.setVisible(true);
             assertTrue(frame.isVisible());
-            frame.setSystemBackdrop(SystemBackdropType.MICA);
-            assertEquals(SystemBackdropType.MICA, frame.getSystemBackdrop());
+            assertEquals(SystemBackdropType.MICA, frame.getSystemBackdrop()); // The default is Mica
+            frame.setSystemBackdrop(SystemBackdropType.ACRYLIC);
+            assertEquals(SystemBackdropType.ACRYLIC, frame.getSystemBackdrop());
         });
     }
 }

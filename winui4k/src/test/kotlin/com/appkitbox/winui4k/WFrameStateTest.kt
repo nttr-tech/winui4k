@@ -354,14 +354,14 @@ class WFrameStateTest : FunSpec() {
         }
 
         context("Reading and writing") {
-            test("systemBackdrop defaults to NONE (SystemBackdrop is null). MICA and MICA_ALT are MicaBackdrop (Kind Base and BaseAlt), ACRYLIC is DesktopAcrylicBackdrop, and NONE removes it") {
+            test("systemBackdrop defaults to MICA (MicaBackdrop with Kind Base). MICA_ALT has Kind BaseAlt, ACRYLIC is DesktopAcrylicBackdrop, NONE removes it, and MICA restores it") {
                 val frame = newFrame()
                 val seen = mutableListOf(onUiThreadGet { frame.systemBackdrop.name } to backdropOf(frame))
-                for (type in listOf(SystemBackdropType.MICA, SystemBackdropType.MICA_ALT, SystemBackdropType.ACRYLIC, SystemBackdropType.NONE)) {
+                for (type in listOf(SystemBackdropType.MICA_ALT, SystemBackdropType.ACRYLIC, SystemBackdropType.NONE, SystemBackdropType.MICA)) {
                     onUiThread { frame.systemBackdrop = type }
                     seen += onUiThreadGet { frame.systemBackdrop.name } to backdropOf(frame)
                 }
-                seen shouldBe listOf("NONE" to "none", "MICA" to "mica:0", "MICA_ALT" to "mica:1", "ACRYLIC" to "acrylic", "NONE" to "none")
+                seen shouldBe listOf("MICA" to "mica:0", "MICA_ALT" to "mica:1", "ACRYLIC" to "acrylic", "NONE" to "none", "MICA" to "mica:0")
             }
         }
 
