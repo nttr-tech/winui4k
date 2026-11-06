@@ -78,11 +78,21 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
     }
 
-    /** Places the caret ([dot]) and the other end of the selection ([mark]). TextBox has no selection direction, so only the range is selected. */
+    /**
+     * Places the caret ([dot]) and the other end of the selection ([mark]). TextBox has no selection direction, so the range is selected,
+     * and when it is not forward (dot is before mark), the direction is remembered in [backward].
+     */
     private fun setDotMark(dot: Int, mark: Int) {
         val start = minOf(dot, mark)
         inspectable.call(XamlInterop.ITextBox_Select, start, maxOf(dot, mark) - start)
+        backward = if (dot < mark) intArrayOf(dot, mark) else null
     }
+
+    /**
+     * [dot, mark] when selected from back to front with [moveCaretPosition] etc. (TextBox has no selection direction, so it is remembered here).
+     * Used only while the native selection stays this range, and discarded when the selection changes through user operations etc.
+     */
+    private var backward: IntArray? = null
 
     /**
      * JTextComponent.getText / setText-style: the text of the field (TextBox.Text).
@@ -107,10 +117,14 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     /** CaretListener-style listeners (subscribes to TextBox.SelectionChanged when the first listener is added). */
     private val caret = CaretEvents(this, ::nativeCaret, ::subscribeSelectionChanged)
 
-    /** The current [dot, mark] (with a selection, dot is the end and mark is the start). */
+    /** The current [dot, mark] (with a selection, dot is the end and mark the start; while the [backward] selection stays, dot is the start). */
     private fun nativeCaret(): IntArray {
         val start = selectionStart
-        return intArrayOf(start + selectionLength, start)
+        val end = start + selectionLength
+        val kept = backward
+        if (kept != null && kept[0] == start && kept[1] == end) return intArrayOf(start, end)
+        backward = null
+        return intArrayOf(end, start)
     }
 
     /** The shared part that determines the width from columns ([TextExtent]). */
@@ -238,40 +252,54 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         val length = text.length
         val start = selectionStart.coerceIn(0, length)
         val end = selectionEnd.coerceAtMost(length).coerceAtLeast(start)
-        inspectable.call(XamlInterop.ITextBox_Select, start, end - start)
+        setDotMark(end, start)
         caret.check()
     }
 
     /** Selects all text (TextBox.SelectAll). */
     fun selectAll() {
+        backward = null
         inspectable.call(XamlInterop.ITextBox_SelectAll)
         caret.check()
     }
 
     /**
-     * JTextComponent.getCaretPosition / setCaretPosition-style: the caret position (from 0 to the number of characters).
-     * With a selection, it is the end of the selection (WinUI does not keep the direction of the selection, so it is not
-     * the start of a selection extended backwards as in Swing).
+     * JTextComponent.getCaretPosition / setCaretPosition-like: the caret position (from 0 to the number of characters).
+     * With a selection, it is the start (Swing's dot) while selected from back to front with [moveCaretPosition], otherwise the end of the selection.
+     * TextBox has no selection direction, so it returns the end even when the user selects from back to front with Shift+← etc. (the start in Swing).
      * Setting it clears the selection and places the caret at that position.
      *
      * @throws IllegalArgumentException if the position is before 0 or after the number of characters (as in Swing)
      */
     var caretPosition: Int
-        get() = selectionEnd
+        get() = nativeCaret()[0]
         set(value) {
             require(value in 0..text.length) { "cannot place the caret at: $value (length ${text.length})" }
-            inspectable.call(XamlInterop.ITextBox_Select, value, 0)
+            setDotMark(value, value)
             caret.check()
         }
 
     /**
-     * JTextComponent.replaceSelection-style: replaces the selection with [content] (inserts it at the caret position if
-     * nothing is selected).
-     * null or an empty string deletes the selection. After replacing, the caret is placed after the inserted text (the
-     * selection is cleared).
+     * JTextComponent.moveCaretPosition-like: moves the caret (dot) to [position] while keeping the other end of the selection (mark; the position placed with [caretPosition] or the start of the selection),
+     * and selects the range between them. When moved forward, [caretPosition] returns the moved-to position (the start of the selection), and
+     * the dot and mark of [WCaretEvent] are also the same as Swing.
+     *
+     * TextBox has no selection direction, so WinUI4K remembers the direction. The caret on screen is at the end of the selection, and if the user then
+     * changes the selection with Shift+← etc., it changes in TextBox's direction (with the start fixed) (unlike Swing). [WTextPane] can match the direction too.
+     *
+     * @throws IllegalArgumentException if the position is before 0 or after the number of characters (as in Swing)
+     */
+    fun moveCaretPosition(position: Int) {
+        require(position in 0..text.length) { "Cannot place the caret at: $position (length ${text.length})" }
+        setDotMark(position, nativeCaret()[1])
+        caret.check()
+    }
+
+    /**
+     * JTextComponent.replaceSelection-style: replaces the selection with [content] (inserts it at the caret position if nothing is selected).
+     * null or an empty string deletes the selection. After replacing, the caret is placed after the inserted text (the selection is cleared).
      * Does nothing if [isEditable] is false (as in Swing). It can be undone like a user edit ([undo]).
-     * The [addDocumentListener] listeners receive removeUpdate for the whole selection and then insertUpdate for the
-     * inserted text, as in Swing.
+     * The [addDocumentListener] listeners receive removeUpdate for the whole selection and then insertUpdate for the inserted text, as in Swing.
      */
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
@@ -291,7 +319,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         // TextBox normalizes the inserted string (CRLF to CR when multi-line, and drops everything after a line break when
         // single-line), so the position is computed from the length actually added, not the length of the passed string
         val position = start + (text.length - before + selected)
-        inspectable.call(XamlInterop.ITextBox_Select, position, 0)
+        setDotMark(position, position)
         caret.check()
     }
 

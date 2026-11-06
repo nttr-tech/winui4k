@@ -110,9 +110,18 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
     }
 
-    /** Places the caret ([dot]) and the other end of the selection ([mark]). */
+    /** Places the caret ([dot]) and the other end of the selection ([mark]). If dot is before mark, the moving end of the selection is put on the start side (StartActive). */
     private fun setDotMark(dot: Int, mark: Int) {
         withSelection { range -> range.call(XamlInterop.ITextRange_SetRange, minOf(dot, mark), maxOf(dot, mark)) }
+        withTextSelection { selection ->
+            val options = selection.getInt(TextInterop.ITextSelection_get_Options)
+            val wanted = if (dot < mark) {
+                options or TextInterop.SelectionOptions_StartActive
+            } else {
+                options and TextInterop.SelectionOptions_StartActive.inv()
+            }
+            if (wanted != options) selection.call(TextInterop.ITextSelection_put_Options, wanted)
+        }
     }
 
     /** CaretListener-style listeners (subscribes to RichEditBox.SelectionChanged when the first listener is attached). */
@@ -487,26 +496,45 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     /** Gets the ITextRange of the selection (Document.Selection), passes it to [block], and reliably releases it. ITextSelection is used after QI. */
-    private fun <T> withSelection(block: (ComPtr) -> T): T {
-        val selection = textDocument.getPtr(XamlInterop.ITextDocument_get_Selection)
+    private fun <T> withSelection(block: (ComPtr) -> T): T = withTextSelection { selection ->
+        val range = selection.queryInterface(XamlInterop.IID_ITextRange)
         try {
-            val range = selection.queryInterface(XamlInterop.IID_ITextRange)
-            try {
-                return block(range)
-            } finally {
-                range.release()
-            }
+            block(range)
         } finally {
-            selection.release()
+            range.release()
         }
     }
 
-    /** The current [dot, mark] (if there is a selection, dot is its end and mark its start). The final paragraph mark is not included. */
-    private fun nativeCaret(): IntArray = withSelection { range ->
+    /** The current selection [start, end]. The final paragraph mark is not included. */
+    private fun nativeSelection(): IntArray = withSelection { range ->
         val last = range.getInt(XamlInterop.ITextRange_get_StoryLength) - 1
         val start = range.getInt(XamlInterop.ITextRange_get_StartPosition).coerceAtMost(last)
         val end = range.getInt(XamlInterop.ITextRange_get_EndPosition).coerceAtMost(last)
-        intArrayOf(end, start)
+        intArrayOf(start, end)
+    }
+
+    /**
+     * The current [dot, mark]. If the moving end of the selection (StartActive of ITextSelection.Options) is on the start side, dot is the start, otherwise the end
+     * (as in Swing, dot is on the caret side even for a selection the user made from back to front).
+     */
+    private fun nativeCaret(): IntArray {
+        val (start, end) = nativeSelection()
+        return if (start < end && startActive()) intArrayOf(start, end) else intArrayOf(end, start)
+    }
+
+    /** Whether the moving end of the selection is on the start side (StartActive of ITextSelection.Options). */
+    private fun startActive(): Boolean = withTextSelection { selection ->
+        selection.getInt(TextInterop.ITextSelection_get_Options) and TextInterop.SelectionOptions_StartActive != 0
+    }
+
+    /** Passes Document.Selection (ITextSelection) to [block] and always releases it. */
+    private fun <T> withTextSelection(block: (ComPtr) -> T): T {
+        val selection = textDocument.getPtr(XamlInterop.ITextDocument_get_Selection)
+        try {
+            return block(selection)
+        } finally {
+            selection.release()
+        }
     }
 
     /** JTextComponent.getSelectedText-style: the selected text. An empty string (not null) if there is no selection. */
@@ -520,7 +548,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
      * position.
      */
     var selectionStart: Int
-        get() = nativeCaret()[1]
+        get() = nativeSelection()[0]
         set(value) = select(value, selectionEnd)
 
     /**
@@ -530,7 +558,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
      * position as the start (no selection).
      */
     var selectionEnd: Int
-        get() = nativeCaret()[0]
+        get() = nativeSelection()[1]
         set(value) = select(selectionStart, value)
 
     /**
@@ -544,7 +572,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         val content = length
         val start = selectionStart.coerceIn(0, content)
         val end = selectionEnd.coerceAtMost(content).coerceAtLeast(start)
-        withSelection { range -> range.call(XamlInterop.ITextRange_SetRange, start, end) }
+        setDotMark(end, start)
         caret.check()
     }
 
@@ -554,28 +582,40 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     /**
-     * JTextComponent.getCaretPosition / setCaretPosition-style: the caret position (from 0 to the number of characters).
-     * When there is a selection, it is the end of the selection (RichEditBox does not keep the direction of the
-     * selection, so it is not the start of a selection extended backward as in Swing).
+     * JTextComponent.getCaretPosition / setCaretPosition-like: the caret position (Swing's dot; from 0 to the number of characters).
+     * With a selection, as in Swing, it is the moving end of the selection (the caret side): the start for a selection made from back to front (Shift+← or [moveCaretPosition]),
+     * otherwise the end (told apart by StartActive of RichEditBox's ITextSelection).
      * Setting it clears the selection and places the caret at that position.
+     *
+     * Earlier versions returned the end even for a selection made from back to front.
      *
      * @throws IllegalArgumentException if the position is before 0 or after the number of characters (as in Swing)
      */
     var caretPosition: Int
-        get() = selectionEnd
+        get() = nativeCaret()[0]
         set(value) {
             require(value in 0..length) { "Cannot place the caret at: $value (length $length)" }
-            withSelection { range -> range.call(XamlInterop.ITextRange_SetRange, value, value) }
+            setDotMark(value, value)
             caret.check()
         }
 
     /**
-     * JTextComponent.replaceSelection-style: replaces the selection with [content] (inserts at the caret position if
-     * there is no selection). Removes the selection if null or an empty string. Afterwards, the caret is placed after
-     * the inserted text (the selection is cleared).
+     * JTextComponent.moveCaretPosition-like: moves the caret (dot) to [position] while keeping the other end of the selection (mark), and selects the range between them.
+     * The RichEditBox selection direction is matched too (moving forward puts the moving end on the start side, and pressing Shift+← then extends the start side, as in Swing).
+     *
+     * @throws IllegalArgumentException if the position is before 0 or after the number of characters (as in Swing)
+     */
+    fun moveCaretPosition(position: Int) {
+        require(position in 0..length) { "Cannot place the caret at: $position (length $length)" }
+        setDotMark(position, nativeCaret()[1])
+        caret.check()
+    }
+
+    /**
+     * JTextComponent.replaceSelection-style: replaces the selection with [content] (inserts it at the caret position if nothing is selected).
+     * null or an empty string deletes the selection. After replacing, the caret is placed after the inserted text (the selection is cleared).
      * Does nothing if [isEditable] is false (as in Swing).
-     * Listeners of [addDocumentListener] receive removeUpdate for the whole selection followed by insertUpdate for the
-     * inserted text, as in Swing.
+     * The [addDocumentListener] listeners receive removeUpdate for the whole selection and then insertUpdate for the inserted text, as in Swing.
      */
     fun replaceSelection(content: String?) {
         if (isReadOnly) return
@@ -593,7 +633,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
             }
         }
         val position = start + (length - before + selected)
-        withSelection { range -> range.call(XamlInterop.ITextRange_SetRange, position, position) }
+        setDotMark(position, position)
         caret.check()
     }
 

@@ -38,6 +38,8 @@ internal object TextInterop {
     const val ITextSelection_get_Options = 6              // get_Options(out SelectionOptions)
     const val ITextSelection_put_Options = 7              // put_Options(SelectionOptions)
     const val SelectionOptions_StartActive = 1            // The moving end of the selection (the caret) is on the start side
+    const val ITextSelection_MoveLeft = 12                // MoveLeft(TextRangeUnit, i4 count, boolean extend, out i4)
+    const val TextRangeUnit_Character = 0                 // Microsoft.UI.Text.TextRangeUnit.Character
 
     // ---- Microsoft.UI.Xaml.Controls.TextBox.BeforeTextChanging ----
     const val ITextBox_add_BeforeTextChanging = 76        // add_BeforeTextChanging(TypedEventHandler<TextBox, TextBoxBeforeTextChangingEventArgs>, out token)
