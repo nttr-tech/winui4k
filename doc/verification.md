@@ -308,3 +308,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     1 つのグループになるため、WRadioMenuFlyoutItem は名前の無い項目に一意の名前を付ける。名前だけで排他にしたときは、選んだ項目の
     SELECTED が外れた項目の DESELECTED より先に届く。WButtonGroup に入れたときは、外れた方の通知でグループが選択を移すので Swing と同じく
     DESELECTED が先になる
+- JComboBox 風の WComboBox (編集できる ComboBox の選択と、モデルに無い項目の扱い) のために、ComboBox と Selector の SelectedItem の受け付け方を
+  WinUI のソースで確かめた
+  - 編集できる (IsEditable) ComboBox がモデルに無い SelectedItem (入力した文字列など) を受け付けるのは、テンプレートが適用されてからになる。
+    `ComboBox::SetupEditableMode` (ComboBox_Partial.cpp:318。テンプレート適用時の :264 と、適用後に IsEditable を変えたときの :1318 から呼ばれる)
+    が `SetAllowCustomValues(true)` を呼ぶ (:390) までは、Selector は項目に無い値を受け付けない。テンプレートを適用する前
+    (ウィンドウに載せる前) に編集できる ComboBox へ項目外の SelectedItem を入れても、選択にならない
+  - 項目に無い SelectedItem を受け付けられない状態で ItemsSource も無いと、Selector はその値を捨てずに `m_itemPendingSelection` に覚える
+    (`Selector::OnSelectedItemChanged`、Selector_Partial.cpp:633 の中の :671)。覚えた値は、あとで ItemsSource が (null 以外に) 設定され、
+    その項目に含まれていたときに `Selector::OnItemsSourceChanged` (:404 の中の :466-481) が選び直す。つまり項目外の値を一度
+    ネイティブへ送ると、後から ItemsSource を設定したときに思わぬ選択が起きうる。WComboBox は項目外の値をネイティブへ送らず、選択はモデル側で持つ
