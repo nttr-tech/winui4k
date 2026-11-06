@@ -853,6 +853,41 @@ abstract class WComponent internal constructor(
     val componentListeners: Array<WComponentListener>
         get() = componentEventsOrNull?.listeners() ?: emptyArray()
 
+    /** The ancestor listeners (created when the first listener is added). */
+    internal var ancestorEventsOrNull: AncestorEvents? = null
+        private set
+
+    /**
+     * JComponent.addAncestorListener-like: adds a listener called when this component appears on screen, disappears from it, or moves within the window.
+     * Does nothing if null. Adding the same listener twice makes it called twice (the same as Swing).
+     *
+     * - ancestorAdded / ancestorRemoved: when placed in a window and loaded by XAML (FrameworkElement.Loaded) or removed (Unloaded),
+     *   or when [isVisible] of it or an ancestor changes and whether it and all its ancestors are visible changes. As in Swing,
+     *   it does not come when the window ([WFrame]) is merely hidden. When removed and re-added to another parent, ancestorRemoved comes and then ancestorAdded
+     * - ancestorMoved: when the position seen from the top left of the window content changes while on screen because it or an ancestor moved (compared after
+     *   layout). Unlike Swing, it does not come when the window is merely moved on the screen. Also, [setLocation] on a child of a [WCanvas] is moved by WinUI
+     *   without a layout, so its descendants get it the next time a layout runs somewhere
+     *
+     * All of them are called on the next turn of the UI thread (as Swing's AncestorNotifier calls after receiving an event, they are not called
+     * within the call that made the change). The event's [WAncestorEvent.ancestor] is always this component itself, because WinUI does not tell
+     * which ancestor changed. There is no equivalent of HierarchyListener. While listeners are attached, visibility and position are checked
+     * every time a layout runs anywhere in the tree (FrameworkElement.LayoutUpdated).
+     */
+    fun addAncestorListener(listener: WAncestorListener?) {
+        if (listener == null) return
+        val events = ancestorEventsOrNull ?: AncestorEvents(this).also { ancestorEventsOrNull = it }
+        events.add(listener)
+    }
+
+    /** JComponent.removeAncestorListener-like: removes one listener added with [addAncestorListener]. Does nothing if it is not attached. */
+    fun removeAncestorListener(listener: WAncestorListener?) {
+        if (listener != null) ancestorEventsOrNull?.remove(listener)
+    }
+
+    /** JComponent.getAncestorListeners-like: the attached ancestor listeners (in the order added). */
+    val ancestorListeners: Array<WAncestorListener>
+        get() = ancestorEventsOrNull?.listeners() ?: emptyArray()
+
     /**
      * Invalidates the natural size cache. Call this alongside the parent [WLayoutPanel]'s revalidate whenever the
      * content's size changes, e.g. from a text change ([revalidate] does both).

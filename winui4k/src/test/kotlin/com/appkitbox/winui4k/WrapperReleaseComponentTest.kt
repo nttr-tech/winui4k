@@ -69,6 +69,22 @@ class WrapperReleaseComponentTest : FunSpec() {
             Reclamation.awaitCollected(label).shouldBeTrue()
         }
 
+        test("a panel with an AncestorListener that does not reference the component is also collected after being placed in the window and removed") {
+            val reference = shownAndHidden { WPanel().also { it.addAncestorListener(EmptyAncestorListener()) } }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a panel that was never placed is also collected once all its AncestorListeners are removed") {
+            val reference = onUiThreadGet {
+                val panel = WPanel()
+                val listener = EmptyAncestorListener()
+                panel.addAncestorListener(listener)
+                panel.removeAncestorListener(listener)
+                WeakReference(panel)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a panel with a ContainerListener and its children are also collected after being removed (no native handler is used)") {
             val reference = shownAndHidden {
                 WPanel().also { panel ->
@@ -78,5 +94,20 @@ class WrapperReleaseComponentTest : FunSpec() {
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
+    }
+}
+
+/** A [WAncestorListener] that does nothing (does not reference the component). */
+private class EmptyAncestorListener : WAncestorListener {
+    override fun ancestorAdded(event: WAncestorEvent) {
+        // Does nothing
+    }
+
+    override fun ancestorRemoved(event: WAncestorEvent) {
+        // Does nothing
+    }
+
+    override fun ancestorMoved(event: WAncestorEvent) {
+        // Does nothing
     }
 }
