@@ -83,6 +83,9 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     /** Whether the model state is being copied to the native side (native ValueChanged during that time is not written back to the model). */
     private var pushing = false
 
+    /** Whether [model] has been read or written (the first time, the spinner is pinned with ListenerAnchor; [pinForModel]). */
+    private var modelExposed = false
+
     /** Whether clearing the input reverts to the previous value (only for spinners given a model; the default model puts NaN). */
     private var revertsEmpty = false
 
@@ -91,17 +94,23 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
      * Sharing one model between several spinners makes all of them move whichever one is changed. When replaced, the native side is updated to the new model, but
      * as with JSpinner the [addChangeListener] listeners are not called. A spinner with a model set reverts to the previous value when the input is cleared.
      * The model references the spinner through a listener, so keeping the model keeps the spinner from being collected too (same as Swing).
+     * A spinner whose model has been read or written even once (including the constructor that takes a model) is, for the other components sharing the model, the same as when listeners are added:
+     * it is not collected while shown even without references (it is not collected if never put in a window; it is collected after being put in and removed).
      *
      * At this point NumberBox can only display numbers, so only [WSpinnerNumberModel] is accepted
      * ([WSpinnerListModel] and [WSpinnerDateModel] cannot be attached).
      * @throws IllegalArgumentException when a model other than [WSpinnerNumberModel] is set
      */
     var model: WSpinnerModel
-        get() = numberModel
+        get() {
+            pinForModel()
+            return numberModel
+        }
         set(newModel) {
             require(newModel is WSpinnerNumberModel) {
                 "WSpinner can only display a WSpinnerNumberModel: ${newModel.javaClass.name}"
             }
+            pinForModel()
             revertsEmpty = true
             if (newModel === numberModel) return
             numberModel.removeChangeListener(modelListener)
@@ -306,6 +315,16 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
         model.value = toModelNumber(newValue, current)
         // Even when truncating to an integer did not change the value (typing 3.2 over 3 and so on), set the display back to the model's value
         if (!sameValue(model.number.toDouble(), newValue)) pushToNative()
+    }
+
+    /**
+     * Pins the spinner with ListenerAnchor only once when a model is passed or read, the same as when listeners are added.
+     * The native handlers reference the spinner only weakly, so without pinning it would be collected even while shown and stop writing input back to the model.
+     */
+    private fun pinForModel() {
+        if (modelExposed) return
+        modelExposed = true
+        listenerAnchor.listenerAdded()
     }
 
     private fun addValueChangedHandler() {

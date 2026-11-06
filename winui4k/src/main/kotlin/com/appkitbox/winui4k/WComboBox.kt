@@ -52,7 +52,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 ) {
     /** JComboBox(E[] items)-like: creates a combo with a [WDefaultComboBoxModel] of [items] and the first item selected, as with JComboBox (unselected if empty). */
     constructor(items: Array<String>) : this() {
-        model = WDefaultComboBoxModel(items)
+        replaceModel(WDefaultComboBoxModel(items)) // A model it created itself, so do not pin ([pinForModel] is for when [model] is read or written)
     }
 
     /** JComboBox(ComboBoxModel)-like: creates a combo that shows the items and selection of [model]. */
@@ -121,6 +121,9 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 
     private var loadedHandlerAdded = false
 
+    /** Whether [model] has been read or written (the first time, the combo is pinned with ListenerAnchor; [pinForModel]). */
+    private var modelExposed = false
+
     /**
      * JComboBox.getActionCommand / setActionCommand-like: the [WActionEvent.actionCommand] of [addActionListener] events.
      * The default is `"comboBoxChanged"`, as in JComboBox. An Enter confirmation in an editable combo uses `"comboBoxEdited"` instead of this value.
@@ -130,15 +133,17 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /**
      * JComboBox.getModel / setModel-like: the model of items and selection. Replacing it matches the native items to the new model, but as in JComboBox
      * listeners are not called. The model references the combo through its listener, so holding on to the model keeps the combo from being collected too (as in Swing).
+     * A combo whose model has been read or written even once (including the constructor that takes a model) is, for the other components sharing the model, the same as when listeners are added:
+     * it is not collected while shown even without references (it is not collected if never put in a window; it is collected after being put in and removed).
      */
     var model: WComboBoxModel<*>
-        get() = dataModel
+        get() {
+            pinForModel()
+            return dataModel
+        }
         set(newModel) {
-            dataModel.removeListDataListener(modelListener)
-            dataModel = newModel
-            newModel.addListDataListener(modelListener)
-            selectedItemReminder = newModel.selectedItem
-            rebuildNative()
+            pinForModel()
+            replaceModel(newModel)
         }
 
     /** The number of items (getSize of [model]). */
@@ -696,6 +701,24 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         itemWhenOpened = null
         if (canceled) for (listener in popupListeners.toList()) listener.popupMenuCanceled(event)
         for (listener in popupListeners.toList()) listener.popupMenuWillBecomeInvisible(event)
+    }
+
+    private fun replaceModel(newModel: WComboBoxModel<*>) {
+        dataModel.removeListDataListener(modelListener)
+        dataModel = newModel
+        newModel.addListDataListener(modelListener)
+        selectedItemReminder = newModel.selectedItem
+        rebuildNative()
+    }
+
+    /**
+     * Pins the combo with ListenerAnchor only once when a model is passed or read, the same as when listeners are added.
+     * The native handlers reference the combo only weakly, so without pinning it would be collected even while shown and stop writing user selections back to the model.
+     */
+    private fun pinForModel() {
+        if (modelExposed) return
+        modelExposed = true
+        listenerAnchor.listenerAdded()
     }
 
     private fun addSelectionHandler() {

@@ -114,19 +114,24 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
 
     private var dragHandlersAdded = false
 
+    /** Whether [model] has been read or written (the first time, the slider is pinned with ListenerAnchor; [pinForModel]). */
+    private var modelExposed = false
+
     /**
      * JSlider.getModel / setModel-style: the range model. [WDefaultBoundedRangeModel] by default (0..100, value 0, extent 0).
      * Sharing one model between several sliders (or components using the same model) makes all of them move whichever one is moved.
      * When replaced, the native side is updated to the new model, but as with JSlider the [addChangeListener] listeners are not called.
      * The model references the slider through a listener, so keeping the model keeps the slider from being collected too (same as Swing).
+     * A slider whose model has been read or written even once (including the constructor that takes a model) is, for the other components sharing the model, the same as when listeners are added:
+     * it is not collected while shown even without references (it is not collected if never put in a window; it is collected after being put in and removed).
      */
     var model: WBoundedRangeModel
         get() {
-            addDragHandlers() // Also tell listeners added directly to the model whether it is being dragged
+            pinForModel()
             return rangeModel
         }
         set(newModel) {
-            addDragHandlers()
+            pinForModel()
             if (newModel === rangeModel) return
             rangeModel.removeChangeListener(modelListener)
             rangeModel = newModel
@@ -351,6 +356,18 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
                 deliver(now)
             }
         }
+    }
+
+    /**
+     * Pins the slider with ListenerAnchor only once when a model is passed or read, the same as when listeners are added.
+     * The native handlers reference the slider only weakly, so without pinning it would be collected even while shown and stop writing user operations back to the model
+     * (and they would no longer reach the other components sharing the model or listeners added directly to the model). Drag detection also starts here.
+     */
+    private fun pinForModel() {
+        addDragHandlers() // Also tell listeners added directly to the model whether a drag is in progress
+        if (modelExposed) return
+        modelExposed = true
+        listenerAnchor.listenerAdded()
     }
 
     private fun applyTickSpacing() {
