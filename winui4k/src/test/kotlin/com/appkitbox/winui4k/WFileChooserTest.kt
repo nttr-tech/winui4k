@@ -16,6 +16,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.io.File
 import java.nio.file.Files
+import java.util.Collections
 import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
 
@@ -374,5 +375,100 @@ class WFileChooserTest : FunSpec() {
                 UiTestHarness.detach(button)
             }
         }
+
+        context("Swing compatibility") {
+            test("accept decides by the selected type (fileFilter) and includes everything if fileFilter is null (JFileChooser.accept)") {
+                val chooser = WFileChooser()
+                chooser.accept(File(tempDir, "a.csv")) shouldBe true // The default is all files
+                chooser.addChoosableFileFilter(WFileNameExtensionFilter("Text", "txt"))
+                listOf(
+                    chooser.accept(File(tempDir, "a.txt")),
+                    chooser.accept(File(tempDir, "a.csv")),
+                    chooser.accept(tempDir),
+                ) shouldContainExactly listOf(true, false, true)
+                chooser.fileFilter = null
+                chooser.accept(File(tempDir, "a.csv")) shouldBe true
+            }
+
+            test("changeToParentDirectory sets currentDirectory to the parent folder and selectedFile to null. It does not change at the top or with null") {
+                val child = File(tempDir, "child").also { it.mkdirs() }
+                val chooser = WFileChooser(child)
+                chooser.selectedFile = File(child, "x.txt")
+                chooser.changeToParentDirectory()
+                chooser.currentDirectory shouldBe tempDir
+                chooser.selectedFile.shouldBeNull()
+
+                val root = tempDir.toPath().root.toFile()
+                val atRoot = WFileChooser(root)
+                atRoot.changeToParentDirectory()
+                atRoot.currentDirectory shouldBe root
+
+                val unset = WFileChooser()
+                unset.changeToParentDirectory()
+                unset.currentDirectory.shouldBeNull()
+            }
+
+            test("ActionListeners are called in the order added and receive CANCEL_SELECTION on cancellation before the result is returned. Removed ones are not called") {
+                val button = onUiThreadGet { WButton("Open") }
+                UiTestHarness.attachAndAwaitLoaded(button)
+                val title = "WFileChooserTest ActionListener"
+                val events = Collections.synchronizedList(mutableListOf<String>())
+                val chooser = WFileChooser(tempDir)
+                chooser.dialogTitle = title
+                val removed = WActionListener { events += "removed" }
+                chooser.addActionListener { e -> events += "1:${e.actionCommand}:${e.source === chooser}" }
+                chooser.addActionListener(removed)
+                chooser.addActionListener { e -> events += "2:${e.actionCommand}" }
+                chooser.removeActionListener(removed)
+                chooser.actionListeners.size shouldBe 2
+                try {
+                    WinUiUtilities.invokeLater { events += "r:${chooser.showOpenDialog(button)}" }
+                    val dialog = eventually(10.seconds) { TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, title).shouldNotBeNull() }
+                    TopLevelWindows.close(dialog)
+                    eventually(5.seconds) {
+                        events.toList() shouldContainExactly listOf(
+                            "1:${WFileChooser.CANCEL_SELECTION}:true",
+                            "2:${WFileChooser.CANCEL_SELECTION}",
+                            "r:${WFileChooser.CANCEL_OPTION}",
+                        )
+                    }
+                } finally {
+                    TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, title)?.let { TopLevelWindows.close(it) }
+                    UiTestHarness.detach(button)
+                }
+            }
+
+            test("closing a save dialog with the approve button delivers APPROVE_SELECTION and returns APPROVE_OPTION and the chosen file") {
+                val button = onUiThreadGet { WButton("Save") }
+                UiTestHarness.attachAndAwaitLoaded(button)
+                val title = "WFileChooserTest save"
+                val events = Collections.synchronizedList(mutableListOf<String>())
+                val target = File(tempDir, "new report.txt")
+                val chooser = WFileChooser()
+                chooser.dialogTitle = title
+                chooser.isAcceptAllFileFilterUsed = false
+                chooser.addChoosableFileFilter(WFileNameExtensionFilter("Text", "txt"))
+                chooser.selectedFile = target
+                chooser.addActionListener { e -> events += "a:${e.actionCommand}" }
+                try {
+                    WinUiUtilities.invokeLater { events += "r:${chooser.showSaveDialog(button)}" }
+                    val dialog = eventually(10.seconds) { TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, title).shouldNotBeNull() }
+                    Thread.sleep(DIALOG_SETTLE_MILLIS)
+                    TopLevelWindows.pressOk(dialog)
+                    eventually(10.seconds) {
+                        events.toList() shouldContainExactly listOf("a:${WFileChooser.APPROVE_SELECTION}", "r:${WFileChooser.APPROVE_OPTION}")
+                    }
+                    chooser.selectedFile?.canonicalFile shouldBe target
+                } finally {
+                    TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, title)?.let { TopLevelWindows.close(it) }
+                    UiTestHarness.detach(button)
+                }
+            }
+        }
+    }
+
+    private companion object {
+        /** The time to wait after the OS dialog opens until it accepts the approve button. */
+        const val DIALOG_SETTLE_MILLIS = 1_000L
     }
 }

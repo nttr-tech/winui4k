@@ -14,6 +14,8 @@ import java.util.function.IntConsumer
  *   Call them on the UI thread, outside layout notifications (listeners such as SizeChanged and Loaded); otherwise [IllegalStateException].
  * - The forms taking an [IntConsumer] as the last argument open without blocking and pass the same value when closed.
  * - Read the selected file with [selectedFile] ([selectedFiles] for multiple selection). Canceling keeps the previous value.
+ * - As in Swing, [addActionListener] listeners receive the actionCommand [APPROVE_SELECTION] on approval and [CANCEL_SELECTION] on cancellation
+ *   (in the order added, before the result is returned or the callback is called). They are not called when the dialog could not open or failed ([ERROR_OPTION]).
  *
  * Which picker opens: if [fileSelectionMode] is [DIRECTORIES_ONLY], folder selection; otherwise, if [dialogType] is
  * [SAVE_DIALOG], save; otherwise ([OPEN_DIALOG], [CUSTOM_DIALOG]), open.
@@ -120,6 +122,12 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
     /** A reference that keeps the picker from being released while the dialog is open. */
     private var openPicker: Any? = null
 
+    /** The listeners added with [addActionListener] (called in the order added). */
+    private val actionListenerList = ArrayList<WActionListener>()
+
+    /** JFileChooser.getActionListeners-like: the attached listeners (in the order added, a copy). */
+    val actionListeners: Array<WActionListener> get() = actionListenerList.toTypedArray()
+
     init {
         this.currentDirectory = currentDirectory
     }
@@ -140,6 +148,32 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
             fileFilter = if (isAcceptAllFileFilterUsed && filter !== AcceptAllFileFilter) AcceptAllFileFilter else filters.firstOrNull()
         }
         return true
+    }
+
+    /**
+     * JFileChooser.accept-like: whether [f] is included in the current type ([fileFilter]). true if [fileFilter] is null.
+     * It does not affect the list in the OS dialog (see the class description).
+     */
+    fun accept(f: File): Boolean = fileFilter?.accept(f) ?: true
+
+    /**
+     * JFileChooser.changeToParentDirectory-like: sets [selectedFile] to null and [currentDirectory] to its parent folder.
+     * If [currentDirectory] is null (left to the OS) or is the top of a drive without a parent, [currentDirectory] does not change.
+     */
+    fun changeToParentDirectory() {
+        selectedFile = null
+        currentDirectory?.parentFile?.let { currentDirectory = it }
+    }
+
+    /** JFileChooser.addActionListener-like: adds a listener called on approval ([APPROVE_SELECTION]) and cancellation ([CANCEL_SELECTION]). */
+    fun addActionListener(listener: WActionListener) {
+        actionListenerList += listener
+    }
+
+    /** Removes one listener added with [addActionListener]. Does nothing if it is not attached. */
+    fun removeActionListener(listener: WActionListener) {
+        val index = actionListenerList.indexOfLast { it === listener }
+        if (index >= 0) actionListenerList.removeAt(index)
     }
 
     /** Resets the selectable file types to only "All Files" (when [isAcceptAllFileFilterUsed] is true). */
@@ -236,6 +270,15 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
                 if (isMultiSelectionEnabled) selectedFiles = files.toTypedArray() else selectedFile = files[0]
                 APPROVE_OPTION
             }
+        }
+        val command = when (result) {
+            APPROVE_OPTION -> APPROVE_SELECTION
+            CANCEL_OPTION -> CANCEL_SELECTION
+            else -> null
+        }
+        if (command != null) {
+            val event = WActionEvent(this, command)
+            for (listener in actionListenerList.toList()) listener.actionPerformed(event)
         }
         onResult.accept(result)
     }
@@ -348,6 +391,12 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
 
         /** [fileSelectionMode]: files and folders (the OS dialogs do not have it, so files are selected, the same as [FILES_ONLY]). */
         const val FILES_AND_DIRECTORIES = 2
+
+        /** The actionCommand of [addActionListener]: chosen with the approve button. */
+        const val APPROVE_SELECTION = "ApproveSelection"
+
+        /** The actionCommand of [addActionListener]: canceled. */
+        const val CANCEL_SELECTION = "CancelSelection"
 
         private const val ALL_FILES = "*"
 

@@ -35,6 +35,8 @@ internal object TopLevelWindows {
 
     private const val WM_CLOSE = 0x0010
     private const val GW_OWNER = 4
+    private const val WM_COMMAND = 0x0111
+    private const val IDOK = 1L
 
     /** The window class of OS common dialogs (IFileOpenDialog and so on). */
     const val DIALOG_CLASS = "#32770"
@@ -59,6 +61,11 @@ internal object TopLevelWindows {
     /** Sends WM_CLOSE to [window]. */
     fun close(window: Ptr) {
         check(postMessageW(window, WM_CLOSE, 0L, 0L) as Int != 0) { "cannot send WM_CLOSE" }
+    }
+
+    /** Presses the approve button (IDOK) of the dialog [window] (WM_COMMAND; the same as the Enter key). */
+    fun pressOk(window: Ptr) {
+        check(postMessageW(window, WM_COMMAND, IDOK, 0L) as Int != 0) { "Cannot send WM_COMMAND" }
     }
 
     /** For Java tests: sends WM_CLOSE to the shown window titled [title]. [IllegalStateException] if not found. */
