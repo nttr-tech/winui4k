@@ -61,7 +61,27 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     private val actions = ActionEvents(this, { actionCommand }, { false })
 
     /** DocumentListener-like listeners (subscribes to PasswordBox.PasswordChanging when the first listener is added). */
-    private val document = DocumentEvents(this, ::nativePassword, ::subscribePasswordChanging)
+    private val documentEvents = DocumentEvents(this, ::nativePassword, ::subscribePasswordChanging)
+
+    /**
+     * JTextComponent.getDocument-like: the interface to the text of this password field ([WDocument]). Returns the same one every time
+     * (the same as [WTextField.document]). [WDocument.getText] returns the password as a string (the same as Swing's Document).
+     */
+    val document: WDocument = WDocument(
+        object : DocumentHost {
+            override val events: DocumentEvents get() = documentEvents
+
+            override fun readText(): String = nativePassword()
+
+            override fun write(offset: Int, length: Int, text: String, attributes: WAttributeSet?) {
+                val old = nativePassword()
+                val replaced = old.substring(0, offset) + text + old.substring(offset + length)
+                Hstring.use(replaced) { h -> inspectable.call(XamlInterop.IPasswordBox_put_Password, h) }
+            }
+
+            override fun afterWrite() = Unit
+        },
+    )
 
     private fun nativePassword(): String = inspectable.getString(XamlInterop.IPasswordBox_get_Password)
 
@@ -78,7 +98,7 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
     var password: String
         get() = nativePassword()
         set(value) {
-            document.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_Password, h) } }
+            documentEvents.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.IPasswordBox_put_Password, h) } }
         }
 
     /**
@@ -266,17 +286,17 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
      * the same character is treated as the right end of the run (typing a anywhere in "aa" gives offset 2).
      */
     fun addDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.add(listener)
+        if (listener != null) documentEvents.add(listener)
     }
 
     /** Document.removeDocumentListener-style: removes one listener added with [addDocumentListener]. Does nothing if it was not added. */
     fun removeDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.remove(listener)
+        if (listener != null) documentEvents.remove(listener)
     }
 
     /** AbstractDocument.getDocumentListeners-style: the DocumentListener-style listeners added (in the order added). */
     val documentListeners: Array<WDocumentListener>
-        get() = document.listeners()
+        get() = documentEvents.listeners()
 
     /** Subscribes to PasswordBox.PasswordChanging. The handler stays in the native object, so the field is looked up from [listenerAnchor]. */
     private fun subscribePasswordChanging() {
@@ -285,7 +305,7 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
             "WinUI4K.DocumentPasswordChanging",
             XamlInterop.IID_PasswordBoxPasswordChangingHandler,
             XamlInterop.IPasswordBox_add_PasswordChanging,
-        ) { _, _ -> (anchor.get() as? WPasswordField)?.document?.onNativeChange(-1) }
+        ) { _, _ -> (anchor.get() as? WPasswordField)?.documentEvents?.onNativeChange(-1) }
     }
 
     /** Subscribes to password changes (PasswordBox.PasswordChanged). The listener receives the password after the change. */

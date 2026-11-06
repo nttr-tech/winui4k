@@ -67,7 +67,42 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     private val textChangedTokens = ListenerTokens<Runnable>()
 
     /** DocumentListener-style listeners (subscribes to RichEditBox.TextChanging when the first listener is attached). */
-    private val document = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+
+    /**
+     * JTextComponent.getDocument-like: the interface to the text of this text pane ([WDocument]). Returns the same one every time
+     * (the same as [WTextField.document]; positions and line breaks are the same as [text]). When modified with [WDocument.insertString] / [WDocument.remove],
+     * the caret moves the same way as Swing's DefaultCaret.
+     */
+    val document: WDocument = WDocument(
+        object : DocumentHost {
+            override val events: DocumentEvents get() = documentEvents
+
+            override fun readText(): String = nativeText()
+
+            override fun write(offset: Int, length: Int, text: String, attributes: WAttributeSet?) = writeRange(offset, length, text)
+
+            override fun afterWrite() = caret.check()
+        },
+    )
+
+    /** Replaces [length] characters from [offset] with [inserted] (ITextRange.SetText) and moves the caret and the selection ends the same way as DefaultCaret. */
+    private fun writeRange(offset: Int, length: Int, inserted: String) {
+        val before = this.length
+        val (dot, mark) = nativeCaret()
+        writable {
+            withRange(offset, offset + length) { range ->
+                Hstring.use(insertedParagraphs(inserted)) { h -> range.call(XamlInterop.ITextRange_SetText, XamlInterop.TextOptions_None, h) }
+            }
+        }
+        val added = this.length - before + length
+        setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
+    }
+
+    /** Places the caret ([dot]) and the other end of the selection ([mark]). */
+    private fun setDotMark(dot: Int, mark: Int) {
+        withSelection { range -> range.call(XamlInterop.ITextRange_SetRange, minOf(dot, mark), maxOf(dot, mark)) }
+    }
 
     /** CaretListener-style listeners (subscribes to RichEditBox.SelectionChanged when the first listener is attached). */
     private val caret = CaretEvents(this, ::nativeCaret, ::subscribeSelectionChanged)
@@ -91,7 +126,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         set(value) {
             // Append the final paragraph mark ourselves. Otherwise a trailing line break is used as the final paragraph mark and lost (text ending with a line break would lose it)
             val paragraphs = paragraphsOf(value) + "\r"
-            document.replaceAll {
+            documentEvents.replaceAll {
                 writable { Hstring.use(paragraphs) { h -> textDocument.call(XamlInterop.ITextDocument_SetText, XamlInterop.TextOptions_None, h) } }
             }
             caret.check()
@@ -149,6 +184,17 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     /** The number of characters in the whole content (the length of [text]). The upper bound of the insertion position. */
     val length: Int get() = nativeText().length
 
+    /**
+     * Turns the text [value] to put in a range into RichEditBox paragraph breaks. A RichEditBox that has never had text does not yet have the final paragraph mark,
+     * and when text ending with a line break is put in, that line break becomes the final paragraph mark and disappears from [text], so in that case one paragraph mark is added
+     * (a JTextArea-like `append("Line 1\n")` to an empty text pane lost its line break).
+     */
+    private fun insertedParagraphs(value: String): String {
+        val paragraphs = paragraphsOf(value)
+        val empty = textDocument.getString(XamlInterop.ITextDocument_GetText, XamlInterop.TextGetOptions_UseLf).isEmpty()
+        return if (empty && paragraphs.endsWith('\r')) paragraphs + "\r" else paragraphs
+    }
+
     private fun nativeText(): String {
         val raw = textDocument.getString(XamlInterop.ITextDocument_GetText, XamlInterop.TextGetOptions_UseLf)
         // RichEditBox always returns the final paragraph mark, so remove one to match the string put in
@@ -165,7 +211,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     var rtfText: String
         get() = textDocument.getString(XamlInterop.ITextDocument_GetText, XamlInterop.TextOptions_FormatRtf)
         set(value) {
-            document.replaceAll {
+            documentEvents.replaceAll {
                 writable {
                     Hstring.use(value) { h -> textDocument.call(XamlInterop.ITextDocument_SetText, XamlInterop.TextOptions_FormatRtf, h) }
                     if (TRAILING_PARAGRAPH_BREAK.containsMatchIn(value)) removeExtraFinalParagraph()
@@ -377,8 +423,8 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         if (start == end && str.isNullOrEmpty()) return
         val content = length
         require(start >= 0 && end <= content) { "Range outside the text: $start..$end (length $content)" }
-        val paragraphs = paragraphsOf(str.orEmpty())
-        document.replaceRange(start, end - start) {
+        val paragraphs = insertedParagraphs(str.orEmpty())
+        documentEvents.replaceRange(start, end - start) {
             writable {
                 withRange(start, end) { range ->
                     Hstring.use(paragraphs) { h -> range.call(XamlInterop.ITextRange_SetText, XamlInterop.TextOptions_None, h) }
@@ -509,8 +555,8 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         val start = selectionStart
         val selected = selectionEnd - start
         val before = length
-        val paragraphs = paragraphsOf(content.orEmpty())
-        document.replaceRange(start, selected) {
+        val paragraphs = insertedParagraphs(content.orEmpty())
+        documentEvents.replaceRange(start, selected) {
             withSelection { range ->
                 Hstring.use(paragraphs) { h -> range.call(XamlInterop.ITextRange_SetText, XamlInterop.TextOptions_None, h) }
             }
@@ -534,7 +580,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         if (isReadOnly || selectionEnd <= selectionStart) return
         val start = selectionStart
         val selected = selectionEnd - start
-        document.replaceRange(start, selected) { withSelection { range -> range.call(XamlInterop.ITextRange_Cut) } }
+        documentEvents.replaceRange(start, selected) { withSelection { range -> range.call(XamlInterop.ITextRange_Cut) } }
         caret.check()
     }
 
@@ -549,7 +595,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         if (isReadOnly) return
         val start = selectionStart
         val selected = selectionEnd - start
-        document.replaceRange(start, selected) { withSelection { range -> range.call(XamlInterop.ITextRange_Paste, 0) } }
+        documentEvents.replaceRange(start, selected) { withSelection { range -> range.call(XamlInterop.ITextRange_Paste, 0) } }
         caret.check()
     }
 
@@ -599,13 +645,12 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
                 format.release()
             }
         }
-        document.changed(start, selected)
+        documentEvents.changed(start, selected)
     }
 
     /**
-     * Document.addDocumentListener-style: attaches a listener called when the text changes. Does nothing if null.
-     * Swing's JTextArea attaches it to the Document from getDocument(), but WinUI4K has no Document, so it is attached
-     * directly to the text pane.
+     * Document.addDocumentListener-like: adds a listener called when the text changes. Does nothing if null.
+     * As in Swing, it can also be added with `document.addDocumentListener`; both go into the same list.
      *
      * User edits such as typing, pasting and undo are detected through RichEditBox.TextChanging, and the difference
      * from the previous text is reported as a single removeUpdate (the removed part) and insertUpdate (the inserted
@@ -616,17 +661,17 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
      * with keys are not reported).
      */
     fun addDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.add(listener)
+        if (listener != null) documentEvents.add(listener)
     }
 
     /** Document.removeDocumentListener-style: removes one listener added with [addDocumentListener]. Does nothing if it was not added. */
     fun removeDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.remove(listener)
+        if (listener != null) documentEvents.remove(listener)
     }
 
     /** AbstractDocument.getDocumentListeners-style: the DocumentListener-style listeners added (in the order added). */
     val documentListeners: Array<WDocumentListener>
-        get() = document.listeners()
+        get() = documentEvents.listeners()
 
     /** Subscribes to RichEditBox.TextChanging. The handler stays in the native object, so the text pane is obtained from [listenerAnchor]. */
     private fun subscribeTextChanging() {
@@ -637,7 +682,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
             XamlInterop.IRichEditBox_add_TextChanging,
         ) { _, _ ->
             val pane = anchor.get() as? WTextPane
-            if (pane != null) pane.document.onNativeChange(pane.nativeCaret()[0])
+            if (pane != null) pane.documentEvents.onNativeChange(pane.nativeCaret()[0])
         }
     }
 

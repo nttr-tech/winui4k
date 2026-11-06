@@ -300,3 +300,8 @@
   `TreeView.NodeFromContainer` に渡しても null だった (TreeViewList::NodeFromContainer はコンテナーの位置から節を引くが、
   この時点ではまだ引けない)。ノードを並べる TreeView では引数の `Item` が TreeViewNode そのものなので、そちらを使う
   (`TreeCellRendering`、`WTreeCellRendererTest`。2026-10-20、Panama で確認)
+- **RichEditBox: 一度も文字を入れていない文書に改行で終わる文字列を範囲で入れると、その改行が消える**
+  作ったばかりの RichEditBox の文書は最後の段落記号をまだ持たず (`GetText` が空文字列)、`GetRange(0, 0).SetText("a\r")` の最後の `\r` は
+  最後の段落記号になる。`GetText` は `"a\r"` を返し、最後の段落記号を外すと `"a"` になって改行が消える (`append("1 行目\n")` を続けると
+  1 行目と 2 行目がつながる)。一度でも文字を入れた後や `SetText` で空にした後は消えない。`WTextPane` は文書が空のときだけ、改行で終わる文字列に
+  段落記号を 1 つ足して入れる (`WDocumentTest`。2026-10-20、Panama で確認)。

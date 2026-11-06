@@ -44,7 +44,43 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     private val actions = ActionEvents(this, { actionCommand }, ::acceptsReturnOf)
 
     /** DocumentListener-style listeners (subscribes to TextBox.TextChanging when the first listener is added). */
-    private val document = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+
+    /**
+     * JTextComponent.getDocument-like: the interface to the text of this text field ([WDocument]). Returns the same one every time.
+     * It can be written in the same form as Swing's `field.getDocument().addDocumentListener(...)` and `getText(0, getLength())`.
+     * It is bound to one text field and cannot be shared with another text field or replaced (setDocument).
+     * When modified with [WDocument.insertString] / [WDocument.remove], the caret moves the same way as Swing's DefaultCaret
+     * (if the caret or an end of the selection is after the changed position, it shifts by that amount).
+     */
+    val document: WDocument = WDocument(
+        object : DocumentHost {
+            override val events: DocumentEvents get() = documentEvents
+
+            override fun readText(): String = nativeText()
+
+            override fun write(offset: Int, length: Int, text: String, attributes: WAttributeSet?) = writeRange(offset, length, text)
+
+            override fun afterWrite() = caret.check()
+        },
+    )
+
+    /** Replaces [length] characters from [offset] with [inserted] (TextBox.Text) and moves the caret and the selection ends the same way as DefaultCaret. */
+    private fun writeRange(offset: Int, length: Int, inserted: String) {
+        val old = nativeText()
+        val (dot, mark) = nativeCaret()
+        val replaced = old.substring(0, offset) + inserted + old.substring(offset + length)
+        Hstring.use(replaced) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) }
+        // TextBox may adjust the inserted text, so the number of inserted characters is computed from the lengths before and after
+        val added = nativeText().length - old.length + length
+        setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
+    }
+
+    /** Places the caret ([dot]) and the other end of the selection ([mark]). TextBox has no selection direction, so only the range is selected. */
+    private fun setDotMark(dot: Int, mark: Int) {
+        val start = minOf(dot, mark)
+        inspectable.call(XamlInterop.ITextBox_Select, start, maxOf(dot, mark) - start)
+    }
 
     /**
      * JTextComponent.getText / setText-style: the text of the field (TextBox.Text).
@@ -54,7 +90,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     var text: String
         get() = nativeText()
         set(value) {
-            document.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
+            documentEvents.replaceAll { Hstring.use(value) { h -> inspectable.call(XamlInterop.ITextBox_put_Text, h) } }
             caret.check()
         }
 
@@ -235,7 +271,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         val selected = selectionLength
         val before = text.length
         val inserted = content.orEmpty()
-        document.replaceRange(start, selected) {
+        documentEvents.replaceRange(start, selected) {
             Hstring.use(inserted) { h -> inspectable.call(XamlInterop.ITextBox_put_SelectedText, h) }
         }
         // TextBox leaves the inserted text selected, so place the caret after the inserted text as in Swing.
@@ -398,9 +434,8 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     /**
-     * Document.addDocumentListener-style: adds a listener called when the text changes. Does nothing if null.
-     * Swing's JTextField adds it to the Document from getDocument(), but WinUI4K has no Document, so it is added to the
-     * field directly.
+     * Document.addDocumentListener-like: adds a listener called when the text changes. Does nothing if null.
+     * As in Swing, it can also be added with `document.addDocumentListener`; both go into the same list.
      *
      * User edits such as typing, pasting and undo are detected via TextBox.TextChanging (delivered right after the
      * change, before rendering), and the difference from the previous text is reported as a single removeUpdate (the
@@ -412,17 +447,17 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * Changes made by [text] and [replaceSelection] are reported in the same form as Swing (see their descriptions).
      */
     fun addDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.add(listener)
+        if (listener != null) documentEvents.add(listener)
     }
 
     /** Document.removeDocumentListener-style: removes one listener added with [addDocumentListener]. Does nothing if it was not added. */
     fun removeDocumentListener(listener: WDocumentListener?) {
-        if (listener != null) document.remove(listener)
+        if (listener != null) documentEvents.remove(listener)
     }
 
     /** AbstractDocument.getDocumentListeners-style: the DocumentListener-style listeners added (in the order added). */
     val documentListeners: Array<WDocumentListener>
-        get() = document.listeners()
+        get() = documentEvents.listeners()
 
     /** Subscribes to TextBox.TextChanging. The handler stays in the native object, so the field is looked up from [listenerAnchor]. */
     private fun subscribeTextChanging() {
@@ -433,7 +468,7 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
             XamlInterop.ITextBox_add_TextChanging,
         ) { _, _ ->
             val field = anchor.get() as? WTextField
-            if (field != null) field.document.onNativeChange(field.selectionEnd)
+            if (field != null) field.documentEvents.onNativeChange(field.selectionEnd)
         }
     }
 

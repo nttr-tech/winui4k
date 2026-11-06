@@ -10,8 +10,8 @@ import java.util.EventObject
  * [EventType.REMOVE] (removed).
  * By the time the listener is called, the text of the text field has already changed (as in Swing).
  *
- * WinUI4K text fields do not have a Swing Document, so there is no Swing getDocument() (read the text from
- * [component]). When selected text is typed over, and when the text is set by the program ([WTextField.text]), a
+ * [document] (Swing's getDocument) is the text field's [WDocument], readable like `e.getDocument().getLength()`.
+ * When selected text is typed over, and when the text is set by the program ([WTextField.text]), a
  * REMOVE for the removed part arrives followed by an INSERT for the inserted part, as in Swing.
  */
 class WDocumentEvent(
@@ -27,10 +27,21 @@ class WDocumentEvent(
     val component: WComponent get() = source as WComponent
 
     /**
-     * DocumentEvent.EventType-style: the kind of change to the text. As in Swing, it can be compared with
-     * `e.getType() == WDocumentEvent.EventType.INSERT`.
-     * [CHANGE] is a change of character attributes (formatting) in Swing, and is not delivered for text fields without
-     * formatting.
+     * DocumentEvent.getDocument-like: the [WDocument] of the changed text field ([WTextField.document] etc.).
+     *
+     * @throws IllegalStateException for an event created with a source other than a text field ([WTextField] / [WPasswordField] / [WTextPane])
+     */
+    val document: WDocument
+        get() = when (val owner = component) {
+            is WTextField -> owner.document
+            is WPasswordField -> owner.document
+            is WTextPane -> owner.document
+            else -> error("A component without a Document: $owner")
+        }
+
+    /**
+     * DocumentEvent.EventType-style: the kind of change to the text. As in Swing, it can be compared with `e.getType() == WDocumentEvent.EventType.INSERT`.
+     * [CHANGE] is a change of character attributes (formatting) in Swing, and is not delivered for text fields without formatting.
      */
     enum class EventType {
         /** Characters were inserted (insertUpdate). */
