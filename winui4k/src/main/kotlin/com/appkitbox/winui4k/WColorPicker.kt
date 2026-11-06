@@ -84,6 +84,27 @@ class WColorPicker() : WControl(
             value.blue,
         )
 
+    /**
+     * Like JColorChooser.setColor(int, int, int): selects an opaque color from red, green and blue components (0..255) (like setting [color],
+     * [selectionModel] also changes).
+     *
+     * @throws IllegalArgumentException when a component is outside 0..255 (as in the java.awt.Color constructor). The color does not change
+     */
+    fun setColor(red: Int, green: Int, blue: Int) {
+        require(red in 0..MAX_COMPONENT && green in 0..MAX_COMPONENT && blue in 0..MAX_COMPONENT) {
+            "Color parameter outside of expected range: red=$red, green=$green, blue=$blue"
+        }
+        color = WColor(red, green, blue)
+    }
+
+    /**
+     * Like JColorChooser.setColor(int): selects an opaque color from a `0xRRGGBB` RGB value. As in java.awt.Color(int), only the lower 24 bits are used and
+     * the upper 8 bits (the alpha position) are ignored.
+     */
+    fun setColor(rgb: Int) {
+        color = WColor((rgb shr RED_SHIFT) and MAX_COMPONENT, (rgb shr GREEN_SHIFT) and MAX_COMPONENT, rgb and MAX_COMPONENT)
+    }
+
     /** Whether alpha (opacity) can be adjusted (ColorPicker.IsAlphaEnabled). */
     var isAlphaEnabled: Boolean
         get() = inspectable.getBool(XamlInterop.IColorPicker_get_IsAlphaEnabled)
@@ -202,6 +223,10 @@ class WColorPicker() : WControl(
     }
 
     companion object {
+        private const val MAX_COMPONENT = 0xFF
+        private const val RED_SHIFT = 16
+        private const val GREEN_SHIFT = 8
+
         /**
          * JColorChooser.showDialog-like: shows a color picker in a dialog (ContentDialog), blocks the caller until it is closed, and
          * returns the selected color for OK, or null for Cancel, Esc or when the owner window is closed.
