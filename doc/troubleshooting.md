@@ -257,3 +257,12 @@
   AppWindowTitleBar の側から変えても Window の側には反映されない (`WAppWindowTest`。2026-10-20、Panama で確認)。
 - **OverlappedPresenter.SetBorderAndTitleBar(false, false) の後も WS_BORDER が残ることがある**
   WS_CAPTION は外れるが、枠のスタイルが残る場合がある。テストは WS_CAPTION だけを見る (2026-10-20、Panama で確認)。
+- **ComboBox.MaxDropDownHeight はドロップダウンの高さそのものではなく、丸ごと並べる項目の数の上限になる**
+  WinUI は MaxDropDownHeight に収まるだけの項目を丸ごと並べ、ドロップダウンをその高さ (並んだ項目 + 枠と余白 10 DIP ほど) に縮める
+  (ComboBox_Partial.cpp の GetNonPannablePopupLayout)。「行数 × 行の高さ + 10」ちょうどにすると、測った高さのわずかなずれで 1 行減る。
+  `WComboBox.maximumRowCount` は半行の余裕を足す。また未選択のときは真ん中の項目を中心に並べるので、開いた直後の
+  ContainerFromIndex(0) は null のことがある (並んでいる最初の項目を探して測る。`WComboBoxTest`。2026-10-20、Panama で確認)。
+- **Slider の見出し (Header) の上で押したポインターは捕捉されない**
+  Slider は押下をテンプレートの SliderContainer (トラック) とつまみの Thumb でだけ処理済みにしてポインターを捕捉する
+  (Slider_Partial.cpp の OnPointerPressed)。見出しの上で押してウィンドウの外で離すと PointerReleased も PointerCaptureLost も届かないので、
+  ドラッグ中かの判定 (`WSlider.valueIsAdjusting`) は処理済みの押下だけを数える (WinUI のソースから。実際のポインター入力では未確認)。
