@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.com.ComPtr
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Tests that the [WFrame] handlers (Window.Closed / Activated, AppWindow.Closing / Changed), the default button, the menu bar and children
  * do not capture the WFrame, and that the WFrame, the child wrappers and the native Window are collected once it is closed and the reference released ([Reclamation]).
+ * Also checks the DisplayArea reference of [WDisplayArea].
  * The shared "winui4k tests" window is kept open (the app exits when the last window closes).
  */
 class WrapperReleaseFrameTest : FunSpec() {
@@ -75,6 +77,32 @@ class WrapperReleaseFrameTest : FunSpec() {
             Reclamation.awaitCollected(built.child).shouldBeTrue()
             Reclamation.awaitDestroyed(built.window).shouldBeTrue()
         }
+
+        context("Lifetime") {
+            test("a WDisplayArea received from primary, all or nearest is collected once the reference is released, and releases its DisplayArea reference too") {
+                // DisplayArea does not support weak references (NativeProbe gets E_NOINTERFACE), so check with the reference count minus the one the test holds
+                val built = onUiThreadGet {
+                    val areas = listOf(WDisplayArea.primary(), WDisplayArea.nearest(UiTestHarness.sharedFrame().appWindow)) +
+                        WDisplayArea.all()
+                    areas.forEach { it.workArea } // Readable
+                    areas.map { area ->
+                        val native = area.displayArea.also { it.addRef() } // The reference the test holds
+                        Triple(WeakReference(area), native, refCount(native))
+                    }
+                }
+                built.forEach { (area, native, before) ->
+                    Reclamation.awaitCollected(area).shouldBeTrue()
+                    Reclamation.awaitWithGc { onUiThreadGet { refCount(native) } == before - 1 }.shouldBeTrue()
+                    onUiThread { native.release() }
+                }
+            }
+        }
+    }
+
+    /** The current reference count of [pointer] (read from the return values of AddRef and Release). */
+    private fun refCount(pointer: ComPtr): Int {
+        pointer.rawCall(1, ComPtr.UNKNOWN_DESC)
+        return pointer.rawCall(2, ComPtr.UNKNOWN_DESC)
     }
 
     private companion object {

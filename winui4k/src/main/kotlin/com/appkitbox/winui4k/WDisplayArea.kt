@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.allocate
 import com.appkitbox.winui4k.internal.ffi.api.withScope
@@ -18,8 +19,14 @@ data class WRectangle(val x: Int, val y: Int, val width: Int, val height: Int)
  *
  * Provides [isPrimary] / [workArea] (the working area excluding things like the taskbar) /
  * [outerBounds] (the display's whole area).
+ * The DisplayArea reference is released on the UI thread when this WDisplayArea is collected by GC (it can be read while kept in a variable).
  */
-class WDisplayArea internal constructor(private val displayArea: ComPtr) {
+class WDisplayArea internal constructor(internal val displayArea: ComPtr) {
+    init {
+        // Release on the UI thread once it becomes unreachable (the same mechanism as WComponent)
+        ComLifetime.adopt(this, displayArea)
+    }
+
     /** Whether this is the primary display (DisplayArea.IsPrimary). */
     val isPrimary: Boolean get() = displayArea.getBool(WindowingInterop.IDisplayArea_get_IsPrimary)
 
@@ -100,7 +107,7 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
         }
 
         private fun workAreaOf(displayArea: ComPtr): WRectangle = try {
-            WDisplayArea(displayArea).workArea
+            XamlStructs.getRectInt32(displayArea, WindowingInterop.IDisplayArea_get_WorkArea).let { WRectangle(it[0], it[1], it[2], it[3]) }
         } finally {
             displayArea.release()
         }
