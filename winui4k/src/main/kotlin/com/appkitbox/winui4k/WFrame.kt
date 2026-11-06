@@ -642,7 +642,7 @@ class WFrame @JvmOverloads constructor(title: String = "") :
             when {
                 current is WLayoutPanel -> current.layout = value
                 current === contentPane -> setContentPane(ContentPanes.movedToLayoutPanel(contentPane, value))
-                else -> throw IllegalStateException(
+                else -> error(
                     "A layout manager cannot be attached to the content replaced with setContentPane (${current.javaClass.simpleName}). " +
                         "Use a WLayoutPanel as the content",
                 )

@@ -94,6 +94,34 @@ class WrapperReleaseDialogTest : FunSpec() {
             }
         }
 
+        test("a dialog that stops the close button with DO_NOTHING_ON_CLOSE and builds its content with contentPane and setLayout is also collected after dispose and dropping the reference") {
+            withOwner { owner ->
+                val reference = onUiThreadGet {
+                    val dialog = dialog()
+                    addListeners(dialog)
+                    dialog.defaultCloseOperation = WContentDialog.DO_NOTHING_ON_CLOSE
+                    dialog.content = null // Back to the default contentPane
+                    dialog.add(WLabel("Name"))
+                    dialog.layout = WBorderLayout()
+                    dialog.add(WTextField(), WBorderLayout.SOUTH)
+                    dialog.show(owner)
+                    WeakReference(dialog)
+                }
+                awaitOpen(owner)
+                val probe = OpenContentDialogs.probe(owner).shouldNotBeNull()
+                OpenContentDialogs.press(owner, "CloseButton")
+                eventually(5.seconds) { events() shouldBe listOf("button:CLOSE") }
+                Thread.sleep(OPEN_SETTLE_MILLIS)
+                OpenContentDialogs.isOpen(owner).shouldBeTrue()
+                onUiThread { reference.get()?.dispose() }
+                eventually(5.seconds) { events() shouldBe listOf("button:CLOSE", "closed:NONE") }
+                eventually(5.seconds) { OpenContentDialogs.isOpen(owner).shouldBeFalse() }
+                onUiThread { }
+                Reclamation.awaitCollected(reference).shouldBeTrue()
+                Reclamation.awaitDestroyed(probe).shouldBeTrue()
+            }
+        }
+
         test("a dialog opened by WOptionPane has its native object destroyed too after it is closed (the Esc and button handlers do not capture the dialog)") {
             withOwner { owner ->
                 val results = events

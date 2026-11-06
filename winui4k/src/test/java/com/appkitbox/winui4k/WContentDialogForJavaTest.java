@@ -219,4 +219,44 @@ class WContentDialogForJavaTest {
             UiTestHarness.detach(owner);
         }
     }
+
+    @Test
+    void contentIsArrangedLikeJDialog_withDoNothingOnCloseEscDoesNotCloseAndDisposeCloses() throws InterruptedException {
+        List<String> events = Collections.synchronizedList(new ArrayList<>());
+        WButton owner = onUiThreadGet(() -> new WButton("Open"));
+        UiTestHarness.attachAndAwaitLoaded(owner);
+        WFrame frame = UiTestHarness.sharedFrame();
+        try {
+            WContentDialog dialog = onUiThreadGet(() -> {
+                WContentDialog d = new WContentDialog(frame, "Settings", true);
+                d.setLayout(new WBorderLayout());
+                d.add(new WLabel("Name"), WBorderLayout.NORTH);
+                d.add(new WLabel("Smith"), WBorderLayout.CENTER);
+                d.setCloseButtonText("Close");
+                d.setDefaultCloseOperation(WContentDialog.DO_NOTHING_ON_CLOSE);
+                d.addDialogListener(new WContentDialogAdapter() {
+                    @Override
+                    public void dialogClosing(WContentDialogEvent e) {
+                        events.add("closing:" + e.isCancel());
+                    }
+                });
+                d.pack();
+                d.setLocationRelativeTo(null);
+                return d;
+            });
+            assertSame(frame, onUiThreadGet(dialog::getOwner));
+            assertTrue(onUiThreadGet(dialog::getLayout) instanceof WBorderLayout);
+            assertEquals(WContentDialog.DO_NOTHING_ON_CLOSE, (int) onUiThreadGet(dialog::getDefaultCloseOperation));
+            onUiThread(() -> dialog.show(owner));
+            awaitOpen(dialog);
+            TestKeyboard.INSTANCE.press(0x1B, 0x01);
+            awaitEvents(events, Collections.singletonList("closing:true"));
+            assertTrue(onUiThreadGet(dialog::isVisible));
+            onUiThread(dialog::dispose);
+            awaitEvents(events, Arrays.asList("closing:true", "closing:false"));
+            awaitClosed(dialog);
+        } finally {
+            UiTestHarness.detach(owner);
+        }
+    }
 }

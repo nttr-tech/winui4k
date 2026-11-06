@@ -73,16 +73,25 @@ enum class ContentDialogButton(internal val native: Int) {
  *
  * Opening and closing can be received with [addDialogListener] (Opened, Closing, Closed) and buttons with [addButtonClickListener]; both can
  * cancel the closing (to validate input and so on).
+ *
+ * As with JDialog, the content can be built either by [add]ing to [contentPane] or by putting one component in [content].
+ * Setting [defaultCloseOperation] to [DO_NOTHING_ON_CLOSE] keeps the Esc key and the close button from closing it.
+ *
+ * Differences from Swing (content and position):
+ * - [contentPane] is a vertical StackPanel ([WPanel]), not a BorderLayout. To use [add] with constraints, set [layout] first.
+ * - The dialog size is always decided by its content and its position is the center of the owner window ([pack] and [setLocationRelativeTo] do nothing).
  */
-class WContentDialog @JvmOverloads constructor(title: String = "", content: WComponent? = null) : WControl(
-    Activation.composeDefault(XamlInterop.CLS_ContentDialog, XamlInterop.IID_IContentDialogFactory), // default interface = IContentDialog
-) {
+class WContentDialog @JvmOverloads constructor(title: String = "", content: WComponent? = null) :
+    WControl(
+        Activation.composeDefault(XamlInterop.CLS_ContentDialog, XamlInterop.IID_IContentDialogFactory), // default interface = IContentDialog
+    ),
+    WWindowConstants {
     /**
-     * Like JDialog(owner, title, modal): creates it with the owner [owner] (it opens in this component's window) and a title.
-     * ContentDialog is modal only, so [IllegalArgumentException] if [modal] is false.
+     * Like JDialog(owner, title, modal): creates it with the owner [owner] (it opens in this component's window, or in the [WFrame] itself) and
+     * a title. ContentDialog is modal only, so [IllegalArgumentException] if [modal] is false.
      */
     @JvmOverloads
-    constructor(owner: WComponent?, title: String, modal: Boolean = true) : this(title) {
+    constructor(owner: WDialogParent?, title: String, modal: Boolean = true) : this(title) {
         require(modal) { "ContentDialog is modal only; a modeless dialog (modal = false) cannot be created" }
         this.owner = owner
     }
@@ -102,10 +111,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     private val kotlinButtonListeners = KotlinListenerAdapters<WContentDialogButtonListener>()
 
     /**
-     * The owner (JDialog's owner). [showAndWait] (without arguments) and [isVisible] = true open the dialog in this component's window.
-     * To make a window ([WFrame]) the owner, pass a component placed in that window ([WFrame.contentPane] and so on).
+     * The owner (JDialog's owner). [showAndWait] (without arguments) and [isVisible] = true open the dialog in this component's window (for a [WFrame],
+     * in that window).
      */
-    var owner: WComponent? = null
+    var owner: WDialogParent? = null
 
     /** The title at the top of the dialog (ContentDialog.Title). An empty string if something other than a string is in it (which WinUI4K cannot put in). */
     var title: String
@@ -123,14 +132,115 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             boxed.release()
         }
 
-    /** The dialog's content (ContentControl.Content). */
+    /**
+     * The default content corresponding to JDialog's contentPane (a vertical StackPanel). While [content] is null, this becomes the dialog content if it has children
+     * (while it has no children, no content is shown as before; it switches on [add] and on opening). Even after putting another component in [content] or
+     * setting [layout], this returns the default panel (the same as WFrame.contentPane).
+     */
+    val contentPane: WPanel = WPanel(spacing = 12.0)
+
+    /**
+     * The dialog's content (ContentControl.Content). While null (the default), [contentPane] is the content (when it has children).
+     * Setting [layout] puts that [WLayoutPanel] here.
+     */
     var content: WComponent? = null
         set(value) {
             field = value
-            contentControl.call(
-                XamlInterop.IContentControl_put_Content,
-                value?.uiElement?.ptr,
-            )
+            updateNativeContent()
+        }
+
+    /** Sets the native content to [content], or to [contentPane] if it has children and [content] is null (removes it if neither). */
+    private fun updateNativeContent() {
+        val shown = content ?: contentPane.takeIf { it.componentCount > 0 }
+        contentControl.call(XamlInterop.IContentControl_put_Content, shown?.uiElement?.ptr)
+    }
+
+    /** Where children are added (the current content). [contentPane] if [content] is null. [IllegalStateException] if it is not a container. */
+    private fun currentContainer(): WContainer = (content ?: contentPane) as? WContainer ?: error(
+        "The content put in content (${content?.javaClass?.simpleName}) is not a container, so children cannot be added. Add them directly to the content's container",
+    )
+
+    /** Container.add(Component)-like: adds a child to the current content ([contentPane] if [content] is null). */
+    fun add(component: WComponent) {
+        currentContainer().add(component)
+        updateNativeContent()
+    }
+
+    /**
+     * Container.add(Component, Object)-like: adds a child with a constraint to the current content. Handled the same as WFrame.add(component, constraints):
+     * a non-null constraint passed to content without a layout manager (the default [contentPane] etc.) throws [IllegalArgumentException]
+     * (unlike Swing, it is not silently discarded; set [layout] first).
+     */
+    fun add(component: WComponent, constraints: Any?) = add(component, constraints, -1)
+
+    /** Container.add(Component, int)-like: adds a child at [index] (-1 for the end) of the current content. [IllegalArgumentException] if out of range. */
+    fun add(component: WComponent, index: Int) {
+        currentContainer().add(component, index)
+        updateNativeContent()
+    }
+
+    /** Container.add(Component, Object, int)-like: adds a child with a constraint at [index] (-1 for the end) of the current content. */
+    fun add(component: WComponent, constraints: Any?, index: Int) {
+        ContentPanes.add(currentContainer(), component, constraints, index)
+        updateNativeContent()
+    }
+
+    /** Container.remove(Component)-like: removes a child from the current content. Does nothing if it is not a child. */
+    fun remove(component: WComponent) {
+        currentContainer().remove(component)
+        updateNativeContent()
+    }
+
+    /**
+     * JDialog.getLayout / setLayout-like: the layout manager that arranges the children of the content. The manager if the content is a [WLayoutPanel],
+     * otherwise (the default [contentPane] etc.) null (unlike Swing, the default is not BorderLayout).
+     * When set and the content is the default [contentPane], the content ([content]) is replaced with a [WLayoutPanel] with that manager and
+     * the children of [contentPane] are moved in the same order (with null constraints; the center for [WBorderLayout]). If the content is already a [WLayoutPanel], its manager is replaced.
+     *
+     * @throws IllegalStateException when a component other than a [WLayoutPanel] is in [content] (the content is not replaced)
+     */
+    var layout: WLayoutManager?
+        get() = (content as? WLayoutPanel)?.layout
+        set(value) {
+            val current = content
+            when {
+                current is WLayoutPanel -> current.layout = value
+                current == null || current === contentPane -> content = ContentPanes.movedToLayoutPanel(contentPane, value)
+                else -> error(
+                    "A layout manager cannot be attached to the content put in content (${current.javaClass.simpleName}). Use a WLayoutPanel as the content",
+                )
+            }
+        }
+
+    /** Window.pack-like: does nothing. The size of a ContentDialog is decided by its content every time it opens (unlike Swing, the size cannot be specified). */
+    fun pack() {
+        // ContentDialog measures its content and decides its size itself
+    }
+
+    /**
+     * Window.setLocationRelativeTo-like: does nothing. A ContentDialog always opens at the center of the owner window
+     * (unlike Swing, the position cannot be specified).
+     */
+    @Suppress("UnusedParameter") // Takes the argument so that it can be called the same way as JDialog
+    fun setLocationRelativeTo(component: WDialogParent?) {
+        // WinUI places the ContentDialog at the center of the owner window
+    }
+
+    /**
+     * JDialog.getDefaultCloseOperation / setDefaultCloseOperation-like: the behavior when the user tries to close it (the Esc key and the close button,
+     * both ways of closing whose result is [ContentDialogResult.NONE]). The default is [HIDE_ON_CLOSE], the same as JDialog.
+     * [HIDE_ON_CLOSE] and [DISPOSE_ON_CLOSE] close it (the dialog can be opened again with either). [DO_NOTHING_ON_CLOSE] does not close it, and
+     * dialogClosing ([addDialogListener]) arrives with [WContentDialogEvent.isCancel] true. Calling [dispose] in it or setting
+     * isCancel to false closes it (the form of disposing in JDialog's windowClosing). The primary and secondary buttons, [hide] /
+     * [dispose], and closing of the owner window are not stopped. Other values (including [EXIT_ON_CLOSE]) throw [IllegalArgumentException] (the same as JDialog).
+     */
+    var defaultCloseOperation: Int = HIDE_ON_CLOSE
+        set(value) {
+            require(value in DO_NOTHING_ON_CLOSE..DISPOSE_ON_CLOSE) {
+                "defaultCloseOperation must be one of DO_NOTHING_ON_CLOSE, HIDE_ON_CLOSE or DISPOSE_ON_CLOSE: $value"
+            }
+            field = value
+            state.blocksUserClose = value == DO_NOTHING_ON_CLOSE
         }
 
     /** The primary button's label. Left empty, the button itself isn't shown. */
@@ -201,6 +311,16 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             XamlInterop.IID_ContentDialogClosedHandler,
             XamlInterop.IContentDialog_add_Closed,
         ) { _, args -> state.closed(ContentDialogResult.of(ComPtr(args).getInt(XamlInterop.IContentDialogClosedEventArgs_get_Result))) }
+        // DO_NOTHING_ON_CLOSE of defaultCloseOperation. Added first so that it runs before the user's dialogClosing, which can then read the cancellation
+        inspectable.addEventHandler(
+            "WinUI4K.ContentDialogCloseOperationHandler",
+            XamlInterop.IID_ContentDialogClosingHandler,
+            XamlInterop.IContentDialog_add_Closing,
+        ) { _, args ->
+            val closingArgs = ComPtr(args) // Borrowed (not Released)
+            val result = ContentDialogResult.of(closingArgs.getInt(XamlInterop.IContentDialogClosingEventArgs_get_Result))
+            if (state.blockClosing(result)) closingArgs.putBool(XamlInterop.IContentDialogClosingEventArgs_put_Cancel, true)
+        }
     }
 
     /**
@@ -221,10 +341,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
      * Call on the UI thread, outside layout notifications (otherwise [IllegalStateException], and the dialog does not open).
      * Other exceptions are the same as [show]. If the message loop exits with an exception while waiting, the dialog is closed before that exception is thrown.
      */
-    fun showAndWait(owner: WComponent): ContentDialogResult {
+    fun showAndWait(owner: WDialogParent): ContentDialogResult {
         ModalLoop.checkRunnable()
         var result: ContentDialogResult? = null
-        open(owner) { result = it }
+        open(WFrame.componentOf(owner)) { result = it }
         val state = state
         var waited = false
         try {
@@ -245,6 +365,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
 
     private fun open(owner: WComponent, onClosed: Consumer<ContentDialogResult>?) {
         check(!state.isShowing()) { "this dialog is already open" }
+        updateNativeContent() // Show children added directly to contentPane
         // WinUI 3's ContentDialog requires the XamlRoot to show in
         val root = requireNotNull(owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)) {
             "the owner is not placed in a window, so the dialog cannot be opened"
@@ -266,9 +387,18 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         state.opened(root, weakReferenceOf(inspectable), onClosed)
     }
 
-    /** Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE]. */
+    /**
+     * Closes the dialog programmatically (ContentDialog.Hide). The result is [ContentDialogResult.NONE].
+     * Called from a dialogClosing canceled because [defaultCloseOperation] is [DO_NOTHING_ON_CLOSE], it lets that closing through.
+     */
     fun hide() {
-        inspectable.call(XamlInterop.IContentDialog_Hide)
+        if (state.requestHideInBlockedClosing()) return
+        state.hidingByProgram = true
+        try {
+            inspectable.call(XamlInterop.IContentDialog_Hide)
+        } finally {
+            state.hidingByProgram = false
+        }
     }
 
     /** Like JDialog.dispose: closes it (same as [hide]). The dialog can be opened again. */
@@ -302,6 +432,8 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
                     closingArgs.getBool(XamlInterop.IContentDialogClosingEventArgs_get_Cancel),
                 )
                 listener.dialogClosing(event)
+                // If dispose / hide is called during a closing canceled by DO_NOTHING_ON_CLOSE, let that closing through
+                if (dialog.state.takeHideRequest()) event.isCancel = false
                 closingArgs.putBool(XamlInterop.IContentDialogClosingEventArgs_put_Cancel, event.isCancel)
             }
         }
@@ -401,6 +533,59 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     private class ShowState {
         private var xamlRoot: ComPtr? = null
 
+        /** true if [defaultCloseOperation] is [DO_NOTHING_ON_CLOSE]. */
+        var blocksUserClose = false
+
+        /** true while [hide] is calling ContentDialog.Hide (that Closing is not stopped). */
+        var hidingByProgram = false
+
+        /** true while dispatching a Closing canceled by [blockClosing] (reset to false on the next turn of the UI thread). */
+        private var inBlockedClosing = false
+
+        /** true if [hide] was called during [inBlockedClosing]. */
+        private var hideRequested = false
+
+        /** Returns true if the Closing with result [result] is to be canceled by [DO_NOTHING_ON_CLOSE], and remembers it until dispatching finishes. */
+        fun blockClosing(result: ContentDialogResult): Boolean {
+            if (!blocksUserClose || hidingByProgram || result != ContentDialogResult.NONE) return false
+            inBlockedClosing = true
+            hideRequested = false
+            WinUiUtilities.invokeLater { finishBlockedClosing() }
+            return true
+        }
+
+        /** If it is a [hide] inside a canceled Closing, remembers to let the closing through and returns true (the native Hide has no effect during it). */
+        fun requestHideInBlockedClosing(): Boolean {
+            if (!inBlockedClosing) return false
+            hideRequested = true
+            return true
+        }
+
+        /** If [hide] was called inside a canceled Closing, clears that request and returns true (lifts the cancellation of dialogClosing). */
+        fun takeHideRequest(): Boolean {
+            if (!inBlockedClosing || !hideRequested) return false
+            hideRequested = false
+            return true
+        }
+
+        /**
+         * Dispatching a canceled Closing has finished. If [hide] was called outside dialogClosing (in another handler of the same Closing etc.)
+         * and it is still open, close it now.
+         */
+        private fun finishBlockedClosing() {
+            inBlockedClosing = false
+            if (!hideRequested) return
+            hideRequested = false
+            val native = dialog?.getPtrOrNull(RESOLVE, Guid.of(XamlInterop.IID_IContentDialog)) ?: return
+            hidingByProgram = true
+            try {
+                native.call(XamlInterop.IContentDialog_Hide)
+            } finally {
+                hidingByProgram = false
+                native.release()
+            }
+        }
+
         /** A weak reference (IWeakReference) to the native open dialog. Used to close it when the window closes. */
         private var dialog: ComPtr? = null
         private var onClosed: Consumer<ContentDialogResult>? = null
@@ -441,15 +626,27 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         }
     }
 
-    private companion object {
+    companion object {
+        /** The same as [WWindowConstants.DO_NOTHING_ON_CLOSE] (so that `WContentDialog.DO_NOTHING_ON_CLOSE` can be written from Kotlin). */
+        const val DO_NOTHING_ON_CLOSE: Int = WWindowConstants.DO_NOTHING_ON_CLOSE
+
+        /** The same as [WWindowConstants.HIDE_ON_CLOSE]. */
+        const val HIDE_ON_CLOSE: Int = WWindowConstants.HIDE_ON_CLOSE
+
+        /** The same as [WWindowConstants.DISPOSE_ON_CLOSE]. */
+        const val DISPOSE_ON_CLOSE: Int = WWindowConstants.DISPOSE_ON_CLOSE
+
+        /** The same as [WWindowConstants.EXIT_ON_CLOSE] (cannot be used for [defaultCloseOperation], the same as JDialog). */
+        const val EXIT_ON_CLOSE: Int = WWindowConstants.EXIT_ON_CLOSE
+
         /** IWeakReferenceSource (weakreference.h). GetWeakReference(out IWeakReference) is vtbl[3]. */
-        const val IID_IWEAK_REFERENCE_SOURCE = "00000038-0000-0000-c000-000000000046"
-        const val GET_WEAK_REFERENCE = 3
+        private const val IID_IWEAK_REFERENCE_SOURCE = "00000038-0000-0000-c000-000000000046"
+        private const val GET_WEAK_REFERENCE = 3
 
         /** IWeakReference.Resolve(REFIID, out IInspectable) is vtbl[3]. null if already destroyed. */
-        const val RESOLVE = 3
+        private const val RESOLVE = 3
 
-        fun weakReferenceOf(target: ComPtr): ComPtr {
+        private fun weakReferenceOf(target: ComPtr): ComPtr {
             val source = target.queryInterface(IID_IWEAK_REFERENCE_SOURCE)
             return try {
                 source.getPtr(GET_WEAK_REFERENCE)
@@ -459,7 +656,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         }
 
         /** Hides the dialog [weak] (released by this function) refers to, if it still exists. */
-        fun hideNative(weak: ComPtr) {
+        private fun hideNative(weak: ComPtr) {
             try {
                 val native = weak.getPtrOrNull(RESOLVE, Guid.of(XamlInterop.IID_IContentDialog)) ?: return
                 try {
@@ -473,10 +670,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         }
 
         /** E_ASYNC_OPERATION_NOT_STARTED. Returned by ShowAsync when another dialog is open (ContentDialog_Partial.cpp). */
-        const val E_ASYNC_OPERATION_NOT_STARTED = 0x80000019.toInt()
+        private const val E_ASYNC_OPERATION_NOT_STARTED = 0x80000019.toInt()
 
         /** A button and the add slot of its Click. */
-        val BUTTON_EVENTS = listOf(
+        private val BUTTON_EVENTS = listOf(
             ContentDialogButton.PRIMARY to XamlInterop.IContentDialog_add_PrimaryButtonClick,
             ContentDialogButton.SECONDARY to XamlInterop.IContentDialog_add_SecondaryButtonClick,
             ContentDialogButton.CLOSE to XamlInterop.IContentDialog_add_CloseButtonClick,
