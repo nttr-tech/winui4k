@@ -247,3 +247,13 @@
   `show(invoker, x, y)` / `isVisible = true` は閉じる途中なら Closed まで開くのを遅らせる (`WFlyoutPopupMenuTest`)。Closed は
   開いているフライアウトの記録を消す前に起きる (`OnPresenterUnloaded`) ので、Closed のハンドラの中で ShowAt してもまだ無視される。
   遅らせた ShowAt は Closed から DispatcherQueue に積んで、記録が消えた後で呼ぶ。
+- **AppWindowPresenter の PreferredMinimumWidth などが IPropertyValue として読めない**
+  OverlappedPresenter.PreferredMinimumWidth / Height と PreferredMaximumWidth / Height が返す IReference<Int32> は、
+  IPropertyValue を実装していない (QueryInterface が失敗する)。IPropertyValue で読むと、設定していても常に null になる。
+  IReference<T>.get_Value (vtable の 6 番) を直接呼んで読む (`WAppWindowPresenter.kt`、`WAppWindowTest`。2026-10-20、Panama で確認)。
+- **AppWindowTitleBar.PreferredHeightOption の Tall / Collapsed は、中身をタイトル バーに広げている間しか選べない**
+  ExtendsContentIntoTitleBar が false のまま Tall や Collapsed を設定すると、HRESULT 0x8007139F (ERROR_INVALID_STATE) で失敗する。
+  また、Window.ExtendsContentIntoTitleBar を true にすると AppWindowTitleBar.ExtendsContentIntoTitleBar も true になるが、
+  AppWindowTitleBar の側から変えても Window の側には反映されない (`WAppWindowTest`。2026-10-20、Panama で確認)。
+- **OverlappedPresenter.SetBorderAndTitleBar(false, false) の後も WS_BORDER が残ることがある**
+  WS_CAPTION は外れるが、枠のスタイルが残る場合がある。テストは WS_CAPTION だけを見る (2026-10-20、Panama で確認)。
