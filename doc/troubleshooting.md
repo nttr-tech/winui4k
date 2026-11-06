@@ -221,3 +221,9 @@
   `ProcessAllLiveAccelerators`) ので、外したつもりの古い項目に同じキーが残っていると、載っている項目の方は呼ばれない。
   使わなくなったメニューの項目は `accelerator = null` で外しておく。E2E テストではテストごとに別のキーを使う。
   また `WMenuBarItem` の項目のアクセラレーターは、メニュー バーが載った直後の短い間は効かないことがある (テストでは 500 ms 待つ)
+- **TreeView: 表示する前に Expand / Collapse / SelectAll を呼ぶとプロセスが落ちる**
+  `TreeView::Expand` / `Collapse` / `SelectAll` は、テンプレートの適用 (OnApplyTemplate) で作る内側の ListView (`m_listControl`) を
+  確かめずに使う (microsoft-ui-xaml `controls/dev/TreeView/TreeView.cpp:140-156`)。ウィンドウに載せる前に呼ぶと
+  `Microsoft.UI.Xaml.Controls.dll` の中で `EXCEPTION_ACCESS_VIOLATION` になり、JVM ごと終わる (2026-10-20、`WTreeTest` の最初の版で再現)。
+  Expand / Collapse の中身は `TreeViewNode.IsExpanded` の設定だけ (`ViewModel.cpp:264-272`) なので、`WTree` はノードの IsExpanded を
+  直接設定する。SelectAll はテンプレートの適用前なら SelectedNodes (適用前は保留の一覧) にノードを加える。

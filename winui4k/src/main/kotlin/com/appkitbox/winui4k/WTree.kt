@@ -10,6 +10,12 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.tree.DefaultTreeModel
+import com.appkitbox.winui4k.tree.TreeModel
+import com.appkitbox.winui4k.tree.TreeModelEvent
+import com.appkitbox.winui4k.tree.TreeModelListener
+import com.appkitbox.winui4k.tree.TreeNode
+import com.appkitbox.winui4k.tree.TreePath
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -119,6 +125,33 @@ class WTreeNode @JvmOverloads constructor(text: String = "") {
         childNodes.clear()
     }
 
+    /** The children are not created yet but will be created on expansion (TreeViewNode.HasUnrealizedChildren). Shows the expand mark even without children. */
+    internal var hasUnrealizedChildren: Boolean
+        get() = inspectable.getBool(XamlInterop.ITreeViewNode_get_HasUnrealizedChildren)
+        set(value) = inspectable.putBool(XamlInterop.ITreeViewNode_put_HasUnrealizedChildren, value)
+
+    /** Inserts a child node at [index] (Children.InsertAt). Used by [WTree], which builds the model mirror. */
+    internal fun insertAt(index: Int, child: WTreeNode) {
+        childVector.call(FoundationInterop.IVector_InsertAt, index, child.inspectable.ptr)
+        childNodes.add(index, child)
+    }
+
+    /** Removes the child node at [index] (Children.RemoveAt). */
+    internal fun removeAt(index: Int) {
+        childVector.call(FoundationInterop.IVector_RemoveAt, index)
+        childNodes.removeAt(index)
+    }
+
+    /** The COM identity (the IUnknown address). Used to look up nodes from native nodes. */
+    internal val identity: Long by lazy {
+        val unknown = inspectable.queryInterface(KComObject.IID_IUNKNOWN)
+        try {
+            unknown.ptr.address
+        } finally {
+            unknown.release()
+        }
+    }
+
     /** Enumerates this node and its descendants depth-first (for look-ups). */
     internal fun selfAndDescendants(): Sequence<WTreeNode> = sequence {
         yield(this@WTreeNode)
@@ -129,15 +162,31 @@ class WTreeNode @JvmOverloads constructor(text: String = "") {
 /**
  * JTree-like: WinUI 3's TreeView.
  *
- * Displays a hierarchy of [WTreeNode]s: [addRootNode] / [removeRootNode] / [rootNodes],
- * [selectionMode] / [selectedNode] / [selectedNodes] / [selectAll],
- * [expand] / [collapse], [canDragItems] / [canReorderItems] (drag-to-reorder),
- * [addItemInvokedListener] (ItemInvoked),
- * [addExpandingListener] / [addCollapsedListener] (Expanding / Collapsed).
+ * There are two ways to use it.
+ * - Mirror a [TreeModel] (as in Swing): `WTree(model)` / `WTree(root)` / [model]. Path ([TreePath]) elements are the model's nodes.
+ *   Children are not created until expanded (only the expand mark is shown with HasUnrealizedChildren, and they are created on first expansion), and model changes
+ *   ([com.appkitbox.winui4k.tree.TreeModelListener] notifications) are reflected in the display. Nodes are displayed with `toString()` ([convertValueToText]).
+ * - Build [WTreeNode]s directly: `WTree()` and [addRootNode] / [removeRootNode] / [rootNodes] / [selectedNode] / [selectedNodes].
+ *   Path elements are [WTreeNode]s, and the root is one of RootNodes (Swing's invisible root is not part of the path).
+ *   While a model is used, these node APIs throw [IllegalStateException].
+ *
+ * Either way, the path and row APIs ([expandPath] / [collapsePath] / [isExpanded] / [rowCount] / [getPathForRow] / [getRowForPath] /
+ * [makeVisible] / [scrollPathToVisible] / [getPathForLocation] ...) can be used. As in Swing, a row is the position of a displayed node
+ * counted from the top (counting only the children of expanded nodes).
+ * Also [selectionMode] / [selectAll], [expand] / [collapse], [canDragItems] / [canReorderItems] (reordering by dragging),
+ * [addItemInvokedListener] (ItemInvoked), [addExpandingListener] / [addCollapsedListener] (Expanding / Collapsed).
  */
-class WTree : WControl(
+class WTree() : WControl(
     Activation.composeDefault(XamlInterop.CLS_TreeView, XamlInterop.IID_ITreeViewFactory), // default interface = ITreeView
 ) {
+    /** Creates a tree that shows [model] (Swing's `JTree(TreeModel)`). An empty tree if null. */
+    constructor(model: TreeModel?) : this() {
+        this.model = model
+    }
+
+    /** Creates a tree that shows a [DefaultTreeModel] rooted at [root] (Swing's `JTree(TreeNode)`). */
+    constructor(root: TreeNode?) : this(DefaultTreeModel(root))
+
     /** ITreeView2 view, which has CanDragItems / SelectedNode and the like. */
     private val treeView2: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_ITreeView2))
@@ -151,6 +200,18 @@ class WTree : WControl(
     /** Root nodes added via [addRootNode]. Used to look nodes back up from e.g. event args. */
     private val roots = mutableListOf<WTreeNode>()
 
+    /** The mapping between displayed nodes and paths (either the node-building usage or the model-mirroring usage). */
+    private var binding: TreeBinding = NodeTreeBinding(roots)
+
+    /** Looks up this tree from the resident native handlers (a cycle forms if a handler captures the tree strongly). */
+    private val anchor = ListenerAnchor(this).also { it.listenerAdded() }
+
+    /** The listener that mirrors model changes (looks up the tree weakly). */
+    private val modelListener: TreeModelListener = AnchoredTreeModelListener(anchor)
+
+    /** While greater than 0, native expand/collapse notifications are not passed to the user (while the tree itself is changing them). */
+    private var expansionMuted = 0
+
     /** ItemInvoked event tokens registered via addItemInvokedListener. */
     private val itemInvokedTokens = ListenerTokens<Consumer<WTreeNode?>>()
 
@@ -159,6 +220,15 @@ class WTree : WControl(
 
     /** Collapsed event tokens registered via addCollapsedListener. */
     private val collapsedTokens = ListenerTokens<Consumer<WTreeNode?>>()
+
+    init {
+        val anchor = anchor // Let the handlers capture only the anchor, not the tree (no cycle)
+        inspectable.addEventHandler(
+            "WinUI4K.TreeViewHandler",
+            XamlInterop.IID_TreeViewExpandingHandler,
+            XamlInterop.ITreeView_add_Expanding,
+        ) { _, args -> anchor.get()?.onNativeExpanding(ComPtr(args)) }
+    }
 
     /** Selection mode (TreeView.SelectionMode). MULTIPLE adds a checkbox to each node. */
     var selectionMode: TreeViewSelectionMode
@@ -178,13 +248,84 @@ class WTree : WControl(
         get() = treeView2.getBool(XamlInterop.ITreeView2_get_CanReorderItems)
         set(value) = treeView2.putBool(XamlInterop.ITreeView2_put_CanReorderItems, value)
 
+    // ---- Model ----
+
+    /**
+     * The [TreeModel] to show (Swing's `getModel` / `setModel`). null in the usage that builds nodes directly (`WTree()`).
+     *
+     * Setting it rebuilds the display (as in Swing, the root starts expanded). Any built root nodes are removed from the display.
+     * Setting null returns to the node-building usage (an empty tree).
+     */
+    var model: TreeModel?
+        get() = (binding as? ModelTreeBinding)?.model
+        set(value) = bind(value, rootVisible)
+
+    /**
+     * Whether to show the root (Swing's `isRootVisible` / `setRootVisible`, true by default).
+     * If false, the children of the model's root are placed at the top level (the root is treated as always expanded and is not counted as a row).
+     * It has no effect in the node-building usage (root nodes are always shown).
+     */
+    @get:JvmName("isRootVisible")
+    var rootVisible: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            (binding as? ModelTreeBinding)?.let { bind(it.model, value) }
+        }
+
+    /**
+     * Whether to show the expand mark of the root (Swing's `getShowsRootHandles` / `setShowsRootHandles`).
+     * TreeView always shows the expand mark on nodes with children, so it only remembers the value and the display does not change.
+     */
+    var showsRootHandles: Boolean = true
+
+    private fun bind(newModel: TreeModel?, newRootVisible: Boolean) {
+        when (val old = binding) {
+            is ModelTreeBinding -> {
+                old.model.removeTreeModelListener(modelListener)
+                muted { old.clear() }
+            }
+            is NodeTreeBinding -> if (roots.isNotEmpty()) {
+                rootVector.call(FoundationInterop.IVector_Clear)
+                roots.clear()
+            }
+        }
+        binding = if (newModel == null) {
+            NodeTreeBinding(roots)
+        } else {
+            muted { ModelTreeBinding(newModel, newRootVisible, rootVector) }.also { newModel.addTreeModelListener(modelListener) }
+        }
+    }
+
+    /** The node APIs cannot be used while a model is mirrored. */
+    private fun requireNodeMode(): Unit = check(binding is NodeTreeBinding) {
+        "WTree is showing a model, so the node APIs (addRootNode etc.) cannot be used. Set model to null to use them"
+    }
+
+    /** Reflects model changes in the display (native expand/collapse caused by rebuilding the mirror is not passed to the user). */
+    private fun onModelChanged(e: TreeModelEvent, apply: ModelTreeBinding.(TreeModelEvent) -> Unit) {
+        val binding = binding as? ModelTreeBinding ?: return
+        muted { binding.apply(e) }
+    }
+
+    /**
+     * The string that displays [value] (Swing's `convertValueToText`). `toString()`, or an empty string if null.
+     * Nodes are always displayed by this rule, and it cannot be overridden.
+     */
+    @Suppress("UNUSED_PARAMETER", "LongParameterList") // Takes unused parameters too, to have the same shape as Swing
+    fun convertValueToText(value: Any?, selected: Boolean, expanded: Boolean, leaf: Boolean, row: Int, hasFocus: Boolean): String =
+        value?.toString().orEmpty()
+
+    // ---- Node-building usage ----
+
     /**
      * The currently selected node, or null if nothing is selected (TreeView.SelectedNode).
-     * The getter looks the result up against the nodes added via [addRootNode] (including descendants)
-     * by COM identity.
+     * The getter looks the result up against the nodes added via [addRootNode] (including descendants) by COM identity.
+     * Throws [IllegalStateException] while a model is shown.
      */
     var selectedNode: WTreeNode?
         get() {
+            requireNodeMode()
             val selected = treeView2.getPtrOrNull(XamlInterop.ITreeView2_get_SelectedNode) ?: return null
             return try {
                 resolveNode(roots, selected)
@@ -193,15 +334,18 @@ class WTree : WControl(
             }
         }
         set(value) {
+            requireNodeMode()
             treeView2.call(XamlInterop.ITreeView2_put_SelectedNode, value?.inspectable?.ptr)
         }
 
     /**
      * The list of currently selected nodes (TreeView.SelectedNodes).
      * Looks up the checked nodes (in MULTIPLE mode) against the nodes added via [addRootNode].
+     * Throws [IllegalStateException] while a model is shown.
      */
     val selectedNodes: List<WTreeNode>
         get() {
+            requireNodeMode()
             val vector = inspectable.getPtr(XamlInterop.ITreeView_get_SelectedNodes)
             return try {
                 (0 until vector.getInt(FoundationInterop.IVector_get_Size)).mapNotNull { index ->
@@ -217,42 +361,257 @@ class WTree : WControl(
             }
         }
 
-    /** The root nodes added via [addRootNode] (an unmodifiable view). */
+    /** The list of root nodes added with [addRootNode] (an unmodifiable view). Throws [IllegalStateException] while a model is shown. */
     val rootNodes: List<WTreeNode>
-        get() = roots.toList()
+        get() {
+            requireNodeMode()
+            return roots.toList()
+        }
 
-    /** Appends a root node at the end (RootNodes.Append). */
+    /** Appends a root node at the end (RootNodes.Append). Throws [IllegalStateException] while a model is shown. */
     fun addRootNode(node: WTreeNode) {
+        requireNodeMode()
         rootVector.call(FoundationInterop.IVector_Append, node.inspectable.ptr)
         roots += node
     }
 
-    /** Removes a root node (RootNodes.RemoveAt). */
+    /** Removes a root node (RootNodes.RemoveAt). Throws [IllegalStateException] while a model is shown. */
     fun removeRootNode(node: WTreeNode) {
+        requireNodeMode()
         val index = roots.indexOf(node)
         if (index < 0) return
         rootVector.call(FoundationInterop.IVector_RemoveAt, index)
         roots.removeAt(index)
     }
 
-    /** Expands a node (TreeView.Expand). Unlike [WTreeNode.isExpanded], this also works before lazy realization. */
+    /**
+     * Expands the node (same as setting [WTreeNode.isExpanded] to true). Can be used before it is shown.
+     * TreeView.Expand crashes natively when called before it is shown (before the template is applied), so it is not used.
+     */
     fun expand(node: WTreeNode) {
-        inspectable.call(XamlInterop.ITreeView_Expand, node.inspectable.ptr)
+        node.isExpanded = true
     }
 
-    /** Collapses a node (TreeView.Collapse). */
+    /** Collapses the node (same as setting [WTreeNode.isExpanded] to false). Can be used before it is shown. */
     fun collapse(node: WTreeNode) {
-        inspectable.call(XamlInterop.ITreeView_Collapse, node.inspectable.ptr)
+        node.isExpanded = false
     }
 
-    /** Selects all nodes (TreeView.SelectAll). Effective in MULTIPLE mode. */
+    /**
+     * Selects all nodes (TreeView.SelectAll). Effective in MULTIPLE mode.
+     * Before it is shown, adds all created nodes to SelectedNodes (TreeView.SelectAll crashes when called before the template is applied).
+     */
     fun selectAll() {
-        inspectable.call(XamlInterop.ITreeView_SelectAll)
+        if (isTemplateApplied()) {
+            inspectable.call(XamlInterop.ITreeView_SelectAll)
+            return
+        }
+        if (selectionMode != TreeViewSelectionMode.MULTIPLE) return
+        val vector = inspectable.getPtr(XamlInterop.ITreeView_get_SelectedNodes)
+        try {
+            vector.call(FoundationInterop.IVector_Clear)
+            for (node in binding.topNodes.asSequence().flatMap { it.selfAndDescendants() }) {
+                vector.call(FoundationInterop.IVector_Append, node.inspectable.ptr)
+            }
+        } finally {
+            vector.release()
+        }
+    }
+
+    /** true if the template is applied (the ListView inside the TreeView exists). Expand etc. crash natively without it. */
+    private fun isTemplateApplied(): Boolean = Xaml.childCount(inspectable) > 0
+
+    // ---- Paths and rows ----
+
+    /** Expands the node that [path] points to (Swing's `expandPath`). Also expands all parents. Does nothing for a leaf or null. */
+    fun expandPath(path: TreePath?) {
+        if (path == null || binding.isLeaf(path)) return
+        setExpandedState(path, true)
+    }
+
+    /** Collapses the node that [path] points to (Swing's `collapsePath`). Expands all parents. */
+    fun collapsePath(path: TreePath?) {
+        path ?: return
+        setExpandedState(path, false)
+    }
+
+    /** Expands the node at row [row] (Swing's `expandRow`). Does nothing if out of range. */
+    fun expandRow(row: Int) = expandPath(getPathForRow(row))
+
+    /** Collapses the node at row [row] (Swing's `collapseRow`). Does nothing if out of range. */
+    fun collapseRow(row: Int) = collapsePath(getPathForRow(row))
+
+    /** true if the node of [path] and all its parents are expanded (Swing's `isExpanded`). false for null or a path not in the tree. */
+    fun isExpanded(path: TreePath?): Boolean {
+        var current = path ?: return false
+        while (true) {
+            if (!isOwnExpanded(current)) return false
+            current = current.getParentPath() ?: return true
+        }
+    }
+
+    /** true if the node at row [row] is expanded. false if out of range. */
+    fun isExpanded(row: Int): Boolean = isExpanded(getPathForRow(row))
+
+    /** The negation of [isExpanded] (Swing's `isCollapsed`). */
+    fun isCollapsed(path: TreePath?): Boolean = !isExpanded(path)
+
+    /** true if the node at row [row] is collapsed (also true if out of range). */
+    fun isCollapsed(row: Int): Boolean = !isExpanded(row)
+
+    /** true if all parents of [path] are expanded (it is visible as a row) (Swing's `isVisible`). true for a top-level path. */
+    fun isVisible(path: TreePath?): Boolean {
+        path ?: return false
+        return path.getParentPath()?.let(::isExpanded) ?: true
+    }
+
+    /** Expands all parents so that [path] is visible (Swing's `makeVisible`). */
+    fun makeVisible(path: TreePath?) {
+        path?.getParentPath()?.let(::expandPath)
+    }
+
+    /** The number of visible rows (Swing's `getRowCount`). */
+    val rowCount: Int
+        get() = binding.rows().size
+
+    /** The path of the node at row [row] (Swing's `getPathForRow`). null if out of range. */
+    fun getPathForRow(row: Int): TreePath? = binding.rows().getOrNull(row)?.let(binding::pathOf)
+
+    /** The row of the node of [path] (Swing's `getRowForPath`). -1 if not visible. */
+    fun getRowForPath(path: TreePath?): Int {
+        path ?: return -1
+        val node = binding.nodeOf(path, false) ?: return -1
+        if (!isVisible(path)) return -1
+        return binding.rows().indexOfFirst { it === node }
+    }
+
+    /**
+     * Expands the parents so that [path] is visible and scrolls to that row (Swing's `scrollPathToVisible`).
+     * Does not scroll before it is shown (only expands the parents).
+     */
+    fun scrollPathToVisible(path: TreePath?) {
+        path ?: return
+        makeVisible(path)
+        val node = binding.nodeOf(path, true) ?: return
+        if (!isTemplateApplied()) return
+        val list = Xaml.templatePartOrNull(inspectable, "ListControl") ?: return
+        try {
+            val listView = list.queryInterface(XamlInterop.IID_IListViewBase)
+            try {
+                listView.call(XamlInterop.IListViewBase_ScrollIntoView, node.inspectable.ptr)
+            } finally {
+                listView.release()
+            }
+        } finally {
+            list.release()
+        }
+    }
+
+    /** Scrolls to row [row] (Swing's `scrollRowToVisible`). */
+    fun scrollRowToVisible(row: Int) = scrollPathToVisible(getPathForRow(row))
+
+    /**
+     * The path of the row at the position ([x], [y], in DIP) from the top-left of the tree (Swing's `getPathForLocation`). null outside the rows.
+     * Only rows realized on screen (TreeViewItem) are examined, so rows before it is shown or scrolled out are not found.
+     */
+    fun getPathForLocation(x: Int, y: Int): TreePath? =
+        rowBounds().firstOrNull { (_, bounds) -> x >= bounds[0] && x < bounds[0] + bounds[2] && y >= bounds[1] && y < bounds[1] + bounds[3] }
+            ?.let { (node, _) -> binding.pathOf(node) }
+
+    /** The row for [getPathForLocation] (Swing's `getRowForLocation`). -1 outside the rows. */
+    fun getRowForLocation(x: Int, y: Int): Int = getRowForPath(getPathForLocation(x, y))
+
+    /**
+     * The path of the row closest to the vertical position [y] (Swing's `getClosestPathForLocation`). null if there are no rows.
+     * As with [getPathForLocation], only rows realized on screen are examined.
+     */
+    @Suppress("UNUSED_PARAMETER") // Takes the horizontal position too, to have the same shape as Swing (rows span the full width)
+    fun getClosestPathForLocation(x: Int, y: Int): TreePath? =
+        rowBounds().minByOrNull { (_, bounds) -> distance(y.toDouble(), bounds[1], bounds[1] + bounds[3]) }
+            ?.let { (node, _) -> binding.pathOf(node) }
+
+    /** The visible rows that are realized on screen, and their bounds within the tree [x, y, width, height] (DIP). */
+    private fun rowBounds(): List<Pair<WTreeNode, DoubleArray>> {
+        if (!isTemplateApplied()) return emptyList()
+        val origin = Xaml.positionInRoot(uiElement)
+        return binding.rows().mapNotNull { node ->
+            val container = treeView2.getPtrOrNull(XamlInterop.ITreeView2_ContainerFromNode, node.inspectable.ptr) ?: return@mapNotNull null
+            try {
+                val framework = container.queryInterface(XamlInterop.IID_IFrameworkElement)
+                try {
+                    val position = Xaml.positionInRoot(container)
+                    node to doubleArrayOf(
+                        position[0] - origin[0],
+                        position[1] - origin[1],
+                        framework.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth),
+                        framework.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight),
+                    )
+                } finally {
+                    framework.release()
+                }
+            } finally {
+                container.release()
+            }
+        }
+    }
+
+    /** The native node showing [path] (null if its children are not created). Used by tests to check the mirror. */
+    internal fun nativeNodeOf(path: TreePath): WTreeNode? = binding.nodeOf(path, false)
+
+    /** Whether the path's node itself is expanded (parents are not checked). A hidden root is always expanded. */
+    private fun isOwnExpanded(path: TreePath): Boolean =
+        binding.isHiddenRoot(path) || binding.nodeOf(path, false)?.isExpanded == true
+
+    /** Swing's `setExpandedState`: expands the parents from the top, then expands or collapses [path]. */
+    private fun setExpandedState(path: TreePath, expanded: Boolean) {
+        val ancestors = generateSequence(path.getParentPath()) { it.getParentPath() }.toList().asReversed()
+        for (ancestor in ancestors) {
+            if (!isOwnExpanded(ancestor) && !expandOne(ancestor)) return
+        }
+        when {
+            expanded && !isOwnExpanded(path) -> expandOne(path)
+            !expanded && isOwnExpanded(path) -> collapseOne(path)
+        }
+    }
+
+    /** Expands one node of [path] (creating its children if not created yet). false if it cannot be expanded. */
+    private fun expandOne(path: TreePath): Boolean {
+        val node = binding.nodeOf(path, true) ?: return false
+        binding.realize(node)
+        muted { node.isExpanded = true }
+        return true
+    }
+
+    /** Collapses one node of [path]. A hidden root cannot be collapsed. */
+    private fun collapseOne(path: TreePath): Boolean {
+        val node = binding.nodeOf(path, false) ?: return false
+        muted { node.isExpanded = false }
+        return true
+    }
+
+    private inline fun <T> muted(block: () -> T): T {
+        expansionMuted++
+        try {
+            return block()
+        } finally {
+            expansionMuted--
+        }
+    }
+
+    /** Native Expanding (after IsExpanded becomes true): creates the children not created yet. */
+    private fun onNativeExpanding(args: ComPtr) {
+        val pointer = args.getPtrOrNull(XamlInterop.ITreeViewExpandingEventArgs_get_Node) ?: return
+        val node = try {
+            binding.resolve(pointer)
+        } finally {
+            pointer.release()
+        }
+        node?.let(binding::realize)
     }
 
     /**
      * Subscribes to node clicks (TreeView.ItemInvoked).
-     * The listener receives the clicked [WTreeNode] (null if it isn't one of the added nodes).
+     * The listener receives the clicked [WTreeNode] (null for nodes other than added ones, or while a model is shown).
      */
     @JvmSynthetic
     fun addItemInvokedListener(listener: (WTreeNode?) -> Unit) {
@@ -368,8 +727,34 @@ class WTree : WControl(
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Collapsed, token)
     }
 
+    /** A listener that reflects model changes in the display, looking up the tree weakly (so that the model does not hold the tree strongly). */
+    private class AnchoredTreeModelListener(private val anchor: ListenerAnchor<WTree>) : TreeModelListener {
+        override fun treeNodesChanged(e: TreeModelEvent) {
+            anchor.get()?.onModelChanged(e, ModelTreeBinding::nodesChanged)
+        }
+
+        override fun treeNodesInserted(e: TreeModelEvent) {
+            anchor.get()?.onModelChanged(e, ModelTreeBinding::nodesInserted)
+        }
+
+        override fun treeNodesRemoved(e: TreeModelEvent) {
+            anchor.get()?.onModelChanged(e, ModelTreeBinding::nodesRemoved)
+        }
+
+        override fun treeStructureChanged(e: TreeModelEvent) {
+            anchor.get()?.onModelChanged(e, ModelTreeBinding::structureChanged)
+        }
+    }
+
     // Called from native handlers, so placed in the companion so as not to capture the wrapper
     private companion object {
+        /** The distance from the vertical position [y] to the range [top]..[bottom] (0 inside the range). */
+        fun distance(y: Double, top: Double, bottom: Double): Double = when {
+            y < top -> top - y
+            y > bottom -> y - bottom
+            else -> 0.0
+        }
+
         /** Reads get_Node of the event arguments and looks up the [WTreeNode] under [roots]. */
         fun resolveNodeArg(roots: List<WTreeNode>, args: Ptr, slot: Int): WTreeNode? {
             val node = ComPtr(args).getPtrOrNull(slot) ?: return null

@@ -696,6 +696,7 @@ internal object XamlInterop {
     const val IID_IListViewFactory = "03ebefb8-f64a-5bf9-9570-cb09eeea2335"
     const val IID_IListView = "f6015db1-df63-52fd-a164-0df44715ee0a" // default interface (no members)
     const val IID_IListViewBase = "775c57ac-abce-5beb-8e34-3b8158aedd80"
+    const val IListViewBase_ScrollIntoView = 44        // ScrollIntoView(object)
     const val IListViewBase_get_SelectedItems = 6      // get_SelectedItems(out IVector<Object>)
     const val IListViewBase_get_SelectionMode = 7      // get_SelectionMode(out ListViewSelectionMode)
     const val IListViewBase_put_SelectionMode = 8      // put_SelectionMode(ListViewSelectionMode)
@@ -767,12 +768,16 @@ internal object XamlInterop {
     const val ITreeView_add_Collapsed = 17             // add_Collapsed(TypedEventHandler, out token)
     const val ITreeView_remove_Collapsed = 18          // remove_Collapsed(token)
     const val IID_ITreeView2 = "b947ca7d-0f6f-594c-83ec-14153d343225"
+    const val ITreeView2_ContainerFromNode = 7         // ContainerFromNode(TreeViewNode, out DependencyObject) — nullable
     const val ITreeView2_get_CanDragItems = 10         // get_CanDragItems(out boolean)
     const val ITreeView2_put_CanDragItems = 11         // put_CanDragItems(boolean)
     const val ITreeView2_get_CanReorderItems = 12      // get_CanReorderItems(out boolean)
     const val ITreeView2_put_CanReorderItems = 13      // put_CanReorderItems(boolean)
     const val ITreeView2_get_SelectedNode = 30         // get_SelectedNode(out TreeViewNode) — nullable
     const val ITreeView2_put_SelectedNode = 31         // put_SelectedNode(TreeViewNode)
+    const val IID_ITreeView3 = "a1b5538e-7956-5671-afd0-4c0f38122b70"
+    const val ITreeView3_add_SelectionChanged = 6      // add_SelectionChanged(TypedEventHandler, out token)
+    const val IID_ITreeViewSelectionChangedEventArgs = "664190f3-7133-5599-b41c-1d54cd2cb930"
 
     // ---- Microsoft.UI.Xaml.Controls.TreeViewNode ----
     const val CLS_TreeViewNode = "Microsoft.UI.Xaml.Controls.TreeViewNode"
@@ -785,6 +790,8 @@ internal object XamlInterop {
     const val ITreeViewNode_put_IsExpanded = 10        // put_IsExpanded(boolean)
     const val ITreeViewNode_get_HasChildren = 11       // get_HasChildren(out boolean)
     const val ITreeViewNode_get_Depth = 12             // get_Depth(out INT32)
+    const val ITreeViewNode_get_HasUnrealizedChildren = 13 // get_HasUnrealizedChildren(out boolean)
+    const val ITreeViewNode_put_HasUnrealizedChildren = 14 // put_HasUnrealizedChildren(boolean)
     const val ITreeViewNode_get_Children = 15          // get_Children(out IVector<TreeViewNode>)
 
     const val IID_ITreeViewItemInvokedEventArgs = "1a05853c-b101-542c-9a1e-775a044c4652"
@@ -1553,6 +1560,16 @@ internal object XamlInterop {
                 "rc(Microsoft.UI.Xaml.Controls.ContentDialog;{$IID_IContentDialog});" +
                 "rc(Microsoft.UI.Xaml.Controls.ContentDialogButtonClickEventArgs;" +
                 "{$IID_IContentDialogButtonClickEventArgs}))",
+        )
+    }
+
+    /** Concrete IID of TypedEventHandler<TreeView, TreeViewSelectionChangedEventArgs> (computed at runtime). */
+    val IID_TreeViewSelectionChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeView;{$IID_ITreeView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TreeViewSelectionChangedEventArgs;" +
+                "{$IID_ITreeViewSelectionChangedEventArgs}))",
         )
     }
 
@@ -2365,6 +2382,7 @@ internal object XamlInterop {
     const val IUIElement_RemoveHandler = 216           // RemoveHandler(RoutedEvent, Object handler)
     const val IUIElement_InvalidateMeasure = 218       // InvalidateMeasure()
     const val IUIElement_Focus = 226                   // Focus(FocusState, out boolean)
+    const val IUIElement_StartBringIntoView = 223      // StartBringIntoView()
 
     // ---- Microsoft.UI.Xaml.UIElement (statics: routed events) ----
     const val CLS_UIElement = "Microsoft.UI.Xaml.UIElement"
