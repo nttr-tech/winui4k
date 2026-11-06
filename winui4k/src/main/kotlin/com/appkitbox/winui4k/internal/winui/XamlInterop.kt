@@ -2181,8 +2181,8 @@ internal object XamlInterop {
     const val IID_IItemContainer = "6332a67f-7fd9-53c7-afd8-cfa1237cf6d1"
     const val IItemContainer_get_Child = 6              // get_Child(out UIElement)
     const val IItemContainer_put_Child = 7              // put_Child(UIElement)
-    const val IItemContainer_get_IsSelected = 8
-    const val IItemContainer_put_IsSelected = 9
+    const val IItemContainer_get_IsSelected = 8         // get_IsSelected(out boolean)
+    const val IItemContainer_put_IsSelected = 9         // put_IsSelected(boolean)
 
     // ---- Microsoft.UI.Xaml.Controls.Layout (the argument type of ItemsView.Layout) ----
     const val IID_ILayout = "24e50c1c-9c51-5144-9ddc-3f500191c262"
@@ -2308,6 +2308,8 @@ internal object XamlInterop {
     const val IID_ISelectorBarItem = "3cdba1f9-a13a-56a2-b9a9-f954998d3658"
     const val ISelectorBarItem_get_Text = 6            // get_Text(out string)
     const val ISelectorBarItem_put_Text = 7            // put_Text(string)
+    const val ISelectorBarItem_get_Icon = 8            // get_Icon(out IconElement)
+    const val ISelectorBarItem_put_Icon = 9            // put_Icon(IconElement)
 
     const val IID_ISelectorBarSelectionChangedEventArgs = "73b3f6c5-5050-5c5a-899c-4e6e0474cb63"
 
