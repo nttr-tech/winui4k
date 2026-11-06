@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.lang.ref.WeakReference
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -31,14 +32,42 @@ enum class ColorSpectrumShape(internal val native: Int) {
 /**
  * JColorChooser-like: WinUI 3's ColorPicker.
  *
- * Provides [color] / [isAlphaEnabled] / [isMoreButtonVisible] / [isHexInputVisible] / [spectrumShape],
- * and [addChangeListener] / [removeChangeListener] (ColorChanged).
+ * Has [color] / [isAlphaEnabled] / [isMoreButtonVisible] / [isHexInputVisible] / [spectrumShape]. Color changes can be
+ * received, as in Swing, with a ChangeListener on [selectionModel] ([WColorSelectionModel]) (the source is the model). Sharing the model
+ * among several pickers links their colors. The existing [addChangeListener] / [removeChangeListener] (which subscribe to ColorChanged directly
+ * and pass the new color) can still be used. JColorChooser has no `addChangeListener` on the picker itself, so a [WChangeListener]
+ * form is not added (adding it would make Java's `value -> ...` lambdas ambiguous).
+ *
+ * To let the user choose a color in a dialog, use [showDialog] (waits until closed; the same shape as JColorChooser.showDialog) or
+ * the callback form of [showDialog].
  */
-class WColorPicker : WControl(
+class WColorPicker() : WControl(
     Activation.composeDefault(XamlInterop.CLS_ColorPicker, XamlInterop.IID_IColorPickerFactory),
 ) {
+    /** JColorChooser(Color)-like: creates it with the color [initial] selected. */
+    constructor(initial: WColor) : this() {
+        color = initial
+    }
+
+    /** JColorChooser(ColorSelectionModel)-like: creates it with [model] as the color model (the picker's color becomes the model's color). */
+    constructor(model: WColorSelectionModel) : this() {
+        selectionModel = model
+    }
+
     /** ColorChanged event tokens registered via addChangeListener. */
     private val changeTokens = ListenerTokens<Consumer<WColor>>()
+
+    /** The model once [selectionModel] has been used (not created until used). */
+    private var model: WColorSelectionModel? = null
+
+    /**
+     * A listener that copies model changes to native. The model references the picker strongly through it, but the native side references
+     * the picker only weakly ([addModelHandler]), so no cycle forms across the boundary (same as WSlider's model).
+     */
+    private val modelListener = WChangeListener { pushToNative() }
+
+    /** Whether the model's color is being copied to native (native ColorChanged during that time is not written back to the model). */
+    private var pushing = false
 
     /** The selected color (ColorPicker.Color). A Windows.UI.Color struct is passed by value. */
     var color: WColor
@@ -61,17 +90,30 @@ class WColorPicker : WControl(
         set(value) = inspectable.putBool(XamlInterop.IColorPicker_put_IsAlphaEnabled, value)
 
     /** Whether to show the "more" button that expands the text input fields (ColorPicker.IsMoreButtonVisible). */
-    var isMoreButtonVisible: Boolean = false
-        set(value) {
-            field = value
-            inspectable.putBool(XamlInterop.IColorPicker_put_IsMoreButtonVisible, value)
-        }
+    var isMoreButtonVisible: Boolean
+        get() = inspectable.getBool(XamlInterop.IColorPicker_get_IsMoreButtonVisible)
+        set(value) = inspectable.putBool(XamlInterop.IColorPicker_put_IsMoreButtonVisible, value)
 
     /** Whether to show the hex input field (ColorPicker.IsHexInputVisible). */
-    var isHexInputVisible: Boolean = true
-        set(value) {
-            field = value
-            inspectable.putBool(XamlInterop.IColorPicker_put_IsHexInputVisible, value)
+    var isHexInputVisible: Boolean
+        get() = inspectable.getBool(XamlInterop.IColorPicker_get_IsHexInputVisible)
+        set(value) = inspectable.putBool(XamlInterop.IColorPicker_put_IsHexInputVisible, value)
+
+    /**
+     * JColorChooser.getSelectionModel / setSelectionModel-like: the model of the selected color. When first read, creates a [WDefaultColorSelectionModel]
+     * holding the picker's current color. When the picker's color changes (by user operation or by setting [color]), the model's
+     * [WColorSelectionModel.selectedColor] changes, and when the model's color changes, the picker's color changes.
+     * When replaced, the picker's color is matched to the new model's color (as in JColorChooser, the old model's listeners are not called then).
+     * The model references the picker through its listener, so holding on to the model keeps the picker from being collected too (as in Swing).
+     */
+    var selectionModel: WColorSelectionModel
+        get() = model ?: WDefaultColorSelectionModel(color).also { attach(it) }
+        set(newModel) {
+            val old = model
+            if (newModel === old) return
+            old?.removeChangeListener(modelListener)
+            attach(newModel)
+            pushToNative()
         }
 
     /** The spectrum's shape (ColorPicker.ColorSpectrumShape). */
@@ -115,5 +157,85 @@ class WColorPicker : WControl(
     fun removeChangeListenerForJava(listener: Consumer<WColor>) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IColorPicker_remove_ColorChanged, token)
+    }
+
+    /** Starts using [newModel]. The first time, subscribes to native ColorChanged, and holds the picker strongly with ListenerAnchor while shown. */
+    private fun attach(newModel: WColorSelectionModel) {
+        if (model == null) {
+            listenerAnchor.listenerAdded()
+            addModelHandler()
+        }
+        model = newModel
+        newModel.addChangeListener(modelListener)
+    }
+
+    /** Copies the model's color to native (does nothing if the color is the same). */
+    private fun pushToNative() {
+        val selected = model?.selectedColor ?: return
+        if (selected == color) return
+        val wasPushing = pushing
+        pushing = true
+        try {
+            color = selected
+        } finally {
+            pushing = wasPushing
+        }
+    }
+
+    /** Writes the native color changed by user operations etc. back to the model. */
+    private fun onNativeColorChanged(newColor: WColor) {
+        if (pushing) return
+        model?.selectedColor = newColor
+    }
+
+    private fun addModelHandler() {
+        // The handler stays on the native side, so it references the picker weakly (ListenerAnchor holds it strongly while shown)
+        val picker = WeakReference(this)
+        inspectable.addEventHandler(
+            "WinUI4K.ColorPickerModelHandler",
+            XamlInterop.IID_ColorPickerColorChangedHandler,
+            XamlInterop.IColorPicker_add_ColorChanged,
+        ) { _, args ->
+            val (a, r, g, b) = XamlStructs.getColor(ComPtr(args), XamlInterop.IColorChangedEventArgs_get_NewColor)
+            picker.get()?.onNativeColorChanged(WColor(r, g, b, a))
+        }
+    }
+
+    companion object {
+        /**
+         * JColorChooser.showDialog-like: shows a color picker in a dialog (ContentDialog), blocks the caller until it is closed, and
+         * returns the selected color for OK, or null for Cancel, Esc or when the owner window is closed.
+         * Starts from white if [initial] is null. How it blocks, where it can be used and the exceptions are the same as [WContentDialog.showAndWait]
+         * (call it on the UI thread, outside layout notifications; [IllegalStateException] if another dialog is open).
+         * The button texts are [WOptionPane.okButtonText] / [WOptionPane.cancelButtonText]. To receive the result without blocking, use
+         * the next [showDialog].
+         */
+        @JvmStatic
+        fun showDialog(owner: WComponent, title: String, initial: WColor?): WColor? {
+            val (dialog, picker) = chooserDialog(title, initial)
+            return pickedColor(dialog.showAndWait(owner), picker)
+        }
+
+        /**
+         * Opens the same dialog as [showDialog] without blocking, and passes the selected color (null for Cancel etc.) to [onClosed] when it is closed
+         * (not called when the owner window is closed).
+         */
+        @JvmStatic
+        fun showDialog(owner: WComponent, title: String, initial: WColor?, onClosed: Consumer<WColor?>) {
+            val (dialog, picker) = chooserDialog(title, initial)
+            dialog.show(owner) { onClosed.accept(pickedColor(it, picker)) }
+        }
+
+        private fun chooserDialog(title: String, initial: WColor?): Pair<WContentDialog, WColorPicker> {
+            val picker = WColorPicker(initial ?: WColor.WHITE)
+            val dialog = WContentDialog(title, picker)
+            dialog.primaryButtonText = WOptionPane.okButtonText
+            dialog.closeButtonText = WOptionPane.cancelButtonText
+            dialog.defaultButton = ContentDialogButton.PRIMARY
+            return dialog to picker
+        }
+
+        private fun pickedColor(result: ContentDialogResult, picker: WColorPicker): WColor? =
+            if (result == ContentDialogResult.PRIMARY) picker.color else null
     }
 }

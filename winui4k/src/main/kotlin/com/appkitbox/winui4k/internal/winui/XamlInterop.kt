@@ -1004,7 +1004,9 @@ internal object XamlInterop {
     const val IColorPicker_put_Color = 7               // put_Color(Windows.UI.Color) — struct passed by value
     const val IColorPicker_get_IsAlphaEnabled = 10     // get_IsAlphaEnabled(out boolean)
     const val IColorPicker_put_IsAlphaEnabled = 11     // put_IsAlphaEnabled(boolean)
+    const val IColorPicker_get_IsMoreButtonVisible = 20 // get_IsMoreButtonVisible(out boolean)
     const val IColorPicker_put_IsMoreButtonVisible = 21 // put_IsMoreButtonVisible(boolean)
+    const val IColorPicker_get_IsHexInputVisible = 26  // get_IsHexInputVisible(out boolean)
     const val IColorPicker_put_IsHexInputVisible = 27  // put_IsHexInputVisible(boolean)
     const val IColorPicker_get_ColorSpectrumShape = 40 // get_ColorSpectrumShape(out ColorSpectrumShape)
     const val IColorPicker_put_ColorSpectrumShape = 41 // put_ColorSpectrumShape(ColorSpectrumShape)

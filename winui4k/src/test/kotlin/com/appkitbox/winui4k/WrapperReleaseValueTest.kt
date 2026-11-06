@@ -134,5 +134,18 @@ class WrapperReleaseValueTest : FunSpec() {
             }
             listOf(calendarDatePicker, calendarView).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
         }
+
+        test("a WColorPicker with a shared color model is collected after being put in a window and removed once released together with the model") {
+            val sources = changeSources
+            var model: WeakReference<WColorSelectionModel>? = null
+            val picker = shownAndHidden {
+                val shared = WDefaultColorSelectionModel(WColor.ORANGE)
+                model = WeakReference(shared)
+                shared.addChangeListener(WChangeListener { sources += "model" })
+                WColorPicker(shared).also { it.color = WColor.BLUE }
+            }
+            Reclamation.awaitCollected(picker).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
     }
 }
