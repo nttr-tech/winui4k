@@ -4,6 +4,9 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.table.DefaultTableModel
+import com.appkitbox.winui4k.table.RowFilter
+import com.appkitbox.winui4k.table.TableRowSorter
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -720,6 +723,71 @@ class WrapperReleaseTest : FunSpec() {
         test("buttons never shown are also collected together with the group once removed from the group") {
             val refs = removedGroupedCheckBoxes()
             refs.all().forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
+
+        test("a WTable placed in the window and removed is collected, both the wrapper and the model holding the row values") {
+            val modelReference = arrayOfNulls<WeakReference<DefaultTableModel>>(1)
+            val reference = shownAndHidden {
+                val rows = arrayOf<Array<Any?>>(arrayOf("Apple", 3), arrayOf("Orange", 5))
+                val model = DefaultTableModel(rows, arrayOf<Any?>("Name", "Count"))
+                modelReference[0] = WeakReference(model)
+                WTable(model)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(modelReference[0])).shouldBeTrue()
+        }
+
+        test("a WTable using sorting, filtering, grouping, row double-click and selection listeners is also collected after being placed in the window and removed") {
+            val reference = shownAndHidden {
+                WTable(listOf(listOf<Any?>("Apple", 3), listOf<Any?>("Orange", 5)), listOf<Any?>("Name", "Count")).also { table ->
+                    table.autoCreateRowSorter = true
+                    (table.rowSorter as TableRowSorter<*>).setRowFilter(RowFilter.regexFilter("e", 0))
+                    table.groupBy(1)
+                    table.addRowInvokedListener { }
+                    table.addRowSelectionListener { }
+                    table.addSortingListener { }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WTable is not collected while placed in the window even without references, and model changes reach the table") {
+            val model = onUiThreadGet { DefaultTableModel(arrayOf<Array<Any?>>(arrayOf("Apple")), arrayOf<Any?>("Name")) }
+            val reference = onUiThreadGet { WeakReference(WTable(model)) }
+            UiTestHarness.attachAndAwaitLoaded(checkNotNull(reference.get()))
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                onUiThreadGet {
+                    model.addRow(arrayOf<Any?>("Orange"))
+                    checkNotNull(reference.get()).rowCount
+                } shouldBe 2
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WTree with ItemInvoked / Expanding / Collapsed listeners that do not reference the component is also collected after being placed in the window and removed") {
+            val reference = shownAndHidden {
+                WTree().also { tree ->
+                    tree.addRootNode(WTreeNode("Fruit").also { it.add(WTreeNode("Apple")) })
+                    tree.addItemInvokedListener { }
+                    tree.addExpandingListener { }
+                    tree.addCollapsedListener { }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WItemsView with an ItemInvoked listener that does not reference the component is also collected after being placed in the window and removed") {
+            val reference = shownAndHidden {
+                WItemsView().also { view ->
+                    view.setItems(listOf(WItemContainer(WLabel("First")), WItemContainer(WLabel("Second"))))
+                    view.isItemInvokedEnabled = true
+                    view.addItemInvokedListener { }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
         test("even if the return value of Xaml.addHandlerHandledToo (the remove function) is discarded, the handler and what it captured are collected once the element is destroyed") {

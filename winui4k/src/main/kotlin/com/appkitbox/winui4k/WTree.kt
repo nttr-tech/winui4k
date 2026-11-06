@@ -187,7 +187,7 @@ class WTree : WControl(
         get() {
             val selected = treeView2.getPtrOrNull(XamlInterop.ITreeView2_get_SelectedNode) ?: return null
             return try {
-                resolveNode(selected)
+                resolveNode(roots, selected)
             } finally {
                 selected.release()
             }
@@ -207,7 +207,7 @@ class WTree : WControl(
                 (0 until vector.getInt(FoundationInterop.IVector_get_Size)).mapNotNull { index ->
                     val node = vector.getPtr(FoundationInterop.IVector_GetAt, index)
                     try {
-                        resolveNode(node)
+                        resolveNode(roots, node)
                     } finally {
                         node.release()
                     }
@@ -263,6 +263,7 @@ class WTree : WControl(
 
     @JvmName("addItemInvokedListener")
     fun addItemInvokedListenerForJava(listener: Consumer<WTreeNode?>) {
+        val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewItemInvokedHandler,
@@ -271,7 +272,7 @@ class WTree : WControl(
             // In node mode (no ItemsSource), InvokedItem is the TreeViewNode itself
             val invoked = ComPtr(args).getPtrOrNull(XamlInterop.ITreeViewItemInvokedEventArgs_get_InvokedItem)
             val node = try {
-                invoked?.let(::resolveNode)
+                invoked?.let { resolveNode(roots, it) }
             } finally {
                 invoked?.release()
             }
@@ -306,12 +307,13 @@ class WTree : WControl(
 
     @JvmName("addExpandingListener")
     fun addExpandingListenerForJava(listener: Consumer<WTreeNode?>) {
+        val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewExpandingHandler,
             XamlInterop.ITreeView_add_Expanding,
         ) { _, args ->
-            listener.accept(resolveNodeArg(args, XamlInterop.ITreeViewExpandingEventArgs_get_Node))
+            listener.accept(resolveNodeArg(roots, args, XamlInterop.ITreeViewExpandingEventArgs_get_Node))
         }
         expandingTokens.add(listener, token)
     }
@@ -342,12 +344,13 @@ class WTree : WControl(
 
     @JvmName("addCollapsedListener")
     fun addCollapsedListenerForJava(listener: Consumer<WTreeNode?>) {
+        val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
             XamlInterop.IID_TreeViewCollapsedHandler,
             XamlInterop.ITreeView_add_Collapsed,
         ) { _, args ->
-            listener.accept(resolveNodeArg(args, XamlInterop.ITreeViewCollapsedEventArgs_get_Node))
+            listener.accept(resolveNodeArg(roots, args, XamlInterop.ITreeViewCollapsedEventArgs_get_Node))
         }
         collapsedTokens.add(listener, token)
     }
@@ -365,35 +368,38 @@ class WTree : WControl(
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Collapsed, token)
     }
 
-    /** Reads an event args' get_Node and looks it back up to a [WTreeNode]. */
-    private fun resolveNodeArg(args: Ptr, slot: Int): WTreeNode? {
-        val node = ComPtr(args).getPtrOrNull(slot) ?: return null
-        return try {
-            resolveNode(node)
-        } finally {
-            node.release()
-        }
-    }
-
-    /**
-     * Looks a TreeViewNode pointer back up to the added [WTreeNode].
-     * Compares addresses using COM identity rules (QI'ing IUnknown always returns the same pointer).
-     */
-    @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
-    private fun resolveNode(node: ComPtr): WTreeNode? {
-        val target = node.queryInterface(KComObject.IID_IUNKNOWN)
-        try {
-            for (root in roots) {
-                for (candidate in root.selfAndDescendants()) {
-                    val mine = candidate.inspectable.queryInterface(KComObject.IID_IUNKNOWN)
-                    val matched = mine.ptr.address == target.ptr.address
-                    mine.release()
-                    if (matched) return candidate
-                }
+    // Called from native handlers, so placed in the companion so as not to capture the wrapper
+    private companion object {
+        /** Reads get_Node of the event arguments and looks up the [WTreeNode] under [roots]. */
+        fun resolveNodeArg(roots: List<WTreeNode>, args: Ptr, slot: Int): WTreeNode? {
+            val node = ComPtr(args).getPtrOrNull(slot) ?: return null
+            return try {
+                resolveNode(roots, node)
+            } finally {
+                node.release()
             }
-            return null
-        } finally {
-            target.release()
+        }
+
+        /**
+         * Looks up an added [WTreeNode] from a TreeViewNode pointer.
+         * Compares addresses using COM's identity rule (QI for IUnknown always returns the same pointer).
+         */
+        @Suppress("NestedBlockDepth") // Releasing COM references with try/finally adds one level of nesting
+        fun resolveNode(roots: List<WTreeNode>, node: ComPtr): WTreeNode? {
+            val target = node.queryInterface(KComObject.IID_IUNKNOWN)
+            try {
+                for (root in roots) {
+                    for (candidate in root.selfAndDescendants()) {
+                        val mine = candidate.inspectable.queryInterface(KComObject.IID_IUNKNOWN)
+                        val matched = mine.ptr.address == target.ptr.address
+                        mine.release()
+                        if (matched) return candidate
+                    }
+                }
+                return null
+            } finally {
+                target.release()
+            }
         }
     }
 }

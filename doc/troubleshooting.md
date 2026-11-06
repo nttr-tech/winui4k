@@ -208,3 +208,9 @@
   アプリの終了時にも起きうるので、終了前にネイティブへ渡したハンドラを外す、などの対策を別に調べる。
   UI スレッドが WinUI のループにいるまま別のスレッドから System.exit を呼ぶと、ほぼ必ず再現する (2026-10-20、`ModalLoopProcessTest` の
   子のプロセス。Panama 8/8・JNR 7/8 で `upcallLinker.cpp:77` か jffi の DLL の中のアクセス違反、JNA は 0/8)。終了コードは System.exit の値のまま。
+- **TableView: ラッパーの回収で参照を返すと、終了時にプロセスが 0xC0000409 で落ちることがある**
+  TableView は WTable の行コレクション (VectorChanged / MapChanged のハンドラを強く持つ Kotlin 実装の IObservableVector) との循環で、
+  ウィンドウから外してラッパーが回収されてもネイティブ側では破棄されない (`NativeProbe` で確かめると生きたまま)。この状態でラッパーの持つ
+  参照を返すと、テストの JVM が全テストの終了後に `0xC0000409` で終わることがあった (`WrapperReleaseTest` だけの実行で 3 回中 2 回)。
+  終了時の XAML の後始末で TableView の破棄が走るためと考えられる (回収の直後に終了したときに起きやすい)。`WTable` は TableView の参照を
+  1 つ持ったままにして、ネイティブの寿命を回収前と同じにしている (ラッパーとモデルは回収される)。

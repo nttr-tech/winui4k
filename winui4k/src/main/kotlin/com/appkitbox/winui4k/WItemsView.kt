@@ -52,8 +52,8 @@ class WItemsView : WControl(
     /** ItemInvoked event tokens registered via addItemInvokedListener. */
     private val itemInvokedTokens = ListenerTokens<IntConsumer>()
 
-    /** The items set via setItems. Also used to look up the invoked item's index. */
-    private var items: List<WItemContainer> = emptyList()
+    /** The items set with setItems. Also used for the reverse lookup in ItemInvoked (the handler captures this, not the wrapper). */
+    private val items = InvokedItems()
 
     /** The selection mode (ItemsView.SelectionMode). */
     var selectionMode: ItemsViewSelectionMode
@@ -81,7 +81,7 @@ class WItemsView : WControl(
      * wrapped in [WItemContainer] rather than passed as bare UIElements.
      */
     fun setItems(items: List<WItemContainer>) {
-        this.items = items
+        this.items.containers = items
         val iterable = UIElementIterable(items.map { it.uiElement })
         inspectable.call(XamlInterop.IItemsView_put_ItemsSource, iterable.comObject.primary)
     }
@@ -99,6 +99,7 @@ class WItemsView : WControl(
 
     @JvmName("addItemInvokedListener")
     fun addItemInvokedListenerForJava(listener: IntConsumer) {
+        val items = items // Let the handler capture only the item list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.ItemsViewItemInvokedHandler",
             XamlInterop.IID_ItemsViewItemInvokedHandler,
@@ -107,7 +108,7 @@ class WItemsView : WControl(
             // args is an ItemsViewItemInvokedEventArgs; read InvokedItem (= the WItemContainer passed in)
             val invoked = ComPtr(args).getPtr(XamlInterop.IItemsViewItemInvokedEventArgs_get_InvokedItem)
             val index = try {
-                indexOfItem(invoked)
+                items.indexOf(invoked)
             } finally {
                 invoked.release()
             }
@@ -128,17 +129,22 @@ class WItemsView : WControl(
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
     }
+}
+
+/** The items passed to [WItemsView.setItems]. Held separately so the ItemInvoked handler can look them up without going through the wrapper. */
+private class InvokedItems {
+    var containers: List<WItemContainer> = emptyList()
 
     /**
-     * Looks up the index within [items] from InvokedItem's pointer.
+     * Looks up the index in [containers] from an InvokedItem pointer.
      * The same COM object can have different pointer values per interface, so this compares the
      * canonical address obtained by QI-ing to IUnknown.
      */
-    private fun indexOfItem(item: ComPtr): Int {
+    fun indexOf(item: ComPtr): Int {
         val identity = item.queryInterface(KComObject.IID_IUNKNOWN)
         val address = identity.ptr.address
         identity.release()
-        return items.indexOfFirst { container ->
+        return containers.indexOfFirst { container ->
             val containerIdentity = container.uiElement.queryInterface(KComObject.IID_IUNKNOWN)
             val containerAddress = containerIdentity.ptr.address
             containerIdentity.release()

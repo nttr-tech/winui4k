@@ -24,6 +24,11 @@ import com.appkitbox.winui4k.table.TableRowSorter
 
 /** The interface through which [TableViewColumnPeer] reads the state of the table ([WTable]). */
 internal interface TableViewColumnHost {
+    /**
+     * Whether the table wrapper has not been collected yet. The native columns and cells can outlive the table wrapper, so
+     * code called from the native side does nothing if this is false ([table] and the like throw when read after collection).
+     */
+    val isAlive: Boolean
     val table: WTable
     val model: TableModel
     val rows: TableRowCollection
@@ -81,7 +86,13 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
         applyProperties()
         applySortProperties()
         column.changeListener = { _, change ->
-            if (change == TableColumn.Change.CELL) host.rebuild(this) else applyProperties()
+            if (!host.isAlive) {
+                Unit
+            } else if (change == TableColumn.Change.CELL) {
+                host.rebuild(this)
+            } else {
+                applyProperties()
+            }
         }
         column.actualWidthProvider = { native.getDouble(TabularInterop.ITableViewColumn_get_ActualWidth) }
         column.sortOrderProvider = { sortOrder() }
@@ -186,6 +197,7 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
     /** Places in the cell [cell] (a Border) a component that the renderer draws from the DataContext row's value. */
     private fun renderCell(cell: Ptr) {
         val currentRenderer = renderer ?: return
+        if (!host.isAlive) return
         val element = ComPtr(cell).queryInterfaceOrNull(XamlInterop.IID_IFrameworkElement) ?: return
         val border = ComPtr(cell).queryInterfaceOrNull(XamlInterop.IID_IBorder)
         try {
@@ -297,8 +309,9 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
                 listOf(
                     // vtbl[6] Compare(this, Object a, Object b, out i4)
                     KComObject.Method(DESC_PTR_PTR_PTR) { args ->
-                        val a = host.rows.itemOf(args[1] as Ptr)
-                        val b = host.rows.itemOf(args[2] as Ptr)
+                        val alive = host.isAlive
+                        val a = if (alive) host.rows.itemOf(args[1] as Ptr) else null
+                        val b = if (alive) host.rows.itemOf(args[2] as Ptr) else null
                         val result = if (a == null || b == null) {
                             0
                         } else {

@@ -1,16 +1,12 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.ffi.api.ArgKind
-import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
-import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.KComObject
-import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.Dispatcher
@@ -79,30 +75,32 @@ class WTable @JvmOverloads constructor(
     /** ITableView (the default interface). */
     private val tableView: ComPtr = inspectable
 
+    /**
+     * The reference through which things passed to the native side (the row collection, columns, event handlers, filter predicates and so on) look up this table.
+     * If they captured the table strongly, it would create the cycle "native -> handler -> wrapper -> native", and the table would not be
+     * collected even after being removed from the window (doc/memory_management.md, "Handling cycles that cross the boundary"). The table always receives model changes and edit commits,
+     * so it is treated as always having listeners and is held strongly only while being built and while shown (and while a removed subtree remains).
+     * A table that is never placed in a window is not collected.
+     */
+    private val anchor = ListenerAnchor(this).also { it.listenerAdded() }
+
     /** TableView.Columns (IVector<TableViewColumn>). */
     private val nativeColumns: ComPtr by lazy { own(tableView.getPtr(TabularInterop.ITableView_get_Columns)) }
 
     /** The access point for reading and writing model values (used by row objects). */
-    private val rowValues = object : TableRowValues {
-        override fun columnCount(): Int = this@WTable.model.getColumnCount()
-
-        override fun valueAt(row: Int, column: Int): Any? = this@WTable.model.getValueAt(row, column)
-
-        override fun valueWritten(item: TableRowItem, column: Int, value: Any?) {
-            onValueWritten(item, column, value)
-        }
-    }
+    private val rowValues: TableRowValues = AnchoredRowValues(anchor)
 
     /** The row collection behind ItemsSource (in model row order). */
-    private var rows = TableRowCollection(rowValues)
+    internal var rows = TableRowCollection(rowValues)
+        private set
 
     /** The TableViewSource set as ItemsSource (projects the row collection sorted, filtered and grouped). */
     private var source: ComPtr? = null
 
     /** The visible columns (matching the order of columnModel). */
-    private val peers = mutableListOf<TableViewColumnPeer>()
+    internal val peers = mutableListOf<TableViewColumnPeer>()
 
-    private val modelListener = TableModelListener { event -> onTableChanged(event) }
+    private val modelListener = anchoredModelListener(anchor)
 
     private val columnModelListener = object : TableColumnModelListener {
         override fun columnAdded(event: TableColumnModelEvent) {
@@ -143,7 +141,7 @@ class WTable @JvmOverloads constructor(
     private val selectionTokens = ListenerTokens<Runnable>()
 
     /** Notifications of row double-clicks (addRowInvokedListener). */
-    internal val rowInvoker = TableViewRowInvoker(uiElement, { itemOf(it) }, { convertRowIndexToView(it) })
+    internal val rowInvoker = anchoredRowInvoker(uiElement, anchor)
 
     /** The grouping key function (no grouping if null). */
     private var groupKey: TableGroupKey? = null
@@ -154,7 +152,7 @@ class WTable @JvmOverloads constructor(
         rows = { rows },
         model = { this.model },
         sorter = { sorter },
-        sortKeys = { sorterHost.currentSortKeys() },
+        sortKeys = { sorterBridge.currentSortKeys() },
     )
 
     // ------------------------------------------------------------------
@@ -208,7 +206,7 @@ class WTable @JvmOverloads constructor(
                 callBool(TabularInterop.ITableView_ClearSort)
             } else {
                 val pending = sorter.pendingSortKeys()
-                if (pending.isNotEmpty()) sorterHost.sortKeysChanged(pending)
+                if (pending.isNotEmpty()) sorterBridge.sortKeysChanged(pending)
             }
         }
 
@@ -222,7 +220,7 @@ class WTable @JvmOverloads constructor(
             if (value) rowSorter = TableRowSorter(model)
         }
 
-    private val sorter: TableRowSorter<*>?
+    internal val sorter: TableRowSorter<*>?
         get() = rowSorter as? TableRowSorter<*>
 
     /** Recreates a [TableColumn] for every model column (JTable.createDefaultColumnsFromModel). */
@@ -667,7 +665,7 @@ class WTable @JvmOverloads constructor(
         for (index in peers.indices) rebuildPeer(peers[index])
     }
 
-    private fun rebuildPeer(peer: TableViewColumnPeer) {
+    internal fun rebuildPeer(peer: TableViewColumnPeer) {
         val index = peers.indexOf(peer)
         if (index < 0) return
         val replacement = TableViewColumnPeer(peer.column, columnHost)
@@ -676,7 +674,7 @@ class WTable @JvmOverloads constructor(
         peer.dispose()
     }
 
-    private fun onTableChanged(event: TableModelEvent) {
+    internal fun onTableChanged(event: TableModelEvent) {
         when {
             event.firstRow == TableModelEvent.HEADER_ROW -> onStructureChanged()
             event.type == TableModelEvent.INSERT -> rows.insert(event.firstRow, event.lastRow - event.firstRow + 1)
@@ -718,7 +716,7 @@ class WTable @JvmOverloads constructor(
     }
 
     /** The binding (edit commit) wrote a value to a cell: converts it to the column type and writes it back to the model. */
-    private fun onValueWritten(item: TableRowItem, column: Int, value: Any?) {
+    internal fun onValueWritten(item: TableRowItem, column: Int, value: Any?) {
         val row = item.modelRow
         val converted = TableCellValues.convert(value, model.getColumnClass(column))
         if (converted === TableCellValues.INVALID) {
@@ -740,26 +738,27 @@ class WTable @JvmOverloads constructor(
     // ------------------------------------------------------------------
 
     private fun subscribeNativeEvents() {
+        val anchor = anchor // Let the handler capture only the anchor, not the table (no cycle)
         tableView.addEventHandler(
             "WinUI4K.TableViewBeginningEditHandler",
             TabularInterop.IID_BeginningEditHandler,
             TabularInterop.ITableView_add_BeginningEdit,
-        ) { _, args -> onBeginningEdit(ComPtr(args)) }
+        ) { _, args -> anchor.get()?.onBeginningEdit(ComPtr(args)) }
         tableView.addEventHandler(
             "WinUI4K.TableViewCellEditEndingHandler",
             TabularInterop.IID_CellEditEndingHandler,
             TabularInterop.ITableView_add_CellEditEnding,
-        ) { _, args -> onCellEditEnding(ComPtr(args)) }
+        ) { _, args -> anchor.get()?.onCellEditEnding(ComPtr(args)) }
         tableView.addEventHandler(
             "WinUI4K.TableViewSortingHandler",
             TabularInterop.IID_SortingHandler,
             TabularInterop.ITableView_add_Sorting,
-        ) { _, args -> onSorting(ComPtr(args)) }
+        ) { _, args -> anchor.get()?.onSorting(ComPtr(args)) }
         tableView.addEventHandler(
             "WinUI4K.TableViewSortedHandler",
             TabularInterop.IID_SortedHandler,
             TabularInterop.ITableView_add_Sorted,
-        ) { _, args -> onSorted(ComPtr(args)) }
+        ) { _, args -> anchor.get()?.onSorted(ComPtr(args)) }
     }
 
     private fun onBeginningEdit(args: ComPtr) {
@@ -832,7 +831,7 @@ class WTable @JvmOverloads constructor(
     }
 
     /** Looks up the row object for an item passed from native code (an owned reference) and releases the item. */
-    private fun itemOf(pointer: ComPtr): TableRowItem? = try {
+    internal fun itemOf(pointer: ComPtr): TableRowItem? = try {
         rows.itemOf(pointer.ptr)
     } finally {
         pointer.release()
@@ -853,7 +852,11 @@ class WTable @JvmOverloads constructor(
     // Internals: sorting, filtering and grouping
     // ------------------------------------------------------------------
 
-    private val sorterHost: RowSorterHost = object : RowSorterHost {
+    /** The gateway passed to [TableRowSorter] (predicates and comparisons look up the sorting from the native side, so it is an [AnchoredSorterHost] that looks the table up weakly). */
+    private val sorterHost: RowSorterHost = AnchoredSorterHost(anchor)
+
+    /** The actual sorting implementation (where [sorterHost] forwards to; held strongly only by the table itself). */
+    internal val sorterBridge: RowSorterHost = object : RowSorterHost {
         override fun sortKeysChanged(keys: List<RowSorter.SortKey>) {
             // Remove the previous multi-key sort (the TableViewSource sort axes) before setting it again
             if (multiSortKeys.isNotEmpty()) clearSourceSort()
@@ -934,23 +937,10 @@ class WTable @JvmOverloads constructor(
     /** Sets the filter of the current [rowSorter] on TableViewSource (clears it if there is none). */
     private fun applyRowFilter() {
         val currentSource = source ?: return
-        val currentSorter = sorter
-        val result = if (currentSorter?.getRowFilter() == null) {
+        val result = if (sorter?.getRowFilter() == null) {
             currentSource.getPtr(TabularInterop.ITableViewSource_ClearFilter)
         } else {
-            val predicate = KComObject("WinUI4K.TableViewPredicate", inspectable = false)
-                .addInterface(
-                    TabularInterop.IID_TableViewPredicate,
-                    listOf(
-                        // Invoke(this, Object item, out boolean) — vtbl[3]
-                        KComObject.Method(DESC_PTR_PTR) { args ->
-                            val item = rows.itemOf(args[1] as Ptr)
-                            val include = item == null || currentSorter.includes(item.modelRow)
-                            Ffi.backend.memory.putByte(args[2] as Ptr, 0, if (include) 1 else 0)
-                            KComObject.S_OK
-                        },
-                    ),
-                )
+            val predicate = anchoredRowFilter(anchor)
             try {
                 currentSource.getPtr(TabularInterop.ITableViewSource_Filter, predicate.primary)
             } finally {
@@ -968,19 +958,7 @@ class WTable @JvmOverloads constructor(
         val result = if (key == null) {
             currentSource.getPtr(TabularInterop.ITableViewSource_ClearGroupBy)
         } else {
-            val selector = KComObject("WinUI4K.TableViewKeySelector", inspectable = false)
-                .addInterface(
-                    TabularInterop.IID_TableViewKeySelector,
-                    listOf(
-                        // Invoke(this, Object item, out Object key) — vtbl[3]
-                        KComObject.Method(DESC_PTR_PTR) { args ->
-                            val item = rows.itemOf(args[1] as Ptr)
-                            val boxed = item?.let { PropertyValues.boxAny(groupKeyOf(key, model, it.modelRow)) }
-                            Ffi.backend.memory.putPtr(args[2] as Ptr, 0, boxed?.ptr ?: Ptr.NULL)
-                            KComObject.S_OK
-                        },
-                    ),
-                )
+            val selector = anchoredGroupKeySelector(anchor, key)
             try {
                 currentSource.getPtr(TabularInterop.ITableViewSource_GroupBy, selector.primary)
             } finally {
@@ -1033,28 +1011,8 @@ class WTable @JvmOverloads constructor(
         Ffi.backend.memory.getByte(out, 0).toInt() != 0
     }
 
-    /** The access point through which columns ([TableViewColumnPeer]) read the table's state. */
-    private val columnHost: TableViewColumnHost = object : TableViewColumnHost {
-        override val table: WTable
-            get() = this@WTable
-        override val model: TableModel
-            get() = this@WTable.model
-        override val rows: TableRowCollection
-            get() = this@WTable.rows
-        override val sorter: TableRowSorter<*>?
-            get() = this@WTable.sorter
-
-        override fun columnClassOf(modelIndex: Int): Class<*> =
-            if (modelIndex in 0 until model.getColumnCount()) model.getColumnClass(modelIndex) else Any::class.java
-
-        override fun itemOf(pointer: ComPtr): TableRowItem? = this@WTable.itemOf(pointer)
-
-        override fun rebuild(peer: TableViewColumnPeer) {
-            rebuildPeer(peer)
-        }
-
-        override fun viewColumnOf(peer: TableViewColumnPeer): Int = peers.indexOf(peer)
-    }
+    /** The gateway through which columns ([TableViewColumnPeer]) read the table's state (looked up from the native columns, so it looks the table up weakly). */
+    private val columnHost: TableViewColumnHost = AnchoredColumnHost(anchor)
 
     // Bind to the native side only after all properties are initialized (placed at the end because initialization
     // follows declaration order)
@@ -1066,6 +1024,10 @@ class WTable @JvmOverloads constructor(
         tableView.putBool(TabularInterop.ITableView_put_IsReadOnly, false)
         tableView.putBool(TabularInterop.ITableView_put_CanUserSortColumns, false)
         subscribeNativeEvents()
+        // TableView is in a cycle with the row collection (a Kotlin-implemented IObservableVector that strongly holds native handlers),
+        // so it is not destroyed on the native side even when the wrapper is collected. Returning the reference when the wrapper is collected can make
+        // the destruction run during XAML cleanup at exit and crash the process (0xC0000409), so one reference is kept (doc/troubleshooting.md)
+        tableView.addRef()
         attachColumnModel()
         attachModel()
     }
@@ -1076,8 +1038,6 @@ class WTable @JvmOverloads constructor(
         private const val GRID_LINES_HORIZONTAL = 1
         private const val GRID_LINES_NONE = 2
         private const val GRID_LINES_VERTICAL = 3
-
-        private val DESC_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
     }
 }
 
@@ -1104,7 +1064,7 @@ private fun <T> lookupByClass(map: Map<Class<*>, T>, columnClass: Class<*>): T? 
  * decimals are widened to those types, and everything else (Boolean or arbitrary objects) becomes its toString()
  * string. Rows with a null key become an empty string so that they also form a single group.
  */
-private fun groupKeyOf(key: TableGroupKey, model: TableModel, modelRow: Int): Any = when (val value = key.groupKey(model, modelRow)) {
+internal fun groupKeyOf(key: TableGroupKey, model: TableModel, modelRow: Int): Any = when (val value = key.groupKey(model, modelRow)) {
     null -> ""
     is String, is Int, is Long, is Double -> value
     is Byte -> value.toInt()
