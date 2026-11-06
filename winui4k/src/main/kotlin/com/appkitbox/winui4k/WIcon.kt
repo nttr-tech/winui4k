@@ -36,6 +36,21 @@ internal fun WIcon.createIconElement(): ComPtr {
 }
 
 /**
+ * Creates a new IconSource (SymbolIconSource / ImageIconSource / FontIconSource) that shows this icon and returns it as an IconSource view
+ * (for IconSource-typed properties such as TabViewItem.IconSource). The caller must release it.
+ * An unsupported implementation created from Java throws [IllegalArgumentException].
+ */
+internal fun WIcon.createIconSource(): ComPtr {
+    requireSupported()
+    return when (val icon: Any = this) {
+        is Symbol -> icon.createIconSource()
+        is WImageIcon -> icon.createImageIconSource()
+        is WFontIcon -> icon.createFontIconSource()
+        else -> throw unsupported(icon)
+    }
+}
+
+/**
  * Checks that this icon is one of the three kinds supported by the library ([Symbol] / [WImageIcon] / [WFontIcon]).
  * Java does not enforce sealed, so a custom implementation can be passed as if it were a Swing Icon; throwing
  * [IllegalArgumentException] at the time it is set avoids an obscure failure when it is shown.
@@ -79,6 +94,19 @@ class WImageIcon(
         } finally {
             imageSource.release()
             imageIcon.release()
+        }
+    }
+
+    @JvmSynthetic
+    internal fun createImageIconSource(): ComPtr {
+        val imageSource = createImageSource(uri)
+        val source = Activation.composeDefault(XamlInterop.CLS_ImageIconSource, XamlInterop.IID_IImageIconSourceFactory)
+        return try {
+            source.call(XamlInterop.IImageIconSource_put_ImageSource, imageSource.ptr)
+            source.queryInterface(XamlInterop.IID_IIconSource)
+        } finally {
+            imageSource.release()
+            source.release()
         }
     }
 
@@ -132,6 +160,23 @@ class WFontIcon @JvmOverloads constructor(
             fontIcon.queryInterface(XamlInterop.IID_IIconElement)
         } finally {
             fontIcon.release()
+        }
+    }
+
+    @JvmSynthetic
+    internal fun createFontIconSource(): ComPtr {
+        val source = Activation.composeDefault(XamlInterop.CLS_FontIconSource, XamlInterop.IID_IFontIconSourceFactory)
+        return try {
+            Hstring.use(glyph) { h -> source.call(XamlInterop.IFontIconSource_put_Glyph, h) }
+            val family = createFontFamily(fontFamily)
+            try {
+                source.call(XamlInterop.IFontIconSource_put_FontFamily, family.ptr)
+            } finally {
+                family.release()
+            }
+            source.queryInterface(XamlInterop.IID_IIconSource)
+        } finally {
+            source.release()
         }
     }
 

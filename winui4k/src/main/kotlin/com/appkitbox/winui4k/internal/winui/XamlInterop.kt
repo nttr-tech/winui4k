@@ -2015,6 +2015,7 @@ internal object XamlInterop {
     const val IID_IFontIconSourceFactory = "bb40eeee-64d1-5133-b1d6-ae13c21b6678"
     const val IID_IFontIconSource = "b89d614c-e9b5-5b6a-9bec-ad78b1a14b74"
     const val IFontIconSource_put_Glyph = 7             // put_Glyph(HSTRING)
+    const val IFontIconSource_put_FontFamily = 11       // put_FontFamily(FontFamily)
 
     // ---- Microsoft.UI.Xaml.Controls.ItemsView ----
     const val CLS_ItemsView = "Microsoft.UI.Xaml.Controls.ItemsView"
@@ -2092,17 +2093,31 @@ internal object XamlInterop {
     const val ITabView_put_SelectedIndex = 46          // put_SelectedIndex(INT32)
     const val ITabView_add_SelectionChanged = 51       // add_SelectionChanged(SelectionChangedEventHandler, out token)
     const val ITabView_remove_SelectionChanged = 52    // remove_SelectionChanged(token)
+    const val ITabView_add_TabDragCompleted = 55       // add_TabDragCompleted(TypedEventHandler, out token)
 
     const val CLS_TabViewItem = "Microsoft.UI.Xaml.Controls.TabViewItem"
     const val IID_ITabViewItemFactory = "b64c2423-7e56-5d41-8a84-1ee28f9826a4"
     const val IID_ITabViewItem = "64980afa-97af-5190-90b3-4ba277b1113d"
     const val ITabViewItem_get_Header = 6              // get_Header(out IInspectable)
     const val ITabViewItem_put_Header = 7              // put_Header(IInspectable)
+    const val ITabViewItem_get_IconSource = 10         // get_IconSource(out IconSource)
+    const val ITabViewItem_put_IconSource = 11         // put_IconSource(IconSource)
     const val ITabViewItem_get_IsClosable = 12         // get_IsClosable(out boolean)
     const val ITabViewItem_put_IsClosable = 13         // put_IsClosable(boolean)
 
     const val IID_ITabViewTabCloseRequestedEventArgs = "d56ab9b2-e264-5c7e-a1cb-e41a16a6c6c6"
     const val ITabViewTabCloseRequestedEventArgs_get_Tab = 7 // get_Tab(out TabViewItem)
+    const val IID_ITabViewTabDragCompletedEventArgs = "791fc623-c8f6-5102-81bd-1869cde82284"
+
+    /** The actual IID of TypedEventHandler<TabView, TabViewTabDragCompletedEventArgs> (computed at runtime). */
+    val IID_TabViewTabDragCompletedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.TabView;{$IID_ITabView});" +
+                "rc(Microsoft.UI.Xaml.Controls.TabViewTabDragCompletedEventArgs;" +
+                "{$IID_ITabViewTabDragCompletedEventArgs}))",
+        )
+    }
 
     /** The actual IID of TypedEventHandler<TabView, TabViewTabCloseRequestedEventArgs> (computed at runtime). */
     val IID_TabViewTabCloseRequestedHandler: String by lazy {
