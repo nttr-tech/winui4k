@@ -219,3 +219,17 @@ abstract class WMouseAdapter : WMouseListener, WMouseMotionListener, WMouseWheel
         // Does nothing by default
     }
 }
+
+/**
+ * MouseMotionAdapter-like: a base class implementing the two methods of [WMouseMotionListener] as empty.
+ * Write only one of mouseDragged or mouseMoved and pass it to [WComponent.addMouseMotionListener].
+ */
+abstract class WMouseMotionAdapter : WMouseMotionListener {
+    override fun mouseDragged(e: WMouseEvent) {
+        // Does nothing by default
+    }
+
+    override fun mouseMoved(e: WMouseEvent) {
+        // Does nothing by default
+    }
+}

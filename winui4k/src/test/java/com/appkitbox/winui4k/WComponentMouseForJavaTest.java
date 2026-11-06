@@ -140,12 +140,38 @@ class WComponentMouseForJavaTest {
     }
 
     @Test
+    void anAnonymousMouseMotionAdapterSubclassWritingOnlyMouseMovedCanReadTheMovedPosition() {
+        WPanel panel = onUiThreadGet(WComponentMouseForJavaTest::sizedPanel);
+        withShown(panel, () -> {
+            List<String> calls = new ArrayList<>();
+            panel.addMouseMotionListener(new WMouseMotionAdapter() {
+                @Override
+                public void mouseMoved(WMouseEvent e) {
+                    calls.add("moved:" + e.getX() + "," + e.getY() + ":" + e.getPreciseX());
+                }
+            });
+            List<WComponent> targets = Collections.singletonList(panel);
+            TestMouse mouse = new TestMouse();
+            mouse.move(30.5, 40, targets);
+            mouse.press(30, 40, WMouseEvent.BUTTON1, targets);
+            mouse.move(60, 40, targets);
+            mouse.release(60, 40, WMouseEvent.BUTTON1, targets);
+            assertEquals(Collections.singletonList("moved:30,40:30.5"), calls);
+            assertEquals(1, panel.getMouseMotionListeners().length);
+        });
+    }
+
+    @Test
     void mouseWheelListenerCanBeLambdaAndGetWheelRotationIsPositiveTowardUser() {
         WPanel panel = onUiThreadGet(WComponentMouseForJavaTest::sizedPanel);
         withShown(panel, () -> {
             List<Integer> rotations = new ArrayList<>();
             WMouseWheelListener listener = e -> {
                 rotations.add(e.getWheelRotation());
+                // The type depends on the system setting (whether to scroll one screen at a time). Either way, the lines scrolled are lines per notch × notches
+                assertTrue(e.getScrollType() == WMouseWheelEvent.WHEEL_UNIT_SCROLL
+                        || e.getScrollType() == WMouseWheelEvent.WHEEL_BLOCK_SCROLL);
+                assertEquals(e.getScrollAmount() * e.getWheelRotation(), e.getUnitsToScroll());
                 e.consume();
             };
             panel.addMouseWheelListener(listener);

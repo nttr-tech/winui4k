@@ -351,6 +351,26 @@ class WMouseEventTest : FunSpec() {
             }
         }
 
+        test("WMouseMotionAdapter can be passed to addMouseMotionListener with only mouseDragged written, and does nothing when moved without pressing") {
+            withBoard { board ->
+                val dragged = mutableListOf<Int>()
+                val adapter = object : WMouseMotionAdapter() {
+                    override fun mouseDragged(e: WMouseEvent) {
+                        dragged += e.x
+                    }
+                }
+                board.inner.addMouseMotionListener(adapter)
+                val mouse = TestMouse()
+                mouse.move(5.0, 5.0, listOf(board.inner))
+                mouse.press(5.0, 5.0, WMouseEvent.BUTTON1, listOf(board.inner))
+                mouse.move(50.0, 5.0, listOf(board.inner))
+                mouse.release(50.0, 5.0, WMouseEvent.BUTTON1, listOf(board.inner))
+                dragged shouldContainExactly listOf(50)
+                board.inner.mouseMotionListeners.toList() shouldContainExactly listOf<WMouseMotionListener>(adapter)
+                board.inner.mouseListeners.toList().shouldBeEmpty()
+            }
+        }
+
         test("modifier keys can be read with isShiftDown and the like, and the Windows key becomes Meta") {
             withBoard { board ->
                 board.recordAll(board.inner)
