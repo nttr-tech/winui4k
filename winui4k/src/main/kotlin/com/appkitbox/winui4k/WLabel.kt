@@ -99,8 +99,8 @@ enum class TextTrimming(internal val native: Int) {
  * where its children do not paint (such as the gap between the icon and the text), whereas Swing's JLabel receives mouse
  * events over its whole bounds.
  *
- * Of JLabel's features, the disabled icon (setDisabledIcon), HTML strings, the mnemonic display that underlines a
- * character (setDisplayedMnemonicIndex), and the grayed display from the label's own setEnabled are not available.
+ * Of JLabel's features, HTML strings, the mnemonic display that underlines a character (setDisplayedMnemonicIndex), and the grayed display from the label's own
+ * setEnabled are not available ([isEnabled] only switches to [disabledIcon]).
  *
  * Changes from earlier versions: since a constructor taking an icon was added, Java's `new WLabel(null)` is ambiguous
  * between `WLabel(String)` and `WLabel(WIcon)` and does not compile (write `(String) null` or `(WIcon) null`).
@@ -166,7 +166,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             val wasEmpty = text.isEmpty()
             Hstring.use(value) { h -> textBlock.call(XamlInterop.ITextBlock_put_Text, h) }
             // With empty text only the icon is placed (no gap), so rearrange when emptiness changes
-            if (currentIcon != null && wasEmpty != value.isEmpty()) arrange()
+            if (shownIcon != null && wasEmpty != value.isEmpty()) arrange()
         }
 
     /** The icon shown alongside (null for no icon). */
@@ -195,6 +195,39 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         }
 
     /**
+     * JLabel.getDisabledIcon / setDisabledIcon-like: the icon shown instead of [icon] while disabled ([isEnabled] is false).
+     * If null (the default), [icon] is shown also while disabled (Swing automatically creates a grayed version of [icon], but WinUI4K does not).
+     * As in Swing, this icon is shown while disabled even if [icon] is null.
+     *
+     * @throws IllegalArgumentException when a WIcon implemented on your own in Java is passed
+     */
+    var disabledIcon: WIcon? = null
+        set(value) {
+            value?.requireSupported()
+            if (value === field) return
+            val before = shownIcon
+            field = value
+            if (shownIcon !== before) arrange()
+        }
+
+    /**
+     * JLabel.isEnabled / setEnabled-like: whether the label is enabled (true by default). While false, [disabledIcon] (or [icon] if null) is shown.
+     * TextBlock has no enabled / disabled state, so this is a value held only inside the label, and the text color does not change (Swing grays it).
+     * It does not affect mouse events or keyboard focus either.
+     */
+    var isEnabled: Boolean = true
+        set(value) {
+            if (value == field) return
+            val before = shownIcon
+            field = value
+            if (shownIcon !== before) arrange()
+        }
+
+    /** The icon to show now ([disabledIcon] takes precedence while disabled; no icon if both are null). */
+    private val shownIcon: WIcon?
+        get() = if (isEnabled) currentIcon else disabledIcon ?: currentIcon
+
+    /**
      * JLabel.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon (defaults to
      * [HorizontalTextPosition.TRAILING], as in Swing).
      * [HorizontalTextPosition.CENTER] places the text above / below the icon when [verticalTextPosition] is TOP / BOTTOM,
@@ -205,7 +238,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         set(value) {
             if (value == field) return
             field = value
-            if (currentIcon != null) arrange()
+            if (shownIcon != null) arrange()
         }
 
     /**
@@ -217,7 +250,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         set(value) {
             if (value == field) return
             field = value
-            if (currentIcon != null) arrange()
+            if (shownIcon != null) arrange()
         }
 
     /**
@@ -230,7 +263,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             require(value >= 0.0 && value.isFinite()) { "iconTextGap must be a finite value of 0 or more: $value" }
             if (value == field) return
             field = value
-            if (currentIcon != null) arrange()
+            if (shownIcon != null) arrange()
         }
 
     /**
@@ -248,7 +281,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         textElement.setGridCell(0, 0)
         textElement.horizontalAlignment = HorizontalAlignment.STRETCH
         textElement.verticalAlignment = VerticalAlignment.STRETCH
-        val icon = currentIcon
+        val icon = shownIcon
         if (icon == null) {
             children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
             return

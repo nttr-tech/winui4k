@@ -64,10 +64,81 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * [WAppBarButton] / [WAppBarToggleButton], which have their own icon property, set it there (Content is not used).
      */
     open var icon: WIcon?
-        get() = label.icon
+        get() = defaultIcon
         set(value) {
-            label.icon = value
+            value?.requireSupported()
+            defaultIcon = value
+            showStateIcon()
         }
+
+    /** The icon set to [icon] (returns to null when [content] is set). What is shown is [shownIcon]. */
+    private var defaultIcon: WIcon? = null
+
+    /**
+     * AbstractButton.getSelectedIcon / setSelectedIcon-like: the icon shown instead of [icon] while selected ([WToggleButton.isSelected] is true).
+     * If null (the default), [icon] is shown also while selected. Not used by buttons without a selection state ([WButton] etc.)
+     * (the same as Swing's JButton). As in Swing, no icon is shown in any state while [icon] is null.
+     * The selection state is followed through IsChecked dependency property notifications, whether changed by a click or by the program.
+     * [WAppBarButton] / [WAppBarToggleButton] only keep the value and do not use it for display (their icons go into their own properties).
+     *
+     * @throws IllegalArgumentException when a WIcon implemented on your own in Java is passed
+     */
+    var selectedIcon: WIcon? = null
+        set(value) {
+            value?.requireSupported()
+            field = value
+            stateIconsChanged()
+        }
+
+    /**
+     * AbstractButton.getDisabledIcon / setDisabledIcon-like: the icon shown instead of [icon] while disabled ([isEnabled] is false).
+     * If null (the default), [icon] is shown also while disabled (Swing automatically creates a grayed version of [icon]; WinUI icons fade
+     * following the text color of the disabled button). While disabled and selected, as with Swing's getDisabledSelectedIcon, [selectedIcon] is shown if set,
+     * otherwise this icon. Nothing is shown while [icon] is null. Otherwise the same as [selectedIcon].
+     *
+     * @throws IllegalArgumentException when a WIcon implemented on your own in Java is passed
+     */
+    var disabledIcon: WIcon? = null
+        set(value) {
+            value?.requireSupported()
+            field = value
+            stateIconsChanged()
+        }
+
+    /** Whether the button is kept through state change notifications for the per-state icons (without that it would be collected while shown and stop following). */
+    private var stateIconsPinned = false
+
+    private fun stateIconsChanged() {
+        val wanted = selectedIcon != null || disabledIcon != null
+        if (wanted) stateChanges.ensureRegistered()
+        if (wanted != stateIconsPinned) {
+            stateIconsPinned = wanted
+            if (wanted) listenerAnchor.listenerAdded() else listenerAnchor.listenerRemoved()
+        }
+        showStateIcon()
+    }
+
+    /** Whether a button with a selection state ([WToggleButton]) is selected (for showing [selectedIcon]). */
+    internal open val showsSelected: Boolean
+        get() = false
+
+    /** The icon to show in the current state (chosen the same way as BasicButtonUI). */
+    private val shownIcon: WIcon?
+        get() {
+            val base = defaultIcon ?: return null
+            val selected = showsSelected
+            return when {
+                !isEnabled -> (if (selected) selectedIcon else null) ?: disabledIcon ?: base
+                selected -> selectedIcon ?: base
+                else -> base
+            }
+        }
+
+    /** Rearranges if [shownIcon] differs from the icon currently arranged. */
+    private fun showStateIcon() {
+        val shown = shownIcon
+        if (shown !== label.icon) label.icon = shown
+    }
 
     /**
      * AbstractButton.setHorizontalTextPosition-like: the horizontal position of the text relative to the icon. The
@@ -129,6 +200,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     var content: WComponent?
         get() = label.content
         set(value) {
+            defaultIcon = null
             label.content = value
         }
 
@@ -413,6 +485,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
 
     /** The state (pressed, pointer, enabled, selected) changed (called from the [ButtonStateChanges] callbacks). */
     internal fun onButtonStateChanged() {
+        showStateIcon()
         changeListeners.fire()
     }
 }

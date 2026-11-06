@@ -199,6 +199,10 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
             isChecked = value
         }
 
+    /** Whether to show [selectedIcon]: the same as [isSelected]. */
+    override val showsSelected: Boolean
+        get() = isSelected
+
     /** Whether clicking cycles through true → null (indeterminate) → false (ToggleButton.IsThreeState). */
     var isThreeState: Boolean
         get() = toggleButton.getBool(XamlInterop.IToggleButton_get_IsThreeState)

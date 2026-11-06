@@ -47,5 +47,16 @@ class WrapperReleaseButtonTest : FunSpec() {
             Reclamation.awaitCollected(button).shouldBeTrue()
             Reclamation.awaitCollected(toggle).shouldBeTrue()
         }
+
+        test("a toggle with selectedIcon and disabledIcon (kept through state notifications while shown) is collected after being placed in the window and removed") {
+            val toggle = shownAndHidden {
+                WToggleButton("", Symbol.PLAY).also {
+                    it.selectedIcon = Symbol.PAUSE
+                    it.disabledIcon = Symbol.CANCEL
+                    it.isSelected = true
+                }
+            }
+            Reclamation.awaitCollected(toggle).shouldBeTrue()
+        }
     }
 }
