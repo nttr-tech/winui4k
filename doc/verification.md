@@ -286,9 +286,15 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - 同じウィンドウ (XamlRoot) にほかの ContentDialog が開いている間の ShowAsync は、非同期の処理を
     始めずにその場で E_ASYNC_OPERATION_NOT_STARTED (0x80000019、ERROR_CONTENTDIALOG_MULTIPLE_OPEN) を返す。
     WContentDialog はこれを IllegalStateException にする
-  - 開いたまま持ち主のウィンドウを閉じると、XamlRoot.Content (ウィンドウの内容) の IsLoaded も false になる。showAndWait は
-    開いたときの XamlRoot.Content の IsLoaded を待ちの条件に入れるので、持ち主がメニュー項目のように先に外れる要素でも
-    ウィンドウが開いている限り待ち続ける
+  - 開いたまま持ち主のウィンドウを閉じると、XamlRoot.Content (ウィンドウの内容) の IsLoaded も false になる。ただし IsLoaded は
+    ウィンドウの中身を差し替えた (Window.Content を入れ替えた) ときも false になり、そのときダイアログは開いたまま。そのため
+    WContentDialog は IsLoaded ではなく、WFrame のウィンドウが閉じた時の内部のフック (Window.Closed) で閉じたとみなす
+    (`WContentDialogTest` の中身の差し替え、`WrapperReleaseWindowCloseTest`)
+  - Window.Closed は内容のツリーを片付ける前に来る (DesktopWindowImpl.cpp の CloseImpl は Closed を起こしてから Content を null にする)
+    ので、その中ではまだ XamlRoot を読める。片付け (ContentRoot::Close → CPopupRoot::CloseAllPopupsForTreeReset) は開いている
+    Popup を CPopup::ForceCloseForTreeReset で IsOpen = false にするが、Popup.Closed は起こさない (Closed は IsOpen の変化の通知からだけ。
+    Popup.cpp)。WPopup はフックで開いている一覧から外す。FlyoutBase の Closed は持ち主のウィンドウを閉じたときも届く
+    (E2E でラッパーが回収されることから確認。FlyoutBase_partial.cpp の OnPresenterUnloaded)
 - JMenuItem 風のメニュー項目 (WMenuFlyoutItem の doClick・accelerator) のために、MenuFlyoutItem の Invoke とアクセラレーターの届き方を
   WinUI のソースと E2E テストで確かめた (`WMenuFlyoutItemTest`)
   - UI オートメーションの Invoke (`Xaml.invoke`) は `MenuFlyoutItem::Invoke` (MenuFlyoutItem_Partial.cpp) を呼び、Click・Command・
