@@ -149,6 +149,8 @@ internal class ListSelectionSync<T : WComponent>(
         guarded {
             writeNative()
             lastNative = items.selectedIndices()
+            // In a mode that does not allow selection the native side clears the selection, so match the model too (so the previous selection is not reselected when switching back)
+            if (modes.isNone()) updateModelTo(lastNative)
             model.setSelectionMode(mode ?: modes.swingMode())
             coerceToMode()
         }

@@ -381,7 +381,20 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
 }
 
 /** The Swing-style selection API of [WList] (ListView). */
-class WListSelectionTest : ListSelectionBindingSpec({ WList(it) })
+class WListSelectionTest : ListSelectionBindingSpec({ WList(it) }) {
+    init {
+        test("switching to a mode that does not allow selection (NONE) also clears the selectionModel's selection, and switching back to single selection does not restore the previous selection") {
+            onUiThreadGet {
+                val list = WList(listOf("a", "b", "c"))
+                list.setSelectionInterval(1, 1)
+                list.selectionMode = ListViewSelectionMode.NONE
+                val none = list.selectedIndices.toList() to list.selectionModel.isSelectionEmpty()
+                list.selectionMode = ListViewSelectionMode.SINGLE
+                listOf(none, list.selectedIndices.toList() to list.listItems.selectedIndices().toList())
+            } shouldBe listOf(emptyList<Int>() to true, emptyList<Int>() to emptyList<Int>())
+        }
+    }
+}
 
 /** The Swing-style selection API of [WListBox] (ListBox). */
 class WListBoxSelectionTest : ListSelectionBindingSpec({ WListBox(it) })
