@@ -63,6 +63,9 @@ enum class ListViewSelectionMode(internal val native: Int) {
  * [removeSelectionInterval] / [clearSelection] / [isSelectedIndex] / [isSelectionEmpty] /
  * [minSelectionIndex] / [maxSelectionIndex] / [anchorSelectionIndex] / [leadSelectionIndex] / [setSelectedValue],
  * and [addListSelectionListener] with a [WListSelectionListener] (the source is this list).
+ *
+ * The display can also be handled with the same names as JList: [ensureIndexIsVisible], [visibleRowCount], [firstVisibleIndex] / [lastVisibleIndex],
+ * [locationToIndex] / [indexToLocation] / [getCellBounds] (DIP with the list's top-left as the origin).
  * The default selection mode is single selection, as in WinUI (Swing's JList defaults to multiple interval selection). WinUI's MULTIPLE (check boxes
  * toggled by clicking) is not Swing's MULTIPLE_INTERVAL_SELECTION; Swing's MULTIPLE_INTERVAL_SELECTION corresponds to
  * WinUI's EXTENDED (Ctrl / Shift). [selectionMode] stays the WinUI enumeration, and MULTIPLE can also be chosen with [selectionMode]
@@ -251,6 +254,63 @@ class WList(model: WListModel<*>) : WControl(
             if (shouldScroll) listItems.withItem(index) { item -> listViewBase.call(XamlInterop.IListViewBase_ScrollIntoView, item.ptr) }
         }
     }
+
+    /** The implementation of the display API (ensureIndexIsVisible etc.). */
+    private val viewport = ListViewport(this, { listItems.size }) { index ->
+        listItems.withItem(index) { item -> listViewBase.call(XamlInterop.IListViewBase_ScrollIntoView, item.ptr) }
+    }
+
+    /**
+     * Scrolls until the element at [index] is visible (JList.ensureIndexIsVisible, ListViewBase.ScrollIntoView).
+     * As in Swing, does nothing for an out-of-range [index].
+     */
+    fun ensureIndexIsVisible(index: Int) = viewport.ensureIndexIsVisible(index)
+
+    /**
+     * The number of rows to show (JList.getVisibleRowCount / setVisibleRowCount). The default is 8, as in Swing, and negative values become 0.
+     * Setting it sets the height ([height]) to "rows × 40 DIP + top and bottom padding (Padding) and border (BorderThickness)". 40 is an estimate taken from
+     * the default item height of WinUI (ListViewItemMinHeight), and it drifts for apps with Compact density (32) or when [cellRenderer] draws items
+     * of different heights. If the user has specified [height], the height is not changed. Unlike Swing, the default 8 rows does not affect the size until set.
+     */
+    var visibleRowCount: Int
+        get() = viewport.visibleRowCount
+        set(value) {
+            viewport.visibleRowCount = value
+        }
+
+    /**
+     * The index of the first (even partly) visible element (JList.getFirstVisibleIndex).
+     * -1 when there are no elements or it is not shown. Values are as of the last layout.
+     */
+    val firstVisibleIndex: Int
+        get() = viewport.firstVisibleIndex
+
+    /** The index of the last (even partly) visible element (JList.getLastVisibleIndex). -1 if none. */
+    val lastVisibleIndex: Int
+        get() = viewport.lastVisibleIndex
+
+    /**
+     * The index of the element closest to the list coordinates ([x], [y]) (DIP; the list's top-left is the origin) (JList.locationToIndex).
+     * As in Swing, it returns the closest element even if not over one (closeness is decided by the vertical position), and -1 if there are no elements. Also -1 when not shown.
+     * WinUI creates only the visible items and a few around them, so for a far point outside the list, it is the created end element rather than an element hidden by scrolling.
+     * It can be used in a mouse listener to find the double-clicked element (`list.locationToIndex(e.point)`).
+     */
+    fun locationToIndex(x: Double, y: Double): Int = viewport.locationToIndex(x, y)
+
+    /** The element closest to [location] (a position in DIP as integers, such as [WMouseEvent.point]) (JList.locationToIndex(Point)). See the overload above for details. */
+    fun locationToIndex(location: WPoint): Int = viewport.locationToIndex(location.x.toDouble(), location.y.toDouble())
+
+    /**
+     * The top-left of the element at [index] (JList.indexToLocation). DIP with the list's top-left as the origin, rounded to the nearest integers (same as [WComponent.location]).
+     * null if out of range, or if the item of that element is not created yet (not shown, or far away by scrolling).
+     */
+    fun indexToLocation(index: Int): WPoint? = viewport.cellBounds(index, index)?.let { WPoint(it.x, it.y) }
+
+    /**
+     * The bounds enclosing the elements from [index0] to [index1] (in either order) (JList.getCellBounds). DIP with the list's top-left as the origin, rounded.
+     * null if either is out of range, or if the items of the end elements are not created.
+     */
+    fun getCellBounds(index0: Int, index1: Int): WRectangle? = viewport.cellBounds(index0, index1)
 
     /**
      * ListSelectionListener-like: receives selection changes as [WListSelectionEvent]s (JList.addListSelectionListener).

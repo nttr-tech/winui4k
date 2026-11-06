@@ -570,6 +570,7 @@ internal object XamlInterop {
     const val IID_IContentControl = "07e81761-11b2-52ae-8f8b-4d53d2b5900a"
     const val IContentControl_get_Content = 6          // get_Content(out IInspectable)
     const val IContentControl_put_Content = 7          // put_Content(IInspectable)
+    const val IContentControl_get_ContentTemplateRoot = 14 // get_ContentTemplateRoot(out UIElement)
     const val IID_IButtonBase = "65714269-2473-5327-a652-0ea6bce7f403" // Controls.Primitives
     const val IButtonBase_get_ClickMode = 6            // get_ClickMode(out ClickMode)
     const val IButtonBase_put_ClickMode = 7            // put_ClickMode(ClickMode)
@@ -721,6 +722,33 @@ internal object XamlInterop {
     const val IItemsControl_put_ItemsSource = 7        // put_ItemsSource(IInspectable)
     const val IItemsControl_get_Items = 8              // get_Items(out ItemCollection)
     const val IItemsControl_put_ItemContainerStyle = 19 // put_ItemContainerStyle(Style)
+    const val IItemsControl_get_ItemsPanelRoot = 17    // get_ItemsPanelRoot(out Panel)
+    const val IItemsControl_put_ItemTemplate = 10      // put_ItemTemplate(DataTemplate)
+    const val IID_IItemContainerMapping = "b3e03a32-ea83-5626-bfda-d327a1c7550c" // Implemented by ItemsControl
+    const val IItemContainerMapping_IndexFromContainer = 8 // IndexFromContainer(DependencyObject, out INT32)
+    const val IItemContainerMapping_ContainerFromIndex = 9 // ContainerFromIndex(INT32, out DependencyObject)
+    const val IListViewBase_add_ContainerContentChanging = 38 // add_ContainerContentChanging(TypedEventHandler, out token)
+    const val IListViewBase_remove_ContainerContentChanging = 39 // remove_ContainerContentChanging(token)
+    const val IID_IContainerContentChangingEventArgs = "f4c8c937-b070-53ce-a76c-074ee5750a71"
+    const val IContainerContentChangingEventArgs_get_ItemContainer = 6 // get_ItemContainer(out SelectorItem)
+    const val IContainerContentChangingEventArgs_get_InRecycleQueue = 7 // get_InRecycleQueue(out boolean)
+    const val IContainerContentChangingEventArgs_get_ItemIndex = 8 // get_ItemIndex(out INT32)
+    const val IContainerContentChangingEventArgs_put_Handled = 12 // put_Handled(boolean)
+
+    /** Concrete IID of TypedEventHandler<ListViewBase, ContainerContentChangingEventArgs> (computed at runtime). */
+    val IID_ContainerContentChangingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.ListViewBase;{$IID_IListViewBase});" +
+                "rc(Microsoft.UI.Xaml.Controls.ContainerContentChangingEventArgs;{$IID_IContainerContentChangingEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.ListBoxItem ----
+    const val CLS_ListBoxItem = "Microsoft.UI.Xaml.Controls.ListBoxItem"
+    const val IID_IListBoxItemFactory = "8e9e0e6d-4597-5efa-94bc-7ffadc264c28"
+    const val IID_ISelectorItem = "5772c4de-60ea-5492-8c5e-b3323d5a3ca6" // Controls.Primitives.SelectorItem
+    const val ISelectorItem_get_IsSelected = 6         // get_IsSelected(out boolean)
 
     // ---- Microsoft.UI.Xaml.Controls.ListBox ----
     const val CLS_ListBox = "Microsoft.UI.Xaml.Controls.ListBox"

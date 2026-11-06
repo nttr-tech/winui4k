@@ -163,4 +163,42 @@ class WListBoxForJavaTest {
             assertThrows(IllegalArgumentException.class, () -> list.setSelectionMode(7));
         });
     }
+
+    @Test
+    void setVisibleRowCountMakesTheHeightFitTheRowsAndLocationToIndexIsMinusOneWhenNotShown() {
+        onUiThread(() -> {
+            WListBox list = new WListBox(new String[] {"Red", "Green", "Blue"});
+            assertEquals(8, list.getVisibleRowCount());
+            list.setVisibleRowCount(4);
+            assertEquals(4, list.getVisibleRowCount());
+            assertEquals(160.0, list.getHeight());
+            assertEquals(-1, list.locationToIndex(new WPoint(5, 5)));
+            assertEquals(-1, list.getFirstVisibleIndex());
+            assertNull(list.indexToLocation(0));
+            assertNull(list.getCellBounds(0, 2));
+            list.ensureIndexIsVisible(-1);
+            list.ensureIndexIsVisible(2);
+        });
+    }
+
+    @Test
+    void inAShownListAPointInsideAnItemsBoundsPassedToLocationToIndexGivesThatItem() {
+        WListBox[] holder = new WListBox[1];
+        onUiThread(() -> holder[0] = new WListBox(new String[] {"Red", "Green", "Blue"}));
+        WListBox list = holder[0];
+        UiTestHarness.attachAndAwaitLoaded(list);
+        try {
+            onUiThread(() -> {
+                list.updateLayout();
+                WRectangle cell = list.getCellBounds(1, 1);
+                WPoint center = new WPoint(cell.getX() + cell.getWidth() / 2, cell.getY() + cell.getHeight() / 2);
+                assertEquals(1, list.locationToIndex(center));
+                assertEquals(new WPoint(cell.getX(), cell.getY()), list.indexToLocation(1));
+                assertEquals(0, list.getFirstVisibleIndex());
+                assertEquals(2, list.getLastVisibleIndex());
+            });
+        } finally {
+            UiTestHarness.detach(list);
+        }
+    }
 }
