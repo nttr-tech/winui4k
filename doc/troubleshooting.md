@@ -288,3 +288,10 @@
   (`ItemsControl::OnItemContainerStyleChanged` → `RefreshContainers`) 新しい色になる。Style は `BasedOn="{StaticResource
   DefaultListViewItemStyle}"` にすればテーマの見た目は残る (XamlReader.Load で解決できる)。
   `WList.selectionBackground` / `WListBox.selectionBackground` はこうしている (`ListCellLookTest`。2026-10-20、Panama で確認)
+- **TableView (2.5.4-experimental): 表や行の Resources に MUX_TabularSurfaceRowBackgroundSelectedBrush を入れても、選んだ行の背景が変わらない**
+  選んだ行の背景はテンプレートの `PART_RootBorder` (Border) の Background で、テーマの既定は #09000000 (SubtleFillColorSecondary)。
+  キーの名前 (`MUX_TabularSurfaceRowBackgroundSelectedBrush` / `...SelectedPointerOverBrush` / `...SelectedPressedBrush`) は
+  Microsoft.UI.Xaml.Controls.Tabular.pri にあるが、TableView の Resources に表示の前に入れても、表示した行 (TableViewRow) の
+  Resources に入れて選び直しても、色は変わらなかった (2026-10-20、Panama で PART_RootBorder の Background を読んで確認)。
+  `PART_RootBorder` にローカル値を入れると読み出しはその色になるが、行は ItemsRepeater で使い回されるので行ごとに管理が要る。
+  そのため WTable には selectionBackground を足していない (Application.Resources に入れれば効く可能性はあるが、全部の表に効いてしまう。未確認)
