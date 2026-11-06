@@ -100,6 +100,61 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
         if (title.isNotEmpty()) this.title = title
     }
 
+    /** JMenu.getText / setText-like: an alias of [title]. */
+    var text: String
+        get() = title
+        set(value) {
+            title = value
+        }
+
+    /**
+     * JMenu.getMnemonic / setMnemonic(int)-like: the key code of the access key (UIElement.AccessKey). The values and constraints are the same as
+     * [WMenuFlyoutItem.mnemonic]. Pressing Alt and that key opens the menu (MenuBarItem opens its menu on AccessKeyInvoked).
+     */
+    var mnemonic: Int
+        get() = Mnemonics.read(uiElement)
+        set(value) = Mnemonics.write(uiElement, value)
+
+    /** JMenu.setMnemonic(char)-like: sets the access key by character (the same as [WMenuFlyoutItem.setMnemonic]). */
+    fun setMnemonic(mnemonic: Char) {
+        this.mnemonic = Mnemonics.keyCodeOf(mnemonic)
+    }
+
+    /**
+     * JMenu.isPopupMenuVisible / setPopupMenuVisible-like: whether the menu is open. true opens it the same as clicking the menu bar heading
+     * (does nothing if already open) and false closes it. It does not open before being placed in a window or when there are no items
+     * (WinUI's MenuBarItem does not open an empty menu). Opening is asynchronous, and reading returns true only after it starts opening.
+     */
+    var isPopupMenuVisible: Boolean
+        get() = withOpeningMenu { it.getBool(XamlInterop.IFlyoutBase_get_IsOpen) } ?: false
+        set(value) {
+            if (value == isPopupMenuVisible) return
+            if (value) {
+                Xaml.invoke(inspectable) // MenuBarItem's Invoke: opens it if closed
+            } else {
+                withOpeningMenu { it.call(XamlInterop.IFlyoutBase_Hide) }
+            }
+        }
+
+    /**
+     * JMenu.doClick-like: the same as clicking the menu bar heading, opens the menu if closed and closes it if open
+     * (UI Automation Invoke). Does nothing if disabled ([isEnabled] is false). Also does nothing before being placed in a window.
+     */
+    fun doClick() {
+        if (!isEnabled) return
+        Xaml.invoke(inspectable)
+    }
+
+    /** Calls [block] with the menu to open (the ContextFlyout of the template part) if there is one. null if not yet there before being placed. */
+    private fun <T> withOpeningMenu(block: (ComPtr) -> T): T? {
+        val flyout = MenuBarItemMenuEvents.openingMenuOf(inspectable) ?: return null
+        return try {
+            block(flyout)
+        } finally {
+            flyout.release()
+        }
+    }
+
     private val menuEvents: MenuBarItemMenuEvents by lazy { MenuBarItemMenuEvents(listenerAnchor) }
 
     /**

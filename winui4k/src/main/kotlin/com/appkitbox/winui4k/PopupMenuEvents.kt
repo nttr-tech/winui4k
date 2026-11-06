@@ -217,7 +217,7 @@ internal class MenuBarItemMenuEvents(private val anchor: ListenerAnchor<WCompone
         listeners.toList().forEach { call(it, event) }
     }
 
-    private companion object {
+    companion object {
         /** The ContextFlyout (IFlyoutBase) of "ContentButton" in the applied template. null if not yet. The caller releases it. */
         fun openingMenuOf(control: ComPtr): ComPtr? {
             val button = Xaml.appliedTemplatePartOrNull(control, "ContentButton") ?: return null

@@ -77,9 +77,27 @@ enum class CommandBarOverflowButtonVisibility(internal val native: Int) {
  * [getComponentAtIndex]. It has the same sequence API as [WContainer], but is not a WContainer subclass.
  * Horizontal only ([orientation]), [isFloatable] is always false, and [isRollover] is always true.
  */
-class WCommandBar : WControl(
+class WCommandBar() : WControl(
     Activation.composeDefault(XamlInterop.CLS_CommandBar, XamlInterop.IID_ICommandBarFactory),
 ) {
+    /** JToolBar(String)-like: a bar with [name] (Component.getName; in Swing it is also the title of the window when detached). */
+    constructor(name: String) : this() {
+        this.name = name
+    }
+
+    /**
+     * JToolBar(int)-like: a bar with the specified orientation. Only [HORIZONTAL] can be specified; [VERTICAL] and any other value throw
+     * IllegalArgumentException (the same as [orientation]).
+     */
+    constructor(orientation: Int) : this() {
+        this.orientation = orientation
+    }
+
+    /** JToolBar(String, int)-like: a bar with the specified [name] and orientation (HORIZONTAL only). */
+    constructor(name: String, orientation: Int) : this(orientation) {
+        this.name = name
+    }
+
     /** The IAppBar view that holds IsOpen / IsSticky / ClosedDisplayMode (CommandBar is an AppBar subclass). */
     private val appBar: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IAppBar)) }
 
