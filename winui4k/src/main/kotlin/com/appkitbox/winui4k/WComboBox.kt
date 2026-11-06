@@ -244,15 +244,24 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 
     /**
      * JComboBox.getMaximumRowCount / setMaximumRowCount-like: the number of rows shown in the drop-down without scrolling. The default is 8, as in JComboBox.
-     * WinUI has no row count setting, so setting it sets ComboBox.MaxDropDownHeight to "rows × 36 DIP item height of the default theme + 10 DIP top and bottom padding"
-     * (the item height is estimated from the ComboBoxItem template padding and the 14px body line height, and drifts if the font or style is changed).
-     * Until set, it keeps the native default (expanding as far as fits on screen).
+     * WinUI has no row count setting, so setting it sets ComboBox.MaxDropDownHeight to "(rows + 0.5) × item height + 10 DIP top and bottom padding".
+     * WinUI lays out as many whole items as fit in this height and shrinks the drop-down to that height (GetNonPannablePopupLayout in ComboBox_Partial.cpp), so
+     * with half a row of slack, exactly the number of rows is laid out even if the measured height is slightly off.
+     * The item height used is the actual height of the items (ComboBoxItem) laid out each time the drop-down opens (so the row count matches even if the font or style changes).
+     * Until it has been opened, the 36 DIP estimate from the default theme and 14px body text is used.
+     * Until set, it keeps the native default (expanding as far as fits on screen). The drop-down is also cut by the window height (WinUI behavior).
      */
     var maximumRowCount: Int = DEFAULT_MAXIMUM_ROW_COUNT
         set(value) {
             field = value
-            inspectable.call(XamlInterop.IComboBox_put_MaxDropDownHeight, value * ROW_HEIGHT + DROP_DOWN_CHROME_HEIGHT)
+            addRowHeightHandler()
+            applyMaxDropDownHeight()
         }
+
+    /** The item height (DIP) measured when the drop-down opened. 0 if not measured yet. */
+    private var measuredRowHeight = 0.0
+
+    private var rowHeightHandlerAdded = false
 
     init {
         dataModel.addListDataListener(modelListener)
@@ -762,6 +771,59 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         ) { _, _ -> comboBox.get()?.syncNativeSelection() }
     }
 
+    /** Decides MaxDropDownHeight from [maximumRowCount] rows and the measured (or, if not yet, estimated) item height (adding half a row of slack). */
+    private fun applyMaxDropDownHeight() {
+        val row = if (measuredRowHeight > 0.0) measuredRowHeight else ROW_HEIGHT
+        inspectable.call(XamlInterop.IComboBox_put_MaxDropDownHeight, (maximumRowCount + ROW_SLACK) * row + DROP_DOWN_CHROME_HEIGHT)
+    }
+
+    /** Measures the item height every time the drop-down opens (only for combos with [maximumRowCount] set). */
+    private fun addRowHeightHandler() {
+        if (rowHeightHandlerAdded) return
+        rowHeightHandlerAdded = true
+        val comboBox = WeakReference(this)
+        inspectable.addEventHandler(
+            "WinUI4K.ComboBoxRowHeightHandler",
+            FoundationInterop.IID_EventHandler_Object,
+            XamlInterop.IComboBox_add_DropDownOpened,
+        ) { _, _ ->
+            val opened = comboBox.get() ?: return@addEventHandler
+            // Right after opening, the items may not be laid out yet, so if it cannot be measured, measure again after returning to the message loop
+            if (!opened.measureRowHeight()) Dispatcher.invokeLater { comboBox.get()?.measureRowHeight() }
+        }
+    }
+
+    /**
+     * Measures the actual height of the first laid-out item (ComboBoxItem), and re-fits MaxDropDownHeight if it changed. true if measured.
+     * While unselected, WinUI lays out items centered on the middle item, so the container of the first item may not be created yet.
+     */
+    private fun measureRowHeight(): Boolean {
+        val mapping = inspectable.queryInterface(XamlInterop.IID_IItemContainerMapping)
+        val height = try {
+            val container = (0 until itemCount).firstNotNullOfOrNull {
+                mapping.getPtrOrNull(XamlInterop.IItemContainerMapping_ContainerFromIndex, it)
+            } ?: return false
+            try {
+                val element = container.queryInterface(XamlInterop.IID_IFrameworkElement)
+                try {
+                    element.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight)
+                } finally {
+                    element.release()
+                }
+            } finally {
+                container.release()
+            }
+        } finally {
+            mapping.release()
+        }
+        if (height <= 0.0) return false
+        if (height != measuredRowHeight) {
+            measuredRowHeight = height
+            applyMaxDropDownHeight()
+        }
+        return true
+    }
+
     private fun textOf(element: Any?): String = element?.toString() ?: ""
 
     private fun addTextSubmittedHandler() {
@@ -798,10 +860,14 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         private const val DEFAULT_MAXIMUM_ROW_COUNT = 8
 
         /**
-         * The height (DIP) of one ComboBoxItem row in the default theme: the template's LayoutRoot Margin top and bottom 2+2, ComboBoxItemThemePadding top and bottom 5+7
-         * (the ComboBoxItem style in controls/dev/ComboBox/ComboBox_themeresources.xaml), and the 14px body line height of 20.
+         * The estimated height (DIP) of one ComboBoxItem row before it is measured. The template's LayoutRoot Margin top and bottom 2+2 and
+         * ComboBoxItemThemePadding top and bottom 5+7 (the ComboBoxItem style in controls/dev/ComboBox/ComboBox_themeresources.xaml) are fixed, and
+         * the body line height of 20 is an estimate that varies with the font (not in WinUI's source). After opening, the actual height is measured and used ([measureRowHeight]).
          */
         private const val ROW_HEIGHT = 36.0
+
+        /** The slack added to MaxDropDownHeight relative to the row height (half a row). */
+        private const val ROW_SLACK = 0.5
 
         /** The outer height (DIP) of the drop-down items: ComboBoxDropdownContentMargin top and bottom 4+4 and ComboBoxDropdownBorderThickness top and bottom 1+1. */
         private const val DROP_DOWN_CHROME_HEIGHT = 10.0

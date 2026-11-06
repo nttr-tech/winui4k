@@ -281,7 +281,7 @@ class WComboBoxEventTest : FunSpec() {
             } shouldBe ("" to "Color")
         }
 
-        test("maximumRowCount defaults to 8, and setting it determines MaxDropDownHeight from a 36 DIP row height and 10 DIP border") {
+        test("maximumRowCount defaults to 8, and setting it before opening decides MaxDropDownHeight from the estimated row height of 36 DIP plus half a row of slack and a 10 DIP border") {
             onUiThreadGet {
                 val comboBox = WComboBox()
                 val initial = comboBox.maximumRowCount
@@ -290,7 +290,7 @@ class WComboBoxEventTest : FunSpec() {
             }.let { (initial, rows, height) ->
                 initial shouldBe 8
                 rows shouldBe 5
-                height shouldBe 5 * 36.0 + 10.0
+                height shouldBe 5.5 * 36.0 + 10.0
             }
         }
 
