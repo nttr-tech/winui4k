@@ -26,11 +26,15 @@ internal object TopLevelWindows {
     private val postMessageW by lazy {
         Ffi.backend.function("user32.dll", "PostMessageW", CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.I32, ArgKind.I64, ArgKind.I64))
     }
+    private val getWindow by lazy {
+        Ffi.backend.function("user32.dll", "GetWindow", CallDescriptor(ValueKind.PTR, ArgKind.PTR, ArgKind.I32))
+    }
     private val getCurrentProcessId by lazy {
         Ffi.backend.function("kernel32.dll", "GetCurrentProcessId", CallDescriptor(ValueKind.I32))
     }
 
     private const val WM_CLOSE = 0x0010
+    private const val GW_OWNER = 4
 
     /** The window class of OS common dialogs (IFileOpenDialog and so on). */
     const val DIALOG_CLASS = "#32770"
@@ -48,6 +52,9 @@ internal object TopLevelWindows {
             previous = next
         }
     }
+
+    /** The owner window of [window] (GetWindow(GW_OWNER)). null if none. */
+    fun owner(window: Ptr): Ptr? = (getWindow(window, GW_OWNER) as Ptr).takeUnless { it.isNull }
 
     /** Sends WM_CLOSE to [window]. */
     fun close(window: Ptr) {

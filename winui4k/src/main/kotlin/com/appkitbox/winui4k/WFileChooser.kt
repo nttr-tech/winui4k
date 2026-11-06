@@ -19,8 +19,9 @@ import java.util.function.IntConsumer
  * [SAVE_DIALOG], save; otherwise ([OPEN_DIALOG], [CUSTOM_DIALOG]), open.
  *
  * Differences from Swing (constraints of the OS dialogs):
- * - The parent must be a component that is in a window, to decide which window to open the dialog on.
- *   null and components not in a window throw [IllegalArgumentException].
+ * - If the parent is null, it opens on the active [WFrame] (if none, the shown [WFrame] that became active last or
+ *   was created last), the same as [WOptionPane]. Unlike Swing, no invisible shared frame is created, so if no window is shown at all
+ *   it throws [IllegalStateException]. A parent that is not in a window throws [IllegalArgumentException].
  * - The OS dialogs have no [FILES_AND_DIRECTORIES], so it selects files, the same as [FILES_ONLY].
  * - Only [WFileNameExtensionFilter] and [acceptAllFileFilter] appear in "file type" (other [WFileFilter]s do not).
  *   If two file types have the same description, only the later one remains.
@@ -205,11 +206,7 @@ class WFileChooser @JvmOverloads constructor(currentDirectory: File? = null) {
     }
 
     private fun start(parent: WComponent?, onResult: IntConsumer) {
-        val windowId = StoragePickers.windowIdOf(
-            requireNotNull(parent) {
-                "The parent is null. Pass a component that is in a window to decide which window to open the dialog on"
-            },
-        )
+        val windowId = StoragePickers.windowIdOf(WFrame.dialogOwnerOf(parent))
         val onError: (RuntimeException) -> Unit = { finish(null, onResult) }
         val onPicked: (List<String>) -> Unit = { paths -> finish(paths, onResult) }
         when (val picker = createPicker(windowId)) {

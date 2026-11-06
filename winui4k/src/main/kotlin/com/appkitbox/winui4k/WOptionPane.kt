@@ -157,7 +157,7 @@ object WOptionPane {
     }
 
     private fun messageDialog(parent: WComponent?, message: Any?, title: String?, messageType: Int, icon: WIcon?) =
-        OptionDialog(ownerOf(parent), message, title, iconOf(messageType, icon), listOf(okButtonText), 0, null)
+        OptionDialog(WFrame.dialogOwnerOf(parent), message, title, iconOf(messageType, icon), listOf(okButtonText), 0, null)
 
     // ---- showConfirmDialog ----
 
@@ -200,7 +200,7 @@ object WOptionPane {
 
     private fun confirmDialog(parent: WComponent?, message: Any?, title: String?, optionType: Int, messageType: Int, icon: WIcon?): OptionDialog {
         val buttons = buttonsOf(optionType)
-        return OptionDialog(ownerOf(parent), message, title, iconOf(messageType, icon), buttons, 0, null)
+        return OptionDialog(WFrame.dialogOwnerOf(parent), message, title, iconOf(messageType, icon), buttons, 0, null)
     }
 
     // ---- showInputDialog ----
@@ -277,7 +277,7 @@ object WOptionPane {
         selectionValues: Array<out Any?>?,
         initialSelectionValue: Any?,
     ): Pair<OptionDialog, InputPart> {
-        val owner = ownerOf(parent)
+        val owner = WFrame.dialogOwnerOf(parent)
         val input = if (selectionValues != null) {
             InputPart.Selection(selectionValues, initialSelectionValue)
         } else {
@@ -338,7 +338,7 @@ object WOptionPane {
         }
         val labels = options.map { it.toString() }
         val defaultIndex = options.indexOfFirst { it == initialValue }.coerceAtLeast(0)
-        return OptionDialog(ownerOf(parent), message, title, iconOf(messageType, icon), labels, defaultIndex, null)
+        return OptionDialog(WFrame.dialogOwnerOf(parent), message, title, iconOf(messageType, icon), labels, defaultIndex, null)
     }
 
     // ---- Common ----
@@ -368,15 +368,6 @@ object WOptionPane {
             )
         }
         return icon ?: glyph?.let { WFontIcon(it) }
-    }
-
-    /** The component of the window to open the dialog on. If [parent] is null, the content of the active window (or the last shown window). */
-    private fun ownerOf(parent: WComponent?): WComponent {
-        if (parent != null) return parent
-        val frame = checkNotNull(WFrame.activeOrRecentFrame()) {
-            "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
-        }
-        return frame.content
     }
 
     /** ErrorBadge. */

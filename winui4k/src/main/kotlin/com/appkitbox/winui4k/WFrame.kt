@@ -881,9 +881,24 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
         val frames: Array<WFrame>
             get() = openFrames.toTypedArray()
 
-        /** The active window. If none, the shown window that became active (or was created) last. null if neither exists. */
+        /**
+         * The shown active window. If none, the shown window that became active (or was created) last. null if neither exists.
+         * A window right after being hidden stays [isActive] until Activated (inactive) arrives, so whether it is shown is checked too.
+         */
         internal fun activeOrRecentFrame(): WFrame? =
-            openFrames.firstOrNull { it.isActive } ?: openFrames.lastOrNull { it.isVisible }
+            openFrames.firstOrNull { it.isActive && it.isVisible } ?: openFrames.lastOrNull { it.isVisible }
+
+        /**
+         * The component of the window to open a dialog ([WOptionPane], [WFileChooser]) on: [parent] if given, otherwise
+         * the content of [activeOrRecentFrame]. [IllegalStateException] if neither exists. Call on the UI thread.
+         */
+        internal fun dialogOwnerOf(parent: WComponent?): WComponent {
+            if (parent != null) return parent
+            val frame = checkNotNull(activeOrRecentFrame()) {
+                "The parent is null and there is no shown window (WFrame) to open on. Show a window, or pass a component that is in a window"
+            }
+            return frame.content
+        }
     }
 }
 

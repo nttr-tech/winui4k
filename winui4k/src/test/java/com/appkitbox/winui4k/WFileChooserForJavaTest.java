@@ -90,17 +90,17 @@ class WFileChooserForJavaTest {
     }
 
     @Test
-    void theCallbackFormCanBeWrittenWithALambdaAndANullParentThrowsIllegalArgumentException() {
+    void theCallbackFormCanBeWrittenWithALambdaAndAParentNotInAWindowThrowsIllegalArgumentException() {
         WFileChooser chooser = new WFileChooser();
         assertThrows(IllegalArgumentException.class, () -> onUiThreadGet(() -> {
-            chooser.showOpenDialog(null, result -> {
+            chooser.showOpenDialog(new WButton("Not loaded"), result -> {
                 if (result == WFileChooser.APPROVE_OPTION) {
                     chooser.getSelectedFile();
                 }
             });
             return null;
         }));
-        assertThrows(IllegalArgumentException.class, () -> onUiThreadGet(() -> chooser.showSaveDialog(null)));
+        assertThrows(IllegalArgumentException.class, () -> onUiThreadGet(() -> chooser.showSaveDialog(new WButton("Not loaded"))));
         assertEquals(WFileChooser.SAVE_DIALOG, chooser.getDialogType());
     }
 }

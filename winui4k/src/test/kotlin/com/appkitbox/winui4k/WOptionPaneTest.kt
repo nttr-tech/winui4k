@@ -394,6 +394,19 @@ class WOptionPaneTest : FunSpec() {
             }
         }
 
+        test("with a null parent and no window shown at all, IllegalStateException (the dialog does not open)") {
+            val shared = UiTestHarness.sharedFrame()
+            onUiThread { shared.appWindow.hide() }
+            try {
+                // Call right after hiding (without waiting for Activated (inactive))
+                shouldThrow<IllegalStateException> {
+                    onUiThreadGet { WOptionPane.showMessageDialog(null, "No parent", "Notice", WOptionPane.INFORMATION_MESSAGE, null) { } }
+                }.message shouldContain "WFrame"
+            } finally {
+                onUiThread { shared.appWindow.show(activate = false) }
+            }
+        }
+
         test("a null parent and showInputDialog(message) without a parent open on the last shown window (Swing's parentless form)") {
             val frame = onUiThreadGet { WFrame(PARENTLESS_TITLE) }
             try {

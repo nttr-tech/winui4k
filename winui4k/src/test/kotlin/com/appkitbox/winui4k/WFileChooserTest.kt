@@ -1,14 +1,17 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.io.File
@@ -289,20 +292,56 @@ class WFileChooserTest : FunSpec() {
         test("showDialog changes the approve button text and makes it CUSTOM_DIALOG, and does not change it if null") {
             val chooser = WFileChooser()
             chooser.approveButtonText = "Previous text"
-            shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showDialog(null, null) } }
+            shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showDialog(WButton("Not loaded"), null) } }
             chooser.dialogType shouldBe WFileChooser.OPEN_DIALOG
             chooser.approveButtonText shouldBe "Previous text"
-            shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showDialog(null, "Import") } }
+            shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showDialog(WButton("Not loaded"), "Import") } }
             chooser.dialogType shouldBe WFileChooser.CUSTOM_DIALOG
             chooser.approveButtonText shouldBe "Import"
         }
 
-        test("a null parent or one not in a window throws IllegalArgumentException (the dialog does not open)") {
+        test("a parent that is not in a window throws IllegalArgumentException (the dialog does not open)") {
             val chooser = WFileChooser()
-            shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showOpenDialog(null) } }
             shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showSaveDialog(WButton("Not loaded")) } }
             shouldThrow<IllegalArgumentException> { onUiThreadGet { chooser.showOpenDialog(WButton("Not loaded")) { } } }
             chooser.dialogType shouldBe WFileChooser.OPEN_DIALOG
+        }
+
+        test("with a null parent, the OS dialog opens with the active WFrame as its owner") {
+            val frameTitle = "WFileChooserTest parentless window"
+            val dialogTitle = "WFileChooserTest parentless dialog"
+            val frame = onUiThreadGet { WFrame(frameTitle) }
+            var result: Int? = null
+            try {
+                onUiThread { frame.isVisible = true }
+                eventually(5.seconds) { onUiThreadGet { frame.isActive }.shouldBeTrue() }
+                val chooser = WFileChooser(tempDir)
+                chooser.dialogTitle = dialogTitle
+                WinUiUtilities.invokeLater { result = chooser.showOpenDialog(null) }
+                val dialog = eventually(10.seconds) { TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle).shouldNotBeNull() }
+                val frameWindow = TopLevelWindows.find(null, frameTitle).shouldNotBeNull()
+                TopLevelWindows.owner(dialog) shouldBe frameWindow
+                TopLevelWindows.close(dialog)
+                eventually(5.seconds) { result shouldBe WFileChooser.CANCEL_OPTION }
+            } finally {
+                TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, dialogTitle)?.let { TopLevelWindows.close(it) }
+                onUiThread { frame.dispose() }
+            }
+        }
+
+        test("with a null parent, IllegalStateException if no window is shown at all (the dialog does not open)") {
+            val shared = UiTestHarness.sharedFrame()
+            onUiThread { shared.appWindow.hide() }
+            try {
+                val chooser = WFileChooser()
+                chooser.dialogTitle = "WFileChooserTest dialog that does not open"
+                // Call right after hiding (without waiting for Activated (inactive))
+                shouldThrow<IllegalStateException> { onUiThreadGet { chooser.showOpenDialog(null) { } } }.message shouldContain "WFrame"
+                shouldThrow<IllegalStateException> { onUiThreadGet { chooser.showSaveDialog(null) { } } }
+                TopLevelWindows.find(TopLevelWindows.DIALOG_CLASS, chooser.dialogTitle).shouldBeNull()
+            } finally {
+                onUiThread { shared.appWindow.show(activate = false) }
+            }
         }
 
         test("calling a blocking form from outside the UI thread throws IllegalStateException") {
