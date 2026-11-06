@@ -113,5 +113,26 @@ class WrapperReleaseValueTest : FunSpec() {
             Reclamation.awaitCollected(modelled).shouldBeTrue()
             Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
         }
+
+        test("a WCalendarDatePicker with a PopupMenuListener referencing itself and a WCalendarView with a selection listener referencing itself are collected after being put in a window and removed") {
+            val sources = changeSources
+            val calendarDatePicker = shownAndHidden {
+                val picker = WCalendarDatePicker()
+                picker.addPopupMenuListener(object : WPopupMenuAdapter() {
+                    override fun popupMenuCanceled(e: WPopupMenuEvent) {
+                        picker.date = null
+                    }
+                })
+                picker
+            }
+            val calendarView = shownAndHidden {
+                val calendar = WCalendarView()
+                calendar.selectionMode = CalendarViewSelectionMode.MULTIPLE
+                calendar.addSelectedDatesChangedListener { e -> sources += "${calendar.selectedDates.size}:${e.addedDates}" }
+                calendar.addSelectedDate(LocalDate.of(2026, 10, 20))
+                calendar
+            }
+            listOf(calendarDatePicker, calendarView).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
     }
 }

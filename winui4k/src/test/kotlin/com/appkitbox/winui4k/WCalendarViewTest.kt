@@ -190,6 +190,40 @@ class WCalendarViewTest : FunSpec() {
             calls shouldContainExactly listOf("plain", "event", "plain")
         }
 
+        test("the display settings can be read back from native as set") {
+            val values = onUiThreadGet {
+                val calendar = WCalendarView()
+                calendar.selectionMode = CalendarViewSelectionMode.MULTIPLE
+                calendar.displayMode = CalendarViewDisplayMode.DECADE
+                calendar.isGroupLabelVisible = true
+                calendar.isOutOfScopeEnabled = false
+                calendar.isTodayHighlighted = false
+                calendar.calendarIdentifier = "JapaneseCalendar"
+                calendar.firstDayOfWeek = java.time.DayOfWeek.SUNDAY
+                calendar.numberOfWeeksInView = 4
+                listOf(
+                    calendar.selectionMode,
+                    calendar.displayMode,
+                    calendar.isGroupLabelVisible,
+                    calendar.isOutOfScopeEnabled,
+                    calendar.isTodayHighlighted,
+                    calendar.calendarIdentifier,
+                    calendar.firstDayOfWeek,
+                    calendar.numberOfWeeksInView,
+                )
+            }
+            values shouldContainExactly listOf(
+                CalendarViewSelectionMode.MULTIPLE,
+                CalendarViewDisplayMode.DECADE,
+                true,
+                false,
+                false,
+                "JapaneseCalendar",
+                java.time.DayOfWeek.SUNDAY,
+                4,
+            )
+        }
+
         test("minDate / maxDate read back the set dates") {
             val range = onUiThreadGet {
                 val calendar = WCalendarView()
