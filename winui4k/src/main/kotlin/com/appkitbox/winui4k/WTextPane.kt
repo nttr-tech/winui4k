@@ -158,15 +158,31 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     /**
      * The RTF text of the whole content. Used to save and restore content including formatting.
      * When set, [addDocumentListener] is notified in the same way as when [text] is set.
+     *
+     * The last `\par` of the RTF is read as the end of the last paragraph (a paragraph mark), as Word does. RichEditBox adds an empty paragraph at the end when reading it as is,
+     * so every time the read RTF was set again, a line break was added to the end of [text]. That empty paragraph is removed.
      */
     var rtfText: String
         get() = textDocument.getString(XamlInterop.ITextDocument_GetText, XamlInterop.TextOptions_FormatRtf)
         set(value) {
             document.replaceAll {
-                writable { Hstring.use(value) { h -> textDocument.call(XamlInterop.ITextDocument_SetText, XamlInterop.TextOptions_FormatRtf, h) } }
+                writable {
+                    Hstring.use(value) { h -> textDocument.call(XamlInterop.ITextDocument_SetText, XamlInterop.TextOptions_FormatRtf, h) }
+                    if (TRAILING_PARAGRAPH_BREAK.containsMatchIn(value)) removeExtraFinalParagraph()
+                }
             }
             caret.check()
         }
+
+    /** Removes the empty paragraph RichEditBox added for the last `\par` of the RTF (the paragraph mark just before the last one). */
+    private fun removeExtraFinalParagraph() {
+        val raw = textDocument.getString(XamlInterop.ITextDocument_GetText, XamlInterop.TextGetOptions_UseLf)
+        val end = raw.length
+        if (end < 2 || raw[end - 1] !in PARAGRAPH_MARKS || raw[end - 2] !in PARAGRAPH_MARKS) return
+        withRange(end - 2, end - 1) { range ->
+            Hstring.use("") { h -> range.call(XamlInterop.ITextRange_SetText, XamlInterop.TextOptions_None, h) }
+        }
+    }
 
     /** The placeholder shown when empty (RichEditBox.PlaceholderText). */
     var placeholderText: String
@@ -690,5 +706,11 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     private companion object {
         /** RichEditBox's paragraph separator is a single CR. CRLF and LF are also normalized to one separator. */
         fun paragraphsOf(value: String): String = value.replace("\r\n", "\r").replace('\n', '\r')
+
+        /** Whether the RTF ends with only closing braces and whitespace after `\par` (end of paragraph) (other control words such as `\pard` are not included). */
+        val TRAILING_PARAGRAPH_BREAK = Regex("""\\par(?![a-zA-Z])[\s}\x00]*$""")
+
+        /** The paragraph mark GetText returns (LF with UseLf, otherwise CR). */
+        val PARAGRAPH_MARKS = charArrayOf('\n', '\r')
     }
 }

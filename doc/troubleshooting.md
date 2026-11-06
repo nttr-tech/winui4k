@@ -274,3 +274,8 @@
   「項目を選んで閉じた」と分からない。ボタンを SecondaryCommands に入れる前に購読する (`WCommandBarFlyout.addSecondaryCommand`)。
   また、閉じるアニメーションがあると最初の Closing を取り消してアニメーションの後に Hide し直すので、1 回閉じるあいだに Closing が 2 回来る
   ことがある (トグルで確認)。PopupMenuListener は Closed までの 2 回目を無視する (`WFlyoutPopupMenuTest`。2026-10-20、Panama で確認)。
+- **RichEditBox: 読み出した RTF を設定し直すたびに末尾に空の段落が 1 つ増える**
+  `ITextDocument.GetText(FormatRtf)` は最後の段落記号も `\par` で書き出すが、`SetText(FormatRtf)` はその `\par` を段落の区切りとして読み、
+  その後ろに最後の段落記号をもう 1 つ足す。文字列 `"a"` の RTF を設定し直すと `"a\n"`、もう一度で `"a\n\n"` になる (空の文書でも増える)。
+  手で書いた `\par` で終わらない RTF (`{\rtf1\ansi Hello}`) では増えない。`WTextPane.rtfText` は、設定した RTF が `\par` で終わっていれば
+  最後の段落記号の 1 つ前の段落記号を消して、Word と同じく最後の `\par` を最後の段落の終わりとして扱う (`WTextCoverageTest`)。
