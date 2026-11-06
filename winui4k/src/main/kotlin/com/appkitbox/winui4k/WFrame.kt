@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.allocate
@@ -34,14 +35,23 @@ import kotlin.math.roundToInt
  */
 @Suppress("TooManyFunctions") // Lists the JFrame / Window APIs in one class
 class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
-    private val window: ComPtr =
+    internal val window: ComPtr =
         Activation.composeDefault(XamlInterop.CLS_Window, XamlInterop.IID_IWindowFactory) // IWindow
 
-    private val window2: ComPtr by lazy { window.queryInterface(XamlInterop.IID_IWindow2) }
+    /**
+     * The owner of the [window] and [window2] references. Released on the UI thread when the WFrame is collected (not when it is closed, so that
+     * [appWindow] etc. can still be read after closing). From being shown until closed, [openFrames] holds the WFrame, so they are not released while it is open.
+     */
+    private val lifetime = ComLifetime.adopt(this, window)
 
-    /** An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.). */
+    private val window2: ComPtr by lazy { lifetime.own(window.queryInterface(XamlInterop.IID_IWindow2)) }
+
+    /**
+     * An AppWindow view (IWindow2.AppWindow) that handles native window management (position, size, title bar appearance, etc.).
+     * The AppWindow reference is held by the [WAppWindow] and released when that is collected.
+     */
     val appWindow: WAppWindow by lazy {
-        WAppWindow(window2.getPtr(XamlInterop.IWindow2_get_AppWindow))
+        WAppWindow(window2.getPtr(XamlInterop.IWindow2_get_AppWindow), ownsReference = true)
     }
 
     /**

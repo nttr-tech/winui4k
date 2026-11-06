@@ -12,7 +12,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests that the [WFrame] handlers (Window.Closed / Activated, AppWindow.Closing / Changed), the default button, the menu bar and children
- * do not capture the WFrame, and that the WFrame and the child wrappers are collected once it is closed and the reference released ([Reclamation]).
+ * do not capture the WFrame, and that the WFrame, the child wrappers and the native Window are collected once it is closed and the reference released ([Reclamation]).
  * The shared "winui4k tests" window is kept open (the app exits when the last window closes).
  */
 class WrapperReleaseFrameTest : FunSpec() {
@@ -20,13 +20,13 @@ class WrapperReleaseFrameTest : FunSpec() {
 
     private fun events(): List<String> = synchronized(events) { events.toList() }
 
-    private class Built(val frame: WeakReference<WFrame>, val child: WeakReference<WButton>)
+    private class Built(val frame: WeakReference<WFrame>, val child: WeakReference<WButton>, val window: NativeProbe)
 
     init {
         beforeSpec { UiTestHarness.sharedFrame() }
         beforeTest { events.clear() }
 
-        test("with window listeners, a default button, a menu bar and children added and shown, disposing and releasing the reference collects the WFrame and its children") {
+        test("with window listeners, a default button, a menu bar and children added and shown, disposing and releasing the reference collects the WFrame and its children, and destroys the Window") {
             val events = events
             val built = onUiThreadGet {
                 val frame = WFrame(TITLE)
@@ -53,25 +53,27 @@ class WrapperReleaseFrameTest : FunSpec() {
                 frame.defaultButton = button
                 frame.jMenuBar = WMenuBar().also { it.add(WMenuBarItem("File")) }
                 frame.isVisible = true
-                Built(WeakReference(frame), WeakReference(button))
+                Built(WeakReference(frame), WeakReference(button), NativeProbe(frame.window))
             }
             eventually(5.seconds) { events() shouldContain "opened" }
             onUiThread { built.frame.get()?.dispose() }
             eventually(5.seconds) { events() shouldContain "closed" }
             Reclamation.awaitCollected(built.frame).shouldBeTrue()
             Reclamation.awaitCollected(built.child).shouldBeTrue()
+            Reclamation.awaitDestroyed(built.window).shouldBeTrue()
         }
 
-        test("a WFrame never shown is collected once the reference is released") {
+        test("a WFrame never shown is collected and its Window destroyed once the reference is released") {
             val built = onUiThreadGet {
                 val frame = WFrame(TITLE)
                 val button = WButton("Inner")
                 frame.add(button)
                 frame.addWindowListener(object : WWindowAdapter() {})
-                Built(WeakReference(frame), WeakReference(button))
+                Built(WeakReference(frame), WeakReference(button), NativeProbe(frame.window))
             }
             Reclamation.awaitCollected(built.frame).shouldBeTrue()
             Reclamation.awaitCollected(built.child).shouldBeTrue()
+            Reclamation.awaitDestroyed(built.window).shouldBeTrue()
         }
     }
 

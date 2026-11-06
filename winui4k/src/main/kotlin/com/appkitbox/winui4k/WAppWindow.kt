@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.lifetime.ComLifetime
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
@@ -22,9 +23,20 @@ data class WDimension(val width: Int, val height: Int)
  * Provides [title] / [size] / [clientSize] / [position] / [titleBar], plus
  * [show] / [hide] / [resize] / [resizeClient] / [move] / [setIcon] / [setPresenter].
  */
-class WAppWindow internal constructor(internal val appWindow: ComPtr) {
+class WAppWindow internal constructor(
+    internal val appWindow: ComPtr,
+    /**
+     * If true, this wrapper owns the reference to [appWindow] (and [appWindow2]) and releases it on the UI thread when collected ([WFrame.appWindow]).
+     * false keeps the previous behavior of not releasing it (an AppWindow created with [create]; releasing its reference has not been verified).
+     */
+    ownsReference: Boolean = false,
+) {
+    private val lifetime: ComLifetime? = if (ownsReference) ComLifetime.adopt(this, appWindow) else null
+
     /** An IAppWindow2 view for ClientSize / ResizeClient. */
-    private val appWindow2: ComPtr by lazy { appWindow.queryInterface(WindowingInterop.IID_IAppWindow2) }
+    private val appWindow2: ComPtr by lazy {
+        appWindow.queryInterface(WindowingInterop.IID_IAppWindow2).let { lifetime?.own(it) ?: it }
+    }
 
     /** The internal WindowId used by owner specification in [WAppWindow.create] and by [WDisplayArea.nearest]. */
     internal val id: Long
