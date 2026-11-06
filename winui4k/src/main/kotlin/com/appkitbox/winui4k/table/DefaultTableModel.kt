@@ -27,6 +27,9 @@ open class DefaultTableModel() : AbstractTableModel() {
         repeat(rowCount) { dataVector += MutableList<Any?>(columnNames.size) { null } }
     }
 
+    /** A model with the column names [columnNames] and [rowCount] rows whose values are all null (Swing's DefaultTableModel(Object[], int)). */
+    constructor(columnNames: Array<out Any?>, rowCount: Int) : this(columnNames.toList(), rowCount)
+
     /**
      * A model with the column names [columnNames] and the row data [data] (equivalent to Swing's
      * DefaultTableModel(Vector, Vector)).
@@ -56,12 +59,22 @@ open class DefaultTableModel() : AbstractTableModel() {
         fireTableStructureChanged()
     }
 
+    /** Replaces the row data and column names with arrays (Swing's setDataVector(Object[][], Object[])). Notifies a column structure change. */
+    fun setDataVector(data: Array<out Array<out Any?>>, columnNames: Array<out Any?>) {
+        setDataVector(data.map { it.toList() }, columnNames.toList())
+    }
+
     /** Replaces the column names. If the column count changes, the length of each row is adjusted too. */
     fun setColumnIdentifiers(columnNames: List<Any?>) {
         columnIdentifiers.clear()
         columnIdentifiers.addAll(columnNames)
         for (row in dataVector) resize(row, columnNames.size)
         fireTableStructureChanged()
+    }
+
+    /** Replaces the column names with an array (Swing's setColumnIdentifiers(Object[])). */
+    fun setColumnIdentifiers(columnNames: Array<out Any?>) {
+        setColumnIdentifiers(columnNames.toList())
     }
 
     /** Changes the column count. Added columns have null names (shown with spreadsheet-style names) and null values. */
@@ -77,6 +90,11 @@ open class DefaultTableModel() : AbstractTableModel() {
         columnIdentifiers += columnName
         dataVector.forEachIndexed { index, row -> row += values.getOrNull(index) }
         fireTableStructureChanged()
+    }
+
+    /** Appends a column named [columnName] at the end (Swing's addColumn(Object, Object[])). [values] are the values put in order from the first row. */
+    fun addColumn(columnName: Any?, values: Array<out Any?>) {
+        addColumn(columnName, values.toList())
     }
 
     /** Appends a row. Missing values up to the column count are filled with null, and extra values are dropped. */
@@ -133,6 +151,32 @@ open class DefaultTableModel() : AbstractTableModel() {
                 fireTableRowsInserted(old, rowCount - 1)
             }
         }
+    }
+
+    /** The same as [setRowCount] (Swing's old name DefaultTableModel.setNumRows). */
+    fun setNumRows(rowCount: Int) {
+        setRowCount(rowCount)
+    }
+
+    /**
+     * Notifies listeners of an [event] a subclass created itself as is (Swing's DefaultTableModel.newDataAvailable).
+     * The same as [fireTableChanged].
+     */
+    fun newDataAvailable(event: TableModelEvent) {
+        fireTableChanged(event)
+    }
+
+    /**
+     * Notifies listeners that rows were added with [event] (Swing's DefaultTableModel.newRowsAdded).
+     * Rows are already aligned to the column count when added, so unlike Swing there is no need to realign row lengths.
+     */
+    fun newRowsAdded(event: TableModelEvent) {
+        fireTableChanged(event)
+    }
+
+    /** Notifies listeners that rows were removed with [event] (Swing's DefaultTableModel.rowsRemoved). */
+    fun rowsRemoved(event: TableModelEvent) {
+        fireTableChanged(event)
     }
 
     override fun getRowCount(): Int = dataVector.size
