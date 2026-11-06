@@ -30,6 +30,20 @@ class WComponentAppearanceForJavaTest {
     }
 
     @Test
+    void getMarginReturnsTheSetValue_0WhenUnsetOrWhenTheSidesDiffer() {
+        onUiThread(() -> {
+            WButton button = new WButton("Press");
+            assertEquals(0.0, button.getMargin());
+            button.setMargin(5);
+            assertEquals(5.0, button.getMargin());
+            button.setMargin(2, 2, 2, 2);
+            assertEquals(2.0, button.getMargin());
+            button.setMargin(1, 2, 3, 4);
+            assertEquals(0.0, button.getMargin());
+        });
+    }
+
+    @Test
     void aRunnableListenerPassedToRemoveIsNotCalledAndOnlyTheKeptListenerIsCalled() throws InterruptedException {
         LinkedBlockingQueue<String> loaded = new LinkedBlockingQueue<>();
         LinkedBlockingQueue<ElementTheme> themes = new LinkedBlockingQueue<>();

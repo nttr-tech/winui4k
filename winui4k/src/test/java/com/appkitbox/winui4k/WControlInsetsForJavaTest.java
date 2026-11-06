@@ -32,6 +32,25 @@ class WControlInsetsForJavaTest {
     }
 
     @Test
+    void getPaddingReturnsTheSetValue_0WhenUnsetOrForThemePadding_theActualPaddingIsReadWithGetInsets() {
+        WButton button = onUiThreadGet(() -> new WButton("Press"));
+        UiTestHarness.attachAndAwaitLoaded(button);
+        try {
+            onUiThread(() -> {
+                assertEquals(0.0, button.getPadding());
+                button.setPadding(6);
+                assertEquals(6.0, button.getPadding());
+                button.setPadding(4, 3, 2, 1);
+                assertEquals(0.0, button.getPadding());
+                button.setBorder(WBorderFactory.createEmptyBorder(7, 7, 7, 7));
+                assertEquals(7.0, button.getPadding());
+            });
+        } finally {
+            UiTestHarness.detach(button);
+        }
+    }
+
+    @Test
     void setPaddingAndSetHorizontalContentAlignmentReadBackTheSetValues() {
         WButton button = onUiThreadGet(() -> new WButton("Press"));
         UiTestHarness.attachAndAwaitLoaded(button);

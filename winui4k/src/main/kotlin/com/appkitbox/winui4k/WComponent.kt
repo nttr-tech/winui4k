@@ -1057,16 +1057,20 @@ abstract class WComponent internal constructor(
 
     /**
      * A uniform margin on all four sides. Passes a Thickness (double×4) by value to put_Margin. Use [setMargin] to set each side individually.
-     * Reading returns the native FrameworkElement.Margin: its value if all four sides are equal, otherwise NaN
-     * (for example after setting different values with [setMargin], since they cannot be expressed as one number).
+     * Reading returns the value set through this library, or 0 if unset. When set with [setMargin], it is that value if all four sides are equal,
+     * otherwise 0, since they cannot be expressed as one number.
      */
     var margin: Double
-        get() = uniformThickness(XamlStructs.getThickness(frameworkElement, XamlInterop.IFrameworkElement_get_Margin))
+        get() = marginValue
         set(value) = setMargin(value, value, value, value)
 
-    /** Sets the margin on each side individually (FrameworkElement.Margin). */
+    /** The last set margin returned by [margin] (0 if the four sides are not equal). */
+    private var marginValue: Double = 0.0
+
+    /** Sets the margin on each side individually (FrameworkElement.Margin). The value read from [margin] changes too. */
     fun setMargin(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(frameworkElement, XamlInterop.IFrameworkElement_put_Margin, left, top, right, bottom)
+        marginValue = uniformThickness(left, top, right, bottom)
     }
 
     /** Opacity, from 0.0 (transparent) to 1.0 (opaque, the default) (UIElement.Opacity). */
@@ -1457,6 +1461,9 @@ internal fun createKeyboardAccelerator(key: Int, modifiers: Int): ComPtr {
     return accelerator
 }
 
-/** The value if all four of a Thickness (left, top, right, bottom) are equal, otherwise NaN (for reading [WComponent.margin] / [WControl.padding]). */
-internal fun uniformThickness(thickness: DoubleArray): Double =
-    if (thickness.all { it == thickness[0] }) thickness[0] else Double.NaN
+/**
+ * The value if all four sides are equal, otherwise 0 (cannot be expressed as one number).
+ * The value remembered by [WComponent.margin] / [WControl.padding] / [WBorder.padding].
+ */
+internal fun uniformThickness(left: Double, top: Double, right: Double, bottom: Double): Double =
+    if (left == top && top == right && right == bottom) left else 0.0

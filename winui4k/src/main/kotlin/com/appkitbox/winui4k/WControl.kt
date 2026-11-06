@@ -35,16 +35,28 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
 
     /**
      * A uniform inner padding on all four sides (Control.Padding). Use [setPadding] to set each side individually.
-     * Reading returns the native effective value: its value if all four sides are equal, otherwise NaN (for example after setting different values with [setPadding],
-     * or the theme padding 11, 5, 11, 6 of a WButton placed in a window, since they cannot be expressed as one number). An empty [border] also shows up here.
+     * Reading returns the value set through this library, or 0 if unset. Padding applied by the theme (such as 11, 5, 11, 6 of a WButton placed in a window)
+     * is not a setting, so it does not show up. When set with [setPadding] or an empty frame of [border], it is that value if all four sides are equal,
+     * otherwise 0, since they cannot be expressed as one number. A [border] without an empty frame or a null [border] clears the Padding setting, so it returns to 0.
+     * Read the actual padding on the four sides (the native effective value including the theme default) with [insets].
      */
     var padding: Double
-        get() = uniformThickness(XamlStructs.getThickness(control, XamlInterop.IControl_get_Padding))
+        get() = paddingValue
         set(value) = setPadding(value, value, value, value)
 
-    /** Sets the inner padding on each side individually (Control.Padding). */
+    /** The last set inner padding returned by [padding] (0 if the four sides are not equal, 0 once the setting is cleared). */
+    private var paddingValue: Double = 0.0
+
+    /** Sets the inner padding on each side individually (Control.Padding). The value read from [padding] changes too. */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(control, XamlInterop.IControl_put_Padding, left, top, right, bottom)
+        paddingValue = uniformThickness(left, top, right, bottom)
+    }
+
+    /** Clears the Control.Padding setting and returns to the theme default ([padding] returns to 0). */
+    private fun clearPadding() {
+        clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
+        paddingValue = 0.0
     }
 
     /**
@@ -175,13 +187,13 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             if (flat == null) {
                 clearControlProperty(XamlInterop.IControlStatics_get_BorderBrushProperty)
                 clearControlProperty(XamlInterop.IControlStatics_get_BorderThicknessProperty)
-                clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
+                clearPadding()
                 return
             }
             applyLine(flat.line)
             val padding = flat.padding
             if (padding == null) {
-                clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
+                clearPadding()
             } else {
                 setPadding(padding.left, padding.top, padding.right, padding.bottom)
             }
