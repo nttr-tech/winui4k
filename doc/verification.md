@@ -404,3 +404,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   dxaml/xcp/dxaml/lib/FocusManager.cpp の TryMoveFocusStatic)。WComponent.transferFocus は SearchRoot に XamlRoot.Content を渡す。
   TryMoveFocus は今フォーカスを持つ要素から動くので、フォーカスを持たないコンポーネントの transferFocus は先にそのコンポーネントへ
   フォーカスを移す (WComponentTransferFocusTest)
+- 読み込み済み (Loaded の後) の要素に Loaded のハンドラを足すと、その要素が「Loaded の発火待ち」の一覧に入り
+  (microsoft-ui-xaml の dxaml/xcp/core/dll/eventmgr.cpp の AddToLoadedEventListIfNeeded)、その間 FrameworkElement.IsLoaded は
+  false を返す (dxaml/xcp/dxaml/lib/FrameworkElement_partial.cpp の get_IsLoadedImpl が IsLoadedEventPending を見る)。
+  共有ウィンドウに載せたラベルに AncestorListener (Loaded のハンドラを足す) を付けると、数周回と 0.5 秒待っても IsLoaded は false のままだった。
+  そのため WComponent.isDisplayable は IsLoaded を使わず、XamlRoot があり、ビジュアル ツリーの根が XamlRoot.Content の根と同じかで決める
+  (WComponentShowingTest)。IsLoaded を読むほかの箇所 (ListenerAnchor など) も、自分で Loaded のハンドラを足した直後は false を読みうる

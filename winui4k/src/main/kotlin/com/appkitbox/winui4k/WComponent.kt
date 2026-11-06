@@ -963,14 +963,14 @@ abstract class WComponent internal constructor(
         set(value) = uiElement.call(XamlInterop.IUIElement_put_Visibility, if (value) 0 else 1)
 
     /**
-     * Component.isDisplayable-like: whether it is connected to the tree of a displayable window (FrameworkElement.IsLoaded).
-     * As in Swing, it is true inside a hidden window ([WFrame.isVisible] = false) and when it or a parent is hidden ([isVisible] = false),
+     * Component.isDisplayable-like: whether it is connected to the visual tree of a displayable window (it has a XamlRoot and following visual tree
+     * parents reaches the same root as XamlRoot.Content). As in Swing, it is true right after being added to a container in a shown window, and
+     * stays true inside a hidden window ([WFrame.isVisible] = false) and when it or a parent is hidden ([isVisible] = false),
      * and becomes false when removed from the window and when the window is closed ([WFrame.dispose]).
-     * Unlike Swing, it is false after being placed in a window until XAML loads it (Loaded), in a window before it is shown (true after pack in Swing),
-     * and inside closed flyouts and popups. Right after removal, it can stay true until XAML finishes unloading it (Unloaded).
+     * Unlike Swing, it is false inside a window that has never been shown (true after pack in Swing) and inside closed flyouts and popups.
      */
     val isDisplayable: Boolean
-        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
+        get() = ComponentShowing.isConnected(this)
 
     /**
      * Component.isShowing-like: whether it is on screen. true when it is [isDisplayable], it and all its parents in the visual tree are visible (Visibility.Visible),
@@ -984,7 +984,7 @@ abstract class WComponent internal constructor(
     /**
      * JComponent.getTopLevelAncestor-like: the window this component is placed in. Unlike Swing's Container, the window is returned
      * as a [WFrame]. For a component in a dialog ([WContentDialog] etc.) or a flyout, the window showing it is returned.
-     * null when [isDisplayable] is false (not placed, before XAML loads it, or a closed window) (Swing also returns a window before it is shown).
+     * null when [isDisplayable] is false (not placed, or a closed window) (Swing also returns a window before it is shown).
      */
     val topLevelAncestor: WFrame?
         get() = if (isDisplayable) ComponentShowing.frameOf(this) else null

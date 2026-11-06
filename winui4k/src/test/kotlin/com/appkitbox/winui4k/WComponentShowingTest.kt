@@ -72,15 +72,25 @@ class WComponentShowingTest : FunSpec() {
                 }
             }
 
-            test("a label removed from the window becomes not displayable and not showing after Unloaded, and loses its top-level ancestor") {
+            test("a label removed from the window is not displayable, not showing and has no top-level ancestor right after removal (the same as Swing's remove)") {
                 val (panel, label) = onUiThreadGet {
                     val label = WLabel("Label")
                     WPanel().also { it.add(label) } to label
                 }
                 UiTestHarness.attachAndAwaitLoaded(panel)
-                UiTestHarness.detach(panel)
-                eventually(10.seconds) {
-                    onUiThreadGet { Triple(label.isDisplayable, label.isShowing, label.topLevelAncestor) } shouldBe Triple(false, false, null)
+                val frame = UiTestHarness.sharedFrame()
+                onUiThreadGet {
+                    frame.contentPane.remove(panel)
+                    Triple(label.isDisplayable, label.isShowing, label.topLevelAncestor)
+                } shouldBe Triple(false, false, null)
+            }
+
+            test("adding a Loaded listener to a label on screen keeps isDisplayable and isShowing true") {
+                withLabelInPanel { _, label ->
+                    onUiThreadGet {
+                        label.addLoadedListener { }
+                        label.isDisplayable to label.isShowing
+                    } shouldBe (true to true)
                 }
             }
         }
