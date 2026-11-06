@@ -2441,6 +2441,7 @@ internal object XamlInterop {
     const val IGeneralTransform_TransformPoint = 7     // TransformPoint(Point, out Point)
     const val IID_IVisualTreeHelperStatics = "5aece43c-7651-5bb5-855c-2198496e455e"
     const val IVisualTreeHelperStatics_FindElementsInHostCoordinates = 6 // (Point, UIElement subtree, out IIterable<UIElement>)
+    const val IVisualTreeHelperStatics_FindAllElementsInHostCoordinates = 8 // (Point, UIElement subtree, boolean includeAllElements, out IIterable<UIElement>)
     const val IVisualTreeHelperStatics_GetChild = 10          // GetChild(DependencyObject, i4, out DependencyObject)
     const val IVisualTreeHelperStatics_GetChildrenCount = 11  // GetChildrenCount(DependencyObject, out i4)
     const val IVisualTreeHelperStatics_GetParent = 12         // GetParent(DependencyObject, out DependencyObject)

@@ -41,9 +41,10 @@ internal object VisualHitTest {
 
     /**
      * Returns the elements (UIElement) at the coordinates ([x], [y]) of [subtree] within [subtree] (something that QIs to UIElement; borrowed), from the frontmost.
-     * The caller releases the returned references. Empty if not shown.
+     * The caller releases the returned references. Empty if not shown. If [includeAllElements] is true, elements excluded from hit testing
+     * (IsHitTestVisible = false or panels without a background) are also included (includeAllElements of FindElementsInHostCoordinates).
      */
-    fun elementsAt(subtree: ComPtr, x: Double, y: Double): List<ComPtr> {
+    fun elementsAt(subtree: ComPtr, x: Double, y: Double, includeAllElements: Boolean = false): List<ComPtr> {
         val (hostX, hostY) = transform(subtree, null, x, y)
         val subtreeElement = subtree.queryInterface(XamlInterop.IID_IUIElement)
         val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
@@ -52,7 +53,16 @@ internal object VisualHitTest {
                 val point = scope.allocate(XamlStructs.POINT_FLOAT)
                 Ffi.backend.memory.putFloat(point.ptr, 0, hostX.toFloat())
                 Ffi.backend.memory.putFloat(point.ptr, 4, hostY.toFloat())
-                statics.getPtrOrNull(XamlInterop.IVisualTreeHelperStatics_FindElementsInHostCoordinates, point, subtreeElement.ptr)
+                if (includeAllElements) {
+                    statics.getPtrOrNull(
+                        XamlInterop.IVisualTreeHelperStatics_FindAllElementsInHostCoordinates,
+                        point,
+                        subtreeElement.ptr,
+                        1, // A boolean (1 byte) is passed in the low part of an I32 register
+                    )
+                } else {
+                    statics.getPtrOrNull(XamlInterop.IVisualTreeHelperStatics_FindElementsInHostCoordinates, point, subtreeElement.ptr)
+                }
             }
         } finally {
             statics.release()

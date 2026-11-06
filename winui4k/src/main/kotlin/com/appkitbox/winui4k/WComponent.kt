@@ -324,6 +324,15 @@ abstract class WComponent internal constructor(
     fun contains(point: WPoint): Boolean = contains(point.x, point.y)
 
     /**
+     * Component.getComponentAt(int, int)-like: the component at the position ([x], [y], DIP) seen from the top left of this component.
+     * For a component without children, itself if [contains], otherwise null. A [WContainer] returns a child ([WContainer.getComponentAt]).
+     */
+    open fun getComponentAt(x: Int, y: Int): WComponent? = if (contains(x, y)) this else null
+
+    /** Component.getComponentAt(Point)-like: the same as [getComponentAt] (x, y). */
+    fun getComponentAt(point: WPoint): WComponent? = getComponentAt(point.x, point.y)
+
+    /**
      * Like Component.setBounds: sets the position relative to the parent ([x], [y]) and the size ([width] x [height]) in DIP ([setLocation] and [setSize]).
      * From Java, ints can be passed too, as in Swing.
      *

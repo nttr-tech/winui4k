@@ -221,6 +221,28 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
         return false
     }
 
+    /**
+     * Container.getComponentAt-like: the child (a direct child added with [add]) at the position ([x], [y], DIP) seen from the top left of this container.
+     * Itself where there is no child, and null outside the container ([contains] is false). Even over a template part of a child, that child is returned.
+     *
+     * Unlike Swing, it does not calculate from the children's sizes but returns the child drawn in front according to WinUI's hit test (VisualTreeHelper.FindElementsInHostCoordinates,
+     * also including panels without a background and elements with IsHitTestVisible = false). So a hidden ([isVisible] = false) child is not hit
+     * (Swing's getComponentAt returns it), and for overlapping children the one added later (drawn in front in XAML) is returned (in Swing the one added first is in front).
+     * A container not placed in a window (before layout) has size 0, so it is null.
+     */
+    override fun getComponentAt(x: Int, y: Int): WComponent? = ContainerHitTest.componentAt(this, x, y, deepest = false)
+
+    /**
+     * Container.findComponentAt-like: the deepest descendant (a child inside a child container) at the position ([x], [y], DIP) seen from the top left of this container.
+     * Itself where there is no descendant, and null outside the container. Only [WContainer] children are followed; the inside of components with a single child
+     * such as [WBorder.child] or [WScrollPane.content] is not looked at (that [WBorder] etc. is returned). The hit test rules are the same as [getComponentAt]
+     * (hidden children are not hit, as in Swing).
+     */
+    fun findComponentAt(x: Int, y: Int): WComponent? = ContainerHitTest.componentAt(this, x, y, deepest = true)
+
+    /** Container.findComponentAt(Point)-like: the same as [findComponentAt] (x, y). */
+    fun findComponentAt(point: WPoint): WComponent? = findComponentAt(point.x, point.y)
+
     override fun validateTree() {
         mutableComponents.forEach { it.validateTree() }
     }
