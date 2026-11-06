@@ -189,6 +189,50 @@ class WOptionPaneForJavaTest {
     }
 
     @Test
+    void overloadsWithTheSameArgumentsAsJOptionPaneCanBeCalledInTurn_eachDoesNotReturnUntilClosed() throws InterruptedException {
+        WinUiUtilities.invokeLater(() -> {
+            WOptionPane.showMessageDialog(owner, "Saved");
+            events.add("message");
+            WOptionPane.showMessageDialog(owner, "Disk space is running low", "Warning", WOptionPane.WARNING_MESSAGE);
+            events.add("warning");
+            WOptionPane.showMessageDialog(owner, "Shared", "Share", WOptionPane.PLAIN_MESSAGE, Symbol.SHARE);
+            events.add("icon");
+            WOptionPane.showMessageDialog(owner, new WFontIcon("\uE8A5"));
+            events.add("icon message");
+            events.add("confirm:" + WOptionPane.showConfirmDialog(owner, "Delete?", "Delete", WOptionPane.OK_CANCEL_OPTION));
+            events.add("confirm icon:" + WOptionPane.showConfirmDialog(owner, "Send?", "Send", WOptionPane.YES_NO_OPTION,
+                    WOptionPane.QUESTION_MESSAGE, Symbol.SEND));
+            events.add("input:" + WOptionPane.showInputDialog(owner, "Name", "Smith"));
+            events.add("input title:" + WOptionPane.showInputDialog(owner, "Address", "Enter Address", WOptionPane.PLAIN_MESSAGE));
+        });
+        List<String> expected = Arrays.asList("message", "warning", "icon", "icon message", "confirm:0", "confirm icon:0",
+                "input:Smith", "input title:");
+        // The next dialog opens as soon as the previous one closes, so tell its opening by the title (adjacent titles all differ; the escaped ones are the Japanese default titles)
+        List<String> titles = Arrays.asList("\u30e1\u30c3\u30bb\u30fc\u30b8", "Warning", "Share", "\u30e1\u30c3\u30bb\u30fc\u30b8", "Delete", "Send", "\u5165\u529b", "Enter Address");
+        for (int i = 0; i < expected.size(); i++) {
+            awaitTitle(titles.get(i));
+            OpenContentDialogs.press(owner, "PrimaryButton");
+            awaitEvents(expected.subList(0, i + 1));
+        }
+        awaitClosed();
+    }
+
+    private void awaitTitle(String title) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
+        while (!title.equals(openTitle()) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+        assertEquals(title, openTitle());
+        assertTrue(OpenContentDialogs.isOpen(owner));
+        Thread.sleep(OPEN_SETTLE_MILLIS);
+    }
+
+    private String openTitle() {
+        OpenContentDialogs.Description shown = OpenContentDialogs.describe(owner);
+        return shown == null || !OpenContentDialogs.isOpen(owner) ? null : shown.getTitle();
+    }
+
+    @Test
     void showInputDialogWithoutAParentAndANullParentOpenOnTheShownWindow() throws InterruptedException {
         WFrame frame = onUiThreadGet(() -> new WFrame("winui4k option pane parentless java"));
         WButton attached = owner;
