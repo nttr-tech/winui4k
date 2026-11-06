@@ -182,6 +182,25 @@ class WListBoxForJavaTest {
     }
 
     @Test
+    void setSelectionBackgroundAndSetFixedCellHeightCanBeUsedLikeJList_theFixedHeightBecomesTheSetVisibleRowCountHeight() {
+        onUiThread(() -> {
+            WListBox list = new WListBox(new String[] {"Red", "Green", "Blue"});
+            assertNull(list.getSelectionBackground());
+            assertEquals(-1, list.getFixedCellHeight());
+            list.setSelectionBackground(new WColor(255, 200, 0));
+            list.setFixedCellHeight(25);
+            list.setVisibleRowCount(4);
+            assertEquals(new WColor(255, 200, 0), list.getSelectionBackground());
+            assertEquals(25, list.getFixedCellHeight());
+            assertEquals(100.0, list.getHeight());
+            list.setSelectionBackground(null);
+            list.setFixedCellHeight(-1);
+            assertNull(list.getSelectionBackground());
+            assertEquals(160.0, list.getHeight());
+        });
+    }
+
+    @Test
     void inAShownListAPointInsideAnItemsBoundsPassedToLocationToIndexGivesThatItem() {
         WListBox[] holder = new WListBox[1];
         onUiThread(() -> holder[0] = new WListBox(new String[] {"Red", "Green", "Blue"}));

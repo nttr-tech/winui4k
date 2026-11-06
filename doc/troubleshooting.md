@@ -279,3 +279,12 @@
   その後ろに最後の段落記号をもう 1 つ足す。文字列 `"a"` の RTF を設定し直すと `"a\n"`、もう一度で `"a\n\n"` になる (空の文書でも増える)。
   手で書いた `\par` で終わらない RTF (`{\rtf1\ansi Hello}`) では増えない。`WTextPane.rtfText` は、設定した RTF が `\par` で終わっていれば
   最後の段落記号の 1 つ前の段落記号を消して、Word と同じく最後の `\par` を最後の段落の終わりとして扱う (`WTextCoverageTest`)。
+- **ListView / ListBox: 表示した後に Resources へ ListViewItemBackgroundSelected などを入れても、作られている項目の選択の色が変わらない**
+  リスト自身の `FrameworkElement.Resources` に `ListViewItemBackgroundSelected` (ListBox は `ListBoxItemBackgroundSelected`) の
+  軽量スタイルのキーを入れても、表示の前なら効くが、表示した後は作られている項目の選択の色が変わらない (null に戻しても戻らない)。
+  ListViewItem はテンプレートの ListViewItemPresenter の属性 `SelectedBackground="{ThemeResource ListViewItemBackgroundSelected}"`
+  (ListViewItem_themeresources.xaml) で、テンプレートを適用したときに解決される。ListBoxItem は選択の表示状態の Storyboard で
+  引くが、選んでいる項目はそのまま変わらなかった。キーを入れた後に ItemContainerStyle を新しい Style に替えると、項目が作り直され
+  (`ItemsControl::OnItemContainerStyleChanged` → `RefreshContainers`) 新しい色になる。Style は `BasedOn="{StaticResource
+  DefaultListViewItemStyle}"` にすればテーマの見た目は残る (XamlReader.Load で解決できる)。
+  `WList.selectionBackground` / `WListBox.selectionBackground` はこうしている (`ListCellLookTest`。2026-10-20、Panama で確認)

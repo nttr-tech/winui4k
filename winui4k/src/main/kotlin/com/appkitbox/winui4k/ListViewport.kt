@@ -28,24 +28,19 @@ internal class ListViewport(
     private val itemCount: () -> Int,
     /** Scrolls until the item at [index] is visible (ScrollIntoView). */
     private val scrollTo: (index: Int) -> Unit,
+    /** The estimated height of one row (DIP; used for the [visibleRowCount] height). */
+    rowHeight: () -> Double = { ROW_HEIGHT },
 ) {
     private val itemsControl: ComPtr by lazy { owner.own(owner.inspectable.queryInterface(XamlInterop.IID_IItemsControl)) }
     private val mapping: ComPtr by lazy { owner.own(owner.inspectable.queryInterface(XamlInterop.IID_IItemContainerMapping)) }
 
-    /** The height last set by [visibleRowCount] (NaN if not set). */
-    private var heightFromRows = Double.NaN
+    private val rows = VisibleRows(owner, rowHeight)
 
     /** The value of JList.getVisibleRowCount (8 by default, as in Swing). */
-    var visibleRowCount: Int = DEFAULT_VISIBLE_ROW_COUNT
-        set(value) {
-            field = value.coerceAtLeast(0)
-            // If the user specified a height, that height takes precedence (a height decided from the row count may be overwritten)
-            if (!owner.height.isNaN() && owner.height != heightFromRows) return
-            val padding = XamlStructs.getThickness(owner.control, XamlInterop.IControl_get_Padding)
-            val border = XamlStructs.getThickness(owner.control, XamlInterop.IControl_get_BorderThickness)
-            heightFromRows = field * ROW_HEIGHT + padding[1] + padding[3] + border[1] + border[3]
-            owner.height = heightFromRows
-        }
+    var visibleRowCount: Int by rows::count
+
+    /** When the estimated height of one row changes (fixedCellHeight): decides the height again if it was decided from the row count. */
+    fun rowHeightChanged() = rows.rowHeightChanged()
 
     /** JList.ensureIndexIsVisible: does nothing for an out-of-range [index]. */
     fun ensureIndexIsVisible(index: Int) {
@@ -137,5 +132,39 @@ internal class ListViewport(
          * It drifts for apps with Compact density (ListViewItemMinHeight = 32) or when a renderer draws items of different heights.
          */
         const val ROW_HEIGHT = 40.0
+    }
+}
+
+/**
+ * The implementation of visibleRowCount of JList / JTree: sets the height ([WComponent.height]) to "rows × the estimated height of one row + top and bottom padding (Padding) and border
+ * (BorderThickness)". If the user has specified a height (if it differs from the height last decided from the row count), it is not changed.
+ */
+internal class VisibleRows(
+    private val owner: WControl,
+    /** The estimated height of one row (DIP). */
+    private val rowHeight: () -> Double,
+) {
+    /** The height last set by [count] (NaN if not set). */
+    private var heightFromRows = Double.NaN
+
+    /** The number of rows to show (8 by default, as in Swing; negative values become 0). */
+    var count: Int = ListViewport.DEFAULT_VISIBLE_ROW_COUNT
+        set(value) {
+            field = value.coerceAtLeast(0)
+            apply()
+        }
+
+    /** When the estimated height of one row changes: decides the height again if it was decided from the row count (Swing recalculates the size every time). */
+    fun rowHeightChanged() {
+        if (!heightFromRows.isNaN()) apply()
+    }
+
+    private fun apply() {
+        // If the user specified a height, that height takes precedence (a height decided from the row count may be overwritten)
+        if (!owner.height.isNaN() && owner.height != heightFromRows) return
+        val padding = XamlStructs.getThickness(owner.control, XamlInterop.IControl_get_Padding)
+        val border = XamlStructs.getThickness(owner.control, XamlInterop.IControl_get_BorderThickness)
+        heightFromRows = count * rowHeight() + padding[1] + padding[3] + border[1] + border[3]
+        owner.height = heightFromRows
     }
 }

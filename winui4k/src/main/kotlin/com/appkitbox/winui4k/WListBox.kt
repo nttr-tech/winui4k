@@ -251,9 +251,41 @@ class WListBox(model: WListModel<*>) : WControl(
     }
 
     /** The implementation of the display API (ensureIndexIsVisible etc.). */
-    private val viewport = ListViewport(this, { listItems.size }) { index ->
-        listItems.withItem(index) { item -> inspectable.call(XamlInterop.IListBox_ScrollIntoView, item.ptr) }
-    }
+    private val viewport: ListViewport = ListViewport(
+        this,
+        { listItems.size },
+        { index -> listItems.withItem(index) { item -> inspectable.call(XamlInterop.IListBox_ScrollIntoView, item.ptr) } },
+        { look.fixedCellHeight.takeIf { it >= 0 }?.toDouble() ?: ListViewport.ROW_HEIGHT },
+    )
+
+    /** The implementation of [selectionBackground] / [fixedCellHeight]. */
+    private val look: ItemContainerLook = ItemContainerLook(this, "ListBoxItem", ItemContainerLook.LIST_BOX_SELECTION) { viewport.rowHeightChanged() }
+
+    /**
+     * The background color of selected elements (JList.getSelectionBackground / setSelectionBackground). null (the default) for the theme color.
+     * The backgrounds for selected, selected with the pointer over it, and selected and pressed become this color and this color with its opacity multiplied by 0.9 and 0.8
+     * (puts WinUI's lightweight styling keys ListBoxItemBackgroundSelected* into the list's Resources).
+     * Unlike Swing, reading it while unset returns null (Swing returns the Look & Feel color), and the text color (selectionForeground) does not change.
+     * Also, the selection background is visible even if the renderer ([cellRenderer]) component does not paint a background (the WinUI item paints it).
+     * Setting it recreates the items to apply the color (replaces the ItemContainerStyle).
+     */
+    var selectionBackground: WColor?
+        get() = look.selectionBackground
+        set(value) {
+            look.selectionBackground = value
+        }
+
+    /**
+     * The item height of elements (DIP; JList.getFixedCellHeight / setFixedCellHeight). The default is -1, the same as Swing, and if negative
+     * it is decided by the item content and the theme's minimum height (ListViewItemMinHeight etc.).
+     * If 0 or more, the height of every item (Height and MinHeight of the ItemContainerStyle) becomes this value, and it is also used as the estimated
+     * height for [visibleRowCount] (rows × this value, the same as Swing). There is no fixedCellWidth or prototypeCellValue (item width follows the list width).
+     */
+    var fixedCellHeight: Int
+        get() = look.fixedCellHeight
+        set(value) {
+            look.fixedCellHeight = value
+        }
 
     /** The implementation of [cellRenderer]. */
     private val cellRendering: ListCellRendering<WListBox> = ListCellRendering(this, listItems, viewport, selector, null) { list: WListBox -> list.cellRendering }
@@ -282,7 +314,8 @@ class WListBox(model: WListModel<*>) : WControl(
 
     /**
      * The number of rows to show (JList.getVisibleRowCount / setVisibleRowCount). The default is 8, as in Swing, and negative values become 0.
-     * Setting it sets the height ([height]) to "rows × 40 DIP + top and bottom padding (Padding) and border (BorderThickness)". 40 is an estimate taken from
+     * Setting it sets the height ([height]) to "rows × 40 DIP + top and bottom padding (Padding) and border (BorderThickness)" (if [fixedCellHeight] is
+     * set, that value instead of 40; the height is decided again even if it is set later). 40 is an estimate taken from
      * the default item height of WinUI (ListViewItemMinHeight), and it drifts for apps with Compact density (32) or when [cellRenderer] draws items
      * of different heights. If the user has specified [height], the height is not changed. Unlike Swing, the default 8 rows does not affect the size until set.
      */

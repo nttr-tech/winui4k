@@ -159,6 +159,14 @@ internal object XamlInterop {
     const val IPanel_get_Background = 7                // get_Background(out Brush)
     const val IPanel_put_Background = 8                // put_Background(Brush)
 
+    // ---- Microsoft.UI.Xaml.Shapes.Shape (the selection background Rectangle in the ListBoxItem template) ----
+    const val IID_IShape = "9941aad3-6af2-5ba2-9085-8506d5f2485e"
+    const val IShape_get_Fill = 6                      // get_Fill(out Brush)
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.ListViewItemPresenter (the root of the ListViewItem template) ----
+    const val IID_IListViewItemPresenter = "81012623-d987-5582-bc28-755a95caaf1c"
+    const val IListViewItemPresenter_get_SelectedBackground = 24 // get_SelectedBackground(out Brush)
+
     // ---- Microsoft.UI.Xaml.Controls.Border ----
     const val CLS_Border = "Microsoft.UI.Xaml.Controls.Border"
     const val IID_IBorder = "1ca13b47-ff5c-5abc-a411-a177df9482a9"
