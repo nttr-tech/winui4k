@@ -2,14 +2,116 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 
-/** Tests verifying WTabView's tab management, selection, and properties, plus WTabViewItem's header updates. */
+/**
+ * Tests WTabView's tab management, selection and properties, and updating WTabViewItem's header.
+ * For the JTabbedPane-shaped API (addTab / insertTab / removeTabAt / indexOfTab and so on), the selection rules and ChangeListener,
+ * the expected values are based on the behavior of Swing's JTabbedPane (the source of insertTab / removeTabAt / removeAll).
+ */
 class WTabViewTest : FunSpec() {
+    /** Passes the IVector<Object> view of the native TabItems to [block] (so tests can manipulate the native order directly). */
+    private fun <T> withNativeTabItems(tabView: WTabView, block: (ComPtr) -> T): T {
+        val items = tabView.inspectable.getPtr(XamlInterop.ITabView_get_TabItems)
+        val vector = items.queryInterface(FoundationInterop.IID_IVector_Object)
+        items.release()
+        return try {
+            block(vector)
+        } finally {
+            vector.release()
+        }
+    }
+
+    /** Moves the tab at [from] to [to] within the native TabItems, as when the user reorders tabs by dragging. */
+    private fun moveNatively(tabView: WTabView, from: Int, to: Int) = withNativeTabItems(tabView) { vector ->
+        val item = vector.getPtr(FoundationInterop.IVector_GetAt, from)
+        try {
+            vector.call(FoundationInterop.IVector_RemoveAt, from)
+            vector.call(FoundationInterop.IVector_InsertAt, to, item.ptr)
+        } finally {
+            item.release()
+        }
+    }
+
+    /** Places [tabView] in the shared window, waits for Loaded, calls [block] on the UI thread, and then removes it. */
+    private fun <T> withShown(tabView: WTabView, block: () -> T): T {
+        UiTestHarness.attachAndAwaitLoaded(tabView)
+        try {
+            onUiThread { tabView.updateLayout() } // Finish the internal ListView's Loaded (the replacement of TabItems)
+            return onUiThreadGet(block)
+        } finally {
+            UiTestHarness.detach(tabView)
+        }
+    }
+
+    /** The kind of [tab]'s IconSource ("none" / "symbol" / "font" / "image" / "other"). */
+    private fun iconSourceKind(tab: WTabViewItem): String {
+        val source = tab.inspectable.getPtrOrNull(XamlInterop.ITabViewItem_get_IconSource) ?: return "none"
+        try {
+            val kinds = listOf(
+                "symbol" to XamlInterop.IID_ISymbolIconSource,
+                "font" to XamlInterop.IID_IFontIconSource,
+                "image" to XamlInterop.IID_IImageIconSource,
+            )
+            for ((kind, iid) in kinds) {
+                val view = source.queryInterfaceOrNull(iid) ?: continue
+                view.release()
+                return kind
+            }
+            return "other"
+        } finally {
+            source.release()
+        }
+    }
+
+    /**
+     * Performs in order the operations that move the selection under Swing's rules, and returns selectedIndex and the selected tab's label after each operation.
+     * In JTabbedPane: adding the first tab gives 0, inserting before the selection moves it back by one, removing before the selection moves it forward by one,
+     * removing the selected last tab gives the previous tab, and removeAll gives -1.
+     */
+    private fun selectionSequence(tabView: WTabView): List<Pair<Int, String?>> {
+        val seen = mutableListOf<Pair<Int, String?>>()
+        fun record() {
+            val index = tabView.selectedIndex
+            seen += index to (if (index < 0) null else tabView.getTitleAt(index))
+        }
+        record()
+        tabView.addTab("A", WLabel("a"))
+        record()
+        tabView.addTab("B", WLabel("b"))
+        record()
+        tabView.selectedIndex = 1
+        record()
+        tabView.insertTab("Z", null, WLabel("z"), null, 0)
+        record()
+        tabView.removeTabAt(0)
+        record()
+        tabView.removeTabAt(1)
+        record()
+        tabView.removeAll()
+        record()
+        return seen
+    }
+
+    private val expectedSelectionSequence = listOf(
+        -1 to null,
+        0 to "A",
+        0 to "A",
+        1 to "B",
+        2 to "B",
+        1 to "B",
+        0 to "A",
+        -1 to null,
+    )
+
     init {
         test("tabs added via addTab can be retrieved from tabCount and getTab") {
             val (count, header) = onUiThreadGet {
@@ -137,6 +239,257 @@ class WTabViewTest : FunSpec() {
             }
             addVisible.shouldBeFalse()
             reorder.shouldBeFalse()
+        }
+
+        test("Swing-shaped addTab creates a tab with a label, icon, tooltip and content and without a close button") {
+            val result = onUiThreadGet {
+                val tabView = WTabView()
+                val first = WLabel("first")
+                val second = WLabel("second")
+                tabView.addTab("A", first)
+                tabView.addTab("B", Symbol.SAVE, second, "Save tab")
+                tabView.addTab("C", WFontIcon("X"), null)
+                listOf(
+                    tabView.tabCount,
+                    (0 until 3).map(tabView::getTitleAt),
+                    (0 until 3).map(tabView::getIconAt),
+                    (0 until 3).map(tabView::getToolTipTextAt),
+                    tabView.getComponentAt(0) === first && tabView.getComponentAt(1) === second && tabView.getComponentAt(2) == null,
+                    (0 until 3).map { tabView.getTab(it).isClosable },
+                    (0 until 3).map { iconSourceKind(tabView.getTab(it)) },
+                )
+            }
+            result shouldBe listOf(
+                3,
+                listOf("A", "B", "C"),
+                listOf(null, Symbol.SAVE, WFontIcon("X")),
+                listOf(null, "Save tab", null),
+                true,
+                listOf(false, false, false),
+                listOf("none", "symbol", "font"),
+            )
+        }
+
+        test("setIconAt sets an image icon and null removes it, and setTitleAt, setToolTipTextAt, setEnabledAt and setComponentAt can be read back") {
+            val result = onUiThreadGet {
+                val tabView = WTabView()
+                tabView.addTab("A", WLabel("a"))
+                val image = WImageIcon("icons/save.png")
+                tabView.setIconAt(0, image)
+                val kindWhileSet = iconSourceKind(tabView.getTab(0))
+                val iconWhileSet = tabView.getIconAt(0)
+                tabView.setIconAt(0, null)
+                val kindAfterClear = iconSourceKind(tabView.getTab(0))
+                tabView.setTitleAt(0, "New name")
+                tabView.setToolTipTextAt(0, "Tip")
+                tabView.setEnabledAt(0, false)
+                val replacement = WLabel("replacement")
+                tabView.setComponentAt(0, replacement)
+                listOf(
+                    kindWhileSet,
+                    iconWhileSet == image,
+                    kindAfterClear,
+                    tabView.getTitleAt(0),
+                    tabView.getToolTipTextAt(0),
+                    tabView.isEnabledAt(0),
+                    tabView.getComponentAt(0) === replacement,
+                    tabView.selectedComponent === replacement,
+                )
+            }
+            result shouldBe listOf("image", true, "none", "New name", "Tip", false, true, true)
+        }
+
+        test("insertTab inserts at the given position, and positions outside 0 to tabCount throw IndexOutOfBoundsException") {
+            val (titles, errors) = onUiThreadGet {
+                val tabView = WTabView()
+                tabView.addTab("A", WLabel("a"))
+                tabView.addTab("C", WLabel("c"))
+                tabView.insertTab("B", null, WLabel("b"), null, 1)
+                tabView.insertTab("D", null, WLabel("d"), null, 3) // The end (tabCount) can also be inserted at
+                val errors = listOf(-1, 5).map { index ->
+                    runCatching { tabView.insertTab("X", null, WLabel("x"), null, index) }.exceptionOrNull()?.javaClass
+                }
+                (0 until tabView.tabCount).map(tabView::getTitleAt) to errors
+            }
+            titles shouldBe listOf("A", "B", "C", "D")
+            errors shouldBe listOf(IndexOutOfBoundsException::class.java, IndexOutOfBoundsException::class.java)
+        }
+
+        test("insertTab with a component that is already a tab's content removes the original tab and moves it (same as Swing)") {
+            val (titles, index) = onUiThreadGet {
+                val tabView = WTabView()
+                val shared = WLabel("shared")
+                tabView.addTab("A", shared)
+                tabView.addTab("B", WLabel("b"))
+                tabView.insertTab("C", null, shared, null, 2) // A has been removed, so it goes into 1
+                (0 until tabView.tabCount).map(tabView::getTitleAt) to tabView.indexOfComponent(shared)
+            }
+            titles shouldBe listOf("B", "C")
+            index shouldBe 1
+        }
+
+        test("indexOfTab and indexOfComponent return the first matching tab, or -1 if none") {
+            val result = onUiThreadGet {
+                val tabView = WTabView()
+                val label = WLabel("b")
+                tabView.addTab("A", WLabel("a"))
+                tabView.addTab("B", Symbol.SAVE, label)
+                tabView.addTab("A", WLabel("a2"))
+                listOf(
+                    tabView.indexOfTab("A"),
+                    tabView.indexOfTab("Missing"),
+                    tabView.indexOfTab(Symbol.SAVE),
+                    tabView.indexOfTab(Symbol.DELETE),
+                    tabView.indexOfComponent(label),
+                    tabView.indexOfComponent(WLabel("other")),
+                )
+            }
+            result shouldBe listOf(0, -1, 1, -1, 1, -1)
+        }
+
+        test("remove(component) removes by content or by the tab itself, and does nothing if it is neither") {
+            val titles = onUiThreadGet {
+                val tabView = WTabView()
+                val content = WLabel("b")
+                val tab = WTabViewItem("C")
+                tabView.addTab("A", WLabel("a"))
+                tabView.addTab("B", content)
+                tabView.addTab(tab)
+                tabView.remove(content)
+                tabView.remove(tab)
+                tabView.remove(WLabel("other"))
+                tabView.remove(null)
+                (0 until tabView.tabCount).map(tabView::getTitleAt)
+            }
+            titles shouldBe listOf("A")
+        }
+
+        test("out-of-range indexes throw IndexOutOfBoundsException for getTab, removeTabAt, getTitleAt and setting selectedIndex") {
+            val errors = onUiThreadGet {
+                val tabView = WTabView()
+                tabView.addTab("A", WLabel("a"))
+                listOf<() -> Unit>(
+                    { tabView.getTab(1) },
+                    { tabView.removeTabAt(-1) },
+                    { tabView.getTitleAt(1) },
+                    { tabView.selectedIndex = 1 },
+                    { tabView.selectedIndex = -2 },
+                ).map { runCatching(it).exceptionOrNull()?.javaClass }
+            }
+            errors shouldBe List(5) { IndexOutOfBoundsException::class.java }
+        }
+
+        test("setting selectedIndex to -1 deselects and makes selectedComponent null, and selecting something that is not a tab's content throws IllegalArgumentException") {
+            val (index, component) = onUiThreadGet {
+                val tabView = WTabView()
+                tabView.addTab("A", WLabel("a"))
+                tabView.selectedIndex = -1
+                shouldThrow<IllegalArgumentException> { tabView.selectedComponent = WLabel("other") }
+                tabView.selectedIndex to tabView.selectedComponent
+            }
+            index shouldBe -1
+            component shouldBe null
+        }
+
+        test("even before being placed in the window, the selection moves by Swing's rules (-1 if empty, the first tab is selected, inserting or removing before shifts it)") {
+            onUiThreadGet { selectionSequence(WTabView()) } shouldBe expectedSelectionSequence
+        }
+
+        test("after being placed in the window, the selection also moves by Swing's rules") {
+            val tabView = onUiThreadGet { WTabView() }
+            withShown(tabView) { selectionSequence(tabView) } shouldBe expectedSelectionSequence
+        }
+
+        test("WinUI's TabView does not select a tab added directly to an empty TabItems after loading (WTabView's addTab does)") {
+            val tabView = onUiThreadGet { WTabView() }
+            val (native, wrapper) = withShown(tabView) {
+                val item = WTabViewItem("native")
+                withNativeTabItems(tabView) { it.call(FoundationInterop.IVector_Append, item.inspectable.ptr) }
+                val native = tabView.inspectable.getInt(XamlInterop.ITabView_get_SelectedIndex)
+                withNativeTabItems(tabView) { it.call(FoundationInterop.IVector_Clear) }
+                tabView.addTab("A", WLabel("a"))
+                native to tabView.selectedIndex
+            }
+            native shouldBe -1
+            wrapper shouldBe 0
+        }
+
+        listOf(false, true).forEach { shown ->
+            test("ChangeListener is called once every time the selected index or the selected tab changes (after placement: $shown)") {
+                val tabView = onUiThreadGet { WTabView() }
+                val run = {
+                    val notified = mutableListOf<Int>()
+                    val sources = mutableListOf<Any>()
+                    tabView.addChangeListener { e ->
+                        sources += e.source
+                        notified += (e.source as WTabView).selectedIndex
+                    }
+                    selectionSequence(tabView)
+                    tabView.addTab("A", WLabel("a"))
+                    tabView.addTab("B", WLabel("b"))
+                    tabView.addTab("C", WLabel("c"))
+                    tabView.selectedIndex = 1
+                    tabView.selectedIndex = 1 // Not called because it does not change
+                    tabView.removeTabAt(2) // Not called because it is after the selection
+                    tabView.removeTabAt(1) // Removing the selected last tab selects the previous tab
+                    notified to sources.all { it === tabView }
+                }
+                val (notified, sourceIsTabView) = if (shown) withShown(tabView, run) else onUiThreadGet(run)
+                // For selectionSequence (0, 1, 2, 1, 0, -1), add 3 and the first tab (0), select 1 (1), remove B and A (0)
+                notified shouldBe listOf(0, 1, 2, 1, 0, -1, 0, 1, 0)
+                sourceIsTabView.shouldBeTrue()
+            }
+        }
+
+        test("ChangeListener is also called when the selected tab is removed and the next tab at the same position is selected (same as Swing)") {
+            val (count, title) = onUiThreadGet {
+                val tabView = WTabView()
+                listOf("A", "B", "C").forEach { tabView.addTab(it, WLabel(it)) }
+                tabView.selectedIndex = 1
+                var count = 0
+                tabView.addChangeListener { count++ }
+                tabView.removeTabAt(1)
+                count to tabView.getTitleAt(tabView.selectedIndex)
+            }
+            count shouldBe 1
+            title shouldBe "C"
+        }
+
+        test("ChangeListener is called when the user selects a tab (automation selection), and removeChangeListener removes it") {
+            val tabView = onUiThreadGet {
+                WTabView().also { tabView -> listOf("A", "B", "C").forEach { tabView.addTab(it, WLabel(it)) } }
+            }
+            val notified = withShown(tabView) {
+                val notified = mutableListOf<Int>()
+                val listener = WChangeListener { notified += tabView.selectedIndex }
+                tabView.addChangeListener(listener)
+                Xaml.invoke(tabView.getTab(2).inspectable)
+                tabView.removeChangeListener(listener)
+                Xaml.invoke(tabView.getTab(1).inspectable)
+                notified + tabView.selectedIndex + tabView.getChangeListeners().size
+            }
+            notified shouldBe listOf(2, 1, 0)
+        }
+
+        test("after reordering by dragging, indexes refer to the native order, and the close button's index is the new position too") {
+            val tabView = onUiThreadGet {
+                WTabView().also { tabView -> listOf("A", "B", "C").forEach { tabView.addTab(WTabViewItem(it)) } }
+            }
+            val result = withShown(tabView) {
+                val closeRequested = mutableListOf<Int>()
+                tabView.addTabCloseRequestedListener { closeRequested += it }
+                moveNatively(tabView, 0, 2)
+                tabView.updateLayout() // Make it rebuild the containers of the moved elements
+                val titles = (0 until tabView.tabCount).map { tabView.getTab(it).header }
+                val closeButton = checkNotNull(Xaml.templatePartOrNull(tabView.getTab(2).inspectable, "CloseButton"))
+                try {
+                    Xaml.invoke(closeButton)
+                } finally {
+                    closeButton.release()
+                }
+                listOf(titles, tabView.indexOfTab("A"), closeRequested)
+            }
+            result shouldBe listOf(listOf("B", "C", "A"), 2, listOf(2))
         }
     }
 }

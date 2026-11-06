@@ -35,7 +35,8 @@ enum class TabViewWidthMode(internal val native: Int) {
 
 /**
  * A single JTabbedPane-tab-like: WinUI 3's TabViewItem.
- * Provides [header] (the tab's label), [isClosable], and [content] (shown while selected).
+ * Provides [header] (the tab's label) / [icon] / [isClosable] / [content] (what is shown when selected).
+ * The tab's tooltip is set with [toolTipText] (corresponds to JTabbedPane's setToolTipTextAt), and whether it can be pressed with [isEnabled].
  */
 class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TabViewItem, XamlInterop.IID_ITabViewItemFactory), // default interface = ITabViewItem
@@ -60,7 +61,23 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
             boxed.release()
         }
 
-    /** Whether this tab shows a close button (TabViewItem.IsClosable). */
+    /**
+     * The icon shown to the left of the label (TabViewItem.IconSource). Null shows none (the default).
+     * [Symbol] / [WImageIcon] / [WFontIcon] are converted to an IconSource and set. get returns the WIcon that was set
+     * (because a WIcon cannot be recovered from the native IconSource). Unsupported implementations throw [IllegalArgumentException].
+     */
+    var icon: WIcon? = null
+        set(value) {
+            val source = value?.createIconSource()
+            try {
+                inspectable.call(XamlInterop.ITabViewItem_put_IconSource, source?.ptr)
+            } finally {
+                source?.release()
+            }
+            field = value
+        }
+
+    /** Whether to show a close button on the tab (TabViewItem.IsClosable). WinUI's default is true. */
     var isClosable: Boolean
         get() = inspectable.getBool(XamlInterop.ITabViewItem_get_IsClosable)
         set(value) = inspectable.putBool(XamlInterop.ITabViewItem_put_IsClosable, value)
@@ -85,89 +102,263 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
 /**
  * A JTabbedPane-like: WinUI 3's TabView.
  *
- * Manage tabs with [addTab] / [removeTab] / [getTab] / [tabCount] / [selectedIndex]; subscribe to
- * tab switches via [addSelectionListener], the close button via [addTabCloseRequestedListener],
+ * Tabs are managed with the Swing-shaped [addTab] (title, icon, content, tooltip) / [insertTab] / [removeTabAt] / [removeAll] /
+ * [indexOfTab] / [indexOfComponent] / [getTitleAt] and so on, and with [addTab] / [removeTab] / [getTab] that take a [WTabViewItem] directly.
+ * Indexes are computed from the order of the native TabItems, so they match the on-screen order even after the user reorders tabs by dragging.
+ * Selection changes are notified by [addChangeListener] (ChangeListener-style), and close buttons by [addTabCloseRequestedListener].
  * and the "+" button via [addAddTabButtonClickListener].
+ *
+ * The selection follows the same rules as Swing: adding the first tab selects it, adding or removing a tab before the selection shifts the selected index,
+ * and removing the selected tab selects the tab at the same position (the previous one if it was last). Without tabs [selectedIndex] is -1.
+ *
+ * WinUI's defaults (the tabs' close buttons, the "+" button, reordering by dragging) are kept. Only tabs created with the Swing-shaped [addTab] / [insertTab]
+ * show no close button (JTabbedPane's tabs have none). Hide the "+" button with [isAddTabButtonVisible].
  * Combine with [WFrame.extendsContentIntoTitleBar] to place it in the title bar area.
  */
+@Suppress("TooManyFunctions") // Lists JTabbedPane's API (per-tab get / set) as is
 class WTabView : WControl(
     Activation.composeDefault(XamlInterop.CLS_TabView, XamlInterop.IID_ITabViewFactory), // default interface = ITabView
 ) {
     /**
-     * Gets the IVector<Object> view of TabView.TabItems, passes it to [block], and releases it afterward.
-     *
-     * TabView swaps out what TabItems actually points to onto ListView.Items when its internal
-     * ListView's Loaded fires (the `TabItems(lvItems)` call at the end of microsoft-ui-xaml's
-     * `TabView::OnListViewLoaded`). So caching the vector means that after Loaded, you'd be
-     * operating on the orphaned pre-swap collection instead, with no effect on the display (the
-     * Append call itself succeeds and get_Size does increase). Always re-fetch via get_TabItems.
+     * The reverse lookup of tab wrappers (the TabViewItem's IUnknown address -> wrapper). Only the native TabItems holds the order.
+     * The wrapper references the native object, so the address does not change while it is registered.
      */
-    private inline fun <T> withTabItemVector(block: (ComPtr) -> T): T {
-        val items = inspectable.getPtr(XamlInterop.ITabView_get_TabItems)
-        try {
-            val vector = items.queryInterface(FoundationInterop.IID_IVector_Object)
-            try {
-                return block(vector)
-            } finally {
-                vector.release()
-            }
-        } finally {
-            items.release()
-        }
-    }
-
-    /** The tabs added via [addTab] (used to reverse-look-up an index). */
-    private val tabs = mutableListOf<WTabViewItem>()
+    private val tabsByIdentity = HashMap<Long, WTabViewItem>()
 
     /** Listener → event token (used by the remove functions). */
     private val selectionTokens = ListenerTokens<Runnable>()
     private val addTabButtonTokens = ListenerTokens<Runnable>()
     private val closeRequestedTokens = ListenerTokens<IntConsumer>()
 
-    /** The number of tabs. */
+    /** The ChangeListeners. The SelectionChanged and TabDragCompleted handlers are registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addSelectionTracking() }
+
+    /** The last notified selection (the index and the IUnknown address of the selected tab). Null means it is not tracked (no listeners added). */
+    private var notifiedSelection: Pair<Int, Long>? = null
+
+    /** In the middle of adding or removing tabs (intermediate selections the native side makes temporarily are not notified; compared once after it ends). */
+    private var mutating = false
+
+    /** The number of tabs (the number of elements in TabItems). */
     val tabCount: Int
-        get() = tabs.size
+        get() = withTabItemVector(inspectable, ::sizeOf)
 
     /** How tab widths are decided (TabView.TabWidthMode). */
     var tabWidthMode: TabViewWidthMode
         get() = TabViewWidthMode.of(inspectable.getInt(XamlInterop.ITabView_get_TabWidthMode))
         set(value) = inspectable.call(XamlInterop.ITabView_put_TabWidthMode, value.native)
 
-    /** Whether the "+" button at the end of the tab strip is shown (TabView.IsAddTabButtonVisible). */
+    /** Whether to show the "+" button at the end of the tab strip (TabView.IsAddTabButtonVisible). WinUI's default is true. */
     var isAddTabButtonVisible: Boolean
         get() = inspectable.getBool(XamlInterop.ITabView_get_IsAddTabButtonVisible)
         set(value) = inspectable.putBool(XamlInterop.ITabView_put_IsAddTabButtonVisible, value)
 
     /**
-     * Whether tabs can be reordered by dragging (TabView.CanReorderTabs).
-     * Reordering doesn't move [getTab]'s indices along with it, so set this to false when
-     * managing tabs by index.
+     * Whether tabs can be reordered by dragging (TabView.CanReorderTabs). WinUI's default is true.
+     * After reordering, the indexes of [getTab] and the like refer to the new order.
      */
     var canReorderTabs: Boolean
         get() = inspectable.getBool(XamlInterop.ITabView_get_CanReorderTabs)
         set(value) = inspectable.putBool(XamlInterop.ITabView_put_CanReorderTabs, value)
 
-    /** The index of the currently selected tab, or -1 if none is selected (TabView.SelectedIndex). */
+    /**
+     * The index of the selected tab. -1 if there are no tabs or nothing is selected (TabView.SelectedIndex).
+     * Only -1 (deselect) or 0 to [tabCount] - 1 can be set; anything else throws [IndexOutOfBoundsException] (same as Swing).
+     * When setting it changes the selection, the [addChangeListener] listeners are called.
+     */
     var selectedIndex: Int
-        get() = inspectable.getInt(XamlInterop.ITabView_get_SelectedIndex)
-        set(value) = inspectable.call(XamlInterop.ITabView_put_SelectedIndex, value)
+        get() = if (tabCount == 0) -1 else inspectable.getInt(XamlInterop.ITabView_get_SelectedIndex)
+        set(value) {
+            if (value != -1) checkIndex(value)
+            mutate { inspectable.call(XamlInterop.ITabView_put_SelectedIndex, value) }
+        }
 
-    /** Appends a tab to the end (TabItems.Append). */
+    /**
+     * The content of the selected tab ([WTabViewItem.content]). Null if no tab is selected.
+     * Setting it selects the tab with that content. [IllegalArgumentException] if it is not the content of any tab (same as Swing).
+     */
+    var selectedComponent: WComponent?
+        get() {
+            val index = selectedIndex
+            return if (index < 0) null else getTab(index).content
+        }
+        set(value) {
+            val index = if (value == null) -1 else indexOfComponent(value)
+            require(index >= 0) { "component not found in tabbed pane" }
+            selectedIndex = index
+        }
+
+    /** Adds a tab at the end (TabItems.Append). If the tab is already in this tab view, it is removed from its old position and moved to the end. */
     fun addTab(tab: WTabViewItem) {
-        withTabItemVector { it.call(FoundationInterop.IVector_Append, tab.inspectable.ptr) }
-        tabs += tab
+        val existing = indexOfItem(tab)
+        if (existing >= 0) removeTab(existing)
+        insertItem(tab, tabCount)
     }
 
-    /** Removes the tab at [index] (TabItems.RemoveAt). */
+    /**
+     * Like JTabbedPane.addTab: adds a tab titled [title] at the end that shows [component] when selected.
+     * The created tab shows no close button ([WTabViewItem.isClosable] = false). If [component] is already the content of some tab, that tab is removed.
+     */
+    fun addTab(title: String?, component: WComponent?) {
+        insertTab(title, null, component, null, tabCount)
+    }
+
+    /** Like JTabbedPane.addTab: adds a tab at the end that also has an icon ([icon]) and a tooltip ([tip], none if null). Otherwise the same as the two-argument [addTab]. */
+    @JvmOverloads
+    fun addTab(title: String?, icon: WIcon?, component: WComponent?, tip: String? = null) {
+        insertTab(title, icon, component, tip, tabCount)
+    }
+
+    /**
+     * Like JTabbedPane.insertTab: inserts a tab at position [index]. [index] must be 0 to [tabCount]; anything else throws [IndexOutOfBoundsException].
+     * If [component] is already the content of some tab, that tab is removed first (an [index] after the removed tab shifts forward by one; same as Swing).
+     * The created tab shows no close button.
+     */
+    fun insertTab(title: String?, icon: WIcon?, component: WComponent?, tip: String?, index: Int) {
+        var newIndex = index
+        val removeIndex = if (component == null) -1 else indexOfComponent(component)
+        if (removeIndex >= 0) {
+            removeTabAt(removeIndex)
+            if (newIndex > removeIndex) newIndex--
+        }
+        val count = tabCount
+        if (newIndex !in 0..count) throw IndexOutOfBoundsException("Index: $newIndex, Tab count: $count")
+        val tab = WTabViewItem(title ?: "")
+        tab.isClosable = false
+        tab.icon = icon
+        tab.toolTipText = tip
+        tab.content = component
+        insertItem(tab, newIndex)
+    }
+
+    /** Removes the [index]th tab (TabItems.RemoveAt). [IndexOutOfBoundsException] if out of range. */
     fun removeTab(index: Int) {
-        withTabItemVector { it.call(FoundationInterop.IVector_RemoveAt, index) }
-        tabs.removeAt(index)
+        checkIndex(index)
+        mutate {
+            val selected = selectedIndex
+            withTabItemVector(inspectable) { vector ->
+                tabsByIdentity.remove(identityAt(vector, index))
+                vector.call(FoundationInterop.IVector_RemoveAt, index)
+            }
+            val count = tabCount
+            val expected = when {
+                selected > index -> selected - 1
+                selected >= count -> selected - 1
+                else -> selected
+            }
+            applySelectedIndex(expected)
+        }
     }
 
-    /** Returns the tab at [index]. */
-    fun getTab(index: Int): WTabViewItem = tabs[index]
+    /** Like JTabbedPane.removeTabAt: same as [removeTab]. */
+    fun removeTabAt(index: Int) = removeTab(index)
 
-    /** Subscribes to selection changes (TabView.SelectionChanged). */
+    /**
+     * Like JTabbedPane.remove(Component): removes the tab whose content is [component] (or the tab that is [component] itself).
+     * Does nothing if it is neither.
+     */
+    fun remove(component: WComponent?) {
+        if (component == null) return
+        val index = if (component is WTabViewItem) indexOfItem(component) else -1
+        val target = if (index >= 0) index else indexOfComponent(component)
+        if (target >= 0) removeTab(target)
+    }
+
+    /** Like JTabbedPane.removeAll: removes all tabs. The selection becomes -1, and if something was selected the ChangeListeners are called once. */
+    fun removeAll() {
+        mutate {
+            applySelectedIndex(-1)
+            withTabItemVector(inspectable) { vector ->
+                for (index in sizeOf(vector) - 1 downTo 0) {
+                    tabsByIdentity.remove(identityAt(vector, index))
+                    vector.call(FoundationInterop.IVector_RemoveAt, index)
+                }
+            }
+            applySelectedIndex(-1)
+        }
+    }
+
+    /**
+     * Returns the [index]th tab. [IndexOutOfBoundsException] if out of range.
+     * Tabs that came in other than through this class's API (dragging from another TabView and so on) have no wrapper, so [IllegalStateException].
+     */
+    fun getTab(index: Int): WTabViewItem {
+        checkIndex(index)
+        val identity = withTabItemVector(inspectable) { identityAt(it, index) }
+        return checkNotNull(tabsByIdentity[identity]) { "tab added other than through the WTabView API (index=$index)" }
+    }
+
+    /** Like JTabbedPane.indexOfTab(String): the index of the first tab whose label is [title], or -1 if none. */
+    fun indexOfTab(title: String?): Int = (0 until tabCount).firstOrNull { getTab(it).header == (title ?: "") } ?: -1
+
+    /** Like JTabbedPane.indexOfTab(Icon): the index of the first tab whose icon equals [icon], or -1 if none. */
+    fun indexOfTab(icon: WIcon?): Int = (0 until tabCount).firstOrNull { getTab(it).icon == icon } ?: -1
+
+    /** Like JTabbedPane.indexOfComponent: the index of the first tab whose content is [component] (the same object), or -1 if none. */
+    fun indexOfComponent(component: WComponent?): Int =
+        (0 until tabCount).firstOrNull { getTab(it).content === component } ?: -1
+
+    /** The label of the [index]th tab ([WTabViewItem.header]). */
+    fun getTitleAt(index: Int): String = getTab(index).header
+
+    /** Changes the label of the [index]th tab. Null is an empty string. */
+    fun setTitleAt(index: Int, title: String?) {
+        getTab(index).header = title ?: ""
+    }
+
+    /** The icon of the [index]th tab ([WTabViewItem.icon]). */
+    fun getIconAt(index: Int): WIcon? = getTab(index).icon
+
+    /** Changes the icon of the [index]th tab. Null removes it. */
+    fun setIconAt(index: Int, icon: WIcon?) {
+        getTab(index).icon = icon
+    }
+
+    /** The tooltip of the [index]th tab ([WTabViewItem.toolTipText]). */
+    fun getToolTipTextAt(index: Int): String? = getTab(index).toolTipText
+
+    /** Changes the tooltip of the [index]th tab. Null removes it. */
+    fun setToolTipTextAt(index: Int, toolTipText: String?) {
+        getTab(index).toolTipText = toolTipText
+    }
+
+    /** Whether the [index]th tab can be pressed ([WTabViewItem.isEnabled]). */
+    fun isEnabledAt(index: Int): Boolean = getTab(index).isEnabled
+
+    /** Changes whether the [index]th tab can be pressed. Tabs that cannot be pressed can still be selected from the program (same as Swing). */
+    fun setEnabledAt(index: Int, enabled: Boolean) {
+        getTab(index).isEnabled = enabled
+    }
+
+    /** The content of the [index]th tab ([WTabViewItem.content]). */
+    fun getComponentAt(index: Int): WComponent? = getTab(index).content
+
+    /** Changes the content of the [index]th tab. */
+    fun setComponentAt(index: Int, component: WComponent?) {
+        getTab(index).content = component
+    }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this tab view) every time the selection changes.
+     * Called when the selected index or the selected tab changes by the user's click or reordering by dragging, setting [selectedIndex], or adding or removing tabs
+     * (as with JTabbedPane, also when the selected tab is removed and the next tab at the same position is selected).
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    /**
+     * Subscribes to selection changes (TabView.SelectionChanged). The native notifications are passed through as is, so it is called even for selections in the middle of adding or removing tabs.
+     * To be notified at the same points as Swing, use [addChangeListener].
+     */
     @JvmSynthetic
     fun addSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
@@ -231,7 +422,7 @@ class WTabView : WControl(
 
     /**
      * Subscribes to a click of a tab's close button (TabView.TabCloseRequested).
-     * The listener receives the target tab's index. TabView doesn't close the tab automatically,
+     * The listener receives the target tab's index in the current order. TabView does not close tabs automatically, so
      * so call [removeTab] from the listener if it's OK to close it.
      */
     @JvmSynthetic
@@ -243,17 +434,13 @@ class WTabView : WControl(
 
     @JvmName("addTabCloseRequestedListener")
     fun addTabCloseRequestedListenerForJava(listener: IntConsumer) {
+        // The handler stays on the native side, so it does not capture this wrapper. The index is computed from the sender's (TabView) TabItems
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewTabCloseRequestedHandler",
             XamlInterop.IID_TabViewTabCloseRequestedHandler,
             XamlInterop.ITabView_add_TabCloseRequested,
-        ) { _, args ->
-            val tab = ComPtr(args).getPtr(XamlInterop.ITabViewTabCloseRequestedEventArgs_get_Tab)
-            val index = try {
-                indexOfTab(tab)
-            } finally {
-                tab.release()
-            }
+        ) { sender, args ->
+            val index = indexOfClosingTab(ComPtr(sender), ComPtr(args))
             if (index >= 0) listener.accept(index)
         }
         closeRequestedTokens.add(listener, token)
@@ -273,20 +460,157 @@ class WTabView : WControl(
     }
 
     /**
-     * Reverse-looks-up an added tab's index from a TabViewItem pointer.
-     * Compares addresses using the COM identity rule (QI'ing IUnknown always returns the same pointer).
+     * Inserts [tab] at [index] and aligns the selection with Swing's rules (select the first tab, shift when inserted before the selection).
+     * After loading, the native side does not select a tab added to an empty TabView, and before loading it does not shift because SelectedIndex stays at its default 0,
+     * so it is rewritten to give the same result in both states.
      */
-    private fun indexOfTab(target: ComPtr): Int {
-        val targetUnknown = target.queryInterface(KComObject.IID_IUNKNOWN)
-        try {
-            return tabs.indexOfFirst { tab ->
-                val mine = tab.inspectable.queryInterface(KComObject.IID_IUNKNOWN)
-                val matched = mine.ptr.address == targetUnknown.ptr.address
-                mine.release()
-                matched
+    private fun insertItem(tab: WTabViewItem, index: Int) {
+        mutate {
+            val selected = selectedIndex
+            val wasEmpty = tabCount == 0
+            withTabItemVector(inspectable) { vector ->
+                vector.call(FoundationInterop.IVector_InsertAt, index, tab.inspectable.ptr)
             }
+            tabsByIdentity[identityOf(tab.inspectable)] = tab
+            applySelectedIndex(
+                when {
+                    wasEmpty -> 0
+                    selected >= index -> selected + 1
+                    else -> selected
+                },
+            )
+        }
+    }
+
+    /** Writes the native SelectedIndex only when it differs from [expected] (writing the same value would cause an extra SelectionChanged). */
+    private fun applySelectedIndex(expected: Int) {
+        if (inspectable.getInt(XamlInterop.ITabView_get_SelectedIndex) != expected) {
+            inspectable.call(XamlInterop.ITabView_put_SelectedIndex, expected)
+        }
+    }
+
+    /** During [block], native selection notifications are not passed on; afterwards, if the selection changed, it is notified once. */
+    private inline fun mutate(block: () -> Unit) {
+        val outer = mutating
+        mutating = true
+        try {
+            block()
         } finally {
-            targetUnknown.release()
+            mutating = outer
+        }
+        if (!outer) notifySelectionIfChanged()
+    }
+
+    private fun notifySelectionIfChanged() {
+        val old = notifiedSelection ?: return
+        if (mutating) return
+        val now = currentSelection()
+        notifiedSelection = now
+        changeListeners.fireIfChanged(old, now)
+    }
+
+    private fun currentSelection(): Pair<Int, Long> {
+        val index = selectedIndex
+        val identity = if (index < 0) 0L else withTabItemVector(inspectable) { identityAt(it, index) }
+        return index to identity
+    }
+
+    /**
+     * Starts tracking the selection. User clicks are learned from SelectionChanged and reordering by dragging from TabDragCompleted
+     * (reordering may change the selected index without a SelectionChanged, and TabDragCompleted is sent after SelectedIndex is
+     * reread from the internal ListView; microsoft-ui-xaml TabView::OnListViewDragItemsCompleted).
+     * The handlers stay on the native side, so this wrapper is not strongly captured; it is looked up through the anchor (see ListenerAnchor).
+     */
+    private fun addSelectionTracking() {
+        notifiedSelection = currentSelection()
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.TabViewSelectionTrackingHandler",
+            XamlInterop.IID_SelectionChangedEventHandler,
+            XamlInterop.ITabView_add_SelectionChanged,
+        ) { _, _ -> (anchor.get() as? WTabView)?.notifySelectionIfChanged() }
+        inspectable.addEventHandler(
+            "WinUI4K.TabViewTabDragCompletedHandler",
+            XamlInterop.IID_TabViewTabDragCompletedHandler,
+            XamlInterop.ITabView_add_TabDragCompleted,
+        ) { _, _ -> (anchor.get() as? WTabView)?.notifySelectionIfChanged() }
+    }
+
+    private fun checkIndex(index: Int) {
+        val count = tabCount
+        if (index < 0 || index >= count) throw IndexOutOfBoundsException("Index: $index, Tab count: $count")
+    }
+
+    /** The index of [tab] in the current order. -1 if it is not in this tab view. */
+    private fun indexOfItem(tab: WTabViewItem): Int {
+        val target = identityOf(tab.inspectable)
+        return withTabItemVector(inspectable) { indexOfIdentity(it, target) }
+    }
+
+    private companion object {
+        /**
+         * Gets the IVector<Object> view of [tabView]'s (ITabView) TabItems, passes it to [block], and releases it after use.
+         *
+         * When its internal ListView is Loaded, TabView replaces the object behind the TabItems property with ListView.Items
+         * (the `TabItems(lvItems)` at the end of microsoft-ui-xaml TabView::OnListViewLoaded).
+         * So caching the vector would, after Loaded, operate on the orphaned collection from before the replacement
+         * and the changes would not be reflected on screen (Append itself succeeds and get_Size also grows).
+         * Always get it again with get_TabItems every time.
+         */
+        inline fun <T> withTabItemVector(tabView: ComPtr, block: (ComPtr) -> T): T {
+            val items = tabView.getPtr(XamlInterop.ITabView_get_TabItems)
+            try {
+                val vector = items.queryInterface(FoundationInterop.IID_IVector_Object)
+                try {
+                    return block(vector)
+                } finally {
+                    vector.release()
+                }
+            } finally {
+                items.release()
+            }
+        }
+
+        fun sizeOf(vector: ComPtr): Int = vector.getInt(FoundationInterop.IVector_get_Size)
+
+        /** The COM identity (IUnknown address) of the [index]th element of [vector]. */
+        fun identityAt(vector: ComPtr, index: Int): Long {
+            val item = vector.getPtr(FoundationInterop.IVector_GetAt, index)
+            return try {
+                identityOf(item)
+            } finally {
+                item.release()
+            }
+        }
+
+        /** The index of the element in [vector] whose identity is [identity], or -1 if none. */
+        fun indexOfIdentity(vector: ComPtr, identity: Long): Int =
+            (0 until sizeOf(vector)).firstOrNull { identityAt(vector, it) == identity } ?: -1
+
+        /** The identity of an object by COM's identity rule (QI for IUnknown always returns the same pointer). */
+        fun identityOf(pointer: ComPtr): Long {
+            val unknown = pointer.queryInterface(KComObject.IID_IUNKNOWN)
+            return try {
+                unknown.ptr.address
+            } finally {
+                unknown.release()
+            }
+        }
+
+        /** The index of the tab being closed ([args]' Tab) in the order of the TabCloseRequested sender [sender] (the TabView; borrowed). */
+        fun indexOfClosingTab(sender: ComPtr, args: ComPtr): Int {
+            val tab = args.getPtr(XamlInterop.ITabViewTabCloseRequestedEventArgs_get_Tab)
+            val target = try {
+                identityOf(tab)
+            } finally {
+                tab.release()
+            }
+            val tabView = sender.queryInterface(XamlInterop.IID_ITabView)
+            return try {
+                withTabItemVector(tabView) { indexOfIdentity(it, target) }
+            } finally {
+                tabView.release()
+            }
         }
     }
 }
