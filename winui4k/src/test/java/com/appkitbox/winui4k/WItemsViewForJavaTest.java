@@ -2,16 +2,19 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.attachAndAwaitLoaded;
 import static com.appkitbox.winui4k.UiTestHarness.detach;
+import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntConsumer;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -95,5 +98,40 @@ class WItemsViewForJavaTest {
         } finally {
             detach(view);
         }
+    }
+
+    @Test
+    void itemInvokedCanBeSubscribedWithAnIntConsumerLambdaAndRemovedWithTheSameReferenceAndLayoutAndIsItemInvokedEnabledWorkWithGettersAndSetters() {
+        onUiThread(() -> {
+            WItemsView view = createView();
+            view.setItemInvokedEnabled(true);
+            assertTrue(view.isItemInvokedEnabled());
+            IntConsumer listener = index -> { };
+            view.addItemInvokedListener(listener);
+            view.removeItemInvokedListener(listener);
+            view.removeItemInvokedListener(listener);
+
+            WUniformGridLayout grid = new WUniformGridLayout();
+            grid.setMinItemWidth(120.0);
+            view.setLayout(grid);
+            assertSame(grid, view.getLayout());
+            view.setLayout(null);
+            assertNull(view.getLayout());
+        });
+    }
+
+    @Test
+    void wItemContainerConstructorGetChildAndSetChild() {
+        onUiThread(() -> {
+            WLabel first = new WLabel("Before");
+            WItemContainer container = new WItemContainer(first);
+            assertSame(first, container.getChild());
+            WLabel second = new WLabel("After");
+            container.setChild(second);
+            assertSame(second, container.getChild());
+            container.setChild(null);
+            assertNull(container.getChild());
+            assertNull(new WItemContainer().getChild());
+        });
     }
 }
