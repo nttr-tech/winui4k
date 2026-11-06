@@ -221,6 +221,21 @@ class WFrameStateTest : FunSpec() {
             }
         }
 
+        test("setIconImage(WImageIcon) can use an image whose path contains spaces, and a file URI with unescaped spaces throws IllegalArgumentException") {
+            val frame = newFrame()
+            show(frame)
+            val dir = File(workDir, "with space").also { it.mkdirs() }
+            val png = File(dir, "icon image.png").also { it.writeBytes(WindowNatives.solidPng(32, 0xFF20C040.toInt())) }
+            onUiThread {
+                frame.setIconImage(WImageIcon(png.path)) // uri becomes a file URI escaped with %20
+                frame.iconImage shouldBe png.path
+                WindowNatives.icons(frame).forEach { it shouldNotBeExactly 0L }
+                val raw = "file:///" + png.absolutePath.replace(File.separatorChar, '/') // Spaces as is (not a valid java.net.URI)
+                shouldThrow<IllegalArgumentException> { frame.setIconImage(WImageIcon(raw)) }
+                frame.iconImage shouldBe png.path // A failed setting does not change the previous value
+            }
+        }
+
         test("jMenuBar is placed below the title bar and above the content, and null removes it. Content set later with setContentPane also goes below the menu") {
             val frame = newFrame()
             val button = onUiThreadGet { WButton("Content") }

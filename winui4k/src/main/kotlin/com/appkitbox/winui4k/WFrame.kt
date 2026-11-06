@@ -16,6 +16,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.io.File
 import java.lang.ref.WeakReference
 import java.net.URI
+import java.net.URISyntaxException
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -817,10 +818,16 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /**
      * Frame.setIconImage(Image)-like: makes the file of [icon] the icon (same as [setIconImage]).
      *
-     * @throws IllegalArgumentException for images that are not files (file URIs) (http:// or ms-appx:///), or when the file conditions are not met
+     * @throws IllegalArgumentException for images that are not files (file URIs) (http:// or ms-appx:///), when it is not a valid URI
+     *   (when passing a URI that does not escape spaces etc.; passing a path may include spaces), or when the file conditions are not met
      */
     fun setIconImage(icon: WImageIcon) {
-        val uri = URI(icon.uri)
+        val uri = try {
+            URI(icon.uri)
+        } catch (e: URISyntaxException) {
+            // A URI as passed (such as "file:///C:/my icons/a.png" with unescaped spaces) cannot be read as a java.net.URI
+            throw IllegalArgumentException("Cannot be read as an icon URI (pass a path for a file): ${icon.path}", e)
+        }
         require(uri.scheme.equals("file", ignoreCase = true)) { "Only file images can be used for the icon: ${icon.path}" }
         setIconImage(File(uri).path)
     }
