@@ -91,11 +91,7 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
     var isBorderPainted: Boolean = true
         set(value) {
             field = value
-            if (value) {
-                clearControlProperty(XamlInterop.IControlStatics_get_BorderThicknessProperty)
-            } else {
-                XamlStructs.putThickness(control, XamlInterop.IControl_put_BorderThickness, 0.0, 0.0, 0.0, 0.0)
-            }
+            putBorderPainted(value)
         }
 
     /**

@@ -229,14 +229,55 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      * [WAppBarToggleButton] has no per-visual-state colors and the color affects only the normal state.
      */
     override var background: WColor?
-        get() = super.background
+        get() = customBackground ?: nativeBackground()
         set(value) {
-            super.background = value
+            customBackground = value
+            applyBackground()
         }
+
+    /** The color set to [background]. null means unset (the theme default). Kept while [isContentAreaFilled] is false. */
+    private var customBackground: WColor? = null
 
     /** The background is put into the keys of [stateColors] (the mechanism is the same as [WControl.background]). */
     override val backgroundStateKeys: StateColorKeys
         get() = stateColors.background
+
+    /**
+     * Puts [customBackground] into the per-visual-state keys and Control.Background while [isContentAreaFilled] is true, and while it is false
+     * makes the same keys and Control.Background transparent.
+     */
+    private fun applyBackground() {
+        val keys = backgroundStateKeys
+        val color = if (isContentAreaFilled) customBackground else TRANSPARENT
+        if (color == null) keys.remove(this) else keys.put(this, color)
+        putLocalBackground(color)
+    }
+
+    /**
+     * AbstractButton.isContentAreaFilled / setContentAreaFilled-like: whether to fill the background (true by default). If false, the background of the unchecked
+     * and indeterminate states becomes transparent in the normal, pointer-over and pressed states alike (a transparent color is put into the per-visual-state keys).
+     * The checked state is still filled with the theme's accent color (WinUI's checked text color is meant to be readable on the accent color, so making it transparent
+     * can make the text invisible; Swing's JToggleButton does not fill even while selected). The border is switched separately with [isBorderPainted].
+     * The [background] color is kept and comes back when set to true again. [foreground] is not affected.
+     * [WCheckBox] / [WRadioButton] do not fill the background even by default, so while false it only stops filling the [background] color.
+     */
+    var isContentAreaFilled: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            applyBackground()
+        }
+
+    /**
+     * AbstractButton.isBorderPainted / setBorderPainted-like: whether to paint the border (true by default). If false, the border thickness (Control.BorderThickness)
+     * becomes 0, and setting it back to true clears that setting and returns to the theme's default thickness (the same as [WButton.isBorderPainted]).
+     * The [WCheckBox] / [WRadioButton] templates do not paint a border even by default, so their look does not change (Swing's JCheckBox defaults to false).
+     */
+    var isBorderPainted: Boolean = true
+        set(value) {
+            field = value
+            putBorderPainted(value)
+        }
 
     /**
      * JComponent.getForeground / setForeground-style: the text color. Like [background], it is also put in the keys for
@@ -321,6 +362,9 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     val selectedObjects: Array<Any>?
         get() = if (isSelected) arrayOf(text) else null
 }
+
+/** The transparent color put into the background while [WToggleButton.isContentAreaFilled] is false. */
+private val TRANSPARENT = WColor(0, 0, 0, 0)
 
 /** Theme resource keys for the background and text color of toggle-type buttons for each visual state ([WToggleButton.stateColors]). */
 internal class ToggleStateColors(val background: StateColorKeys, val foreground: StateColorKeys)

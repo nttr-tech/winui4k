@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 
 /**
  * A table of the theme resource keys (lightweight styling) for the colors of each visual state of button-type controls,
@@ -70,6 +71,18 @@ internal fun WControl.putLocalBackground(color: WColor?) {
         control.call(XamlInterop.IControl_put_Background, brush.ptr)
     } finally {
         brush.release()
+    }
+}
+
+/**
+ * The shared implementation of AbstractButton.setBorderPainted ([WButton.isBorderPainted] / [WToggleButton.isBorderPainted]): if false,
+ * sets Control.BorderThickness to 0, and if true clears that setting to return to the theme's default thickness.
+ */
+internal fun WControl.putBorderPainted(painted: Boolean) {
+    if (painted) {
+        clearControlProperty(XamlInterop.IControlStatics_get_BorderThicknessProperty)
+    } else {
+        XamlStructs.putThickness(control, XamlInterop.IControl_put_BorderThickness, 0.0, 0.0, 0.0, 0.0)
     }
 }
 
