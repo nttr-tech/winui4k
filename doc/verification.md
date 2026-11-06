@@ -399,3 +399,8 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   WinUI4K のマネージャーは Swing と同じ見た目の座標で計算し、右から左のパネルでは反転した位置を Canvas.Left にする (WLayoutPanel.setVisualBounds)。
   WComponent.bounds は ActualOffset なので、右から左の親の中では親の右端から測った値になる (WLayoutRightToLeftTest が子の端を
   TransformToVisual でウィンドウの座標にして、画面の上の位置を確かめる)
+- デスクトップ (Window の XAML) の FocusManager.TryMoveFocus(direction) は FindNextElementOptions 無しだと E_UNEXPECTED で失敗し、
+  Next / Previous で渡せる SearchRoot は XamlRoot.Content だけ (それ以外は E_INVALIDARG。microsoft-ui-xaml の
+  dxaml/xcp/dxaml/lib/FocusManager.cpp の TryMoveFocusStatic)。WComponent.transferFocus は SearchRoot に XamlRoot.Content を渡す。
+  TryMoveFocus は今フォーカスを持つ要素から動くので、フォーカスを持たないコンポーネントの transferFocus は先にそのコンポーネントへ
+  フォーカスを移す (WComponentTransferFocusTest)

@@ -680,6 +680,25 @@ abstract class WComponent internal constructor(
     }
 
     /**
+     * Component.transferFocus-like: moves the focus to the component after this one, in the same order as the Tab key
+     * (Next of FocusManager.TryMoveFocus). The order is WinUI's Tab order (tree order and TabIndex); Swing's
+     * FocusTraversalPolicy cannot be used.
+     *
+     * If this component does not have the focus, the focus is first moved to this component and then to the next (the corresponding
+     * focusGained / focusLost also arrive; Swing does not move it). For a component that cannot receive the focus ([isFocusable] is false,
+     * [WLabel] etc.), it moves to the element after the one that currently has the focus (Swing moves to the one after this component).
+     * Does nothing when not placed in a window ([isDisplayable] is false).
+     */
+    fun transferFocus() {
+        FocusTraversal.transfer(this, next = true)
+    }
+
+    /** Component.transferFocusBackward-like: moves the focus to the previous component in the same order as Shift+Tab. Otherwise the same as [transferFocus]. */
+    fun transferFocusBackward() {
+        FocusTraversal.transfer(this, next = false)
+    }
+
+    /**
      * JComponent.isRequestFocusEnabled / setRequestFocusEnabled-like: whether it takes the focus when pressed or touched with the mouse
      * (FrameworkElement.AllowFocusOnInteraction). The default is true. As in Swing, false does not stop moving with the Tab key or
      * the focus from [requestFocus] / [requestFocusInWindow] / [grabFocus] (used so that toolbar buttons do not steal the focus from

@@ -2682,6 +2682,12 @@ internal object XamlInterop {
     const val IFocusManagerStatics_FindFirstFocusableElement = 19 // (DependencyObject searchScope, out DependencyObject)
     const val IFocusManagerStatics_FindLastFocusableElement = 20
     const val IFocusManagerStatics_TryMoveFocus = 24   // TryMoveFocus(FocusNavigationDirection, out boolean)
+    const val IFocusManagerStatics_TryMoveFocusWithOptions = 17 // TryMoveFocus(FocusNavigationDirection, FindNextElementOptions, out boolean)
+
+    // ---- Microsoft.UI.Xaml.Input.FindNextElementOptions (the argument of TryMoveFocus; SearchRoot is required on the desktop) ----
+    const val CLS_FindNextElementOptions = "Microsoft.UI.Xaml.Input.FindNextElementOptions" // activatable (default factory)
+    const val IID_IFindNextElementOptions = "7f88e76b-7417-5447-aed4-2fabd291bdc6"
+    const val IFindNextElementOptions_put_SearchRoot = 7 // put_SearchRoot(DependencyObject)
     const val IFocusManagerStatics_GetFocusedElement = 26 // GetFocusedElement(XamlRoot, out Object)
 
     // enum Microsoft.UI.Xaml.Input.FocusNavigationDirection: Next=0, Previous=1, Up=2, Down=3, Left=4, Right=5
