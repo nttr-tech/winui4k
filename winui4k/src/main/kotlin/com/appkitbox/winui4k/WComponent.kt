@@ -483,7 +483,24 @@ abstract class WComponent internal constructor(
         set(value) {
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, value.width)
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, value.height)
+            isMinimumSizeSet = true
         }
+
+    /**
+     * Component.isPreferredSizeSet-like: whether the preferred size has been decided. Besides [preferredSize], setting only one of [width] / [height]
+     * also makes it true (WinUI4K holds the preferred width and height separately and measures only the undecided dimension from the content; Swing's
+     * Dimension decides both at once). Resetting both the width and the height to NaN makes it false (corresponding to Swing's setPreferredSize(null)).
+     * The set values ([width] / [height]) are the ones remembered on the Kotlin side; direct changes to the native Width / Height are not seen.
+     */
+    val isPreferredSizeSet: Boolean
+        get() = !width.isNaN() || !height.isNaN()
+
+    /**
+     * Component.isMinimumSizeSet-like: whether [minimumSize] has been set. As in Swing, once set it stays true regardless of the value (even (0, 0), the same as the default)
+     * (there is no way to unset it, corresponding to Swing's setMinimumSize(null)). Whether it was set is remembered on the Kotlin side.
+     */
+    var isMinimumSizeSet: Boolean = false
+        private set
 
     /**
      * The maximum size (equivalent to JComponent.get/setMaximumSize; FrameworkElement.MaxWidth / MaxHeight).
@@ -497,7 +514,15 @@ abstract class WComponent internal constructor(
         set(value) {
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value.width)
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxHeight, value.height)
+            isMaximumSizeSet = true
         }
+
+    /**
+     * Component.isMaximumSizeSet-like: whether [maximumSize] or [maxWidth] has been set ([maxWidth] decides only the width of the maximum size,
+     * so it alone also makes it true). Otherwise the same as [isMinimumSizeSet].
+     */
+    var isMaximumSizeSet: Boolean = false
+        private set
 
     /** The value set to [alignmentX] (null if not set, in which case [defaultAlignmentX] is returned). */
     private var alignmentXValue: Float? = null
@@ -891,7 +916,10 @@ abstract class WComponent internal constructor(
      */
     var maxWidth: Double
         get() = frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MaxWidth)
-        set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value)
+        set(value) {
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxWidth, value)
+            isMaximumSizeSet = true
+        }
 
     /** Horizontal position within the space the parent allots (FrameworkElement.HorizontalAlignment). */
     var horizontalAlignment: HorizontalAlignment
