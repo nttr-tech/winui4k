@@ -495,6 +495,7 @@ class WTree() : WControl(
         } finally {
             vector.release()
         }
+        selectionBridge.onNativeSelectionChanged() // SelectionChanged does not come before it is shown, so mirror to the selection model here
     }
 
     /** true if the template is applied (the ListView inside the TreeView exists). Expand etc. crash natively without it. */

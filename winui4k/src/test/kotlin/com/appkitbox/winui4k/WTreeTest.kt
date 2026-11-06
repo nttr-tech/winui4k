@@ -75,6 +75,22 @@ class WTreeTest : FunSpec() {
             } shouldBe Triple(null, "Child", null)
         }
 
+        test("selectAll before it is shown is also mirrored to the selection model, and the selection listener is called once") {
+            val (result, nodes) = onUiThreadGet {
+                val tree = WTree()
+                val root = WTreeNode("Root")
+                val child = WTreeNode("Child")
+                root.add(child)
+                tree.addRootNode(root)
+                tree.selectionMode = TreeViewSelectionMode.MULTIPLE
+                var events = 0
+                tree.addTreeSelectionListener { events++ }
+                tree.selectAll()
+                Triple(tree.selectionCount, tree.getSelectionPaths()?.map { it.getLastPathComponent() }?.toSet(), events) to setOf(root, child)
+            }
+            result shouldBe Triple(2, nodes, 1)
+        }
+
         test("selectAll while selectionMode is SINGLE selects nothing") {
             onUiThreadGet {
                 val tree = WTree()
