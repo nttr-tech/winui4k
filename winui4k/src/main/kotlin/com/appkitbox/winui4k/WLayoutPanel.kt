@@ -15,8 +15,8 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * size. Once that happens, it keeps sizing itself this way going forward (it won't follow a
  * parent's STRETCH).
  *
- * When a child's content (e.g. its text) changes and its natural size changes with it, call that
- * child's [WComponent.invalidateNaturalSize] and this panel's [revalidate].
+ * When a child's content (e.g. its text) changes and its natural size changes with it, call that child's [WComponent.revalidate]
+ * (equivalent to calling the child's [WComponent.invalidateNaturalSize] and this panel's [revalidate]).
  */
 class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
@@ -35,10 +35,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
             revalidate()
         }
 
-    private val mutableLayoutChildren = mutableListOf<WComponent>()
-
-    /** The children under layout management, in addition order. Used by WLayoutManager implementations to enumerate them. */
-    val layoutChildren: List<WComponent> get() = mutableLayoutChildren
+    /** The children under layout management (in order; same as [components]). Used by WLayoutManager implementations to enumerate them. */
+    val layoutChildren: List<WComponent> get() = componentList
 
     /**
      * The current layout area (the whole area, before subtracting [insets]). Fixed by the layout
@@ -73,38 +71,39 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     init {
-        addSizeChangedListener { revalidate() }
+        addSizeChangedListener { scheduleLayout() }
         addLoadedListener {
             loaded = true
             // A measurement taken before joining the visual tree can incorrectly return 0, and once
             // cached it stays 0 on later passes. Force every child to be re-measured once it joins
-            mutableLayoutChildren.forEach { it.invalidateNaturalSize() }
-            revalidate()
+            componentList.forEach { it.invalidateNaturalSize() }
+            scheduleLayout()
         }
     }
 
-    /** Adds a child with constraints (like Container.add(Component, Object)). */
+    /**
+     * Adds a child with constraints (like Container.add(Component, Object)). If the manager rejects the constraints and throws,
+     * the child is not added.
+     */
     fun add(component: WComponent, constraints: Any?) {
-        mutableLayoutChildren.add(component)
+        addImpl(component, constraints, -1)
+    }
+
+    /**
+     * Adds a child with constraints at position [index] (-1 is the end) (like Container.add(Component, Object, int)).
+     * IllegalArgumentException if [index] is out of range.
+     */
+    fun add(component: WComponent, constraints: Any?, index: Int) {
+        addImpl(component, constraints, index)
+    }
+
+    override fun onComponentAdded(component: WComponent, constraints: Any?) {
         layout?.addLayoutComponent(component, constraints)
-        super.add(component)
         revalidate()
     }
 
-    override fun add(component: WComponent) = add(component, null)
-
-    override fun remove(component: WComponent) {
-        if (!mutableLayoutChildren.remove(component)) return
+    override fun onComponentRemoved(component: WComponent) {
         layout?.removeLayoutComponent(component)
-        super.remove(component)
-        revalidate()
-    }
-
-    override fun removeAll() {
-        val manager = layout
-        if (manager != null) mutableLayoutChildren.forEach { manager.removeLayoutComponent(it) }
-        mutableLayoutChildren.clear()
-        super.removeAll()
         revalidate()
     }
 
@@ -132,13 +131,26 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
 
     /**
      * Schedules a re-layout (like Container.revalidate). Multiple calls within the same UI thread
-     * turn coalesce into a single run.
+     * turn coalesce into a single run. Also schedules a re-layout of the ancestor WLayoutPanels reached through [parent]
+     * (because this panel's preferred size may change).
      */
-    fun revalidate() {
+    final override fun revalidate() {
+        scheduleLayout()
+        super.revalidate()
+    }
+
+    /** Schedules a re-layout of only this panel (not propagated to ancestors). */
+    internal fun scheduleLayout() {
         if (layoutPending) return
         layoutPending = true
         if (inLayout) return // gets rescheduled when performLayout finishes
-        WinUiUtilities.invokeLater { performLayout() }
+        WinUiUtilities.invokeLater { if (layoutPending) performLayout() } // Does nothing if validate already did it
+    }
+
+    /** From [validate]: runs the scheduled re-layout now and follows it down to the child containers. */
+    override fun validateTree() {
+        if (layoutPending && !inLayout) performLayout()
+        super.validateTree()
     }
 
     // The branching is inherent to the layout algorithm's spec (size-determination priority order)
@@ -151,11 +163,11 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
             // 1. Clear the explicit size of any child whose natural size is invalid, 2. run a
             //    synchronous Measure to fix its preferred size, and 3. cache it (Canvas measures
             //    children with an infinite constraint, so this equals the natural size)
-            mutableLayoutChildren.forEach { child ->
+            componentList.forEach { child ->
                 if (child.naturalSize == null) child.clearLayoutSizeForMeasure()
             }
             uiElement.call(XamlInterop.IUIElement_UpdateLayout)
-            mutableLayoutChildren.forEach { child ->
+            componentList.forEach { child ->
                 if (child.naturalSize == null) child.naturalSize = child.readDesiredSize()
             }
 
@@ -197,7 +209,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         }
         if (layoutPending) {
             layoutPending = false
-            revalidate()
+            scheduleLayout()
         }
     }
 

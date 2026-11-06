@@ -100,9 +100,14 @@ class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WCont
     /** The content to scroll (ScrollView.Content). */
     var content: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             inspectable.call(XamlInterop.IScrollView_put_Content, value?.uiElement?.ptr)
         }
+
+    override fun detachChild(child: WComponent) {
+        if (this.content === child) this.content = null
+    }
 
     /** How the horizontal scrollbar is shown (ScrollView.HorizontalScrollBarVisibility, default AUTO). */
     var horizontalScrollBarVisibility: ScrollingScrollBarVisibility

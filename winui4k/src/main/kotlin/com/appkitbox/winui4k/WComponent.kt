@@ -13,6 +13,7 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -142,6 +143,63 @@ abstract class WComponent internal constructor(
     /** DependencyObject view (passed as the target of attached properties like ToolTipService). */
     internal val dependencyObject: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IDependencyObject))
+    }
+
+    /**
+     * A weak reference to the parent wrapper. If the child held its parent strongly, entrusting the child to the handler of a detached subtree's root via [ListenerAnchor]
+     * would create the cycle "root native -> handler -> child -> parent -> ... -> root wrapper -> root native", and the whole subtree would never be collected
+     * (doc/memory_management.md, "Handling cycles that cross the boundary"). From parent to child, the container's child list holds the reference strongly.
+     */
+    private var parentReference: WeakReference<WComponent>? = null
+
+    /**
+     * Component.getParent-style: the component that holds this component as a child. Set when it is added to a [WContainer] with [WContainer.add], and when it is
+     * put into a component holding a single child ([WBorder.child] / [WScrollPane.content] / [WScrollView.content] / [WExpander.content] /
+     * [WTabViewItem.content] / [WSplitView.content] / [WSplitView.pane]); goes back to null when removed.
+     * Represents only parent-child relationships made through WinUI4K's API, and does not include a [WFrame]'s content or native parents inside templates.
+     *
+     * Children reference their parent weakly (strongly from parent to child). When neither the parent nor any wrapper above it is referenced from anywhere,
+     * the parent may be collected and this may become null (a parent placed in a window is normally referenced from the [WFrame]'s content).
+     */
+    val parent: WComponent?
+        get() = parentReference?.get()
+
+    /** Replaces the parent record (called only by [WContainer] and single-child hosts). */
+    internal fun setParentLink(newParent: WComponent?) {
+        parentReference = newParent?.let { WeakReference(it) }
+    }
+
+    /** Removes this component from its current parent (same as Swing's add removing it from its old parent first). Does nothing if there is no parent. */
+    internal fun removeFromParent() {
+        parent?.detachChild(this)
+    }
+
+    /** Removes the child [child] from this component (called from [removeFromParent]; implemented by components that have children). */
+    internal open fun detachChild(child: WComponent) {
+        // Components without children do nothing
+    }
+
+    /** Checks whether [child] can be made a child. IllegalArgumentException if it is this component itself or an ancestor (same as Swing). */
+    internal fun checkCanAdopt(child: WComponent) {
+        var current: WComponent? = this
+        while (current != null) {
+            require(current !== child) { "cannot make the component itself or a parent (ancestor) a child" }
+            current = current.parent
+        }
+    }
+
+    /**
+     * Called by a component holding a single child (WBorder.child and so on) before the native put when it changes the child from [old] to [new].
+     * Removes [new] from its old parent and updates the parent records. Hosts must also implement [detachChild], which removes a child.
+     */
+    internal fun replaceChild(old: WComponent?, new: WComponent?) {
+        if (old === new) return
+        if (new != null) checkCanAdopt(new)
+        if (old != null && old.parent === this) old.setParentLink(null)
+        if (new != null) {
+            new.removeFromParent()
+            new.setParentLink(this)
+        }
     }
 
     var width: Double = Double.NaN
@@ -572,12 +630,62 @@ abstract class WComponent internal constructor(
         get() = inputOrNull?.keys?.keyListeners() ?: emptyArray()
 
     /**
-     * Invalidates the natural size cache (equivalent to Swing's revalidate). Call this alongside
-     * the parent [WLayoutPanel]'s revalidate whenever the content's size changes, e.g. from a text
-     * change.
+     * Invalidates the natural size cache. Call this alongside the parent [WLayoutPanel]'s revalidate whenever the
+     * content's size changes, e.g. from a text change ([revalidate] does both).
      */
     fun invalidateNaturalSize() {
         naturalSize = null
+    }
+
+    /**
+     * Component.invalidate-style: records that this component's size may change. Discards the natural size cache
+     * ([invalidateNaturalSize], also for the ancestors reached through [parent]) and calls UIElement.InvalidateMeasure.
+     * Does not go as far as scheduling a re-layout (that is [revalidate]).
+     */
+    open fun invalidate() {
+        invalidateNaturalSize()
+        uiElement.call(XamlInterop.IUIElement_InvalidateMeasure)
+        var ancestor = parent
+        while (ancestor != null) {
+            ancestor.invalidateNaturalSize()
+            ancestor = ancestor.parent
+        }
+    }
+
+    /**
+     * JComponent.revalidate-style: calls [invalidate] and then schedules a re-layout of every ancestor [WLayoutPanel] reached through [parent]
+     * (multiple calls within the same UI thread turn are coalesced into one). Call it on the component when its natural size changes,
+     * for example after changing its text. WinUI's own panels (WPanel, WGrid and so on) rearrange themselves without it.
+     */
+    open fun revalidate() {
+        invalidate()
+        var ancestor = parent
+        while (ancestor != null) {
+            if (ancestor is WLayoutPanel) ancestor.scheduleLayout()
+            ancestor = ancestor.parent
+        }
+    }
+
+    /**
+     * Container.validate-style: runs the scheduled re-layouts of [WLayoutPanel]s now (following the [WContainer] children below)
+     * and completes the layout synchronously ([updateLayout]).
+     */
+    open fun validate() {
+        validateTree()
+        updateLayout()
+    }
+
+    /** The re-layout part of [validate]. Containers with children follow it down to the children. */
+    internal open fun validateTree() {
+        // Components without children do nothing
+    }
+
+    /**
+     * Component.repaint-style: does nothing. XAML redraws itself when the displayed values change, so there is no need to request a redraw
+     * (provided so that Swing code's `revalidate(); repaint();` works as is).
+     */
+    fun repaint() {
+        // XAML redraws itself, so do nothing
     }
 
     /**

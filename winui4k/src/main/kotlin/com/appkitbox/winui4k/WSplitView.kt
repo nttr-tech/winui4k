@@ -55,6 +55,7 @@ class WSplitView @JvmOverloads constructor(pane: WComponent? = null, content: WC
     /** The main content (SplitView.Content). */
     var content: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             inspectable.call(XamlInterop.ISplitView_put_Content, value?.uiElement?.ptr)
         }
@@ -62,9 +63,15 @@ class WSplitView @JvmOverloads constructor(pane: WComponent? = null, content: WC
     /** The collapsible pane (SplitView.Pane). */
     var pane: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             inspectable.call(XamlInterop.ISplitView_put_Pane, value?.uiElement?.ptr)
         }
+
+    override fun detachChild(child: WComponent) {
+        if (content === child) content = null
+        if (pane === child) pane = null
+    }
 
     /** Whether the pane is open (SplitView.IsPaneOpen). */
     var isPaneOpen: Boolean

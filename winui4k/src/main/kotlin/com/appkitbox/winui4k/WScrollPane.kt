@@ -135,12 +135,17 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) : WCont
     /** The content to scroll (ContentControl.Content). */
     var content: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             contentControl.call(
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
+
+    override fun detachChild(child: WComponent) {
+        if (this.content === child) this.content = null
+    }
 
     init {
         if (content != null) this.content = content

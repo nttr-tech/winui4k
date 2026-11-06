@@ -54,12 +54,17 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     /** The content shown while expanded (ContentControl.Content). */
     var content: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             contentControl.call(
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
         }
+
+    override fun detachChild(child: WComponent) {
+        if (this.content === child) this.content = null
+    }
 
     /** Whether it's currently expanded (Expander.IsExpanded). */
     var isExpanded: Boolean

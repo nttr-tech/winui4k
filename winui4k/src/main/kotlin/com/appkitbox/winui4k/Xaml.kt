@@ -180,6 +180,8 @@ internal object Xaml {
      * has no parent.
      */
     fun detach(component: WComponent) {
+        // Also removes it from the child list and parent record of a parent added through WinUI4K's API (WContainer and so on)
+        component.removeFromParent()
         // Elements that are out of the visual tree, such as the content of a closed popup, are detached from their logical parent (FrameworkElement.Parent)
         val parent = parentOf(component.uiElement) ?: logicalParentOf(component) ?: return
         try {

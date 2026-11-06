@@ -68,9 +68,14 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     /** The content shown in TabView's content area while this tab is selected (ContentControl.Content). */
     var content: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             contentControl.call(XamlInterop.IContentControl_put_Content, value?.uiElement?.ptr)
         }
+
+    override fun detachChild(child: WComponent) {
+        if (this.content === child) this.content = null
+    }
 
     init {
         if (header.isNotEmpty()) this.header = header

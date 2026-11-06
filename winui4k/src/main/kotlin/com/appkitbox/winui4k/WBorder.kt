@@ -15,9 +15,14 @@ class WBorder @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     /** The single child shown inside the border (Border.Child). */
     var child: WComponent? = null
         set(value) {
+            replaceChild(field, value)
             field = value
             inspectable.call(XamlInterop.IBorder_put_Child, value?.uiElement?.ptr)
         }
+
+    override fun detachChild(child: WComponent) {
+        if (this.child === child) this.child = null
+    }
 
     /** The border color (Border.BorderBrush). Converted to a SolidColorBrush before being passed. */
     var borderColor: WColor? = null
