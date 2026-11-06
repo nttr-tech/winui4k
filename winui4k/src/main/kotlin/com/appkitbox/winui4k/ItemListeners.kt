@@ -49,6 +49,9 @@ internal class ItemListeners(private val owner: WComponent, private val addNativ
         remove(adapters.remove(key) ?: return)
     }
 
+    /** The listeners currently added (in the order added; for getItemListeners). */
+    fun toArray(): Array<WItemListener> = listeners.toTypedArray()
+
     /** Passes [event] to all listeners in the order added (even if listeners are added or removed during the calls, it is delivered to the list as of the start). */
     fun fire(event: WItemEvent) {
         if (listeners.isEmpty()) return
