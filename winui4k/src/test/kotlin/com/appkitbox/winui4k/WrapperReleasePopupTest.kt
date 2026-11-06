@@ -12,7 +12,7 @@ import java.util.Collections
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Tests that the handlers of [WPopup]'s Opened / Closed / PopupMenuListener and [WFlyout]'s PopupMenuListener do not capture the wrapper,
+ * Tests that the handlers of [WPopup]'s Opened / Closed / PopupMenuListener and [WFlyout] / [WCommandBarFlyout]'s PopupMenuListener do not capture the wrapper,
  * and that the wrapper and native are collected once opened, closed and released ([Reclamation]).
  */
 class WrapperReleasePopupTest : FunSpec() {
@@ -98,6 +98,37 @@ class WrapperReleasePopupTest : FunSpec() {
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
             Reclamation.awaitDestroyed(probe).shouldBeTrue()
+        }
+
+        test("a WCommandBarFlyout closed by pressing a button in its lower menu is collected together with the button, and its native destroyed, even if the listener captures that button") {
+            val button = onUiThreadGet { WButton("Open") }
+            UiTestHarness.attachAndAwaitLoaded(button)
+            val references = try {
+                val events = events
+                val (flyout, native, save) = onUiThreadGet {
+                    val flyout = WCommandBarFlyout()
+                    val save = WAppBarButton("Save").also { flyout.addSecondaryCommand(it) }
+                    flyout.addSecondaryCommand(WAppBarToggleButton("Bold"))
+                    // If the button's native handler (which sets the "chosen" mark when pressed) captured the listener too,
+                    // it would form a cycle: the button's native → listener → button wrapper → button's native
+                    flyout.addPopupMenuListener(object : WPopupMenuAdapter() {
+                        override fun popupMenuWillBecomeInvisible(e: WPopupMenuEvent) {
+                            events += "invisible:${save.isEnabled}"
+                        }
+                    })
+                    Triple(WeakReference(flyout), NativeProbe(flyout.inspectable), WeakReference(save))
+                }
+                onUiThread { flyout.get()?.showAt(button) }
+                eventually(5.seconds) { onUiThreadGet { flyout.get()?.isOpen } shouldBe true }
+                onUiThread { save.get()?.doClick() }
+                eventually(5.seconds) { events() shouldContainExactly listOf("invisible:true") }
+                Triple(flyout, native, save)
+            } finally {
+                UiTestHarness.detach(button)
+            }
+            Reclamation.awaitCollected(references.first).shouldBeTrue()
+            Reclamation.awaitCollected(references.third).shouldBeTrue()
+            Reclamation.awaitDestroyed(references.second).shouldBeTrue()
         }
     }
 }

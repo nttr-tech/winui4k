@@ -13,7 +13,7 @@ import java.lang.ref.WeakReference
  *
  * - popupMenuWillBecomeVisible on Opening; on Closing, popupMenuCanceled (only when canceled) → popupMenuWillBecomeInvisible, in that order
  *   (canceled first, as with Swing's BasicPopupMenuUI). Listeners are called in the order added.
- * - Canceled means it closed after opening without an item being chosen (no Click of an item of the [WMenuFlyout]), and not by [WFlyoutBase.hide] /
+ * - Canceled means it closed after opening without an item being chosen (no Click of an item of the [WMenuFlyout] and no press of a button in the lower menu of a [WCommandBarFlyout]), and not by [WFlyoutBase.hide] /
  *   `isVisible = false` (light dismiss such as an outside click or Esc). In Swing too, setVisible(false) does not call
  *   canceled. Item Clicks are subscribed per item only while open (MenuFlyoutItem.Invoke closes the menu after Click).
  * - Reopening while closing (from Closing to Closed) is deferred until Closed ([showWhenClosed]). WinUI treats a closing flyout
@@ -33,8 +33,8 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
     /** Asked to close with [WFlyoutBase.hide] (that way of closing is not counted as a cancellation). Reset on Opening and Closed. */
     var hideRequested = false
 
-    /** An item was chosen after opening. */
-    private var invoked = false
+    /** A mark of whether an item was chosen after opening. Item handlers capture only this (it is also attached to buttons in the lower menu of a [WCommandBarFlyout]). */
+    val invocation = InvocationMark()
 
     /** Closing (from Closing to Closed). */
     private var closing = false
@@ -89,7 +89,7 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
     private fun onOpening() {
         val owner = reference.get() ?: return
         pinned = owner
-        invoked = false
+        invocation.invoked = false
         hideRequested = false
         closing = false
         pendingShow = null
@@ -99,9 +99,12 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
     }
 
     private fun onClosing() {
+        // CommandBarFlyout cancels the first Closing for its closing animation and calls Hide again after the animation, so
+        // Closing comes twice (the Closing handler in CommandBarFlyout.cpp). From the second one until Closed, do not call the listeners
+        if (closing) return
         closing = true
         val owner = pinned ?: reference.get() ?: return
-        if (!invoked && !hideRequested) fire(owner) { listener, e -> listener.popupMenuCanceled(e) }
+        if (!invocation.invoked && !hideRequested) fire(owner) { listener, e -> listener.popupMenuCanceled(e) }
         fire(owner) { listener, e -> listener.popupMenuWillBecomeInvisible(e) }
     }
 
@@ -124,7 +127,7 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
                 "WinUI4K.PopupMenuItemInvoked",
                 XamlInterop.IID_RoutedEventHandler,
                 XamlInterop.IMenuFlyoutItem_add_Click,
-            ) { _, _ -> invoked = true }
+            ) { _, _ -> invocation.invoked = true }
             itemTokens += item to token
         }
     }
@@ -139,6 +142,11 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
         val event = WPopupMenuEvent(source)
         listeners.toList().forEach { call(it, event) }
     }
+}
+
+/** The "an item was chosen after opening" mark of [FlyoutPopupMenuEvents]. Native item handlers capture only this (no cycle). */
+internal class InvocationMark {
+    var invoked = false
 }
 
 /**

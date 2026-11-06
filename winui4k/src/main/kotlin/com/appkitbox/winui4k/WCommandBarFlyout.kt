@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
@@ -41,9 +42,57 @@ class WCommandBarFlyout : WFlyoutBase(
         items.add(element, -1, wrap = false)
     }
 
-    /** Appends a command shown in the menu below the mini toolbar (SecondaryCommands). */
+    /**
+     * Appends a command shown in the menu below the mini toolbar (SecondaryCommands). Pressing a [WAppBarButton] (one without a flyout)
+     * or [WAppBarToggleButton] that closes the flyout counts as "chosen", the same as an item of a [WMenuFlyout],
+     * and closing that way does not call popupMenuCanceled. Mini toolbar buttons do not close it when pressed, so they are not counted.
+     */
     fun addSecondaryCommand(element: WControl) {
+        // CommandBarFlyout calls Hide on the Click of added buttons (Checked / Unchecked for toggles) (SetSecondaryCommandsToCloseWhenExecuted
+        // in CommandBarFlyout.cpp). Closing happens inside Hide, so subscribe before adding so that the mark is set before it
+        when (element) {
+            is WAppBarToggleButton -> markInvocationOnToggle(element)
+            is WAppBarButton -> markInvocationOnClick(element)
+            else -> Unit
+        }
         appendCommandBarElement(secondaryCommands, element)
+    }
+
+    private fun markInvocationOnClick(button: WAppBarButton) {
+        val mark = events.invocation
+        val buttonBase = button.inspectable.queryInterface(XamlInterop.IID_IButtonBase)
+        try {
+            buttonBase.addEventHandler("WinUI4K.CommandBarFlyoutInvoked", XamlInterop.IID_RoutedEventHandler, XamlInterop.IButtonBase_add_Click) { sender, _ ->
+                // A button with a flyout only opens that flyout when pressed and does not close (CommandBarFlyout does not call Hide either)
+                if (!hasFlyout(ComPtr(sender))) mark.invoked = true
+            }
+        } finally {
+            buttonBase.release()
+        }
+    }
+
+    private fun markInvocationOnToggle(button: WAppBarToggleButton) {
+        val mark = events.invocation
+        val toggle = button.inspectable.queryInterface(XamlInterop.IID_IToggleButton)
+        try {
+            for (slot in intArrayOf(XamlInterop.IToggleButton_add_Checked, XamlInterop.IToggleButton_add_Unchecked)) {
+                toggle.addEventHandler("WinUI4K.CommandBarFlyoutInvoked", XamlInterop.IID_RoutedEventHandler, slot) { _, _ -> mark.invoked = true }
+            }
+        } finally {
+            toggle.release()
+        }
+    }
+
+    private companion object {
+        /** Whether [sender] (a borrowed AppBarButton reference) has a Button.Flyout. */
+        fun hasFlyout(sender: ComPtr): Boolean {
+            val button = sender.queryInterfaceOrNull(XamlInterop.IID_IButton) ?: return false
+            return try {
+                button.getPtrOrNull(XamlInterop.IButton_get_Flyout)?.also { it.release() } != null
+            } finally {
+                button.release()
+            }
+        }
     }
 
     private val items = CommandBarItems(null) { primaryCommands }

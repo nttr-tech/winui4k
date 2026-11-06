@@ -268,3 +268,9 @@
   ドラッグ中かの判定 (`WSlider.valueIsAdjusting`) は処理済みの押下だけを数える (WinUI のソースから。実際のポインター入力では未確認)。
 - **ほかの Panel の子になっている要素を Window.Content に入れると E_INVALIDARG (0x80070057) で失敗する**
   Window.put_Content は親を付け替えない。WFrame.setContentPane は先に元のコンテナから外してから入れる (`WFrameTest`。2026-10-20、Panama で確認)。
+- **CommandBarFlyout の下のメニューのボタンを押すと、Click の前に購読したハンドラより先に閉じ始めることがある**
+  CommandBarFlyout は SecondaryCommands のボタンの Click (トグルは Checked / Unchecked) で自分を Hide し、その中で Closing が同期で起きる
+  (`CommandBarFlyout.cpp` の SetSecondaryCommandsToCloseWhenExecuted)。開いてから Click を購読すると、閉じる処理が先に走るので
+  「項目を選んで閉じた」と分からない。ボタンを SecondaryCommands に入れる前に購読する (`WCommandBarFlyout.addSecondaryCommand`)。
+  また、閉じるアニメーションがあると最初の Closing を取り消してアニメーションの後に Hide し直すので、1 回閉じるあいだに Closing が 2 回来る
+  ことがある (トグルで確認)。PopupMenuListener は Closed までの 2 回目を無視する (`WFlyoutPopupMenuTest`。2026-10-20、Panama で確認)。

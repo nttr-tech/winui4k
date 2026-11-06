@@ -180,6 +180,49 @@ class WFlyoutPopupMenuTest : FunSpec() {
             }
         }
 
+        test("closing a WCommandBarFlyout by pressing a button or toggle in its lower menu does not call canceled (the same as choosing an item)") {
+            withPanel { _, button ->
+                val events = mutableListOf<String>()
+                val (flyout, save, bold) = onUiThreadGet {
+                    val flyout = WCommandBarFlyout()
+                    val save = WAppBarButton("Save").also { flyout.addSecondaryCommand(it) }
+                    val bold = WAppBarToggleButton("Bold").also { flyout.addSecondaryCommand(it) }
+                    flyout.addPopupMenuListener(recorder(flyout, events))
+                    Triple(flyout, save, bold)
+                }
+                onUiThread { flyout.showAt(button) }
+                awaitOpen(flyout, true)
+                onUiThread { save.doClick() }
+                awaitOpen(flyout, false)
+                onUiThread { flyout.showAt(button) }
+                awaitOpen(flyout, true)
+                onUiThread { bold.doClick() }
+                awaitOpen(flyout, false)
+                onUiThreadGet { events.toList() } shouldContainExactly
+                    listOf("visible:true", "invisible:true", "visible:true", "invisible:true")
+            }
+        }
+
+        test("WCommandBarFlyout's mini toolbar buttons do not close it when pressed, so a following Esc is a cancellation") {
+            withPanel { _, button ->
+                val events = mutableListOf<String>()
+                val (flyout, copy) = onUiThreadGet {
+                    val flyout = WCommandBarFlyout()
+                    val copy = WAppBarButton("Copy").also { flyout.addPrimaryCommand(it) }
+                    flyout.addSecondaryCommand(WAppBarButton("Save"))
+                    flyout.addPopupMenuListener(recorder(flyout, events))
+                    flyout to copy
+                }
+                onUiThread { flyout.showAt(button) }
+                awaitOpen(flyout, true)
+                onUiThread { copy.doClick() }
+                onUiThreadGet { flyout.isOpen }.shouldBeTrue()
+                pressEscape()
+                awaitOpen(flyout, false)
+                onUiThreadGet { events.toList() } shouldContainExactly listOf("visible:true", "canceled:true", "invisible:true")
+            }
+        }
+
         test("a listener removed with removePopupMenuListener is not called, and popupMenuListeners are in the order added") {
             withPanel { _, button ->
                 val events = mutableListOf<String>()

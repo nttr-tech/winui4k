@@ -165,7 +165,7 @@ abstract class WFlyoutBase internal constructor(
         }
 
     /** The subscription to open/close events (calling [WPopupMenuListener]s and deferring reopening while closing). Subscribed on first use. */
-    private val events: FlyoutPopupMenuEvents by lazy { FlyoutPopupMenuEvents(this) }
+    internal val events: FlyoutPopupMenuEvents by lazy { FlyoutPopupMenuEvents(this) }
 
     /**
      * JPopupMenu.addPopupMenuListener-like: adds an open/close listener. Just before opening (Opening), popupMenuWillBecomeVisible;
