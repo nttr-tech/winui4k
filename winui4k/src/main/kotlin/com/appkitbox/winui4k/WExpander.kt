@@ -29,7 +29,8 @@ enum class ExpandDirection(internal val native: Int) {
 
 /**
  * Collapsible JPanel-like: WinUI 3's Expander.
- * Clicking the [header] expands/collapses the [content].
+ * Clicking the header ([header]) expands or collapses the content ([content]). Expand/collapse is notified by [addChangeListener] (once per change in either direction),
+ * or one direction at a time by [addExpandListener] / [addCollapseListener].
  */
 class WExpander @JvmOverloads constructor(header: String = "", content: WComponent? = null) : WControl(
     Activation.composeDefault(XamlInterop.CLS_Expander, XamlInterop.IID_IExpanderFactory), // default interface = IExpander
@@ -38,17 +39,33 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
         own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
+    /** The ChangeListeners. One pair of native handlers (Expanding and Collapsed) is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addChangeHandlers() }
+
     /** Listener → event token (used by the remove functions). */
     private val expandTokens = ListenerTokens<Runnable>()
     private val collapseTokens = ListenerTokens<Runnable>()
 
-    /** The header text (Expander.Header). Object-typed, so a boxed string is passed. */
-    var header: String = ""
+    /**
+     * The header string (Expander.Header). It is of type Object, so a boxed string is passed, and when read it is read back from the native side and unboxed
+     * (so strings set on the XAML side can be read). Returns "" for anything other than a string (such as an element set on the XAML side) or when unset.
+     */
+    var header: String
+        get() {
+            val boxed = inspectable.getPtrOrNull(XamlInterop.IExpander_get_Header) ?: return ""
+            return try {
+                PropertyValues.unboxString(boxed) ?: ""
+            } finally {
+                boxed.release()
+            }
+        }
         set(value) {
-            field = value
             val boxed = PropertyValues.boxString(value)
-            inspectable.call(XamlInterop.IExpander_put_Header, boxed.ptr)
-            boxed.release()
+            try {
+                inspectable.call(XamlInterop.IExpander_put_Header, boxed.ptr)
+            } finally {
+                boxed.release()
+            }
         }
 
     /** The content shown while expanded (ContentControl.Content). */
@@ -79,6 +96,41 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     init {
         if (header.isNotEmpty()) this.header = header
         if (content != null) this.content = content
+    }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this Expander) on every expand or collapse (change of [isExpanded]).
+     * Called once per change in either direction, and when it is called [isExpanded] returns the new value.
+     * Called both for user interaction (clicking the header) and when [isExpanded] is set.
+     *
+     * The existing [addExpandListener] (Expanding) and [addCollapseListener] (Collapsed) handle one direction each,
+     * and are called at different times: within the IsExpanded change notification, WinUI sends Expanding before updating the visual state when expanding,
+     * and Collapsed after updating the visual state when collapsing (in both cases [isExpanded] has the new value).
+     * ChangeListeners are called at the timing of Expanding when expanding and of Collapsed when collapsing.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun addChangeHandlers() {
+        // The handlers stay on the native side, so do not strongly capture the Expander; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        for ((iid, slot) in listOf(
+            XamlInterop.IID_ExpanderExpandingHandler to XamlInterop.IExpander_add_Expanding,
+            XamlInterop.IID_ExpanderCollapsedHandler to XamlInterop.IExpander_add_Collapsed,
+        )) {
+            inspectable.addEventHandler("WinUI4K.ExpanderHandler", iid, slot) { _, _ ->
+                (anchor.get() as? WExpander)?.changeListeners?.fire()
+            }
+        }
     }
 
     /** Registers a listener called when it expands (Expander.Expanding). */

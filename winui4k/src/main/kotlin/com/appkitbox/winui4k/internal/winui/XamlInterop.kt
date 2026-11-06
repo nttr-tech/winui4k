@@ -201,6 +201,7 @@ internal object XamlInterop {
     const val CLS_Expander = "Microsoft.UI.Xaml.Controls.Expander"
     const val IID_IExpanderFactory = "51a5afc2-b16d-516e-83ae-5a10476b13af"
     const val IID_IExpander = "ca633942-e584-55c2-b7ee-cffc73c8127a"
+    const val IExpander_get_Header = 6                 // get_Header(out IInspectable)
     const val IExpander_put_Header = 7                 // put_Header(IInspectable)
     const val IExpander_get_IsExpanded = 12            // get_IsExpanded(out boolean)
     const val IExpander_put_IsExpanded = 13            // put_IsExpanded(boolean)

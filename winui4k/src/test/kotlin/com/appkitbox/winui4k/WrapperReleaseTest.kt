@@ -640,6 +640,18 @@ class WrapperReleaseTest : FunSpec() {
             listOf(slider, rating, changeSlider, changeRating).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
         }
 
+        test("a WExpander with a ChangeListener that does not reference the component is also collected after being placed in the window and removed") {
+            val sources = itemSources
+            val expander = shownAndHidden {
+                WExpander("Toggle").also {
+                    // Actually deliver notifications by expanding and collapsing. Recording the received source would make the record hold the Expander, so do not record it
+                    it.addChangeListener(WChangeListener { sources += "changed" })
+                    it.isExpanded = true
+                }
+            }
+            Reclamation.awaitCollected(expander).shouldBeTrue()
+        }
+
         test("a slider with a shared model is collected after being placed in the window and removed if released together with the model (the native side does not reference the model)") {
             val sources = itemSources
             var model: WeakReference<WBoundedRangeModel>? = null
