@@ -86,10 +86,10 @@ enum class NavigationViewBackButtonVisible(internal val native: Int) {
 /**
  * JRootPane-like with top-level navigation built in: WinUI 3's NavigationView.
  *
- * Shows the menu of [WNavigationViewItem]s added via [addItem] in the left (or top)
- * pane, providing an app skeleton that swaps [content] based on the selection.
- * Subscribe to selection changes with [addSelectionListener], and item clicks with
- * [addItemInvokedListener].
+ * Shows the menu of [WNavigationViewItem]s added via [addItem] in the left (or top) pane,
+ * providing an app skeleton that swaps [content] based on the selection.
+ * Subscribe to selection changes with [addChangeListener] (ChangeListener-style) or [addSelectionListener], and to item clicks with
+ * [WNavigationViewItem.addActionListener] (ActionListener-style) or [addItemInvokedListener].
  */
 class WNavigationView : WControl(
     Activation.composeDefault(XamlInterop.CLS_NavigationView, XamlInterop.IID_INavigationViewFactory), // default interface = INavigationView
@@ -111,8 +111,20 @@ class WNavigationView : WControl(
         own(footerItems.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
-    /** Items added via [addItem] / [addFooterItem] (used to resolve the selected item back). */
-    private val items = mutableListOf<WNavigationViewItem>()
+    /**
+     * The items added with [addItem] / [addFooterItem] (for looking up the selected item and the clicked item).
+     * Handlers left on the native side capture only this list, not the navigation view's wrapper (so as not to create a cycle).
+     */
+    private val registry = NavigationItemRegistry()
+
+    /** The ChangeListeners. A single SelectionChanged handler is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addSelectionTracking() }
+
+    /** The COM identity of the last notified selected item (0 when unselected). Null means it is not tracked (no listeners added). */
+    private var notifiedSelection: Long? = null
+
+    /** Whether the ItemInvoked handler that notifies the items' ActionListeners has been registered. */
+    private var itemInvokedDispatchAdded = false
 
     /** Listener -> event token (used to remove). */
     private val selectionTokens = ListenerTokens<Consumer<WNavigationViewItem?>>()
@@ -165,7 +177,7 @@ class WNavigationView : WControl(
         get() {
             val selected = inspectable.getPtrOrNull(XamlInterop.INavigationView_get_SelectedItem) ?: return null
             return try {
-                resolveItem(selected)
+                registry.resolve(selected)
             } finally {
                 selected.release()
             }
@@ -175,6 +187,7 @@ class WNavigationView : WControl(
                 XamlInterop.INavigationView_put_SelectedItem,
                 value?.inspectable?.ptr,
             )
+            notifySelectionIfChanged()
         }
 
     /** The content area that shows the selected item (ContentControl.Content). */
@@ -210,14 +223,33 @@ class WNavigationView : WControl(
     /** Appends a menu item to the end (MenuItems.Append). */
     fun addItem(item: WNavigationViewItem) {
         menuItemVector.call(FoundationInterop.IVector_Append, item.inspectable.ptr)
-        items += item
+        registry.items += item
+        ensureItemInvokedDispatch()
     }
 
     /** Adds an item to the footer menu at the bottom of the pane (FooterMenuItems.Append). */
     fun addFooterItem(item: WNavigationViewItem) {
         footerItemVector.call(FoundationInterop.IVector_Append, item.inspectable.ptr)
-        items += item
+        registry.items += item
+        ensureItemInvokedDispatch()
     }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this navigation view) every time the selected item changes.
+     * Called on the user's click and when [selectedItem] is set; notifications that stay on the same item are dropped. Read the new selection with [selectedItem].
+     * The native side sends SelectionChanged later when the item's container does not exist yet, but setting [selectedItem] notifies immediately.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
 
     /**
      * Subscribes to selection changes (NavigationView.SelectionChanged).
@@ -233,6 +265,7 @@ class WNavigationView : WControl(
 
     @JvmName("addSelectionListener")
     fun addSelectionListenerForJava(listener: Consumer<WNavigationViewItem?>) {
+        val registry = registry // The handler stays on the native side, so capture only the item list, not this wrapper (reading the property directly would capture this)
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewSelectionChangedHandler,
@@ -241,7 +274,7 @@ class WNavigationView : WControl(
             val e = ComPtr(args)
             val selected = e.getPtrOrNull(XamlInterop.INavigationViewSelectionChangedEventArgs_get_SelectedItem)
             val item = try {
-                selected?.let(::resolveItem)
+                selected?.let(registry::resolve)
             } finally {
                 selected?.release()
             }
@@ -307,25 +340,90 @@ class WNavigationView : WControl(
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_ItemInvoked, token)
     }
 
+    private fun notifySelectionIfChanged() {
+        val old = notifiedSelection ?: return
+        val now = currentSelectionIdentity()
+        notifiedSelection = now
+        changeListeners.fireIfChanged(old, now)
+    }
+
+    private fun currentSelectionIdentity(): Long {
+        val selected = inspectable.getPtrOrNull(XamlInterop.INavigationView_get_SelectedItem) ?: return 0L
+        return try {
+            NavigationItemRegistry.identityOf(selected)
+        } finally {
+            selected.release()
+        }
+    }
+
+    /** Starts tracking the selection. The handler stays on the native side, so this wrapper is not strongly captured; it is looked up through the anchor (see ListenerAnchor). */
+    private fun addSelectionTracking() {
+        notifiedSelection = currentSelectionIdentity()
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.NavigationViewSelectionTrackingHandler",
+            XamlInterop.IID_NavigationViewSelectionChangedHandler,
+            XamlInterop.INavigationView_add_SelectionChanged,
+        ) { _, _ -> (anchor.get() as? WNavigationView)?.notifySelectionIfChanged() }
+    }
+
     /**
-     * Resolves an added [WNavigationViewItem] back from the SelectedItem pointer.
+     * Registers, when the first item is added, a single ItemInvoked handler that notifies the items' ActionListeners ([WNavigationViewItem.addActionListener]).
+     * The handler captures only the item list and looks up the item's wrapper from the invoked item's container (InvokedItemContainer).
+     */
+    private fun ensureItemInvokedDispatch() {
+        if (itemInvokedDispatchAdded) return
+        itemInvokedDispatchAdded = true
+        val registry = registry
+        inspectable.addEventHandler(
+            "WinUI4K.NavigationViewItemActionHandler",
+            XamlInterop.IID_NavigationViewItemInvokedHandler,
+            XamlInterop.INavigationView_add_ItemInvoked,
+        ) { _, args -> registry.resolveInvokedContainer(ComPtr(args))?.fireActionPerformed() }
+    }
+}
+
+/**
+ * The list of items added to a [WNavigationView] and the reverse lookup from native items to wrappers.
+ * Handlers left on the native side capture this instead of the navigation view's wrapper (item wrappers only reference the native items
+ * and do not lead back to the navigation view's wrapper, so there is no cycle). Use only from the UI thread.
+ */
+private class NavigationItemRegistry {
+    val items = mutableListOf<WNavigationViewItem>()
+
+    /**
+     * Looks up an added [WNavigationViewItem] (including descendants) from the pointer of [native] (the selected item and so on). Null if none.
      * Compares addresses under COM's identity rule (QI'ing IUnknown always returns the same pointer).
      */
-    @Suppress("NestedBlockDepth") // Only looks deep due to the try/finally releasing the COM reference
-    private fun resolveItem(selected: ComPtr): WNavigationViewItem? {
-        val target = selected.queryInterface(KComObject.IID_IUNKNOWN)
-        try {
-            for (item in items) {
-                for (candidate in item.selfAndDescendants()) {
-                    val mine = candidate.inspectable.queryInterface(KComObject.IID_IUNKNOWN)
-                    val matched = mine.ptr.address == target.ptr.address
-                    mine.release()
-                    if (matched) return candidate
-                }
-            }
-            return null
+    fun resolve(native: ComPtr): WNavigationViewItem? {
+        val target = identityOf(native)
+        return items.asSequence().flatMap { it.selfAndDescendants() }.firstOrNull { identityOf(it.inspectable) == target }
+    }
+
+    /** The item corresponding to the InvokedItemContainer of the ItemInvoked arguments [args] (borrowed). Null if it is not an added item, such as the settings item. */
+    fun resolveInvokedContainer(args: ComPtr): WNavigationViewItem? {
+        val args2 = args.queryInterfaceOrNull(XamlInterop.IID_INavigationViewItemInvokedEventArgs2) ?: return null
+        val container = try {
+            args2.getPtrOrNull(XamlInterop.INavigationViewItemInvokedEventArgs2_get_InvokedItemContainer)
         } finally {
-            target.release()
+            args2.release()
+        } ?: return null
+        return try {
+            resolve(container)
+        } finally {
+            container.release()
+        }
+    }
+
+    companion object {
+        /** COM identity (the IUnknown address). */
+        fun identityOf(pointer: ComPtr): Long {
+            val unknown = pointer.queryInterface(KComObject.IID_IUNKNOWN)
+            return try {
+                unknown.ptr.address
+            } finally {
+                unknown.release()
+            }
         }
     }
 }

@@ -54,6 +54,49 @@ class WrapperReleaseNavigationTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a WNavigationView with a selection listener is also collected after being placed in the window and removed (the handler does not capture the navigation view)") {
+            val sink = received
+            val reference = shownAndHidden {
+                WNavigationView().also { view ->
+                    view.addItem(WNavigationViewItem("A"))
+                    view.addSelectionListener { item -> sink += item?.text ?: "" }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a WNavigationView with a ChangeListener and items with ActionListeners are also collected after being placed in the window and removed") {
+            val sink = received
+            var item: WeakReference<WNavigationViewItem>? = null
+            val reference = shownAndHidden {
+                WNavigationView().also { view ->
+                    val listening = WNavigationViewItem("A").also { it.addActionListener { e -> sink += e.actionCommand ?: "" } }
+                    item = WeakReference(listening)
+                    view.addItem(listening)
+                    view.addChangeListener { e -> sink += e.source.javaClass }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(item)).shouldBeTrue()
+        }
+
+        test("a WBreadcrumbBar with an ActionListener and a WSemanticZoom with a ChangeListener are also collected after being placed in the window and removed") {
+            val sink = received
+            val bar = shownAndHidden {
+                WBreadcrumbBar().also { bar ->
+                    bar.setItems(listOf("C:", "Users"))
+                    bar.addActionListener { e -> sink += e.actionCommand ?: "" }
+                }
+            }
+            val zoom = shownAndHidden {
+                WSemanticZoom(WList(listOf("a1")), WList(listOf("a"))).also { zoom ->
+                    zoom.addChangeListener { e -> sink += e.source.javaClass }
+                }
+            }
+            Reclamation.awaitCollected(bar).shouldBeTrue()
+            Reclamation.awaitCollected(zoom).shouldBeTrue()
+        }
+
         test("a WTabView that was never placed is also collected once all its ChangeListeners are removed") {
             val reference = onUiThreadGet {
                 val tabView = WTabView()
