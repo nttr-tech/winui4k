@@ -7,7 +7,7 @@ package com.appkitbox.winui4k
  * - Setting [value] clamps it to the range (with 0..100 and an extent of 10, setting 150 gives 90)
  * - Setting [extent] clamps it to 0 or more and `maximum - value` or less
  * - Setting [minimum] raises a smaller value and the maximum (with a value of 50, setting the minimum to 60 makes the value 60 too)
- * - Setting [maximum] lowers a larger minimum, value and extent
+ * - Setting [maximum] lowers a larger minimum and extent, and lowers the value to at most `maximum - extent` (with a value of 50 and an extent of 10, setting the maximum to 40 makes the value 30)
  * The notification ([WChangeListener.stateChanged]) is sent once per change, only when one of the values actually changed.
  * As with Swing's EventListenerList, listeners are notified starting from the most recently added one.
  * Listeners added or removed during a notification do not affect it: it goes to the list as it was when it started.
@@ -59,7 +59,7 @@ open class WDefaultBoundedRangeModel @JvmOverloads constructor(
         get() = currentMax
         set(n) {
             val newMin = minOf(n, currentMin)
-            val newExtent = minOf(n - currentValue, currentExtent)
+            val newExtent = minOf(n - newMin, currentExtent)
             val newValue = minOf(n - newExtent, currentValue)
             setRangeProperties(newValue, newExtent, newMin, n, adjusting)
         }

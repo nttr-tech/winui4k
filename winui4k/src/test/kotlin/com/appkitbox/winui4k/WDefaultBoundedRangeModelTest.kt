@@ -74,18 +74,24 @@ class WDefaultBoundedRangeModelTest : FunSpec() {
             model.state() shouldContainExactly listOf(120.0, 0.0, 120.0, 120.0)
         }
 
-        test("setMaximum lowers extent and adjusts so that value fits") {
+        test("setMaximum keeps extent and lowers value so that value + extent fits within max") {
             val model = WDefaultBoundedRangeModel(50.0, 10.0, 0.0, 100.0)
             model.maximum = 70.0
             model.state() shouldContainExactly listOf(50.0, 10.0, 0.0, 70.0)
             model.maximum = 55.0
-            model.state() shouldContainExactly listOf(50.0, 5.0, 0.0, 55.0)
+            model.state() shouldContainExactly listOf(45.0, 10.0, 0.0, 55.0)
         }
 
-        test("setMaximum below value puts max back to value and makes extent 0, as in Swing") {
+        test("setMaximum below value lowers value to max - extent (same as the JDK's DefaultBoundedRangeModel.setMaximum)") {
             val model = WDefaultBoundedRangeModel(50.0, 10.0, 0.0, 100.0)
             model.maximum = 40.0
-            model.state() shouldContainExactly listOf(50.0, 0.0, 0.0, 50.0)
+            model.state() shouldContainExactly listOf(30.0, 10.0, 0.0, 40.0)
+        }
+
+        test("setMaximum below min lowers min and value too, and shrinks extent to at most max - min") {
+            val model = WDefaultBoundedRangeModel(70.0, 10.0, 50.0, 100.0)
+            model.maximum = 20.0
+            model.state() shouldContainExactly listOf(20.0, 0.0, 20.0, 20.0)
         }
 
         test("setRangeProperties fixes the values to satisfy the invariant and notifies only once") {
