@@ -6,9 +6,11 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
+import java.time.LocalDate
+import java.time.LocalTime
 
 /**
- * Tests that value components (WSpinner, WProgressBar, WProgressRing) with a ChangeListener or a shared model attached are not strongly captured by the handlers or the model,
+ * Tests that value components (WSpinner, WProgressBar, WProgressRing) and date and time pickers with a ChangeListener or a shared model attached are not strongly captured by the handlers or the model,
  * and are collected after being removed (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass).
  * Waits for collection while prompting GC ([Reclamation]).
  */
@@ -60,6 +62,31 @@ class WrapperReleaseValueTest : FunSpec() {
             Reclamation.awaitCollected(bar).shouldBeTrue()
             Reclamation.awaitCollected(checkNotNull(ring)).shouldBeTrue()
             Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
+
+        test("date and time pickers (WDatePicker, WTimePicker, WCalendarDatePicker, WCalendarView) with a ChangeListener whose value was changed are collected after being placed in the window and removed") {
+            val sources = changeSources
+            // Recording the received source would make the record hold the picker, so do not record it
+            val datePicker = shownAndHidden {
+                WDatePicker().also {
+                    it.addChangeListener(WChangeListener { sources += "date" })
+                    it.date = LocalDate.of(2026, 10, 20)
+                }
+            }
+            val timePicker = shownAndHidden {
+                WTimePicker().also {
+                    it.addChangeListener(WChangeListener { sources += "time" })
+                    it.time = LocalTime.of(12, 0)
+                }
+            }
+            val calendarDatePicker = shownAndHidden {
+                WCalendarDatePicker().also {
+                    it.addChangeListener(WChangeListener { sources += "calendarDate" })
+                    it.date = LocalDate.of(2026, 10, 20)
+                }
+            }
+            val calendarView = shownAndHidden { WCalendarView().also { it.addChangeListener(WChangeListener { sources += "calendar" }) } }
+            listOf(datePicker, timePicker, calendarDatePicker, calendarView).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
         }
     }
 }

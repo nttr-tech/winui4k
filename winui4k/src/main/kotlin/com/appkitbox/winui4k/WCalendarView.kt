@@ -45,6 +45,9 @@ class WCalendarView : WControl(
 ) {
     private val selectedDatesChangedTokens = ListenerTokens<Runnable>()
 
+    /** The ChangeListeners. A single native handler (SelectedDatesChanged) is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addChangeHandler() }
+
     /** The selection mode (CalendarView.SelectionMode). */
     var selectionMode: CalendarViewSelectionMode
         get() = CalendarViewSelectionMode.of(inspectable.getInt(XamlInterop.ICalendarView_get_SelectionMode))
@@ -91,6 +94,34 @@ class WCalendarView : WControl(
     /** Scrolls the given date into view (CalendarView.SetDisplayDate). */
     fun setDisplayDate(date: LocalDate) {
         inspectable.call(XamlInterop.ICalendarView_SetDisplayDate, DateTimeConversions.localDateToTicks(date))
+    }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this CalendarView) every time the set of selected dates (CalendarView.SelectedDates)
+     * changes. Called once per change, whether by the user's selection, clearing the selection, or changing the selection from code.
+     * WinUI sends SelectedDatesChanged only when the set gains or loses dates (CalendarView::RaiseSelectionChangedEventIfChanged), so
+     * that is passed on as is. Also called for changes before it is placed on screen.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun addChangeHandler() {
+        // The handler stays on the native side, so do not strongly capture the CalendarView; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.CalendarViewSelectedDatesChangedHandler",
+            XamlInterop.IID_CalendarViewSelectedDatesChangedHandler,
+            XamlInterop.ICalendarView_add_SelectedDatesChanged,
+        ) { _, _ -> (anchor.get() as? WCalendarView)?.changeListeners?.fire() }
     }
 
     /** Registers a listener for when the selected dates change (CalendarView.SelectedDatesChanged). */

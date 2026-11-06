@@ -1173,6 +1173,7 @@ internal object XamlInterop {
     const val ICalendarView_put_MinDate = 23                  // put_MinDate(DateTime i8)
     const val ICalendarView_get_NumberOfWeeksInView = 24      // get_NumberOfWeeksInView(out i4)
     const val ICalendarView_put_NumberOfWeeksInView = 25      // put_NumberOfWeeksInView(i4)
+    const val ICalendarView_get_SelectedDates = 26            // get_SelectedDates(out IVector<DateTime>)
     const val ICalendarView_get_SelectionMode = 27            // get_SelectionMode(out CalendarViewSelectionMode)
     const val ICalendarView_put_SelectionMode = 28            // put_SelectionMode(CalendarViewSelectionMode)
     const val ICalendarView_add_SelectedDatesChanged = 156    // add_SelectedDatesChanged(TypedEventHandler, out token)

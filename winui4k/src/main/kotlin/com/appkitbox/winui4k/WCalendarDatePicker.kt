@@ -22,6 +22,15 @@ class WCalendarDatePicker : WControl(
 ) {
     private val dateChangedTokens = ListenerTokens<Consumer<LocalDate?>>()
 
+    /** The ChangeListeners. A single native handler (DateChanged) is registered when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addChangeHandler() }
+
+    /** The [date] last notified to the ChangeListeners (or when they were added). Compared from both the native notification and the setter so each change is notified only once. */
+    private var notifiedDate: LocalDate? = null
+
+    /** Whether [addChangeHandler] has been done (until it has, [notifiedDate] is not used). */
+    private var changeHandlerAdded = false
+
     /** The selected date (null = nothing selected). CalendarDatePicker.Date (IReference<DateTime>). */
     var date: LocalDate?
         get() {
@@ -38,6 +47,7 @@ class WCalendarDatePicker : WControl(
                 inspectable.call(XamlInterop.ICalendarDatePicker_put_Date, boxed.ptr)
                 boxed.release()
             }
+            notifyIfDateChanged()
         }
 
     /** Whether the calendar drop-down is open (CalendarDatePicker.IsCalendarOpen). */
@@ -63,6 +73,45 @@ class WCalendarDatePicker : WControl(
             inspectable.call(XamlInterop.ICalendarDatePicker_put_Header, boxed.ptr)
             boxed.release()
         }
+
+    /**
+     * ChangeListener-style: receives a [WChangeEvent] (whose source is this CalendarDatePicker) every time [date] changes. Corresponds to the ChangeListener of Swing's date
+     * JSpinner (SpinnerDateModel). Called once per change of the value, whether by choosing in the calendar, setting [date], or clearing to null.
+     * When it is called, [date] returns the new value.
+     * Setting the same date again does not call it (it is compared with the value last notified and not notified if the same). Also called for changes before it is placed on screen.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order they were added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun addChangeHandler() {
+        notifiedDate = date
+        changeHandlerAdded = true
+        // The handler stays on the native side, so do not strongly capture the CalendarDatePicker; look it up through the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.CalendarDatePickerDateChangedHandler",
+            XamlInterop.IID_CalendarDatePickerDateChangedHandler,
+            XamlInterop.ICalendarDatePicker_add_DateChanged,
+        ) { _, _ -> (anchor.get() as? WCalendarDatePicker)?.notifyIfDateChanged() }
+    }
+
+    /** If ChangeListeners are added, compares the current [date] with the value last notified and notifies if it changed. */
+    private fun notifyIfDateChanged() {
+        if (!changeHandlerAdded) return
+        val current = date
+        val old = notifiedDate
+        notifiedDate = current
+        changeListeners.fireIfChanged(old, current)
+    }
 
     /** Registers a listener for when the selected date changes (CalendarDatePicker.DateChanged). */
     @JvmSynthetic
