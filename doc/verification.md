@@ -334,3 +334,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     スクロールは呼んだ後に起きる
   - ScrollView.ScrollTo を AnimationMode = Disabled の ScrollingScrollOptions で呼んでも位置は InteractionTracker の非同期の更新で変わる
     (ScrollPresenter.cpp の TryUpdatePosition)。UpdateLayout では読み戻せない
+- JSplitPane 風の WSplitPane (Grid の 3 つのセルを Kotlin から決める) のために、仕切りのマウス ポインターと配分の反映を E2E テストで確かめた
+  (`WSplitPaneTest`)
+  - UIElement.ProtectedCursor は protected (派生クラス向け) だが、派生していない Border でも IUIElementProtected を QI で取れ、
+    InputSystemCursor.Create(SizeWestEast / SizeNorthSouth) を IInputCursor にして put_ProtectedCursor すると、get で読み戻せる
+  - Grid の SizeChanged の中で ColumnDefinition.Width を変えても例外にならず、続くレイアウトで配置し直される
+    (同じ UpdateLayout の中で済むかは確かめておらず、テストは validate を 2 回回してから位置を読む)
