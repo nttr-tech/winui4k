@@ -64,7 +64,8 @@ internal class SelectionChangeGate {
  *   and copies the result to native.
  *
  * The native handlers capture only the [ListenerAnchor] and look up the wrapper on every call (no cycle).
- * A wrapper that started syncing is not collected while shown (and while being assembled), the same as when listeners are added.
+ * A wrapper that started syncing is not collected from the first Loaded on while shown (and while the detached subtree remains).
+ * A wrapper never shown can be collected even if it uses the Swing-style API or listeners (the same as before syncing starts).
  */
 internal class ListSelectionSync<T : WComponent>(
     /** The list wrapper. Copies model changes to native and is the source of events to listeners. */
@@ -108,7 +109,7 @@ internal class ListSelectionSync<T : WComponent>(
         updateModelTo(lastNative)
         model.addListSelectionListener(modelListener)
         items.selectionSync = this
-        val anchor = ListenerAnchor(owner).also { it.listenerAdded() }
+        val anchor = ListenerAnchor(owner).also { it.listenerAddedFromFirstLoaded() }
         // Let the handlers capture only the anchor, not the wrapper (no cycle)
         selector.addEventHandler(
             "WinUI4K.ListSelectionSyncHandler",

@@ -31,6 +31,46 @@ class WrapperReleaseListTest : FunSpec() {
     }
 
     init {
+        test("WList and WListBox never shown are collected even when using the Swing-style selection API and listeners") {
+            val references = onUiThreadGet {
+                val list = WList(arrayOf("a", "b", "c")).also { list ->
+                    list.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION)
+                    list.setSelectionInterval(0, 1)
+                    list.addListSelectionListener { _: WListSelectionEvent -> }
+                }
+                val listBox = WListBox(arrayOf("a", "b")).also { list ->
+                    list.selectedIndices = intArrayOf(1)
+                    list.addListSelectionListener { _: WListSelectionEvent -> }
+                }
+                listOf<WeakReference<WComponent>>(WeakReference(list), WeakReference(listBox))
+            }
+            references.forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
+        }
+
+        test("a WList that started using Swing-style selection before being shown is not collected while shown even without references, and selections in the display reach the listeners") {
+            val holder = arrayOfNulls<WList>(1)
+            val events = mutableListOf<Int>()
+            val reference = onUiThreadGet {
+                val list = WList(arrayOf("a", "b", "c")).also { list ->
+                    list.addListSelectionListener { e: WListSelectionEvent -> events += e.lastIndex }
+                }
+                holder[0] = list
+                WeakReference(list)
+            }
+            UiTestHarness.attachAndAwaitLoaded(checkNotNull(holder[0]))
+            holder[0] = null
+            try {
+                Reclamation.survivesGc(reference).shouldBeTrue()
+                onUiThreadGet {
+                    checkNotNull(reference.get()).selectedIndex = 2
+                    events.toList()
+                } shouldBe listOf(2)
+            } finally {
+                reference.get()?.let { UiTestHarness.detach(it) }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("WList and WListBox using selectionModel and WListSelectionListener are collected after being put in a window and removed") {
             val list = shownAndHidden {
                 WList(arrayOf("a", "b")).also { list ->
