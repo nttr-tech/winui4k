@@ -187,7 +187,11 @@ class WTable @JvmOverloads constructor(
      */
     var autoCreateColumnsFromModel: Boolean = columnModel == null
 
-    /** The model of the data to display. Changing it recreates the rows and (if autoCreateColumnsFromModel) the columns. */
+    /**
+     * The model of the data to display. Changing it recreates the rows and (if autoCreateColumnsFromModel) the columns, and clears the selection, as JTable.setModel does.
+     * The model's fireTableDataChanged (a change of all rows) and fireTableStructureChanged (a change of the column structure) also clear the selection, as in Swing
+     * (adding or removing rows, or changing some rows, keeps the same model row selected).
+     */
     var model: TableModel = model
         set(value) {
             val old = field
@@ -370,7 +374,8 @@ class WTable @JvmOverloads constructor(
      * TableView can select only one row, so even if the model selects intervals or several rows, it is shrunk to the lead row only (the smallest row if the lead is not selected).
      * The default is a single selection [WDefaultListSelectionModel] (Swing's JTable defaults to multiple intervals). After sorting, filtering, and adding or removing rows,
      * the same model row stays selected as in Swing (the selection of rows that disappeared from the display or were removed is cleared).
-     * WinUI does not report operations in progress, so valueIsAdjusting of events is always false.
+     * WinUI does not report operations in progress, so valueIsAdjusting of events from display operations is always false
+     * (when the user calls the model's setValueIsAdjusting, events with true also arrive, as in Swing).
      * As in Swing, the selection model references the table through its listener, so the table is not collected while the model is held.
      */
     var selectionModel: WListSelectionModel
@@ -380,16 +385,19 @@ class WTable @JvmOverloads constructor(
         }
 
     /**
-     * Sets the Swing selection mode (a ListSelectionModel constant) (JTable.setSelectionMode). TableView can select only one row, so
-     * the [selectionModel]'s selection mode becomes SINGLE_SELECTION for any value. Make a non-selectable table with [selectionMode] NONE or
-     * [rowSelectionAllowed].
+     * Sets the Swing selection mode (a ListSelectionModel constant) (JTable.setSelectionMode). Clears the selection first, as JTable does.
+     * TableView can select only one row, so the [selectionModel]'s selection mode becomes SINGLE_SELECTION for any value. Make a non-selectable table with
+     * [selectionMode] NONE or [rowSelectionAllowed].
      * @throws IllegalArgumentException if it is none of the constants
      */
     fun setSelectionMode(selectionMode: Int) {
         require(selectionMode in WListSelectionModel.SINGLE_SELECTION..WListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
             "invalid selectionMode: $selectionMode"
         }
-        selection.call { it.setSelectionMode(WListSelectionModel.SINGLE_SELECTION) }
+        selection.call {
+            it.clearSelection()
+            it.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
+        }
     }
 
     /** Whether rows can be selected (JTable.getRowSelectionAllowed / setRowSelectionAllowed). false sets [selectionMode] to NONE, true to SINGLE. */
@@ -421,6 +429,7 @@ class WTable @JvmOverloads constructor(
      * Changes the selection by the same rules as Swing's JTable.changeSelection ([columnIndex] is not used since there is no column selection).
      * If neither toggle nor extend, selects only [rowIndex]; toggle only toggles the selection of [rowIndex]; extend only selects from
      * the anchor to [rowIndex] (only one row can be selected, so [rowIndex]); both extend the anchor's selection state to anchor..[rowIndex].
+     * Does nothing if [rowIndex] is outside the table's rows (changes neither the selection nor anchor / lead).
      */
     fun changeSelection(rowIndex: Int, columnIndex: Int, toggle: Boolean, extend: Boolean) {
         selection.changeSelection(rowIndex, toggle, extend) { isCellSelected(it, columnIndex) }

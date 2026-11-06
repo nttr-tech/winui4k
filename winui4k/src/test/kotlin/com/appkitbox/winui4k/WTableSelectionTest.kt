@@ -87,6 +87,24 @@ class WTableSelectionTest : FunSpec() {
             } shouldBe listOf(listOf(3) to listOf(3), 2 to listOf(2))
         }
 
+        test("setSelectionMode clears the selection first, as JTable does") {
+            shown { table ->
+                table.setRowSelectionInterval(2, 2)
+                table.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
+                listOf(table.selectedRow, table.selectionModel.isSelectionEmpty())
+            } shouldBe listOf(-1, true)
+        }
+
+        test("changeSelection for an out-of-range row does not change the selection or move lead, as with JTable's out-of-range rows") {
+            shown { table ->
+                table.changeSelection(1, 0, toggle = false, extend = false)
+                table.changeSelection(10, 0, toggle = false, extend = false)
+                table.changeSelection(-1, 0, toggle = true, extend = false)
+                table.changeSelection(7, 0, toggle = false, extend = true)
+                listOf(table.selectedRow, table.selectionModel.getLeadSelectionIndex(), table.selectionModel.getAnchorSelectionIndex())
+            } shouldBe listOf(1, 1, 1)
+        }
+
         test("setSelectionMode makes it single selection for any constant, and a non-constant throws IllegalArgumentException") {
             shown { table ->
                 table.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION)

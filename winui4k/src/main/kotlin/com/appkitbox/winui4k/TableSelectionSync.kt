@@ -141,8 +141,9 @@ internal class TableSelectionSync(
         reselect()
     }
 
-    /** The rules of JTable.changeSelection ([isSelected] is whether the row's cell is selected). */
+    /** The rules of JTable.changeSelection ([isSelected] is whether the row's cell is selected). Does nothing for an out-of-range row. */
     fun changeSelection(rowIndex: Int, toggle: Boolean, extend: Boolean, isSelected: (Int) -> Boolean) = call { model ->
+        if (rowIndex !in 0 until table.rowCount) return@call
         var anchor = model.getAnchorSelectionIndex()
         var anchorSelected = true
         if (anchor == -1) {
