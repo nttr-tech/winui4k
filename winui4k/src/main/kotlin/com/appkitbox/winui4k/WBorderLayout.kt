@@ -229,26 +229,26 @@ class WBorderLayout @JvmOverloads constructor(
 
         visibleChild(Constraint.NORTH, ltr)?.let { child ->
             val preferredHeight = child.preferredSize().height
-            parent.setBounds(child, left, top, maxOf(0.0, right - left), preferredHeight)
+            parent.setVisualBounds(child, left, top, maxOf(0.0, right - left), preferredHeight)
             top += preferredHeight + vgap
         }
         visibleChild(Constraint.SOUTH, ltr)?.let { child ->
             val preferredHeight = child.preferredSize().height
-            parent.setBounds(child, left, bottom - preferredHeight, maxOf(0.0, right - left), preferredHeight)
+            parent.setVisualBounds(child, left, bottom - preferredHeight, maxOf(0.0, right - left), preferredHeight)
             bottom -= preferredHeight + vgap
         }
         visibleChild(Constraint.EAST, ltr)?.let { child ->
             val preferredWidth = child.preferredSize().width
-            parent.setBounds(child, right - preferredWidth, top, preferredWidth, maxOf(0.0, bottom - top))
+            parent.setVisualBounds(child, right - preferredWidth, top, preferredWidth, maxOf(0.0, bottom - top))
             right -= preferredWidth + hgap
         }
         visibleChild(Constraint.WEST, ltr)?.let { child ->
             val preferredWidth = child.preferredSize().width
-            parent.setBounds(child, left, top, preferredWidth, maxOf(0.0, bottom - top))
+            parent.setVisualBounds(child, left, top, preferredWidth, maxOf(0.0, bottom - top))
             left += preferredWidth + hgap
         }
         visibleChild(Constraint.CENTER, ltr)?.let { child ->
-            parent.setBounds(child, left, top, maxOf(0.0, right - left), maxOf(0.0, bottom - top))
+            parent.setVisualBounds(child, left, top, maxOf(0.0, right - left), maxOf(0.0, bottom - top))
         }
     }
 }

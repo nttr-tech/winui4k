@@ -383,3 +383,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   WFrame.extendedState = NORMAL はもう一度 Restore して通常にし、途中の最大化では windowStateChanged を出さない (WFrameStateTest)。
   OverlappedPresenter.SetBorderAndTitleBar(false, false) の後もウィンドウのスタイルに WS_DLGFRAME が残るが、WS_BORDER が消えるので
   タイトル バーは出ない。WFrame.setIconImage の PNG は、PNG をそのまま 1 枚入れた .ico にすると AppWindow.SetIcon が読める (WM_GETICON で確認)
+- XAML は流れの向き (FlowDirection) が親と違う要素で、その中身をまとめて左右に反転して描く (microsoft-ui-xaml
+  uielement.cpp の CUIElement::GetShouldFlipRTL)。右から左の Canvas に Canvas.Left = 5 で置いた子は、画面ではパネルの右端から 5 の位置に見え、
+  UIElement.ActualOffset は反転前の 5 のまま。レイアウト マネージャーが自分で x を反転して置くと二重に反転して左から右と同じ見た目になる。
+  WinUI4K のマネージャーは Swing と同じ見た目の座標で計算し、右から左のパネルでは反転した位置を Canvas.Left にする (WLayoutPanel.setVisualBounds)。
+  WComponent.bounds は ActualOffset なので、右から左の親の中では親の右端から測った値になる (WLayoutRightToLeftTest が子の端を
+  TransformToVisual でウィンドウの座標にして、画面の上の位置を確かめる)

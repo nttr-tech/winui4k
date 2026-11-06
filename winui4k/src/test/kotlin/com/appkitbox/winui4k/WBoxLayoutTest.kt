@@ -188,11 +188,14 @@ class WBoxLayoutTest : FunSpec() {
                 val b = rigid(60.0, 20.0)
                 Triple(box(axis, 300.0, 20.0, a, b).also { it.flowDirection = FlowDirection.RIGHT_TO_LEFT }, a, b)
             }
-            // Reversed order: from the right edge 300, a is at 300 - 50 = 250, b at 250 - 60 = 190
+            // Visually (Swing), from the right edge 300, a is 300 - 50 = 250 and b is 250 - 60 = 190. In a right-to-left panel, bounds are
+            // the coordinates before XAML mirrors them (measured from the right edge), so x = 300 - visual x - width gives a = 0 and b = 50.
+            // The on-screen positions are checked by WLayoutRightToLeftTest
             val (line, a, b) = scene(WBoxLayout.LINE_AXIS)
-            laidOut(line, a, b) shouldBe listOf(WRectangle(250, 0, 50, 20), WRectangle(190, 0, 60, 20))
+            laidOut(line, a, b) shouldBe listOf(WRectangle(0, 0, 50, 20), WRectangle(50, 0, 60, 20))
+            // X_AXIS is visually a = 0, b = 50 from the left. In bounds, 300 - 0 - 50 = 250 and 300 - 50 - 60 = 190
             val (x, c, d) = scene(WBoxLayout.X_AXIS)
-            laidOut(x, c, d) shouldBe listOf(WRectangle(0, 0, 50, 20), WRectangle(50, 0, 60, 20))
+            laidOut(x, c, d) shouldBe listOf(WRectangle(250, 0, 50, 20), WRectangle(190, 0, 60, 20))
         }
 
         test("PAGE_AXIS stacks vertically and mirrors the horizontal alignment in a right-to-left flow") {
@@ -200,8 +203,9 @@ class WBoxLayoutTest : FunSpec() {
             val panel = onUiThreadGet {
                 box(WBoxLayout.PAGE_AXIS, 200.0, 100.0, left).also { it.flowDirection = FlowDirection.RIGHT_TO_LEFT }
             }
-            // Mirrored alignment 1 - 0 = 1: the overall alignment 1 - 0 = 1 gives the upper part 200, and the child is 50 above / 0 below -> offset 200 - 50 = 150
-            laidOut(panel, left) shouldBe listOf(WRectangle(150, 0, 50, 20))
+            // Mirrored alignment 1 - 0 = 1: with the overall alignment 1 - 0 = 1, the upper side is 200 and the child is top 50 / bottom 0 → visual offset 200 - 50 = 150.
+            // bounds are measured from the right edge, so 200 - 150 - 50 = 0
+            laidOut(panel, left) shouldBe listOf(WRectangle(0, 0, 50, 20))
         }
 
         test("WBox struts, rigid areas and glue have the same minimum, preferred and maximum sizes as Swing") {

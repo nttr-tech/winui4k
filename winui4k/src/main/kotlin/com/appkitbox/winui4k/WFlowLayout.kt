@@ -112,7 +112,7 @@ class WFlowLayout @JvmOverloads constructor(
             val size = member.size
             val y = row.top + (row.height - size.height) / 2
             val childX = if (ltr) x else parent.layoutSize.width - x - size.width
-            parent.setBounds(member.component, childX, y, size.width, size.height)
+            parent.setVisualBounds(member.component, childX, y, size.width, size.height)
             x += size.width + hgap
         }
     }

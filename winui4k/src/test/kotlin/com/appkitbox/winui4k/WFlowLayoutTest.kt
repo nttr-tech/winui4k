@@ -116,16 +116,18 @@ class WFlowLayoutTest : FunSpec() {
             }
         }
 
-        test("in a right-to-left flow children are laid out from the right edge and LEADING aligns right (x = width - x - child width)") {
+        test("in right-to-left flow, children are visually laid out from the right edge and LEADING aligns right, and bounds are measured from the panel's right edge") {
             val s = scene(WFlowLayout(WFlowLayout.LEADING))
             onUiThread { s.panel.flowDirection = FlowDirection.RIGHT_TO_LEFT }
             show(s)
             try {
-                // LEADING does not move, x = 5: a is 100 - 5 - 31 = 64, b is x = 5 + 31 + 5 = 41, so 100 - 41 - 40 = 19. Row 2 c is 100 - 5 - 50 = 45
+                // LEADING with fixed x = 5: visually (Swing) a is 100 - 5 - 31 = 64, b is at x = 5 + 31 + 5 = 41, so 100 - 41 - 40 = 19,
+                // and c on the second row is 100 - 5 - 50 = 45. In a right-to-left panel, bounds are the coordinates before XAML mirrors them (measured from the right edge), so
+                // 100 - visual x - width gives a = 5, b = 41, c = 5 (on screen: WLayoutRightToLeftTest)
                 bounds(s.a, s.b, s.c) shouldBe listOf(
-                    WRectangle(64, 10, 31, 10),
-                    WRectangle(19, 5, 40, 20),
-                    WRectangle(45, 30, 50, 10),
+                    WRectangle(5, 10, 31, 10),
+                    WRectangle(41, 5, 40, 20),
+                    WRectangle(5, 30, 50, 10),
                 )
             } finally {
                 UiTestHarness.detach(s.panel)

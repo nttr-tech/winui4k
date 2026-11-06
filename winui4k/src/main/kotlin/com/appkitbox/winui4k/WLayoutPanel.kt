@@ -161,12 +161,28 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
      * Assigns a child's position and size (like Component.setBounds). Called by a WLayoutManager
      * implementation from [WLayoutManager.layoutContainer]. Position is the Canvas.SetLeft/SetTop
      * attached properties; size is Width/Height (a put is skipped if the value is unchanged).
+     *
+     * Positions are in WinUI coordinates, and in a right-to-left ([flowDirection]) panel XAML draws the content mirrored. So placing children
+     * computed the same way as left-to-right makes them naturally line up from the right (WinUI4K's managers compute in the same visual coordinates as Swing and place them mirrored).
      */
     fun setBounds(component: WComponent, x: Double, y: Double, width: Double, height: Double) {
         if (component is WLayoutPanel) component.noteAssignedSize(width, height)
         statics.call(XamlInterop.ICanvasStatics_SetLeft, component.uiElement.ptr, x)
         statics.call(XamlInterop.ICanvasStatics_SetTop, component.uiElement.ptr, y)
         component.setLayoutSize(width, height)
+    }
+
+    /**
+     * Places a child in on-screen visual coordinates (as in Swing, measured from the panel's left edge even in right-to-left flow). WinUI4K's layout managers
+     * compute the visual position with the same calculation as Swing and call this.
+     *
+     * XAML draws the content of right-to-left elements mirrored (CUIElement::GetShouldFlipRTL in microsoft-ui-xaml's uielement.cpp), so
+     * in a right-to-left panel the mirrored x (the position measured from the panel's right edge) becomes Canvas.Left. [setBounds] does not mirror
+     * (it stays in WinUI coordinates; to handle right-to-left flow in your own manager, leave the mirroring to XAML and place children the same as left-to-right).
+     */
+    internal fun setVisualBounds(component: WComponent, x: Double, y: Double, width: Double, height: Double) {
+        val left = if (flowDirection == FlowDirection.RIGHT_TO_LEFT) layoutSize.width - x - width else x
+        setBounds(component, left, y, width, height)
     }
 
     /**

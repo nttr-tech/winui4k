@@ -138,16 +138,17 @@ class WGridLayoutTest : FunSpec() {
             }
         }
 
-        test("in a right-to-left flow the first column is at the right edge") {
+        test("in right-to-left flow, the first column is visually at the right edge, and bounds are measured from the panel's right edge") {
             val (panel, children) = panelOf(WGridLayout(1, 3, 4.0, 6.0), 116.0, 30.0, 3)
             onUiThread { panel.flowDirection = FlowDirection.RIGHT_TO_LEFT }
             show(panel)
             try {
-                // Cell width 36. x is (116 - 0 - 36) - column x 40 = 80, 40, 0
+                // Cell width 36. The visual (Swing) x is (116 - 0 - 36) - column x 40 = 80, 40, 0. In a right-to-left panel, bounds are
+                // the coordinates before XAML mirrors them (measured from the right edge), so 116 - x - 36 = 0, 40, 80 (on screen: WLayoutRightToLeftTest)
                 bounds(children) shouldBe listOf(
-                    WRectangle(80, 0, 36, 30),
-                    WRectangle(40, 0, 36, 30),
                     WRectangle(0, 0, 36, 30),
+                    WRectangle(40, 0, 36, 30),
+                    WRectangle(80, 0, 36, 30),
                 )
             } finally {
                 UiTestHarness.detach(panel)

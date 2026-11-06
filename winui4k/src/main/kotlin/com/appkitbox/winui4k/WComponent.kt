@@ -276,6 +276,10 @@ abstract class WComponent internal constructor(
      * of a control's template. It points inside the margin (the left edge of the visible frame). 0 for an element not
      * placed in a window or before layout. Movement by transforms such as rotation (RenderTransform) or by scrolling is not
      * included. The unrounded value is [actualX].
+     *
+     * If the parent's [flowDirection] is right-to-left, unlike Swing it is in WinUI coordinates (before XAML mirrors the drawing), measured from the parent's right edge
+     * to this element's right edge (a child placed by a WLayoutPanel layout manager at x from the visual left edge
+     * returns parent width - x - child width).
      */
     val x: Int
         get() = Math.round(actualX).toInt()

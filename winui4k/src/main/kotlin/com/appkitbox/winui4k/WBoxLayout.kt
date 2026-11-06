@@ -76,7 +76,7 @@ class WBoxLayout(target: WLayoutPanel, axis: Int) : WLayoutManager {
             aligned(width, r.xTotal, r.x, ltr) to tiled(height, r.y, true)
         }
         parent.layoutChildren.forEachIndexed { i, child ->
-            parent.setBounds(child, insets.left + xs[i].offset, insets.top + ys[i].offset, xs[i].span, ys[i].span)
+            parent.setVisualBounds(child, insets.left + xs[i].offset, insets.top + ys[i].offset, xs[i].span, ys[i].span)
         }
     }
 

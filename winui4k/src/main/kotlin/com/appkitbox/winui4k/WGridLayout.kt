@@ -85,7 +85,7 @@ class WGridLayout @JvmOverloads constructor(
             } else {
                 (width - insets.right - cellWidth) - column * (cellWidth + hgap)
             }
-            parent.setBounds(child, x, insets.top + row * (cellHeight + vgap), cellWidth, cellHeight)
+            parent.setVisualBounds(child, x, insets.top + row * (cellHeight + vgap), cellWidth, cellHeight)
         }
     }
 }
