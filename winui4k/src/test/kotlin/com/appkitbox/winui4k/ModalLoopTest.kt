@@ -10,6 +10,7 @@ import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -269,6 +270,36 @@ class ModalLoopTest : FunSpec() {
                     events().toSet() shouldBe setOf("sizeChanged:IllegalStateException", "loaded:IllegalStateException")
                 }
                 onUiThreadGet { ModalLoop.run { true } } shouldBe true // Usable outside the listeners
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("running it from inside WComponentListener's componentResized (SizeChanged) and componentMoved (LayoutUpdated) throws IllegalStateException") {
+            val panel = onUiThreadGet { WPanel() }
+            val box = onUiThreadGet { WLabel("box") }
+            onUiThread {
+                panel.add(box)
+                box.addComponentListener(
+                    object : WComponentAdapter() {
+                        override fun componentResized(e: WComponentEvent) {
+                            events += "resized:" + runCatching { ModalLoop.run { true } }.exceptionOrNull()?.javaClass?.simpleName
+                        }
+
+                        override fun componentMoved(e: WComponentEvent) {
+                            events += "moved:" + runCatching { ModalLoop.run { true } }.exceptionOrNull()?.javaClass?.simpleName
+                        }
+                    },
+                )
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                eventually(5.seconds) { events() shouldContain "resized:IllegalStateException" }
+                // Inserting a child before it moves the box down, and componentMoved arrives with the LayoutUpdated after the layout
+                onUiThread { panel.add(WLabel("before"), 0) }
+                eventually(5.seconds) {
+                    events().toSet() shouldBe setOf("resized:IllegalStateException", "moved:IllegalStateException")
+                }
             } finally {
                 UiTestHarness.detach(panel)
             }

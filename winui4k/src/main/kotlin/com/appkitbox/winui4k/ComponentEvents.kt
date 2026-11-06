@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
@@ -17,6 +18,9 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  *   LayoutUpdated arrives on every layout anywhere in the tree, so it is subscribed only while there are listeners
  * - componentShown / componentHidden: the Visibility change callback (DependencyObject.RegisterPropertyChangedCallback).
  *   Only this component's own Visibility is watched (hiding a parent does not trigger it, same as Swing)
+ *
+ * componentResized and componentMoved (from LayoutUpdated) are called in the middle of layout, so they are wrapped in [ModalLoop.duringLayout]
+ * (a dialog that waits until it is closed cannot be opened from inside them; IllegalStateException).
  *
  * The handlers are registered only while there are listeners. None of them strongly captures the component or this object;
  * they look the component up through [WComponent.listenerAnchor].
@@ -60,12 +64,12 @@ internal class ComponentEvents(private val owner: WComponent) {
             "WinUI4K.ComponentListenerSizeChanged",
             XamlInterop.IID_SizeChangedEventHandler,
             XamlInterop.IFrameworkElement_add_SizeChanged,
-        ) { _, _ -> anchor.get()?.componentEventsOrNull?.onSizeChanged() }
+        ) { _, _ -> ModalLoop.duringLayout { anchor.get()?.componentEventsOrNull?.onSizeChanged() } }
         layoutUpdatedToken = owner.frameworkElement.addEventHandler(
             "WinUI4K.ComponentListenerLayoutUpdated",
             FoundationInterop.IID_EventHandler_Object,
             XamlInterop.IFrameworkElement_add_LayoutUpdated,
-        ) { _, _ -> anchor.get()?.componentEventsOrNull?.onLayoutUpdated() }
+        ) { _, _ -> ModalLoop.duringLayout { anchor.get()?.componentEventsOrNull?.onLayoutUpdated() } }
         visibilityToken = TableViewXaml.registerPropertyChangedCallback(owner.dependencyObject, visibilityProperty) { _ ->
             anchor.get()?.componentEventsOrNull?.onVisibilityChanged()
         }

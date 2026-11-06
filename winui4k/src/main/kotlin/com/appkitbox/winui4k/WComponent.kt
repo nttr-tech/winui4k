@@ -644,6 +644,8 @@ abstract class WComponent internal constructor(
      *   and as with Swing posting them to the event queue, they are called after returning from the call that changed [isVisible]
      *
      * While listeners are added, the position is read every time a layout runs anywhere in the tree (FrameworkElement.LayoutUpdated).
+     * componentResized and componentMoved are called in the middle of XAML's layout, so a dialog that waits until it is closed cannot be opened from inside them
+     * ([IllegalStateException]; open it later with WinUiUtilities.invokeLater).
      */
     fun addComponentListener(listener: WComponentListener?) {
         if (listener == null) return
