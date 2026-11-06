@@ -135,7 +135,7 @@ internal interface RowSorterHost {
  * - With multiple keys, TableViewSource sort descriptions are stacked (TableViewSource.Sort). The first key is the
  *   primary key. In this case comparators are not used (the standard comparison applies), and the column header
  *   arrow appears only on the primary key's column
- * - Rows are filtered with the filter from [setRowFilter] (TableViewSource.Filter)
+ * - Rows are filtered with the filter from [setRowFilter] (TableViewSource.Filter). [stringConverter] affects only the filter strings (Entry.getStringValue)
  */
 class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
     private val comparators = HashMap<Int, Comparator<*>>()
@@ -206,6 +206,18 @@ class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
     /** The current filter. */
     fun getRowFilter(): RowFilter<in M, in Int>? = rowFilter
 
+    /**
+     * The conversion of values to strings (TableRowSorter.getStringConverter / setStringConverter). If null (the default), the value's toString() (an empty string for null).
+     * Decides the strings of [RowFilter.Entry.getStringValue] (and [RowFilter.regexFilter], which uses it).
+     * Unlike Swing, it is not used for sorting (sorting is done by WinUI's TableView). Also, Swing does not refilter when it changes, but
+     * this refilters the shown table immediately if there is a filter.
+     */
+    var stringConverter: TableStringConverter? = null
+        set(value) {
+            field = value
+            if (rowFilter != null) host?.rowFilterChanged()
+        }
+
     /** Clears all sort keys. */
     fun clearSortKeys() {
         setSortKeys(null)
@@ -224,7 +236,7 @@ class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
     internal fun includes(modelRow: Int): Boolean {
         val filter = rowFilter ?: return true
         @Suppress("UNCHECKED_CAST") // Entry is read-only, so it can be passed to a contravariant filter
-        return (filter as RowFilter<M, Int>).include(ModelEntry(model, modelRow))
+        return (filter as RowFilter<M, Int>).include(ModelEntry(model, modelRow, stringConverter))
     }
 
     /** The sort keys set before display (WTable applies them when it is shown). */
@@ -242,8 +254,14 @@ class TableRowSorter<M : TableModel>(private val model: M) : RowSorter<M>() {
     }
 
     /** Presents one row of the model as a [RowFilter.Entry]. */
-    private class ModelEntry<M : TableModel>(private val model: M, private val row: Int) : RowFilter.Entry<M, Int>() {
+    private class ModelEntry<M : TableModel>(
+        private val model: M,
+        private val row: Int,
+        private val converter: TableStringConverter?,
+    ) : RowFilter.Entry<M, Int>() {
         override fun getModel(): M = model
+
+        override fun getStringValue(index: Int): String = converter?.let { it.toString(model, row, index) ?: "" } ?: super.getStringValue(index)
 
         override fun getValueCount(): Int = model.getColumnCount()
 

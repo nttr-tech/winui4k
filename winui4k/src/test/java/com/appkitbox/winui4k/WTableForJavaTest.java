@@ -18,8 +18,10 @@ import com.appkitbox.winui4k.table.RowFilter;
 import com.appkitbox.winui4k.table.RowSorter;
 import com.appkitbox.winui4k.table.SortOrder;
 import com.appkitbox.winui4k.table.TableColumn;
+import com.appkitbox.winui4k.table.TableModel;
 import com.appkitbox.winui4k.table.TableModelEvent;
 import com.appkitbox.winui4k.table.TableRowSorter;
+import com.appkitbox.winui4k.table.TableStringConverter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -204,6 +206,29 @@ class WTableForJavaTest {
             assertEquals(-1, table.convertRowIndexToView(1));
             sorter.setRowFilter(null);
             assertEquals(3, table.getRowCount());
+        });
+    }
+
+    @Test
+    void anAnonymousTableStringConverterSetWithSetStringConverterMakesRegexFilterMatchTheConvertedStrings() {
+        DefaultTableModel model = products();
+        WTable table = UiTestHarness.onUiThreadGet(() -> new WTable(model));
+        shown(table, () -> {
+            TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+            table.setRowSorter(sorter);
+            assertNull(sorter.getStringConverter());
+            sorter.setRowFilter(RowFilter.regexFilter("^¥4", 1));
+            assertEquals(0, table.getRowCount());
+            TableStringConverter converter = new TableStringConverter() {
+                @Override
+                public String toString(TableModel model, int row, int column) {
+                    return column == 1 ? "¥" + model.getValueAt(row, column) : String.valueOf(model.getValueAt(row, column));
+                }
+            };
+            sorter.setStringConverter(converter);
+            assertSame(converter, sorter.getStringConverter());
+            assertEquals(1, table.getRowCount());
+            assertEquals("Grape", table.getValueAt(0, 0));
         });
     }
 
