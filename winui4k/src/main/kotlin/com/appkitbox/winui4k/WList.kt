@@ -43,10 +43,32 @@ enum class ListViewSelectionMode(internal val native: Int) {
  * [selectedIndex] / [selectedItem] / [selectionMode] / [selectAll],
  * [addListSelectionListener] / [removeListSelectionListener] (SelectionChanged),
  * [isItemClickEnabled] / [addItemClickListener] / [removeItemClickListener] (ItemClick).
+ *
+ * As with Swing's JList, the data is held by a [WListModel] ([model] / [setListData]; [WDefaultListModel] by default).
+ * Each element is shown as its toString() string (an empty string if null), and model changes are reflected in the display immediately.
+ * Selected elements can be read as the model's elements themselves with [selectedValue] / [selectedValuesList]
+ * (elements with the same string are distinguished by position).
+ *
+ * Model changes and the selection (same as Swing's JList): inserting or removing before the selected element shifts the selection, removing the selected element
+ * clears that selection, and replacing an element (contentsChanged) keeps the selection at that position (WinUI deselects replaced items, so they are
+ * selected again, which calls the selection listeners). Replacing [model] clears the selection.
+ *
+ * [addItem] / [removeItem] / [removeAllItems] edit the default model ([WDefaultListModel]). When an app-specific
+ * model (a read-only [WAbstractListModel] and so on) is set, they throw UnsupportedOperationException.
+ * Swing's JList(Object[]) / setListData create a read-only model, but these create a [WDefaultListModel], so
+ * the list can still be edited afterwards with addItem and the like.
+ * * The default selection mode is single selection, as in WinUI (Swing's JList defaults to multiple-interval selection).
  */
-class WList @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
+class WList(model: WListModel<*>) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ListView, XamlInterop.IID_IListViewFactory), // default interface = IListView
 ) {
+    /** A list showing each element of [items] (creates a default model [WDefaultListModel]). */
+    @JvmOverloads
+    constructor(items: List<*> = emptyList<Any?>()) : this(defaultListModelOf(items))
+
+    /** A list showing each element of [listData] (equivalent to JList(Object[]); creates a default model [WDefaultListModel]). */
+    constructor(listData: Array<out Any?>) : this(defaultListModelOf(listData.asList()))
+
     private val selector: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_ISelector))
     }
@@ -61,15 +83,47 @@ class WList @JvmOverloads constructor(items: List<String> = emptyList()) : WCont
         own(items.queryInterface(FoundationInterop.IID_IVector_Object))
     }
 
+    /** The synchronization of the model and Items (shared by ListView and ListBox). */
+    internal val listItems = ListModelItems(
+        owner = this,
+        items = itemVector,
+        model = model,
+        // get_SelectedItems returns a typed IVector<Object> pointer, so no QI is needed
+        selectedItems = { listViewBase.getPtr(XamlInterop.IListViewBase_get_SelectedItems) },
+        selector = selector,
+        isSingleSelection = { selectionMode == ListViewSelectionMode.SINGLE },
+    )
+
+    /**
+     * The model of the elements shown (JList.getModel / setModel). Replacing it rebuilds the display and clears the selection.
+     * [WDefaultListModel] by default.
+     */
+    var model: WListModel<*>
+        get() = listItems.model
+        set(value) {
+            listItems.model = value
+        }
+
+    /**
+     * The selected element (JList.getSelectedValue). The frontmost element when several are selected, null when nothing is selected.
+     * Returns the model's element itself, not a string.
+     */
+    val selectedValue: Any?
+        get() = listItems.selectedIndices().firstOrNull()?.let { listItems.valueAt(it) }
+
+    /** All selected elements (JList.getSelectedValuesList). In index order. */
+    val selectedValuesList: List<Any?>
+        get() = listItems.selectedIndices().map { listItems.valueAt(it) }
+
     /** SelectionChanged event tokens registered via addListSelectionListener. */
     private val selectionTokens = ListenerTokens<Runnable>()
 
     /** ItemClick event tokens registered via addItemClickListener. */
     private val itemClickTokens = ListenerTokens<Consumer<String>>()
 
-    /** Item count (Items.Size). */
+    /** The number of items (the number of elements in the model). */
     val itemCount: Int
-        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
+        get() = listItems.size
 
     /**
      * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
@@ -79,16 +133,9 @@ class WList @JvmOverloads constructor(items: List<String> = emptyList()) : WCont
         get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
         set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
-    /** The selected item string, or null if nothing is selected (Selector.SelectedItem). */
+    /** The string of the selected item (toString() of [selectedValue]). Null when nothing is selected. */
     val selectedItem: String?
-        get() {
-            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
-            return try {
-                PropertyValues.unboxString(boxed)
-            } finally {
-                boxed.release()
-            }
-        }
+        get() = selectedValue?.toString()
 
     /** The selection mode (ListViewBase.SelectionMode). */
     var selectionMode: ListViewSelectionMode
@@ -103,35 +150,44 @@ class WList @JvmOverloads constructor(items: List<String> = emptyList()) : WCont
         get() = listViewBase.getBool(XamlInterop.IListViewBase_get_IsItemClickEnabled)
         set(value) = listViewBase.putBool(XamlInterop.IListViewBase_put_IsItemClickEnabled, value)
 
-    init {
-        for (item in items) addItem(item)
+    /** Shows each element of [listData] (JList.setListData). Sets a new [WDefaultListModel] as [model]. */
+    fun setListData(listData: Array<out Any?>) {
+        model = defaultListModelOf(listData.asList())
     }
 
-    /** Appends an item at the end (Items.Append). The string is boxed before being passed. */
+    /** Shows each element of [listData] (JList.setListData(Vector)). Sets a new [WDefaultListModel] as [model]. */
+    fun setListData(listData: List<*>) {
+        model = defaultListModelOf(listData)
+    }
+
+    /**
+     * Adds an item at the end (the default model's addElement).
+     * @throws UnsupportedOperationException when [model] is not a [WDefaultListModel]
+     */
     fun addItem(item: String) {
-        val boxed = PropertyValues.boxString(item)
-        itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
-        boxed.release()
+        listItems.editableModel().addElement(item)
     }
 
-    /** Returns the item string at [index] (Items.GetAt). */
-    fun getItem(index: Int): String {
-        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
-        return try {
-            PropertyValues.unboxString(boxed) ?: ""
-        } finally {
-            boxed.release()
-        }
-    }
+    /**
+     * Returns the string of the [index]th item (toString() of the model's element; an empty string if null).
+     * @throws ArrayIndexOutOfBoundsException when [index] is out of range (with the default model)
+     */
+    fun getItem(index: Int): String = listItems.textAt(index)
 
-    /** Removes the item at [index] (Items.RemoveAt). */
+    /**
+     * Removes the [index]th item (the default model's removeElementAt).
+     * @throws UnsupportedOperationException when [model] is not a [WDefaultListModel]
+     */
     fun removeItem(index: Int) {
-        itemVector.call(FoundationInterop.IVector_RemoveAt, index)
+        listItems.editableModel().removeElementAt(index)
     }
 
-    /** Removes all items (Items.Clear). */
+    /**
+     * Removes all items (the default model's removeAllElements).
+     * @throws UnsupportedOperationException when [model] is not a [WDefaultListModel]
+     */
     fun removeAllItems() {
-        itemVector.call(FoundationInterop.IVector_Clear)
+        listItems.editableModel().removeAllElements()
     }
 
     /** Selects all items (ListViewBase.SelectAll). Only effective in Multiple / Extended mode. */
