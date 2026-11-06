@@ -64,6 +64,17 @@ class WKeyStrokeForJavaTest {
     }
 
     @Test
+    void passingACharacterAndModifiersToGetKeyStrokeGivesAKeystrokeForTheCharacterWithModifiersAndNullThrows() {
+        WKeyStroke ctrlA = WKeyStroke.getKeyStroke(Character.valueOf('a'), WInputEvent.CTRL_DOWN_MASK);
+        assertEquals("ctrl typed a", ctrlA.toString());
+        assertEquals('a', ctrlA.getKeyChar());
+        assertEquals(WKeyEvent.VK_UNDEFINED, ctrlA.getKeyCode());
+        assertEquals(WKeyEvent.KEY_TYPED, ctrlA.getKeyEventType());
+        assertEquals(WKeyStroke.getKeyStroke("ctrl typed a"), ctrlA);
+        assertThrows(IllegalArgumentException.class, () -> WKeyStroke.getKeyStroke((Character) null, 0));
+    }
+
+    @Test
     void releaseKeyStrokeIsReleasedAndCanBeUsedLikeAltF4() {
         WKeyStroke stroke = WKeyStroke.getKeyStroke(WKeyEvent.VK_F4, WKeyEvent.ALT_DOWN_MASK, true);
         assertEquals("alt released F4", stroke.toString());

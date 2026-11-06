@@ -95,6 +95,15 @@ class WKeyStrokeTest : FunSpec() {
                 Measured("pressed UNKNOWN", 4660, 0, 65535, false, WKeyEvent.KEY_PRESSED, 610926594)
         }
 
+        test("getKeyStroke(Char?, Int) gives a keystroke for the character with modifiers, and null throws IllegalArgumentException") {
+            WKeyStroke.getKeyStroke('a', WInputEvent.CTRL_DOWN_MASK).measured() shouldBe
+                Measured("ctrl typed a", 0, 130, 97, false, WKeyEvent.KEY_TYPED, 25678)
+            WKeyStroke.getKeyStroke('A', WInputEvent.SHIFT_MASK).measured() shouldBe
+                Measured("shift typed A", 0, 65, 65, false, WKeyEvent.KEY_TYPED, 8714)
+            WKeyStroke.getKeyStroke('a', WInputEvent.CTRL_DOWN_MASK) shouldBe WKeyStroke.getKeyStroke("ctrl typed a")
+            shouldThrow<IllegalArgumentException> { WKeyStroke.getKeyStroke(null as Char?, 0) }
+        }
+
         test("getKeyStroke(String) reads AWT's format and gives the same values as Swing") {
             val expected = mapOf(
                 "ctrl shift S" to Measured("shift ctrl pressed S", 83, 195, 65535, false, WKeyEvent.KEY_PRESSED, -2136997886),

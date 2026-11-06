@@ -21,6 +21,13 @@ public class KeyStrokeProbe {
         print("'a'", KeyStroke.getKeyStroke('a'));
         print("'a', 0", KeyStroke.getKeyStroke('a', 0));
         print("0x1234, 0", KeyStroke.getKeyStroke(0x1234, 0));
+        print("Character 'a', CTRL_DOWN_MASK", KeyStroke.getKeyStroke(Character.valueOf('a'), InputEvent.CTRL_DOWN_MASK));
+        print("Character 'A', SHIFT_MASK", KeyStroke.getKeyStroke(Character.valueOf('A'), InputEvent.SHIFT_MASK));
+        try {
+            KeyStroke.getKeyStroke((Character) null, 0);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Character null => IllegalArgumentException");
+        }
         String[] texts = {
             "ctrl shift S", "alt F4", "control DELETE", "meta W", "shift typed a", "typed a", "released ENTER",
             "pressed ENTER", "ctrl pressed S", "S", "altGraph Q", "button1 A", "ctrl s", "CTRL S", "ctrl", "",

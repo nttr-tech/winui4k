@@ -128,6 +128,19 @@ class WKeyStroke private constructor(
         fun getKeyStroke(keyChar: Char): WKeyStroke = cached(keyChar, WKeyEvent.VK_UNDEFINED, 0, false)
 
         /**
+         * A keystroke that types the character [keyChar] while pressing the modifier keys [modifiers] (equivalent to KeyStroke.getKeyStroke(Character, int);
+         * "ctrl typed a"). [modifiers] may be in the new or old form. As in Swing, the argument is a Java Character, and
+         * writing `getKeyStroke('a', mask)` in Java selects the (int, int) overload, so pass `Character.valueOf('a')`.
+         *
+         * @throws IllegalArgumentException if [keyChar] is null (as in Swing)
+         */
+        @JvmStatic
+        fun getKeyStroke(keyChar: Char?, modifiers: Int): WKeyStroke {
+            requireNotNull(keyChar) { "keyChar must not be null" }
+            return cached(keyChar, WKeyEvent.VK_UNDEFINED, modifiers, false)
+        }
+
+        /**
          * The key stroke for pressing the key [keyCode] (same values as AWT's KeyEvent.VK_*) with the modifiers [modifiers]
          * (equivalent to KeyStroke.getKeyStroke(int, int)). [modifiers] may be in the new style such as [WInputEvent.CTRL_DOWN_MASK] or
          * in the old style such as [WInputEvent.CTRL_MASK].
