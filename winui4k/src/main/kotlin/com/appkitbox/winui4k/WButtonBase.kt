@@ -2,7 +2,6 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
-import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -235,31 +234,24 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     var action: WAction? = null
         set(value) {
             if (field === value) return
-            detachAction()
+            actionBinder.detach()
             // Replace before mapping the values (so that the mapped selection state change is not written back to the previous action; same order as Swing's setAction)
             field = value
-            if (value != null) {
-                for (key in ACTION_KEYS) applyActionValue(value, key)
-                val sync = ActionSync(this)
-                val clickListener = WActionListener { e -> value.actionPerformed(e) }
-                value.addPropertyChangeListener(sync)
-                addActionListenerForJava(clickListener)
-                actionBinding = ActionBinding(value, sync, clickListener)
-            } else {
-                for (key in ACTION_KEYS) applyActionValue(null, key)
-            }
+            actionBinder.attach(value)
             onActionChanged(value)
         }
 
-    private var actionBinding: ActionBinding? = null
+    /** The binding to [action] (following values and calling on click). The action reaches the button only through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) = this@WButtonBase.applyActionValue(action, key)
 
-    /** Unbinds [action] (change notifications and click calls). The button's items stay as they are. */
-    private fun detachAction() {
-        val binding = actionBinding ?: return
-        actionBinding = null
-        binding.action.removePropertyChangeListener(binding.sync)
-        removeActionListenerForJava(binding.clickListener)
-    }
+            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+        },
+        ACTION_KEYS,
+    )
 
     /**
      * Copies the value of [action] to the button item for [key] (unsets it if action is null). Does nothing for an
@@ -292,25 +284,6 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     internal open fun onActionChanged(action: WAction?) {
         // Buttons without a selection state have nothing to write back to the action
     }
-
-    /**
-     * A listener that copies to the button when the action changes. Holds the button through a weak reference (removes
-     * itself when the button is collected).
-     */
-    private class ActionSync(button: WButtonBase) : WActionChangeListener {
-        private val reference = WeakReference(button)
-
-        override fun actionChanged(action: WAction, key: String) {
-            val button = reference.get()
-            if (button == null) {
-                action.removePropertyChangeListener(this)
-            } else {
-                button.applyActionValue(action, key)
-            }
-        }
-    }
-
-    private class ActionBinding(val action: WAction, val sync: WActionChangeListener, val clickListener: WActionListener)
 
     /**
      * ActionListener-like. Implemented as a subscription to ButtonBase.Click (RoutedEventHandler).
