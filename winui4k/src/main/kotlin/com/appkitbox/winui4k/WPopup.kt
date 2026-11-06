@@ -13,12 +13,16 @@ import kotlin.jvm.JvmSynthetic
  * arbitrary content ([child]) layered at an offset position from the window's top-left origin.
  * Unlike Flyout, it has no decoration (background/shadow), so decorate the content side with
  * something like WBorder.
+ * It also has [show] (owner, x, y), which opens at coordinates of the owner like PopupFactory.getPopup(owner, contents, x, y), and the JPopupMenu-like [isVisible] and
+ * [addPopupMenuListener]. Unlike Swing's heavyweight (separate-window) popups, it is drawn only inside the window
+ * (ShouldConstrainToRootBounds stays at the default true).
  */
 class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup), // created via the default factory
 ) {
     /** Listener -> event token (used to remove). */
     private val closeTokens = ListenerTokens<Runnable>()
+    private val openTokens = ListenerTokens<Runnable>()
 
     /** The content shown in the popup (Popup.Child). */
     var child: WComponent? = null
@@ -49,11 +53,16 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
         if (child != null) this.child = child
     }
 
+    /** The owner last passed to [show] (used when reopening with `isVisible = true`). */
+    private var lastOwner: WComponent? = null
+
     /**
      * Opens the popup (Popup.IsOpen = true). Shown in the same window as [owner]
-     * (inherits its XamlRoot). Pass an already-shown element.
+     * (inherits its XamlRoot). Pass an already-shown element. The position stays at [horizontalOffset] / [verticalOffset].
      */
     fun show(owner: WComponent) {
+        lastOwner = owner
+        popupMenuEvents?.hideRequested = false
         // A Popup outside the XAML tree requires the XamlRoot to show in
         val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
         uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
@@ -61,8 +70,91 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
         inspectable.putBool(XamlInterop.IPopup_put_IsOpen, true)
     }
 
+    /**
+     * PopupFactory.getPopup(owner, contents, x, y) + Popup.show-like: opens at ([x], [y]) (DIP) from the top-left of [owner].
+     * Adds them to the position of [owner] within its window (the sum of the parents' ActualOffset) and sets [horizontalOffset] / [verticalOffset].
+     * Swing's x / y are screen coordinates, but WinUI popups cannot go outside the window, so they are taken in the owner's coordinates
+     * (same as JPopupMenu.show(invoker, x, y)). When [owner] is inside a popup, the position is relative to the top-left of that popup.
+     */
+    fun show(owner: WComponent, x: Double, y: Double) {
+        val origin = Xaml.positionInRoot(owner.uiElement)
+        horizontalOffset = origin[0] + x
+        verticalOffset = origin[1] + y
+        show(owner)
+    }
+
+    /** Closes it (Popup.IsOpen = false). This way of closing does not call [WPopupMenuListener.popupMenuCanceled]. */
     fun hide() {
+        popupMenuEvents?.hideRequested = true
         inspectable.putBool(XamlInterop.IPopup_put_IsOpen, false)
+    }
+
+    /**
+     * JPopupMenu.isVisible / setVisible-like: whether it is open (same as [isOpen]). Setting false calls [hide]; setting true,
+     * if closed, opens it at the current position in the window of the owner last passed to [show] (IllegalStateException if it has never been opened).
+     * Unlike other components, this is not UIElement.Visibility (a popup takes no layout space, and opening and closing is how it appears).
+     */
+    override var isVisible: Boolean
+        get() = isOpen
+        set(value) {
+            if (!value) {
+                hide()
+            } else if (!isOpen) {
+                show(checkNotNull(lastOwner) { "There is no owner to show it on. Open it with show(owner) or show(owner, x, y)" })
+            }
+        }
+
+    /** Calls the [WPopupMenuListener]s (created with the first listener). */
+    private var popupMenuEvents: PopupPopupMenuEvents? = null
+
+    /**
+     * JPopupMenu.addPopupMenuListener-like: adds an open/close listener. Popup has no events before opening or before closing, so
+     * popupMenuWillBecomeVisible is called after opening (Opened), and after closing (Closed), popupMenuCanceled if it was a light dismiss (an outside click
+     * with [isLightDismissEnabled]), then popupMenuWillBecomeInvisible, in the order added. [hide] is not a cancellation.
+     */
+    fun addPopupMenuListener(listener: WPopupMenuListener) {
+        val events = popupMenuEvents ?: PopupPopupMenuEvents(listenerAnchor).also { popupMenuEvents = it }
+        events.add(inspectable, listener)
+    }
+
+    /** Removes a listener added with [addPopupMenuListener]. Does nothing if not registered. */
+    fun removePopupMenuListener(listener: WPopupMenuListener) {
+        popupMenuEvents?.remove(listener)
+    }
+
+    /** The added listeners (in the order added; a new array on each call). */
+    val popupMenuListeners: Array<WPopupMenuListener>
+        get() = popupMenuEvents?.all ?: emptyArray()
+
+    /** Registers a listener called when it opens (Popup.Opened). */
+    @JvmSynthetic
+    fun addOpenListener(listener: () -> Unit) {
+        val adapter = Runnable(listener)
+        addOpenListenerForJava(adapter)
+        openTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addOpenListener")
+    fun addOpenListenerForJava(listener: Runnable) {
+        val token = inspectable.addEventHandler(
+            "WinUI4K.PopupOpenedHandler",
+            FoundationInterop.IID_EventHandler_Object,
+            XamlInterop.IPopup_add_Opened,
+        ) { _, _ -> listener.run() }
+        openTokens.add(listener, token)
+    }
+
+    /** Unsubscribes a listener registered with [addOpenListener]. */
+    @JvmSynthetic
+    fun removeOpenListener(listener: () -> Unit) {
+        val adapter = openTokens.removeKotlinAdapter(listener) ?: return
+        removeOpenListenerForJava(adapter)
+    }
+
+    @JvmName("removeOpenListener")
+    fun removeOpenListenerForJava(listener: Runnable) {
+        val token = openTokens.remove(listener) ?: return
+        inspectable.removeEventHandler(XamlInterop.IPopup_remove_Opened, token)
     }
 
     /** Registers a listener called when it closes (Popup.Closed). Also called on a light dismiss. */

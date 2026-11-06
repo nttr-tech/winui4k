@@ -232,3 +232,45 @@ internal class MenuBarItemMenuEvents(private val anchor: ListenerAnchor<WCompone
     }
 }
 
+/**
+ * Calls the [WPopupMenuListener]s of a [WPopup] from the Popup's Opened / Closed. Popup has no Opening / Closing, so
+ * popupMenuWillBecomeVisible is called after opening (Opened), and popupMenuCanceled (only for light dismiss) and
+ * popupMenuWillBecomeInvisible after closing (Closed). Closing with [WPopup.hide] / `isVisible = false` is not a cancellation.
+ * The handlers capture only this object, and the source wrapper is looked up from [anchor].
+ */
+internal class PopupPopupMenuEvents(private val anchor: ListenerAnchor<WComponent>) {
+    private val listeners = ArrayList<WPopupMenuListener>()
+    private var subscribed = false
+
+    /** Asked to close with [WPopup.hide] (the next Closed is not counted as a cancellation). Reset on opening and on Closed. */
+    var hideRequested = false
+
+    val all: Array<WPopupMenuListener> get() = listeners.toTypedArray()
+
+    fun add(popup: ComPtr, listener: WPopupMenuListener) {
+        listeners += listener
+        anchor.listenerAdded()
+        if (subscribed) return
+        subscribed = true
+        popup.addEventHandler("WinUI4K.PopupMenuPopupOpened", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Opened) { _, _ ->
+            fire { listener, e -> listener.popupMenuWillBecomeVisible(e) }
+        }
+        popup.addEventHandler("WinUI4K.PopupMenuPopupClosed", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Closed) { _, _ ->
+            val canceled = !hideRequested
+            hideRequested = false
+            if (canceled) fire { listener, e -> listener.popupMenuCanceled(e) }
+            fire { listener, e -> listener.popupMenuWillBecomeInvisible(e) }
+        }
+    }
+
+    fun remove(listener: WPopupMenuListener) {
+        if (listeners.remove(listener)) anchor.listenerRemoved()
+    }
+
+    private inline fun fire(call: (WPopupMenuListener, WPopupMenuEvent) -> Unit) {
+        val source = anchor.get() ?: return
+        if (listeners.isEmpty()) return
+        val event = WPopupMenuEvent(source)
+        listeners.toList().forEach { call(it, event) }
+    }
+}
