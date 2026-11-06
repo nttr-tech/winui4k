@@ -2032,6 +2032,21 @@ internal object XamlInterop {
     const val IWindow_get_ExtendsContentIntoTitleBar = 16 // get_ExtendsContentIntoTitleBar(out boolean)
     const val IWindow_put_ExtendsContentIntoTitleBar = 17 // put_ExtendsContentIntoTitleBar(boolean)
     const val IWindow_SetTitleBar = 28                  // SetTitleBar(UIElement)
+    const val IWindow_add_Activated = 18                // add_Activated(TypedEventHandler<Object, WindowActivatedEventArgs>, out token)
+    const val IID_IWindowActivatedEventArgs = "c723a5ea-82c4-5dd6-861b-70ef573b88d6"
+    const val IWindowActivatedEventArgs_get_WindowActivationState = 8 // -> WindowActivationState
+
+    /** WindowActivationState.Deactivated (CodeActivated=0 / Deactivated=1 / PointerActivated=2). */
+    const val WINDOW_ACTIVATION_STATE_DEACTIVATED = 1
+
+    /** Concrete IID of TypedEventHandler<Object, WindowActivatedEventArgs> (computed at runtime). The first type argument is Object. */
+    val IID_WindowActivatedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "cinterface(IInspectable);" +
+                "rc(Microsoft.UI.Xaml.WindowActivatedEventArgs;{$IID_IWindowActivatedEventArgs}))",
+        )
+    }
     const val IID_IWindow2 = "42febaa5-1c32-522a-a591-57618c6f665d"
     const val IWindow2_get_SystemBackdrop = 6           // get_SystemBackdrop(out SystemBackdrop)
     const val IWindow2_put_SystemBackdrop = 7           // put_SystemBackdrop(SystemBackdrop)

@@ -67,6 +67,32 @@ internal object WindowingInterop {
     const val IAppWindow_SetPresenterKind = 26          // SetPresenter(AppWindowPresenterKind)
     const val IAppWindow_Show = 27                      // Show()
     const val IAppWindow_ShowWithActivation = 28        // Show(boolean activateWindow)
+    const val IAppWindow_add_Changed = 29               // add_Changed(TypedEventHandler<AppWindow, AppWindowChangedEventArgs>, out token)
+    const val IAppWindow_add_Closing = 31               // add_Closing(TypedEventHandler<AppWindow, AppWindowClosingEventArgs>, out token)
+
+    const val IID_IAppWindowClosingEventArgs = "0e09d90b-2261-590b-9ad1-8504991d8754"
+    const val IAppWindowClosingEventArgs_put_Cancel = 7 // put_Cancel(boolean)
+    const val IID_IAppWindowChangedEventArgs = "2182bc5d-fdac-5c3e-bf37-7d8d684e9d1d"
+    const val IAppWindowChangedEventArgs_get_DidPresenterChange = 7
+    const val IAppWindowChangedEventArgs_get_DidVisibilityChange = 9
+
+    /** Concrete IID of TypedEventHandler<AppWindow, AppWindowClosingEventArgs> (computed at runtime). */
+    val IID_AppWindowClosingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Windowing.AppWindow;{$IID_IAppWindow});" +
+                "rc(Microsoft.UI.Windowing.AppWindowClosingEventArgs;{$IID_IAppWindowClosingEventArgs}))",
+        )
+    }
+
+    /** Concrete IID of TypedEventHandler<AppWindow, AppWindowChangedEventArgs> (computed at runtime). */
+    val IID_AppWindowChangedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Windowing.AppWindow;{$IID_IAppWindow});" +
+                "rc(Microsoft.UI.Windowing.AppWindowChangedEventArgs;{$IID_IAppWindowChangedEventArgs}))",
+        )
+    }
 
     const val IID_IAppWindow2 = "6cd41292-794c-5cac-8961-210d012c6ebc"
     const val IAppWindow2_get_ClientSize = 6            // get_ClientSize(out SizeInt32) — out of a struct
