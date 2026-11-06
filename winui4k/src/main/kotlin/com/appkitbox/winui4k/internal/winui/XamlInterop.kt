@@ -2652,6 +2652,24 @@ internal object XamlInterop {
     const val IFlyoutBase_remove_Closed = 33
     const val IFlyoutBase_add_Opening = 34             // add_Opening(EventHandler<Object>, out token)
     const val IFlyoutBase_remove_Opening = 35
+    const val IFlyoutBase_add_Closing = 36             // add_Closing(TypedEventHandler<FlyoutBase, FlyoutBaseClosingEventArgs>, out token)
+    const val IFlyoutBase_remove_Closing = 37
+    const val IFlyoutBase_ShowAtWithOptions = 39       // ShowAt(DependencyObject, FlyoutShowOptions)
+    const val IID_IFlyoutBaseClosingEventArgs = "7cb280b4-1cca-5a5a-8ea4-191a2bbc8b32"
+
+    /** Concrete IID of TypedEventHandler<FlyoutBase, FlyoutBaseClosingEventArgs> (FlyoutBase.Closing). */
+    val IID_TypedEventHandler_FlyoutBase_Closing: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase;{$IID_IFlyoutBase});" +
+                "rc(Microsoft.UI.Xaml.Controls.Primitives.FlyoutBaseClosingEventArgs;{$IID_IFlyoutBaseClosingEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions (composable) ----
+    const val CLS_FlyoutShowOptions = "Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions"
+    const val IID_IFlyoutShowOptionsFactory = "17426d30-70d9-54d7-bd39-e7c4c940c0f4"
+    const val IFlyoutShowOptions_put_Position = 7      // put_Position(IReference<Point>)
 
     // enum Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode (same values as FlyoutPlacement)
     // enum Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowMode: Auto=0, Standard=1, Transient=2, ...

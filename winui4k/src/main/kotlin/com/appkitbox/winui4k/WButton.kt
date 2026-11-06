@@ -50,6 +50,7 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
         set(value) {
             field = value
             button.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
+            value?.attachedTo(this)
         }
 
     /**

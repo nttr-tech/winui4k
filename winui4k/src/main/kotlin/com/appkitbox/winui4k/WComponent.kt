@@ -1107,6 +1107,19 @@ abstract class WComponent internal constructor(
                 XamlInterop.IUIElement_put_ContextFlyout,
                 value?.flyoutBase?.ptr,
             )
+            value?.attachedTo(this)
+        }
+
+    /**
+     * JComponent.getComponentPopupMenu / setComponentPopupMenu-like: the popup menu opened by right click, long press or the application key (Shift+F10).
+     * It is [contextFlyout] seen as a [WMenuFlyout], and setting it sets [contextFlyout].
+     * null when [contextFlyout] is set to something other than a [WMenuFlyout] (WFlyout, etc.). There is no mechanism to inherit the parent's menu
+     * (JComponent.setInheritsPopupMenu).
+     */
+    var componentPopupMenu: WMenuFlyout?
+        get() = contextFlyout as? WMenuFlyout
+        set(value) {
+            contextFlyout = value
         }
 
     /**

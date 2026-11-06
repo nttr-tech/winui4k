@@ -116,6 +116,7 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? =
         set(value) {
             field = value
             button.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
+            value?.attachedTo(this)
         }
 
     /** Whether it's shown in the compact form with the label hidden (ICommandBarElement.IsCompact). */

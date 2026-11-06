@@ -100,6 +100,7 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         set(value) {
             field = value
             splitButton.call(XamlInterop.ISplitButton_put_Flyout, value?.flyoutBase?.ptr)
+            value?.attachedTo(this)
         }
 
     /**

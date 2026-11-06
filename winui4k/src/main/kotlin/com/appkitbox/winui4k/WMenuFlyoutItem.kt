@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -20,8 +21,17 @@ abstract class WMenuFlyoutItemBase internal constructor(inspectable: ComPtr) :
         own(inspectable.queryInterface(XamlInterop.IID_IMenuFlyoutItemBase))
     }
 
-    /** The menu it is in (set by the item management of WMenuBarItem / WMenuFlyoutSubItem / WMenuFlyout). */
-    internal var menuOwner: MenuItems<WMenuFlyoutItemBase>? = null
+    /**
+     * The menu it is in (set by the item management of WMenuBarItem / WMenuFlyoutSubItem / WMenuFlyout). It is from child to parent, so it is held weakly
+     * (item wrappers are entrusted to the root of the native subtree for listeners, so holding the parent strongly would form a cycle across the native boundary).
+     */
+    private var menuOwnerReference: WeakReference<MenuItems<WMenuFlyoutItemBase>>? = null
+
+    internal var menuOwner: MenuItems<WMenuFlyoutItemBase>?
+        get() = menuOwnerReference?.get()
+        set(value) {
+            menuOwnerReference = value?.let { WeakReference(it) }
+        }
 }
 
 /**
@@ -62,8 +72,8 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         this.action = action
     }
 
-    /** The IMenuFlyoutItem view holding text / Click, etc. (also used by the Toggle / Radio subclasses). */
-    private val menuFlyoutItem: ComPtr by lazy {
+    /** The IMenuFlyoutItem view with text / Click etc. (also used by the Toggle / Radio subclasses and for judging popup cancellation). */
+    internal val menuFlyoutItem: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IMenuFlyoutItem))
     }
 
@@ -558,6 +568,9 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
 
     private val items = MenuItems.forMenuItems { nativeItems }
 
+    /** The child items (in order; used to collect, as items that close the menu when chosen, those inside submenus). */
+    internal val itemList: List<WMenuFlyoutItemBase> get() = items.list
+
     /** The submenu's label (MenuFlyoutSubItem.Text). */
     var text: String
         get() = inspectable.getString(XamlInterop.IMenuFlyoutSubItem_get_Text)
@@ -682,3 +695,12 @@ class WMenuFlyoutSubItem internal constructor(inspectable: ComPtr) : WMenuFlyout
 class WMenuFlyoutSeparator : WMenuFlyoutItemBase(
     Activation.composeDefault(XamlInterop.CLS_MenuFlyoutSeparator, XamlInterop.IID_IMenuFlyoutSeparatorFactory),
 )
+
+/** The items in [items] and inside their submenus that close the menu when chosen ([WMenuFlyoutItem] and its subclasses). */
+internal fun invocableMenuItemsOf(items: List<WMenuFlyoutItemBase>): List<WMenuFlyoutItem> = items.flatMap {
+    when (it) {
+        is WMenuFlyoutItem -> listOf(it)
+        is WMenuFlyoutSubItem -> invocableMenuItemsOf(it.itemList)
+        else -> emptyList()
+    }
+}

@@ -104,4 +104,6 @@ class WMenuFlyout : WFlyoutBase(
 
     /** JPopupMenu.getComponentIndex-like: the position of [item]. -1 if it is not an item of this menu. */
     fun getComponentIndex(item: WMenuFlyoutItemBase?): Int = items.indexOf(item)
+
+    override fun invocableMenuItems(): List<WMenuFlyoutItem> = invocableMenuItemsOf(items.list)
 }

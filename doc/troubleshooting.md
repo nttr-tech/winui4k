@@ -239,3 +239,11 @@
   (`controls/dev/MenuBar/MenuBarItem.cpp` の `OnItemsVectorChanged`)。載った後に Clear すると、Items は空でも開くメニューには
   古い項目が残る。`WMenuBarItem.removeAll` (と共有の `MenuItems`) は Swing の Container.removeAll と同じく末尾から 1 つずつ RemoveAt する
   (`WMenuContainerTest`)。
+- **閉じる途中のフライアウトへの同じ位置の ShowAt は無視される**
+  FlyoutBase は Hide (やライト ディスミス) の後、閉じる動き (Closing から Closed まで) の間もそのフライアウトを開いているものとして扱い、
+  同じ基準の要素・同じ位置への ShowAt を「開いているものへの呼び出し」として何もせずに戻る。位置か基準が違えば閉じ終わるのを待って開く
+  (`dxaml/xcp/dxaml/lib/FlyoutBase_partial.cpp` の `CheckAndHandleOpenFlyout`)。IsOpen は Hide の直後に false になるので、
+  `hide()` の直後の `showAt` が黙って効かない (2026-10-20、Panama で確認。1 秒待てば開く)。`WFlyoutBase.showAt` /
+  `show(invoker, x, y)` / `isVisible = true` は閉じる途中なら Closed まで開くのを遅らせる (`WFlyoutPopupMenuTest`)。Closed は
+  開いているフライアウトの記録を消す前に起きる (`OnPresenterUnloaded`) ので、Closed のハンドラの中で ShowAt してもまだ無視される。
+  遅らせた ShowAt は Closed から DispatcherQueue に積んで、記録が消えた後で呼ぶ。

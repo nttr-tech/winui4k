@@ -411,6 +411,15 @@ internal object Xaml {
         return findDescendantByName(root, partName)
     }
 
+    /**
+     * Same as [templatePartOrNull], but does not apply the template (searches only the applied visual tree).
+     * Used for controls like MenuBarItem whose behavior changes when ApplyTemplate is called before they are in the tree, because they cannot find their parent (MenuBar).
+     */
+    fun appliedTemplatePartOrNull(control: ComPtr, partName: String): ComPtr? {
+        val root = childAt(control, 0) ?: return null
+        return findDescendantByName(root, partName)
+    }
+
     /** Searches [element] (takes ownership) and its descendants depth-first for an element named [name]. The caller releases the found element. */
     private fun findDescendantByName(element: ComPtr, name: String): ComPtr? {
         val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)

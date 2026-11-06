@@ -40,6 +40,7 @@ internal object PropertyValues {
     private const val IPropertyValueStatics_CreateDateTime = 21 // CreateDateTime(DateTime i8, out IInspectable)
     private const val IPropertyValueStatics_CreateTimeSpan = 22 // CreateTimeSpan(TimeSpan i8, out IInspectable)
     private const val IPropertyValueStatics_CreateRect = 25 // CreateRect(Rect by value, out IInspectable)
+    private const val IPropertyValueStatics_CreatePoint = 23 // CreatePoint(Point, out IInspectable)
 
     /**
      * Process-lifetime cache of the PropertyValue statics factory. box is a hot path used by
@@ -122,6 +123,17 @@ internal object PropertyValues {
         memory.putFloat(rect.ptr, 8, width.toFloat())
         memory.putFloat(rect.ptr, 12, height.toFloat())
         statics.getPtr(IPropertyValueStatics_CreateRect, rect)
+    }
+
+    /**
+     * Boxes a Windows.Foundation.Point (x, y as float) into an IInspectable (PropertyValue.CreatePoint).
+     * Used to pass it to an IReference<Point> property (FlyoutShowOptions.Position).
+     */
+    fun boxPoint(x: Double, y: Double): ComPtr = Ffi.backend.withScope { scope ->
+        val point = scope.allocate(XamlStructs.POINT_FLOAT)
+        Ffi.backend.memory.putFloat(point.ptr, 0, x.toFloat())
+        Ffi.backend.memory.putFloat(point.ptr, 4, y.toFloat())
+        statics.getPtr(IPropertyValueStatics_CreatePoint, point)
     }
 
     /**

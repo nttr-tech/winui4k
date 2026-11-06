@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 
 /**
@@ -81,8 +82,14 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
 
     private val items = MenuItems.forMenuItems { nativeItems }
 
-    /** The menu bar it is in (set by WMenuBar's item management). */
-    internal var menuOwner: MenuItems<WMenuBarItem>? = null
+    /** The menu bar it is in (set by WMenuBar's item management). It is from child to parent, so it is held weakly (same as [WMenuFlyoutItemBase]). */
+    private var menuOwnerReference: WeakReference<MenuItems<WMenuBarItem>>? = null
+
+    internal var menuOwner: MenuItems<WMenuBarItem>?
+        get() = menuOwnerReference?.get()
+        set(value) {
+            menuOwnerReference = value?.let { WeakReference(it) }
+        }
 
     /** The label shown on the menu bar (MenuBarItem.Title). */
     var title: String
@@ -92,6 +99,27 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
     init {
         if (title.isNotEmpty()) this.title = title
     }
+
+    private val menuEvents: MenuBarItemMenuEvents by lazy { MenuBarItemMenuEvents(listenerAnchor) }
+
+    /**
+     * JMenu.addMenuListener-like: adds a menu open/close listener. When opening (Opening of the open menu), menuSelected; when closed
+     * (Closed), menuDeselected, in the order added. When moving to the adjacent heading in the menu bar, the previous menu's menuDeselected and
+     * the next menu's menuSelected are called too. menuCanceled is not called, as with Swing's JMenu ([WMenuListener.menuCanceled]).
+     * The open menu is created after the MenuBarItem is put in a window, so a listener added before that is called for opening and closing after it is loaded.
+     */
+    fun addMenuListener(listener: WMenuListener) {
+        menuEvents.add(this, listener)
+    }
+
+    /** JMenu.removeMenuListener-like: removes a listener added with [addMenuListener]. Does nothing if not registered. */
+    fun removeMenuListener(listener: WMenuListener) {
+        menuEvents.remove(listener)
+    }
+
+    /** JMenu.getMenuListeners-like: the added listeners (in the order added; a new array on each call). */
+    val menuListeners: Array<WMenuListener>
+        get() = menuEvents.all
 
     /** JMenu.add(JMenuItem)-like: appends an item at the end and returns [item]. An item that is in another menu is first removed from there. */
     fun <T : WMenuFlyoutItemBase> add(item: T): T = items.add(item)

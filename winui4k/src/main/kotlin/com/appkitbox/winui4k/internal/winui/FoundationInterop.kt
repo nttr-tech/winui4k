@@ -76,6 +76,11 @@ internal object FoundationInterop {
         )
     }
 
+    /** Concrete IID of IReference<Point> (FlyoutShowOptions.Position). The Point signature is struct(Windows.Foundation.Point;f4;f4). */
+    val IID_IReference_Point: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.Point;f4;f4))")
+    }
+
     /** Concrete IID of IReference<DateTime>. DateTime's signature is struct(Windows.Foundation.DateTime;i8). */
     val IID_IReference_DateTime: String by lazy {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};struct(Windows.Foundation.DateTime;i8))")
