@@ -2,6 +2,8 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
@@ -10,7 +12,7 @@ import io.kotest.matchers.shouldBe
 import java.util.Collections
 import kotlin.time.Duration.Companion.seconds
 
-/** Tests for [WTeachingTip]'s properties (read back from native) and the close reason of hide(). */
+/** Tests for [WTeachingTip]'s properties (read back from native), the close reason with the buttons and hide(), and the action button listeners. */
 class WTeachingTipTest : FunSpec() {
     /** Whether the native TeachingTip.IconSource is set. */
     private fun WTeachingTip.hasNativeIcon(): Boolean =
@@ -61,6 +63,102 @@ class WTeachingTipTest : FunSpec() {
             } finally {
                 UiTestHarness.detach(panel)
             }
+        }
+
+        context("Defaults") {
+            test("target is null, preferredPlacement is AUTO, light dismiss is disabled, and it is closed") {
+                onUiThreadGet {
+                    val tip = WTeachingTip()
+                    listOf(tip.target, tip.preferredPlacement, tip.isLightDismissEnabled, tip.isOpen)
+                } shouldContainExactly listOf(null, TeachingTipPlacement.AUTO, false, false)
+            }
+        }
+
+        context("Reading and writing") {
+            test("preferredPlacement reads back every value, and isLightDismissEnabled and target read back the set values") {
+                onUiThread {
+                    val tip = WTeachingTip()
+                    TeachingTipPlacement.entries.map { placement ->
+                        tip.preferredPlacement = placement
+                        tip.preferredPlacement
+                    } shouldContainExactly TeachingTipPlacement.entries
+                    tip.isLightDismissEnabled = true
+                    tip.isLightDismissEnabled shouldBe true
+                    val button = WButton("Target")
+                    tip.target = button
+                    (tip.target === button) shouldBe true
+                    tip.target = null
+                    tip.target shouldBe null
+                }
+            }
+        }
+
+        context("Events") {
+            test("pressing the action button calls the ActionListener and keeps it open, and pressing the close button closes it with CLOSE_BUTTON. Removed listeners are not called") {
+                val events = Collections.synchronizedList(ArrayList<String>())
+                val target = onUiThreadGet { WButton("Target") }
+                val panel = onUiThreadGet { WPanel().also { it.add(target) } }
+                val tip = onUiThreadGet {
+                    WTeachingTip("New feature", "You can share from here").also { tip ->
+                        panel.add(tip)
+                        tip.target = target
+                        tip.actionButtonText = "Try it"
+                        tip.closeButtonText = "Later"
+                        val removedAction: () -> Unit = { events += "removed action" }
+                        val removedClose: (TeachingTipCloseReason) -> Unit = { events += "removed close" }
+                        tip.addActionListener(removedAction)
+                        tip.addCloseListener(removedClose)
+                        tip.addActionListener { events += "action" }
+                        tip.addCloseListener { events += "closed:$it" }
+                        tip.removeActionListener(removedAction)
+                        tip.removeCloseListener(removedClose)
+                    }
+                }
+                UiTestHarness.attachAndAwaitLoaded(panel)
+                try {
+                    onUiThread { tip.show() }
+                    eventually(5.seconds) { onUiThreadGet { tip.isOpen } shouldBe true }
+                    Thread.sleep(OPEN_ANIMATION_MILLIS)
+                    pressInOpenPopup(panel, "ActionButton")
+                    eventually(5.seconds) { events.toList() shouldContainExactly listOf("action") }
+                    onUiThreadGet { tip.isOpen } shouldBe true
+                    pressInOpenPopup(panel, "CloseButton")
+                    eventually(5.seconds) { events.toList() shouldContainExactly listOf("action", "closed:CLOSE_BUTTON") }
+                    onUiThreadGet { tip.isOpen } shouldBe false
+                } finally {
+                    UiTestHarness.detach(panel)
+                }
+            }
+        }
+    }
+
+    /** Finds and presses the element named [name] in the Popups open in [owner]'s window (the teaching tip's parts are placed in a Popup). */
+    private fun pressInOpenPopup(owner: WComponent, name: String) = onUiThread {
+        val root = checkNotNull(owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)) { "not placed in a window" }
+        val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
+        val popups = try {
+            statics.getPtr(XamlInterop.IVisualTreeHelperStatics_GetOpenPopupsForXamlRoot, root.ptr)
+        } finally {
+            statics.release()
+            root.release()
+        }
+        try {
+            val found = (0 until popups.getInt(FoundationInterop.IVectorView_get_Size)).firstNotNullOfOrNull { index ->
+                val popup = popups.getPtr(FoundationInterop.IVectorView_GetAt, index)
+                val child = try {
+                    popup.getPtrOrNull(XamlInterop.IPopup_get_Child)
+                } finally {
+                    popup.release()
+                }
+                child?.let { TemplateParts.findByName(it, name) } // Ownership of child passes to findByName
+            } ?: error("No $name in the open Popups")
+            try {
+                Xaml.invoke(found)
+            } finally {
+                found.release()
+            }
+        } finally {
+            popups.release()
         }
     }
 

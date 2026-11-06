@@ -2,9 +2,12 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -54,6 +57,32 @@ class WTeachingTipForJavaTest {
             assertSame(font, tip.getIcon());
             tip.setIcon(null);
             assertNull(tip.getIcon());
+        });
+    }
+
+    @Test
+    void targetPlacementAndLightDismissCanBeSet_listenersCanBeAddedAndRemovedAsLambdas() {
+        onUiThread(() -> {
+            WTeachingTip tip = new WTeachingTip("Share");
+            WButton share = new WButton("Share");
+            assertNull(tip.getTarget());
+            assertEquals(TeachingTipPlacement.AUTO, tip.getPreferredPlacement());
+            assertFalse(tip.isLightDismissEnabled());
+            assertFalse(tip.isOpen());
+            tip.setTarget(share);
+            tip.setPreferredPlacement(TeachingTipPlacement.BOTTOM);
+            tip.setLightDismissEnabled(true);
+            assertSame(share, tip.getTarget());
+            assertEquals(TeachingTipPlacement.BOTTOM, tip.getPreferredPlacement());
+            assertTrue(tip.isLightDismissEnabled());
+
+            Runnable onAction = () -> { };
+            Consumer<TeachingTipCloseReason> onClose = reason -> { };
+            tip.addActionListener(onAction);
+            tip.addCloseListener(onClose);
+            tip.removeActionListener(onAction);
+            tip.removeCloseListener(onClose);
+            tip.removeCloseListener(onClose); // Removing one that is not attached does nothing
         });
     }
 }

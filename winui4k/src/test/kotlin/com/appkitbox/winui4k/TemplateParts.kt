@@ -12,8 +12,8 @@ internal object TemplateParts {
         return findByName(root, name)
     }
 
-    /** Searches [element] (taking ownership) and its descendants for the element named [name]. */
-    private fun findByName(element: ComPtr, name: String): ComPtr? {
+    /** Searches [element] (taking ownership) and its descendants for the element named [name]. The caller releases the found element. */
+    fun findByName(element: ComPtr, name: String): ComPtr? {
         val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
         val found = try {
             framework.getString(XamlInterop.IFrameworkElement_get_Name) == name
