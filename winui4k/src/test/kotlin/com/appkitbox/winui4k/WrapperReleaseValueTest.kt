@@ -88,5 +88,30 @@ class WrapperReleaseValueTest : FunSpec() {
             val calendarView = shownAndHidden { WCalendarView().also { it.addChangeListener(WChangeListener { sources += "calendar" }) } }
             listOf(datePicker, timePicker, calendarDatePicker, calendarView).forEach { Reclamation.awaitCollected(it).shouldBeTrue() }
         }
+
+        test("a WComboBox with ItemListener, ActionListener, PopupMenuListener and a shared model is collected after removal once released together with the model") {
+            val sources = changeSources
+            var model: WeakReference<WComboBoxModel<*>>? = null
+            val plain = shownAndHidden {
+                WComboBox(listOf("Red", "Green")).also { comboBox ->
+                    comboBox.addItemListener { e -> sources += e.item }
+                    comboBox.addActionListener { e -> sources += e.actionCommand.orEmpty() }
+                    comboBox.addPopupMenuListener(object : WPopupMenuAdapter() {})
+                    comboBox.selectedIndex = 1
+                }
+            }
+            val modelled = shownAndHidden {
+                val shared = WDefaultComboBoxModel(arrayOf("Red", "Green"))
+                model = WeakReference(shared)
+                WComboBox(shared).also { comboBox ->
+                    comboBox.isEditable = true
+                    comboBox.addActionListener(WActionListener { e -> sources += e.actionCommand.orEmpty() })
+                    comboBox.setSelectedItem("Purple")
+                }
+            }
+            Reclamation.awaitCollected(plain).shouldBeTrue()
+            Reclamation.awaitCollected(modelled).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
     }
 }

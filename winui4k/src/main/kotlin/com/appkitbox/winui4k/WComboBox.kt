@@ -18,18 +18,22 @@ import kotlin.jvm.JvmSynthetic
 /**
  * JComboBox-like: WinUI 3's ComboBox (a Selector subclass).
  *
- * Provides drop-down selection of string items:
- * [addItem] / [insertItemAt] / [getItemAt] / [removeItemAt] / [removeItem] / [removeAllItems] / [itemCount],
- * [selectedIndex] / [selectedItem] / [setSelectedItem] / [getSelectedObjects], [placeholderText] / [header],
- * [isEditable] / [text] / [addTextSubmitListener] (for an editable combo),
- * [showPopup] / [hidePopup] / [isPopupVisible] / [maximumRowCount] (drop-down).
+ * The items and the selected item are held by [model] ([WComboBoxModel]; [WDefaultComboBoxModel] by default), and the native ComboBox.Items get
+ * the `toString()` strings of the model's items. Model changes ([WListDataListener] notifications) are copied to native, and native selection changes made
+ * by the user are written back to the model's [WComboBoxModel.selectedItem]. One model can be shared by several combos.
+ *
+ * Item operations: [addItem] / [insertItemAt] / [getItemAt] / [removeItemAt] / [removeItem] / [removeAllItems] / [itemCount]
+ * (adding and removing only with a [WMutableComboBoxModel] model). Selection: [selectedIndex] / [selectedItem] (the displayed string) /
+ * [setSelectedItem] / [getSelectedObjects] (the model's items themselves). Also [placeholderText] / [header],
+ * [isEditable] / [text] / [addTextSubmitListener] (for an editable combo), [showPopup] / [hidePopup] / [isPopupVisible] /
+ * [maximumRowCount] (drop-down).
  *
  * Events can be received in the same form as JComboBox:
- * - [addItemListener]: when the selected item changes, the previous item's DESELECTED arrives, then the new item's SELECTED ([WItemEvent.item] is the item string).
- *   A change is detected by "whether the selected items are equal", so moving to another item with the same string delivers nothing (as in Swing)
+ * - [addItemListener]: when the selected item changes, the previous item's DESELECTED arrives, then the new item's SELECTED ([WItemEvent.item] is the model's item).
+ *   A change is detected by "whether the selected items are equal", so moving to another equal item delivers nothing (as in Swing)
  * - [addActionListener]: arrives after the item events ([actionCommand] is `"comboBoxChanged"` by default). [selectedIndex] /
- *   [setSelectedItem] deliver it once even if the selection does not change, as in Swing. Confirming the input with Enter in an editable combo
- *   delivers `"comboBoxEdited"` after the selection change events
+ *   [setSelectedItem] deliver it once even if the selection does not change, as in Swing. It is also delivered when the model's selection changes or items are removed,
+ *   under the same conditions as JComboBox. Confirming the input with Enter in an editable combo delivers `"comboBoxEdited"` after the selection change events
  * - [addPopupMenuListener]: opening and closing of the drop-down (ComboBox.DropDownOpened / DropDownClosed)
  *
  * The existing [addListSelectionListener] (a Runnable called on every SelectionChanged) can still be used.
@@ -38,15 +42,22 @@ import kotlin.jvm.JvmSynthetic
  * - Reselecting the current item from the popup delivers no ActionEvent (WinUI reports nothing when the selection does not change)
  * - [popupMenuWillBecomeVisible][WPopupMenuListener.popupMenuWillBecomeVisible] arrives after it starts opening, and
  *   [popupMenuWillBecomeInvisible][WPopupMenuListener.popupMenuWillBecomeInvisible] after it has finished closing
- * - The constructor taking a List and the no-arg constructor still select nothing when items are added
- *   (JComboBox selects the first item. The constructor taking an array selects the first item, as with JComboBox(E[]))
+ * - The models made by the constructor taking a List and the no-arg constructor still select nothing when items are added, and removing the selected item leaves it unselected
+ *   (JComboBox selects the first item and selects an adjacent one on removal. The constructors taking an array or a model behave like JComboBox)
+ * - When the model selects a value not in the list, a non-editable combo shows nothing ([selectedItem] is that value's string, [selectedIndex] is -1).
+ *   An editable combo shows that string (after the template that lets WinUI accept custom values is applied, that is, after it is in a window)
  */
 class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ComboBox, XamlInterop.IID_IComboBoxFactory), // default interface = IComboBox
 ) {
-    /** JComboBox(E[] items)-like: creates a combo with [items] as its items and the first item selected, as with JComboBox (unselected if empty). */
-    constructor(items: Array<String>) : this(items.asList()) {
-        if (items.isNotEmpty()) selectNative(0)
+    /** JComboBox(E[] items)-like: creates a combo with a [WDefaultComboBoxModel] of [items] and the first item selected, as with JComboBox (unselected if empty). */
+    constructor(items: Array<String>) : this() {
+        model = WDefaultComboBoxModel(items)
+    }
+
+    /** JComboBox(ComboBoxModel)-like: creates a combo that shows the items and selection of [model]. */
+    constructor(model: WComboBoxModel<*>) : this() {
+        this.model = model
     }
 
     private val selector: ComPtr by lazy {
@@ -90,42 +101,80 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /** The selected item when the drop-down was opened (if it is the same when closed, it is treated as canceled). */
     private var itemWhenOpened: Any? = null
 
+    /** The model of items and selection. The default is a [WDefaultComboBoxModel] that does not move the selection, like the previous WComboBox. */
+    private var dataModel: WComboBoxModel<*> = WDefaultComboBoxModel<String>(movesSelection = false)
+
+    /**
+     * A listener that copies model changes to native and passes them to this combo's listeners, as in JComboBox. The model references the combo strongly through it,
+     * but the native side references the combo only weakly ([addSelectionHandler]), so no cycle forms across the boundary.
+     */
+    private val modelListener = object : WListDataListener {
+        override fun intervalAdded(e: WListDataEvent) = onIntervalAdded(e)
+
+        override fun intervalRemoved(e: WListDataEvent) = onIntervalRemoved(e)
+
+        override fun contentsChanged(e: WListDataEvent) = onContentsChanged(e)
+    }
+
+    /** Whether the model state is being copied to native (native SelectionChanged during that time is not written back to the model). */
+    private var pushing = false
+
+    private var loadedHandlerAdded = false
+
     /**
      * JComboBox.getActionCommand / setActionCommand-like: the [WActionEvent.actionCommand] of [addActionListener] events.
      * The default is `"comboBoxChanged"`, as in JComboBox. An Enter confirmation in an editable combo uses `"comboBoxEdited"` instead of this value.
      */
     var actionCommand: String = COMBO_BOX_CHANGED
 
-    /** The number of items (Items.Size). */
+    /**
+     * JComboBox.getModel / setModel-like: the model of items and selection. Replacing it matches the native items to the new model, but as in JComboBox
+     * listeners are not called. The model references the combo through its listener, so holding on to the model keeps the combo from being collected too (as in Swing).
+     */
+    var model: WComboBoxModel<*>
+        get() = dataModel
+        set(newModel) {
+            dataModel.removeListDataListener(modelListener)
+            dataModel = newModel
+            newModel.addListDataListener(modelListener)
+            selectedItemReminder = newModel.selectedItem
+            rebuildNative()
+        }
+
+    /** The number of items (getSize of [model]). */
     val itemCount: Int
-        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
+        get() = dataModel.getSize()
 
     /**
-     * The selected index. -1 if nothing is selected (Selector.SelectedIndex).
-     * As with JComboBox.setSelectedIndex, values outside -1 to `itemCount - 1` throw [IllegalArgumentException], and the [addActionListener]
-     * listeners are called once even if the selection does not change.
+     * The selected index. -1 if unselected or if a value not in the list is selected.
+     * As with JComboBox.setSelectedIndex, values outside -1 to `itemCount - 1` throw [IllegalArgumentException], and like [setSelectedItem]
+     * it selects that item (the [addActionListener] listeners are called once even if the selection does not change).
      */
     var selectedIndex: Int
-        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        get() {
+            val selected = dataModel.selectedItem ?: return -1
+            val native = nativeSelectedIndex
+            if (native in 0 until itemCount && dataModel.getElementAt(native) == selected) return native
+            return indexOfItem(selected)
+        }
         set(value) {
             require(value in -1 until itemCount) { "setSelectedIndex: $value out of bounds" }
-            if (value != selectedIndex || (value == -1 && selectedItem != null)) selectNative(value)
-            fireActionEvent(actionCommand)
+            if (value == -1) {
+                setSelectedItem(null)
+                return
+            }
+            val element = dataModel.getElementAt(value)
+            setSelectedItem(element)
+            // Even if an equal item appears earlier, show the given index as selected (same as the previous WComboBox)
+            if (nativeSelectedIndex != value && dataModel.selectedItem == element) push { putNativeSelectedIndex(value) }
         }
 
     /**
-     * The selected item string. null if nothing is selected (Selector.SelectedItem). When a string not in the list is confirmed in an editable combo,
-     * that string ([selectedIndex] is then -1). Use [setSelectedItem] to change it.
+     * The display string of the selected item (`toString()` of the selectedItem of [model]). null if unselected. When a string not in the list is
+     * confirmed in an editable combo, that string ([selectedIndex] is then -1). Use [setSelectedItem] to change it. The item itself is [getSelectedObjects] or [model].
      */
     val selectedItem: String?
-        get() {
-            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
-            return try {
-                PropertyValues.unboxString(boxed)
-            } finally {
-                boxed.release()
-            }
-        }
+        get() = dataModel.selectedItem?.toString()
 
     /** The placeholder text shown when nothing is selected (ComboBox.PlaceholderText). */
     var placeholderText: String
@@ -151,7 +200,10 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /** Whether a string outside the list of choices can be typed in (ComboBox.IsEditable). */
     var isEditable: Boolean
         get() = inspectable.getBool(XamlInterop.IComboBox_get_IsEditable)
-        set(value) = inspectable.putBool(XamlInterop.IComboBox_put_IsEditable, value)
+        set(value) {
+            inspectable.putBool(XamlInterop.IComboBox_put_IsEditable, value)
+            syncNativeSelection()
+        }
 
     /** The typed-in text for an editable combo (ComboBox.Text). */
     var text: String
@@ -186,84 +238,78 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         }
 
     init {
+        dataModel.addListDataListener(modelListener)
         addSelectionHandler()
         for (item in items) addItem(item)
     }
 
-    /** Appends an item at the end (Items.Append). The string is boxed before passing. */
+    /** Adds an item at the end ([WMutableComboBoxModel.addElement]). Throws [UnsupportedOperationException] if the model is not mutable. */
     fun addItem(item: String) {
-        val boxed = PropertyValues.boxString(item)
-        itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
-        boxed.release()
+        mutableModel().addElement(item)
     }
 
-    /** JComboBox.insertItemAt-like: inserts an item at [index] (Items.InsertAt). */
+    /** JComboBox.insertItemAt-like: inserts an item at [index] ([WMutableComboBoxModel.insertElementAt]). */
     fun insertItemAt(item: String, index: Int) {
-        val boxed = PropertyValues.boxString(item)
-        itemVector.call(FoundationInterop.IVector_InsertAt, index, boxed.ptr)
-        boxed.release()
+        mutableModel().insertElementAt(item, index)
     }
 
-    /** Returns the item string at [index] (Items.GetAt). Throws if out of range ([getItemAt] returns null when out of range). */
+    /** Returns the display string of the item at [index]. Throws [IndexOutOfBoundsException] if out of range ([getItemAt] returns null when out of range). */
     fun getItem(index: Int): String {
-        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
-        return try {
-            PropertyValues.unboxString(boxed) ?: ""
-        } finally {
-            boxed.release()
-        }
+        if (index !in 0 until itemCount) throw IndexOutOfBoundsException("index: $index, size: $itemCount")
+        return textOf(dataModel.getElementAt(index))
     }
 
-    /** JComboBox.getItemAt-like: the item string at [index]. null if out of range. */
+    /** JComboBox.getItemAt-like: the display string of the item at [index]. null if out of range (the item itself is getElementAt of [model]). */
     fun getItemAt(index: Int): String? = if (index in 0 until itemCount) getItem(index) else null
 
-    /** Removes the item at [index] (Items.RemoveAt). Same as JComboBox's removeItemAt ([removeItemAt] is the Swing way to write it). */
+    /** Removes the item at [index]. Same as JComboBox's removeItemAt ([removeItemAt] is the Swing way to write it). */
     fun removeItem(index: Int) {
-        itemVector.call(FoundationInterop.IVector_RemoveAt, index)
+        mutableModel().removeElementAt(index)
     }
 
-    /** JComboBox.removeItemAt-like: removes the item at [index]. */
+    /** JComboBox.removeItemAt-like: removes the item at [index] ([WMutableComboBoxModel.removeElementAt]). */
     fun removeItemAt(index: Int) {
         removeItem(index)
     }
 
-    /** JComboBox.removeItem(Object)-like: removes the first item equal to [item]. Does nothing if there is none. */
+    /** JComboBox.removeItem(Object)-like: removes the first item equal to [item] ([WMutableComboBoxModel.removeElement]). Does nothing if there is none. */
     fun removeItem(item: Any?) {
-        val index = indexOfItem(item ?: return)
-        if (index >= 0) removeItem(index)
+        mutableModel().removeElement(item)
     }
 
-    /** Removes all items (Items.Clear). If an item was selected, DESELECTED and an ActionEvent are delivered, as in JComboBox. */
+    /** Removes all items. If an item was selected, DESELECTED and an ActionEvent are delivered, as in JComboBox. */
     fun removeAllItems() {
-        itemVector.call(FoundationInterop.IVector_Clear)
+        val mutable = mutableModel()
+        val current = dataModel
+        if (current is WDefaultComboBoxModel<*>) {
+            current.removeAllElements()
+        } else {
+            repeat(mutable.getSize()) { mutable.removeElement(mutable.getElementAt(0)) }
+        }
+        selectedItemReminder = null
     }
 
     /**
-     * JComboBox.setSelectedItem-like: selects the item equal to [item] (deselects if null).
-     * In a non-editable combo, values not in the list are ignored (no events either). If editable, a value not in the list is also selected as its `toString()` string
-     * ([selectedIndex] is -1. WinUI accepts custom values only after the template is applied, that is, after the combo is in a window).
-     * As in Swing, the [addActionListener] listeners are called once even if the selection does not change.
+     * JComboBox.setSelectedItem-like: selects the item equal to [item] (deselects if null; the equal item itself is put into the model).
+     * In a non-editable combo, values not in the list are ignored (no events either). If editable, a value not in the list is selected as is
+     * (displayed as its `toString()` string, [selectedIndex] is -1). As in Swing, the [addActionListener] listeners are called once even if the selection does not change.
      */
     fun setSelectedItem(item: Any?) {
         val old = selectedItemReminder
         if (old == null || old != item) {
-            when {
-                item == null -> selectNative(-1)
-                else -> {
-                    val index = indexOfItem(item)
-                    when {
-                        index >= 0 -> selectNative(index)
-                        !isEditable -> return
-                        else -> selectCustom(item.toString())
-                    }
-                }
+            var toSelect = item
+            if (item != null && !isEditable) {
+                val index = indexOfItem(item)
+                if (index < 0) return
+                toSelect = dataModel.getElementAt(index)
             }
+            selectInModel(toSelect)
         }
         fireActionEvent(actionCommand)
     }
 
     /** JComboBox.getSelectedObjects-like: an array of only the selected item (empty if unselected). */
-    fun getSelectedObjects(): Array<Any> = selectedItem?.let { arrayOf<Any>(it) } ?: emptyArray()
+    fun getSelectedObjects(): Array<Any> = dataModel.selectedItem?.let { arrayOf(it) } ?: emptyArray()
 
     /** JComboBox.showPopup-like: opens the drop-down. */
     fun showPopup() {
@@ -419,38 +465,182 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     /** The index of the first item equal to [item]. -1 if none. */
-    private fun indexOfItem(item: Any): Int = (0 until itemCount).firstOrNull { getItem(it) == item } ?: -1
+    private fun indexOfItem(item: Any): Int = (0 until itemCount).firstOrNull { dataModel.getElementAt(it) == item } ?: -1
 
-    /**
-     * Sets the native selection to [index]. Notifications during that time do not fire ActionEvents (the caller fires them).
-     * -1 deselects by setting SelectedItem to null (for a value not in the list of an editable combo, SelectedIndex is already -1, so the index cannot deselect it).
-     */
-    private fun selectNative(index: Int) {
+    @Suppress("UNCHECKED_CAST")
+    private fun mutableModel(): WMutableComboBoxModel<Any?> = dataModel as? WMutableComboBoxModel<Any?>
+        ?: throw UnsupportedOperationException("Cannot use this method with a non-Mutable data model.")
+
+    /** Sets the model's selection to [item]. Model notifications during that time do not fire ActionEvents (the caller fires them). The middle part of JComboBox.setSelectedItem. */
+    private fun selectInModel(item: Any?) {
         val was = selectingItem
         selectingItem = true
         try {
-            if (index < 0) {
-                selector.call(XamlInterop.ISelector_put_SelectedItem, null)
-            } else {
-                selector.call(XamlInterop.ISelector_put_SelectedIndex, index)
-            }
+            dataModel.selectedItem = item
         } finally {
             selectingItem = was
         }
+        // Fire item events even for model implementations that do not report selection changes (same as JComboBox)
+        if (selectedItemReminder !== dataModel.selectedItem) selectedItemChanged()
     }
 
-    /** Selects a string [text] not in the list (editable combos only. ComboBox accepts it as a custom value and SelectedIndex becomes -1). */
-    private fun selectCustom(text: String) {
-        val was = selectingItem
-        selectingItem = true
+    /** JComboBox.selectedItemChanged: reports the previous item's DESELECTED and the new item's SELECTED. */
+    private fun selectedItemChanged() {
+        selectedItemReminder?.let { itemListeners.fire(WItemEvent(this, WItemEvent.DESELECTED, it)) }
+        val newItem = dataModel.selectedItem
+        selectedItemReminder = newItem
+        newItem?.let { itemListeners.fire(WItemEvent(this, WItemEvent.SELECTED, it)) }
+    }
+
+    private fun onIntervalAdded(e: WListDataEvent) {
+        val nativeSize = nativeItemCount
+        if (e.index0 in 0..nativeSize && nativeSize + (e.index1 - e.index0 + 1) == itemCount) {
+            push { for (i in e.index0..e.index1) insertNative(i, textOf(dataModel.getElementAt(i))) }
+            syncNativeSelection()
+        } else {
+            rebuildNative()
+        }
+        if (selectedItemReminder !== dataModel.selectedItem) selectedItemChanged()
+    }
+
+    private fun onIntervalRemoved(e: WListDataEvent) {
+        val nativeSize = nativeItemCount
+        if (e.index0 >= 0 && e.index1 < nativeSize && nativeSize - (e.index1 - e.index0 + 1) == itemCount) {
+            push { for (i in e.index1 downTo e.index0) itemVector.call(FoundationInterop.IVector_RemoveAt, i) }
+            syncNativeSelection()
+        } else {
+            rebuildNative()
+        }
+        onSelectionMaybeChanged()
+    }
+
+    private fun onContentsChanged(e: WListDataEvent) {
+        if (e.index0 >= 0) {
+            if (nativeItemCount == itemCount && e.index1 < itemCount) {
+                push { for (i in e.index0..e.index1) setNative(i, textOf(dataModel.getElementAt(i))) }
+                syncNativeSelection()
+            } else {
+                rebuildNative()
+            }
+        } else {
+            syncNativeSelection()
+        }
+        onSelectionMaybeChanged()
+    }
+
+    /** JComboBox.contentsChanged's handling of the selection (same as Swing, down to firing an ActionEvent even without a selection change when nothing was selected before). */
+    private fun onSelectionMaybeChanged() {
+        val old = selectedItemReminder
+        if (old == null || old != dataModel.selectedItem) {
+            selectedItemChanged()
+            if (!selectingItem) fireActionEvent(actionCommand)
+        }
+    }
+
+    private val nativeItemCount: Int
+        get() = itemVector.getInt(FoundationInterop.IVector_get_Size)
+
+    private val nativeSelectedIndex: Int
+        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+
+    /** The string of the native SelectedItem (null if unselected). */
+    private val nativeSelectedText: String?
+        get() {
+            val boxed = selector.getPtrOrNull(XamlInterop.ISelector_get_SelectedItem) ?: return null
+            return try {
+                PropertyValues.unboxString(boxed)
+            } finally {
+                boxed.release()
+            }
+        }
+
+    /** Runs [block], which copies from the model to native, without writing native notifications back to the model. */
+    private inline fun push(block: () -> Unit) {
+        val was = pushing
+        pushing = true
+        try {
+            block()
+        } finally {
+            pushing = was
+        }
+    }
+
+    private fun insertNative(index: Int, text: String) {
         val boxed = PropertyValues.boxString(text)
         try {
-            selector.call(XamlInterop.ISelector_put_SelectedItem, boxed.ptr)
+            itemVector.call(FoundationInterop.IVector_InsertAt, index, boxed.ptr)
         } finally {
             boxed.release()
-            selectingItem = was
         }
     }
+
+    private fun setNative(index: Int, text: String) {
+        val boxed = PropertyValues.boxString(text)
+        try {
+            itemVector.call(FoundationInterop.IVector_SetAt, index, boxed.ptr)
+        } finally {
+            boxed.release()
+        }
+    }
+
+    private fun putNativeSelectedIndex(index: Int) {
+        selector.call(XamlInterop.ISelector_put_SelectedIndex, index)
+    }
+
+    /** Rebuilds the native items from the model's items and matches the selection too. */
+    private fun rebuildNative() {
+        push {
+            itemVector.call(FoundationInterop.IVector_Clear)
+            for (i in 0 until itemCount) {
+                val boxed = PropertyValues.boxString(textOf(dataModel.getElementAt(i)))
+                try {
+                    itemVector.call(FoundationInterop.IVector_Append, boxed.ptr)
+                } finally {
+                    boxed.release()
+                }
+            }
+        }
+        syncNativeSelection()
+    }
+
+    /**
+     * Matches the native selection to the model's selectedItem. A value not in the list is passed as a custom value only when an editable combo is in a window.
+     * Otherwise it shows as unselected (when WinUI does not accept a custom value and there is no ItemsSource, it remembers the value and selects an item with the same value
+     * added later (m_itemPendingSelection in OnSelectedItemChanged of Selector_Partial.cpp), so it is not passed).
+     */
+    private fun syncNativeSelection() {
+        val selected = dataModel.selectedItem ?: return clearNativeSelection()
+        val native = nativeSelectedIndex
+        if (native in 0 until itemCount && dataModel.getElementAt(native) == selected) return
+        val index = indexOfItem(selected)
+        when {
+            index >= 0 -> push { putNativeSelectedIndex(index) }
+            isEditable && isLoaded -> putNativeCustomValue(selected.toString())
+            else -> {
+                if (isEditable) addLoadedHandler()
+                clearNativeSelection()
+            }
+        }
+    }
+
+    /** Shows the native side as unselected (does nothing if already unselected). */
+    private fun clearNativeSelection() {
+        if (nativeSelectedIndex >= 0 || nativeSelectedText != null) push { selector.call(XamlInterop.ISelector_put_SelectedItem, null) }
+    }
+
+    /** Passes a value [text] not in the list to the native side of an editable combo as a custom value (does nothing if it already has that value). */
+    private fun putNativeCustomValue(text: String) {
+        if (nativeSelectedIndex < 0 && nativeSelectedText == text) return
+        val boxed = PropertyValues.boxString(text)
+        try {
+            push { selector.call(XamlInterop.ISelector_put_SelectedItem, boxed.ptr) }
+        } finally {
+            boxed.release()
+        }
+    }
+
+    private val isLoaded: Boolean
+        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)
 
     private fun fireActionEvent(command: String) {
         if (actionListeners.isEmpty() || firingActionEvent) return
@@ -463,16 +653,16 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         }
     }
 
-    /** The native selection changed (by user operation or programmatically). Reports in the same order as JComboBox.selectedItemChanged. */
+    /**
+     * The native selection changed. Except while copying from the model (that is, for user operations and Enter confirmations), changes the model's
+     * selection, reports it and fires one ActionEvent, as with JComboBox's item selection.
+     */
     private fun onNativeSelectionChanged() {
-        val newItem = selectedItem
-        val oldItem = selectedItemReminder
-        if (oldItem != newItem) {
-            selectedItemReminder = newItem
-            if (oldItem != null) itemListeners.fire(WItemEvent(this, WItemEvent.DESELECTED, oldItem))
-            if (newItem != null) itemListeners.fire(WItemEvent(this, WItemEvent.SELECTED, newItem))
-            if (!selectingItem) fireActionEvent(actionCommand)
-        }
+        if (pushing) return
+        val index = nativeSelectedIndex
+        val target = if (index in 0 until itemCount) dataModel.getElementAt(index) else nativeSelectedText
+        selectInModel(target)
+        fireActionEvent(actionCommand)
         flushEdited()
     }
 
@@ -517,6 +707,20 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             XamlInterop.ISelector_add_SelectionChanged,
         ) { _, _ -> comboBox.get()?.onNativeSelectionChanged() }
     }
+
+    /** When an editable combo is put in a window, passes the selected value not in the list to native again (it cannot be accepted before the template is applied). */
+    private fun addLoadedHandler() {
+        if (loadedHandlerAdded) return
+        loadedHandlerAdded = true
+        val comboBox = WeakReference(this)
+        frameworkElement.addEventHandler(
+            "WinUI4K.ComboBoxLoadedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
+        ) { _, _ -> comboBox.get()?.syncNativeSelection() }
+    }
+
+    private fun textOf(element: Any?): String = element?.toString() ?: ""
 
     private fun addTextSubmittedHandler() {
         val anchor = listenerAnchor

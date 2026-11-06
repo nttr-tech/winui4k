@@ -95,6 +95,27 @@ class WComboBoxForJavaTest {
     }
 
     @Test
+    void comboBoxModelConstructorAndSetModelGetModelHandleItemsOfAnyType() {
+        onUiThread(() -> {
+            WDefaultComboBoxModel<Integer> numbers = new WDefaultComboBoxModel<>(new Integer[] {10, 20, 30});
+            WComboBox comboBox = new WComboBox(numbers);
+            assertSame(numbers, comboBox.getModel());
+            assertEquals("10", comboBox.getSelectedItem());
+            comboBox.setSelectedIndex(2);
+            assertEquals(30, numbers.getSelectedItem());
+            assertEquals(30, comboBox.getSelectedObjects()[0]);
+
+            WDefaultComboBoxModel<String> colors = new WDefaultComboBoxModel<>();
+            colors.addElement("Red");
+            comboBox.setModel(colors);
+            assertEquals(1, comboBox.getItemCount());
+            assertEquals("Red", comboBox.getSelectedItem());
+            WComboBoxModel<?> model = comboBox.getModel();
+            assertEquals("Red", model.getElementAt(0));
+        });
+    }
+
+    @Test
     void actionCommandCanBeReadAndWrittenWithTheGetterAndSetter() {
         onUiThread(() -> {
             WComboBox comboBox = new WComboBox();
