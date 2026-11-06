@@ -96,6 +96,8 @@ internal object WindowingInterop {
 
     const val IID_IAppWindow2 = "6cd41292-794c-5cac-8961-210d012c6ebc"
     const val IAppWindow2_get_ClientSize = 6            // get_ClientSize(out SizeInt32) — out of a struct
+    const val IAppWindow2_MoveInZOrderAtBottom = 7      // MoveInZOrderAtBottom()
+    const val IAppWindow2_MoveInZOrderAtTop = 8         // MoveInZOrderAtTop()
     const val IAppWindow2_ResizeClient = 10             // ResizeClient(SizeInt32) — struct passed by value
 
     // ---- Microsoft.UI.Content.ContentIslandEnvironment (Microsoft.UI.winmd) ----
@@ -217,6 +219,7 @@ internal object WindowingInterop {
     const val IDisplayAreaStatics_get_Primary = 6
     const val IDisplayAreaStatics_FindAll = 8           // FindAll() -> IVectorView<DisplayArea>
     const val IDisplayAreaStatics_GetFromWindowId = 9   // GetFromWindowId(WindowId, DisplayAreaFallback) -> DisplayArea
+    const val IDisplayAreaStatics_GetFromPoint = 10     // GetFromPoint(PointInt32, DisplayAreaFallback) -> DisplayArea
     const val DisplayAreaFallback_Nearest = 2           // enum Microsoft.UI.Windowing.DisplayAreaFallback.Nearest
 
     // ---- Microsoft.UI.Input.PointerPoint (Microsoft.UI.winmd) ----

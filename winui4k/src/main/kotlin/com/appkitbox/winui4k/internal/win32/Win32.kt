@@ -59,6 +59,16 @@ internal object Win32 {
         )
     }
 
+    private val getDpiForWindow by lazy {
+        Ffi.backend.function("user32.dll", "GetDpiForWindow", CallDescriptor(ValueKind.I32, ArgKind.PTR))
+    }
+
+    /**
+     * The DPI of window [hwnd] (GetDpiForWindow; 96 at 100%). Even for a window not shown yet, returns the value of the monitor it will be on.
+     * 0 for an invalid handle.
+     */
+    fun dpiForWindow(hwnd: Ptr): Int = getDpiForWindow(hwnd) as Int
+
     /** The maximum interval between two presses to count as a double click (milliseconds; GetDoubleClickTime). */
     fun doubleClickTimeMillis(): Int = getDoubleClickTime() as Int
 
