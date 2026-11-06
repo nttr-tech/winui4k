@@ -664,6 +664,20 @@ class WrapperReleaseTest : FunSpec() {
             Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
         }
 
+        test("a WSpinner with a ChangeListener and a shared model is collected after being placed in the window and removed if released together with the model") {
+            val sources = itemSources
+            var model: WeakReference<WSpinnerModel>? = null
+            val plain = shownAndHidden { WSpinner().also { it.addChangeListener { value -> sources += value } } }
+            val modelled = shownAndHidden {
+                val shared = WSpinnerNumberModel(1, 0, 10, 1)
+                model = WeakReference(shared)
+                WSpinner(shared).also { it.addChangeListener(WChangeListener { e -> sources += e.source }) }
+            }
+            Reclamation.awaitCollected(plain).shouldBeTrue()
+            Reclamation.awaitCollected(modelled).shouldBeTrue()
+            Reclamation.awaitCollected(checkNotNull(model)).shouldBeTrue()
+        }
+
         test("a WSlider with a ChangeListener is not collected while it is placed even without references, and the ChangeEvent source is that slider") {
             val sources = itemSources
             // A slider with listeners is held by the ListenerAnchor until it is placed, so it can be passed with only a weak reference
