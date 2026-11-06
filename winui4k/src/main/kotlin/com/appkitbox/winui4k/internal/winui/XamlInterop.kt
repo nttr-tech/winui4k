@@ -710,6 +710,7 @@ internal object XamlInterop {
     const val ISelector_get_SelectedIndex = 6          // get_SelectedIndex(out INT32)
     const val ISelector_put_SelectedIndex = 7          // put_SelectedIndex(INT32)
     const val ISelector_get_SelectedItem = 8           // get_SelectedItem(out IInspectable)
+    const val ISelector_put_SelectedItem = 9           // put_SelectedItem(IInspectable)
     const val ISelector_add_SelectionChanged = 16      // add_SelectionChanged(SelectionChangedEventHandler, out token)
     const val ISelector_remove_SelectionChanged = 17   // remove_SelectionChanged(token)
     const val IID_IItemsControl = "bf1ccb54-83e2-5b98-acbc-736f876c3d35"
@@ -952,11 +953,18 @@ internal object XamlInterop {
     const val IComboBox_put_IsDropDownOpen = 7         // put_IsDropDownOpen(boolean)
     const val IComboBox_get_IsEditable = 8             // get_IsEditable(out boolean)
     const val IComboBox_put_IsEditable = 9             // put_IsEditable(boolean)
+    const val IComboBox_get_MaxDropDownHeight = 11     // get_MaxDropDownHeight(out DOUBLE)
+    const val IComboBox_put_MaxDropDownHeight = 12     // put_MaxDropDownHeight(DOUBLE)
+    const val IComboBox_get_Header = 16                // get_Header(out IInspectable)
     const val IComboBox_put_Header = 17                // put_Header(IInspectable)
     const val IComboBox_get_PlaceholderText = 20       // get_PlaceholderText(out HSTRING)
     const val IComboBox_put_PlaceholderText = 21       // put_PlaceholderText(HSTRING)
     const val IComboBox_get_Text = 30                  // get_Text(out HSTRING)
     const val IComboBox_put_Text = 31                  // put_Text(HSTRING)
+    const val IComboBox_add_DropDownClosed = 36        // add_DropDownClosed(EventHandler<Object>, out token)
+    const val IComboBox_remove_DropDownClosed = 37
+    const val IComboBox_add_DropDownOpened = 38        // add_DropDownOpened(EventHandler<Object>, out token)
+    const val IComboBox_remove_DropDownOpened = 39
     const val IComboBox_add_TextSubmitted = 40         // add_TextSubmitted(TypedEventHandler, out token)
     const val IComboBox_remove_TextSubmitted = 41
     const val IID_IComboBoxTextSubmittedEventArgs = "0d7a9794-73b5-585e-bfbb-de6df7eb9fcf"
