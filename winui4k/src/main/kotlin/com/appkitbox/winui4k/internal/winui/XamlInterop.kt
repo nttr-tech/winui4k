@@ -1824,6 +1824,10 @@ internal object XamlInterop {
     const val CLS_AppBarSeparator = "Microsoft.UI.Xaml.Controls.AppBarSeparator"
     const val IID_IAppBarSeparatorFactory = "6497d326-fb55-5cf5-8cc4-c556b1a958fb"
 
+    // ---- Microsoft.UI.Xaml.Controls.AppBarElementContainer (a ContentControl subclass that implements ICommandBarElement) ----
+    const val CLS_AppBarElementContainer = "Microsoft.UI.Xaml.Controls.AppBarElementContainer"
+    const val IID_IAppBarElementContainerFactory = "0664bf62-1fab-5873-9608-117c3b4483ff"
+
     // ---- Microsoft.UI.Xaml.Controls.CommandBarFlyout ----
     const val CLS_CommandBarFlyout = "Microsoft.UI.Xaml.Controls.CommandBarFlyout"
     const val IID_ICommandBarFlyoutFactory = "a194dbe6-4311-5bd2-a8eb-b49c4733a33c"

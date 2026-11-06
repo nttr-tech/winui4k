@@ -72,7 +72,10 @@ enum class CommandBarOverflowButtonVisibility(internal val native: Int) {
 /**
  * JToolBar-like: WinUI 3's CommandBar.
  * Buttons added with [addPrimaryCommand] line up on the bar; buttons added with
- * [addSecondaryCommand] go into the […] overflow menu.
+ * [addSecondaryCommand] go into the […] overflow menu (no Swing counterpart; not counted in [componentCount] etc.).
+ * They can also be handled with Swing's [add] (creating a button from a [WAction] / putting an arbitrary component), [addSeparator], [remove] and
+ * [getComponentAtIndex]. It has the same sequence API as [WContainer], but is not a WContainer subclass.
+ * Horizontal only ([orientation]), [isFloatable] is always false, and [isRollover] is always true.
  */
 class WCommandBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_CommandBar, XamlInterop.IID_ICommandBarFactory),
@@ -152,21 +155,131 @@ class WCommandBar : WControl(
     /**
      * Appends a command shown on the bar (CommandBar.PrimaryCommands).
      * [element] must be an ICommandBarElement implementation (WAppBarButton /
-     * WAppBarToggleButton / WAppBarSeparator).
+     * WAppBarToggleButton / WAppBarSeparator). Otherwise IllegalArgumentException
+     * (use [add] to put an arbitrary component). It is also included in the sequence such as [getComponentAtIndex].
      */
     fun addPrimaryCommand(element: WControl) {
-        appendCommandBarElement(primaryCommands, element)
+        items.add(element, -1, wrap = false)
     }
 
     /** Appends a command placed in the overflow menu (CommandBar.SecondaryCommands). */
     fun addSecondaryCommand(element: WControl) {
         appendCommandBarElement(secondaryCommands, element)
     }
+
+    private val items = CommandBarItems(this) { primaryCommands }
+
+    /**
+     * JToolBar.add(Action)-like: creates a [WAppBarButton] bound to [action] at the end and returns it. The label, icon and enabled state
+     * follow the action by the same rules as [WButtonBase.action], and pressing it calls [WAction.actionPerformed].
+     */
+    fun add(action: WAction): WAppBarButton {
+        val button = WAppBarButton()
+        button.action = action
+        items.add(button, -1, wrap = true)
+        return button
+    }
+
+    /**
+     * JToolBar.add(Component)-like: appends [component] at the end and returns it. AppBar buttons and separators (ICommandBarElement) are put
+     * as is, and other components are wrapped in an internal AppBarElementContainer ([getComponentAtIndex] returns [component] itself).
+     * If it is in another parent, it is removed from there first. Itself or an ancestor throws IllegalArgumentException.
+     */
+    fun add(component: WComponent): WComponent {
+        items.add(component, -1, wrap = true)
+        return component
+    }
+
+    /** JToolBar.add(Component, int)-like: adds at [index] (-1 for the end). Out of range throws IllegalArgumentException. */
+    fun add(component: WComponent, index: Int): WComponent {
+        items.add(component, index, wrap = true)
+        return component
+    }
+
+    /** JToolBar.addSeparator-like: appends a separator ([WAppBarSeparator]) at the end and returns it. */
+    fun addSeparator(): WAppBarSeparator {
+        val separator = WAppBarSeparator()
+        items.add(separator, -1, wrap = false)
+        return separator
+    }
+
+    /** JToolBar.getComponentCount-like: the number of (Primary) children on the bar. Items from [addSecondaryCommand] are not counted. */
+    val componentCount: Int
+        get() = items.count
+
+    /** JToolBar.getComponentAtIndex-like: the child at [index]. null if out of range (as in Swing). */
+    fun getComponentAtIndex(index: Int): WComponent? = items.componentAt(index)
+
+    /** JToolBar.getComponentIndex-like: the position of [component]. -1 if it is not a child (as in Swing). */
+    fun getComponentIndex(component: WComponent?): Int = items.indexOf(component)
+
+    /** Container.getComponents-like: the list of children (in order; a new array on each call). */
+    val components: Array<WComponent>
+        get() = items.components()
+
+    /** JToolBar.remove(Component)-like: removes a child. Does nothing if it is not a child. */
+    fun remove(component: WComponent) {
+        items.remove(component)
+    }
+
+    /** Container.remove(int)-like: removes the child at [index]. Out of range throws ArrayIndexOutOfBoundsException. */
+    fun remove(index: Int) {
+        items.removeAt(index)
+    }
+
+    /** Container.removeAll-like: removes all children added with [add] / [addPrimaryCommand]. Items from [addSecondaryCommand] remain. */
+    fun removeAll() {
+        items.removeAll()
+    }
+
+    /** JToolBar.isFloatable-like: always false (a CommandBar cannot be moved; it is a horizontal bar that stays docked). */
+    var isFloatable: Boolean
+        get() = false
+
+        @Suppress("UNUSED_PARAMETER")
+        set(value) {
+            // Does nothing: CommandBar has no feature to detach the bar
+        }
+
+    /**
+     * JToolBar.getOrientation-like: always [HORIZONTAL]. CommandBar (ICommandBar / IAppBar) has no orientation setting and is fixed horizontal.
+     * Setting [VERTICAL] throws IllegalArgumentException, and setting [HORIZONTAL] does nothing.
+     */
+    var orientation: Int
+        get() = HORIZONTAL
+        set(value) = requireHorizontalOrientation(value)
+
+    /** JToolBar.isRollover-like: always true (AppBarButton changes its look when the pointer is over it by default). Setting does nothing. */
+    var isRollover: Boolean
+        get() = true
+
+        @Suppress("UNUSED_PARAMETER")
+        set(value) {
+            // Does nothing: rollover cannot be chosen
+        }
+
+    override fun detachChild(child: WComponent) {
+        items.remove(child)
+    }
+
+    companion object {
+        /** Horizontal (the same value as SwingConstants.HORIZONTAL). */
+        const val HORIZONTAL = 0
+
+        /** Vertical (the same value as SwingConstants.VERTICAL). Cannot be set to [orientation]. */
+        const val VERTICAL = 1
+    }
 }
 
-/** QIs [element] to ICommandBarElement and appends it to the IVector<ICommandBarElement>. */
+/**
+ * QIs [element] to ICommandBarElement and Appends it to an IVector<ICommandBarElement>.
+ * IllegalArgumentException if it is not an ICommandBarElement.
+ */
 internal fun appendCommandBarElement(vector: ComPtr, element: WControl) {
-    val commandBarElement = element.inspectable.queryInterface(XamlInterop.IID_ICommandBarElement)
+    val commandBarElement = element.inspectable.queryInterfaceOrNull(XamlInterop.IID_ICommandBarElement)
+        ?: throw IllegalArgumentException(
+            "A component that is not an ICommandBarElement cannot be added: ${element.javaClass.simpleName}",
+        )
     try {
         vector.call(FoundationInterop.IVector_Append, commandBarElement.ptr)
     } finally {
