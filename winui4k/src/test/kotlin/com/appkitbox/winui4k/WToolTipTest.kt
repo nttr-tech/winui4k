@@ -118,5 +118,37 @@ class WToolTipTest : FunSpec() {
                 UiTestHarness.detach(button)
             }
         }
+
+        context("Defaults") {
+            test("placement defaults to the WinUI default (TOP), the text is empty, and content and component are null") {
+                onUiThreadGet {
+                    val tip = WToolTip()
+                    listOf(tip.placement, tip.text, tip.content, tip.component)
+                } shouldContainExactly listOf(ToolTipPlacement.TOP, "", null, null)
+            }
+        }
+
+        context("Reading and writing") {
+            test("placement writes every value to the native ToolTip.Placement and reads it back") {
+                onUiThreadGet {
+                    val tip = WToolTip()
+                    ToolTipPlacement.entries.map { placement ->
+                        tip.placement = placement
+                        tip.placement
+                    }
+                } shouldContainExactly ToolTipPlacement.entries
+            }
+
+            test("a component set to content reads back from content, and setting text returns content to null") {
+                onUiThreadGet {
+                    val tip = WToolTip()
+                    val label = WLabel("Component tip")
+                    tip.content = label
+                    val set = tip.content === label
+                    tip.text = "Text tip"
+                    listOf(set, tip.content, tip.text)
+                } shouldContainExactly listOf(true, null, "Text tip")
+            }
+        }
     }
 }

@@ -44,4 +44,21 @@ class WToolTipForJavaTest {
             assertNull(tip.getComponent());
         });
     }
+
+    @Test
+    void placementAndComponentContentCanBeSetWithGettersAndSetters() {
+        onUiThread(() -> {
+            WToolTip tip = new WToolTip();
+            assertEquals(ToolTipPlacement.TOP, tip.getPlacement());
+            tip.setPlacement(ToolTipPlacement.MOUSE);
+            assertEquals(ToolTipPlacement.MOUSE, tip.getPlacement());
+            WLabel label = new WLabel("Component tip");
+            tip.setContent(label);
+            assertSame(label, tip.getContent());
+            assertNull(tip.getTipText());
+            tip.setText("Text tip");
+            assertEquals("Text tip", tip.getText());
+            assertNull(tip.getContent());
+        });
+    }
 }
