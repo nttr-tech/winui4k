@@ -635,6 +635,25 @@ abstract class WComponent internal constructor(
      */
     fun hasFocus(): Boolean = uiElement.getInt(XamlInterop.IUIElement_get_FocusState) != 0 || ownsFocus(this)
 
+    /** Component.isFocusOwner-like: the same as [hasFocus] (as in Swing). */
+    val isFocusOwner: Boolean
+        get() = hasFocus()
+
+    /** JComponent.grabFocus-like: the same as [requestFocus]. As in Swing, it moves the focus even if [isRequestFocusEnabled] is false. */
+    fun grabFocus() {
+        requestFocus()
+    }
+
+    /**
+     * JComponent.isRequestFocusEnabled / setRequestFocusEnabled-like: whether it takes the focus when pressed or touched with the mouse
+     * (FrameworkElement.AllowFocusOnInteraction). The default is true. As in Swing, false does not stop moving with the Tab key or
+     * the focus from [requestFocus] / [requestFocusInWindow] / [grabFocus] (used so that toolbar buttons do not steal the focus from
+     * input fields).
+     */
+    var isRequestFocusEnabled: Boolean
+        get() = frameworkElement.getBool(XamlInterop.IFrameworkElement_get_AllowFocusOnInteraction)
+        set(value) = frameworkElement.putBool(XamlInterop.IFrameworkElement_put_AllowFocusOnInteraction, value)
+
     /** The list of input listeners and the native handlers (created when the first listener is added). */
     private var inputOrNull: ComponentInput? = null
 

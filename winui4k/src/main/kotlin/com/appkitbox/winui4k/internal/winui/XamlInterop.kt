@@ -2533,6 +2533,7 @@ internal object XamlInterop {
     const val IFrameworkElement_get_MaxHeight = 25
     const val IFrameworkElement_put_MaxHeight = 26
     const val IFrameworkElement_put_Name = 34
+    const val IFrameworkElement_get_AllowFocusOnInteraction = 38
     const val IFrameworkElement_put_AllowFocusOnInteraction = 39
     const val IFrameworkElement_put_FocusVisualMargin = 41 // put_FocusVisualMargin(Thickness)
     const val IFrameworkElement_get_Parent = 54        // get_Parent(out DependencyObject) — parent in the logical tree
