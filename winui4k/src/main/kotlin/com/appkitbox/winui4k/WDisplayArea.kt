@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.allocate
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
@@ -83,6 +84,25 @@ class WDisplayArea internal constructor(private val displayArea: ComPtr) {
                     WindowingInterop.DisplayAreaFallback_Nearest,
                 ),
             )
+        }
+
+        /** The work area of the primary display (physical pixels). The DisplayArea is released right away. */
+        internal fun primaryWorkArea(): WRectangle = workAreaOf(statics.getPtr(WindowingInterop.IDisplayAreaStatics_get_Primary))
+
+        /** The work area of the display nearest to the screen point ([x], [y], physical pixels) (DisplayAreaStatics.GetFromPoint, Nearest). */
+        internal fun workAreaAt(x: Int, y: Int): WRectangle = Ffi.backend.withScope { scope ->
+            val point = scope.allocate(XamlStructs.POINT_INT32)
+            Ffi.backend.memory.putInt(point.ptr, 0, x)
+            Ffi.backend.memory.putInt(point.ptr, 4, y)
+            workAreaOf(
+                statics.getPtr(WindowingInterop.IDisplayAreaStatics_GetFromPoint, point, WindowingInterop.DisplayAreaFallback_Nearest),
+            )
+        }
+
+        private fun workAreaOf(displayArea: ComPtr): WRectangle = try {
+            WDisplayArea(displayArea).workArea
+        } finally {
+            displayArea.release()
         }
     }
 }

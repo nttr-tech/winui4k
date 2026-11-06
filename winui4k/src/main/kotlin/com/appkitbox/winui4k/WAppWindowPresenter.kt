@@ -70,7 +70,14 @@ enum class OverlappedPresenterState(internal val native: Int) {
  */
 class WOverlappedPresenter internal constructor(ptr: ComPtr) : WAppWindowPresenter(ptr) {
     /** An IOverlappedPresenter3 view for PreferredMinimum/MaximumWidth/Height. */
-    private val presenter3: ComPtr by lazy { presenterPtr.queryInterface(WindowingInterop.IID_IOverlappedPresenter3) }
+    private val presenter3View = lazy { presenterPtr.queryInterface(WindowingInterop.IID_IOverlappedPresenter3) }
+    private val presenter3: ComPtr by presenter3View
+
+    /** Releases a temporarily wrapped Presenter ([WFrame] wraps AppWindow.Presenter every time it reads it). It cannot be used afterwards. */
+    internal fun release() {
+        if (presenter3View.isInitialized()) presenter3.release()
+        presenterPtr.release()
+    }
 
     /** Whether the border (including the caption) is shown (read-only; change it with [setBorderAndTitleBar]). */
     val hasBorder: Boolean get() = presenterPtr.getBool(WindowingInterop.IOverlappedPresenter_get_HasBorder)

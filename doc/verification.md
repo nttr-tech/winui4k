@@ -373,3 +373,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     なく後の周回になることがある。テストは文字が現れるまで待つ
   - ListBox にはコンテナーを割り当てたときのイベントが無い (ContainerContentChanging は ListViewBase だけ) ので、レンダラーを使う間は
     Items を要素ごとの ListBoxItem (自分自身がコンテナーになる) にして、その Content に部品を置く。この間は見えない要素も描く
+- 表示する前 (最初の Window.Activate の前) のウィンドウの中身に UIElement.Measure だけを呼ぶと、テンプレートが当たっておらず
+  Button は 0 x 19、TextBox は 0 x 0 と測られる。先に中身のルートで UpdateLayout を呼ぶとテンプレートが当たり、制約なしの
+  Measure が表示した後と同じ値になる (WFrame.pack。WFrameGeometryTest で、表示前と表示後の pack が同じクライアント領域になることを確認)。
+  その UpdateLayout は表示前の仮の大きさで並べるので、表示した直後は ActualWidth が古い値のことがある (次のレイアウトで直る)
+- OverlappedPresenter.PreferredMinimumWidth / PreferredMinimumHeight は、タイトル バーと枠を含むウィンドウ全体の物理ピクセルで効き、
+  AppWindow.Resize で小さくしようとしても止まる (WFrameGeometryTest)。WindowId の値は HWND そのもので、GetDpiForWindow に渡せる

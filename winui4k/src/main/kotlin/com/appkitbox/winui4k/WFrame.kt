@@ -1,12 +1,20 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.ffi.api.Ffi
+import com.appkitbox.winui4k.internal.ffi.api.Ptr
+import com.appkitbox.winui4k.internal.ffi.api.allocate
+import com.appkitbox.winui4k.internal.ffi.api.withScope
+import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.lang.ref.WeakReference
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 /**
  * JFrame-like: WinUI 3's Window.
@@ -42,6 +50,9 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     /** The current window content (Window.Content). Initially [contentPane], replaced by [setContentPane]. */
     internal var content: WComponent = contentPane
         private set
+
+    /** The element put in Window.Content (measured by [pack]). */
+    private val rootContent: WComponent get() = content
 
     var title: String = ""
         set(value) {
@@ -215,22 +226,30 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     }
 
     /** Reads OverlappedPresenter.State as [NORMAL] / [ICONIFIED] / [MAXIMIZED_BOTH]. null for other presenters. */
-    private fun readState(): Int? {
+    private fun readState(): Int? = withOverlapped { presenter ->
+        when (presenter.state) {
+            OverlappedPresenterState.MAXIMIZED -> MAXIMIZED_BOTH
+            OverlappedPresenterState.MINIMIZED -> ICONIFIED
+            OverlappedPresenterState.RESTORED -> NORMAL
+        }
+    }
+
+    /**
+     * If the current AppWindow.Presenter is an OverlappedPresenter, wraps it temporarily and passes it to [block] (releasing it afterwards).
+     * For other presenters (full screen, etc.), returns null without calling [block].
+     */
+    private inline fun <T> withOverlapped(block: (WOverlappedPresenter) -> T): T? {
         val presenter = appWindow.appWindow.getPtrOrNull(WindowingInterop.IAppWindow_get_Presenter) ?: return null
         val overlapped = try {
             presenter.queryInterfaceOrNull(WindowingInterop.IID_IOverlappedPresenter)
         } finally {
             presenter.release()
         } ?: return null
-        val native = try {
-            overlapped.getInt(WindowingInterop.IOverlappedPresenter_get_State)
+        val wrapper = WOverlappedPresenter(overlapped)
+        return try {
+            block(wrapper)
         } finally {
-            overlapped.release()
-        }
-        return when (OverlappedPresenterState.of(native)) {
-            OverlappedPresenterState.MAXIMIZED -> MAXIMIZED_BOTH
-            OverlappedPresenterState.MINIMIZED -> ICONIFIED
-            OverlappedPresenterState.RESTORED -> NORMAL
+            wrapper.release()
         }
     }
 
@@ -342,6 +361,179 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
 
     /** Component.isDisplayable-like: true if not yet closed (neither [dispose]d nor disposed with ×). true if only hidden. */
     val isDisplayable: Boolean get() = !closed
+
+    // ---- Position and size (DIP) ----
+    //
+    // As with Swing since Java 9, window position and size are handled in logical units divided by the scale factor (DIP; one pixel at 100%).
+    // It is the same unit as other WinUI4K components; on a 150% monitor, setSize(400, 300) becomes physical 600 x 450 pixels.
+    // The scale factor is that of the monitor this window is currently on (GetDpiForWindow). Use [appWindow] to work in physical pixels.
+
+    /** Physical pixels per DIP (this window's DPI / 96). Even before it is shown, the value of the monitor it will be on. */
+    internal val dpiScale: Double
+        get() {
+            // The WindowId value is the same as the HWND (Win32Interop.GetWindowFromWindowId returns the value as is)
+            val dpi = Win32.dpiForWindow(Ptr(appWindow.id))
+            return if (dpi > 0) dpi / BASE_DPI else 1.0
+        }
+
+    private fun toDip(pixels: Int, scale: Double): Int = (pixels / scale).roundToInt()
+
+    private fun toPixels(dip: Int, scale: Double): Int = (dip * scale).roundToInt()
+
+    /**
+     * Component.getSize / setSize(Dimension)-like: the size of the whole window including the title bar and border (DIP; AppWindow.Size).
+     * Setting is the same as [setSize].
+     */
+    var size: WDimension
+        get() {
+            val scale = dpiScale
+            return appWindow.size.let { WDimension(toDip(it.width, scale), toDip(it.height, scale)) }
+        }
+        set(value) = setSize(value.width, value.height)
+
+    /**
+     * Window.setSize(int, int)-like: changes the size of the whole window in DIP (AppWindow.Resize). Values smaller than [minimumSize] are
+     * enlarged to [minimumSize] (as in Swing). Negative values are treated as 0. It does not get smaller than the minimum size the OS decides
+     * (a width that fits the title bar buttons).
+     */
+    fun setSize(width: Int, height: Int) {
+        val minimum = minimumSize
+        val scale = dpiScale
+        appWindow.resize(
+            toPixels(maxOf(width, minimum?.width ?: 0, 0), scale),
+            toPixels(maxOf(height, minimum?.height ?: 0, 0), scale),
+        )
+    }
+
+    /** Component.getWidth-like: the width of the whole window (DIP). */
+    val width: Int get() = size.width
+
+    /** Component.getHeight-like: the height of the whole window (DIP). */
+    val height: Int get() = size.height
+
+    /**
+     * Component.getLocation / setLocation(Point)-like: the on-screen position of the window's top-left (DIP; AppWindow.Position divided by the scale factor).
+     * As in Swing, coordinates are not continuous across monitors with different scale factors. Setting is the same as [setLocation].
+     */
+    var location: WPoint
+        get() {
+            val scale = dpiScale
+            return appWindow.position.let { WPoint(toDip(it.x, scale), toDip(it.y, scale)) }
+        }
+        set(value) = setLocation(value.x, value.y)
+
+    /** Component.setLocation(int, int)-like: moves the window's top-left to ([x], [y]) (DIP) on screen (AppWindow.Move). */
+    fun setLocation(x: Int, y: Int) {
+        val scale = dpiScale
+        appWindow.move(toPixels(x, scale), toPixels(y, scale))
+    }
+
+    /** Component.getX-like: the on-screen position of the window's left edge (DIP). */
+    val x: Int get() = location.x
+
+    /** Component.getY-like: the on-screen position of the window's top edge (DIP). */
+    val y: Int get() = location.y
+
+    /** Component.getBounds / setBounds(Rectangle)-like: the rectangle combining [location] and [size] (DIP). Setting is the same as [setBounds]. */
+    var bounds: WRectangle
+        get() {
+            val location = location
+            val size = size
+            return WRectangle(location.x, location.y, size.width, size.height)
+        }
+        set(value) = setBounds(value.x, value.y, value.width, value.height)
+
+    /** Component.setBounds(int, int, int, int)-like: changes the position and size (DIP). The size is handled the same as [setSize]. */
+    fun setBounds(x: Int, y: Int, width: Int, height: Int) {
+        setLocation(x, y)
+        setSize(width, height)
+    }
+
+    /**
+     * Window.setMinimumSize / getMinimumSize-like: the minimum size the user can shrink it to (DIP; OverlappedPresenter.PreferredMinimumWidth /
+     * PreferredMinimumHeight). null removes the constraint (default). Setting a value larger than the current size enlarges the window to it (as in Swing).
+     * It is converted to physical pixels with the scale factor at the time it is set. With presenters such as full screen it only enlarges, and no constraint applies.
+     *
+     * @throws IllegalArgumentException if the width or height is negative
+     */
+    var minimumSize: WDimension? = null
+        set(value) {
+            require(value == null || (value.width >= 0 && value.height >= 0)) { "The minimumSize width and height must be 0 or more: $value" }
+            field = value
+            val scale = dpiScale
+            withOverlapped { presenter ->
+                presenter.preferredMinimumWidth = value?.let { toPixels(it.width, scale) }
+                presenter.preferredMinimumHeight = value?.let { toPixels(it.height, scale) }
+            }
+            if (value != null) growToMinimum()
+        }
+
+    /** Enlarges it if the current size is smaller than [minimumSize]. */
+    private fun growToMinimum() {
+        val minimum = minimumSize ?: return
+        val current = size
+        if (current.width < minimum.width || current.height < minimum.height) setSize(current.width, current.height)
+    }
+
+    /**
+     * Window.pack-like: fits the client area (the part excluding the title bar) to the size of the content (Window.Content) measured without constraints
+     * (UIElement.Measure → IAppWindow2.ResizeClient). It can be used before or after it is shown. Enlarges it if smaller than [minimumSize].
+     */
+    fun pack() {
+        val root = rootContent.uiElement
+        // Before it is shown, Measure alone does not apply templates, so buttons and the like are measured small (0 wide). First apply
+        // the templates with UpdateLayout, then measure again without constraints (doc/verification.md)
+        root.call(XamlInterop.IUIElement_UpdateLayout)
+        Ffi.backend.withScope { scope ->
+            val available = scope.allocate(XamlStructs.SIZE_FLOAT)
+            Ffi.backend.memory.putFloat(available.ptr, 0, Float.POSITIVE_INFINITY)
+            Ffi.backend.memory.putFloat(available.ptr, 4, Float.POSITIVE_INFINITY)
+            root.call(XamlInterop.IUIElement_Measure, available)
+        }
+        val desired = XamlStructs.getSizeFloat(root, XamlInterop.IUIElement_get_DesiredSize)
+        val scale = dpiScale
+        appWindow.resizeClient(ceil(desired[0] * scale).toInt(), ceil(desired[1] * scale).toInt())
+        growToMinimum()
+    }
+
+    /**
+     * Window.setLocationRelativeTo-like: if null, puts the window at the center of the primary display's work area (the part excluding the taskbar).
+     * If a component, aligns the window's center with the center of its on-screen rectangle, and shifts it so that it does not extend outside the
+     * work area of the display the component is on (as in Swing). A component not in a window is treated the same as null.
+     */
+    fun setLocationRelativeTo(component: WComponent?) {
+        val target = component?.let { screenBoundsOf(it) }
+        val own = appWindow.size
+        val area = if (target == null) {
+            WDisplayArea.primaryWorkArea()
+        } else {
+            WDisplayArea.workAreaAt(target.x + target.width / 2, target.y + target.height / 2)
+        }
+        val center = target ?: area
+        val x = center.x + (center.width - own.width) / 2
+        val y = center.y + (center.height - own.height) / 2
+        appWindow.move(
+            x.coerceAtMost(area.x + area.width - own.width).coerceAtLeast(area.x),
+            y.coerceAtMost(area.y + area.height - own.height).coerceAtLeast(area.y),
+        )
+    }
+
+    /** The on-screen rectangle of [component] (physical pixels). null if it is not in a window. */
+    private fun screenBoundsOf(component: WComponent): WRectangle? {
+        val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return null
+        val scale = try {
+            root.getDouble(XamlInterop.IXamlRoot_get_RasterizationScale)
+        } finally {
+            root.release()
+        }
+        val origin = Xaml.positionOnScreen(component) ?: return null
+        return WRectangle(
+            origin[0],
+            origin[1],
+            (component.actualWidth * scale).roundToInt(),
+            (component.actualHeight * scale).roundToInt(),
+        )
+    }
 
     /** Container.add(Component)-like: adds a child to the current content ([contentPane], or the container replaced with [setContentPane]). */
     fun add(component: WComponent) = currentContainer().add(component)
@@ -477,6 +669,9 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
 
         /** Same as [WWindowConstants.EXIT_ON_CLOSE]. */
         const val EXIT_ON_CLOSE: Int = WWindowConstants.EXIT_ON_CLOSE
+
+        /** The DPI at 100% scaling. */
+        private const val BASE_DPI = 96.0
 
         /** MicaKind.BaseAlt (value extracted from the winmd). */
         private const val MICA_KIND_BASE_ALT = 1
