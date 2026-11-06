@@ -200,7 +200,7 @@ class WDefaultButtonTest : FunSpec() {
         other.add(button)
         other.defaultButton = button
         check(button in DefaultButtons.active) { "the default button is not in the list" }
-        other.isVisible = false // Window.Close
+        other.dispose() // Window.Close
         check(button !in DefaultButtons.active) { "the default button of the closed window is still in the list" }
         WeakReference(other) to WeakReference(button)
     }
