@@ -1,7 +1,9 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -9,6 +11,8 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import java.util.Collections
+import kotlin.time.Duration.Companion.seconds
 
 /** Tests for WInfoBar's content (title / message / severity / icon), open state and Closing / Closed listeners. */
 class WInfoBarTest : FunSpec() {
@@ -119,6 +123,73 @@ class WInfoBarTest : FunSpec() {
                 infoBar.isOpen = false
                 events
             }.shouldBeEmpty()
+        }
+
+        context("Defaults") {
+            test("it is closed, shows the close button and the icon, the severity is INFORMATIONAL, texts are empty, and actionButton, content and icon are null") {
+                onUiThreadGet {
+                    val infoBar = WInfoBar()
+                    listOf(
+                        infoBar.isOpen,
+                        infoBar.isClosable,
+                        infoBar.isIconVisible,
+                        infoBar.severity,
+                        infoBar.title,
+                        infoBar.message,
+                        infoBar.actionButton,
+                        infoBar.content,
+                        infoBar.icon,
+                    )
+                } shouldContainExactly listOf(false, true, true, InfoBarSeverity.INFORMATIONAL, "", "", null, null, null)
+            }
+        }
+
+        context("Reading and writing") {
+            test("a component set to content reads back and null removes it") {
+                onUiThreadGet {
+                    val infoBar = WInfoBar()
+                    val label = WLabel("Details")
+                    infoBar.content = label
+                    val set = infoBar.content === label
+                    infoBar.content = null
+                    listOf(set, infoBar.content)
+                } shouldContainExactly listOf(true, null)
+            }
+        }
+
+        context("Events") {
+            test("pressing the close button (×) calls the button listener, Closing and Closed in that order with CLOSE_BUTTON and closes it. Removed listeners are not called") {
+                val events = Collections.synchronizedList(mutableListOf<String>())
+                val infoBar = onUiThreadGet {
+                    WInfoBar().also { infoBar ->
+                        infoBar.title = "Saved"
+                        infoBar.isOpen = true
+                        val removed: () -> Unit = { events += "removed" }
+                        infoBar.addCloseButtonListener(removed)
+                        infoBar.addCloseButtonListener { events += "button" }
+                        infoBar.removeCloseButtonListener(removed)
+                        infoBar.addClosingListener { e -> events += "closing:${e.reason}" }
+                        infoBar.addCloseListener { events += "closed:$it" }
+                    }
+                }
+                UiTestHarness.attachAndAwaitLoaded(infoBar)
+                try {
+                    onUiThread {
+                        val close = checkNotNull(Xaml.templatePartOrNull(infoBar.inspectable, "CloseButton")) { "No CloseButton" }
+                        try {
+                            Xaml.invoke(close)
+                        } finally {
+                            close.release()
+                        }
+                    }
+                    eventually(5.seconds) {
+                        events.toList() shouldContainExactly listOf("button", "closing:CLOSE_BUTTON", "closed:CLOSE_BUTTON")
+                    }
+                    onUiThreadGet { infoBar.isOpen }.shouldBeFalse()
+                } finally {
+                    UiTestHarness.detach(infoBar)
+                }
+            }
         }
     }
 

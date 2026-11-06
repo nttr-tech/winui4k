@@ -2,6 +2,7 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,6 +37,34 @@ class WInfoBarForJavaTest {
             bar.setOpen(true);
             bar.setOpen(false);
             assertEquals(Arrays.asList("closing:PROGRAMMATIC", "closed:PROGRAMMATIC", "closing:PROGRAMMATIC"), events);
+        });
+    }
+
+    @Test
+    void displayedContentCanBeSetWithGettersAndSetters_closeButtonListenersCanBeAddedAndRemovedAsRunnables() {
+        onUiThread(() -> {
+            WInfoBar bar = new WInfoBar();
+            bar.setTitle("An update is available");
+            bar.setMessage("It applies after a restart");
+            bar.setSeverity(InfoBarSeverity.WARNING);
+            bar.setClosable(false);
+            bar.setIconVisible(false);
+            WButton restart = new WButton("Restart");
+            bar.setActionButton(restart);
+            WLabel detail = new WLabel("Details");
+            bar.setContent(detail);
+            assertEquals("An update is available", bar.getTitle());
+            assertEquals("It applies after a restart", bar.getMessage());
+            assertEquals(InfoBarSeverity.WARNING, bar.getSeverity());
+            assertFalse(bar.isClosable());
+            assertFalse(bar.isIconVisible());
+            assertSame(restart, bar.getActionButton());
+            assertSame(detail, bar.getContent());
+
+            Runnable onClose = () -> { };
+            bar.addCloseButtonListener(onClose);
+            bar.removeCloseButtonListener(onClose);
+            bar.removeCloseButtonListener(onClose); // Removing one that is not attached does nothing
         });
     }
 
