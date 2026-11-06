@@ -75,7 +75,7 @@ internal object Dispatcher {
                 WindowingInterop.IID_DispatcherQueueHandler,
                 listOf(
                     KComObject.Method(DESC_HANDLER) {
-                        pending.poll()?.invoke()
+                        pending.poll()?.let(::runReportingFailure)
                         KComObject.S_OK
                     },
                 ),
@@ -123,7 +123,7 @@ internal object Dispatcher {
                         KComObject.Method(DESC_TICK_HANDLER) {
                             if (done.compareAndSet(false, true)) {
                                 stopAndRelease(timerRef)
-                                block()
+                                runReportingFailure(block)
                             }
                             KComObject.S_OK
                         },
@@ -145,6 +145,20 @@ internal object Dispatcher {
                 // If not yet created (creation is still queued), the creating side's done check aborts it
                 runOnDispatchThread { stopAndRelease(timerRef) }
             }
+        }
+    }
+
+    /**
+     * Runs [block] and passes any exception thrown to the UI thread's uncaught exception handler (the same as Swing's EDT). DispatcherQueue
+     * forcibly terminates the process when a handler returns a failure (0xC000027B; doc/troubleshooting.md), so nothing is returned to native code.
+     */
+    @Suppress("TooGenericExceptionCaught") // Pass every exception from user code to the uncaught exception handler
+    private fun runReportingFailure(block: () -> Unit) {
+        try {
+            block()
+        } catch (t: Throwable) {
+            val thread = Thread.currentThread()
+            thread.uncaughtExceptionHandler.uncaughtException(thread, t)
         }
     }
 

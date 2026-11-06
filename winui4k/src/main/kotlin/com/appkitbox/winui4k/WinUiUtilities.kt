@@ -164,6 +164,8 @@ object WinUiUtilities {
      * Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
      * Calls made after the app has exited (the last window closed) throw [IllegalStateException].
      * A [block] posted right before exit may not run.
+     * Exceptions thrown from [block] are passed, as on Swing's EDT, to the UI thread's uncaught exception handler (Thread.uncaughtExceptionHandler;
+     * by default printed to standard error), and the UI thread keeps running.
      */
     @JvmStatic
     fun invokeLater(block: Runnable) {
@@ -175,6 +177,7 @@ object WinUiUtilities {
      * Runs [block] once on the UI thread after [delayMillis] milliseconds (a one-shot
      * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
      * fired yet. Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
+     * Exceptions thrown from [block] are passed to the UI thread's uncaught exception handler, the same as [invokeLater].
      */
     @JvmStatic
     fun schedule(delayMillis: Long, block: Runnable): AutoCloseable {

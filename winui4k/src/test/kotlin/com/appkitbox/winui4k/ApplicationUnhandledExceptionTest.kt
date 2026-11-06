@@ -11,11 +11,14 @@ import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.function
 import com.appkitbox.winui4k.internal.ffi.api.withScope
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.util.Collections
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests the handling of the unhandled errors that XAML reports (Application.UnhandledException).
@@ -45,6 +48,30 @@ class ApplicationUnhandledExceptionTest : FunSpec() {
             error.hresult shouldBe E_ILLEGAL_METHOD_CALL
             error.message shouldContain "winui4k unhandled error test"
             onUiThreadGet { WButton("Continue").text } shouldBe "Continue"
+        }
+
+        context("Boundaries and exceptions") {
+            test("exceptions thrown inside invokeLater and schedule reach the UI thread's uncaught exception handler and the process does not crash (the same as Swing's EDT)") {
+                val received = Collections.synchronizedList(mutableListOf<Throwable>())
+                lateinit var previous: Thread.UncaughtExceptionHandler
+                onUiThread {
+                    val thread = Thread.currentThread()
+                    previous = thread.uncaughtExceptionHandler
+                    thread.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, t -> received += t }
+                }
+                try {
+                    WinUiUtilities.invokeLater { throw IllegalStateException("Exception from invokeLater") }
+                    WinUiUtilities.schedule(0) { throw IllegalArgumentException("Exception from schedule") }
+                    eventually(10.seconds) { received.size shouldBe 2 }
+                } finally {
+                    onUiThread { Thread.currentThread().uncaughtExceptionHandler = previous }
+                }
+                received.map { it::class to it.message }.toSet() shouldBe setOf(
+                    IllegalStateException::class to "Exception from invokeLater",
+                    IllegalArgumentException::class to "Exception from schedule",
+                )
+                onUiThreadGet { WButton("Continue").text } shouldBe "Continue"
+            }
         }
     }
 
