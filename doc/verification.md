@@ -275,3 +275,17 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - BreadcrumbBarItem のピアは Invoke を持ち、押すと ItemClicked が届く。VisualTreeHelper には DependencyObject のビューを渡すこと
     (コントロールの既定のインターフェースのポインタを渡すと Microsoft.UI.Xaml.dll の中でアクセス違反になる)
   - SemanticZoom.ViewChangeCompleted は ToggleActiveView と IsZoomedInViewActive の設定のどちらでも、切り替えの後に届く
+- JDialog 風の `WContentDialog` と JOptionPane 風の `WOptionPane` のために、ContentDialog の閉じ方を E2E テストで確かめた
+  (`WContentDialogTest`・`WOptionPaneTest`)
+  - Esc は、CloseButtonText が空でなければ閉じるボタンを押したことになり、CloseButtonClick → Closing → Closed (結果は None) が
+    閉じるボタンを押したときと同じ順で来る (`ContentDialog_Partial.cpp` の ProcessLayoutRootKey → ExecuteCloseAction。テンプレートの
+    LayoutRoot の KeyDown で処理する)。Swing は Esc を CLOSED_OPTION、キャンセルのボタンを CANCEL_OPTION と区別するので、
+    WOptionPane はダイアログ自身の PreviewKeyDown (トンネル) で Esc を先に受けて処理済みにし、Hide で閉じる。ウィンドウに
+    載せていない ContentDialog はダイアログごと Popup に載る (EntireControlInPopup) ので、ダイアログは中の要素の祖先になり、
+    PreviewKeyDown が届く
+  - 同じウィンドウ (XamlRoot) にほかの ContentDialog が開いている間の ShowAsync は、非同期の処理を
+    始めずにその場で E_ASYNC_OPERATION_NOT_STARTED (0x80000019、ERROR_CONTENTDIALOG_MULTIPLE_OPEN) を返す。
+    WContentDialog はこれを IllegalStateException にする
+  - 開いたまま持ち主のウィンドウを閉じると、XamlRoot.Content (ウィンドウの内容) の IsLoaded も false になる。showAndWait は
+    開いたときの XamlRoot.Content の IsLoaded を待ちの条件に入れるので、持ち主がメニュー項目のように先に外れる要素でも
+    ウィンドウが開いている限り待ち続ける
