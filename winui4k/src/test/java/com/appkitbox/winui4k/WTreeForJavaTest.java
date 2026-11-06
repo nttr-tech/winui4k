@@ -20,6 +20,7 @@ import com.appkitbox.winui4k.tree.TreeWillExpandListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -165,5 +166,64 @@ class WTreeForJavaTest {
             assertEquals(Arrays.asList("will Documents", "will collapse Folder", "collapsed Folder"), calls);
             assertEquals(1, tree.getRowCount());
         });
+    }
+
+    @Test
+    void buildWTreeNodesWithNewAndAddAndSelectWithGetSelectedNodeAndSetSelectedNode() {
+        onUiThread(() -> {
+            WTree tree = new WTree();
+            WTreeNode root = new WTreeNode("Folder");
+            WTreeNode documents = new WTreeNode("Documents");
+            WTreeNode images = new WTreeNode("Pictures");
+            root.add(documents);
+            root.add(images);
+            tree.addRootNode(root);
+            assertEquals(1, tree.getRootNodes().size());
+            assertEquals(2, root.getChildCount());
+            assertSame(images, root.getChildren().get(1));
+            assertTrue(root.getHasChildren());
+            assertNull(tree.getSelectedNode());
+            tree.setSelectedNode(documents);
+            assertSame(documents, tree.getSelectedNode());
+            assertSame(documents, tree.getSelectionPath().getLastPathComponent());
+            root.remove(images);
+            assertEquals(1, root.getChildCount());
+            tree.setSelectionMode(TreeViewSelectionMode.MULTIPLE);
+            tree.selectAll();
+            assertEquals(2, tree.getSelectedNodes().size());
+            tree.removeRootNode(root);
+            assertTrue(tree.getRootNodes().isEmpty());
+        });
+    }
+
+    @Test
+    void consumerListenersReceiveExpansionAndCollapseWhileShown() {
+        WTreeNode root = UiTestHarness.onUiThreadGet(() -> {
+            WTreeNode node = new WTreeNode("Root");
+            node.add(new WTreeNode("Child"));
+            return node;
+        });
+        WTree tree = UiTestHarness.onUiThreadGet(() -> {
+            WTree created = new WTree();
+            created.addRootNode(root);
+            return created;
+        });
+        List<String> calls = new ArrayList<>();
+        UiTestHarness.attachAndAwaitLoaded(tree);
+        try {
+            onUiThread(() -> {
+                Consumer<WTreeNode> expanding = node -> calls.add("expanding " + node.getText());
+                tree.addExpandingListener(expanding);
+                tree.addCollapsedListener(node -> calls.add("collapsed " + node.getText()));
+                tree.addItemInvokedListener(node -> calls.add("invoked " + node.getText()));
+                root.setExpanded(true);
+                root.setExpanded(false);
+                tree.removeExpandingListener(expanding);
+                root.setExpanded(true);
+            });
+        } finally {
+            UiTestHarness.detach(tree);
+        }
+        assertEquals(Arrays.asList("expanding Root", "collapsed Root"), calls);
     }
 }
