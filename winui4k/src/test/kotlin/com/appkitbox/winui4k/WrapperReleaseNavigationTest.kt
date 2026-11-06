@@ -117,6 +117,16 @@ class WrapperReleaseNavigationTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a WScrollView with a ChangeListener is also collected after being put in a window and removed") {
+            val sink = received
+            val reference = shownAndHidden {
+                WScrollView(WLabel("a")).also { view ->
+                    view.addChangeListener { e -> sink += e.source.javaClass }
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a WTabView that was never placed is also collected once all its ChangeListeners are removed") {
             val reference = onUiThreadGet {
                 val tabView = WTabView()

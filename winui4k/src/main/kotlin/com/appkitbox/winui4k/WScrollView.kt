@@ -82,10 +82,15 @@ enum class ScrollingZoomMode(internal val native: Int) {
  * It differs from ScrollViewer ([WScrollPane]) in that the vertical/horizontal behavior is
  * switched via [contentOrientation], and scroll position changes are exposed as the
  * [scrollTo] / [scrollBy] methods.
+ *
+ * For people familiar with Swing's JScrollPane, it also has [setViewportView] with the same name, scroll bar policies with [WScrollPaneConstants]
+ * ([verticalScrollBarPolicy] / [horizontalScrollBarPolicy]), [viewPosition] and [addChangeListener] (the WinUI names can be used as is too).
  */
-class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WControl(
-    Activation.composeDefault(XamlInterop.CLS_ScrollView, XamlInterop.IID_IScrollViewFactory), // default interface = IScrollView
-) {
+class WScrollView @JvmOverloads constructor(content: WComponent? = null) :
+    WControl(
+        Activation.composeDefault(XamlInterop.CLS_ScrollView, XamlInterop.IID_IScrollViewFactory), // Default interface = IScrollView
+    ),
+    WScrollPaneConstants {
     /** ViewChanged event tokens registered via addViewChangedListener. */
     private val viewChangedTokens = ListenerTokens<Runnable>()
 
@@ -141,6 +146,151 @@ class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WCont
     var maxZoomFactor: Double
         get() = inspectable.getDouble(XamlInterop.IScrollView_get_MaxZoomFactor)
         set(value) = inspectable.call(XamlInterop.IScrollView_put_MaxZoomFactor, value)
+
+    /** JScrollPane.setViewportView-like: sets the content to show (same as setting [content]). */
+    fun setViewportView(view: WComponent?) {
+        content = view
+    }
+
+    /**
+     * JScrollPane.getVerticalScrollBarPolicy / setVerticalScrollBarPolicy-like: reads and writes the vertical scroll bar policy with [WScrollPaneConstants] values.
+     * AS_NEEDED = AUTO, ALWAYS = VISIBLE, NEVER = HIDDEN ([verticalScrollBarVisibility]), and all of them enable vertical scrolling
+     * (vertical is included in [contentOrientation]: HORIZONTAL becomes BOTH, and NONE becomes VERTICAL). As with [WScrollPane], NEVER
+     * only hides the bar and does not shrink the content height. Returns NEVER when [contentOrientation] does not include vertical (HORIZONTAL / NONE).
+     *
+     * @throws IllegalArgumentException for values other than VERTICAL_SCROLLBAR_* (as in Swing)
+     */
+    var verticalScrollBarPolicy: Int
+        get() = when {
+            !contentOrientation.scrollsVertically() -> WScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER
+            else -> when (verticalScrollBarVisibility) {
+                ScrollingScrollBarVisibility.AUTO -> WScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+                ScrollingScrollBarVisibility.VISIBLE -> WScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+                ScrollingScrollBarVisibility.HIDDEN -> WScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER
+            }
+        }
+        set(value) {
+            verticalScrollBarVisibility = when (value) {
+                WScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED -> ScrollingScrollBarVisibility.AUTO
+                WScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS -> ScrollingScrollBarVisibility.VISIBLE
+                WScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER -> ScrollingScrollBarVisibility.HIDDEN
+                else -> throw IllegalArgumentException("invalid verticalScrollBarPolicy: $value")
+            }
+            contentOrientation = when (contentOrientation) {
+                ScrollingContentOrientation.HORIZONTAL -> ScrollingContentOrientation.BOTH
+                ScrollingContentOrientation.NONE -> ScrollingContentOrientation.VERTICAL
+                else -> contentOrientation
+            }
+        }
+
+    /**
+     * JScrollPane.getHorizontalScrollBarPolicy / setHorizontalScrollBarPolicy-like: reads and writes the horizontal scroll bar policy with [WScrollPaneConstants] values.
+     * AS_NEEDED / ALWAYS / NEVER all enable horizontal scrolling (horizontal is included in [contentOrientation]: VERTICAL becomes BOTH, and NONE becomes HORIZONTAL).
+     * The default [contentOrientation] is VERTICAL (no horizontal scrolling), so it returns NEVER if nothing is set.
+     *
+     * @throws IllegalArgumentException for values other than HORIZONTAL_SCROLLBAR_* (as in Swing)
+     */
+    var horizontalScrollBarPolicy: Int
+        get() = when {
+            !contentOrientation.scrollsHorizontally() -> WScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            else -> when (horizontalScrollBarVisibility) {
+                ScrollingScrollBarVisibility.AUTO -> WScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+                ScrollingScrollBarVisibility.VISIBLE -> WScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
+                ScrollingScrollBarVisibility.HIDDEN -> WScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            }
+        }
+        set(value) {
+            horizontalScrollBarVisibility = when (value) {
+                WScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED -> ScrollingScrollBarVisibility.AUTO
+                WScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS -> ScrollingScrollBarVisibility.VISIBLE
+                WScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER -> ScrollingScrollBarVisibility.HIDDEN
+                else -> throw IllegalArgumentException("invalid horizontalScrollBarPolicy: $value")
+            }
+            contentOrientation = when (contentOrientation) {
+                ScrollingContentOrientation.VERTICAL -> ScrollingContentOrientation.BOTH
+                ScrollingContentOrientation.NONE -> ScrollingContentOrientation.HORIZONTAL
+                else -> contentOrientation
+            }
+        }
+
+    /**
+     * JViewport.getViewPosition / setViewPosition-like: the content position visible at the top-left of the viewport (DIP rounded to integers).
+     * Setting is done with ScrollView.ScrollTo without animation (AnimationMode = Disabled of ScrollingScrollOptions).
+     * ScrollView changes the position asynchronously later, so it may still return the previous position when the setter returns (Swing changes it immediately).
+     * The position is kept within 0 to the scrollable amount.
+     */
+    var viewPosition: WPoint
+        get() = WPoint(Math.round(horizontalOffset).toInt(), Math.round(verticalOffset).toInt())
+        set(value) {
+            val options = Ffi.backend.withScope { scope ->
+                val factory = Activation.factory(XamlInterop.CLS_ScrollingScrollOptions, XamlInterop.IID_IScrollingScrollOptionsFactory)
+                try {
+                    val inner = scope.allocate(8)
+                    val instance = scope.allocate(8)
+                    factory.call(XamlInterop.IScrollingScrollOptionsFactory_CreateInstance, XamlInterop.ScrollingAnimationMode_Disabled, null, inner, instance)
+                    // Creation without derivation does not use inner, so return the received reference
+                    val innerPtr = Ffi.backend.memory.getPtr(inner, 0)
+                    if (!innerPtr.isNull) ComPtr(innerPtr).release()
+                    ComPtr(Ffi.backend.memory.getPtr(instance, 0))
+                } finally {
+                    factory.release()
+                }
+            }
+            try {
+                Ffi.backend.withScope { scope ->
+                    val correlationId = scope.allocate(4) // out int correlationId (unused)
+                    inspectable.call(XamlInterop.IScrollView_ScrollToWithOptions, value.x.toDouble(), value.y.toDouble(), options.ptr, correlationId)
+                }
+            } finally {
+                options.release()
+            }
+        }
+
+    /** The content width (ScrollView.ExtentWidth). */
+    val extentWidth: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ExtentWidth)
+
+    /** The content height (ScrollView.ExtentHeight). */
+    val extentHeight: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ExtentHeight)
+
+    /** The viewport width (ScrollView.ViewportWidth). */
+    val viewportWidth: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ViewportWidth)
+
+    /** The viewport height (ScrollView.ViewportHeight). */
+    val viewportHeight: Double
+        get() = inspectable.getDouble(XamlInterop.IScrollView_get_ViewportHeight)
+
+    /** The ChangeListeners. The ViewChanged handler is registered only once, when the first listener is added. */
+    private val changeListeners = ChangeListeners(this) { addViewChangedHandler() }
+
+    /**
+     * ChangeListener-like (corresponding to JViewport's ChangeListener): receives a [WChangeEvent] every time the scroll position or zoom factor changes
+     * (the source is this control) (ScrollView.ViewChanged; also called during inertial scrolling).
+     * Inside the listener, [viewPosition] returns the value after the change.
+     */
+    fun addChangeListener(listener: WChangeListener) {
+        changeListeners.add(listener)
+    }
+
+    /** Removes one [WChangeListener] added with [addChangeListener]. */
+    fun removeChangeListener(listener: WChangeListener) {
+        changeListeners.remove(listener)
+    }
+
+    /** The ChangeListeners currently added (in the order added). */
+    fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
+
+    private fun addViewChangedHandler() {
+        // The handler stays on the native side, so it does not capture this control strongly but looks it up from the anchor (see ListenerAnchor)
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.ScrollViewChangeListenerHandler",
+            XamlInterop.IID_ScrollViewViewChangedHandler,
+            XamlInterop.IScrollView_add_ViewChanged,
+        ) { _, _ -> (anchor.get() as? WScrollView)?.changeListeners?.fire() }
+    }
 
     /** The current horizontal scroll position (ScrollView.HorizontalOffset). */
     val horizontalOffset: Double
@@ -212,3 +362,9 @@ class WScrollView @JvmOverloads constructor(content: WComponent? = null) : WCont
         if (content != null) this.content = content
     }
 }
+
+private fun ScrollingContentOrientation.scrollsVertically(): Boolean =
+    this == ScrollingContentOrientation.VERTICAL || this == ScrollingContentOrientation.BOTH
+
+private fun ScrollingContentOrientation.scrollsHorizontally(): Boolean =
+    this == ScrollingContentOrientation.HORIZONTAL || this == ScrollingContentOrientation.BOTH
