@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.TextInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.io.IOException
 import java.io.Reader
@@ -17,8 +18,9 @@ import kotlin.jvm.JvmSynthetic
 /**
  * JTextArea / JTextPane-style: WinUI 3's RichEditBox.
  *
- * Edits multi-line text, and also handles formatted text such as bold and italic. Formatting is toggled on the
- * selection with [toggleSelectionBold] / [toggleSelectionItalic]. The whole content is read and written with [text]
+ * Edits multi-line text, and also handles formatted text such as bold and italic. As with JTextPane, formatting is read and written by passing
+ * a [WSimpleAttributeSet] to [setCharacterAttributes] / [getCharacterAttributes] and [styledDocument] ([WStyledDocument]),
+ * or toggled on the selection with [toggleSelectionBold] / [toggleSelectionItalic]. The whole content is read and written with [text]
  * (plain text) and [rtfText] (RTF format).
  *
  * As with Swing's JTextArea, positions are the number of characters from the start of the text (in UTF-16 chars), and
@@ -35,9 +37,8 @@ import kotlin.jvm.JvmSynthetic
  * shows NoWrap).
  * To disable wrapping, set `lineWrap = false`.
  *
- * JTextPane's StyledDocument (a sequence of characters with attributes) is not provided. Character formatting is
- * changed with [toggleSelectionBold] and the like on the selection. Changing formatting at a specified position is not
- * supported.
+ * The formatting attributes are only the six of [WStyleConstants] (bold, italic, underline, color, size, font family). Swing's Style (addStyle / getStyle /
+ * setLogicalStyle) and paragraph attributes (setParagraphAttributes) are not provided.
  *
  * Unlike JTextArea(String text), the `(String)` constructor takes the placeholder text ([placeholderText]) (to keep
  * the form from earlier versions). To initialize with text, use `(text, rows, columns)` or set [text].
@@ -74,20 +75,29 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
      * (the same as [WTextField.document]; positions and line breaks are the same as [text]). When modified with [WDocument.insertString] / [WDocument.remove],
      * the caret moves the same way as Swing's DefaultCaret.
      */
-    val document: WDocument = WDocument(
+    val document: WStyledDocument = WStyledDocument(
         object : DocumentHost {
             override val events: DocumentEvents get() = documentEvents
 
             override fun readText(): String = nativeText()
 
-            override fun write(offset: Int, length: Int, text: String, attributes: WAttributeSet?) = writeRange(offset, length, text)
+            override fun write(offset: Int, length: Int, text: String, attributes: WAttributeSet?) =
+                writeRange(offset, length, text, attributes)
 
             override fun afterWrite() = caret.check()
         },
+        this,
     )
 
-    /** Replaces [length] characters from [offset] with [inserted] (ITextRange.SetText) and moves the caret and the selection ends the same way as DefaultCaret. */
-    private fun writeRange(offset: Int, length: Int, inserted: String) {
+    /** JTextPane.getStyledDocument-like: the same as [document]. */
+    val styledDocument: WStyledDocument get() = document
+
+    /**
+     * Replaces [length] characters from [offset] with [inserted] (ITextRange.SetText) and moves the caret and the selection ends the same way as DefaultCaret.
+     * If there are [attributes], the inserted text is formatted with them (the same as replace = true).
+     */
+    private fun writeRange(offset: Int, length: Int, inserted: String, attributes: WAttributeSet?) {
+        val format = attributes?.let(CharacterFormat::of)
         val before = this.length
         val (dot, mark) = nativeCaret()
         writable {
@@ -96,6 +106,7 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
             }
         }
         val added = this.length - before + length
+        if (format != null && added > 0) writable { withRange(offset, offset + added) { range -> applyFormat(range, format, true) } }
         setDotMark(caretAfterEdit(dot, offset, length, added), caretAfterEdit(mark, offset, length, added))
     }
 
@@ -635,6 +646,77 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     /** Redoes the most recently undone edit (ITextDocument.Redo). */
     fun redo() {
         textDocument.call(XamlInterop.ITextDocument_Redo)
+    }
+
+    /**
+     * JTextPane.setCharacterAttributes-like: sets the formatting of the selection to [attributes] (the same as [WStyledDocument.setCharacterAttributes];
+     * if [replace] is true, the current formatting is reset to the default first). If there is no selection, as with Swing's input attributes,
+     * it becomes the formatting of characters typed from now on at the caret position (RichEditBox's selection formatting). If there is a selection, listeners receive changedUpdate.
+     * See [WStyleConstants] for the attribute keys and values.
+     *
+     * @throws IllegalArgumentException if an attribute value has the wrong type
+     */
+    fun setCharacterAttributes(attributes: WAttributeSet, replace: Boolean) {
+        val format = CharacterFormat.of(attributes)
+        val start = selectionStart
+        val end = selectionEnd
+        if (start != end) {
+            setCharacterAttributes(start, end - start, attributes, replace)
+            return
+        }
+        writable { withSelection { range -> applyFormat(range, format, replace) } }
+    }
+
+    /** The body of [WStyledDocument.setCharacterAttributes]. */
+    internal fun setCharacterAttributes(offset: Int, length: Int, attributes: WAttributeSet, replace: Boolean) {
+        require(offset >= 0) { "Negative position: $offset" }
+        val format = CharacterFormat.of(attributes)
+        if (length <= 0) return
+        val end = minOf(offset + length, this.length)
+        if (end <= offset) return
+        writable { withRange(offset, end) { range -> applyFormat(range, format, replace) } }
+        documentEvents.changed(offset, end - offset)
+    }
+
+    /**
+     * JTextPane.getCharacterAttributes-like: the formatting of the character at the caret position (the one character after the caret; at the end, the final paragraph mark).
+     * Unlike Swing, all six attributes of [WStyleConstants] (bold, italic, underline, color, size, font family) are always present
+     * (the values are the native effective values; the size is converted to DIP and rounded to an integer). Changing the returned collection does not change the text formatting.
+     */
+    fun getCharacterAttributes(): WAttributeSet = getCharacterAttributes(caretPosition)
+
+    /** The body of [WStyledDocument.getCharacterAttributes]. */
+    internal fun getCharacterAttributes(offset: Int): WAttributeSet {
+        require(offset in 0..length) { "Position out of range: $offset (length $length)" }
+        return withRange(offset, offset + 1) { range -> readFormat(range) }
+    }
+
+    /** Puts [format] into the formatting (ITextCharacterFormat) of [range]. If [replace], the document's default formatting is copied first. */
+    private fun applyFormat(range: ComPtr, format: CharacterFormat, replace: Boolean) {
+        val native = range.getPtr(XamlInterop.ITextRange_get_CharacterFormat)
+        try {
+            if (replace) {
+                val defaults = textDocument.getPtr(TextInterop.ITextDocument_GetDefaultCharacterFormat)
+                try {
+                    native.call(TextInterop.ITextCharacterFormat_SetClone, defaults)
+                } finally {
+                    defaults.release()
+                }
+            }
+            format.applyTo(native)
+        } finally {
+            native.release()
+        }
+    }
+
+    /** Reads the formatting of [range] as the six attributes of [WStyleConstants]. */
+    private fun readFormat(range: ComPtr): WAttributeSet {
+        val native = range.getPtr(XamlInterop.ITextRange_get_CharacterFormat)
+        try {
+            return CharacterFormat.read(native)
+        } finally {
+            native.release()
+        }
     }
 
     /**
