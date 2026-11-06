@@ -760,7 +760,7 @@ abstract class WComponent internal constructor(
         set(value) = uiElement.call(XamlInterop.IUIElement_put_Opacity, value)
 
     /** Whether this is shown (UIElement.Visibility). false is Collapsed (doesn't reserve layout space either). */
-    var isVisible: Boolean
+    open var isVisible: Boolean
         get() = uiElement.getInt(XamlInterop.IUIElement_get_Visibility) == 0 // Visibility.Visible
         set(value) = uiElement.call(XamlInterop.IUIElement_put_Visibility, if (value) 0 else 1)
 

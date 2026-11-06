@@ -86,11 +86,7 @@ internal object ModalLoop {
      * [IllegalStateException] where it cannot be called (off the UI thread, inside layout notifications).
      */
     fun run(isDone: () -> Boolean): Boolean {
-        check(Dispatcher.isDispatchThread) { "the nested message loop can be run only from the UI thread" }
-        check(layoutDepth == 0) {
-            "cannot wait for a dialog to close inside a layout notification (SizeChanged, Loaded, LayoutUpdated, layout manager)" +
-                " (XAML layout and rendering would stay stopped). Open it later with WinUiUtilities.invokeLater"
-        }
+        checkRunnable()
         depth++
         try {
             return Ffi.backend.withScope { scope ->
@@ -99,6 +95,18 @@ internal object ModalLoop {
             }
         } finally {
             depth--
+        }
+    }
+
+    /**
+     * Checks whether [run] can be run here now, and if not throws the same [IllegalStateException] as [run]. APIs that open a dialog and then
+     * wait call this before opening (refusing after opening would return the exception to the caller with the dialog left open).
+     */
+    fun checkRunnable() {
+        check(Dispatcher.isDispatchThread) { "the nested message loop can be run only from the UI thread" }
+        check(layoutDepth == 0) {
+            "cannot wait for a dialog to close inside a layout notification (SizeChanged, Loaded, LayoutUpdated, layout manager)" +
+                " (XAML layout and rendering would stay stopped). Open it later with WinUiUtilities.invokeLater"
         }
     }
 
