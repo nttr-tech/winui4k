@@ -1,13 +1,16 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
-/** Tests verifying WInfoBar's displayed content (title / message / severity) and open state. */
+/** Tests for WInfoBar's content (title / message / severity / icon), open state and Closing / Closed listeners. */
 class WInfoBarTest : FunSpec() {
     init {
         test("title and message return exactly the strings that were set") {
@@ -63,5 +66,63 @@ class WInfoBarTest : FunSpec() {
             set shouldBeSameInstanceAs button
             cleared shouldBe null
         }
+
+        test("icon is null by default, setting it attaches the native IconSource, and null removes it") {
+            onUiThreadGet {
+                val infoBar = WInfoBar()
+                val initial = listOf(infoBar.icon, infoBar.hasNativeIcon())
+                infoBar.icon = Symbol.SAVE
+                val set = listOf(infoBar.icon, infoBar.hasNativeIcon())
+                infoBar.icon = null
+                initial + set + listOf(infoBar.icon, infoBar.hasNativeIcon())
+            } shouldContainExactly listOf(null, false, Symbol.SAVE, true, null, false)
+        }
+
+        test("setting isOpen to false calls Closing and then Closed with PROGRAMMATIC") {
+            onUiThreadGet {
+                val events = ArrayList<String>()
+                val infoBar = WInfoBar()
+                infoBar.isOpen = true
+                infoBar.addClosingListener { e ->
+                    events += "closing:${e.reason}:${e.isCancel}:${e.infoBar === infoBar}"
+                }
+                infoBar.addCloseListener { events += "closed:$it" }
+                infoBar.isOpen = false
+                events + "isOpen=${infoBar.isOpen}"
+            } shouldContainExactly listOf("closing:PROGRAMMATIC:false:true", "closed:PROGRAMMATIC", "isOpen=false")
+        }
+
+        test("setting isCancel to true in Closing keeps it open and Closed is not called. Later listeners receive the previous value") {
+            onUiThreadGet {
+                val events = ArrayList<String>()
+                val infoBar = WInfoBar()
+                infoBar.isOpen = true
+                infoBar.addClosingListener { e -> e.isCancel = true }
+                infoBar.addClosingListener { e -> events += "second:${e.isCancel}" }
+                infoBar.addCloseListener { events += "closed:$it" }
+                infoBar.isOpen = false
+                events + "isOpen=${infoBar.isOpen}"
+            } shouldContainExactly listOf("second:true", "isOpen=true")
+        }
+
+        test("removed listeners are not called") {
+            onUiThreadGet {
+                val events = ArrayList<String>()
+                val infoBar = WInfoBar()
+                val closing: (WInfoBarClosingEvent) -> Unit = { events += "closing" }
+                val closed: (InfoBarCloseReason) -> Unit = { events += "closed" }
+                infoBar.addClosingListener(closing)
+                infoBar.addCloseListener(closed)
+                infoBar.removeClosingListener(closing)
+                infoBar.removeCloseListener(closed)
+                infoBar.isOpen = true
+                infoBar.isOpen = false
+                events
+            }.shouldBeEmpty()
+        }
     }
+
+    /** Whether the native InfoBar.IconSource is set. */
+    private fun WInfoBar.hasNativeIcon(): Boolean =
+        inspectable.getPtrOrNull(XamlInterop.IInfoBar_get_IconSource)?.also { it.release() } != null
 }

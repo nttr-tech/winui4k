@@ -1850,6 +1850,7 @@ internal object XamlInterop {
     const val IID_IInfoBadge = "82104d7f-03d4-5ea4-872e-f9ecab758601"
     const val IInfoBadge_get_Value = 6                 // get_Value(out INT32)
     const val IInfoBadge_put_Value = 7                 // put_Value(INT32) — -1 for a dot badge, >= 0 for a numeric one
+    const val IInfoBadge_get_IconSource = 8            // get_IconSource(out IconSource)
     const val IInfoBadge_put_IconSource = 9            // put_IconSource(IconSource)
 
     // ---- Microsoft.UI.Xaml.Controls.InfoBar ----
@@ -1864,6 +1865,8 @@ internal object XamlInterop {
     const val IInfoBar_put_Message = 11                // put_Message(HSTRING)
     const val IInfoBar_get_Severity = 12               // get_Severity(out InfoBarSeverity)
     const val IInfoBar_put_Severity = 13               // put_Severity(InfoBarSeverity)
+    const val IInfoBar_get_IconSource = 14             // get_IconSource(out IconSource)
+    const val IInfoBar_put_IconSource = 15             // put_IconSource(IconSource)
     const val IInfoBar_get_IsIconVisible = 16          // get_IsIconVisible(out boolean)
     const val IInfoBar_put_IsIconVisible = 17          // put_IsIconVisible(boolean)
     const val IInfoBar_get_IsClosable = 18             // get_IsClosable(out boolean)
@@ -1872,10 +1875,36 @@ internal object XamlInterop {
     const val IInfoBar_put_Content = 29                // put_Content(object)
     const val IInfoBar_add_CloseButtonClick = 33       // add_CloseButtonClick(TypedEventHandler<InfoBar, object>, out token)
     const val IInfoBar_remove_CloseButtonClick = 34
+    const val IInfoBar_add_Closing = 35                // add_Closing(TypedEventHandler<InfoBar, InfoBarClosingEventArgs>, out token)
+    const val IInfoBar_remove_Closing = 36
     const val IInfoBar_add_Closed = 37                 // add_Closed(TypedEventHandler<InfoBar, InfoBarClosedEventArgs>, out token)
     const val IInfoBar_remove_Closed = 38
+    const val IID_IInfoBarClosingEventArgs = "062d01d6-61af-5435-8c4b-c51106583b5b"
+    const val IInfoBarClosingEventArgs_get_Reason = 6  // get_Reason(out InfoBarCloseReason)
+    const val IInfoBarClosingEventArgs_get_Cancel = 7  // get_Cancel(out boolean)
+    const val IInfoBarClosingEventArgs_put_Cancel = 8  // put_Cancel(boolean)
+    const val IID_IInfoBarClosedEventArgs = "593af0b3-bded-53da-8f56-80ed3c64322c"
+    const val IInfoBarClosedEventArgs_get_Reason = 6   // get_Reason(out InfoBarCloseReason)
 
-    /** Actual IID of TypedEventHandler<InfoBar, Object> (shared by CloseButtonClick / Closed). */
+    /** Concrete IID of TypedEventHandler<InfoBar, InfoBarClosingEventArgs>. */
+    val IID_InfoBarClosingHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.InfoBar;{$IID_IInfoBar});" +
+                "rc(Microsoft.UI.Xaml.Controls.InfoBarClosingEventArgs;{$IID_IInfoBarClosingEventArgs}))",
+        )
+    }
+
+    /** Concrete IID of TypedEventHandler<InfoBar, InfoBarClosedEventArgs>. */
+    val IID_InfoBarClosedHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.Controls.InfoBar;{$IID_IInfoBar});" +
+                "rc(Microsoft.UI.Xaml.Controls.InfoBarClosedEventArgs;{$IID_IInfoBarClosedEventArgs}))",
+        )
+    }
+
+    /** Concrete IID of TypedEventHandler<InfoBar, Object> (CloseButtonClick). */
     val IID_InfoBarCloseButtonClickHandler: String by lazy {
         Pinterface.iid(
             "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +

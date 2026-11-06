@@ -1,11 +1,14 @@
 package com.appkitbox.winui4k
 
+import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.EventObject
+import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -34,6 +37,39 @@ enum class InfoBarSeverity(internal val native: Int) {
 }
 
 /**
+ * Microsoft.UI.Xaml.Controls.InfoBarCloseReason (how it was closed). Values extracted from winmd (CloseButton=0, Programmatic=1).
+ */
+enum class InfoBarCloseReason(internal val native: Int) {
+    /** Closed with the × (close) button. */
+    CLOSE_BUTTON(0),
+
+    /** Closed programmatically ([WInfoBar.isOpen] = false). */
+    PROGRAMMATIC(1),
+    ;
+
+    internal companion object {
+        @JvmSynthetic
+        fun of(native: Int): InfoBarCloseReason = entries.first { it.native == native }
+    }
+}
+
+/**
+ * An event telling that a [WInfoBar] is about to close (InfoBar.Closing). The source is the bar ([infoBar]).
+ * Setting [isCancel] to true keeps it from closing (InfoBarClosingEventArgs.Cancel). With multiple listeners, the next listener receives
+ * the value set by the previous one.
+ */
+class WInfoBarClosingEvent internal constructor(
+    source: WInfoBar,
+    /** The reason for closing. */
+    val reason: InfoBarCloseReason,
+    /** If set to true, the bar stays open instead of closing. */
+    var isCancel: Boolean = false,
+) : EventObject(source) {
+    /** The bar the event came from (the same as [getSource]). */
+    val infoBar: WInfoBar get() = source as WInfoBar
+}
+
+/**
  * WinUI 3's InfoBar (an in-app inline notification bar). No Swing equivalent, so we keep
  * WinUI's class name as-is. Unlike a ContentDialog, it doesn't block user interaction and keeps
  * showing a state change (a save completing, a connection error, etc.) in the content area.
@@ -41,12 +77,17 @@ enum class InfoBarSeverity(internal val native: Int) {
  * [title] / [message] / [severity] control the content and appearance, and [isOpen] shows or
  * hides it (closed by default, so set isOpen = true to display it). It can also have an
  * [isClosable] close (x) button and an [actionButton] action button.
+ * The bar is shown and hidden with [isOpen], not [isVisible] (WComponent's visibility)
+ * (a bar with isOpen = false draws nothing even if isVisible is true).
+ * Before and after closing can be received with [addClosingListener] (cancelable) and [addCloseListener].
  */
 class WInfoBar : WControl(
     Activation.composeDefault(XamlInterop.CLS_InfoBar, XamlInterop.IID_IInfoBarFactory), // default interface = IInfoBar
 ) {
     /** CloseButtonClick event tokens registered via addCloseButtonListener. */
     private val closeButtonTokens = ListenerTokens<Runnable>()
+    private val closingTokens = ListenerTokens<Consumer<WInfoBarClosingEvent>>()
+    private val closeTokens = ListenerTokens<Consumer<InfoBarCloseReason>>()
 
     private var actionButtonComponent: WButtonBase? = null
 
@@ -103,6 +144,18 @@ class WInfoBar : WControl(
             }
         }
 
+    /** The icon to the left of the title (InfoBar.IconSource). If null (default), the default icon of [severity]. */
+    var icon: WIcon? = null
+        set(value) {
+            val source = value?.createIconSource()
+            try {
+                inspectable.call(XamlInterop.IInfoBar_put_IconSource, source?.ptr)
+            } finally {
+                source?.release()
+            }
+            field = value
+        }
+
     /** Arbitrary content placed below the message (InfoBar.Content). */
     var content: WComponent? = null
         set(value) {
@@ -139,5 +192,86 @@ class WInfoBar : WControl(
     fun removeCloseButtonListenerForJava(listener: Runnable) {
         val token = closeButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_CloseButtonClick, token)
+    }
+
+    /**
+     * Registers a listener called before closing (InfoBar.Closing). Called both for the × button and for [isOpen] = false, and
+     * setting [WInfoBarClosingEvent.isCancel] to true keeps it from closing.
+     */
+    @JvmSynthetic
+    fun addClosingListener(listener: (WInfoBarClosingEvent) -> Unit) {
+        val adapter = Consumer<WInfoBarClosingEvent> { listener(it) }
+        addClosingListenerForJava(adapter)
+        closingTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addClosingListener")
+    fun addClosingListenerForJava(listener: Consumer<WInfoBarClosingEvent>) {
+        val anchor = listenerAnchor
+        val token = inspectable.addEventHandler(
+            "WinUI4K.InfoBarClosingHandler",
+            XamlInterop.IID_InfoBarClosingHandler,
+            XamlInterop.IInfoBar_add_Closing,
+        ) { _, args ->
+            (anchor.get() as? WInfoBar)?.let { bar ->
+                val closingArgs = ComPtr(args) // Borrowed (not Released)
+                val event = WInfoBarClosingEvent(
+                    bar,
+                    InfoBarCloseReason.of(closingArgs.getInt(XamlInterop.IInfoBarClosingEventArgs_get_Reason)),
+                    closingArgs.getBool(XamlInterop.IInfoBarClosingEventArgs_get_Cancel),
+                )
+                listener.accept(event)
+                closingArgs.putBool(XamlInterop.IInfoBarClosingEventArgs_put_Cancel, event.isCancel)
+            }
+        }
+        closingTokens.add(listener, token)
+        anchor.listenerAdded()
+    }
+
+    /** Unsubscribes a listener registered with [addClosingListener]. */
+    @JvmSynthetic
+    fun removeClosingListener(listener: (WInfoBarClosingEvent) -> Unit) {
+        val adapter = closingTokens.removeKotlinAdapter(listener) ?: return
+        removeClosingListenerForJava(adapter)
+    }
+
+    @JvmName("removeClosingListener")
+    fun removeClosingListenerForJava(listener: Consumer<WInfoBarClosingEvent>) {
+        val token = closingTokens.remove(listener) ?: return
+        inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_Closing, token)
+        listenerAnchor.listenerRemoved()
+    }
+
+    /** Registers a listener called when closed (InfoBar.Closed). The reason for closing is passed. */
+    @JvmSynthetic
+    fun addCloseListener(listener: (InfoBarCloseReason) -> Unit) {
+        val adapter = Consumer<InfoBarCloseReason> { listener(it) }
+        addCloseListenerForJava(adapter)
+        closeTokens.addKotlinAdapter(listener, adapter)
+    }
+
+    @JvmName("addCloseListener")
+    fun addCloseListenerForJava(listener: Consumer<InfoBarCloseReason>) {
+        val token = inspectable.addEventHandler(
+            "WinUI4K.InfoBarClosedHandler",
+            XamlInterop.IID_InfoBarClosedHandler,
+            XamlInterop.IInfoBar_add_Closed,
+        ) { _, args ->
+            listener.accept(InfoBarCloseReason.of(ComPtr(args).getInt(XamlInterop.IInfoBarClosedEventArgs_get_Reason)))
+        }
+        closeTokens.add(listener, token)
+    }
+
+    /** Unsubscribes a listener registered with [addCloseListener]. */
+    @JvmSynthetic
+    fun removeCloseListener(listener: (InfoBarCloseReason) -> Unit) {
+        val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
+        removeCloseListenerForJava(adapter)
+    }
+
+    @JvmName("removeCloseListener")
+    fun removeCloseListenerForJava(listener: Consumer<InfoBarCloseReason>) {
+        val token = closeTokens.remove(listener) ?: return
+        inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_Closed, token)
     }
 }

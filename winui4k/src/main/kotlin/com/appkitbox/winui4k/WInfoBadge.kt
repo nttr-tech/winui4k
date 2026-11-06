@@ -9,7 +9,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * show an unread count or draw attention.
  *
  * Setting [value] to 0 or greater shows a numeric badge; the default -1 shows a small dot
- * badge instead. Use [setSymbolIcon] to show an icon (takes priority over value).
+ * badge instead. Use [icon] (or [setSymbolIcon]) to show an icon (takes priority over value).
  */
 class WInfoBadge : WControl(
     Activation.composeDefault(XamlInterop.CLS_InfoBadge, XamlInterop.IID_IInfoBadgeFactory), // default interface = IInfoBadge
@@ -22,13 +22,23 @@ class WInfoBadge : WControl(
         get() = inspectable.getInt(XamlInterop.IInfoBadge_get_Value)
         set(value) = inspectable.call(XamlInterop.IInfoBadge_put_Value, value)
 
-    /** Turns this into an icon badge (InfoBadge.IconSource). Creates and passes a SymbolIconSource. */
-    fun setSymbolIcon(symbol: Symbol) {
-        val iconSource = symbol.createIconSource()
-        try {
-            inspectable.call(XamlInterop.IInfoBadge_put_IconSource, iconSource.ptr)
-        } finally {
-            iconSource.release()
+    /**
+     * The icon of an icon badge (InfoBadge.IconSource). If null (default), a numeric or dot badge from [value].
+     * An icon set with [setSymbolIcon] can also be read here.
+     */
+    var icon: WIcon? = null
+        set(value) {
+            val source = value?.createIconSource()
+            try {
+                inspectable.call(XamlInterop.IInfoBadge_put_IconSource, source?.ptr)
+            } finally {
+                source?.release()
+            }
+            field = value
         }
+
+    /** Makes it an icon badge (InfoBadge.IconSource). Same as setting [symbol] to [icon]. */
+    fun setSymbolIcon(symbol: Symbol) {
+        icon = symbol
     }
 }
