@@ -75,6 +75,40 @@ class WrapperReleaseWindowCloseTest : FunSpec() {
             Reclamation.awaitDestroyed(probe).shouldBeTrue()
         }
 
+        test("a WContentDialog whose owner window was closed while open is collected together with its show callback, and its native destroyed") {
+            val (frame, owner) = openFrame()
+            val (reference, marker, probe) = onUiThreadGet {
+                val dialog = WContentDialog("Confirm", WLabel("Continue?")).apply { closeButtonText = "Close" }
+                val marker = Marker()
+                dialog.show(owner) { events += "callback:$marker" }
+                Triple(WeakReference(dialog), WeakReference(marker), NativeProbe(dialog.inspectable))
+            }
+            eventually(5.seconds) { OpenContentDialogs.isOpen(owner).shouldBeTrue() }
+            onUiThread { frame.dispose() }
+            onUiThreadGet { reference.get()?.isVisible } shouldBe false
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitCollected(marker).shouldBeTrue()
+            Reclamation.awaitDestroyed(probe).shouldBeTrue()
+            events().shouldContainExactly(emptyList())
+        }
+
+        test("a dialog of WOptionPane's callback form whose owner window was closed with × while open is collected together with the callback, and its native destroyed") {
+            val (_, owner) = openFrame()
+            val marker = onUiThreadGet {
+                val marker = Marker()
+                WOptionPane.showConfirmDialog(owner, "Save?", "Confirm", WOptionPane.YES_NO_OPTION, WOptionPane.QUESTION_MESSAGE, null) {
+                    events += "result:$marker"
+                }
+                WeakReference(marker)
+            }
+            eventually(5.seconds) { OpenContentDialogs.isOpen(owner).shouldBeTrue() }
+            val probe = OpenContentDialogs.probe(owner).shouldNotBeNull()
+            TopLevelWindows.closeByTitle(TITLE)
+            eventually(5.seconds) { OpenContentDialogs.isLoaded(owner) shouldBe false }
+            Reclamation.awaitCollected(marker).shouldBeTrue()
+            Reclamation.awaitDestroyed(probe).shouldBeTrue()
+        }
+
         test("a WFlyout whose owner window was closed while open is collected and its native destroyed once the reference is released") {
             val (frame, owner) = openFrame()
             val (reference, probe) = onUiThreadGet {
