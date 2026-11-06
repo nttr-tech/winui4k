@@ -231,6 +231,27 @@ class WKeyEvent @JvmOverloads constructor(
             else -> VK_UNDEFINED
         }
 
+        /**
+         * Maps an AWT key code ([keyCode]) to a Windows virtual key (the value passed to KeyboardAccelerator.Key) (the inverse of [keyCodeOf]).
+         * Keys with left and right variants (Shift, Ctrl, Alt) map to the virtual key that does not distinguish left and right, and [VK_WINDOWS] to the left Windows key.
+         * Null if there is no mapping ([VK_UNDEFINED], [VK_META] and so on).
+         */
+        @JvmSynthetic
+        internal fun windowsKeyOf(keyCode: Int): Int? = WINDOWS_KEYS[keyCode]
+
+        /** The table for [windowsKeyOf]. Passes the virtual keys in ascending order through [keyCodeOf] and takes the first (left/right-agnostic) virtual key that gives the same key code. */
+        private val WINDOWS_KEYS: Map<Int, Int> by lazy {
+            val map = HashMap<Int, Int>()
+            for (windowsKey in 1 until WIN_VIRTUAL_KEY_LIMIT) {
+                val code = keyCodeOf(windowsKey)
+                if (code != VK_UNDEFINED) map.putIfAbsent(code, windowsKey)
+            }
+            map
+        }
+
+        /** The upper bound of Windows virtual key values (0x01 to 0xFE). */
+        private const val WIN_VIRTUAL_KEY_LIMIT = 0xFF
+
         // Windows virtual keys (Windows.System.VirtualKey / VK_* in WinUser.h) whose values differ from AWT
         private const val WIN_RETURN = 13
         private const val WIN_SNAPSHOT = 44

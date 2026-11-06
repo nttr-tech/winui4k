@@ -967,6 +967,45 @@ abstract class WComponent internal constructor(
         accelerators.release()
         accelerator.release()
     }
+
+    /**
+     * Adds a keyboard shortcut for [keyStroke] (Ctrl+S and so on) (UIElement.KeyboardAccelerators).
+     * As with [addKeyboardAccelerator] (VirtualKey), pressing it while this element is visible invokes the click-equivalent action.
+     * [WKeyStroke] is written with AWT key codes like Swing's KeyStroke, so keys not in VirtualKey (; , and so on) can also be used.
+     * Key strokes for character input, for key release, or including AltGraph or mouse buttons throw [IllegalArgumentException].
+     */
+    fun addKeyboardAccelerator(keyStroke: WKeyStroke) {
+        val (key, modifiers) = keyStroke.toAccelerator()
+        appendKeyboardAccelerator(createKeyboardAccelerator(key, modifiers))
+    }
+
+    /**
+     * Adds a keyboard shortcut that calls [action] when [keyStroke] is pressed
+     * (the [WKeyStroke] version of [addKeyboardAccelerator] (VirtualKey, ..., Runnable)). It sets Handled, so
+     * default behavior such as invoking a click does not happen. Unusable key strokes are the same as for [addKeyboardAccelerator] (WKeyStroke).
+     * Use it instead of Swing's InputMap and ActionMap (close to WHEN_IN_FOCUSED_WINDOW; works even when this element does not have focus).
+     */
+    fun addKeyboardAccelerator(keyStroke: WKeyStroke, action: Runnable) {
+        val (key, modifiers) = keyStroke.toAccelerator()
+        val accelerator = createKeyboardAccelerator(key, modifiers)
+        accelerator.addEventHandler(
+            "WinUI4K.KeyboardAcceleratorInvokedHandler",
+            XamlInterop.IID_KeyboardAcceleratorInvokedHandler,
+            XamlInterop.IKeyboardAccelerator_add_Invoked,
+        ) { _, args ->
+            ComPtr(args).putBool(XamlInterop.IKeyboardAcceleratorInvokedEventArgs_put_Handled, true)
+            action.run()
+        }
+        appendKeyboardAccelerator(accelerator)
+    }
+
+    /** Adds [accelerator] to KeyboardAccelerators and releases it. */
+    private fun appendKeyboardAccelerator(accelerator: ComPtr) {
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
+        accelerators.release()
+        accelerator.release()
+    }
 }
 
 /**
@@ -991,11 +1030,16 @@ enum class VirtualKeyModifier(internal val native: Int) {
 internal fun createKeyboardAccelerator(
     key: VirtualKey,
     modifiers: Array<out VirtualKeyModifier>,
-): ComPtr {
+): ComPtr = createKeyboardAccelerator(key.native, modifiers.fold(0) { acc, modifier -> acc or modifier.native })
+
+/**
+ * Creates a KeyboardAccelerator with the Windows virtual key [key] and the VirtualKeyModifiers value [modifiers] and returns its default interface pointer
+ * (OEM keys not in the VirtualKey enumeration can also be passed). Release it after use.
+ */
+internal fun createKeyboardAccelerator(key: Int, modifiers: Int): ComPtr {
     val accelerator =
         Activation.composeDefault(XamlInterop.CLS_KeyboardAccelerator, XamlInterop.IID_IKeyboardAcceleratorFactory)
-    accelerator.call(XamlInterop.IKeyboardAccelerator_put_Key, key.native)
-    val combined = modifiers.fold(0) { acc, modifier -> acc or modifier.native }
-    if (combined != 0) accelerator.call(XamlInterop.IKeyboardAccelerator_put_Modifiers, combined)
+    accelerator.call(XamlInterop.IKeyboardAccelerator_put_Key, key)
+    if (modifiers != 0) accelerator.call(XamlInterop.IKeyboardAccelerator_put_Modifiers, modifiers)
     return accelerator
 }

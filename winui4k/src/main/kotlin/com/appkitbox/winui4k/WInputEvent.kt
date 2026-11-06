@@ -144,6 +144,20 @@ abstract class WInputEvent internal constructor(
         }
 
         /**
+         * Maps the modifier-key bits (new style) of [modifiersEx] to the VirtualKeyModifiers format (Ctrl=1, Alt=2, Shift=4, Win=8)
+         * (the inverse of [fromVirtualKeyModifiers]). [META_DOWN_MASK] is the Windows key. Other bits (old style, buttons, AltGraph) are ignored.
+         */
+        @JvmSynthetic
+        internal fun toVirtualKeyModifiers(modifiersEx: Int): Int {
+            var result = 0
+            if (modifiersEx and SHIFT_DOWN_MASK != 0) result = result or Xaml.MODIFIER_SHIFT
+            if (modifiersEx and CTRL_DOWN_MASK != 0) result = result or Xaml.MODIFIER_CONTROL
+            if (modifiersEx and META_DOWN_MASK != 0) result = result or Xaml.MODIFIER_WINDOWS
+            if (modifiersEx and ALT_DOWN_MASK != 0) result = result or Xaml.MODIFIER_MENU
+            return result
+        }
+
+        /**
          * Maps the VirtualKeyModifiers format ([Xaml.currentModifiers] and PointerRoutedEventArgs.KeyModifiers: Ctrl=1,
          * Alt=2, Shift=4, Win=8) to the modifier-key bits of [modifiersEx]. The Windows key is [META_DOWN_MASK] (treated
          * the same as [WActionEvent.META_MASK]).

@@ -73,6 +73,24 @@ interface WAction {
         const val SELECTED_KEY: String = "SwingSelectedKey"
 
         /**
+         * The keyboard accelerator of a menu item. The value is a [WKeyStroke]. Same key name as Swing's Action.ACCELERATOR_KEY.
+         * Buttons ([WButtonBase]) do not use this value (same as Swing's JButton).
+         */
+        const val ACCELERATOR_KEY: String = "AcceleratorKey"
+
+        /** A long description (for help and so on). The value is a String. Same key name as Swing's Action.LONG_DESCRIPTION. Not used by buttons or menu items. */
+        const val LONG_DESCRIPTION: String = "LongDescription"
+
+        /** A large icon. The value is a [WIcon]. Same key name as Swing's Action.LARGE_ICON_KEY. Currently used by neither buttons nor menu items. */
+        const val LARGE_ICON_KEY: String = "SwingLargeIconKey"
+
+        /**
+         * The position of the character underlined as the mnemonic. The value is an Int. Same key name as Swing's Action.DISPLAYED_MNEMONIC_INDEX_KEY.
+         * WinUI shows access key tips instead of underlines, so it is currently used by neither buttons nor menu items.
+         */
+        const val DISPLAYED_MNEMONIC_INDEX_KEY: String = "SwingDisplayedMnemonicIndexKey"
+
+        /**
          * The key name used to report changes to [WAction.isEnabled] to [WActionChangeListener.actionChanged]
          * (same as Swing's "enabled").
          */
