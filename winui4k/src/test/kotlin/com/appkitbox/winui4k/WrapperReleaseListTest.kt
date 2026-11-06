@@ -49,6 +49,23 @@ class WrapperReleaseListTest : FunSpec() {
             Reclamation.awaitCollected(listBox).shouldBeTrue()
         }
 
+        test("WList and WListBox with a cellRenderer set and an element selected are collected after being put in a window and removed") {
+            val list = shownAndHidden {
+                WList(arrayOf("a", "b")).also { list ->
+                    list.cellRenderer = WDefaultListCellRenderer()
+                    list.selectedIndex = 1
+                }
+            }
+            val listBox = shownAndHidden {
+                WListBox(arrayOf("a", "b")).also { list ->
+                    list.cellRenderer = WListCellRenderer { _, value, _, _, _ -> WLabel(value.toString()) }
+                    list.selectedIndex = 1
+                }
+            }
+            Reclamation.awaitCollected(list).shouldBeTrue()
+            Reclamation.awaitCollected(listBox).shouldBeTrue()
+        }
+
         test("a WTable with a listener on selectionModel and a selected row is collected after being put in a window and removed") {
             val reference = shownAndHidden {
                 WTable(arrayOf(arrayOf<Any?>("Apple"), arrayOf<Any?>("Orange")), arrayOf<Any?>("Name")).also { table ->

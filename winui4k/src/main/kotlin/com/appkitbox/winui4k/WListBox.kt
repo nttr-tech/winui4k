@@ -2,7 +2,6 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
@@ -253,6 +252,25 @@ class WListBox(model: WListModel<*>) : WControl(
         listItems.withItem(index) { item -> inspectable.call(XamlInterop.IListBox_ScrollIntoView, item.ptr) }
     }
 
+    /** The implementation of [cellRenderer]. */
+    private val cellRendering: ListCellRendering<WListBox> = ListCellRendering(this, listItems, viewport, selector, null) { list: WListBox -> list.cellRendering }
+
+    /**
+     * ListCellRenderer-like: the renderer that creates components to show elements (JList.getCellRenderer / setCellRenderer).
+     * The default is null, and WinUI shows the element's toString() string as is (corresponding to the text-only display of Swing's default
+     * DefaultListCellRenderer; set a [WDefaultListCellRenderer] to add icons and so on).
+     * When set, the renderer is called each time elements are added or replaced (ListBox has no event for when an item is assigned, so
+     * all elements are drawn, including those not visible; items become one ListBoxItem per element), and for elements whose selection changed.
+     * The renderer must return a new component on each call ([WListCellRenderer]).
+     * The UI Automation name (AutomationProperties.Name) is the element's toString().
+     * While it is set, a shown list is not collected even without references to the wrapper, the same as when listeners are added.
+     */
+    var cellRenderer: WListCellRenderer<Any?>?
+        get() = cellRendering.renderer
+        set(value) {
+            cellRendering.renderer = value
+        }
+
     /**
      * Scrolls until the element at [index] is visible (JList.ensureIndexIsVisible, ListBox.ScrollIntoView).
      * As in Swing, does nothing for an out-of-range [index].
@@ -345,14 +363,8 @@ class WListBox(model: WListModel<*>) : WControl(
             // get_SelectedItems already returns a typed IVector<Object> pointer, so no QI is needed
             val vector = inspectable.getPtr(XamlInterop.IListBox_get_SelectedItems)
             return try {
-                (0 until vector.getInt(FoundationInterop.IVector_get_Size)).map { index ->
-                    val boxed = vector.getPtr(FoundationInterop.IVector_GetAt, index)
-                    try {
-                        PropertyValues.unboxString(boxed) ?: ""
-                    } finally {
-                        boxed.release()
-                    }
-                }
+                // Items are strings or (with a cellRenderer) ListBoxItems, so convert back to the element strings
+                listItems.textsOf(vector)
             } finally {
                 vector.release()
             }

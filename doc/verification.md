@@ -363,3 +363,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     `static_cast<DependencyObject*>(pReference)` で実体に直すので、FindElementsInHostCoordinates が返す UIElement のポインタ (IUIElement の
     vtable) をそのまま渡すと別の位置を実体と見なし、JVM ごと落ちる。先に IID_IDependencyObject へ QI してから渡す
     (`TableHitTest.kt` の rowAt、`Xaml.parentOf` / `Xaml.childAt` は中で QI する)
+- JList 風の cellRenderer (WList / WListBox) のために、ListView と ListBox の項目に任意の部品を載せる方法を E2E テストで確かめた (`ListCellRendererTest`)
+  - ListView の ContainerContentChanging で Handled にすると、WinUI はコンテナーに要素を Content として設定しない
+    (`ListViewBase::SetupContainerContentChangingAfterPrepare`、ListViewBase_Partial_ContainerPhase.cpp:179-196)。ただしそこで
+    ListViewItem の Content に部品を直接置くと、ListViewItemPresenter は部品ではなく空の TextBlock を表示した (実測)。
+    ItemTemplate を `<Border/>` だけの DataTemplate にして、コンテナーの ContentTemplateRoot (その Border) の Child に置くと表示される
+    (`ListCellRendering.kt`)
+  - ItemTemplate を変えたときの項目の作り直しや、ContainerContentChanging で描いた中身が見えるようになるのは、その場の UpdateLayout では
+    なく後の周回になることがある。テストは文字が現れるまで待つ
+  - ListBox にはコンテナーを割り当てたときのイベントが無い (ContainerContentChanging は ListViewBase だけ) ので、レンダラーを使う間は
+    Items を要素ごとの ListBoxItem (自分自身がコンテナーになる) にして、その Content に部品を置く。この間は見えない要素も描く

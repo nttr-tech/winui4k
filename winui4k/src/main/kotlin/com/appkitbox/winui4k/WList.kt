@@ -260,6 +260,25 @@ class WList(model: WListModel<*>) : WControl(
         listItems.withItem(index) { item -> listViewBase.call(XamlInterop.IListViewBase_ScrollIntoView, item.ptr) }
     }
 
+    /** The implementation of [cellRenderer]. */
+    private val cellRendering: ListCellRendering<WList> = ListCellRendering(this, listItems, viewport, selector, listViewBase) { list: WList -> list.cellRendering }
+
+    /**
+     * ListCellRenderer-like: the renderer that creates components to show elements (JList.getCellRenderer / setCellRenderer).
+     * The default is null, and WinUI shows the element's toString() string as is (corresponding to the text-only display of Swing's default
+     * DefaultListCellRenderer; set a [WDefaultListCellRenderer] to add icons and so on).
+     * When set, the renderer is called each time an element is assigned to an item (only the visible items and a few around them, including when items are reused by scrolling),
+     * and for elements whose selection changed.
+     * The renderer must return a new component on each call ([WListCellRenderer]).
+     * The UI Automation name (AutomationProperties.Name) is the element's toString().
+     * While it is set, a shown list is not collected even without references to the wrapper, the same as when listeners are added.
+     */
+    var cellRenderer: WListCellRenderer<Any?>?
+        get() = cellRendering.renderer
+        set(value) {
+            cellRendering.renderer = value
+        }
+
     /**
      * Scrolls until the element at [index] is visible (JList.ensureIndexIsVisible, ListViewBase.ScrollIntoView).
      * As in Swing, does nothing for an out-of-range [index].

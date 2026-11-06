@@ -40,6 +40,12 @@ internal class ListModelItems(
      */
     var selectionSync: ListSelectionSync<*>? = null
 
+    /**
+     * A function that makes the item put into Items from an element (returns an owned reference). If null, the toString() string is boxed.
+     * Used by the [WListBox] renderer to put ListBoxItems drawing the elements. Call [rebuildItems] after changing it.
+     */
+    var itemFactory: ((index: Int) -> ComPtr)? = null
+
     private val listener = object : WListDataListener {
         override fun intervalAdded(e: WListDataEvent) {
             // If the range disagrees with Items (the model implementation does not report ranges correctly), rebuild everything
@@ -140,14 +146,33 @@ internal class ListModelItems(
         return result.sorted().toIntArray()
     }
 
-    /** The strings put into Items (for tests to check the native state). */
+    /**
+     * The strings put in Items (for tests to check the native state).
+     * If an item is not a string (a renderer's ListBoxItem), its AutomationProperties.Name.
+     */
     fun nativeTexts(): List<String> = (0 until items.getInt(FoundationInterop.IVector_get_Size)).map { index ->
         val boxed = items.getPtr(FoundationInterop.IVector_GetAt, index)
         try {
-            PropertyValues.unboxString(boxed) ?: ""
+            PropertyValues.unboxString(boxed) ?: Xaml.getAutomation(boxed, XamlInterop.IAutomationPropertiesStatics_GetName)
         } finally {
             boxed.release()
         }
+    }
+
+    /** The element strings ([textAt]) of each item of the selected items IVector<Object> ([selected]; borrowed), in the order of [selected]. */
+    fun textsOf(selected: ComPtr): List<String> = (0 until selected.getInt(FoundationInterop.IVector_get_Size)).mapNotNull { position ->
+        selected.getPtrOrNull(FoundationInterop.IVector_GetAt, position)?.let { item ->
+            try {
+                identities.indexOf(identityOf(item)).takeIf { it >= 0 }?.let { textAt(it) }
+            } finally {
+                item.release()
+            }
+        }
+    }
+
+    /** Recreates all items (the selection stays at its position, as with replacing elements). Used when [itemFactory] changes. */
+    fun rebuildItems() {
+        if (identities.isNotEmpty()) listener.contentsChanged(WListDataEvent(model, WListDataEvent.CONTENTS_CHANGED, 0, identities.size - 1))
     }
 
     /** The model indexes of the selected items (ascending). */
@@ -233,7 +258,7 @@ internal class ListModelItems(
     }
 
     private fun insert(index: Int) {
-        val boxed = PropertyValues.boxString(textAt(index))
+        val boxed = newItem(index)
         try {
             items.call(FoundationInterop.IVector_InsertAt, index, boxed.ptr)
             identities.add(index, identityOf(boxed))
@@ -243,7 +268,7 @@ internal class ListModelItems(
     }
 
     private fun replace(index: Int) {
-        val boxed = PropertyValues.boxString(textAt(index))
+        val boxed = newItem(index)
         try {
             items.call(FoundationInterop.IVector_SetAt, index, boxed.ptr)
             identities[index] = identityOf(boxed)
@@ -251,6 +276,8 @@ internal class ListModelItems(
             boxed.release()
         }
     }
+
+    private fun newItem(index: Int): ComPtr = itemFactory?.invoke(index) ?: PropertyValues.boxString(textAt(index))
 
     private companion object {
         /** COM identity (the address from QueryInterface(IUnknown)). */

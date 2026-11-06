@@ -201,4 +201,43 @@ class WListBoxForJavaTest {
             UiTestHarness.detach(list);
         }
     }
+
+    @Test
+    void elementsCanBeDrawnWithARendererExtendingDefaultListCellRendererAndALambdaRenderer() {
+        WListBox[] holder = new WListBox[1];
+        List<Integer> selectedIndices = new ArrayList<>();
+        onUiThread(() -> {
+            WListBox list = new WListBox(new Object[] {"Red", 2, null});
+            assertNull(list.getCellRenderer());
+            list.setCellRenderer(new WDefaultListCellRenderer() {
+                @Override
+                protected String getText(Object value) {
+                    return "Color: " + value;
+                }
+
+                @Override
+                protected void configure(WLabel label, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    if (isSelected) {
+                        selectedIndices.add(index);
+                    }
+                }
+            });
+            holder[0] = list;
+        });
+        WListBox list = holder[0];
+        UiTestHarness.attachAndAwaitLoaded(list);
+        try {
+            onUiThread(() -> {
+                list.updateLayout();
+                list.setSelectedIndex(1);
+                assertEquals(Collections.singletonList(1), selectedIndices);
+                WListCellRenderer<Object> plain = (l, value, index, isSelected, cellHasFocus) -> new WLabel(String.valueOf(value));
+                list.setCellRenderer(plain);
+                assertSame(plain, list.getCellRenderer());
+                assertEquals(2, list.getSelectedValue());
+            });
+        } finally {
+            UiTestHarness.detach(list);
+        }
+    }
 }
