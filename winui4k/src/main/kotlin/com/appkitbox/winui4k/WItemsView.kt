@@ -91,10 +91,8 @@ class WItemsView : WControl(
     /** The number of items (the number passed to [setItems]). */
     private val itemCount: Int get() = items.containers.size
 
-    /** Throws [IndexOutOfBoundsException] unless [index] is in 0 until the item count. */
-    private fun checkIndex(index: Int) {
-        if (index !in 0 until itemCount) throw IndexOutOfBoundsException("index: $index, size: $itemCount")
-    }
+    /** true if [index] is within the items (0 until the item count). Out-of-range row numbers are ignored, as in Swing's JList. */
+    private fun inRange(index: Int): Boolean = index in 0 until itemCount
 
     /** The set of selected row numbers (reads the native IsSelected of every row). */
     internal fun selectedIndexSet(): Set<Int> {
@@ -128,12 +126,14 @@ class WItemsView : WControl(
     /** Whether operations that change the selection are possible. false in [ItemsViewSelectionMode.NONE]. */
     private val isSelectable: Boolean get() = selectionMode != ItemsViewSelectionMode.NONE
 
-    /** Preparation for operations taking two row numbers, such as [setSelectionInterval]. null (do nothing) if either is -1. */
+    /**
+     * Preparation for operations taking two row numbers, such as [setSelectionInterval]. null (do nothing) if either is -1.
+     * Out-of-range parts are excluded (as in Swing's JList, it affects only rows in range), and null if nothing remains.
+     */
     private fun interval(index0: Int, index1: Int): IntRange? {
         if (index0 == -1 || index1 == -1) return null
-        checkIndex(index0)
-        checkIndex(index1)
-        return minOf(index0, index1)..maxOf(index0, index1)
+        val range = maxOf(minOf(index0, index1), 0)..minOf(maxOf(index0, index1), itemCount - 1)
+        return range.takeUnless { it.isEmpty() }
     }
 
     /** The smallest selected row number. -1 if nothing is selected (JList.getMinSelectionIndex). */
@@ -147,29 +147,27 @@ class WItemsView : WControl(
 
     /**
      * The smallest selected row number. -1 if nothing is selected (JList.getSelectedIndex).
-     * Assigning selects only that one row (-1 clears the selection). [IndexOutOfBoundsException] if out of range.
+     * Assigning selects only that one row (-1 clears the selection). Other out-of-range row numbers are ignored, as in Swing's JList.
      */
     var selectedIndex: Int
         get() = minSelectionIndex
         set(value) {
-            if (value == -1) {
-                clearSelection()
-            } else {
-                checkIndex(value)
-                if (isSelectable) applySelection(setOf(value))
+            when {
+                value == -1 -> clearSelection()
+                inRange(value) && isSelectable -> applySelection(setOf(value))
             }
         }
 
     /**
      * The selected row numbers (ascending; JList.getSelectedIndices). Assigning selects only the given rows
-     * (only the last one if [selectionMode] is SINGLE). If any row is out of range, [IndexOutOfBoundsException] and the selection does not change.
+     * (only the last one if [selectionMode] is SINGLE). Out-of-range row numbers are ignored, as in Swing's JList.setSelectedIndices.
      */
     var selectedIndices: IntArray
         get() = selectedIndexSet().toIntArray()
         set(value) {
-            value.forEach(::checkIndex)
             if (!isSelectable) return
-            val target = if (selectionMode == ItemsViewSelectionMode.SINGLE) value.takeLast(1).toSet() else value.toSet()
+            val valid = value.filter(::inRange)
+            val target = if (selectionMode == ItemsViewSelectionMode.SINGLE) valid.takeLast(1).toSet() else valid.toSet()
             applySelection(target)
         }
 
@@ -178,27 +176,33 @@ class WItemsView : WControl(
 
     /**
      * Makes the selection only [index0]..[index1] (either may be larger) (JList.setSelectionInterval).
-     * Does nothing if either is -1. Only the one row [index1] if [selectionMode] is SINGLE. [IndexOutOfBoundsException] if out of range.
+     * Does nothing if either is -1. Only the one row [index1] if [selectionMode] is SINGLE. Out-of-range rows are ignored
+     * (does nothing in SINGLE if [index1] is out of range).
      */
     fun setSelectionInterval(index0: Int, index1: Int) {
         val range = interval(index0, index1) ?: return
         if (!isSelectable) return
-        applySelection(if (selectionMode == ItemsViewSelectionMode.SINGLE) setOf(index1) else range.toSet())
+        if (selectionMode != ItemsViewSelectionMode.SINGLE) {
+            applySelection(range.toSet())
+        } else if (inRange(index1)) {
+            applySelection(setOf(index1))
+        }
     }
 
     /**
      * Adds [index0]..[index1] to the selection (JList.addSelectionInterval). Same as [setSelectionInterval] if [selectionMode] is SINGLE.
-     * Does nothing if either is -1. [IndexOutOfBoundsException] if out of range.
+     * Does nothing if either is -1. Out-of-range rows are ignored.
      */
     fun addSelectionInterval(index0: Int, index1: Int) {
+        if (selectionMode == ItemsViewSelectionMode.SINGLE) return setSelectionInterval(index0, index1)
         val range = interval(index0, index1) ?: return
         if (!isSelectable) return
-        applySelection(if (selectionMode == ItemsViewSelectionMode.SINGLE) setOf(index1) else selectedIndexSet() + range)
+        applySelection(selectedIndexSet() + range)
     }
 
     /**
      * Removes [index0]..[index1] from the selection (JList.removeSelectionInterval).
-     * Does nothing if either is -1. [IndexOutOfBoundsException] if out of range.
+     * Does nothing if either is -1. Out-of-range rows are ignored.
      */
     fun removeSelectionInterval(index0: Int, index1: Int) {
         val range = interval(index0, index1) ?: return
@@ -220,11 +224,11 @@ class WItemsView : WControl(
 
     /**
      * Scrolls until row [index] is visible (JList.ensureIndexIsVisible; ItemsView.StartBringItemIntoView).
-     * [IndexOutOfBoundsException] if out of range. Before it is in the visual tree (before the template is applied), WinUI
+     * Does nothing for an out-of-range row number, as in Swing's JList. Before it is in the visual tree (before the template is applied), WinUI
      * returns a failure, so it throws.
      */
     fun ensureIndexIsVisible(index: Int) {
-        checkIndex(index)
+        if (!inRange(index)) return
         inspectable.call(XamlInterop.IItemsView_StartBringItemIntoView, index, null)
     }
 
@@ -252,9 +256,16 @@ class WItemsView : WControl(
      * wrapped in [WItemContainer] rather than passed as bare UIElements.
      */
     fun setItems(items: List<WItemContainer>) {
-        this.items.containers = items
-        val iterable = UIElementIterable(items.map { it.uiElement })
-        inspectable.call(XamlInterop.IItemsView_put_ItemsSource, iterable.comObject.primary)
+        val bridge = selectionBridge
+        // Notify the selection changed by the replacement only once, and make the new selection the baseline so that the next notification does not compare with the old items' selection
+        bridge?.suppress()
+        try {
+            this.items.containers = items
+            val iterable = UIElementIterable(items.map { it.uiElement })
+            inspectable.call(XamlInterop.IItemsView_put_ItemsSource, iterable.comObject.primary)
+        } finally {
+            bridge?.resume(this)
+        }
     }
 
     /**

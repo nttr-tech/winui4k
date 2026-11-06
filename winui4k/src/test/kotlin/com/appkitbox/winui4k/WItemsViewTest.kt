@@ -3,7 +3,6 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.attachAndAwaitLoaded
 import com.appkitbox.winui4k.UiTestHarness.detach
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -90,14 +89,34 @@ class WItemsViewTest : FunSpec() {
             } shouldBe (listOf(2) to listOf(4))
         }
 
-        test("row numbers outside the items throw IndexOutOfBoundsException, and the selection does not change") {
+        test("row numbers outside the items are ignored as in Swing's JList, and intervals affect only rows in range") {
             val view = onUiThreadGet { createView(ItemsViewSelectionMode.EXTENDED) }
             shown(view) {
                 it.selectedIndex = 1
-                shouldThrow<IndexOutOfBoundsException> { it.selectedIndex = 5 }
-                shouldThrow<IndexOutOfBoundsException> { it.setSelectionInterval(0, 5) }
+                it.selectedIndex = 5
+                it.selectedIndex = -2
+                val single = it.selectedIndices.toList()
+                it.selectedIndices = intArrayOf(0, 7, 2, -3)
+                val indices = it.selectedIndices.toList()
+                it.setSelectionInterval(3, 9)
+                val interval = it.selectedIndices.toList()
+                it.addSelectionInterval(-5, 0)
+                val added = it.selectedIndices.toList()
+                it.removeSelectionInterval(4, 8)
+                val removed = it.selectedIndices.toList()
+                it.setSelectionInterval(5, 9)
+                listOf(single, indices, interval, added, removed, it.selectedIndices.toList())
+            } shouldBe listOf(listOf(1), listOf(0, 2), listOf(3, 4), listOf(0, 3, 4), listOf(0, 3), listOf(0, 3))
+        }
+
+        test("in single selection, setSelectionInterval / addSelectionInterval with an out-of-range index1 do nothing") {
+            val view = onUiThreadGet { createView(ItemsViewSelectionMode.SINGLE) }
+            shown(view) {
+                it.selectedIndex = 2
+                it.setSelectionInterval(0, 5)
+                it.addSelectionInterval(1, 6)
                 it.selectedIndices.toList()
-            } shouldBe listOf(1)
+            } shouldBe listOf(2)
         }
 
         test("setSelectionInterval with either row number -1 does nothing (as in Swing)") {
@@ -167,13 +186,14 @@ class WItemsViewTest : FunSpec() {
             events shouldBe listOf(2 to 2)
         }
 
-        test("ensureIndexIsVisible works without exceptions while shown, and an out-of-range row number throws IndexOutOfBoundsException") {
+        test("ensureIndexIsVisible works without exceptions while shown, and does nothing for out-of-range row numbers (as in JList)") {
             val view = onUiThreadGet { createView(ItemsViewSelectionMode.SINGLE) }
             shown(view) {
                 it.ensureIndexIsVisible(4)
-                shouldThrow<IndexOutOfBoundsException> { it.ensureIndexIsVisible(5) }
-                shouldThrow<IndexOutOfBoundsException> { it.ensureIndexIsVisible(-1) }
-            }
+                it.ensureIndexIsVisible(5)
+                it.ensureIndexIsVisible(-1)
+                it.selectedIndex
+            } shouldBe -1
         }
 
         test("specifying a selection on a view whose selection mode is NONE leaves the selection empty") {
@@ -194,6 +214,22 @@ class WItemsViewTest : FunSpec() {
                 it.isSelectionEmpty
             } shouldBe true
             events shouldBe listOf(1 to 3)
+        }
+
+        test("selection notifications after setItems do not compare with the selection of the items before the replacement") {
+            val view = onUiThreadGet { createView(ItemsViewSelectionMode.EXTENDED) }
+            val events = mutableListOf<Pair<Int, Int>>()
+            shown(view) {
+                it.addListSelectionListener { e -> events += e.firstIndex to e.lastIndex }
+                it.selectedIndex = 3
+                it.setItems((0 until 5).map { n -> WItemContainer(WLabel("New $n")) })
+                val afterItems = it.selectedIndices.toSet()
+                events.clear()
+                it.selectedIndex = 0
+                // Only the change from the selection on the new items (afterItems) to {0} is notified
+                val changed = (afterItems - 0) + (setOf(0) - afterItems)
+                it.selectedIndices.toList() to listOf(changed.min() to changed.max())
+            } shouldBe (listOf(0) to events.toList())
         }
     }
 }
