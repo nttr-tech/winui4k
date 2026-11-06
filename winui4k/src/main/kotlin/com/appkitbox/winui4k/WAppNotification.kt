@@ -198,6 +198,10 @@ object WAppNotificationManager {
     private val invokedListeners = mutableListOf<Consumer<String>>()
     private val invokedListenerAdapters = KotlinListenerAdapters<Consumer<String>>()
 
+    /** The mapping from addActionListener lambdas to WActionListeners, and from WActionListeners to the Consumers put into invokedListeners. */
+    private val actionKotlinAdapters = KotlinListenerAdapters<WActionListener>()
+    private val actionConsumers = KotlinListenerAdapters<Consumer<String>>()
+
     /**
      * Registers exactly one COM NotificationInvoked handler and fans it out to all listeners.
      * add_NotificationInvoked returns E_ILLEGAL_METHOD_CALL after Register, so the COM
@@ -265,6 +269,44 @@ object WAppNotificationManager {
         invokedListenerAdapters.add(listener, adapter)
     }
 
+    /** Passes [argument] to all registered listeners in registration order (call on the UI thread). */
+    internal fun deliverInvoked(argument: String) {
+        invokedListeners.toList().forEach { it.accept(argument) }
+    }
+
+    /**
+     * ActionListener-like: receives clicks on the notification body and buttons as [WActionEvent]s.
+     * [WActionEvent.actionCommand] is the NotificationInvoked argument (a string in the "key=value;key2=value2" form
+     * set with addArgument / addButton), and [WActionEvent.source] is this [WAppNotificationManager].
+     * The registration constraints are the same as [addNotificationInvokedListener] (the first one before [register]).
+     */
+    @JvmSynthetic
+    fun addActionListener(listener: (WActionEvent) -> Unit) {
+        addActionListenerForJava(WActionListener(listener).also { actionKotlinAdapters.add(listener, it) })
+    }
+
+    @JvmStatic
+    @JvmName("addActionListener")
+    fun addActionListenerForJava(listener: WActionListener) {
+        val consumer = Consumer<String> { listener.actionPerformed(WActionEvent(this, it)) }
+        actionConsumers.add(listener, consumer)
+        addNotificationInvokedListenerForJava(consumer)
+    }
+
+    /** Unsubscribes a listener registered with [addActionListener]. */
+    @JvmSynthetic
+    fun removeActionListener(listener: (WActionEvent) -> Unit) {
+        val adapter = actionKotlinAdapters.remove(listener) ?: return
+        removeActionListenerForJava(adapter)
+    }
+
+    @JvmStatic
+    @JvmName("removeActionListener")
+    fun removeActionListenerForJava(listener: WActionListener) {
+        val consumer = actionConsumers.remove(listener) ?: return
+        removeNotificationInvokedListenerForJava(consumer)
+    }
+
     @JvmStatic
     @JvmName("addNotificationInvokedListener")
     fun addNotificationInvokedListenerForJava(listener: Consumer<String>) {
@@ -278,7 +320,7 @@ object WAppNotificationManager {
                 val eventArgs = ComPtr(args).queryInterface(NotificationInterop.IID_IAppNotificationActivatedEventArgs)
                 val argument = eventArgs.getString(NotificationInterop.IAppNotificationActivatedEventArgs_get_Argument)
                 eventArgs.release()
-                Dispatcher.invokeLater { invokedListeners.toList().forEach { it.accept(argument) } }
+                Dispatcher.invokeLater { deliverInvoked(argument) }
             }
             invokedHandlerAdded = true
         }
