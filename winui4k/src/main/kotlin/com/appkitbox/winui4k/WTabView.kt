@@ -78,6 +78,16 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
             field = value
         }
 
+    /**
+     * The tab version of JTabbedPane.getMnemonicAt / setMnemonicAt: the key code of the access key (UIElement.AccessKey). Uses the same values as AWT's KeyEvent.VK_A..VK_Z
+     * (65..90) / VK_0..VK_9 (48..57); leaving it unset or setting 0 clears it (reads as 0). Anything other than letters and digits throws
+     * [IllegalArgumentException]. It appears in the key tips shown when Alt is pressed, and pressing that key selects the tab
+     * (unlike Swing, the character in the label is not underlined, so there is no counterpart of setDisplayedMnemonicIndexAt).
+     */
+    var mnemonic: Int
+        get() = Mnemonics.read(uiElement)
+        set(value) = Mnemonics.write(uiElement, value)
+
     /** Whether to show a close button on the tab (TabViewItem.IsClosable). WinUI's default is true. */
     var isClosable: Boolean
         get() = inspectable.getBool(XamlInterop.ITabViewItem_get_IsClosable)
@@ -383,6 +393,17 @@ class WTabView : WControl(
     /** Changes whether the [index]th tab can be pressed. Tabs that cannot be pressed can still be selected from the program (same as Swing). */
     fun setEnabledAt(index: Int, enabled: Boolean) {
         getTab(index).isEnabled = enabled
+    }
+
+    /** JTabbedPane.getMnemonicAt-like: the access key code of the tab at [index] ([WTabViewItem.mnemonic]). 0 if unset. */
+    fun getMnemonicAt(index: Int): Int = getTab(index).mnemonic
+
+    /**
+     * JTabbedPane.setMnemonicAt-like: sets the access key of the tab at [index] to [mnemonic] (the same values as KeyEvent.VK_A etc.; 0 clears it)
+     * ([WTabViewItem.mnemonic]). Anything other than letters and digits throws [IllegalArgumentException].
+     */
+    fun setMnemonicAt(index: Int, mnemonic: Int) {
+        getTab(index).mnemonic = mnemonic
     }
 
     /** The content of the [index]th tab ([WTabViewItem.content]). */

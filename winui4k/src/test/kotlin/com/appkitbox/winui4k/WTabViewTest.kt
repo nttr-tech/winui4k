@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
@@ -613,6 +614,32 @@ class WTabViewTest : FunSpec() {
                     )
                 }
                 result shouldBe listOf(listOf("Z", "M", "A", "E", ""), Symbol.SAVE, IndexOutOfBoundsException::class.java, 5)
+            }
+
+            test("setMnemonicAt sets a tab's access key with the same values as KeyEvent's VK, and 0 removes it. Non-letters and non-digits and an out-of-range index throw") {
+                val result = onUiThreadGet {
+                    val tabView = WTabView()
+                    tabView.addTab("File", WLabel("f"))
+                    tabView.addTab("Edit", WLabel("e"))
+                    val before = tabView.getMnemonicAt(0)
+                    tabView.setMnemonicAt(0, 'F'.code)
+                    tabView.setMnemonicAt(1, '2'.code)
+                    val set = listOf(tabView.getMnemonicAt(0), tabView.getMnemonicAt(1)) +
+                        (0..1).map { tabView.getTab(it).uiElement.getString(XamlInterop.IUIElement_get_AccessKey) }
+                    tabView.setMnemonicAt(0, 0)
+                    val cleared = tabView.getTab(0).uiElement.getString(XamlInterop.IUIElement_get_AccessKey)
+                    val invalid = runCatching { tabView.setMnemonicAt(1, '!'.code) }.exceptionOrNull()?.javaClass
+                    val outOfRange = runCatching { tabView.setMnemonicAt(2, 'A'.code) }.exceptionOrNull()?.javaClass
+                    listOf(before, set, cleared, tabView.getMnemonicAt(1), invalid, outOfRange)
+                }
+                result shouldBe listOf(
+                    0,
+                    listOf('F'.code, '2'.code, "F", "2"),
+                    "",
+                    '2'.code,
+                    IllegalArgumentException::class.java,
+                    IndexOutOfBoundsException::class.java,
+                )
             }
 
             test("add(WTabViewItem) adds that tab itself (the same as addTab), and add of a component that is already the content of a tab moves it from the original tab") {

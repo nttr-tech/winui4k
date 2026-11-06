@@ -171,4 +171,16 @@ class WTabViewForJavaTest {
             assertFalse(tabs.getCanReorderTabs());
         });
     }
+
+    @Test
+    void setMnemonicAtCanBeWrittenWithTheSameValuesAsKeyEventVk() {
+        onUiThread(() -> {
+            WTabView tabs = new WTabView();
+            tabs.addTab("File", new WLabel("f"));
+            tabs.setMnemonicAt(0, 70); // KeyEvent.VK_F
+            assertEquals(70, tabs.getMnemonicAt(0));
+            assertEquals(70, tabs.getTab(0).getMnemonic());
+            assertThrows(IllegalArgumentException.class, () -> tabs.setMnemonicAt(0, '-'));
+        });
+    }
 }
