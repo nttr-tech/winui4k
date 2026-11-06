@@ -308,6 +308,16 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     override fun removeItemListener(listener: WItemListener) {
         itemListeners.remove(listener)
     }
+
+    /** AbstractButton.getItemListeners-like: the ItemListeners currently added (in the order added; Kotlin lambdas appear wrapped). */
+    fun getItemListeners(): Array<WItemListener> = itemListeners.toArray()
+
+    /**
+     * ItemSelectable.getSelectedObjects-like (the same as AbstractButton's implementation): an array containing only [text] if selected,
+     * null if not selected (including indeterminate).
+     */
+    val selectedObjects: Array<Any>?
+        get() = if (isSelected) arrayOf(text) else null
 }
 
 /** Theme resource keys for the background and text color of toggle-type buttons for each visual state ([WToggleButton.stateColors]). */

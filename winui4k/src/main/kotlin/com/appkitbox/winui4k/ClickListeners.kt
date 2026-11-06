@@ -51,12 +51,23 @@ internal class ClickListeners(
         remove(tokens.removeKotlinAdapter(listener) ?: return)
     }
 
-    /** Unsubscribes a [Runnable] / [WActionListener] added with [add] (does nothing if not registered). */
+    /**
+     * Unsubscribes a [Runnable] / [WActionListener] added with [add] (does nothing if not registered).
+     * A listener wrapping a [Runnable] returned by [listeners] can also be passed to remove it.
+     */
     fun remove(listener: Any) {
-        val token = tokens.remove(listener) ?: return
+        val key = (listener as? RunnableActionListener)?.runnable ?: listener
+        val token = tokens.remove(key) ?: return
         events.removeEventHandler(click.removeSlot, token)
         anchor.listenerRemoved()
     }
+
+    /**
+     * AbstractButton.getActionListeners-like: the listeners currently added (in the order added). Kotlin lambdas appear as wrapping [WActionListener]s, and
+     * [Runnable]s appear wrapped in [RunnableActionListener]; any of them can be passed to [remove] to remove it.
+     */
+    fun listeners(): Array<WActionListener> =
+        tokens.listeners().map { it as? WActionListener ?: RunnableActionListener(it as Runnable) }.toTypedArray()
 
     private fun subscribe(key: Any, onClick: (WActionEvent) -> Unit) {
         val anchor = anchor
@@ -75,6 +86,11 @@ internal class ClickListeners(
         tokens.add(key, token)
         anchor.listenerAdded()
     }
+}
+
+/** A wrapper to return an ActionListener added as a [Runnable] as a [WActionListener] from getActionListeners. */
+internal class RunnableActionListener(val runnable: Runnable) : WActionListener {
+    override fun actionPerformed(e: WActionEvent) = runnable.run()
 }
 
 /** ABI values of a Click event: the handler name (for debugging), the IID of the handler type, and the vtable slots of add_Click and remove_Click. */

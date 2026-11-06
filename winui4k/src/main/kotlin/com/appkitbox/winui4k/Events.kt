@@ -37,6 +37,9 @@ internal class ListenerTokens<L : Any> {
         return tokens.removeAt(index).second
     }
 
+    /** The registered listeners (in registration order; a listener registered several times appears that many times). */
+    fun listeners(): List<L> = tokens.map { it.first }
+
     fun addKotlinAdapter(listener: Any, adapter: L) {
         kotlinAdapters.add(listener, adapter)
     }

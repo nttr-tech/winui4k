@@ -2451,6 +2451,7 @@ internal object XamlInterop {
     const val IUIElement_get_ActualOffset = 107        // get_ActualOffset(out Vector3) — position relative to the parent (out of r4×3)
     const val IUIElement_get_ActualSize = 108          // get_ActualSize(out Vector2) — out of r4×2
     const val IUIElement_get_FocusState = 115          // get_FocusState(out FocusState)
+    const val IUIElement_get_UseSystemFocusVisuals = 116 // get_UseSystemFocusVisuals() -> boolean
     const val IUIElement_put_UseSystemFocusVisuals = 117 // put_UseSystemFocusVisuals(boolean)
     const val IUIElement_get_AccessKey = 58            // get_AccessKey(out HSTRING)
     const val IUIElement_put_AccessKey = 59            // put_AccessKey(HSTRING)

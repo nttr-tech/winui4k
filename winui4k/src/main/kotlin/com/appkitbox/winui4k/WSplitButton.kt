@@ -164,6 +164,16 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
      */
     fun doClick() {
         if (!isEnabled) return
+        clickPrimary()
+    }
+
+    /** AbstractButton.doClick(int pressTime)-like: the same as [doClick] ([pressTime] is not used, for the same reason as [WButtonBase.doClick]). */
+    @Suppress("UNUSED_PARAMETER")
+    fun doClick(pressTime: Int) {
+        doClick()
+    }
+
+    private fun clickPrimary() {
         val primary = Xaml.templatePartOrNull(inspectable, PRIMARY_BUTTON_PART) ?: return
         try {
             if (isControlEnabled(primary)) Xaml.invoke(primary)
@@ -235,6 +245,10 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
     fun removeActionListenerForJava(listener: WActionListener) {
         clickListeners.remove(listener)
     }
+
+    /** AbstractButton.getActionListeners-like: the added listeners (in the order added; wrapped ones can be removed too, as with [WButtonBase.actionListeners]). */
+    val actionListeners: Array<WActionListener>
+        get() = clickListeners.listeners()
 }
 
 /** ABI values of SplitButton.Click (TypedEventHandler<SplitButton, SplitButtonClickEventArgs>). */

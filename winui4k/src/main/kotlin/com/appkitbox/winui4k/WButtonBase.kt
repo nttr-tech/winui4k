@@ -206,6 +206,37 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     }
 
     /**
+     * AbstractButton.doClick(int pressTime)-like: clicks once, the same as [doClick]. Swing keeps the button looking pressed and
+     * stops the UI thread for [pressTime] milliseconds before releasing, but WinUI's Invoke does not create a pressed look, so [pressTime] is not used
+     * (and the UI thread is not stopped). The order and content of listener calls are the same as [doClick].
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun doClick(pressTime: Int) {
+        doClick()
+    }
+
+    /**
+     * AbstractButton.isFocusPainted / setFocusPainted-like: whether to draw the keyboard focus frame when it has the focus
+     * (UIElement.UseSystemFocusVisuals). The default is true (the value of WinUI's default style). If false, the focus frame is not drawn even when the focus
+     * is moved with the Tab key (it still receives the focus).
+     */
+    var isFocusPainted: Boolean
+        get() = uiElement.getBool(XamlInterop.IUIElement_get_UseSystemFocusVisuals)
+        set(value) = uiElement.putBool(XamlInterop.IUIElement_put_UseSystemFocusVisuals, value)
+
+    /**
+     * AbstractButton.getHideActionText / setHideActionText-like: if true, [WAction.NAME] of [action] is not copied to [text]
+     * (the text becomes "", making an icon-only button). The default is false. Toggling it copies the text again right away if there is an [action]
+     * (setting it back to false returns to the NAME text). Without an [action], [text] is not changed (as in Swing).
+     */
+    var hideActionText: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            action?.let { applyActionValue(it, WAction.NAME) }
+        }
+
+    /**
      * AbstractButton.getAction / setAction-like: the [WAction] bound to the button. null (the default) means unbound.
      * When set, the action's values are copied to the button as follows, and the button follows them whenever the
      * action's values change afterwards.
@@ -259,7 +290,7 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      */
     private fun applyActionValue(action: WAction?, key: String) {
         when (key) {
-            WAction.NAME -> text = action?.stringValue(key) ?: ""
+            WAction.NAME -> text = if (hideActionText) "" else action?.stringValue(key) ?: ""
             WAction.SMALL_ICON -> icon = action?.typedValue<WIcon>(key, "WIcon")
             WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
             WAction.MNEMONIC_KEY -> mnemonic = action?.keyCodeValue(key) ?: 0
@@ -343,6 +374,15 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
     fun removeActionListenerForJava(listener: WActionListener) {
         clickListeners.remove(listener)
     }
+
+    /**
+     * AbstractButton.getActionListeners-like: the listeners added with [addActionListener] (in the order added). Kotlin lambdas and [Runnable]s appear as
+     * wrapping [WActionListener]s, and any of them can be passed to `removeActionListener` to remove it (the same as writing
+     * `for (ActionListener l : b.getActionListeners()) b.removeActionListener(l)` in Java).
+     * While an [action] is bound, one internal listener that calls the action is included too (as with Swing's setAction).
+     */
+    val actionListeners: Array<WActionListener>
+        get() = clickListeners.listeners()
 }
 
 /** ABI values of ButtonBase.Click (RoutedEventHandler). */

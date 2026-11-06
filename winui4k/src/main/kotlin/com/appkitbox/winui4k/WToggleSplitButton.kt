@@ -102,6 +102,9 @@ class WToggleSplitButton @JvmOverloads constructor(text: String = "") : WSplitBu
         itemListeners.remove(listener)
     }
 
+    /** AbstractButton.getItemListeners-like: the ItemListeners currently added (in the order added; Kotlin lambdas appear wrapped). */
+    fun getItemListeners(): Array<WItemListener> = itemListeners.toArray()
+
     init {
         if (text.isNotEmpty()) this.text = text
     }

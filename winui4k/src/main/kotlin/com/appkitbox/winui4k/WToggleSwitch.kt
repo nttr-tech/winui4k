@@ -93,6 +93,17 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
         Xaml.invoke(inspectable)
     }
 
+    /** AbstractButton.doClick(int pressTime)-like: the same as [doClick] ([pressTime] is not used, for the same reason as [WButtonBase.doClick]). */
+    @Suppress("UNUSED_PARAMETER")
+    fun doClick(pressTime: Int) {
+        doClick()
+    }
+
+    /** JToggleButton(String, boolean)-like: creates a switch with the header [header], on if [selected]. */
+    constructor(header: String, selected: Boolean) : this(header) {
+        isOn = selected
+    }
+
     init {
         if (header.isNotEmpty()) this.header = header
     }
@@ -159,4 +170,7 @@ class WToggleSwitch @JvmOverloads constructor(header: String = "") : WControl(
     fun removeItemListener(listener: WItemListener) {
         itemListeners.remove(listener)
     }
+
+    /** AbstractButton.getItemListeners-like: the ItemListeners currently added (in the order added; Kotlin lambdas appear wrapped). */
+    fun getItemListeners(): Array<WItemListener> = itemListeners.toArray()
 }
