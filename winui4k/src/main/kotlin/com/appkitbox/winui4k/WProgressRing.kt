@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  * WinUI 3's ProgressRing (a circular spinner). JProgressBar has no circular visual, so there's
  * no Swing counterpart and we keep WinUI's class name as-is.
  *
- * [isActive] toggles whether the spinning animation is shown. By default [isIndeterminate] is
+ * [isActive] toggles whether the spinning animation is shown. When created without arguments, [isIndeterminate] is by default
  * true and it keeps spinning to indicate "working", but setting it to false turns it into a
  * determinate progress ring driven by [value] / [minimum] / [maximum].
  *
@@ -20,9 +20,24 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 class WProgressRing() : WControl(
     Activation.composeDefault(XamlInterop.CLS_ProgressRing, XamlInterop.IID_IProgressRingFactory), // default interface = IProgressRing
 ) {
-    /** Creates a progress ring that uses [model] for its range of values (the model's extent is set to 0; same as the same form of [WProgressBar]). */
+    /**
+     * JProgressBar(BoundedRangeModel)-like: creates a progress ring that uses [model] for its range of values (the model's extent is set to 0; same as the same form of [WProgressBar]).
+     * It is a progress ring that shows a value, so as with JProgressBar it is created determinate ([isIndeterminate] = false).
+     */
     constructor(model: WBoundedRangeModel) : this() {
         this.model = model
+        isIndeterminate = false
+    }
+
+    /**
+     * JProgressBar(int min, int max)-like: creates a determinate ([isIndeterminate] = false) progress ring with the specified range. As in Swing, the value starts at
+     * [minimum].
+     *
+     * @throws IllegalArgumentException if [maximum] is less than [minimum] (the same as Swing's JProgressBar(int, int))
+     */
+    constructor(minimum: Int, maximum: Int) : this() {
+        model = WDefaultBoundedRangeModel(minimum.toDouble(), 0.0, minimum.toDouble(), maximum.toDouble())
+        isIndeterminate = false
     }
 
     private val range = ProgressRange(this) { min, max, v ->
@@ -40,8 +55,9 @@ class WProgressRing() : WControl(
         set(value) = inspectable.putBool(XamlInterop.IProgressRing_put_IsActive, value)
 
     /**
-     * Whether progress is indeterminate (ProgressRing.IsIndeterminate). true (the default) keeps
-     * spinning to indicate "working"; false draws determinate progress based on [value].
+     * JProgressBar.isIndeterminate / setIndeterminate-like: whether progress is indeterminate (ProgressRing.IsIndeterminate). true keeps spinning to indicate "working",
+     * and false draws determinate progress based on [value]. When created without arguments, the default is true, the same as WinUI (JProgressBar's default is false).
+     * When created with a constructor that takes a range or a model, it is false, the same as JProgressBar.
      */
     var isIndeterminate: Boolean
         get() = inspectable.getBool(XamlInterop.IProgressRing_get_IsIndeterminate)
