@@ -18,8 +18,10 @@ import java.lang.ref.WeakReference
  *   canceled. Item Clicks are subscribed per item only while open (MenuFlyoutItem.Invoke closes the menu after Click).
  * - Reopening while closing (from Closing to Closed) is deferred until Closed ([showWhenClosed]). WinUI treats a closing flyout
  *   as still open and ignores ShowAt with the same target and position (CheckAndHandleOpenFlyout in FlyoutBase_partial.cpp).
- * - The native handlers capture only this object, and the flyout wrapper is held weakly (strongly only while open and while waiting to reopen).
- *   The handlers are added when the [WFlyoutBase] first opens, closes or adds a listener, and are never removed (they capture only this object, so no cycle forms).
+ * - The native handlers capture this object through a weak reference, and this object holds the flyout wrapper weakly. Only while open
+ *   (from Opening to Closed, including while waiting to reopen) does [openEvents] hold this object strongly and [pinned] the wrapper.
+ *   If the handlers captured this object strongly, adding a listener that captures its own flyout would form a cycle across the boundary, native → handler → listener →
+ *   wrapper → native, and it would not be collected. The handlers are added when the [WFlyoutBase] first opens, closes or adds a listener, and are never removed.
  */
 internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
     private val reference = WeakReference(owner)
@@ -73,22 +75,24 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
         if (subscribed) return
         val flyoutBase = reference.get()?.flyoutBase ?: return
         subscribed = true
+        val events = WeakReference(this)
         flyoutBase.addEventHandler("WinUI4K.PopupMenuOpening", FoundationInterop.IID_EventHandler_Object, XamlInterop.IFlyoutBase_add_Opening) { _, _ ->
-            onOpening()
+            events.get()?.onOpening()
         }
         flyoutBase.addEventHandler(
             "WinUI4K.PopupMenuClosing",
             XamlInterop.IID_TypedEventHandler_FlyoutBase_Closing,
             XamlInterop.IFlyoutBase_add_Closing,
-        ) { _, _ -> onClosing() }
+        ) { _, _ -> events.get()?.onClosing() }
         flyoutBase.addEventHandler("WinUI4K.PopupMenuClosed", FoundationInterop.IID_EventHandler_Object, XamlInterop.IFlyoutBase_add_Closed) { _, _ ->
-            onClosed()
+            events.get()?.onClosed()
         }
     }
 
     private fun onOpening() {
         val owner = reference.get() ?: return
         pinned = owner
+        openEvents += this
         invocation.invoked = false
         hideRequested = false
         closing = false
@@ -113,6 +117,7 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
         hideRequested = false
         closing = false
         pinned = null
+        openEvents -= this
         pendingShow?.let { show ->
             pendingShow = null
             // Closed happens before the record of finishing closing (the open flyout in FlyoutMetadata) is removed, so open after that
@@ -141,6 +146,10 @@ internal class FlyoutPopupMenuEvents(owner: WFlyoutBase) {
         if (listeners.isEmpty()) return
         val event = WPopupMenuEvent(source)
         listeners.toList().forEach { call(it, event) }
+    }
+    private companion object {
+        /** The calls of open flyouts (from Opening to Closed). Read and written only by the UI thread. */
+        val openEvents = HashSet<FlyoutPopupMenuEvents>()
     }
 }
 
@@ -244,7 +253,7 @@ internal class MenuBarItemMenuEvents(private val anchor: ListenerAnchor<WCompone
  * Calls the [WPopupMenuListener]s of a [WPopup] from the Popup's Opened / Closed. Popup has no Opening / Closing, so
  * popupMenuWillBecomeVisible is called after opening (Opened), and popupMenuCanceled (only for light dismiss) and
  * popupMenuWillBecomeInvisible after closing (Closed). Closing with [WPopup.hide] / `isVisible = false` is not a cancellation.
- * The handlers capture only this object, and the source wrapper is looked up from the weakly referenced [popup]. A Popup is not in the tree
+ * The handlers capture this object weakly, and the source wrapper is looked up from the weakly referenced [popup]. A Popup is not in the tree
  * (with [ListenerAnchor], which re-holds on Loaded / Unloaded, it would not be collected until the listeners are removed), so while it is open
  * the [WPopup] itself holds it strongly.
  */
@@ -261,15 +270,26 @@ internal class PopupPopupMenuEvents(private val popup: WeakReference<WPopup>) {
         listeners += listener
         if (subscribed) return
         subscribed = true
+        // The handlers capture this object weakly (capturing it strongly would form a cycle native → handler →
+        // listener → wrapper → native when a listener capturing the popup is added). The WPopup holds this object, and while open the open list holds it along with the WPopup
+        val events = WeakReference(this)
         popup.addEventHandler("WinUI4K.PopupMenuPopupOpened", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Opened) { _, _ ->
-            fire { listener, e -> listener.popupMenuWillBecomeVisible(e) }
+            events.get()?.onOpened()
         }
         popup.addEventHandler("WinUI4K.PopupMenuPopupClosed", FoundationInterop.IID_EventHandler_Object, XamlInterop.IPopup_add_Closed) { _, _ ->
-            val canceled = !hideRequested
-            hideRequested = false
-            if (canceled) fire { listener, e -> listener.popupMenuCanceled(e) }
-            fire { listener, e -> listener.popupMenuWillBecomeInvisible(e) }
+            events.get()?.onClosed()
         }
+    }
+
+    private fun onOpened() {
+        fire { listener, e -> listener.popupMenuWillBecomeVisible(e) }
+    }
+
+    private fun onClosed() {
+        val canceled = !hideRequested
+        hideRequested = false
+        if (canceled) fire { listener, e -> listener.popupMenuCanceled(e) }
+        fire { listener, e -> listener.popupMenuWillBecomeInvisible(e) }
     }
 
     fun remove(listener: WPopupMenuListener) {

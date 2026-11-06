@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Tests that a [WPopup], [WContentDialog] (including the callback form of [WOptionPane]) and [WFlyout] whose owner window ([WFrame]) was closed while open
  * release their while-open state even without a closed notification (Closed), and that the wrappers and natives are collected once the references are released
- * ([Reclamation]). Also that a [WFlyout] with a PopupMenuListener capturing its own flyout is collected.
+ * ([Reclamation]). Also that a [WFlyout] / [WPopup] with a PopupMenuListener capturing its own flyout / popup is collected.
  * The shared "winui4k tests" window is kept open (the app exits when the last window closes).
  */
 @Tags("Memory")
@@ -119,6 +119,66 @@ class WrapperReleaseWindowCloseTest : FunSpec() {
             }
             eventually(5.seconds) { events() shouldContainExactly listOf("visible") }
             onUiThread { frame.dispose() }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitDestroyed(probe).shouldBeTrue()
+        }
+
+        test("a WFlyout never opened, with a PopupMenuListener capturing its own flyout, is collected and its native destroyed") {
+            val (reference, probe) = onUiThreadGet {
+                val flyout = WFlyout()
+                val events = events
+                flyout.addPopupMenuListener(object : WPopupMenuAdapter() {
+                    override fun popupMenuWillBecomeVisible(e: WPopupMenuEvent) {
+                        events += "visible:${flyout.isOpen}"
+                    }
+                })
+                WeakReference(flyout) to NativeProbe(flyout.inspectable)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitDestroyed(probe).shouldBeTrue()
+        }
+
+        test("a WPopup never opened, with a PopupMenuListener capturing its own popup, is collected and its native destroyed") {
+            val (reference, probe) = onUiThreadGet {
+                val popup = WPopup(WLabel("Content"))
+                val events = events
+                popup.addPopupMenuListener(object : WPopupMenuAdapter() {
+                    override fun popupMenuWillBecomeVisible(e: WPopupMenuEvent) {
+                        events += "visible:${popup.isOpen}"
+                    }
+                })
+                WeakReference(popup) to NativeProbe(popup.inspectable)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+            Reclamation.awaitDestroyed(probe).shouldBeTrue()
+        }
+
+        test("a WFlyout opened and closed with a PopupMenuListener capturing its own flyout is collected and its native destroyed once the button is removed and the reference released") {
+            val button = onUiThreadGet { WButton("Open") }
+            UiTestHarness.attachAndAwaitLoaded(button)
+            val (reference, probe) = try {
+                val events = events
+                val (reference, probe) = onUiThreadGet {
+                    val flyout = WFlyout(WLabel("Content"))
+                    flyout.addPopupMenuListener(object : WPopupMenuAdapter() {
+                        override fun popupMenuWillBecomeVisible(e: WPopupMenuEvent) {
+                            events += "visible:${e.source === flyout}"
+                        }
+
+                        override fun popupMenuWillBecomeInvisible(e: WPopupMenuEvent) {
+                            events += "invisible:${e.source === flyout}"
+                        }
+                    })
+                    WeakReference(flyout) to NativeProbe(flyout.inspectable)
+                }
+                onUiThread { reference.get()?.showAt(button) }
+                eventually(5.seconds) { events() shouldContainExactly listOf("visible:true") }
+                onUiThread { reference.get()?.hide() }
+                eventually(5.seconds) { events() shouldContainExactly listOf("visible:true", "invisible:true") }
+                reference to probe
+            } finally {
+                UiTestHarness.detach(button)
+            }
             Reclamation.awaitCollected(reference).shouldBeTrue()
             Reclamation.awaitDestroyed(probe).shouldBeTrue()
         }
