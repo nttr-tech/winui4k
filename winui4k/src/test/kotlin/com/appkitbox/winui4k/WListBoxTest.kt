@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 /** Tests verifying WListBox's item management, single/multiple selection, and SelectionChanged listener. */
 class WListBoxTest : FunSpec() {
@@ -52,6 +53,32 @@ class WListBoxTest : FunSpec() {
                 listBox.selectionMode = SelectionMode.EXTENDED
                 listBox.selectionMode
             } shouldBe SelectionMode.EXTENDED
+        }
+
+        context("Swing compatibility") {
+            test("listSelectionListeners returns the added WListSelectionListeners in the order added, and removed ones are excluded") {
+                onUiThreadGet {
+                    val list = WListBox(arrayOf("a", "b"))
+                    val first = WListSelectionListener { }
+                    val second = WListSelectionListener { }
+                    list.addListSelectionListener(first)
+                    list.addListSelectionListener(second)
+                    val both = list.listSelectionListeners.toList()
+                    list.removeListSelectionListener(first)
+                    listOf(both == listOf(first, second), list.listSelectionListeners.toList() == listOf(second))
+                } shouldBe listOf(true, true)
+            }
+        }
+
+        context("Boundaries and exceptions") {
+            test("scrollIntoView throws IndexOutOfBoundsException for an out-of-range position, and ensureIndexIsVisible does nothing") {
+                onUiThreadGet {
+                    val list = WListBox(listOf("Spring", "Summer"))
+                    list.scrollIntoView(1)
+                    list.ensureIndexIsVisible(5)
+                    runCatching { list.scrollIntoView(2) }.exceptionOrNull()
+                }.shouldBeInstanceOf<IndexOutOfBoundsException>()
+            }
         }
     }
 }

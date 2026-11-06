@@ -433,8 +433,10 @@ class WListBox(model: WListModel<*>) : WControl(
      * Items requires the actual object it holds, so it's fetched via GetAt before being passed.
      * Works the same as [ensureIndexIsVisible], which has the same name as in JList, except that an out-of-range [index] throws
      * (ensureIndexIsVisible does nothing).
+     * @throws IndexOutOfBoundsException if [index] is outside the elements
      */
     fun scrollIntoView(index: Int) {
+        if (index !in 0 until listItems.size) throw IndexOutOfBoundsException("Index: $index, Size: ${listItems.size}")
         val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
         try {
             inspectable.call(XamlInterop.IListBox_ScrollIntoView, boxed.ptr)

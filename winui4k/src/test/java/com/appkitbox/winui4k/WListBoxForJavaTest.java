@@ -240,4 +240,26 @@ class WListBoxForJavaTest {
             UiTestHarness.detach(list);
         }
     }
+
+    @Test
+    void removeSelectionIntervalGetAnchorSelectionIndexAndGetSelectedItemsScrollIntoViewAndRemoveAllItems() {
+        onUiThread(() -> {
+            WListBox list = new WListBox(new String[] {"a", "b", "c", "d"});
+            list.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+            list.setSelectionInterval(0, 3);
+            list.removeSelectionInterval(1, 2);
+            assertArrayEquals(new int[] {0, 3}, list.getSelectedIndices());
+            assertEquals(1, list.getAnchorSelectionIndex()); // As in Swing, the ends of the removed interval become the anchor and lead
+            assertEquals(2, list.getLeadSelectionIndex());
+            assertEquals(Arrays.asList("a", "d"), list.getSelectedItems());
+            WListSelectionListener listener = e -> { };
+            list.addListSelectionListener(listener);
+            assertArrayEquals(new WListSelectionListener[] {listener}, list.getListSelectionListeners());
+            list.scrollIntoView(3);
+            assertThrows(IndexOutOfBoundsException.class, () -> list.scrollIntoView(4));
+            list.removeAllItems();
+            assertEquals(0, list.getItemCount());
+            assertTrue(list.getSelectedItems().isEmpty());
+        });
+    }
 }

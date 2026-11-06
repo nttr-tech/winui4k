@@ -240,4 +240,31 @@ class WListForJavaTest {
             UiTestHarness.detach(list);
         }
     }
+
+    @Test
+    void removeSelectionIntervalGetAnchorSelectionIndexAndGetListSelectionListenersAndAnItemClickConsumer() {
+        onUiThread(() -> {
+            WList list = new WList(new String[] {"a", "b", "c", "d"});
+            list.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+            list.setSelectionInterval(0, 3);
+            list.removeSelectionInterval(1, 2);
+            assertArrayEquals(new int[] {0, 3}, list.getSelectedIndices());
+            assertEquals(1, list.getAnchorSelectionIndex()); // As in Swing, the ends of the removed interval become the anchor and lead
+            assertEquals(2, list.getLeadSelectionIndex());
+            WListSelectionListener listener = e -> { };
+            list.addListSelectionListener(listener);
+            assertArrayEquals(new WListSelectionListener[] {listener}, list.getListSelectionListeners());
+            list.removeListSelectionListener(listener);
+            assertEquals(0, list.getListSelectionListeners().length);
+
+            list.setItemClickEnabled(true);
+            assertTrue(list.isItemClickEnabled());
+            java.util.function.Consumer<String> clicked = item -> { };
+            list.addItemClickListener(clicked);
+            list.removeItemClickListener(clicked);
+            list.removeAllItems();
+            assertEquals(0, list.getItemCount());
+            assertTrue(list.isSelectionEmpty());
+        });
+    }
 }

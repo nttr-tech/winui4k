@@ -57,5 +57,33 @@ class WListTest : FunSpec() {
             count shouldBe 2
             last shouldBe "Added"
         }
+
+        context("Swing compatibility") {
+            test("listSelectionListeners returns the added WListSelectionListeners in the order added, and removed ones are excluded") {
+                onUiThreadGet {
+                    val list = WList(arrayOf("a", "b"))
+                    val first = WListSelectionListener { }
+                    val second = WListSelectionListener { }
+                    list.addListSelectionListener(first)
+                    list.addListSelectionListener(second)
+                    val both = list.listSelectionListeners.toList()
+                    list.removeListSelectionListener(first)
+                    listOf(both == listOf(first, second), list.listSelectionListeners.toList() == listOf(second))
+                } shouldBe listOf(true, true)
+            }
+
+            test("isItemClickEnabled returns the set value, and Kotlin (String) -> Unit item click listeners can be added and removed") {
+                onUiThreadGet {
+                    val list = WList(listOf("Mon", "Tue"))
+                    val before = list.isItemClickEnabled
+                    list.isItemClickEnabled = true
+                    val listener: (String) -> Unit = { }
+                    list.addItemClickListener(listener)
+                    list.removeItemClickListener(listener)
+                    list.removeItemClickListener(listener) // Removing a listener never added does nothing
+                    listOf(before, list.isItemClickEnabled)
+                } shouldBe listOf(false, true)
+            }
+        }
     }
 }
