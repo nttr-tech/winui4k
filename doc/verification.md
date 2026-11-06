@@ -354,3 +354,12 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
 - `WTeachingTip.hide()` (IsOpen = false) は、開くアニメーションの途中 (TeachingTip がまだ idle でない間) だと TeachingTip 自身が
   IsOpen を true に戻して無視する (`TeachingTip.cpp` の OnIsOpenChanged)。開き終わってからの hide() では Closing → Closed が
   理由 Programmatic で届く (`WTeachingTipTest`)
+- JTable 風の rowAtPoint / columnAtPoint (WTable) のために、TableView の行と列ヘッダーの中の並びを E2E テストで確かめた (`WTableSelectionTest`)
+  - TableViewRow と列ヘッダーは、どちらもセルを列の表示順に左から並べた TableViewCellsPanel を 1 つ持ち、各セルの幅は列の ActualWidth に
+    なる (実測。TableView は microsoft-ui-xaml のソースに無い実験版の部品)。パネルは横のスクロールとともに動くので、点をパネルの座標に直して
+    列の幅を左から足せば、スクロールしていても列が決まる (`TableHitTest.kt` の columnAt)
+  - VisualTreeHelper の GetParent / GetChild などに渡す要素は、IDependencyObject のポインタでなければならない。
+    `VisualTreeHelper::GetParentStaticPrivate` (dxaml/xcp/dxaml/lib/VisualTreeHelper.cpp:463 など) は引数を QueryInterface せずに
+    `static_cast<DependencyObject*>(pReference)` で実体に直すので、FindElementsInHostCoordinates が返す UIElement のポインタ (IUIElement の
+    vtable) をそのまま渡すと別の位置を実体と見なし、JVM ごと落ちる。先に IID_IDependencyObject へ QI してから渡す
+    (`TableHitTest.kt` の rowAt、`Xaml.parentOf` / `Xaml.childAt` は中で QI する)
