@@ -57,7 +57,10 @@ import kotlin.jvm.JvmSynthetic
  * - Filtering: [TableRowSorter.setRowFilter] (TableViewSource.Filter)
  * - Grouping: [groupBy] / [clearGrouping] / [expandAllGroups] / [collapseAllGroups] / [groupHeaderTemplate]
  * - Appearance: [showHorizontalLines] / [showVerticalLines] / [isHeaderVisible] / [density] / [rowBackground] /
- *   [alternatingRowBackground] / [emptyText] / [emptyTemplate] / [canUserResizeColumns]
+ *   [alternatingRowBackground] / [emptyText] / [emptyTemplate] / [canUserResizeColumns].
+ *   There is no equivalent of JTable.setSelectionBackground; the color of selected rows follows the theme (lightweight styling keys put into the Resources of the table or rows
+ *   do not reach TableView rows. See "TableView (2.5.4-experimental): putting MUX_TabularSurfaceRowBackgroundSelectedBrush into the Resources of the table or rows
+ *   does not change the background of selected rows" in doc/troubleshooting.md)
  *
  * Row and column indices are view positions (rows after sorting and filtering, columns in display order), except for
  * those whose names contain model. Conversion to and from the model is done with [convertRowIndexToModel] /
