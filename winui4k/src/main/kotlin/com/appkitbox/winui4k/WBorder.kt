@@ -68,16 +68,21 @@ class WBorder @JvmOverloads constructor(child: WComponent? = null) : WComponent(
             }
         }
 
-    /** The inner padding, the same on all four sides (Border.Padding). */
-    var padding: Double = 0.0
-        set(value) {
-            field = value
-            XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_Padding, value, value, value, value)
-        }
+    /**
+     * The inner padding, the same on all four sides (Border.Padding). Reading returns the set value, or 0 if unset.
+     * When set with [setPadding], it is that value if all four sides are equal, otherwise 0, since they cannot be expressed as one number.
+     */
+    var padding: Double
+        get() = paddingValue
+        set(value) = setPadding(value, value, value, value)
 
-    /** Sets the padding on each side individually (Border.Padding). */
+    /** The last set inner padding returned by [padding] (0 if the four sides are not equal). */
+    private var paddingValue: Double = 0.0
+
+    /** Sets the padding on each side individually (Border.Padding). The value read from [padding] changes too. */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_Padding, left, top, right, bottom)
+        paddingValue = uniformThickness(left, top, right, bottom)
     }
 
     init {

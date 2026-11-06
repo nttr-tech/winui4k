@@ -6,7 +6,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /**
- * Tests that reading [WComponent.margin] and [WControl.padding] returns "the value set through this library, or 0 if unset".
+ * Tests that reading [WComponent.margin], [WControl.padding] and [WBorder.padding] returns "the value set through this library, or 0 if unset".
  * Native values applied by the theme (such as the Padding 11, 5, 11, 6 of a WButton placed in a window) are not settings, so they
  * do not show up when reading (read the actual four sides with [WControl.insets]).
  * Whichever path sets it (margin / setMargin, padding / setPadding / border), the same value is read: that value if all four sides are equal,
@@ -39,6 +39,9 @@ class WComponentMarginPaddingTest : FunSpec() {
                 attached({ WButton("Press") }) { it.margin } shouldBe 0.0
             }
 
+            test("the padding of a WBorder with nothing set is 0") {
+                onUiThreadGet { WBorder().padding } shouldBe 0.0
+            }
         }
 
         context("Reading and writing") {
@@ -120,6 +123,24 @@ class WComponentMarginPaddingTest : FunSpec() {
                     it.padding = 8.0
                     it.border = null
                     it.padding
+                } shouldBe 0.0
+            }
+
+            test("after writing WBorder's padding, making all four sides equal with setPadding makes padding read that value") {
+                onUiThreadGet {
+                    val border = WBorder()
+                    border.padding = 8.0
+                    border.setPadding(4.0, 4.0, 4.0, 4.0)
+                    border.padding
+                } shouldBe 4.0
+            }
+
+            test("making the four sides different with WBorder's setPadding makes padding 0") {
+                onUiThreadGet {
+                    val border = WBorder()
+                    border.padding = 8.0
+                    border.setPadding(1.0, 2.0, 3.0, 4.0)
+                    border.padding
                 } shouldBe 0.0
             }
         }
