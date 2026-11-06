@@ -62,6 +62,7 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
             removeNative(component)
             throw e
         }
+        fireContainerEvent(WContainerEvent.COMPONENT_ADDED, component)
     }
 
     private fun checkPosition(index: Int) {
@@ -123,6 +124,7 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
         mutableComponents.removeAt(index)
         component.setParentLink(null)
         onComponentRemoved(component)
+        fireContainerEvent(WContainerEvent.COMPONENT_REMOVED, component)
     }
 
     /** Container.removeAll-style: removes all children. As in Swing, removes them starting from the last child. */
@@ -162,5 +164,38 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
 
     override fun validateTree() {
         mutableComponents.forEach { it.validateTree() }
+    }
+
+    /** The listeners for children entering and leaving (in the order they were added). No native handler is used (all children enter and leave through the Kotlin API). */
+    private val containerListenerList = ArrayList<WContainerListener>()
+
+    /**
+     * Container.addContainerListener-style: adds a listener called when a child is added or removed. Does nothing if null.
+     * Adding the same listener twice makes it called twice (same as Swing).
+     *
+     * Listeners are called synchronously inside [add] / [remove], after the native child list has been changed. [removeAll] calls them once per removed child,
+     * starting from the last child, and when a child with a parent is added to another container with [add], the old container's listeners
+     * receive componentRemoved first (all the same as Swing).
+     */
+    fun addContainerListener(listener: WContainerListener?) {
+        if (listener != null) containerListenerList += listener
+    }
+
+    /** Container.removeContainerListener-style: removes one listener added with [addContainerListener]. Does nothing if it was not added. */
+    fun removeContainerListener(listener: WContainerListener?) {
+        val index = containerListenerList.indexOfLast { it === listener }
+        if (index >= 0) containerListenerList.removeAt(index)
+    }
+
+    /** Container.getContainerListeners-style: the listeners for children entering and leaving that are added (in the order they were added). */
+    val containerListeners: Array<WContainerListener>
+        get() = containerListenerList.toTypedArray()
+
+    private fun fireContainerEvent(id: Int, child: WComponent) {
+        if (containerListenerList.isEmpty()) return
+        val event = WContainerEvent(this, id, child)
+        for (listener in containerListenerList.toList()) {
+            if (id == WContainerEvent.COMPONENT_ADDED) listener.componentAdded(event) else listener.componentRemoved(event)
+        }
     }
 }
