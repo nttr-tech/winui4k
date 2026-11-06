@@ -1215,6 +1215,8 @@ internal object XamlInterop {
     const val ICalendarView_remove_SelectedDatesChanged = 157 // remove_SelectedDatesChanged(token)
     const val ICalendarView_SetDisplayDate = 158              // SetDisplayDate(DateTime i8)
     const val IID_ICalendarViewSelectedDatesChangedEventArgs = "675f688f-bc30-59f6-83c4-140bd053a09a"
+    const val ICalendarViewSelectedDatesChangedEventArgs_get_AddedDates = 6   // get_AddedDates(out IVectorView<DateTime>)
+    const val ICalendarViewSelectedDatesChangedEventArgs_get_RemovedDates = 7 // get_RemovedDates(out IVectorView<DateTime>)
 
     /** The actual IID of TypedEventHandler<CalendarView, CalendarViewSelectedDatesChangedEventArgs> (computed at runtime). */
     val IID_CalendarViewSelectedDatesChangedHandler: String by lazy {
