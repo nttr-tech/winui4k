@@ -49,6 +49,11 @@ enum class PasswordRevealMode(internal val native: Int) {
 class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WControl(
     Activation.activate(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBox),
 ) {
+    /** JPasswordField(int columns)-like: creates an input field [columns] columns wide. */
+    constructor(columns: Int) : this("") {
+        this.columns = columns
+    }
+
     /** PasswordChanged event tokens registered via addPasswordChangedListener. */
     private val passwordChangedTokens = ListenerTokens<Consumer<String>>()
 
@@ -155,6 +160,26 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
         actions.install()
     }
 
+    /** The shared part that decides the width from the column count ([TextExtent]). */
+    private val extent = TextExtent(this)
+
+    /**
+     * JTextField.getColumns / setColumns-like: the number of columns that decides the input field's width (0 by default, meaning the width is not decided by columns).
+     * How the width is decided, when it is measured and the priority are the same as [WTextField.columns] (columns × the width of 'm' + inner padding and border).
+     * It is measured with the width of 'm', not of the mask character (the same as Swing's JPasswordField).
+     *
+     * @throws IllegalArgumentException for a negative value (as in Swing)
+     */
+    var columns: Int
+        get() = extent.columns
+        set(value) {
+            extent.columns = value
+        }
+
+    override fun fontChanged() = extent.fontChanged()
+
+    override fun preferredSize(): WSize = extent.preferredSize(super.preferredSize())
+
     /** Selects all text (PasswordBox.SelectAll). */
     fun selectAll() {
         inspectable.call(XamlInterop.IPasswordBox_SelectAll)
@@ -196,6 +221,41 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
 
     /** JTextField.postActionEvent-like: calls the registered listeners in registration order, as when Enter is pressed. Does not press the default button. */
     fun postActionEvent() = actions.post()
+
+    /**
+     * JTextField.getActionListeners-like: the listeners added with [addActionListener] (in the order added). Kotlin lambdas and [Runnable]s appear as
+     * wrapping [WActionListener]s, and any of them can be passed to `removeActionListener` to remove it.
+     */
+    val actionListeners: Array<WActionListener>
+        get() = actions.listeners()
+
+    /**
+     * JTextComponent.getFocusAccelerator / setFocusAccelerator-like: the access key that moves the focus to the input field with Alt and this character
+     * (UIElement.AccessKey). Letters are stored in upper case, and '\u0000' (default) clears it. Anything other than ASCII letters and digits throws
+     * [IllegalArgumentException] (Swing accepts any character). WinUI moves the focus to elements that have no operation invocable by an access key
+     * (ScopeTree::ProcessNormalKey of AccessKeys). [WLabel.labelFor] and [WLabel.displayedMnemonic] also put into the same access key.
+     */
+    var focusAccelerator: Char
+        get() = readFocusAccelerator(this)
+        set(value) = writeFocusAccelerator(this, value)
+
+    /**
+     * JTextComponent.getSelectionColor / setSelectionColor-like: the background color of the selected text (PasswordBox.SelectionHighlightColor).
+     * Reading returns the native effective value, which after it is put in a window is the theme color even before it is set (it may be null before that).
+     * Setting null clears the setting and returns to the theme color.
+     */
+    var selectionColor: WColor?
+        get() = selectionHighlight.get()
+        set(value) = selectionHighlight.set(value)
+
+    /** Reads and writes the selection background color ([selectionColor]). */
+    private val selectionHighlight = SelectionHighlight(
+        this,
+        inspectable,
+        XamlInterop.IPasswordBox_get_SelectionHighlightColor,
+        XamlInterop.IPasswordBox_put_SelectionHighlightColor,
+        Triple(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBoxStatics, XamlInterop.IPasswordBoxStatics_get_SelectionHighlightColorProperty),
+    )
 
     /**
      * Document.addDocumentListener-like: adds a listener called when the password changes. Does nothing if null.

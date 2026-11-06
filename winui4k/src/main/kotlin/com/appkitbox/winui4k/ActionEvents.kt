@@ -52,18 +52,32 @@ internal class ActionEvents(
         owner.listenerAnchor.listenerAdded()
     }
 
+    /** Removes one listener added with [key]. The wrapper ([KeyedActionListener]) returned by [listeners] can also be passed to remove it. */
     fun remove(key: Any) {
-        val index = listeners.indexOfLast { it.first === key }
+        val registered = (key as? KeyedActionListener)?.key ?: key
+        val index = listeners.indexOfLast { it.first === registered }
         if (index < 0) return
         listeners.removeAt(index)
         owner.listenerAnchor.listenerRemoved()
     }
+
+    /**
+     * JTextField.getActionListeners-like: the listeners currently added (in the order added). Those added as a [WActionListener] appear as themselves,
+     * and Kotlin lambdas and [Runnable]s appear wrapped in [KeyedActionListener]; any of them can be passed to [remove] to remove it.
+     */
+    fun listeners(): Array<WActionListener> =
+        listeners.map { (key, invoke) -> key as? WActionListener ?: KeyedActionListener(key, invoke) }.toTypedArray()
 
     /** Calls the registered listeners in registration order, as when Enter is pressed. Does not press the default button. */
     fun post() {
         val event = WActionEvent(owner, actionCommand(), WActionEvent.fromVirtualKeyModifiers(Xaml.currentModifiers()))
         for ((_, invoke) in listeners.toList()) invoke(event)
     }
+}
+
+/** A wrapper to return listeners added as lambdas or [Runnable]s as [WActionListener]s from [ActionEvents.listeners] ([key] is what was added). */
+internal class KeyedActionListener(val key: Any, private val invoke: (WActionEvent) -> Unit) : WActionListener {
+    override fun actionPerformed(e: WActionEvent) = invoke(e)
 }
 
 /**

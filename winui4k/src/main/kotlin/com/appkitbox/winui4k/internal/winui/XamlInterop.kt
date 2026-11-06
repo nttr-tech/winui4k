@@ -346,6 +346,10 @@ internal object XamlInterop {
     const val ITextBox_remove_TextChanged = 59         // remove_TextChanged(token)
     const val ITextBox_Select = 80                     // Select(INT32 start, INT32 length)
     const val ITextBox_SelectAll = 81                  // SelectAll()
+    const val ITextBox_get_SelectionHighlightColor = 36 // get_SelectionHighlightColor(out SolidColorBrush)
+    const val ITextBox_put_SelectionHighlightColor = 37 // put_SelectionHighlightColor(SolidColorBrush)
+    const val IID_ITextBoxStatics = "a41cf38f-712a-5599-bbed-5a3d9b6bd46e"
+    const val ITextBoxStatics_get_SelectionHighlightColorProperty = 18
 
     /** delegate Microsoft.UI.Xaml.Controls.TextChangedEventHandler(sender, TextChangedEventArgs) — Invoke is vtbl[3] */
     const val IID_TextChangedEventHandler = "5d8ddcff-45d8-5e7c-9b8b-c41d2893c6a1"
@@ -359,6 +363,10 @@ internal object XamlInterop {
     const val IPasswordBox_put_PasswordChar = 9        // put_PasswordChar(HSTRING)
     const val IPasswordBox_get_MaxLength = 12          // get_MaxLength(out INT32)
     const val IPasswordBox_put_MaxLength = 13          // put_MaxLength(INT32)
+    const val IPasswordBox_get_SelectionHighlightColor = 20 // get_SelectionHighlightColor(out SolidColorBrush)
+    const val IPasswordBox_put_SelectionHighlightColor = 21 // put_SelectionHighlightColor(SolidColorBrush)
+    const val IID_IPasswordBoxStatics = "90e6559c-5f74-5cd1-87b6-c0514085ab42"
+    const val IPasswordBoxStatics_get_SelectionHighlightColorProperty = 13
     const val IPasswordBox_put_Header = 15             // put_Header(IInspectable)
     const val IPasswordBox_get_PlaceholderText = 18
     const val IPasswordBox_put_PlaceholderText = 19
@@ -453,6 +461,10 @@ internal object XamlInterop {
     const val IRichEditBox_put_Header = 22             // put_Header(IInspectable)
     const val IRichEditBox_get_PlaceholderText = 25
     const val IRichEditBox_put_PlaceholderText = 26
+    const val IRichEditBox_get_SelectionHighlightColor = 27 // get_SelectionHighlightColor(out SolidColorBrush)
+    const val IRichEditBox_put_SelectionHighlightColor = 28 // put_SelectionHighlightColor(SolidColorBrush)
+    const val IID_IRichEditBoxStatics = "b3f59239-efd1-5129-bf80-2841a331b24a"
+    const val IRichEditBoxStatics_get_SelectionHighlightColorProperty = 16
     const val IRichEditBox_add_TextChanged = 49        // add_TextChanged(RoutedEventHandler, out token)
     const val IRichEditBox_remove_TextChanged = 50     // remove_TextChanged(token)
     const val IRichEditBox_add_SelectionChanged = 51   // add_SelectionChanged(RoutedEventHandler, out token)

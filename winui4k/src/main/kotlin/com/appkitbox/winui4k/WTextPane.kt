@@ -8,6 +8,9 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.io.IOException
+import java.io.Reader
+import java.io.Writer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -93,6 +96,55 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
             }
             caret.check()
         }
+
+    /**
+     * JTextComponent.getFocusAccelerator / setFocusAccelerator-like: the access key that moves the focus to the input field with Alt and this character
+     * (UIElement.AccessKey). The same as [WTextField.focusAccelerator].
+     */
+    var focusAccelerator: Char
+        get() = readFocusAccelerator(this)
+        set(value) = writeFocusAccelerator(this, value)
+
+    /**
+     * JTextComponent.getSelectionColor / setSelectionColor-like: the background color of the selected text (RichEditBox.SelectionHighlightColor).
+     * As with [WTextField.selectionColor], setting null returns to the theme color.
+     */
+    var selectionColor: WColor?
+        get() = selectionHighlight.get()
+        set(value) = selectionHighlight.set(value)
+
+    /** Reads and writes the selection background color ([selectionColor]). */
+    private val selectionHighlight = SelectionHighlight(
+        this,
+        inspectable,
+        XamlInterop.IRichEditBox_get_SelectionHighlightColor,
+        XamlInterop.IRichEditBox_put_SelectionHighlightColor,
+        Triple(XamlInterop.CLS_RichEditBox, XamlInterop.IID_IRichEditBoxStatics, XamlInterop.IRichEditBoxStatics_get_SelectionHighlightColorProperty),
+    )
+
+    /**
+     * JTextComponent.getText(int offs, int len)-like: [length] characters of [text] from [offset] (positions and line breaks are the same as [text]).
+     *
+     * @throws IllegalArgumentException for negative values, or when the range is outside the string (corresponds to Swing's BadLocationException)
+     */
+    fun getText(offset: Int, length: Int): String = textRange(text, offset, length)
+
+    /**
+     * JTextComponent.read-like: replaces [text] with the string read from [reader] to the end. Line breaks are normalized to LF, as in Swing
+     * (CRLF and CR become LF). Formatting is lost. [desc] (the document description in Swing) is not used. [addDocumentListener] listeners are
+     * notified the same as when [text] is set. [reader] is not closed.
+     */
+    @Throws(IOException::class)
+    @Suppress("UNUSED_PARAMETER")
+    fun read(reader: Reader, desc: Any?) {
+        text = readText(reader)
+    }
+
+    /** JTextComponent.write-like: writes [text] (line breaks LF) to [writer] and flushes it ([writer] is not closed). Formatting is not written (use [rtfText]). */
+    @Throws(IOException::class)
+    fun write(writer: Writer) {
+        writeText(writer, text)
+    }
 
     /** The number of characters in the whole content (the length of [text]). The upper bound of the insertion position. */
     val length: Int get() = nativeText().length

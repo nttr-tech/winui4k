@@ -10,6 +10,9 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.io.IOException
+import java.io.Reader
+import java.io.Writer
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -334,6 +337,65 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      * Does not press the default button.
      */
     fun postActionEvent() = actions.post()
+
+    /**
+     * JTextField.getActionListeners-like: the listeners added with [addActionListener] (in the order added). Kotlin lambdas and [Runnable]s appear as
+     * wrapping [WActionListener]s, and any of them can be passed to `removeActionListener` to remove it.
+     */
+    val actionListeners: Array<WActionListener>
+        get() = actions.listeners()
+
+    /**
+     * JTextComponent.getFocusAccelerator / setFocusAccelerator-like: the access key that moves the focus to the input field with Alt and this character
+     * (UIElement.AccessKey). Letters are stored in upper case, and '\u0000' (default) clears it. Anything other than ASCII letters and digits throws
+     * [IllegalArgumentException] (Swing accepts any character). WinUI moves the focus to elements that have no operation invocable by an access key
+     * (ScopeTree::ProcessNormalKey of AccessKeys). [WLabel.labelFor] and [WLabel.displayedMnemonic] also put into the same access key.
+     */
+    var focusAccelerator: Char
+        get() = readFocusAccelerator(this)
+        set(value) = writeFocusAccelerator(this, value)
+
+    /**
+     * JTextComponent.getSelectionColor / setSelectionColor-like: the background color of the selected text (TextBox.SelectionHighlightColor).
+     * Reading returns the native effective value, which after it is put in a window is the theme color even before it is set (it may be null before that).
+     * Setting null clears the setting and returns to the theme color.
+     */
+    var selectionColor: WColor?
+        get() = selectionHighlight.get()
+        set(value) = selectionHighlight.set(value)
+
+    /** Reads and writes the selection background color ([selectionColor]). */
+    private val selectionHighlight = SelectionHighlight(
+        this,
+        inspectable,
+        XamlInterop.ITextBox_get_SelectionHighlightColor,
+        XamlInterop.ITextBox_put_SelectionHighlightColor,
+        Triple(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxStatics, XamlInterop.ITextBoxStatics_get_SelectionHighlightColorProperty),
+    )
+
+    /**
+     * JTextComponent.getText(int offs, int len)-like: [length] characters of [text] from [offset].
+     *
+     * @throws IllegalArgumentException for negative values, or when the range is outside the string (corresponds to Swing's BadLocationException)
+     */
+    fun getText(offset: Int, length: Int): String = textRange(text, offset, length)
+
+    /**
+     * JTextComponent.read-like: replaces [text] with the string read from [reader] to the end. Line breaks are normalized to LF, as in Swing
+     * (CRLF and CR become LF). [desc] (the document description in Swing) is not used. [addDocumentListener] listeners are notified the same as when [text]
+     * is set. [reader] is not closed. This is a single-line input field, so strings containing line breaks are handled as TextBox does.
+     */
+    @Throws(IOException::class)
+    @Suppress("UNUSED_PARAMETER")
+    fun read(reader: Reader, desc: Any?) {
+        text = readText(reader)
+    }
+
+    /** JTextComponent.write-like: writes [text] to [writer] and flushes it ([writer] is not closed). Line breaks stay LF. */
+    @Throws(IOException::class)
+    fun write(writer: Writer) {
+        writeText(writer, text)
+    }
 
     /**
      * Document.addDocumentListener-style: adds a listener called when the text changes. Does nothing if null.

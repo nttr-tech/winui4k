@@ -176,6 +176,13 @@ class WAutoSuggestBox @JvmOverloads constructor(placeholder: String = "") : WCon
     /** JComboBox.actionPerformed-style: calls the registered listeners in registration order, as when a query is committed. */
     fun postActionEvent() = actions.post()
 
+    /**
+     * JTextField.getActionListeners-like: the listeners added with [addActionListener] (in the order added). Kotlin lambdas and [Runnable]s appear as
+     * wrapping [WActionListener]s, and any of them can be passed to `removeActionListener` to remove it.
+     */
+    val actionListeners: Array<WActionListener>
+        get() = actions.listeners()
+
     /** Calls the listeners with the committed query [queryText] as the default [actionCommand]. */
     private fun postSubmitted(queryText: String) {
         submittedQuery = queryText
