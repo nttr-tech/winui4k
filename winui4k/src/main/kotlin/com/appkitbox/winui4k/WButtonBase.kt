@@ -277,6 +277,12 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
         }
     }
 
+    /** As with AbstractButton, the default of [alignmentX] is left-aligned (0). */
+    override val defaultAlignmentX: Float get() = LEFT_ALIGNMENT
+
+    /** As with AbstractButton, [WBoxLayout] does not make it larger than its preferred size unless a maximum size is set. */
+    override val maximumFollowsPreferred: Boolean get() = true
+
     /** Maps [action]'s [WAction.SELECTED_KEY] to the button's selection state (deselects if null). Only [WToggleButton], which has a selection state, overrides this. */
     internal open fun applyActionSelected(action: WAction?) {
         // Buttons without a selection state do not read SELECTED_KEY (same as Swing's JButton)

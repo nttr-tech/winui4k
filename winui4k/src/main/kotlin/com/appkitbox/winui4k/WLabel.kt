@@ -154,6 +154,12 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     override val automationTarget: ComPtr get() = textBlock
 
+    /** As with JLabel, the default of [alignmentX] is left-aligned (0). */
+    override val defaultAlignmentX: Float get() = LEFT_ALIGNMENT
+
+    /** As with JLabel, [WBoxLayout] does not make it larger than its preferred size unless a maximum size is set. */
+    override val maximumFollowsPreferred: Boolean get() = true
+
     var text: String
         get() = textBlock.getString(XamlInterop.ITextBlock_get_Text)
         set(value) {

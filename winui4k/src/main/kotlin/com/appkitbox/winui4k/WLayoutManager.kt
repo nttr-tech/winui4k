@@ -51,6 +51,15 @@ interface WLayoutManager {
      */
     fun invalidateLayout(parent: WLayoutPanel) {}
 
+    /**
+     * The horizontal alignment of [parent] (like LayoutManager2.getLayoutAlignmentX, 0..1). Becomes the value of a [WLayoutPanel] that does not set
+     * [alignmentX][WComponent.alignmentX], and is used by a nested [WBoxLayout]. Center (0.5) by default.
+     */
+    fun getLayoutAlignmentX(parent: WLayoutPanel): Float = WComponent.CENTER_ALIGNMENT
+
+    /** The vertical alignment of [parent] (like LayoutManager2.getLayoutAlignmentY). Center (0.5) by default. See [getLayoutAlignmentX] for details. */
+    fun getLayoutAlignmentY(parent: WLayoutPanel): Float = WComponent.CENTER_ALIGNMENT
+
     /** Positions children to fit [WLayoutPanel.layoutSize] (calls [WLayoutPanel.setBounds]). */
     fun layoutContainer(parent: WLayoutPanel)
 }

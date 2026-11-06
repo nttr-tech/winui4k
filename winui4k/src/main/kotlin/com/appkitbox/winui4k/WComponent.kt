@@ -458,6 +458,49 @@ abstract class WComponent internal constructor(
             frameworkElement.call(XamlInterop.IFrameworkElement_put_MaxHeight, value.height)
         }
 
+    /** The value set to [alignmentX] (null if not set, in which case [defaultAlignmentX] is returned). */
+    private var alignmentXValue: Float? = null
+
+    /** The value set to [alignmentY] (null if not set, in which case [defaultAlignmentY] is returned). */
+    private var alignmentYValue: Float? = null
+
+    /**
+     * Like JComponent.getAlignmentX / setAlignmentX: the horizontal alignment (0 = left [LEFT_ALIGNMENT], 0.5 = center [CENTER_ALIGNMENT],
+     * 1 = right [RIGHT_ALIGNMENT]). Values below 0 become 0 and values above 1 become 1 (same as Swing).
+     *
+     * A value kept on the Kotlin side, separate from the native [horizontalAlignment] (WinUI's panels do not look at it). It is used by
+     * layout managers such as [WBoxLayout]. The default, as in Swing, is 0 for labels ([WLabel]) and buttons (subclasses of [WButtonBase]),
+     * the manager's value ([WLayoutManager.getLayoutAlignmentX]) for a [WLayoutPanel] with a layout manager, and 0.5 otherwise.
+     * As in Swing, changing it does not rearrange (call [revalidate]).
+     */
+    var alignmentX: Float
+        get() = alignmentXValue ?: defaultAlignmentX
+        set(value) {
+            alignmentXValue = value.coerceIn(0.0f, 1.0f)
+        }
+
+    /**
+     * Like JComponent.getAlignmentY / setAlignmentY: the vertical alignment (0 = top [TOP_ALIGNMENT], 0.5 = center, 1 = bottom [BOTTOM_ALIGNMENT]).
+     * The default is 0.5 (the manager's value for a [WLayoutPanel]). Otherwise the same as [alignmentX].
+     */
+    var alignmentY: Float
+        get() = alignmentYValue ?: defaultAlignmentY
+        set(value) {
+            alignmentYValue = value.coerceIn(0.0f, 1.0f)
+        }
+
+    /** The value of [alignmentX] when it is not set. */
+    internal open val defaultAlignmentX: Float get() = CENTER_ALIGNMENT
+
+    /** The value of [alignmentY] when it is not set. */
+    internal open val defaultAlignmentY: Float get() = CENTER_ALIGNMENT
+
+    /**
+     * Whether [WBoxLayout] keeps this component from growing beyond its preferred size when [maximumSize] is not set.
+     * Swing's JLabel and AbstractButton have maximum size = preferred size, so the corresponding [WLabel] and [WButtonBase] are true.
+     */
+    internal open val maximumFollowsPreferred: Boolean get() = false
+
     /** The values put with [putClientProperty] (not created until one is put). */
     private var clientProperties: MutableMap<Any, Any>? = null
 
@@ -1075,6 +1118,23 @@ abstract class WComponent internal constructor(
         accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
         accelerators.release()
         accelerator.release()
+    }
+
+    companion object {
+        /** Like Component.TOP_ALIGNMENT: top alignment for [alignmentY]. */
+        const val TOP_ALIGNMENT: Float = 0.0f
+
+        /** Like Component.CENTER_ALIGNMENT: center alignment for [alignmentX] / [alignmentY]. */
+        const val CENTER_ALIGNMENT: Float = 0.5f
+
+        /** Like Component.BOTTOM_ALIGNMENT: bottom alignment for [alignmentY]. */
+        const val BOTTOM_ALIGNMENT: Float = 1.0f
+
+        /** Like Component.LEFT_ALIGNMENT: left alignment for [alignmentX]. */
+        const val LEFT_ALIGNMENT: Float = 0.0f
+
+        /** Like Component.RIGHT_ALIGNMENT: right alignment for [alignmentX]. */
+        const val RIGHT_ALIGNMENT: Float = 1.0f
     }
 }
 

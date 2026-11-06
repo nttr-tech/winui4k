@@ -137,6 +137,14 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
             super.maximumSize = value
         }
 
+    /** Like Container.getAlignmentX: if [alignmentX] is not set, [layout]'s [WLayoutManager.getLayoutAlignmentX]. */
+    override val defaultAlignmentX: Float
+        get() = layout?.getLayoutAlignmentX(this) ?: super.defaultAlignmentX
+
+    /** Like Container.getAlignmentY: if [alignmentY] is not set, [layout]'s [WLayoutManager.getLayoutAlignmentY]. */
+    override val defaultAlignmentY: Float
+        get() = layout?.getLayoutAlignmentY(this) ?: super.defaultAlignmentY
+
     /** Returns the explicit setting if there is one ([native] other than [unset]), otherwise the layout manager's computed value. */
     private inline fun layoutOverride(native: WSize, unset: WSize, fromLayout: (WLayoutManager) -> WSize): WSize {
         val manager = layout
