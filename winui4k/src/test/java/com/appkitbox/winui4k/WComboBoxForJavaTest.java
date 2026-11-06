@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
+import static com.appkitbox.winui4k.UiTestHarness.onUiThreadGet;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
 
 /** Tests that use WComboBox from Java in the same way developers who have used Swing's JComboBox would write it. */
@@ -140,4 +142,61 @@ class WComboBoxForJavaTest {
             assertTrue(comboBox.isEditable());
         });
     }
+
+    @Test
+    void popupMenuCanceledArrivesOnlyWhenClosedWithEscAndNotWithHidePopup() throws InterruptedException {
+        List<String> events = new ArrayList<>();
+        WComboBox comboBox = onUiThreadGet(() -> new WComboBox(new String[] {"Red", "Green"}));
+        onUiThread(() -> comboBox.addPopupMenuListener(new WPopupMenuAdapter() {
+            @Override
+            public void popupMenuWillBecomeVisible(WPopupMenuEvent e) {
+                events.add("visible");
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(WPopupMenuEvent e) {
+                events.add("invisible");
+            }
+
+            @Override
+            public void popupMenuCanceled(WPopupMenuEvent e) {
+                events.add("canceled");
+            }
+        }));
+        UiTestHarness.attachAndAwaitLoaded(comboBox);
+        try {
+            onUiThread(comboBox::showPopup);
+            awaitEvents(events, Arrays.asList("visible"));
+            onUiThread(comboBox::hidePopup);
+            awaitEvents(events, Arrays.asList("visible", "invisible"));
+
+            onUiThread(() -> {
+                events.clear();
+                assertTrue(comboBox.requestFocusInWindow());
+                comboBox.setPopupVisible(true);
+            });
+            awaitEvents(events, Arrays.asList("visible"));
+            TestKeyboard.INSTANCE.press(VK_ESCAPE, SCAN_ESCAPE);
+            awaitEvents(events, Arrays.asList("visible", "canceled", "invisible"));
+            assertFalse(onUiThreadGet(comboBox::isPopupVisible));
+        } finally {
+            UiTestHarness.detach(comboBox);
+        }
+    }
+
+    /** Waits until [events] read on the UI thread becomes [expected], and checks that it does not change after waiting a little longer. */
+    private static void awaitEvents(List<String> events, List<String> expected) throws InterruptedException {
+        Callable<List<String>> snapshot = () -> new ArrayList<>(events);
+        long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
+        while (!onUiThreadGet(snapshot).equals(expected) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+        Thread.sleep(SETTLE_MILLIS);
+        assertEquals(expected, onUiThreadGet(snapshot));
+    }
+
+    private static final int VK_ESCAPE = 0x1B;
+    private static final int SCAN_ESCAPE = 0x01;
+    private static final long TIMEOUT_MILLIS = 3_000;
+    private static final long SETTLE_MILLIS = 500;
 }

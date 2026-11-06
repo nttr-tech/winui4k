@@ -36,6 +36,36 @@ class WComboBoxEventTest : FunSpec() {
 
     private fun recorded(vararg items: String) = Recorded(WComboBox(items.toList()))
 
+    /** Records the three PopupMenuListener notifications as "visible", "canceled" and "invisible" (call on the UI thread). */
+    private fun popupEvents(comboBox: WComboBox): MutableList<String> {
+        val events = mutableListOf<String>()
+        comboBox.addPopupMenuListener(object : WPopupMenuListener {
+            override fun popupMenuWillBecomeVisible(e: WPopupMenuEvent) {
+                events += "visible"
+            }
+
+            override fun popupMenuWillBecomeInvisible(e: WPopupMenuEvent) {
+                events += "invisible"
+            }
+
+            override fun popupMenuCanceled(e: WPopupMenuEvent) {
+                events += "canceled"
+            }
+        })
+        return events
+    }
+
+    /**
+     * Moves the focus, opens the drop-down with F4, and waits until it has finished opening and settled. Opening with the keyboard moves the keyboard
+     * focus to the selected item, and Enter selects that item (when opened with showPopup, keys do not reach the items).
+     */
+    private suspend fun openWithFocus(comboBox: WComboBox, events: MutableList<String>) {
+        onUiThread { check(comboBox.requestFocusInWindow()) { "Cannot move the focus" } }
+        TestKeyboard.press(VK_F4, SCAN_F4)
+        eventually(3.seconds) { onUiThreadGet { events.toList() } shouldContainExactly listOf("visible") }
+        Thread.sleep(SETTLE_MILLIS) // The focus moves to the selected item during the opening animation
+    }
+
     init {
         test("each selection change delivers the previous item's DESELECTED, the new item's SELECTED and an ActionEvent (comboBoxChanged) in that order") {
             onUiThreadGet {
@@ -294,7 +324,7 @@ class WComboBoxEventTest : FunSpec() {
             }
         }
 
-        test("opening with showPopup delivers popupMenuWillBecomeVisible, and closing with hidePopup without selecting delivers popupMenuCanceled then popupMenuWillBecomeInvisible") {
+        test("opening with showPopup delivers popupMenuWillBecomeVisible, and closing with hidePopup without selecting delivers only popupMenuWillBecomeInvisible without popupMenuCanceled (the same as Swing's hidePopup)") {
             val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")) }
             val events = mutableListOf<String>()
             onUiThread {
@@ -319,10 +349,62 @@ class WComboBoxEventTest : FunSpec() {
                 eventually(3.seconds) { onUiThreadGet { events.toList() to comboBox.isPopupVisible } shouldBe (listOf("visible") to true) }
                 onUiThread { comboBox.hidePopup() }
                 eventually(3.seconds) {
-                    onUiThreadGet { events.toList() to comboBox.isPopupVisible } shouldBe (listOf("visible", "canceled", "invisible") to false)
+                    onUiThreadGet { events.toList() to comboBox.isPopupVisible } shouldBe (listOf("visible", "invisible") to false)
                 }
             } finally {
                 UiTestHarness.detach(comboBox)
+            }
+        }
+
+        context("Events") {
+            test("opening and closing with Esc delivers popupMenuWillBecomeInvisible after popupMenuCanceled, and the selection stays as before opening") {
+                val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")).apply { selectedIndex = 0 } }
+                val events = onUiThreadGet { popupEvents(comboBox) }
+                UiTestHarness.attachAndAwaitLoaded(comboBox)
+                try {
+                    openWithFocus(comboBox, events)
+                    TestKeyboard.press(VK_ESCAPE, SCAN_ESCAPE)
+                    eventually(3.seconds) {
+                        onUiThreadGet { events.toList() to comboBox.isPopupVisible } shouldBe (listOf("visible", "canceled", "invisible") to false)
+                    }
+                    onUiThreadGet { comboBox.selectedIndex } shouldBe 0
+                } finally {
+                    UiTestHarness.detach(comboBox)
+                }
+            }
+
+            test("opening and reselecting the current item with Enter does not change the selection, and there is no popupMenuCanceled (as in Swing, it is not a cancellation)") {
+                val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")).apply { selectedIndex = 0 } }
+                val events = onUiThreadGet { popupEvents(comboBox) }
+                UiTestHarness.attachAndAwaitLoaded(comboBox)
+                try {
+                    openWithFocus(comboBox, events)
+                    TestKeyboard.pressEnter()
+                    eventually(3.seconds) {
+                        onUiThreadGet { events.toList() to comboBox.isPopupVisible } shouldBe (listOf("visible", "invisible") to false)
+                    }
+                    Thread.sleep(SETTLE_MILLIS)
+                    onUiThreadGet { events.toList() to comboBox.selectedIndex } shouldBe (listOf("visible", "invisible") to 0)
+                } finally {
+                    UiTestHarness.detach(comboBox)
+                }
+            }
+
+            test("after closing by selecting with Enter, opening again and closing with Esc delivers popupMenuCanceled that time (the selection mark is reset on every opening)") {
+                val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")).apply { selectedIndex = 0 } }
+                val events = onUiThreadGet { popupEvents(comboBox) }
+                UiTestHarness.attachAndAwaitLoaded(comboBox)
+                try {
+                    openWithFocus(comboBox, events)
+                    TestKeyboard.pressEnter()
+                    eventually(3.seconds) { onUiThreadGet { events.toList() } shouldContainExactly listOf("visible", "invisible") }
+                    onUiThread { events.clear() }
+                    openWithFocus(comboBox, events)
+                    TestKeyboard.press(VK_ESCAPE, SCAN_ESCAPE)
+                    eventually(3.seconds) { onUiThreadGet { events.toList() } shouldContainExactly listOf("visible", "canceled", "invisible") }
+                } finally {
+                    UiTestHarness.detach(comboBox)
+                }
             }
         }
 
@@ -377,5 +459,13 @@ class WComboBoxEventTest : FunSpec() {
                 UiTestHarness.detach(comboBox)
             }
         }
+    }
+
+    private companion object {
+        const val VK_ESCAPE = 0x1B
+        const val SCAN_ESCAPE = 0x01
+        const val VK_F4 = 0x73
+        const val SCAN_F4 = 0x3E
+        const val SETTLE_MILLIS = 500L
     }
 }

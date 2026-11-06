@@ -1002,6 +1002,7 @@ internal object XamlInterop {
     const val CLS_ComboBox = "Microsoft.UI.Xaml.Controls.ComboBox"
     const val IID_IComboBoxFactory = "71c1014b-acdf-5c03-b5ed-02871caaeb6b"
     const val IID_IComboBox = "c77da58b-4fd7-51e0-a431-f84658a83e9e"
+    const val IID_IComboBoxItem = "df65f6f4-863f-558d-bc4e-82c12f28062f"
     const val IComboBox_get_IsDropDownOpen = 6         // get_IsDropDownOpen(out boolean)
     const val IComboBox_put_IsDropDownOpen = 7         // put_IsDropDownOpen(boolean)
     const val IComboBox_get_IsEditable = 8             // get_IsEditable(out boolean)
