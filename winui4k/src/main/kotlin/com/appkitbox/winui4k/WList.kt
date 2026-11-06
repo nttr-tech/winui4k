@@ -51,7 +51,9 @@ enum class ListViewSelectionMode(internal val native: Int) {
  *
  * Model changes and the selection (same as Swing's JList): inserting or removing before the selected element shifts the selection, removing the selected element
  * clears that selection, and replacing an element (contentsChanged) keeps the selection at that position (WinUI deselects replaced items, so they are
- * selected again, which calls the selection listeners). Replacing [model] clears the selection.
+ * selected again, which calls the selection listeners). A contentsChanged(-1, -1) that does not report its range (such as a WDefaultComboBoxModel selection change)
+ * replaces only the elements whose text changed if the number of elements is the same (the selection is kept, and listeners are not called if nothing changed).
+ * Replacing [model] clears the selection.
  *
  * [addItem] / [removeItem] / [removeAllItems] edit the default model ([WDefaultListModel]). When an app-specific
  * model (a read-only [WAbstractListModel] and so on) is set, they throw UnsupportedOperationException.

@@ -39,6 +39,9 @@ private interface ListUnderTest {
 
     /** The strings put into the native Items. */
     fun nativeTexts(): List<String>
+
+    /** Adds a Runnable listener notified of selection changes. */
+    fun addRunnableListener(listener: () -> Unit)
 }
 
 private class ListViewUnderTest(val list: WList) : ListUnderTest {
@@ -67,6 +70,8 @@ private class ListViewUnderTest(val list: WList) : ListUnderTest {
     }
 
     override fun nativeTexts(): List<String> = list.listItems.nativeTexts()
+
+    override fun addRunnableListener(listener: () -> Unit) = list.addListSelectionListener(listener)
 }
 
 private class ListBoxUnderTest(val list: WListBox) : ListUnderTest {
@@ -95,6 +100,8 @@ private class ListBoxUnderTest(val list: WListBox) : ListUnderTest {
     }
 
     override fun nativeTexts(): List<String> = list.listItems.nativeTexts()
+
+    override fun addRunnableListener(listener: () -> Unit) = list.addListSelectionListener(listener)
 }
 
 /**
@@ -296,6 +303,40 @@ abstract class ListModelBindingSpec(
                 model.reloadAll()
                 list.nativeTexts()
             } shouldContainExactly listOf("A", "b", "c")
+        }
+
+        test("a contentsChanged(-1, -1) that does not change the size (such as a WDefaultComboBoxModel selection change) keeps the selection as is and does not call listeners") {
+            onUiThreadGet {
+                val combo = WDefaultComboBoxModel(listOf("a", "b", "c"))
+                val list = listWith(combo)
+                list.selectedIndex = 2
+                var runs = 0
+                list.addRunnableListener { runs++ }
+                combo.selectedItem = "b"
+                val plain = listOf(list.selectedIndex, list.selectedValue, runs, list.nativeTexts())
+                (list as? ListViewUnderTest)?.list?.isSelectedIndex(2) ?: (list as ListBoxUnderTest).list.isSelectedIndex(2) // Starts the Swing-style sync
+                combo.selectedItem = "a"
+                plain to listOf(list.selectedIndex, list.selectedValue, runs)
+            } shouldBe (listOf(2, "c", 0, listOf("a", "b", "c")) to listOf(2, "c", 0))
+        }
+
+        test("with a contentsChanged(-1, -1) that does not change the size, elements whose text changed update their display, and the selection stays at its position") {
+            onUiThreadGet {
+                val data = mutableListOf("a", "b", "c")
+                val model = object : WAbstractListModel<String>() {
+                    override fun getSize(): Int = data.size
+
+                    override fun getElementAt(index: Int): String = data[index]
+
+                    fun reloadAll() = fireContentsChanged(this, -1, -1)
+                }
+                val list = listWith(model)
+                list.selectedIndex = 1
+                data[1] = "B"
+                data[2] = "C"
+                model.reloadAll()
+                Triple(list.nativeTexts(), list.selectedIndex, list.selectedValue)
+            } shouldBe Triple(listOf("a", "B", "C"), 1, "B")
         }
 
         test("getItem out of range throws ArrayIndexOutOfBoundsException") {

@@ -72,17 +72,26 @@ internal class ListModelItems(
 
         override fun contentsChanged(e: WListDataEvent) {
             val size = this@ListModelItems.model.getSize()
-            if (e.index0 < 0 || e.index1 >= identities.size || identities.size != size) {
+            if (identities.size != size) {
                 change(ListStructureChange.RELOADED, e) { reload() }
                 return
             }
-            change(ListStructureChange.CHANGED, e) {
-                // WinUI deselects a replaced item, but Swing keeps the selection at that position, so select it again
-                val selected = selectedIndices().filter { it in e.index0..e.index1 }
-                for (index in e.index0..e.index1) replace(index)
-                if (selected.isNotEmpty()) reselect(selected)
+            if (e.index0 < 0 || e.index1 >= size) {
+                // A change that does not report its range (such as the (-1, -1) of a DefaultComboBoxModel selection change) is treated as replacing everything
+                // if the size is the same (the selection is kept, as with Swing's JList). Items whose text does not change are not replaced (no selection notification either)
+                val changed = (0 until size).filter { itemFactory != null || nativeTextAt(it) != textAt(it) }
+                if (changed.isNotEmpty()) change(ListStructureChange.CHANGED, WListDataEvent(e.source, e.type, 0, size - 1)) { replaceKeepingSelection(changed) }
+                return
             }
+            change(ListStructureChange.CHANGED, e) { replaceKeepingSelection((e.index0..e.index1).toList()) }
         }
+    }
+
+    /** Replaces the items at [indices]. WinUI deselects replaced items, but Swing keeps the selection at that position, so they are selected again. */
+    private fun replaceKeepingSelection(indices: List<Int>) {
+        val selected = selectedIndices().filter { it in indices }
+        for (index in indices) replace(index)
+        if (selected.isNotEmpty()) reselect(selected)
     }
 
     /** Changes Items with [edit], and if synced with the selection model, also adjusts it according to [kind]. */
@@ -150,9 +159,12 @@ internal class ListModelItems(
      * The strings put in Items (for tests to check the native state).
      * If an item is not a string (a renderer's ListBoxItem), its AutomationProperties.Name.
      */
-    fun nativeTexts(): List<String> = (0 until items.getInt(FoundationInterop.IVector_get_Size)).map { index ->
+    fun nativeTexts(): List<String> = (0 until items.getInt(FoundationInterop.IVector_get_Size)).map(::nativeTextAt)
+
+    /** The string put at [index] in Items (AutomationProperties.Name if the item is not a string). */
+    private fun nativeTextAt(index: Int): String {
         val boxed = items.getPtr(FoundationInterop.IVector_GetAt, index)
-        try {
+        return try {
             PropertyValues.unboxString(boxed) ?: Xaml.getAutomation(boxed, XamlInterop.IAutomationPropertiesStatics_GetName)
         } finally {
             boxed.release()
