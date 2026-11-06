@@ -688,7 +688,7 @@ internal class FilerWindow {
 
     private fun menuItem(text: String, icon: Symbol, action: () -> Unit): WMenuFlyoutItem {
         val item = WMenuFlyoutItem(text, icon)
-        item.addActionListener(action)
+        item.addActionListener { action() }
         return item
     }
 

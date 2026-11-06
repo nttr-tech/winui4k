@@ -214,3 +214,10 @@
   参照を返すと、テストの JVM が全テストの終了後に `0xC0000409` で終わることがあった (`WrapperReleaseTest` だけの実行で 3 回中 2 回)。
   終了時の XAML の後始末で TableView の破棄が走るためと考えられる (回収の直後に終了したときに起きやすい)。`WTable` は TableView の参照を
   1 つ持ったままにして、ネイティブの寿命を回収前と同じにしている (ラッパーとモデルは回収される)。
+- **メニュー項目のアクセラレーター: 持ち主をウィンドウから外した後も効き続ける**
+  `WMenuFlyoutItem.accelerator` (KeyboardAccelerator) は、メニューを ContextFlyout にした要素をウィンドウから外した後でも、キーを押すと
+  項目の Click を起こした (2026-10-20、`WMenuFlyoutItemTest`。外したパネルのラッパーはまだ参照されていた)。WinUI は有効なアクセラレーターを
+  ContentRoot の一覧 (`GetAllLiveKeyboardAccelerators`) で探し、同じキーの最初の 1 つだけを呼ぶ (`KeyboardAcceleratorUtility.cpp` の
+  `ProcessAllLiveAccelerators`) ので、外したつもりの古い項目に同じキーが残っていると、載っている項目の方は呼ばれない。
+  使わなくなったメニューの項目は `accelerator = null` で外しておく。E2E テストではテストごとに別のキーを使う。
+  また `WMenuBarItem` の項目のアクセラレーターは、メニュー バーが載った直後の短い間は効かないことがある (テストでは 500 ms 待つ)

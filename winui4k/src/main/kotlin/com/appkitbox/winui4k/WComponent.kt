@@ -1113,11 +1113,37 @@ abstract class WComponent internal constructor(
     }
 
     /** Adds [accelerator] to KeyboardAccelerators and releases it. */
-    private fun appendKeyboardAccelerator(accelerator: ComPtr) {
+    internal fun appendKeyboardAccelerator(accelerator: ComPtr) {
         val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
         accelerators.call(FoundationInterop.IVector_Append, accelerator.ptr)
         accelerators.release()
         accelerator.release()
+    }
+
+    /**
+     * Removes the first accelerator in KeyboardAccelerators whose key is [key] (a Windows virtual key) and whose modifiers are
+     * [modifiers] (VirtualKeyModifiers). Returns true if one was removed, false if there was none.
+     */
+    internal fun removeKeyboardAccelerator(key: Int, modifiers: Int): Boolean {
+        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
+        try {
+            for (index in 0 until accelerators.getInt(FoundationInterop.IVector_get_Size)) {
+                val accelerator = accelerators.getPtr(FoundationInterop.IVector_GetAt, index)
+                val matches = try {
+                    accelerator.getInt(XamlInterop.IKeyboardAccelerator_get_Key) == key &&
+                        accelerator.getInt(XamlInterop.IKeyboardAccelerator_get_Modifiers) == modifiers
+                } finally {
+                    accelerator.release()
+                }
+                if (matches) {
+                    accelerators.call(FoundationInterop.IVector_RemoveAt, index)
+                    return true
+                }
+            }
+            return false
+        } finally {
+            accelerators.release()
+        }
     }
 
     companion object {

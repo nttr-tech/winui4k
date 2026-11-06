@@ -182,7 +182,7 @@ internal class RibbonKeyTipController(private val owner: RibbonKeyTipOwner) {
 
         override fun onKeyTip(): RibbonKeyTipResult {
             if (item is WMenuFlyoutItem) {
-                item.performClick()
+                item.doClick()
             } else {
                 keyTipAnchor.focus(com.appkitbox.winui4k.internal.winui.XamlInterop.FocusState_Keyboard)
             }

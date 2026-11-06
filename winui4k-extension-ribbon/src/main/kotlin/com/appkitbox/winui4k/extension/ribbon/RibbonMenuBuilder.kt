@@ -29,7 +29,7 @@ internal class RibbonMenuBuilder(private val ribbon: WRibbon) {
     private fun item(text: String, glyph: String? = null, action: () -> Unit): WMenuFlyoutItem {
         val entry = WMenuFlyoutItem(text)
         glyph?.let { RibbonMenus.setIcon(entry.inspectable, com.appkitbox.winui4k.internal.winui.XamlInterop.IMenuFlyoutItem_put_Icon, RibbonIcon.glyph(it)) }
-        entry.addActionListener(action)
+        entry.addActionListener { action() }
         return entry
     }
 
@@ -44,7 +44,7 @@ internal class RibbonMenuBuilder(private val ribbon: WRibbon) {
         val entry = WRadioMenuFlyoutItem(text, group)
         entry.isChecked = checked
         glyph?.let { RibbonMenus.setIcon(entry.inspectable, com.appkitbox.winui4k.internal.winui.XamlInterop.IMenuFlyoutItem_put_Icon, RibbonIcon.glyph(it)) }
-        entry.addActionListener(action)
+        entry.addActionListener { action() }
         return entry
     }
 

@@ -289,3 +289,11 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - 開いたまま持ち主のウィンドウを閉じると、XamlRoot.Content (ウィンドウの内容) の IsLoaded も false になる。showAndWait は
     開いたときの XamlRoot.Content の IsLoaded を待ちの条件に入れるので、持ち主がメニュー項目のように先に外れる要素でも
     ウィンドウが開いている限り待ち続ける
+- JMenuItem 風のメニュー項目 (WMenuFlyoutItem の doClick・accelerator) のために、MenuFlyoutItem の Invoke とアクセラレーターの届き方を
+  WinUI のソースと E2E テストで確かめた (`WMenuFlyoutItemTest`)
+  - UI オートメーションの Invoke (`Xaml.invoke`) は `MenuFlyoutItem::Invoke` (MenuFlyoutItem_Partial.cpp) を呼び、Click・Command・
+    開いているメニューを閉じる、までをマウスで選んだときと同じに行う。ToggleMenuFlyoutItem は Invoke を上書きして先に IsChecked を
+    反転する。無効な項目の Invoke は UIA_E_ELEMENTNOTENABLED なので、doClick は呼ぶ前に isEnabled を見て何もしない
+  - Invoked のハンドラを付けないアクセラレーターは、メニューを閉じたままでも項目を Invoke する (Click が届く)。ContextFlyout の
+    メニュー (UIElement::OnProcessKeyboardAcceleratorsImpl) とメニュー バー (MenuBarItem はテンプレートの ContentButton の
+    ContextFlyout に項目を移す。MenuBarItem.cpp の PopulateContent) のどちらでも効き、フォーカスは別の要素にあってよい
