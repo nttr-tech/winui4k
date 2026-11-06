@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Borders are checked by reading the native values (Control.BorderBrush / BorderThickness / Padding).
  * The native Thickness order is Left, Top, Right, Bottom, which differs from Swing's Insets order top, left, bottom, right.
  */
+@Tags("E2E")
 class WControlBorderTest : FunSpec() {
     /** The native border thickness [Left, Top, Right, Bottom]. */
     private fun thickness(control: WControl): List<Double> =

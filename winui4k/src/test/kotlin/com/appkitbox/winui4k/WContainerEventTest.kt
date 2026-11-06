@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Tests the ContainerListener-style [WContainer.addContainerListener]. The expected values follow the behavior of Swing's Container
  * (called synchronously after add / remove, removeAll one at a time from the last child, componentRemoved to the old parent on reparenting).
  */
+@Tags("Integration")
 class WContainerEventTest : FunSpec() {
     /** A listener that records each received event in [log] in the form "container name:added:child name". */
     private class Recorder(private val log: MutableList<String>) : WContainerListener {

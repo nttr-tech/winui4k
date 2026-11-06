@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -15,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests for WFlyout's content, opening position (placement) and showAt / hide / isOpen, by actually opening it in the shared window.
  * Opening as a menu (PopupMenuListener, invoker) is checked by WFlyoutPopupMenuTest.
  */
+@Tags("Integration")
 class WFlyoutTest : FunSpec() {
     private suspend fun withButton(block: suspend (button: WButton) -> Unit) {
         val button = onUiThreadGet { WButton("Open") }

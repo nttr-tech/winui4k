@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -19,6 +20,7 @@ import java.util.function.Consumer
  * window with [shown].
  * The form seen from Java is in WSplitButtonForJavaTest.
  */
+@Tags("E2E")
 class WSplitButtonTest : FunSpec() {
     /**
      * Places the WSplitButton created by [create] (run on the UI thread) in the window (waiting for Loaded), runs [act] on

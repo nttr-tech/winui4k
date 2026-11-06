@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Checks that the action's values are reflected in the button's properties, follow changes, and that a click invokes
  * the action. The Java-facing shape is covered by WActionForJavaTest.
  */
+@Tags("E2E")
 class WActionTest : FunSpec() {
     /** An action that records the [WActionEvent]s it receives. */
     private class RecordingAction(name: String? = null, icon: WIcon? = null) : WAbstractAction(name, icon) {

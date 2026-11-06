@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.detach
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldBe
  * Tests for WAnnotatedScrollBar's connectTo, addLabel / clearLabels, and adding and removing DetailLabelRequested listeners.
  * DetailLabelRequested fires only when the mouse actually hovers over the rail, so this only checks that adding and removing go through without exceptions.
  */
+@Tags("E2E")
 class WAnnotatedScrollBarTest : FunSpec() {
     /** The number of elements in the native AnnotatedScrollBar.Labels (call on the UI thread). */
     private fun labelCount(bar: WAnnotatedScrollBar): Int {

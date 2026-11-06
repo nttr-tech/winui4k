@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * The defaults are as defined by WinUI's UniformGridLayout (MUX_DEFAULT_VALUE in ItemsRepeater.idl).
  * The arrangement is checked by differences in the on-screen coordinates of the cells' top-left (compared as ratios of differences so as not to depend on scaling).
  */
+@Tags("Integration")
 class WUniformGridLayoutTest : FunSpec() {
     /** A WItemsView with 4 items. Cells are 80 × 40, row and column spacing is 20, wrapping every 2. */
     private class Scene {

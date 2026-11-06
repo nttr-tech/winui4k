@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests for WCalendarDatePicker's properties, clamping to min / max, ChangeListener and PopupMenuListener. */
+@Tags("E2E")
 class WCalendarDatePickerTest : FunSpec() {
     init {
         test("ChangeListener is called only once per change of date even before being placed on screen, and not for setting the same date again") {

@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.continually
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -28,6 +29,7 @@ import kotlin.time.Duration.Companion.seconds
  * setIconImage, jMenuBar). The native state is checked by reading it directly with Win32 ([WindowNatives]).
  * Each test creates its own WFrame and disposes it at the end, and the shared "winui4k tests" window is not closed.
  */
+@Tags("Integration")
 class WFrameStateTest : FunSpec() {
     private val frames = mutableListOf<WFrame>()
     private val states: MutableList<String> = Collections.synchronizedList(mutableListOf())

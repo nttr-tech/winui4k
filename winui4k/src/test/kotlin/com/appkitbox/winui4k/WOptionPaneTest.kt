@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * the return values of the blocking forms (per button, CLOSED_OPTION for Esc, when the owner window is closed), input and choices,
  * the callback forms, and the exceptions for a second dialog and wrong arguments. Opened dialogs are looked at and pressed from outside with [OpenContentDialogs].
  */
+@Tags("Integration")
 class WOptionPaneTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

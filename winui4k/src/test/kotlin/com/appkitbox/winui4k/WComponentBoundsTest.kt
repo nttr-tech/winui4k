@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import kotlin.math.roundToInt
  * Positions are expected to be the values determined by the Canvas's Left / Top and margins. All values are DIP multiples
  * of 4 so that physical pixels are integers even at 125% / 150% / 175% scale (layout rounding does not shift the values).
  */
+@Tags("E2E")
 class WComponentBoundsTest : FunSpec() {
     /** A screen with a box, a nested box and a box with a margin laid out at absolute coordinates in an outer Canvas. */
     private class Scene {

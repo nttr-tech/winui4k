@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.win32.Win32
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -19,6 +20,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * read from native events and passes them in. The expected values are derived from the contract of Swing's (Windows AWT's)
  * MouseEvent and Windows' system settings (double-click time and area, drag area, wheel lines).
  */
+@Tags("E2E")
 class WMouseEventTest : FunSpec() {
     /** Two 200 x 100 panels (an outer one and an inner one inside it) and a record of what was received. */
     private class Board {

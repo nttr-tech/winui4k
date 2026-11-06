@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests WRatingControl's value (unset is -1) and ChangeListener (both user input and setting the value; notifications of the same value are dropped). */
+@Tags("E2E")
 class WRatingControlTest : FunSpec() {
     init {
         test("the default is unset (value -1) with 5 stars; it returns the value set, and setting -1 makes it unset again") {

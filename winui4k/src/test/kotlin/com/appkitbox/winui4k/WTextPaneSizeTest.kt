@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * bottom padding and border". The expected size of 'm' is measured with a WLabel in the same font placed in the same
  * window, and the padding and border are read from the RichEditBox after it is shown.
  */
+@Tags("E2E")
 class WTextPaneSizeTest : FunSpec() {
     /** A text pane in a horizontally arranged panel, and a label showing 'm' in the same font. */
     private class Row(val panel: WPanel, val pane: WTextPane, val m: WLabel)

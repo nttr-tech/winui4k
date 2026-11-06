@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * JButton. Repeating while held requires actual mouse operation, so this checks reading back the settings and clicking
  * from the program. The Java-facing form is in WRepeatButtonForJavaTest.
  */
+@Tags("E2E")
 class WRepeatButtonTest : FunSpec() {
     init {
         test("the label passed to the constructor can be retrieved via text, and is an empty string when unset") {

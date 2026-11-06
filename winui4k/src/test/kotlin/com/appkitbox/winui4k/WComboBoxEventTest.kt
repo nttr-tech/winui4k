@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests for WComboBox's JComboBox-like events (ItemListener, ActionListener, PopupMenuListener) and Swing-named item operations.
  * Expected values follow JComboBox (DefaultComboBoxModel) behavior. The shape seen from Java is tested in WComboBoxForJavaTest.
  */
+@Tags("E2E")
 class WComboBoxEventTest : FunSpec() {
     /** A combo that lines up item and action events in one record. */
     private class Recorded(val comboBox: WComboBox) {

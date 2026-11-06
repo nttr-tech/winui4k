@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 /** Tests for the ribbon model (lookup, bulk command state, change notification, merging, icons) (no UI required). */
+@Tags("Pure")
 class RibbonModelTest : FunSpec() {
     /** A model with the same structure as RibbonSpace's ModelTests: a [Home] tab and a hidden contextual tab. */
     private fun createModel(): RibbonModel {

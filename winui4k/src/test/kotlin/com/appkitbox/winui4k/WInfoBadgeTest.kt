@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import io.kotest.matchers.string.shouldContain
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests for [WInfoBadge]'s value (-1 for a dot, 0, a number) and icon (the native IconSource). */
+@Tags("E2E")
 class WInfoBadgeTest : FunSpec() {
     /** Whether the native InfoBadge.IconSource is set. */
     private fun WInfoBadge.hasNativeIcon(): Boolean =

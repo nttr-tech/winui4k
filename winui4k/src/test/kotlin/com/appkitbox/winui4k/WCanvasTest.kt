@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * Tests for the absolute placement of [WCanvas] (JPanel with setLayout(null)-like).
  * Expected values come from Canvas's rule (child position = Canvas.Left / Canvas.Top as is; child size = the child's own Width / Height).
  */
+@Tags("E2E")
 class WCanvasTest : FunSpec() {
     private fun box(width: Double, height: Double): WCanvas = WCanvas().also {
         it.width = width

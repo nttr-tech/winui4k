@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * The expected child positions and sizes were calculated by hand with the algorithms of FlowLayout.layoutContainer / moveComponents / preferredLayoutSize
  * (the calculations are left in each test's comments). The children's preferred sizes are set with explicit width / height.
  */
+@Tags("Integration")
 class WFlowLayoutTest : FunSpec() {
     private fun box(width: Double, height: Double): WCanvas = WCanvas().also {
         it.width = width

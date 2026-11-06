@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -9,6 +10,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
 
 /** Tests for commands (RibbonRelayCommand / RibbonAsyncCommand), the catalog, and keyboard shortcuts. */
+@Tags("Pure")
 class RibbonCommandTest : FunSpec() {
     init {
         synchronousModelNotifications()

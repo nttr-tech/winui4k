@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -10,6 +11,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.time.LocalTime
 
 /** Tests verifying WTimePicker's time (LocalTime <-> WinRT TimeSpan conversion) and listeners. */
+@Tags("E2E")
 class WTimePickerTest : FunSpec() {
     init {
         test("an unselected time returns null without throwing (TimePicker's default Time is the sentinel value -1 for unselected)") {

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.seconds
  * insertUpdate / removeUpdate when the same operation is done in Swing's JPasswordField (PlainDocument). Key input is
  * sent to the shared window with [TestKeyboard].
  */
+@Tags("E2E")
 class WPasswordFieldDocumentTest : FunSpec() {
     /** A listener that records received events in the form "insert:offset:length:password at that time". */
     private class Recorder(private val field: WPasswordField) : WDocumentListener {

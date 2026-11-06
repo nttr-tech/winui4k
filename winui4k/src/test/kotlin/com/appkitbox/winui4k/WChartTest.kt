@@ -29,6 +29,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.time.Instant
@@ -39,6 +40,7 @@ import java.time.LocalDateTime
  * Tests WChart and the com.appkitbox.winui4k.chart package (series, axes, data models) by checking them against the
  * state of the native Chart / CartesianSeries / Samples.
  */
+@Tags("E2E")
 class WChartTest : FunSpec() {
     /** The number of elements in the native Chart.Series / Chart.Axes. */
     private fun WChart.nativeCount(slot: Int, vectorIid: String): Int {

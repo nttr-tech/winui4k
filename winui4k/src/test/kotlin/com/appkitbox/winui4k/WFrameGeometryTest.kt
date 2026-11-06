@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  * As with Swing since Java 9, the unit is DIP, and it checks that the physical pixels of the native AppWindow are the WinUI scale factor (XamlRoot.RasterizationScale)
  * times that. Each test creates its own WFrame and disposes it at the end, and the shared "winui4k tests" window is not closed.
  */
+@Tags("Integration")
 class WFrameGeometryTest : FunSpec() {
     private val frames = mutableListOf<WFrame>()
 

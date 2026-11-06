@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * Tests WBreadcrumbBar's levels and the click ActionListener.
  * Clicks are made with UI Automation peers (BreadcrumbBarItem's Invoke) ([NavigationClicks]).
  */
+@Tags("E2E")
 class WBreadcrumbBarTest : FunSpec() {
     /** Places [bar] in the shared window, waits for Loaded, calls [block] on the UI thread, and then removes it. */
     private fun <T> withShown(bar: WBreadcrumbBar, block: () -> T): T {

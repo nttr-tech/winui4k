@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * that Button's lightweight styling keys (ButtonBackground* / ButtonForeground*) take effect. The Java-side shape is
  * covered by WDropDownButtonForJavaTest.
  */
+@Tags("E2E")
 class WDropDownButtonTest : FunSpec() {
     private fun templatePart(button: WButtonBase, name: String): ComPtr? = TemplateParts.find(button, name)
 

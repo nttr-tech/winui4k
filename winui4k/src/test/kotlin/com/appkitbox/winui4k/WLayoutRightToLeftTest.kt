@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldBe
  * So instead of [WComponent.bounds] (logical coordinates within the parent), the child's left and right edges are converted to window content coordinates,
  * and how many DIP to the right of the panel's on-screen left edge it appears is measured. Expected values are Swing's computed values (laid out in non-mirrored screen coordinates).
  */
+@Tags("Integration")
 class WLayoutRightToLeftTest : FunSpec() {
     private fun box(width: Double, height: Double): WCanvas = WCanvas().also {
         it.width = width

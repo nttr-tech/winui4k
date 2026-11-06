@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
@@ -13,6 +14,7 @@ import java.util.function.IntConsumer
  * and is collected after being removed from the window (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass).
  * Collection is awaited while prompting GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseSelectorBarTest : FunSpec() {
     /** The values the listeners received. The listeners do not reference the SelectorBar (they only record here). */
     private val received = mutableListOf<Any>()

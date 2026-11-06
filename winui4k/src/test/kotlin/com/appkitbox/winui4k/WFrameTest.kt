@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -24,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
  * (the app exits when the last window closes, so the shared window is opened first).
  * The user's close operation (the title bar ×) is reproduced with WM_CLOSE.
  */
+@Tags("Integration")
 class WFrameTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

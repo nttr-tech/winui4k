@@ -16,6 +16,7 @@ import com.appkitbox.winui4k.tree.TreePath
 import com.appkitbox.winui4k.tree.TreeSelectionEvent
 import com.appkitbox.winui4k.tree.TreeSelectionModel
 import com.appkitbox.winui4k.tree.TreeWillExpandListener
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -26,6 +27,7 @@ import io.kotest.matchers.shouldBe
  * Tests for WTree's selection (syncing TreeSelectionModel with the TreeView's SelectedNodes, TreeSelectionListener) and expansion listeners
  * (TreeExpansionListener / TreeWillExpandListener and ExpandVetoException). Expected values come from JTree's behavior.
  */
+@Tags("E2E")
 class WTreeEventsTest : FunSpec() {
     private class Sample {
         val root = DefaultMutableTreeNode("Root")

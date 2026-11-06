@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * The Enter key is sent with [TestKeyboard] to the input child window of the shared window (it arrives even when the
  * window is not in the foreground).
  */
+@Tags("E2E")
 class WDefaultButtonTest : FunSpec() {
     private val frame by lazy { UiTestHarness.sharedFrame() }
 

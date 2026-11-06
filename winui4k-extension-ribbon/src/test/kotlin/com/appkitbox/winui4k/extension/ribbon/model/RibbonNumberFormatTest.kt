@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.util.Locale
 
 /** Tests for formatting and parsing spinner numbers ([RibbonNumberFormat]). */
+@Tags("Pure")
 class RibbonNumberFormatTest : FunSpec({
     test("# digits appear only when needed, and 0 digits always appear") {
         RibbonNumberFormat.format(1.5, "0.##", null, Locale.ROOT) shouldBe "1.5"

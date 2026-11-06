@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  * Expected values come from Swing's behavior (on doClick the ItemEvent comes before the ActionEvent, a selected item in a ButtonGroup is not
  * deselected by a click, radio items not in a group are independent). The shape seen from Java is tested in WSelectableMenuItemForJavaTest.
  */
+@Tags("E2E")
 class WSelectableMenuItemTest : FunSpec() {
     /** Adds both an ItemListener and an ActionListener and records "item:<name>:SELECTED" / "action:<name>" in the order received. */
     private fun record(item: WMenuFlyoutItem, name: String, events: MutableList<String>) {

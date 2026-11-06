@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * The expected child positions and sizes were calculated by hand with the algorithms of BorderLayout.layoutContainer / minimumLayoutSize
  * (trimming the space in the order north -> south -> east -> west -> center).
  */
+@Tags("Integration")
 class WBorderLayoutTest : FunSpec() {
     private fun box(width: Double, height: Double): WCanvas = WCanvas().also {
         it.width = width

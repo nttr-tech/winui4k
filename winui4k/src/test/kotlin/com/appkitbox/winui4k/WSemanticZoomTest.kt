@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * Tests WSemanticZoom's view switching and the ChangeListener that reports the end of a switch.
  * ViewChangeCompleted arrives after the switching animation, so the test waits while keeping the UI thread free.
  */
+@Tags("E2E")
 class WSemanticZoomTest : FunSpec() {
     private fun semanticZoom(): WSemanticZoom = WSemanticZoom(WList(listOf("a1", "a2", "b1")), WList(listOf("a", "b")))
 

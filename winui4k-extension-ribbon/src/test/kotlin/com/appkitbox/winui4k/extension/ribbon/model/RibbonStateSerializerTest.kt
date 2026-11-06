@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
@@ -13,6 +14,7 @@ import java.nio.file.Files
  * Tests for JSON conversion and file storage of ribbon state (RibbonStateSerializer / RibbonState).
  * Ports RibbonSpace's StateTests and RegressionTests (the state-saving part), and reads JSON written by RibbonSpace.
  */
+@Tags("Pure")
 class RibbonStateSerializerTest : FunSpec() {
     private fun sampleState(): RibbonState {
         val group = RibbonCustomGroup("custom.group", "Tools").apply { itemIds += "bold" }

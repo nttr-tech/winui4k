@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -21,6 +22,7 @@ import kotlin.time.Duration.Companion.seconds
  * The expected strings, modifiers and hash values were taken from the actual values of Swing's KeyStroke (the output of
  * tools/swing_probes/KeyStrokeProbe.java run on Temurin JDK 25). The expected virtual keys are the VK_* values in WinUser.h.
  */
+@Tags("E2E")
 class WKeyStrokeTest : FunSpec() {
     /** Values measured with Swing's KeyStroke (toString, keyCode, modifiers, the keyChar code, onKeyRelease, keyEventType, hashCode). */
     private data class Measured(

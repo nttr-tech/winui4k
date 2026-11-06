@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests for specifying the image of WImage (an Image in the style of JLabel + ImageIcon) by file path, URI or WImageIcon,
  * and for reading it back from the native Image.Source. The PNGs for the tests are written to a temporary folder.
  */
+@Tags("E2E")
 class WImageTest : FunSpec() {
     /** A file with a PNG of width [width] and height [height], written to a folder whose name contains spaces. */
     private fun pngFile(width: Int, height: Int): File {

@@ -1,11 +1,13 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 /** Tests for item size definitions (RibbonSizeDefinition). Ported and extended from RibbonSpace's SimplifiedLayoutTests.Size_definition_parsing. */
+@Tags("Pure")
 class RibbonSizeDefinitionTest : FunSpec() {
     init {
         test("parses \"Large, Middle, Small\" and the like, filling missing values with the last one") {

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * orientation, floatable, rollover). It also reads and checks that the Kotlin-side record of the sequence agrees with the native PrimaryCommands.
  * The shape seen from Java is tested in WCommandBarToolBarForJavaTest.
  */
+@Tags("E2E")
 class WCommandBarToolBarTest : FunSpec() {
     private class RecordingAction(name: String) : WAbstractAction(name, null) {
         var performed = 0

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Tests for WScrollPane's JScrollPane-like API (policy constants, setViewportView, WViewport position and size, ChangeListener).
  * The scroll pane is 200 x 150 DIP and the content has a fixed size of 1000 x 800 DIP, so the expected values can be computed by hand.
  */
+@Tags("E2E")
 class WScrollPaneTest : FunSpec() {
     private fun content(): WCanvas = WCanvas().apply {
         width = CONTENT_WIDTH

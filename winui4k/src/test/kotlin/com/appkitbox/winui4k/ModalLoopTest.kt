@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
@@ -25,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
  * a menu item, a keyboard accelerator and invokeLater, and checks that key input, invokeLater and GC-driven releases keep working while blocked,
  * and that closing the dialog with the keyboard returns. Keys are sent to the shared window with [TestKeyboard].
  */
+@Tags("Integration")
 class ModalLoopTest : FunSpec() {
     /** Events recorded on the UI thread and read from the test thread (guarded by a lock). */
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())

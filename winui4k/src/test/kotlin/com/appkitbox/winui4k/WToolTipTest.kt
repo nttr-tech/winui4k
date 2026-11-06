@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Tests for JComponent.setToolTipText / getToolTipText and the JToolTip-like [WToolTip] (tipText, component, isOpen).
  * Values are read back from ToolTipService.GetToolTip and ToolTip.Content.
  */
+@Tags("E2E")
 class WToolTipTest : FunSpec() {
     init {
         test("the string set with setToolTipText can be read, and null removes it (null by default)") {

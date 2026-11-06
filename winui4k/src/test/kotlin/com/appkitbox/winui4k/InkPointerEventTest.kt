@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.winrt.KComObject
 import com.appkitbox.winui4k.internal.winui.InkInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -18,6 +19,7 @@ import io.kotest.matchers.shouldBe
  * values when the modifier keys can be read.
  * The event args are reproduced with a fake IPointerEventArgs implemented in Kotlin.
  */
+@Tags("E2E")
 class InkPointerEventTest : FunSpec() {
     /** A fake IPointerEventArgs. CurrentPoint and GetIntermediatePoints return CO_E_NOT_SUPPORTED; KeyModifiers returns [modifiers]. */
     private fun fakeArgs(modifiers: Int?): KComObject {

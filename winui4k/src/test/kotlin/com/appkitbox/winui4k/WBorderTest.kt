@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * The expected child positions and sizes are computed by hand from Border's rule (child area = outer size - border thickness - padding).
  * The numbers are DIP multiples of 4, so the physical pixels are integers even at 125% scaling or more.
  */
+@Tags("E2E")
 class WBorderTest : FunSpec() {
     /** A 100 × 60 border. The child is a WPanel (which stretches) so that the child area is visible as is. */
     private fun border(): WBorder = WBorder().also {

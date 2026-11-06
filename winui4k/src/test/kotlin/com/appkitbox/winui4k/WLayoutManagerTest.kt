@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -8,6 +9,7 @@ import io.kotest.matchers.shouldBe
  * Tests the default methods of [WLayoutManager] (minimumLayoutSize / maximumLayoutSize / invalidateLayout) and
  * [WLayoutPanel], which calls them in the same situations as Swing's Container (getMinimumSize / getMaximumSize / invalidate).
  */
+@Tags("Integration")
 class WLayoutManagerTest : FunSpec() {
     /** Implements only preferredLayoutSize and layoutContainer, and counts invalidateLayout calls. */
     private class MinimalLayout : WLayoutManager {

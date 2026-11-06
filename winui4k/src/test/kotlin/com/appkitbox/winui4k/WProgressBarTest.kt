@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -14,6 +15,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Tests WProgressBar's value, range (synchronization of the model and RangeBase), ChangeListener, progress string and display states.
  * The shape seen from Java is in WProgressBarForJavaTest.
  */
+@Tags("E2E")
 class WProgressBarTest : FunSpec() {
     /** The native RangeBase's (Value, Minimum, Maximum). */
     private fun WProgressBar.nativeState(): List<Double> {

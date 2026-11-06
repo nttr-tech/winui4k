@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests for WTree's node API (the usage that builds WTreeNodes directly). */
+@Tags("E2E")
 class WTreeTest : FunSpec() {
     init {
         test("expand / collapse / selectAll before it is shown do not crash and affect node expansion and selection") {

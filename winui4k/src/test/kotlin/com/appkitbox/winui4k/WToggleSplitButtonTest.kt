@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -13,6 +14,7 @@ import java.util.function.Consumer
  * ToggleSplitButton does not raise IsCheckedChanged for IsChecked changes before Loaded (it checks m_hasLoaded), so tests
  * that check events attach it to the shared window and wait for Loaded before changing the state.
  */
+@Tags("E2E")
 class WToggleSplitButtonTest : FunSpec() {
     init {
         test("isSelected reads and writes the same value as isChecked") {

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Expected values are computed by hand from RelativePanel's rules (children are placed next to, at the edge of, or at the center of the reference element; a child with nothing specified goes to the top-left).
  * The numbers are DIP multiples of 4 (integers even when halved), so the physical pixels are integers even at 125% scaling or more.
  */
+@Tags("E2E")
 class WRelativePanelTest : FunSpec() {
     private fun box(width: Double, height: Double): WCanvas = WCanvas().also {
         it.width = width

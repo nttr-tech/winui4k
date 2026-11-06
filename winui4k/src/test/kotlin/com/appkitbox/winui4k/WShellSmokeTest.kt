@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -14,6 +15,7 @@ import io.kotest.matchers.shouldBe
  * (they also do not actually show notifications or save jump lists, so as not to change the user's environment).
  * The shape seen from Java is tested in WShellSmokeForJavaTest.
  */
+@Tags("Integration")
 class WShellSmokeTest : FunSpec() {
     init {
         test("isSupported returns a boolean without exceptions") {

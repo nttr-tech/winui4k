@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.nulls.shouldBeNull
@@ -14,6 +15,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * and CompactInline leaves a narrow pane of compactPaneLength even when closed).
  * Left and right of the pane are checked by comparing on-screen x coordinates (independent of scaling).
  */
+@Tags("E2E")
 class WSplitViewTest : FunSpec() {
     /** A SplitView 400 wide × 200 high. The open pane width is 100. The pane and content are WPanels (which stretch). */
     private class Scene {

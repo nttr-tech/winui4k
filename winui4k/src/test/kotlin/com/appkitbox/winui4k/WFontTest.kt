@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldNotBe
  * Verifies that WControl.font / foreground reach the native object (WFont's own behavior as a value is covered by
  * WFontForJavaTest).
  */
+@Tags("E2E")
 class WFontTest : FunSpec() {
     init {
         test("the family, weight, italic, and size set on WControl.font can be read back from the native object") {

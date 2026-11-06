@@ -2,6 +2,7 @@ package com.appkitbox.winui4k.extension.ribbon.model
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
@@ -16,6 +17,7 @@ import kotlin.math.abs
  * Tests for colors (RibbonColor), the Office palettes (RibbonColorPalette), and the theme palettes (RibbonThemePalette).
  * Ported from RibbonSpace's ColorTests.
  */
+@Tags("Pure")
 class RibbonColorTest : FunSpec() {
     init {
         test("parses #RRGGBB, #AARRGGBB, #RGB, and colors without #") {

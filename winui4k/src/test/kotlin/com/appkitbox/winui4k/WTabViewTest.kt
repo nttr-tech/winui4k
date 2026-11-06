@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -18,6 +19,7 @@ import io.kotest.matchers.shouldBe
  * For the JTabbedPane-shaped API (addTab / insertTab / removeTabAt / indexOfTab and so on), the selection rules and ChangeListener,
  * the expected values are based on the behavior of Swing's JTabbedPane (the source of insertTab / removeTabAt / removeAll).
  */
+@Tags("E2E")
 class WTabViewTest : FunSpec() {
     /** Passes the IVector<Object> view of the native TabItems to [block] (so tests can manipulate the native order directly). */
     private fun <T> withNativeTabItems(tabView: WTabView, block: (ComPtr) -> T): T {

@@ -1,11 +1,13 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
 /** Tests for RibbonList, a list that notifies changes (no UI required). */
+@Tags("Pure")
 class RibbonListTest : FunSpec() {
     /** Records the change notifications of [list] as strings of the form "type index elements oldElements". */
     private fun record(list: RibbonList<String>): MutableList<String> {

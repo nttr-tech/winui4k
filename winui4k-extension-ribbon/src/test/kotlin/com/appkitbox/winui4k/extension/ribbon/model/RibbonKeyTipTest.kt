@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -8,6 +9,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotStartWith
 
 /** Tests for KeyTip assignment (RibbonKeyTipAssigner) and input matching (RibbonKeyTipScope / Navigator). */
+@Tags("Pure")
 class RibbonKeyTipTest : FunSpec() {
     private fun assign(vararg labels: String): List<String> = RibbonKeyTipAssigner.assign(labels.map { RibbonKeyTipRequest(it) })
 

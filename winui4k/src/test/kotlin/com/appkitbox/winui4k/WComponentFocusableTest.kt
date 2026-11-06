@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * by passing focus to a part inside the template, so requestFocusInWindow returns true.
  * Only components with isFocusable = false set explicitly return false, as ones that "do not accept focus".
  */
+@Tags("Integration")
 class WComponentFocusableTest : FunSpec() {
     /** isFocusable, the result of requestFocusInWindow, and hasFocus. */
     private data class Focus(val isFocusable: Boolean, val accepted: Boolean, val hasFocus: Boolean)

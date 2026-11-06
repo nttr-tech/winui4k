@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -17,6 +18,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests WSpinner's (NumberBox) value, synchronization with the model ([WSpinnerNumberModel]) and ChangeListener. The shape seen from Java is in WSpinnerForJavaTest. */
+@Tags("E2E")
 class WSpinnerTest : FunSpec() {
     /** The native NumberBox's (Value, Minimum, Maximum, SmallChange). */
     private fun WSpinner.nativeState() = listOf(

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Tests for WScrollView's Swing-like aliases (setViewportView, the mapping of policy constants to ContentOrientation, viewPosition, ChangeListener) and
  * the original scrollTo / offsets. The viewport is 200 x 150 DIP and the content is 1000 x 800 DIP.
  */
+@Tags("E2E")
 class WScrollViewTest : FunSpec() {
     private fun content(): WCanvas = WCanvas().apply {
         width = CONTENT_WIDTH

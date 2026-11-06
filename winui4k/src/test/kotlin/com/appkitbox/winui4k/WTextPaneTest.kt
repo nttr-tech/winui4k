@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * expected values are the results of the same operations on Swing's JTextArea (positions are character counts, a line
  * break is the single character "\n", and text has no trailing paragraph mark).
  */
+@Tags("E2E")
 class WTextPaneTest : FunSpec() {
     /** Creates a new WTextPane on the UI thread and runs [block]. */
     private fun <T> withPane(text: String = "", block: (WTextPane) -> T): T = onUiThreadGet {

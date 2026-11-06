@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.tree.DefaultTreeModel
 import com.appkitbox.winui4k.tree.DefaultTreeSelectionModel
 import com.appkitbox.winui4k.tree.TreeExpansionEvent
 import com.appkitbox.winui4k.tree.TreeExpansionListener
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,7 @@ import java.lang.ref.WeakReference
  * Tests that a WTree mirroring a TreeModel is not captured strongly by resident native handlers or a shared model and is collected after removal
  * (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass). Collection is awaited while prompting GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseTreeTest : FunSpec() {
     /** Puts the tree made by [create] (created on the UI thread) in a window, removes it, and returns only a weak reference. */
     private fun shownAndHidden(create: () -> WTree): WeakReference<WTree> {

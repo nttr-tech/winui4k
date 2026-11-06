@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import java.lang.ref.WeakReference
  * Tests that a [WSplitPane] (the size change and Loaded handlers, and the divider's mouse listener) is not captured strongly by handlers,
  * and is collected together with its children and divider after removal or when never loaded (continuation of [WrapperReleaseTest]).
  */
+@Tags("Memory")
 class WrapperReleaseSplitPaneTest : FunSpec() {
     private class Parts(val pane: WeakReference<WSplitPane>, val divider: WeakReference<WComponent>, val left: WeakReference<WComponent>)
 

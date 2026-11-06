@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
@@ -12,6 +13,7 @@ import java.lang.ref.WeakReference
  * are not strongly captured by the handlers and are collected after being removed (continuation of [WrapperReleaseTest],
  * split off to avoid detekt's LargeClass). Waits for collection while prompting GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseComponentTest : FunSpec() {
     /** Places [component] in the shared window, waits for Loaded, and removes it. Also waits until the Unloaded after the removal has been processed on the UI thread. */
     private fun showAndHide(component: WComponent) {

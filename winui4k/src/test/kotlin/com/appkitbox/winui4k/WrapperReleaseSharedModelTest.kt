@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,7 @@ import java.lang.ref.WeakReference
  * The components are put directly into the panel's native Children (not into the wrapper's list), to create a state with no strong references
  * from the Kotlin side to the component wrappers, the same as when the native side keeps a subtree and shows it again (Flyouts or tabs).
  */
+@Tags("Memory")
 class WrapperReleaseSharedModelTest : FunSpec() {
     /** Puts [components] directly into the native Children of [host]. Call on the UI thread. */
     private fun appendNatively(host: WPanel, vararg components: WComponent) = editChildren(host) { children ->

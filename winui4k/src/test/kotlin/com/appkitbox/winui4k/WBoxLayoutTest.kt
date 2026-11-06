@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldBe
  * calculateAlignedPositions (crossing direction) used by BoxLayout.layoutContainer (the calculations are left in each test's comments). Swing truncates to int, but
  * WBoxLayout calculates with DIP Doubles. An unbounded maximum size is treated as 32767, the same as Swing's Short.MAX_VALUE.
  */
+@Tags("Integration")
 class WBoxLayoutTest : FunSpec() {
     /** A box whose minimum, preferred and maximum are all [width] x [height] (neither grows nor shrinks). */
     private fun rigid(width: Double, height: Double): WCanvas = WCanvas().also {

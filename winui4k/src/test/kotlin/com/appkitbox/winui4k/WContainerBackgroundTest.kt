@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * JPanel receives mouse events over its whole bounds, but WinUI's Panel is hit only over its children when it has no Background.
  * Hit testing is checked with WinUI's own VisualTreeHelper.FindElementsInHostCoordinates ([HitTest]).
  */
+@Tags("Integration")
 class WContainerBackgroundTest : FunSpec() {
     /** A 200x100 panel without children (aligned to the top left). */
     private fun <T : WContainer> sized(panel: T): T = panel.also {

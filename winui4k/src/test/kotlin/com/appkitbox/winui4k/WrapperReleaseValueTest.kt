@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
@@ -14,6 +15,7 @@ import java.time.LocalTime
  * and are collected after being removed (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass).
  * Waits for collection while prompting GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseValueTest : FunSpec() {
     /** The values and sources the ChangeListener received. The listener does not reference the component (it only records here). */
     private val changeSources = mutableListOf<Any>()

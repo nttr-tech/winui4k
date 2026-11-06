@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -349,6 +350,7 @@ abstract class ListModelBindingSpec(
 }
 
 /** The model API of [WList] (ListView). */
+@Tags("E2E")
 class WListModelTest : ListModelBindingSpec({ WList(it) }, { WList(it) })
 
 /** The model API of [WListBox] (ListBox). */

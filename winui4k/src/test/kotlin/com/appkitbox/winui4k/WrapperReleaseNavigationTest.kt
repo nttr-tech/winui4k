@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
@@ -11,6 +12,7 @@ import java.lang.ref.WeakReference
  * Tests that the listener handlers of tab and navigation components (WTabView and others) do not strongly capture the wrapper and that the components are collected
  * after being placed in the window and removed (continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass). Waits for collection while prompting GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseNavigationTest : FunSpec() {
     /** What the listeners received (checks that even if the listener captures test objects, it does not capture the wrapper). */
     private val received = mutableListOf<Any>()

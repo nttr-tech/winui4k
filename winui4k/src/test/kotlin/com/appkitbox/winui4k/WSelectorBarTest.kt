@@ -3,11 +3,13 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 /** Tests verifying WSelectorBar's item management, selection, and SelectionChanged, plus WSelectorBarItem's text. */
+@Tags("E2E")
 class WSelectorBarTest : FunSpec() {
     private fun barOf(vararg texts: String): WSelectorBar = WSelectorBar().also { bar -> texts.forEach { bar.addItem(WSelectorBarItem(it)) } }
 

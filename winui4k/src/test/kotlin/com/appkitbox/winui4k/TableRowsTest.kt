@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -18,6 +19,7 @@ import io.kotest.matchers.shouldBe
  * Tests the row objects (IObservableMap<String, Object>) and the row collection (IObservableVector<Object>) passed to
  * TableView's ItemsSource, using the same COM calls as XAML bindings / TableViewSource.
  */
+@Tags("E2E")
 class TableRowsTest : FunSpec() {
     /** A [TableRowValues] that holds 2 rows × 2 columns of values and records the values written to it. */
     private class FakeValues : TableRowValues {

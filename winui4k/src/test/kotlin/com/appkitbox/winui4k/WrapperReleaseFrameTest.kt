@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContain
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
  * Also checks the DisplayArea reference of [WDisplayArea].
  * The shared "winui4k tests" window is kept open (the app exits when the last window closes).
  */
+@Tags("Memory")
 class WrapperReleaseFrameTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldBe
  * Tests that check, through the native state, menu-related parts that other units do not look at closely (WMenuBarItem's title, WMenuFlyoutSeparator,
  * WCommandBarFlyout's primary / secondary, WAppBarSeparator). The shape seen from Java is tested in WMenuBarPartsForJavaTest.
  */
+@Tags("E2E")
 class WMenuBarPartsTest : FunSpec() {
     /** Represents the command list of [slot] of a CommandBarFlyout as a sequence of "button" / "other" (an AppBarButton or anything else). */
     private fun nativeCommands(flyout: WCommandBarFlyout, slot: Int): List<String> {

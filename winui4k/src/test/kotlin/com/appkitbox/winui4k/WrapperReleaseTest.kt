@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  * Waits for collection while prompting GC ([Reclamation]). Destruction of the native object is checked with
  * IWeakReference ([NativeProbe]).
  */
+@Tags("Memory")
 class WrapperReleaseTest : FunSpec() {
     /** The source of events received on click. The listener does not reference the button itself (it only records here). */
     private val clickSources = mutableListOf<Any>()

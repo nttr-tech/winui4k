@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * The scroll pane is 200 x 150 DIP and the content has a fixed size of 1000 x 800 DIP, and the expected values are computed by hand from Swing's JScrollBar rules
  * (maximum = the content length, visibleAmount = the viewport length, value = the visible top-left position).
  */
+@Tags("E2E")
 class WScrollPaneBarTest : FunSpec() {
     private fun content(): WCanvas = WCanvas().apply {
         width = CONTENT_WIDTH

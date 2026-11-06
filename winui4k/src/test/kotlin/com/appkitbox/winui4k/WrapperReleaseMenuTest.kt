@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -15,6 +16,7 @@ import java.lang.ref.WeakReference
  * across the native boundary. The handler looks up the item through [ListenerAnchor], so releasing a menu that was opened and closed also collects its items.
  * Collection is awaited while prompting GC with [Reclamation].
  */
+@Tags("Memory")
 class WrapperReleaseMenuTest : FunSpec() {
     /** The sources of events received by listeners. The listeners do not reference the item (they only record here). */
     private val sources = mutableListOf<Any>()

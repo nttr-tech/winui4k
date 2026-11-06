@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.withClue
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  * The window comes from [UiTestHarness]'s shared window; the page is set up only once for the
  * spec (beforeSpec) and shared across all tests.
  */
+@Tags("E2E")
 class WWebViewTest : FunSpec() {
     companion object {
         /** Upper bound on the wait for page load / script response (the first one includes browser-process startup). */

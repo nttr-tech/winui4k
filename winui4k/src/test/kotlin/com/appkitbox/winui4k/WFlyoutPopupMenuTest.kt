@@ -7,6 +7,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * (cancellation is canceled → willBecomeInvisible, setVisible(false) is not a cancellation, getInvoker is the reference element of the display).
  * The shape seen from Java is tested in WFlyoutPopupMenuForJavaTest.
  */
+@Tags("Integration")
 class WFlyoutPopupMenuTest : FunSpec() {
     /** A listener that records "visible" / "canceled" / "invisible" in the order received, and whether the source is [expected]. */
     private fun recorder(expected: Any, events: MutableList<String>) = object : WPopupMenuListener {

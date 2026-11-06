@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -15,6 +16,7 @@ import java.util.Collections
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests for WInfoBar's content (title / message / severity / icon), open state and Closing / Closed listeners. */
+@Tags("E2E")
 class WInfoBarTest : FunSpec() {
     init {
         test("title and message return exactly the strings that were set") {

@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Tests for reading back the properties of [WTitleBar] (WinUI's TitleBar control) and adding and removing listeners.
  * The back / pane toggle buttons need a window to actually press them, so they are not pressed here. The shape seen from Java is tested in WTitleBarForJavaTest.
  */
+@Tags("Integration")
 class WTitleBarTest : FunSpec() {
     init {
         test("title and subtitle read back the written strings, and are empty when new") {

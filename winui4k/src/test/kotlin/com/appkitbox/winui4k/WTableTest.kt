@@ -20,6 +20,7 @@ import com.appkitbox.winui4k.table.TableCellRenderer
 import com.appkitbox.winui4k.table.TableColumn
 import com.appkitbox.winui4k.table.TableModel
 import com.appkitbox.winui4k.table.TableRowSorter
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
@@ -29,6 +30,7 @@ import io.kotest.matchers.shouldBe
  * Tests WTable (TableView) by actually displaying it and verifying integration with the model, selection, sorting,
  * filtering, grouping, column operations, and renderers.
  */
+@Tags("E2E")
 class WTableTest : FunSpec() {
     /** A model of 3 columns (product name / price / in stock) × 4 rows. */
     private fun productModel(): DefaultTableModel = object : DefaultTableModel(

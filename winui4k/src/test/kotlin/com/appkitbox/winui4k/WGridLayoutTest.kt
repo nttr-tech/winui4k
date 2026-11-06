@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * The expected child positions and sizes were calculated by hand with the algorithms of GridLayout.layoutContainer / preferredLayoutSize
  * (the calculations are left in each test's comments). Only evenly divisible values are used, so the results match Swing's integer calculation.
  */
+@Tags("Integration")
 class WGridLayoutTest : FunSpec() {
     private fun box(width: Double = 1.0, height: Double = 1.0): WCanvas = WCanvas().also {
         it.width = width

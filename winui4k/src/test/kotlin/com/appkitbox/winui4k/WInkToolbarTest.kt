@@ -7,12 +7,14 @@ import com.appkitbox.winui4k.ink.InkDrawingAttributes
 import com.appkitbox.winui4k.ink.InkPoint
 import com.appkitbox.winui4k.ink.InkStroke
 import com.appkitbox.winui4k.ink.PenTipShape
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
 /** Tests WInkToolbar and each of its buttons (tool, pen, toggle, menu, custom pen, flyout items). */
+@Tags("E2E")
 class WInkToolbarTest : FunSpec() {
     /** Places a toolbar set up by [configure] in the shared window, runs [block] after it loads (its template is applied), and removes it. */
     private fun <T> withLoadedToolbar(configure: (WInkToolbar) -> Unit = {}, block: (WInkToolbar) -> T): T {

@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests WSlider's value and range (RangeBase and model), ChangeListener, and the JSlider-style tick and other settings. */
+@Tags("E2E")
 class WSliderTest : FunSpec() {
     /** The native RangeBase's [Minimum, Maximum, Value]. */
     private fun nativeRange(slider: WSlider): List<Double> {

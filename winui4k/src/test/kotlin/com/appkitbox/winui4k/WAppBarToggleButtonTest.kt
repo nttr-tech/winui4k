@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * compact display. The aliases of label, icon and text are in WAppBarButtonTest, so they are not repeated here.
  * The Java-facing forms are WAppBarButtonForJavaTest (icon and label) and WAppBarToggleButtonForJavaTest (selection state).
  */
+@Tags("E2E")
 class WAppBarToggleButtonTest : FunSpec() {
     init {
         test("the constructor's label and icon can be read back, and the selection state is false when unset") {

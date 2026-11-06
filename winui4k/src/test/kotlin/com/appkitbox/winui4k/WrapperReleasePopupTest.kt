@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -15,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests that the handlers of [WPopup]'s Opened / Closed / PopupMenuListener and [WFlyout] / [WCommandBarFlyout]'s PopupMenuListener do not capture the wrapper,
  * and that the wrapper and native are collected once opened, closed and released ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleasePopupTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

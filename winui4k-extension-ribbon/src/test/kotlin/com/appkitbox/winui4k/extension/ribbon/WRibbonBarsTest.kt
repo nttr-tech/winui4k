@@ -27,6 +27,7 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonToolBarOrientation
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonZoomModel
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -34,6 +35,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
 /** E2E tests for the components outside the ribbon (toolbar, status bar, zoom, menu bar, application menu, search, title bar). */
+@Tags("Integration")
 class WRibbonBarsTest : FunSpec() {
     private val attached = mutableListOf<WComponent>()
 

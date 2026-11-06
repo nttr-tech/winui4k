@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldBe
  * Content.
  * The form seen from Java is in WAppBarButtonForJavaTest.
  */
+@Tags("E2E")
 class WAppBarButtonTest : FunSpec() {
     /** Content of WAppBarButton.Icon ([IconElements.describe]). "none" if absent. */
     private fun nativeIcon(button: WAppBarButton): String = describeIcon(button, XamlInterop.IAppBarButton_get_Icon)

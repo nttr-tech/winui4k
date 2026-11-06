@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -18,6 +19,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * [WContainer.isAncestorOf]), [WComponent.parent], reparenting, and revalidate / validate / invalidate.
  * The expected values follow the behavior of Swing's Container (exceptions for out-of-range positions, reparenting removes from the old parent, removeAll from the end).
  */
+@Tags("Integration")
 class WContainerTest : FunSpec() {
     /** A layout manager that records the addLayoutComponent / removeLayoutComponent / layoutContainer calls. */
     private class RecordingLayout : WLayoutManager {

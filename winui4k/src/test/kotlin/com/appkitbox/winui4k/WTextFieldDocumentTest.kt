@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.seconds
  * lengths of insertUpdate / removeUpdate when the same operation is done on Swing's JTextField (PlainDocument). Key input
  * is sent to the shared window with [TestKeyboard].
  */
+@Tags("E2E")
 class WTextFieldDocumentTest : FunSpec() {
     /** A listener that records received events in the form "insert:offset:length:text at that time". */
     private class Recorder(private val field: WTextField) : WDocumentListener {

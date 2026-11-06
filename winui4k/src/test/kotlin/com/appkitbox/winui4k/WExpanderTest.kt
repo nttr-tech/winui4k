@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -14,6 +15,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Tests WExpander's expanded state, the Expanding / Collapsed listeners and the Swing ChangeListener-style addChangeListener.
  * Checks that ChangeListeners are called once per change in either direction, and that isExpanded has the new value when they are called.
  */
+@Tags("E2E")
 class WExpanderTest : FunSpec() {
     init {
         test("the header and content passed to the constructor can both be retrieved") {

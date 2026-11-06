@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests that WComboBox shows the items and selection of a [WComboBoxModel] and fires the same events as JComboBox on model changes.
  * The native ComboBox.Items and SelectedIndex are also read to check that the model is reflected. The shape seen from Java is tested in WComboBoxForJavaTest.
  */
+@Tags("E2E")
 class WComboBoxModelTest : FunSpec() {
     /** A non-string item whose display string is its name. */
     private data class Color(val name: String, val rgb: Int) {

@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
 import com.appkitbox.winui4k.internal.ffi.api.function
 import com.appkitbox.winui4k.internal.ffi.api.withScope
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -23,6 +24,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
  * The unhandled error is raised by calling combase's RoReportUnhandledError from the UI thread,
  * the same function that XAML's own ErrorHelper::ReportUnhandledError uses.
  */
+@Tags("Integration")
 class ApplicationUnhandledExceptionTest : FunSpec() {
     init {
         test("an unhandled XAML error reaches the UI thread's uncaught exception handler, and the process keeps running so the UI thread stays usable") {

@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.withClue
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -23,6 +24,7 @@ import kotlin.time.Duration.Companion.seconds
  * The native state is also checked with Win32 ([WindowNatives]). Each test creates its own WFrame and disposes it at the end,
  * and the shared "winui4k tests" window is not closed. The shape seen from Java is tested in WAppWindowForJavaTest.
  */
+@Tags("Integration")
 class WAppWindowTest : FunSpec() {
     private val frames = mutableListOf<WFrame>()
 

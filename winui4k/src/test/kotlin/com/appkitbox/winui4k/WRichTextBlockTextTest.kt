@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldNotBe
  * Paragraphs are separated by the line break "\n", and formatted text (such as bold built with addParagraph) is also
  * included in text.
  */
+@Tags("E2E")
 class WRichTextBlockTextTest : FunSpec() {
     private fun <T> withBlock(block: (WRichTextBlock) -> T): T = onUiThreadGet { block(WRichTextBlock()) }
 

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldContainExactly
@@ -13,6 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 /** Tests verifying WDatePicker's date (LocalDate <-> WinRT DateTime conversion) and listeners. */
+@Tags("E2E")
 class WDatePickerTest : FunSpec() {
     init {
         test("an unselected date is null (DatePicker's default Date is the sentinel value for unselected, and 1601-01-01 is not returned)") {

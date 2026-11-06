@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * (the result for each button pressed with Esc or Enter, and when the owner window is closed), the order and canceling of the open/close and button listeners,
  * the exception for a second dialog. That the handlers do not capture the wrapper (GC) is in [WrapperReleaseDialogTest]. Keys are sent to the shared window with [TestKeyboard].
  */
+@Tags("Integration")
 class WContentDialogTest : FunSpec() {
     /** Events recorded on the UI thread and read from the test thread (guarded by a lock). */
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())

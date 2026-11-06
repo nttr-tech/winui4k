@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.table.RowSorter
 import com.appkitbox.winui4k.table.SortOrder
 import com.appkitbox.winui4k.table.TableRowSorter
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -17,6 +18,7 @@ import io.kotest.matchers.shouldBe
  * the array constructor, getColumn by column name, and rowAtPoint / columnAtPoint by actually showing the table.
  * Expected values come from Swing's JTable behavior (TableView can select only one row, so intervals are shrunk to the single lead row).
  */
+@Tags("E2E")
 class WTableSelectionTest : FunSpec() {
     /** A model of 2 columns (Product / Price) × 4 rows. */
     private fun productModel(): DefaultTableModel = object : DefaultTableModel(

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.withClue
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
  * Tests verifying the properties common to every WComponent (size / alignment / visibility /
  * theme / listeners) using the concrete class WButton.
  */
+@Tags("E2E")
 class WComponentTest : FunSpec() {
     init {
         test("explicitly setting width and height is reflected in preferredSize") {

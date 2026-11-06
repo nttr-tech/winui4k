@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * wrapping to the next row / column; a cell with spans occupies several cells). The children are WPanels (stretched to fill the cells).
  * The numbers are DIP multiples of 4, so the physical pixels are integers even at 125% scaling or more.
  */
+@Tags("E2E")
 class WVariableSizedWrapGridTest : FunSpec() {
     /** 40 × 20 cells, wrapping every 2 vertically (the default orientation is vertical). */
     private fun grid(): WVariableSizedWrapGrid = WVariableSizedWrapGrid(40.0, 20.0).also {

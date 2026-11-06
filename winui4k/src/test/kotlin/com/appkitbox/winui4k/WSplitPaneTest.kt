@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -17,6 +18,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * BasicSplitPaneDivider's drag rules (the computations are left in each test's comments). The divider thickness is the default 10.
  * Children's preferred sizes are determined by a Border (stretching to fill the cell) containing a Canvas with an explicit size.
  */
+@Tags("E2E")
 class WSplitPaneTest : FunSpec() {
     /** A child whose preferred size is [width] x [height] and that stretches to fill the cell. */
     private fun child(width: Double, height: Double): WBorder = WBorder(

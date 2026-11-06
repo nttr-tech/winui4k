@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -16,6 +17,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Notifications and badges may not work in environments without a package ID or notification permission, so those parts are not run
  * in environments where WAppNotificationManager.isSupported is false. The shape seen from Java is tested in WShellOddsForJavaTest.
  */
+@Tags("Integration")
 class WShellOddsTest : FunSpec() {
     init {
         test("WDisplayArea.all returns one or more, exactly one of which is the primary, at the origin (0, 0) (Windows specification)") {

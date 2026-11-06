@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonItemSize
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonMetrics
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemePalette
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemeStyle
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.nulls.shouldBeNull
@@ -19,6 +20,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
 /** Tests for the UI-independent computations of the ribbon view (item content layout, icon XAML, theme colors). */
+@Tags("Pure")
 class RibbonViewLogicTest : FunSpec() {
     /** Text width measured at 6px per character (to verify the computations independently of real fonts). */
     private val sixPerChar = RibbonTextWidths { texts, _, _ -> texts.map { it.length * 6.0 } }

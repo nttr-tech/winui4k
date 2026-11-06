@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -15,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests for WTextField's JTextComponent-style editing API (isEditable, selection, caret, replaceSelection, clipboard,
  * undo). The expected values are the results of the same operations on Swing's JTextField.
  */
+@Tags("E2E")
 class WTextFieldEditTest : FunSpec() {
     /** Places a text field containing [text] in the shared window, runs [block] on the UI thread, and removes it. */
     private fun <T> withField(text: String, block: (WTextField) -> T): T {

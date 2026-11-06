@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 /** Tests that WLabel's text decorations, font and text color are applied to the TextBlock and can be read back from the native object. */
+@Tags("E2E")
 class WLabelTest : FunSpec() {
     /** The DesiredSize of [element] ([width, height]). */
     private fun desiredSizeOf(element: ComPtr): List<Double> {

@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import kotlin.time.Duration.Companion.seconds
  * suggestions, close to an editable JComboBox).
  * Key input is sent to the shared window with [TestKeyboard].
  */
+@Tags("E2E")
 class WAutoSuggestBoxTest : FunSpec() {
     /** The placed box and the record of what happened. */
     private class Shown(val box: WAutoSuggestBox) {

@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * Tests the internal ChangeListeners (the list of a component's ChangeListeners) by passing a function that only
  * counts calls in place of the native registration. A WLabel is used as the owner (a component with a ListenerAnchor).
  */
+@Tags("E2E")
 class ChangeListenersTest : FunSpec() {
     /** A ChangeListeners that counts native registrations, and its owner. */
     private class Fixture {

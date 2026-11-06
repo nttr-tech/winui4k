@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.ink.InkTransform
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.WindowsRuntimeException
 import com.appkitbox.winui4k.internal.winui.InkInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
@@ -24,6 +25,7 @@ import java.io.ByteArrayOutputStream
  * container directly, and the body of the StrokesCollected / StrokesErased handling (collectStrokes / eraseStrokes)
  * is called to verify it.
  */
+@Tags("E2E")
 class WInkCanvasTest : FunSpec() {
     /** A two-point stroke extending 10 DIPs down and to the right, distinguishable by the x coordinate of its start point. */
     private fun stroke(x: Double, y: Double = 20.0) = InkStroke(listOf(InkPoint(x, y), InkPoint(x + 10.0, y + 10.0)))

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * The numbers are DIP multiples of 4, so the physical pixels are integers even at 125% scaling or more.
  * The children are WPanels (stretched to fill the cells) so that the cell areas are visible as is.
  */
+@Tags("E2E")
 class WGridTest : FunSpec() {
     private fun grid(rowSpacing: Double = 0.0, columnSpacing: Double = 0.0): WGrid =
         WGrid(rowSpacing, columnSpacing).also {

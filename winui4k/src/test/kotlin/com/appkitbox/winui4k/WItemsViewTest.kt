@@ -3,10 +3,12 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.attachAndAwaitLoaded
 import com.appkitbox.winui4k.UiTestHarness.detach
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests for WItemsView's selection API (in the form of Swing's JList) and WItemContainer.isSelected. */
+@Tags("E2E")
 class WItemsViewTest : FunSpec() {
     /** Creates a WItemsView with 5 items (call on the UI thread). */
     private fun createView(mode: ItemsViewSelectionMode): WItemsView {

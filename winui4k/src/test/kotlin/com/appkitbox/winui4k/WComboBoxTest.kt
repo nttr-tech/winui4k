@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldBeNull
@@ -13,6 +14,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests verifying WComboBox's item management, selection, and SelectionChanged listener. */
+@Tags("E2E")
 class WComboBoxTest : FunSpec() {
     /** The actual heights of the first item (ComboBoxItem) laid out in the open drop-down and of the drop-down border (PopupBorder, the child of the template's Popup). */
     private fun dropDownHeights(comboBox: WComboBox): Pair<Double, Double> {

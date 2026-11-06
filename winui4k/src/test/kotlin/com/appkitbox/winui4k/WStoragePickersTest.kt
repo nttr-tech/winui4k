@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -13,6 +14,7 @@ import io.kotest.matchers.shouldBe
  * WFolderPicker) and round-tripping their properties. Operations that open the dialog
  * (pick*) never complete without user input, so they aren't verified here.
  */
+@Tags("E2E")
 class WStoragePickersTest : FunSpec() {
     init {
         test("WFileOpenPicker properties read back the values that were set") {

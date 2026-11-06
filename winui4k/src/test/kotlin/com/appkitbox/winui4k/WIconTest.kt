@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -8,6 +9,7 @@ import io.kotest.matchers.shouldBe
  * Verifies that WIcon (Symbol / WImageIcon / WFontIcon) is correctly converted to a WinUI IconElement
  * (its behavior as a value and its Java-facing shape are covered by WIconForJavaTest).
  */
+@Tags("E2E")
 class WIconTest : FunSpec() {
     /** Creates an IconElement from [icon] and returns its contents in the form of [IconElements.describe]. */
     private fun describeCreated(icon: WIcon): String = onUiThreadGet {

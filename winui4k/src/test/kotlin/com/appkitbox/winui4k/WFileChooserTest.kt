@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -25,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
  * How settings are mapped to the OS dialogs is checked by reading the picker made by [WFileChooser.createPicker] (without opening it),
  * and only one test opens and closes a dialog (finding the dialog window class #32770 and sending WM_CLOSE).
  */
+@Tags("Integration")
 class WFileChooserTest : FunSpec() {
     /** The WindowId of the shared window. sharedFrame waits for the UI thread, so read it first outside the UI thread. */
     private var windowId = 0L

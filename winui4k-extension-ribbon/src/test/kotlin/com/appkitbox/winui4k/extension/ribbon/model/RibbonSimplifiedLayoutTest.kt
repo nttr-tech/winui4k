@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 
 /** Tests for simplified ribbon overflow (RibbonSimplifiedLayout). Ported from RibbonSpace's SimplifiedLayoutTests. */
+@Tags("Pure")
 class RibbonSimplifiedLayoutTest : FunSpec() {
     private fun group(vararg widths: Double) =
         RibbonSimplifiedGroup(widths.map { RibbonSimplifiedItem(it, RibbonSimplifiedVisibility.AUTO) })

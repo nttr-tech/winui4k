@@ -4,12 +4,14 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 
 /** Verifies WButton's appearance (switching built-in styles such as isAccent). */
+@Tags("E2E")
 class WButtonAppearanceTest : FunSpec() {
     /** The key of the Style set on the button ("other" if it is none of the built-in styles, null if unset). */
     private fun styleKeyOf(button: WButton): String? {

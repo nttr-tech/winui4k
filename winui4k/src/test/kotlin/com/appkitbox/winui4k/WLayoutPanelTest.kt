@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Expected values come from the promises in [WLayoutPanel]'s KDoc (without an assigned size, preferredLayoutSize becomes the size; an explicit width / height takes precedence;
  * however many times revalidate is called in a turn, it collapses into one layoutContainer).
  */
+@Tags("Integration")
 class WLayoutPanelTest : FunSpec() {
     /** A manager whose preferred size can be changed, recording the number of layoutContainer calls and the layoutSize at that time. All children are placed at (10, 20, 30, 40). */
     private class ProbeLayout(var preferred: WSize) : WLayoutManager {

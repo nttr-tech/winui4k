@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  * actually draws with. Visual states are switched with VisualStateManager.GoToState (the state's Storyboard takes effect
  * at the next render, so the test waits until the expected color appears).
  */
+@Tags("E2E")
 class WButtonColorTest : FunSpec() {
     /** The ContentPresenter's background and foreground colors in one visual state. */
     private data class Brushes(val background: WColor?, val foreground: WColor?)

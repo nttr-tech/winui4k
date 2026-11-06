@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * (ensureIndexIsVisible / visibleRowCount / first / lastVisibleIndex / locationToIndex / indexToLocation / getCellBounds)
  * by actually showing them. Expected values come from the behavior of Swing's JList and the positions of the shown text (TextBlock).
  */
+@Tags("E2E")
 class ListViewportTest : FunSpec() {
     /** A thin interface to examine the two kinds of lists in the same tests. */
     private class Kind(val name: String, val create: (List<String>) -> WControl)

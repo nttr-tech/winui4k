@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests that the handlers of dialogs ([WContentDialog], [WOptionPane]) do not capture the wrapper, and that the wrapper and the native object
  * are collected once the dialog is closed and its references are dropped ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseDialogTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

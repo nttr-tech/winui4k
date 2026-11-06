@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import java.util.Collections
 import kotlin.time.Duration.Companion.seconds
 
 /** Tests for [WTeachingTip]'s properties (read back from native), the close reason with the buttons and hide(), and the action button listeners. */
+@Tags("E2E")
 class WTeachingTipTest : FunSpec() {
     /** Whether the native TeachingTip.IconSource is set. */
     private fun WTeachingTip.hasNativeIcon(): Boolean =

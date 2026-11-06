@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  * positions and exceptions as Swing's JMenuBar / JMenu / JPopupMenu, and that the native Items are in the same order.
  * The shape seen from Java is tested in WMenuContainerForJavaTest.
  */
+@Tags("Integration")
 class WMenuContainerTest : FunSpec() {
     /** Represents the contents of a native IVector<MenuFlyoutItemBase> as "text" / "sub:text" / "-" (separator). */
     private fun nativeLabels(vector: ComPtr): List<String> =

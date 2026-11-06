@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.seconds
  * Enter presses the WFrame's default button when there is no listener.
  * The Enter key is sent with [TestKeyboard] to the input child window of the shared window.
  */
+@Tags("E2E")
 class WPasswordFieldActionTest : FunSpec() {
     private val frame by lazy { UiTestHarness.sharedFrame() }
 

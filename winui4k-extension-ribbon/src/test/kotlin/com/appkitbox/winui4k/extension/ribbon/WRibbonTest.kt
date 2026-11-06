@@ -28,6 +28,7 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonTabModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonToggleButtonModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonVisibilityMode
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
@@ -41,6 +42,7 @@ import kotlin.time.Duration.Companion.seconds
  * E2E test that places a [WRibbon] in an actual WinUI window and verifies synchronization with the model, item
  * invocation, adaptive layout, contextual tabs, the QAT, KeyTips, and state saving.
  */
+@Tags("Integration")
 class WRibbonTest : FunSpec() {
     private lateinit var model: RibbonModel
     private lateinit var ribbon: WRibbon

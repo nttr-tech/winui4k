@@ -2,11 +2,13 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 
 /** Tests verifying WList (ListView)'s item management, selection, and SelectionChanged listener. */
+@Tags("E2E")
 class WListTest : FunSpec() {
     init {
         test("the items passed to the constructor can be retrieved via itemCount and getItem") {

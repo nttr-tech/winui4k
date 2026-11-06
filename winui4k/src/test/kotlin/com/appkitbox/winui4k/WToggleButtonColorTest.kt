@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  *   The text color is the same in all states except disabled
  * Visual states are switched with VisualStateManager.GoToState. The Java-facing form is in WToggleButtonColorForJavaTest.
  */
+@Tags("E2E")
 class WToggleButtonColorTest : FunSpec() {
     /** The background and text colors in one visual state. */
     private data class Look(val background: WColor?, val foreground: WColor?)

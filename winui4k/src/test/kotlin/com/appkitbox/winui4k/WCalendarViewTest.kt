@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -16,6 +17,7 @@ import java.time.LocalDate
  * Tests for WCalendarView's selection API and ChangeListener / WCalendarViewSelectionListener.
  * The first two ChangeListener cases create the selection by changing the native SelectedDates (IVector<DateTime>) directly.
  */
+@Tags("E2E")
 class WCalendarViewTest : FunSpec() {
     /** Applies [block] to CalendarView.SelectedDates (the obtained IVector is released). Call on the UI thread. */
     private fun WCalendarView.editSelectedDates(block: (ComPtr) -> Unit) {

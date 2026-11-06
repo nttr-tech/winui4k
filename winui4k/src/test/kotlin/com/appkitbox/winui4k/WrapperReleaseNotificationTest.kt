@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.lang.ref.WeakReference
@@ -11,6 +12,7 @@ import java.lang.ref.WeakReference
  * Tests that the handlers and references of notification components ([WInfoBar]'s Closing / Closed, a component bound to a [WToolTip]) do not keep the wrappers alive,
  * and that the wrappers and natives are collected once the references are released ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseNotificationTest : FunSpec() {
     /** Puts the component made by [create] in a window and removes it (waiting until Unloaded is processed), and returns only a weak reference and a native watcher. */
     private fun shownAndHidden(create: () -> WComponent): Pair<WeakReference<WComponent>, NativeProbe> {

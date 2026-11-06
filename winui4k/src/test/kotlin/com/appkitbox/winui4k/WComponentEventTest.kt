@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -15,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
  * changes its size, position and visibility, and checks that the same kinds of events as Swing arrive once each (and that moving or hiding only the parent does not reach the child).
  * Events arrive after a layout or on the next turn of the UI thread, so the test waits for the record to match and checks that no extra notifications arrive after waiting a little longer.
  */
+@Tags("E2E")
 class WComponentEventTest : FunSpec() {
     /** A scene with an intermediate Canvas inside an outer Canvas and a box inside that. [events] records what the listener received. */
     private class Scene {

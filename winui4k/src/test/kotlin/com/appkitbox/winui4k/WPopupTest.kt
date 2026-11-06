@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.doubles.plusOrMinus
@@ -14,6 +15,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests for WPopup's Swing-like ways of opening (show(owner, x, y) at coordinates of the owner, isVisible), the Opened listener and the PopupMenuListener,
  * by actually opening it in the shared window. The shape seen from Java is tested in WPopupForJavaTest.
  */
+@Tags("Integration")
 class WPopupTest : FunSpec() {
     private suspend fun withOwner(block: suspend (owner: WButton) -> Unit) {
         val panel = onUiThreadGet { WPanel() }

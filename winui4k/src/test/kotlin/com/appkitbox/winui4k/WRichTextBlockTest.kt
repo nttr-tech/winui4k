@@ -1,11 +1,13 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 /** Tests that the font of WRichTextBlock (RichTextBlock) reaches the native object and can be read back. */
+@Tags("E2E")
 class WRichTextBlockTest : FunSpec() {
     init {
         test("the family, weight, italic and size set in font can be read back from the RichTextBlock") {

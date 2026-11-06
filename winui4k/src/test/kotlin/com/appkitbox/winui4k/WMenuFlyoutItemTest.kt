@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -24,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
  * when disabled, accelerators work without opening the menu). The native state (Icon, AccessKey, KeyboardAccelerators) is also read and checked.
  * The shape seen from Java is tested in WMenuFlyoutItemForJavaTest.
  */
+@Tags("Integration")
 class WMenuFlyoutItemTest : FunSpec() {
     /** A description of the item's native Icon ("Symbol:SAVE" etc.). null if none. */
     private fun nativeIconOf(item: WMenuFlyoutItem): String? {

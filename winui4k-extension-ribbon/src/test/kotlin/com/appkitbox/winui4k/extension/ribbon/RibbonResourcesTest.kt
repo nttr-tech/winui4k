@@ -16,6 +16,7 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonMetrics
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemePalette
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonThemeStyle
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -24,6 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * E2E test verifying that the ribbon's theme resources, shared styles, and text-width measurement work in actual WinUI.
  */
+@Tags("Integration")
 class RibbonResourcesTest : FunSpec() {
     /** A Canvas placed in the window, used as the basis for text-width measurement. */
     private lateinit var host: XamlElement

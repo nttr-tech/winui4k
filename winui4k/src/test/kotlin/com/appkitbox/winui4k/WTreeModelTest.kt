@@ -11,6 +11,7 @@ import com.appkitbox.winui4k.tree.TreePath
 import com.appkitbox.winui4k.tree.TreeSelectionModel
 import com.appkitbox.winui4k.tree.TreeWillExpandListener
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -21,6 +22,7 @@ import io.kotest.matchers.shouldBe
  * Tests for the usage of WTree that mirrors a TreeModel (the same shape as JTree).
  * The expected rows, paths and expansion come from JTree's behavior (the root is expanded from the start, rows count visible nodes from the top).
  */
+@Tags("E2E")
 class WTreeModelTest : FunSpec() {
     /** The tree Food ─ Fruit (Apple, Orange) / Vegetables (Carrot ─ Variety (Kintoki)) / Water. */
     private class Sample {

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.doubles.shouldBeGreaterThan
@@ -14,6 +15,7 @@ import io.kotest.matchers.shouldBe
  * on). Places the label in the shared window, reads the positions of the icon and text after layout, and checks that the
  * arrangement is the same as Swing's JLabel.
  */
+@Tags("E2E")
 class WLabelIconTest : FunSpec() {
     /** The position and size of an element after layout (from the top-left of the shared window's content, in DIP). */
     private data class Box(val x: Double, val y: Double, val width: Double, val height: Double) {

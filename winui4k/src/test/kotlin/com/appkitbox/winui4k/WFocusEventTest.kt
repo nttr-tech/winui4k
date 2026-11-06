@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -19,6 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  * GotFocus / LostFocus arrive asynchronously, each test waits for the record to match the expectation and then checks that
  * no extra notification arrives after a short wait.
  */
+@Tags("Integration")
 class WFocusEventTest : FunSpec() {
     /** A form with a text field, a button and a numeric field. Records what the listeners received in [events]. */
     private class Form {

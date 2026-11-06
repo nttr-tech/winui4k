@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  * continuation of [WrapperReleaseTest], split off to avoid detekt's LargeClass).
  * Waits for collection while encouraging GC ([Reclamation]).
  */
+@Tags("Memory")
 class WrapperReleaseTextInputTest : FunSpec() {
     /** The values received by change notification listeners (password field, AutoSuggestBox). The listeners do not reference the field (they only record here). */
     private val changedValues = mutableListOf<String>()

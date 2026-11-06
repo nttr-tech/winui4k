@@ -7,10 +7,12 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests for the standalone behavior of WItemContainer's child (ItemContainer.Child) and isSelected. Integration with WItemsView is in WItemsViewTest. */
+@Tags("Integration")
 class WItemContainerTest : FunSpec() {
     /** Passes [ptr] to [block] and Releases it afterwards. */
     private fun <T> useReleasing(ptr: ComPtr, block: (ComPtr) -> T): T {

@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * Clicks are made with UI Automation peers ([NavigationClicks]). The expected values are based on the behavior of Swing's ChangeListener (once, only when it changes) and
  * JMenuItem's ActionListener (once per press; the actionCommand defaults to the label).
  */
+@Tags("E2E")
 class WNavigationViewTest : FunSpec() {
     /** A navigation view with its pane always open as a left menu, with the item containers created. */
     private fun navigationView(vararg items: WNavigationViewItem): WNavigationView = WNavigationView().also { view ->

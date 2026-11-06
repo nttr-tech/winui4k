@@ -2,12 +2,14 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 /** Tests verifying WPasswordField (PasswordBox)'s password handling and PasswordChanged listener. */
+@Tags("E2E")
 class WPasswordFieldTest : FunSpec() {
     init {
         test("password returns exactly the string that was set") {

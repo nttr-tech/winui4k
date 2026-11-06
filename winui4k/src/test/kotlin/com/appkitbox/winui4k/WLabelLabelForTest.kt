@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -13,6 +14,7 @@ import kotlin.time.Duration.Companion.seconds
  * Tests WLabel.labelFor / displayedMnemonic (JLabel.setLabelFor / setDisplayedMnemonic).
  * Checks by reading the target's AutomationProperties.LabeledBy and UIElement.AccessKey back from the native object.
  */
+@Tags("E2E")
 class WLabelLabelForTest : FunSpec() {
     /** Whether [target]'s LabeledBy is [label]'s text (TextBlock). */
     private fun isLabeledBy(target: WComponent, label: WLabel): Boolean {

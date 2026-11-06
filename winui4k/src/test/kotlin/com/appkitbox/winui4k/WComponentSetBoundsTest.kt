@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * are overwritten on the next layout in parents with a layout manager, and do not change the explicit size (width / height).
  * The position and size are read after layout with [WComponent.bounds] (the position relative to the parent and the actual size).
  */
+@Tags("E2E")
 class WComponentSetBoundsTest : FunSpec() {
     /** Places [child] inside a 400x300 [parent] and calls [block] on the UI thread after layout. */
     private fun <T> withChild(parent: WContainer, child: WComponent, block: () -> T): T {

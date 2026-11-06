@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
@@ -8,6 +9,7 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import java.util.Locale
 
 /** Tests for RibbonStrings (localized strings for the ribbon's built-in UI) (no UI required). */
+@Tags("Pure")
 class RibbonStringsTest : FunSpec() {
     private lateinit var previous: RibbonStrings
 

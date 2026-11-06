@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  * the existing ColorChanged listeners, and [WColorPicker.showDialog] that waits until closed and its callback form.
  * Open dialogs are inspected and pressed from outside with [OpenContentDialogs]. That the handlers do not capture the picker (GC) is tested in [WrapperReleaseValueTest].
  */
+@Tags("E2E")
 class WColorPickerTest : FunSpec() {
     private val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
 

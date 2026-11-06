@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Verifies the cellRenderer ([WListCellRenderer]) of WList (ListView) and WListBox (ListBox) and [WDefaultListCellRenderer]
  * by actually showing them. Expected values come from how Swing's JList calls a ListCellRenderer (per shown element, with the selection state).
  */
+@Tags("E2E")
 class ListCellRendererTest : FunSpec() {
     /** One call of the renderer. */
     private data class Call(val value: Any?, val index: Int, val isSelected: Boolean)

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -12,6 +13,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.util.function.Consumer
 
 /** Tests verifying WButton's key properties (including behavior inherited from WButtonBase / WControl). */
+@Tags("E2E")
 class WButtonTest : FunSpec() {
     init {
         test("the label passed to the constructor can be retrieved via text") {

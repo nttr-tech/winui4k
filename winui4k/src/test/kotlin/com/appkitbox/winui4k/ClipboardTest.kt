@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference
  * Tests that verify Clipboard / DataPackage / DataPackageView round trips on the real clipboard.
  * They actually rewrite the OS clipboard, so anything copied during the test run is lost.
  */
+@Tags("E2E")
 class ClipboardTest : FunSpec() {
     init {
         // The clipboard is accessed from the STA (UI thread). Open the shared window first

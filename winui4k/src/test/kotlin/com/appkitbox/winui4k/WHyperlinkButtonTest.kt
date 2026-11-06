@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * doClick on a button with navigateUri set would launch the default browser, so doClick is checked only with buttons
  * without navigateUri. The form seen from Java is in WHyperlinkButtonForJavaTest.
  */
+@Tags("E2E")
 class WHyperlinkButtonTest : FunSpec() {
     init {
         test("text and navigateUri passed to the constructor can be read back") {

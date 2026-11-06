@@ -4,11 +4,13 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupState.COLLAPSED
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupState.LARGE
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupState.MEDIUM
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonGroupState.SMALL
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 /** Tests for adaptive group reduction (RibbonAdaptiveLayout). A port of RibbonSpace's AdaptiveLayoutTests. */
+@Tags("Pure")
 class RibbonAdaptiveLayoutTest : FunSpec() {
     /** A group with the large, medium, small, and collapsed widths [widths]. */
     private fun group(vararg widths: Double, order: Int = 0, canCollapse: Boolean = true) =

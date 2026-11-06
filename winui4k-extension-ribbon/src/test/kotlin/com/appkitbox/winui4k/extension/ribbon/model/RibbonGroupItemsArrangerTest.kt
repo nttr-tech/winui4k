@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
 /** Tests for arranging items in a classic group (RibbonGroupItemsArranger). Ported from RibbonSpace's GroupItemsArrangerTests. */
+@Tags("Pure")
 class RibbonGroupItemsArrangerTest : FunSpec() {
     init {
         test("a large item takes a whole column, and small items stack three rows per column") {

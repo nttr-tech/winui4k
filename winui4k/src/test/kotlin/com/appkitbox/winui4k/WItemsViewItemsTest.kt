@@ -3,6 +3,7 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.UiTestHarness.attachAndAwaitLoaded
 import com.appkitbox.winui4k.UiTestHarness.detach
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -11,6 +12,7 @@ import io.kotest.matchers.shouldBe
  * ItemInvoked fires only on an actual click on an item, so this checks reading and writing the enabling, and that subscribing and unsubscribing go through without exceptions.
  * Selection is in WItemsViewTest.
  */
+@Tags("E2E")
 class WItemsViewItemsTest : FunSpec() {
     private fun containers(count: Int, prefix: String): List<WItemContainer> = (0 until count).map { WItemContainer(WLabel("$prefix$it")) }
 

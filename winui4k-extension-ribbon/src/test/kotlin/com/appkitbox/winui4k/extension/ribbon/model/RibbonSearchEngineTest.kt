@@ -1,11 +1,13 @@
 package com.appkitbox.winui4k.extension.ribbon.model
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 
 /** Tests for ranking in command search (RibbonSearchEngine) and for managing recently used items. */
+@Tags("Pure")
 class RibbonSearchEngineTest : FunSpec() {
     private fun engine(): RibbonSearchEngine = RibbonSearchEngine().apply {
         setEntries(

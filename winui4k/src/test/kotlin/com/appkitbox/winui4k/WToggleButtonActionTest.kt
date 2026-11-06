@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,7 @@ import io.kotest.matchers.shouldBe
  * button in both directions.
  * The form seen from Java is in WToggleButtonActionForJavaTest.
  */
+@Tags("E2E")
 class WToggleButtonActionTest : FunSpec() {
     /** An action that records the value of SELECTED_KEY when called. */
     private class RecordingAction(name: String? = null, icon: WIcon? = null) : WAbstractAction(name, icon) {

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
 import java.util.Collections
 
 /** Tests for the mutual exclusion and registration management of WButtonGroup (ButtonGroup-style). */
+@Tags("E2E")
 class WButtonGroupTest : FunSpec() {
     init {
         test("the number and order of added buttons appear in buttonCount and elements, and adding the same button twice counts once") {

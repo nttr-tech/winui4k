@@ -2,11 +2,13 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
 /** Tests verifying WRadioButton's group name, checked state, and listeners. */
+@Tags("E2E")
 class WRadioButtonTest : FunSpec() {
     init {
         test("groupName returns exactly the value that was set") {

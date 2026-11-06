@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -13,6 +14,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * The defaults are as defined by WinUI's NavigationViewItem (SelectsOnInvoked = true, IsExpanded = false).
  * Click notifications are covered by [WNavigationViewTest].
  */
+@Tags("E2E")
 class WNavigationViewItemTest : FunSpec() {
     private fun navigationView(vararg items: WNavigationViewItem): WNavigationView = WNavigationView().also { view ->
         view.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT

@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import kotlin.time.Duration.Companion.seconds
  * The expected values are the results of the same operations on Swing's JTextArea (the same form as
  * [WTextFieldEditTest]). A line break counts as one character.
  */
+@Tags("E2E")
 class WTextPaneSelectionTest : FunSpec() {
     /** Places a text pane containing [text] in the shared window, runs [block] on the UI thread, and removes it. */
     private fun <T> withPane(text: String, block: (WTextPane) -> T): T {

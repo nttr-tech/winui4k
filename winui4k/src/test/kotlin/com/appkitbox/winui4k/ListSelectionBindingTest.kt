@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -381,6 +382,7 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
 }
 
 /** The Swing-style selection API of [WList] (ListView). */
+@Tags("E2E")
 class WListSelectionTest : ListSelectionBindingSpec({ WList(it) }) {
     init {
         test("switching to a mode that does not allow selection (NONE) also clears the selectionModel's selection, and switching back to single selection does not restore the previous selection") {

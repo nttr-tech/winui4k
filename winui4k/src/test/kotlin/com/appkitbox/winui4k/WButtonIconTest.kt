@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
  * Reads the contents of the button's Content with [contentOf] and checks the order, orientation, and spacing of the
  * icon and text.
  */
+@Tags("E2E")
 class WButtonIconTest : FunSpec() {
     private fun contentOf(button: WButtonBase): List<String> = ButtonContents.contentOf(button)
 
