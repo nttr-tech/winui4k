@@ -2091,7 +2091,8 @@ internal object XamlInterop {
     const val IKeyboardAccelerator_put_Key = 7         // put_Key(VirtualKey)
     const val IKeyboardAccelerator_get_Modifiers = 8   // get_Modifiers(out VirtualKeyModifiers)
     const val IKeyboardAccelerator_put_Modifiers = 9   // put_Modifiers(VirtualKeyModifiers)
-    const val IKeyboardAccelerator_add_Invoked = 14    // add_Invoked(TypedEventHandler, out token)
+    const val IKeyboardAccelerator_put_ScopeOwner = 13 // put_ScopeOwner(DependencyObject)
+    const val IKeyboardAccelerator_add_Invoked = 14   // add_Invoked(TypedEventHandler, out token)
     const val IKeyboardAccelerator_remove_Invoked = 15 // remove_Invoked(token)
 
     const val IID_IKeyboardAcceleratorInvokedEventArgs = "62c9fdb0-b574-527d-97eb-5c7f674441e0"

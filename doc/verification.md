@@ -421,3 +421,18 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
 - Control.IsEnabled の依存関係プロパティの変更のコールバック (DependencyObject.RegisterPropertyChangedCallback) には、値の変わらない
   通知も来る。ボタンの isEnabled を false にすると 2 回、同じ false を設定し直しても 1 回呼ばれる (WButtonChangeListenerTest で確認)。
   WButtonBase.addChangeListener は押下・ポインター・有効・選択の 4 つをまとめて前回の値と比べ、変わったときだけ知らせる (ButtonStateChanges)
+- KeyboardAccelerator が動く範囲 (Swing のキー バインドの 3 つの条件と比べた実測。KeyboardAcceleratorScopeTest、microsoft-ui-xaml の
+  dxaml/xcp/components/KeyboardAccelerator/KeyboardAcceleratorUtility.cpp と components/ContentRoot/KeyboardInputProcessor.cpp):
+  フォーカスのある要素から根への KeyDown のバブリングの途中で、各要素の OnKeyDown がその要素のアクセラレーター (ローカル) と
+  ScopeOwner がその要素のアクセラレーターを処理し、KeyDown が処理済みにならずに根まで届いた後で、ScopeOwner の無いアクセラレーター
+  (グローバル) をツリー全体から探す。そのため ScopeOwner の無いアクセラレーターは持ち主の外にフォーカスがあっても動き
+  (WHEN_IN_FOCUSED_WINDOW に近い)、ScopeOwner を持ち主にするとフォーカスが持ち主の中にあるときだけ動く
+  (WHEN_ANCESTOR_OF_FOCUSED_COMPONENT に近い)。WHEN_FOCUSED に当たるもの (フォーカスを持つ要素自身だけ) は無い。
+  持ち主が無効か隠れているアクセラレーターは飛ばして次を探すが、Invoked で処理済みにしないと持ち主の既定の操作
+  (ボタンのクリック。KeyboardAutomationInvoker) を起こし、ほかのアクセラレーターは探さない。キーを離したときと文字の入力には使えず、
+  使えるキーも限られ (IsKeyValidForAccelerators。Ctrl 無しの Tab や ` は不可)、持ち主にキーのヒントが出る。
+  Swing の「無効なアクションはキーを消費しない」と KEY_RELEASED / KEY_TYPED を守れないため、WComponent.getInputMap のキー バインドは
+  アクセラレーターを使わず、WHEN_FOCUSED はフォーカスを持つコンポーネントの PreviewKeyDown / PreviewKeyUp / CharacterReceived (キーの
+  リスナーの後)、WHEN_ANCESTOR_OF_FOCUSED_COMPONENT は各コンポーネントの KeyDown / KeyUp / CharacterReceived のバブリング、
+  WHEN_IN_FOCUSED_WINDOW は XamlRoot.Content のバブリングで引く (KeyBindings.kt。根のバブリングはグローバルなアクセラレーター
+  (WComponent.addKeyboardAccelerator など) より先で、Swing でメニューのアクセラレーターが WHEN_IN_FOCUSED_WINDOW の後なのと同じ順)
