@@ -12,15 +12,27 @@ internal object ComponentShowing {
      * FrameworkElement.IsLoaded is not used. Adding a Loaded handler to an already loaded element puts it in the list of elements "waiting for Loaded to fire",
      * and IsLoaded is false until it fires (doc/verification.md). That would break the visibility check every time a listener is added.
      */
-    fun isConnected(component: WComponent): Boolean {
-        val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
+    fun isConnected(component: WComponent): Boolean = isUiElementConnected(component.uiElement)
+
+    /** Makes the same decision as [isConnected] for [element] (borrowed; any interface of an element implementing UIElement). */
+    fun isConnected(element: ComPtr): Boolean {
+        val uiElement = element.queryInterface(XamlInterop.IID_IUIElement)
+        return try {
+            isUiElementConnected(uiElement)
+        } finally {
+            uiElement.release()
+        }
+    }
+
+    private fun isUiElementConnected(uiElement: ComPtr): Boolean {
+        val root = uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
         val content = try {
             root.getPtrOrNull(XamlInterop.IXamlRoot_get_Content)
         } finally {
             root.release()
         } ?: return false
         return try {
-            topOf(component.uiElement) == topOf(content)
+            topOf(uiElement) == topOf(content)
         } finally {
             content.release()
         }

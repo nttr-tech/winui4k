@@ -442,3 +442,14 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   「Canvas → ハンドラ → パネル → Canvas」の循環になっていた。一度も載せていない WLayoutPanel も、載せて外したものも回収されなかった。
   ハンドラがパネルを弱く参照するようにして、どの場合も回収される (WrapperReleaseLayoutTest)。WSettingsCard の init の
   addSizeChangedListener も同じ形
+- 発火待ちの Loaded (上の IsLoaded の件) は、ツリーのどこかに要素が入ったとき (UIElementCollection.cpp の
+  RequestRaiseLoadedEventOnNextTick、Window.Content の差し替え) にだけまとめて送られ (eventmgr.cpp の RaiseLoadedEvent)、
+  ツリーから外すと送られずに一覧から消える (eventmgr.cpp の DisableEvents → RemoveFromLoadedEventList)。そのため ListenerAnchor が
+  IsLoaded で「載っているか」を決めると、(1) 読み込み済みの要素に初めてリスナーを付けたとき (ListenerAnchor の init が Loaded の
+  ハンドラを足す) に載っていないと読んで祖先を覚えず、外した部分木をネイティブだけが持つ間にラッパーが回収された。(2) 載ったままの
+  祖先に Loaded のハンドラがあると外れたと読み、その祖先に預けたラッパーが次の Loaded で持ち直されて、部分木を手放しても
+  回収されなかった。ListenerAnchor は IsLoaded が true か、WComponent.isDisplayable と同じ判定 (XamlRoot とビジュアル ツリーの根) が
+  true なら「載っている」とみなす (WrapperReleaseLayoutTest)。根の判定だけにしないのは、開いているメニュー (MenuFlyout) の項目が、
+  IsLoaded は true なのにビジュアル ツリーの根がウィンドウの中身の根と違う (XamlRoot.Content の根に着かない) ため
+  (E2E で確認。根の判定だけにすると WrapperReleaseMenuTest の項目が回収されなくなった)。そのため開いているメニューの項目の
+  WComponent.isDisplayable も false になる

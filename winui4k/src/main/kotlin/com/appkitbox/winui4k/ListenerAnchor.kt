@@ -76,7 +76,7 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
         if (listenerCount++ > 0) return
         val owner = reference.get() ?: return
         pinned = owner
-        if (isLoaded(owner.frameworkElement)) recordAncestors(owner.frameworkElement)
+        if (isLive(owner.frameworkElement)) recordAncestors(owner.frameworkElement)
     }
 
     /**
@@ -85,7 +85,7 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
      */
     fun listenerAddedFromFirstLoaded() {
         val owner = reference.get() ?: return
-        if (isLoaded(owner.frameworkElement)) listenerAdded() else addOnLoaded = true
+        if (isLive(owner.frameworkElement)) listenerAdded() else addOnLoaded = true
     }
 
     /** A listener was removed. If it was the last listener, stop holding the wrapper strongly. */
@@ -113,7 +113,7 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
 
     private fun onUnloaded(element: ComPtr) { // element is borrowed (do not Release)
         // When reparenting, the old Unloaded can arrive after the new Loaded, so do nothing if it is still in the tree
-        if (isLoaded(element)) return
+        if (isLive(element)) return
         val owner = pinned
         pinned = null
         val root = if (owner != null) detachedRoot() else null
@@ -161,10 +161,10 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
         return root
     }
 
-    /** The FrameworkElement that [weak] points to, if it is not destroyed yet and not in the tree. Otherwise null. */
+    /** The FrameworkElement that [weak] points to, if it is not destroyed yet and not in the tree ([isLive] is false). Otherwise null. */
     private fun resolveUnloaded(weak: ComPtr): ComPtr? {
         val element = weak.getPtrOrNull(RESOLVE, Guid.of(XamlInterop.IID_IFrameworkElement)) ?: return null
-        if (!element.getBool(XamlInterop.IFrameworkElement_get_IsLoaded)) return element
+        if (!isLive(element)) return element
         element.release()
         return null
     }
@@ -207,6 +207,18 @@ internal class ListenerAnchor<T : WComponent>(owner: T) {
 
         /** IWeakReference.Resolve(REFIID, out IInspectable) is vtbl[3]. Returns null if the object has been destroyed. */
         const val RESOLVE = 3
+
+        /**
+         * Whether [element] (borrowed) is in the visual tree. true if FrameworkElement.IsLoaded is true or if the root of its visual tree is the same as
+         * that of the window content ([ComponentShowing.isConnected]).
+         * It is not decided by IsLoaded alone. Adding a Loaded handler to an already loaded element makes IsLoaded return false until some element next enters the tree and WinUI
+         * sends the pending Loaded (doc/verification.md). This init itself adds a Loaded handler, so
+         * adding a listener later to a shown element would read it as "not in the tree", not remember the ancestor, and fail to entrust it to the root of the removed subtree. Reading an ancestor
+         * still in the tree as "removed" would make the wrapper entrusted to that ancestor be held again on the next Loaded and never be collected.
+         * It is not decided by comparing roots alone either. The items of an open menu (MenuFlyout) have a visual tree root different from that of the window content.
+         * An element in an open menu with a pending Loaded is read as not in the tree either way (a remaining gap).
+         */
+        fun isLive(element: ComPtr): Boolean = isLoaded(element) || ComponentShowing.isConnected(element)
 
         fun isLoaded(element: ComPtr): Boolean {
             val frameworkElement = element.queryInterface(XamlInterop.IID_IFrameworkElement)
