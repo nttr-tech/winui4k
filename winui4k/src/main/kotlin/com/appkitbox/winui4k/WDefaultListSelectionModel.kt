@@ -306,6 +306,17 @@ open class WDefaultListSelectionModel : WListSelectionModel {
         fireValueChanged()
     }
 
+    /**
+     * Moves only the lead to [index] without changing the selection (Swing's DefaultListSelectionModel.moveLeadSelectionIndex).
+     * Unlike [setLeadSelectionIndex], it does not reselect from the anchor to the lead. As in Swing, -1 is ignored when the anchor
+     * is not -1. If [isLeadAnchorNotificationEnabled], reports one change covering the old and new lead.
+     */
+    fun moveLeadSelectionIndex(index: Int) {
+        if (index == -1 && anchorIndex != -1) return
+        updateLeadAnchorIndices(anchorIndex, index)
+        fireValueChanged()
+    }
+
     override fun setLeadSelectionIndex(index: Int) {
         var newAnchor = anchorIndex
         // The lead can be set to -1 only when the anchor is also -1. When the anchor is -1, a lead other than -1 cannot be set

@@ -83,4 +83,26 @@ class WDefaultListSelectionModelForJavaTest {
         model.removeListSelectionListener(a);
         assertArrayEquals(new WListSelectionListener[] {b}, model.getListSelectionListeners());
     }
+
+    @Test
+    void moveTheAnchorAndLeadWithTheSameNamesAsSwingAndShiftTheSelectionWithInsertIndexIntervalAndRemoveIndexInterval() {
+        WDefaultListSelectionModel model = new WDefaultListSelectionModel();
+        model.setSelectionInterval(1, 2);
+        model.moveLeadSelectionIndex(4);
+        assertEquals(1, model.getAnchorSelectionIndex());
+        assertEquals(4, model.getLeadSelectionIndex());
+        assertArrayEquals(new int[] {1, 2}, model.getSelectedIndices());
+        model.setLeadSelectionIndex(3);
+        assertArrayEquals(new int[] {1, 2, 3}, model.getSelectedIndices());
+        model.setAnchorSelectionIndex(0);
+        assertArrayEquals(new int[] {1, 2, 3}, model.getSelectedIndices());
+        model.insertIndexInterval(0, 2, true);
+        assertArrayEquals(new int[] {3, 4, 5}, model.getSelectedIndices());
+        model.removeIndexInterval(0, 1);
+        assertArrayEquals(new int[] {1, 2, 3}, model.getSelectedIndices());
+        model.removeSelectionInterval(2, 2);
+        assertArrayEquals(new int[] {1, 3}, model.getSelectedIndices());
+        model.setLeadAnchorNotificationEnabled(false);
+        assertFalse(model.isLeadAnchorNotificationEnabled());
+    }
 }

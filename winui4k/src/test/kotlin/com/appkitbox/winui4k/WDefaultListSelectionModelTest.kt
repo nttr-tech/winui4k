@@ -436,5 +436,40 @@ class WDefaultListSelectionModelTest : FunSpec() {
             val e = received!!
             listOf(e.source === m, e.firstIndex, e.lastIndex, e.valueIsAdjusting) shouldBe listOf(true, 2, 4, false)
         }
+
+        context("Swing compatibility") {
+            test("moveLeadSelectionIndex moves only the lead without changing the selection, and reports one change covering the old and new lead") {
+                val m = model()
+                m.setSelectionInterval(2, 4)
+                val events = m.record()
+                m.moveLeadSelectionIndex(1)
+                listOf(m.indices(), m.getAnchorSelectionIndex(), m.getLeadSelectionIndex()) shouldBe listOf(listOf(2, 3, 4), 2, 1)
+                events shouldBe listOf(Triple(1, 4, false))
+            }
+
+            test("moveLeadSelectionIndex(-1) does nothing if the anchor is not -1, and sets the lead to -1 if the anchor is -1") {
+                val m = model()
+                m.setSelectionInterval(1, 3)
+                val events = m.record()
+                m.moveLeadSelectionIndex(-1)
+                m.getLeadSelectionIndex() shouldBe 3
+                events shouldBe emptyList()
+                val fresh = model()
+                fresh.moveLeadSelectionIndex(5)
+                fresh.getLeadSelectionIndex() shouldBe 5
+                fresh.moveLeadSelectionIndex(-1)
+                listOf(fresh.getLeadSelectionIndex(), fresh.getAnchorSelectionIndex(), fresh.isSelectionEmpty()) shouldBe listOf(-1, -1, true)
+            }
+
+            test("if leadAnchorNotificationEnabled is false, moveLeadSelectionIndex reports nothing") {
+                val m = model()
+                m.setSelectionInterval(0, 2)
+                m.isLeadAnchorNotificationEnabled = false
+                val events = m.record()
+                m.moveLeadSelectionIndex(0)
+                m.getLeadSelectionIndex() shouldBe 0
+                events shouldBe emptyList()
+            }
+        }
     }
 }
