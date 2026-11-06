@@ -414,6 +414,8 @@ internal object XamlInterop {
     const val INumberBox_put_SmallChange = 13          // put_SmallChange(DOUBLE)
     const val INumberBox_get_LargeChange = 14          // get_LargeChange(out DOUBLE)
     const val INumberBox_put_LargeChange = 15          // put_LargeChange(DOUBLE)
+    const val INumberBox_get_Text = 16                 // get_Text(out HSTRING)
+    const val INumberBox_put_Text = 17                 // put_Text(HSTRING)
     const val INumberBox_get_Header = 18               // get_Header(out IInspectable)
     const val INumberBox_put_Header = 19               // put_Header(IInspectable)
     const val INumberBox_get_PlaceholderText = 22      // get_PlaceholderText(out HSTRING)

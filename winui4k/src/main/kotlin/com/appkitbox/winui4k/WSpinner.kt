@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
+import java.text.ParseException
 import java.util.function.DoubleConsumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -261,6 +262,51 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     /** Like JSpinner.getChangeListeners: the ChangeListeners currently added (in the order they were added; Kotlin lambdas appear wrapped). */
     fun getChangeListeners(): Array<WChangeListener> = changeListeners.toArray()
 
+    /**
+     * JSpinner.commitEdit-like: makes the NumberBox read the text being typed in the input field (the template's TextBox) into a value, the same as when the focus leaves
+     * or Enter is pressed (also expressions if [acceptsExpression]). The read value is clamped to the range and written back to the model, and if the value changes,
+     * the ChangeListeners are called. The text in the input field is replaced by the display of the committed value.
+     *
+     * An empty field sets the value to NaN with the default model (as before). With a spinner given a model or an integer model, it is treated as unreadable text,
+     * as with Swing's JFormattedTextField. Before being placed in a window (while the template's input field does not exist yet), there is nothing to commit, so it does nothing.
+     *
+     * @throws ParseException for text that cannot be read as a number (expression). The value and model do not change, and the text stays in the input field (the same as Swing;
+     *   WinUI's NumberBox returns unreadable text to the display of the previous value when the focus leaves, but this call does not)
+     */
+    @Throws(ParseException::class)
+    fun commitEdit() {
+        val input = Xaml.appliedTemplatePartOrNull(inspectable, INPUT_BOX_PART) ?: return
+        val textBox = try {
+            input.queryInterface(XamlInterop.IID_ITextBox)
+        } finally {
+            input.release()
+        }
+        try {
+            val raw = textBox.getString(XamlInterop.ITextBox_get_Text)
+            // After setting Value to NaN and putting the text back into Text, NumberBox reads it in ValidateInput (UpdateValueToText in NumberBox.cpp),
+            // and only a readable value goes into Value. If it stays NaN, it could not be read (an empty field also becomes NaN)
+            val wasPushing = pushing
+            pushing = true
+            val committed = try {
+                inspectable.call(XamlInterop.INumberBox_put_Value, Double.NaN)
+                Hstring.use(raw) { h -> inspectable.call(XamlInterop.INumberBox_put_Text, h) }
+                inspectable.getDouble(XamlInterop.INumberBox_get_Value)
+            } finally {
+                pushing = wasPushing
+            }
+            // Only the default model (Double, which becomes NaN when the input is cleared) accepts an empty field as NaN
+            val acceptsEmpty = !revertsEmpty && !numberModel.number.isIntegral()
+            if (committed.isNaN() && (raw.isNotBlank() || !acceptsEmpty)) {
+                pushToNative() // Return the value and display to the model's value, then put the typed text back
+                Hstring.use(raw) { h -> textBox.call(XamlInterop.ITextBox_put_Text, h) }
+                throw ParseException("Cannot be read as a number: \"$raw\"", 0)
+            }
+            onNativeValueChanged(committed)
+        } finally {
+            textBox.release()
+        }
+    }
+
     /** Passes the new value to [deliver] only when the value changed (for the legacy value listeners; NaN to NaN is not a change). */
     private fun valueChangeAdapter(deliver: (Double) -> Unit): WChangeListener {
         var last = value
@@ -342,6 +388,9 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     }
 
     private companion object {
+        /** The name of the TextBox for entering text in the NumberBox template. */
+        const val INPUT_BOX_PART = "InputBox"
+
         /** Compares treating NaN and NaN as equal too. */
         fun sameValue(a: Double, b: Double): Boolean = a == b || (a.isNaN() && b.isNaN())
 
