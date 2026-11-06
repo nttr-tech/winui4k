@@ -2274,6 +2274,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.Media.VisualTreeHelper (statics) ----
     const val CLS_VisualTreeHelper = "Microsoft.UI.Xaml.Media.VisualTreeHelper"
     const val IID_IVisualTreeHelperStatics = "5aece43c-7651-5bb5-855c-2198496e455e"
+    const val IVisualTreeHelperStatics_FindElementsInHostCoordinates = 6 // (Point, UIElement subtree, out IIterable<UIElement>)
     const val IVisualTreeHelperStatics_GetChild = 10          // GetChild(DependencyObject, i4, out DependencyObject)
     const val IVisualTreeHelperStatics_GetChildrenCount = 11  // GetChildrenCount(DependencyObject, out i4)
     const val IVisualTreeHelperStatics_GetParent = 12         // GetParent(DependencyObject, out DependencyObject)

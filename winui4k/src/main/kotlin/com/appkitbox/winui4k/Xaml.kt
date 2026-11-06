@@ -902,9 +902,6 @@ internal open class XamlElement(inspectable: ComPtr) : WComponent(inspectable) {
         Xaml.canvasStatics.call(XamlInterop.ICanvasStatics_SetTop, uiElement.ptr, y)
     }
 
-    /** The explicit size (Width / Height; NaN clears it). */
-    fun setSize(width: Double, height: Double) = setLayoutSize(width, height)
-
     /** The row and column in a Grid (Grid.Row / Grid.Column). */
     fun setGridCell(row: Int, column: Int) {
         Xaml.gridStatics.call(XamlInterop.IGridStatics_SetRow, frameworkElement.ptr, row)

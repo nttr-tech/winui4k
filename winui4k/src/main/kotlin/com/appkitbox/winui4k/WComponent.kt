@@ -304,11 +304,61 @@ abstract class WComponent internal constructor(
      * Swing's getBounds-style: the position and size of this element as seen from the parent's top-left ([x], [y], width,
      * height). Integers as in Swing's Rectangle, with DIP rounded to the nearest integer. The unrounded values are
      * [actualX] / [actualY] / [size].
-     * (WinUI4K has no setBounds that writes this value; placement is left to layout. Children of [WLayoutPanel] are placed
-     * by the WLayoutManager.)
+     * It is written with [setBounds] (effective inside a parent with a null layout; inside a parent that lays out, the next layout decides it).
      */
     val bounds: WRectangle
         get() = WRectangle(x, y, Math.round(actualWidth).toInt(), Math.round(actualHeight).toInt())
+
+    /**
+     * Like Component.setBounds: sets the position relative to the parent ([x], [y]) and the size ([width] x [height]) in DIP ([setLocation] and [setSize]).
+     * From Java, ints can be passed too, as in Swing.
+     *
+     * Inside parents corresponding to Swing's null layout ([WCanvas], and a [WLayoutPanel] whose [WLayoutPanel.layout] is null) they become the
+     * position and size as is. Inside a [WLayoutPanel] with a layout manager they take effect immediately but, as in Swing, are overwritten
+     * by the manager's values on the next layout. Inside other panels (parents that arrange their children themselves, such as [WPanel]) only the size takes effect and the position is ignored
+     * (as Swing ignores the position under a layout manager).
+     */
+    fun setBounds(x: Double, y: Double, width: Double, height: Double) {
+        setLocation(x, y)
+        setSize(width, height)
+    }
+
+    /** Like Component.setBounds(Rectangle): sets the position and size of [bounds]. See [setBounds] for details. */
+    fun setBounds(bounds: WRectangle) {
+        setBounds(bounds.x.toDouble(), bounds.y.toDouble(), bounds.width.toDouble(), bounds.height.toDouble())
+    }
+
+    /**
+     * Like Component.setLocation: sets the position relative to the parent in DIP (the attached properties Canvas.Left / Canvas.Top).
+     * It takes effect only when the parent is a [WCanvas] or a [WLayoutPanel] and is ignored under other parents. The value is remembered, so
+     * moving it into a [WCanvas] later puts it at that position (same as Swing).
+     */
+    fun setLocation(x: Double, y: Double) {
+        Xaml.canvasStatics.call(XamlInterop.ICanvasStatics_SetLeft, uiElement.ptr, x)
+        Xaml.canvasStatics.call(XamlInterop.ICanvasStatics_SetTop, uiElement.ptr, y)
+    }
+
+    /** Like Component.setLocation(Point): places it at [location] (DIP). See [setLocation] for details. */
+    fun setLocation(location: WPoint) {
+        setLocation(location.x.toDouble(), location.y.toDouble())
+    }
+
+    /**
+     * Like Component.setSize: sets the size in DIP (FrameworkElement.Width / Height). Negative values become 0 (in Swing nothing is drawn).
+     * NaN removes the size in that dimension, and WinUI decides it from the content.
+     *
+     * As in Swing, the explicit size ([width] / [height], corresponding to JComponent.setPreferredSize) is not changed. It takes effect under any parent, but
+     * inside a [WLayoutPanel] with a layout manager it is overwritten on the next layout. Under parents other than [WLayoutPanel],
+     * WinUI measures with the placed size, so [preferredSize] read later is also this size (Swing's getPreferredSize does not change).
+     */
+    fun setSize(width: Double, height: Double) {
+        setLayoutSize(width.coerceAtLeast(0.0), height.coerceAtLeast(0.0))
+    }
+
+    /** Like Component.setSize(Dimension): sets it to [size] (DIP). See [setSize] for details. */
+    fun setSize(size: WSize) {
+        setSize(size.width, size.height)
+    }
 
     /**
      * Swing's getLocationOnScreen-style: the on-screen position of this element's top-left (physical pixels; with multiple
@@ -557,7 +607,14 @@ abstract class WComponent internal constructor(
      * arrive as the left mouse button.
      */
     fun addMouseListener(listener: WMouseListener?) {
-        if (listener != null) input.mouse.addMouseListener(listener)
+        if (listener == null) return
+        input.mouse.addMouseListener(listener)
+        mouseListenerAdded()
+    }
+
+    /** Called after a mouse listener (press, move or wheel) is added ([WContainer] puts a brush for hit testing). */
+    internal open fun mouseListenerAdded() {
+        // Does nothing by default
     }
 
     /** Component.removeMouseListener-style: removes one listener added with [addMouseListener]. Does nothing if not added. */
@@ -575,7 +632,9 @@ abstract class WComponent internal constructor(
      * even after leaving the component.
      */
     fun addMouseMotionListener(listener: WMouseMotionListener?) {
-        if (listener != null) input.mouse.addMouseMotionListener(listener)
+        if (listener == null) return
+        input.mouse.addMouseMotionListener(listener)
+        mouseListenerAdded()
     }
 
     /** Component.removeMouseMotionListener-style: removes one listener added with [addMouseMotionListener]. */
@@ -593,7 +652,9 @@ abstract class WComponent internal constructor(
      * child receives them. Calling [WInputEvent.consume] stops it from propagating to a parent ScrollViewer and the like.
      */
     fun addMouseWheelListener(listener: WMouseWheelListener?) {
-        if (listener != null) input.mouse.addMouseWheelListener(listener)
+        if (listener == null) return
+        input.mouse.addMouseWheelListener(listener)
+        mouseListenerAdded()
     }
 
     /** Component.removeMouseWheelListener-style: removes one listener added with [addMouseWheelListener]. */

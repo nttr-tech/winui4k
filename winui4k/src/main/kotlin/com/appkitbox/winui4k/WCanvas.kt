@@ -5,8 +5,9 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * JPanel-like with a null layout: WinUI 3's Canvas.
- * Positions children with absolute coordinates (Canvas.Left / Canvas.Top). Overlap order is controlled with [setZIndex].
+ * JPanel-style with a null layout (a panel with `setLayout(null)`): WinUI 3's Canvas.
+ * Places children at absolute coordinates (Canvas.Left / Canvas.Top). As in Swing, children can also be placed with [WComponent.setBounds] / [WComponent.setLocation] /
+ * [WComponent.setSize]. The stacking order is controlled with [setZIndex].
  */
 class WCanvas : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),

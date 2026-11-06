@@ -17,8 +17,67 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  */
 abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent(inspectable) {
     private val children: ComPtr by lazy {
-        val panel = own(inspectable.queryInterface(XamlInterop.IID_IPanel))
         own(panel.getPtr(XamlInterop.IPanel_get_Children)) // IVector<UIElement>
+    }
+
+    /** This panel's IPanel (for reading and writing Background). */
+    private val panel: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IPanel)) }
+
+    /** Whether Background is the transparent brush put for hit testing, not a color the user set. */
+    private var hitTestBrushOnly = false
+
+    /** Whether a mouse listener has ever been added (after that, Background is not set to null; hit testing is kept with a transparent brush). */
+    private var wantsHitTest = false
+
+    /**
+     * Like JComponent.getBackground / setBackground: the panel's background color (Panel.Background). Converted to a SolidColorBrush when set,
+     * and read back as the native brush's color (null if it is not a solid color brush). Null by default (no background). Setting null removes the background.
+     *
+     * WinUI's Panel receives mouse events only over its children when it has no Background. To receive them over the whole bounds as JPanel does,
+     * a transparent brush is put when a mouse listener ([addMouseListener] and so on) is added if there is no background (hit testing is not changed
+     * while there are no listeners). That brush is not the user's setting, so this getter stays null. Setting null after adding a listener
+     * puts the transparent brush back to keep hit testing (it stays even after the listeners are removed).
+     */
+    var background: WColor?
+        get() {
+            if (hitTestBrushOnly) return null
+            val brush = panel.getPtrOrNull(XamlInterop.IPanel_get_Background) ?: return null
+            return try {
+                colorOf(brush)
+            } finally {
+                brush.release()
+            }
+        }
+        set(value) {
+            if (value == null && wantsHitTest) {
+                putTransparentBackground()
+                return
+            }
+            hitTestBrushOnly = false
+            val brush = value?.createBrush()
+            try {
+                panel.call(XamlInterop.IPanel_put_Background, brush?.ptr)
+            } finally {
+                brush?.release()
+            }
+        }
+
+    override fun mouseListenerAdded() {
+        if (wantsHitTest) return
+        wantsHitTest = true
+        val existing = panel.getPtrOrNull(XamlInterop.IPanel_get_Background)
+        if (existing == null) putTransparentBackground() else existing.release()
+    }
+
+    /** Puts a transparent brush in Background only for hit testing. */
+    private fun putTransparentBackground() {
+        val transparent = Xaml.solidBrush(0, 0, 0, 0)
+        try {
+            panel.call(XamlInterop.IPanel_put_Background, transparent.ptr)
+        } finally {
+            transparent.release()
+        }
+        hitTestBrushOnly = true
     }
 
     /** The child wrappers (in the same order as the native Children). */
