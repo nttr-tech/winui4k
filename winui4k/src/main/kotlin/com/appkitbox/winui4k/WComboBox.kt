@@ -1,7 +1,6 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
-import com.appkitbox.winui4k.internal.ffi.api.Ptr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
@@ -99,14 +98,8 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /** Whether the comboBoxEdited ActionEvent has not been fired yet after an Enter confirmation (TextSubmitted). */
     private var pendingEdited = false
 
-    /** Asked to close with [hidePopup] / `isPopupVisible = false` etc. after opening (that way of closing is not a cancellation). Reset on every opening. */
-    private var popupHideRequested = false
-
-    /**
-     * After opening, an operation that closes it other than canceling was done (releasing the pointer over an item, pressing Enter, Space, Tab, F4 or Alt + ↑↓). Reset on every opening.
-     * Closing without this or [popupHideRequested] (Esc, an outside click, losing the focus) is a cancellation.
-     */
-    private var popupClosedByChoice = false
+    /** Decides how the drop-down closed (whether it was a cancellation). */
+    private val popupClose = ComboBoxPopupClose()
 
     /** The model of items and selection. The default is a [WDefaultComboBoxModel] that does not move the selection, like the previous WComboBox. */
     private var dataModel: WComboBoxModel<*> = WDefaultComboBoxModel<String>(movesSelection = false)
@@ -238,7 +231,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     var isDropDownOpen: Boolean
         get() = inspectable.getBool(XamlInterop.IComboBox_get_IsDropDownOpen)
         set(value) {
-            if (!value) popupHideRequested = true
+            if (!value) popupClose.hideRequested = true
             inspectable.putBool(XamlInterop.IComboBox_put_IsDropDownOpen, value)
         }
 
@@ -728,17 +721,14 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     }
 
     private fun onDropDownOpened() {
-        popupHideRequested = false
-        popupClosedByChoice = false
+        popupClose.opened(inspectable, isEditable)
         val event = WPopupMenuEvent(this)
         for (listener in popupListeners.toList()) listener.popupMenuWillBecomeVisible(event)
     }
 
     private fun onDropDownClosed() {
         val event = WPopupMenuEvent(this)
-        val canceled = !popupHideRequested && !popupClosedByChoice
-        popupHideRequested = false
-        popupClosedByChoice = false
+        val canceled = popupClose.closed()
         if (canceled) for (listener in popupListeners.toList()) listener.popupMenuCanceled(event)
         for (listener in popupListeners.toList()) listener.popupMenuWillBecomeInvisible(event)
     }
@@ -860,60 +850,6 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             FoundationInterop.IID_EventHandler_Object,
             XamlInterop.IComboBox_add_DropDownClosed,
         ) { _, _ -> (anchor.get() as? WComboBox)?.onDropDownClosed() }
-        // The closing keys must be known before ComboBox's OnKeyDown closes it, so look at PreviewKeyDown, which arrives at the parent first.
-        // A pointer released over an item is marked handled by ComboBoxItem (PerformPointerUpAction in ComboBoxItem_Partial.cpp), so
-        // handled ones are received too. DropDownClosed comes after the closing animation (FinishClosingDropDown), so it is in time
-        uiElement.addEventHandler("WinUI4K.ComboBoxPopupPreviewKeyDown", XamlInterop.IID_KeyEventHandler, XamlInterop.IUIElement_add_PreviewKeyDown) { _, args ->
-            (anchor.get() as? WComboBox)?.onPreviewKeyDown(XamlKeyEvent(ComPtr(args)))
-        }
-        Xaml.addHandlerHandledToo(
-            this,
-            XamlInterop.IUIElementStatics_get_PointerReleasedEvent,
-            XamlInterop.IID_PointerEventHandler,
-            FoundationInterop.IID_IReference_PointerEventHandler,
-        ) { _, args -> (anchor.get() as? WComboBox)?.onPointerReleased(args) }
-    }
-
-    /** The keys that close it without canceling while open (the ones PopupKeyDown in ComboBox_Partial.cpp closes with; Esc is a cancellation). */
-    private fun onPreviewKeyDown(event: XamlKeyEvent) {
-        if (!isDropDownOpen) return
-        val alt = (Xaml.currentModifiers() and Xaml.MODIFIER_MENU) != 0
-        popupClosedByChoice = popupClosedByChoice || when (event.key) {
-            VK_RETURN, VK_TAB -> true
-            VK_SPACE -> !isEditable
-            VK_F4 -> Xaml.currentModifiers() == 0
-            VK_UP, VK_DOWN -> alt
-            else -> false
-        }
-    }
-
-    /** Releasing the pointer over an item (ComboBoxItem) while open is an operation that selects that item and closes it. */
-    private fun onPointerReleased(args: Ptr) {
-        if (!isDropDownOpen) return
-        val source = Xaml.originalSource(args) ?: return
-        if (isInComboBoxItem(source)) popupClosedByChoice = true
-    }
-
-    /** Whether [element] (released by this function) or one of its ancestors is a ComboBoxItem. */
-    private fun isInComboBoxItem(element: ComPtr): Boolean {
-        var current: ComPtr? = element
-        var depth = 0
-        try {
-            while (current != null && depth++ < MAX_ITEM_DEPTH) {
-                val item = current.queryInterfaceOrNull(XamlInterop.IID_IComboBoxItem)
-                if (item != null) {
-                    item.release()
-                    return true
-                }
-                if (Xaml.sameObject(current, inspectable)) return false
-                val parent = Xaml.parentOf(current)
-                current.release()
-                current = parent
-            }
-            return false
-        } finally {
-            current?.release()
-        }
     }
 
     companion object {
@@ -938,17 +874,6 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
 
         /** The outer height (DIP) of the drop-down items: ComboBoxDropdownContentMargin top and bottom 4+4 and ComboBoxDropdownBorderThickness top and bottom 1+1. */
         private const val DROP_DOWN_CHROME_HEIGHT = 10.0
-
-        /** The maximum number of parents walked when looking for the ComboBoxItem from an element inside an item. */
-        private const val MAX_ITEM_DEPTH = 32
-
-        // Windows.System.VirtualKey
-        private const val VK_TAB = 9
-        private const val VK_RETURN = 13
-        private const val VK_SPACE = 32
-        private const val VK_UP = 38
-        private const val VK_DOWN = 40
-        private const val VK_F4 = 115
     }
 }
 
