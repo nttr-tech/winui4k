@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -67,7 +68,27 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
         val root = owner.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
         uiElement.call(XamlInterop.IUIElement_put_XamlRoot, root.ptr)
         root.release()
+        keepWhileOpen()
         inspectable.putBool(XamlInterop.IPopup_put_IsOpen, true)
+    }
+
+    /** Whether the Closed subscription for [keepWhileOpen] is done. */
+    private var closedSubscribed = false
+
+    /**
+     * Holds this wrapper strongly while it is open (as with a shown Swing popup, it is not collected until closed even if the reference is released,
+     * and can be the source of listeners). A Popup is not in the tree, so [ListenerAnchor] does not hold it. Released on Closed.
+     */
+    private fun keepWhileOpen() {
+        openPopups += this
+        if (closedSubscribed) return
+        closedSubscribed = true
+        val self = WeakReference(this)
+        inspectable.addEventHandler(
+            "WinUI4K.PopupKeepWhileOpenClosed",
+            FoundationInterop.IID_EventHandler_Object,
+            XamlInterop.IPopup_add_Closed,
+        ) { _, _ -> self.get()?.let { openPopups -= it } }
     }
 
     /**
@@ -113,7 +134,7 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
      * with [isLightDismissEnabled]), then popupMenuWillBecomeInvisible, in the order added. [hide] is not a cancellation.
      */
     fun addPopupMenuListener(listener: WPopupMenuListener) {
-        val events = popupMenuEvents ?: PopupPopupMenuEvents(listenerAnchor).also { popupMenuEvents = it }
+        val events = popupMenuEvents ?: PopupPopupMenuEvents(WeakReference(this)).also { popupMenuEvents = it }
         events.add(inspectable, listener)
     }
 
@@ -186,5 +207,10 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     fun removeCloseListenerForJava(listener: Runnable) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
+    }
+
+    private companion object {
+        /** The open WPopups (read and written only by the UI thread). */
+        val openPopups = HashSet<WPopup>()
     }
 }
