@@ -61,8 +61,9 @@ enum class TeachingTipCloseReason(internal val native: Int) {
 }
 
 /**
- * JToolTip-like: WinUI 3's TeachingTip. Shows a callout pointing at an element ([target])
- * for things like feature announcements. If target isn't set, it's shown in a screen corner.
+ * WinUI 3's TeachingTip: a callout pointing at an element ([target]) that shows notifications such as feature introductions. Swing has no counterpart, so
+ * the WinUI class name is used as is (the hint that appears on hover is [WToolTip] / [WComponent.toolTipText]).
+ * If target is not set, it appears in a corner of the screen. It can have a title, subtitle, [icon], an action button and a close button.
  * As in the real Gallery, add it into a container in the XAML tree ahead of time before use
  * (it renders nothing while closed). Opening it outside the tree shows no content.
  */
@@ -100,26 +101,48 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
         get() = inspectable.getBool(XamlInterop.ITeachingTip_get_IsLightDismissEnabled)
         set(value) = inspectable.putBool(XamlInterop.ITeachingTip_put_IsLightDismissEnabled, value)
 
-    /** The action button's label. Object-typed, so a boxed string is passed. Left empty, it isn't shown. */
-    var actionButtonText: String = ""
+    /** The action button text (TeachingTip.ActionButtonContent). Not shown while empty. */
+    var actionButtonText: String
+        get() = contentText(XamlInterop.ITeachingTip_get_ActionButtonContent)
         set(value) {
-            field = value
             val boxed = PropertyValues.boxString(value)
             inspectable.call(XamlInterop.ITeachingTip_put_ActionButtonContent, boxed.ptr)
             boxed.release()
         }
 
-    /** The close button's label. Object-typed, so a boxed string is passed. Left empty, only the × button shows. */
-    var closeButtonText: String = ""
+    /** The close button text (TeachingTip.CloseButtonContent). Only the × button while empty. */
+    var closeButtonText: String
+        get() = contentText(XamlInterop.ITeachingTip_get_CloseButtonContent)
         set(value) {
-            field = value
             val boxed = PropertyValues.boxString(value)
             inspectable.call(XamlInterop.ITeachingTip_put_CloseButtonContent, boxed.ptr)
             boxed.release()
         }
 
+    /** The icon to the left of the title (TeachingTip.IconSource). null (default) means no icon. */
+    var icon: WIcon? = null
+        set(value) {
+            val source = value?.createIconSource()
+            try {
+                inspectable.call(XamlInterop.ITeachingTip_put_IconSource, source?.ptr)
+            } finally {
+                source?.release()
+            }
+            field = value
+        }
+
+    /** Whether the callout is open (TeachingTip.IsOpen). */
     val isOpen: Boolean
         get() = inspectable.getBool(XamlInterop.ITeachingTip_get_IsOpen)
+
+    /** The button Content (object) if it is a string, otherwise "". */
+    private fun contentText(slot: Int): String = inspectable.getPtrOrNull(slot)?.let { boxed ->
+        try {
+            PropertyValues.unboxString(boxed)
+        } finally {
+            boxed.release()
+        }
+    }.orEmpty()
 
     init {
         if (title.isNotEmpty()) this.title = title
@@ -131,6 +154,10 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
         inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, true)
     }
 
+    /**
+     * Closes the callout (TeachingTip.IsOpen = false). The close reason is [TeachingTipCloseReason.PROGRAMMATIC].
+     * If called during the opening animation, TeachingTip sets IsOpen back to true and does not close (WinUI behavior).
+     */
     fun hide() {
         inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, false)
     }

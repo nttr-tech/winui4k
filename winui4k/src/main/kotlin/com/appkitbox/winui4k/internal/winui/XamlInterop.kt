@@ -678,12 +678,16 @@ internal object XamlInterop {
     const val ITeachingTip_get_IsOpen = 10             // get_IsOpen(out boolean)
     const val ITeachingTip_put_IsOpen = 11             // put_IsOpen(boolean)
     const val ITeachingTip_put_Target = 13             // put_Target(FrameworkElement)
+    const val ITeachingTip_get_ActionButtonContent = 16 // get_ActionButtonContent(out IInspectable)
     const val ITeachingTip_put_ActionButtonContent = 17 // put_ActionButtonContent(IInspectable)
+    const val ITeachingTip_get_CloseButtonContent = 24 // get_CloseButtonContent(out IInspectable)
     const val ITeachingTip_put_CloseButtonContent = 25 // put_CloseButtonContent(IInspectable)
     const val ITeachingTip_get_IsLightDismissEnabled = 36 // get_IsLightDismissEnabled(out boolean)
     const val ITeachingTip_put_IsLightDismissEnabled = 37 // put_IsLightDismissEnabled(boolean)
     const val ITeachingTip_get_PreferredPlacement = 38 // get_PreferredPlacement(out TeachingTipPlacementMode)
     const val ITeachingTip_put_PreferredPlacement = 39 // put_PreferredPlacement(TeachingTipPlacementMode)
+    const val ITeachingTip_get_IconSource = 44         // get_IconSource(out IconSource)
+    const val ITeachingTip_put_IconSource = 45         // put_IconSource(IconSource)
     const val ITeachingTip_add_ActionButtonClick = 47  // add_ActionButtonClick(TypedEventHandler<TeachingTip, Object>, out token)
     const val ITeachingTip_remove_ActionButtonClick = 48 // remove_ActionButtonClick(token)
     const val ITeachingTip_add_Closed = 53             // add_Closed(TypedEventHandler, out token)
@@ -1922,6 +1926,7 @@ internal object XamlInterop {
     const val CLS_ToolTipService = "Microsoft.UI.Xaml.Controls.ToolTipService"
     const val IID_IToolTipServiceStatics = "5aa38adc-9874-5e0a-8d8e-1574efc0b88f"
     const val IToolTipServiceStatics_SetPlacement = 8  // SetPlacement(DependencyObject, PlacementMode)
+    const val IToolTipServiceStatics_GetToolTip = 13   // GetToolTip(DependencyObject, out object)
     const val IToolTipServiceStatics_SetToolTip = 14   // SetToolTip(DependencyObject, object)
 
     // ---- Microsoft.UI.Xaml.Controls.SwipeControl / SwipeItems / SwipeItem ----
@@ -2779,6 +2784,7 @@ internal object XamlInterop {
     const val IResourceDictionary_get_ThemeDictionaries = 9 // get_ThemeDictionaries(out IMap<Object, Object>)
 
     // ---- Microsoft.UI.Xaml.Controls.ToolTip (additions to IToolTip) ----
+    const val IToolTip_get_IsOpen = 8                  // get_IsOpen(out boolean)
     const val IToolTip_put_IsOpen = 9
     const val IToolTip_add_Closed = 19                 // add_Closed(RoutedEventHandler, out token)
     const val IToolTip_remove_Closed = 20

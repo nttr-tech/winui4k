@@ -351,3 +351,6 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     FileTypeFilter より優先される (WindowsAppSDK の PickerCommon.cpp の CaptureFilterSpecData)
   - ピッカーの OS のダイアログは持ち主のウィンドウにモーダルで、開いている間も UI スレッドの入れ子のループ (ModalLoop) は回り、
     ダイアログに WM_CLOSE を送るとキャンセル (結果は null) で完了する
+- `WTeachingTip.hide()` (IsOpen = false) は、開くアニメーションの途中 (TeachingTip がまだ idle でない間) だと TeachingTip 自身が
+  IsOpen を true に戻して無視する (`TeachingTip.cpp` の OnIsOpenChanged)。開き終わってからの hide() では Closing → Closed が
+  理由 Programmatic で届く (`WTeachingTipTest`)
