@@ -6,8 +6,8 @@ import java.util.IdentityHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * ButtonGroup-style: allows only one of several toggle-type buttons ([WToggleButton] / [WCheckBox] / [WRadioButton])
- * to be selected.
+ * ButtonGroup-style: allows only one of several toggle-type buttons ([WToggleButton] / [WCheckBox] / [WRadioButton]) and check and radio menu items
+ * ([WToggleMenuFlyoutItem] / [WRadioMenuFlyoutItem]) to be selected. The member type is [WSelectable].
  *
  * When one of the buttons [add]ed is selected (by a click, or by [WToggleButton.isSelected] / [setSelected]), the other
  * buttons go back to unselected. The DESELECTED for the ItemListener of the deselected button arrives before the
@@ -17,11 +17,13 @@ import java.util.concurrent.atomic.AtomicLong
  * group restores the selection on the spot, and the notifications of that change and of the restoration are delivered
  * neither to ItemListeners nor to actions). To deselect all, use [clearSelection].
  *
- * WinUI's RadioButton is exclusive per parent (or per visual tree root when GroupName is set), so [add]ing a
- * [WRadioButton] gives it a unique [WRadioButton.groupName] dedicated to this group (all members of the group share
- * the same name). Radio buttons of different groups stay independent even under the same parent, and WinUI's arrow
- * key focus navigation (which moves within the same GroupName) works within the group.
- * [remove] restores the groupName it had before joining the group.
+ * WinUI's RadioButton is exclusive per parent (or per visual tree root when GroupName is set), so [add]ing a [WRadioButton] gives it
+ * a unique [WRadioButton.groupName] dedicated to this group (all members of the group share the same name). Radio buttons of different groups
+ * stay independent even under the same parent, and WinUI's arrow key focus navigation (which moves within the same GroupName) works within the group.
+ * [remove] restores the groupName it had before joining the group. A [WRadioMenuFlyoutItem] also gets a unique name (WinUI's
+ * RadioMenuFlyoutItem shares GroupName across the whole UI thread, so two groups with the same texts do not interfere with each other).
+ * A [WRadioMenuFlyoutItem] [remove]d while checked is unchecked when another item of the group is selected, because WinUI remembers it
+ * as the last selection for that name (in Swing it stays checked).
  *
  * There is no counterpart of Swing's `ButtonModel`, so [selection] / [isSelected] / [setSelected] deal with the buttons
  * themselves.
@@ -34,47 +36,48 @@ import java.util.concurrent.atomic.AtomicLong
  * Use only from the UI thread.
  */
 class WButtonGroup {
-    private val members = ArrayList<WToggleButton>()
+    private val members = ArrayList<WSelectable>()
 
     /** The selected button, or null if none is selected (like ButtonGroup.getSelection, but the button itself rather than a ButtonModel). */
-    var selection: WToggleButton? = null
+    var selection: WSelectable? = null
         private set
 
     /** True while the group is changing a button's state. Notifications that arrive then are not subject to the exclusion control. */
     private var updating = false
 
     /** The button whose attempted deselection the group is currently reverting. Notifications of the reversion are delivered to no one. */
-    private var reverting: WToggleButton? = null
+    private var reverting: WSelectable? = null
 
-    /** The GroupName given to this group's radio buttons (shared by the members). */
+    /** The GroupName given to the radio buttons and radio menu items of this group (shared by the members). */
     private val groupName = newGroupName()
 
-    /** The groupName a radio button had before joining the group (restored by remove). */
-    private val originalGroupNames = IdentityHashMap<WRadioButton, String>()
+    /** The groupName the radio buttons and radio menu items had before joining the group (restored by remove). */
+    private val originalGroupNames = IdentityHashMap<WSelectable, String>()
 
     /** The number of buttons in the group (equivalent to ButtonGroup.getButtonCount). */
     val buttonCount: Int get() = members.size
 
     /** A copy of the buttons in the group in the order they were [add]ed. For use from Kotlin (from Java, use [getElements]). */
-    val buttons: List<WToggleButton> get() = members.toList()
+    val buttons: List<WSelectable> get() = members.toList()
 
     /**
      * ButtonGroup.getElements-style: returns the buttons in the group in the order they were [add]ed.
      * It is a copy taken at the time of the call, so [add] / [remove] during the enumeration has no effect (safe, unlike
      * Swing's Vector.elements()).
      */
-    val elements: Enumeration<WToggleButton> get() = Collections.enumeration(buttons)
+    val elements: Enumeration<WSelectable> get() = Collections.enumeration(buttons)
 
     /**
-     * ButtonGroup.add-style: adds [button] to the group. Does nothing for a button that is already in it. If the button
-     * belongs to another group, removes it from that group.
+     * ButtonGroup.add-style: adds [button] to the group. Does nothing for a button that is already in it. If the button belongs to another group, removes it from that group.
      * A selected button becomes the [selection] if the group has no selection yet, and is deselected if it already has one.
+     * A [WSelectable] implemented on one's own in Java throws [IllegalArgumentException].
      */
-    fun add(button: WToggleButton) {
+    fun add(button: WSelectable) {
+        requireSupported(button)
         if (members.any { it === button }) return
-        button.buttonGroup?.remove(button)
+        button.currentGroup()?.remove(button)
         members += button
-        button.joinGroup(this)
+        button.enterGroup(this)
         if (button.isSelected) {
             if (selection == null) {
                 selection = button
@@ -83,9 +86,16 @@ class WButtonGroup {
             }
         }
         // Set the name after settling the selection (setting it while selected makes WinUI deselect the group's original selection instead)
-        if (button is WRadioButton) {
-            originalGroupNames[button] = button.groupName
-            button.groupName = groupName
+        when (button) {
+            is WRadioButton -> {
+                originalGroupNames[button] = button.groupName
+                button.groupName = groupName
+            }
+            is WRadioMenuFlyoutItem -> {
+                originalGroupNames[button] = button.groupName
+                button.groupName = groupName
+            }
+            else -> Unit
         }
     }
 
@@ -93,14 +103,16 @@ class WButtonGroup {
      * ButtonGroup.remove-style: removes [button] from the group. If it was the [selection], [selection] becomes null
      * (the button's own selection state stays as it is). Does nothing for a button that is not in the group.
      */
-    fun remove(button: WToggleButton) {
+    fun remove(button: WSelectable) {
         val index = members.indexOfFirst { it === button }
         if (index < 0) return
         members.removeAt(index)
         if (selection === button) selection = null
-        button.leaveGroup()
-        if (button is WRadioButton) {
-            button.groupName = originalGroupNames.remove(button) ?: ""
+        button.exitGroup()
+        when (button) {
+            is WRadioButton -> button.groupName = originalGroupNames.remove(button) ?: ""
+            is WRadioMenuFlyoutItem -> button.groupName = originalGroupNames.remove(button) ?: ""
+            else -> Unit
         }
     }
 
@@ -112,14 +124,14 @@ class WButtonGroup {
     }
 
     /** ButtonGroup.isSelected-style: whether [button] is the [selection]. */
-    fun isSelected(button: WToggleButton): Boolean = selection === button
+    fun isSelected(button: WSelectable): Boolean = selection === button
 
     /**
      * ButtonGroup.setSelected-style: if [selected] is true, selects [button] and deselects the previous [selection].
      * Setting it to false does nothing (the group cannot deselect a selected button; use [clearSelection] for that).
      * Buttons that are not in the group are ignored.
      */
-    fun setSelected(button: WToggleButton, selected: Boolean) {
+    fun setSelected(button: WSelectable, selected: Boolean) {
         if (!selected || selection === button || members.none { it === button }) return
         val old = selection
         selection = button
@@ -128,17 +140,14 @@ class WButtonGroup {
     }
 
     /**
-     * Notification that a member's selection state changed (from [WToggleButton], before its ItemListeners). A
-     * notification for which this returns false is delivered neither to the button's ItemListeners nor to actions.
-     * - Selected: makes the button the [selection] and deselects the previous [selection] (its DESELECTED is delivered
-     *   first)
-     * - The [selection] was deselected: if another member has been selected (when a button with the same GroupName is
-     *   selected, WinUI's RadioButton sends this one's Unchecked before the selected one's Checked;
-     *   RadioButton::OnChecked), makes that one the [selection].
-     *   Otherwise it was only an attempt to deselect, so selects it again and delivers neither the deselection nor the
-     *   reselection notification (in Swing the state does not change)
+     * Notification that a member's selection state changed (from [WToggleButton] and menu items, before their ItemListeners). A notification
+     * for which this returns false is delivered neither to the button's ItemListeners nor to actions.
+     * - Selected: makes the button the [selection] and deselects the previous [selection] (its DESELECTED is delivered first)
+     * - The [selection] was deselected: if another member has been selected (when a button with the same GroupName is selected, WinUI's RadioButton
+     *   sends this one's Unchecked before the selected one's Checked; RadioButton::OnChecked), makes that one the [selection].
+     *   Otherwise it was only an attempt to deselect, so selects it again and delivers neither the deselection nor the reselection notification (in Swing the state does not change)
      */
-    internal fun onItemStateChanged(button: WToggleButton, stateChange: Int): Boolean {
+    internal fun onItemStateChanged(button: WSelectable, stateChange: Int): Boolean {
         if (reverting === button) return false
         if (updating) return true
         if (stateChange == WItemEvent.SELECTED) {
@@ -164,7 +173,7 @@ class WButtonGroup {
         return false
     }
 
-    private fun deselect(button: WToggleButton) {
+    private fun deselect(button: WSelectable) {
         withUpdating { button.isSelected = false }
     }
 
@@ -180,6 +189,33 @@ class WButtonGroup {
 
     private companion object {
         private val counter = AtomicLong()
+
+        /** Whether [WSelectable] is implemented by the library (Java does not enforce sealed, so a custom implementation can be passed). */
+        fun requireSupported(button: Any) {
+            require(button is WToggleButton || button is WToggleMenuFlyoutItem || button is WRadioMenuFlyoutItem) {
+                "Unsupported WSelectable implementation: ${button.javaClass.name} (only WToggleButton and its subclasses, WToggleMenuFlyoutItem and " +
+                    "WRadioMenuFlyoutItem can be added)"
+            }
+        }
+
+        /** The group each [WSelectable] instance belongs to. */
+        fun WSelectable.currentGroup(): WButtonGroup? = when (this) {
+            is WToggleButton -> buttonGroup
+            is WToggleMenuFlyoutItem -> menuSelection.group
+            is WRadioMenuFlyoutItem -> menuSelection.group
+        }
+
+        fun WSelectable.enterGroup(group: WButtonGroup) = when (this) {
+            is WToggleButton -> joinGroup(group)
+            is WToggleMenuFlyoutItem -> menuSelection.joinGroup(group)
+            is WRadioMenuFlyoutItem -> menuSelection.joinGroup(group)
+        }
+
+        fun WSelectable.exitGroup() = when (this) {
+            is WToggleButton -> leaveGroup()
+            is WToggleMenuFlyoutItem -> menuSelection.leaveGroup()
+            is WRadioMenuFlyoutItem -> menuSelection.leaveGroup()
+        }
 
         /** A name for giving each group a different WinUI GroupName (with a prefix that does not collide with other GroupNames). */
         fun newGroupName(): String = "WinUI4K.ButtonGroup#" + counter.incrementAndGet()

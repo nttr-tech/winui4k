@@ -9,7 +9,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import java.lang.ref.WeakReference
 
 /**
- * Tests that menu item listeners (Click's ActionListener, WAction binding, check ItemListener) do not create cycles
+ * Tests that menu item listeners (Click's ActionListener, WAction binding, ItemListener through the IsChecked change callback) do not create cycles
  * across the native boundary. The handler looks up the item through [ListenerAnchor], so releasing a menu that was opened and closed also collects its items.
  * Collection is awaited while prompting GC with [Reclamation].
  */
@@ -94,6 +94,50 @@ class WrapperReleaseMenuTest : FunSpec() {
             Reclamation.awaitCollected(menu).shouldBeTrue()
             Reclamation.awaitCollected(item).shouldBeTrue()
             onUiThread { action.putValue(WAction.NAME, "After collection") } // Notifications to the collected item are dropped
+        }
+
+        test("check and radio items with an ItemListener that does not reference the item are collected once the menu is opened, closed and released") {
+            val recorded = sources
+            val (toggleMenu, toggle) = openedAndClosed {
+                WToggleMenuFlyoutItem("Bold").also { it.addItemListener { e -> recorded += e.source } }
+            }
+            val (radioMenu, radio) = openedAndClosed {
+                WRadioMenuFlyoutItem("Small").also { it.addItemListener { e -> recorded += e.source } }
+            }
+            Reclamation.awaitCollected(toggleMenu).shouldBeTrue()
+            Reclamation.awaitCollected(toggle).shouldBeTrue()
+            Reclamation.awaitCollected(radioMenu).shouldBeTrue()
+            Reclamation.awaitCollected(radio).shouldBeTrue()
+        }
+
+        test("check items of a menu never opened are collected once the ItemListener is removed and they are removed from the WButtonGroup") {
+            val reference = onUiThreadGet {
+                val item = WToggleMenuFlyoutItem("Remove")
+                val listener = WItemListener { }
+                val group = WButtonGroup()
+                item.addItemListener(listener)
+                group.add(item)
+                item.isSelected = true
+                item.removeItemListener(listener)
+                group.remove(item)
+                WeakReference(item)
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
+        test("a radio item with an ItemListener is not collected until it is removed even with no references anywhere, and the ItemEvent source is the item") {
+            val recorded = sources
+            val listener = WItemListener { e -> recorded += e.source }
+            val item = onUiThreadGet { WeakReference(WRadioMenuFlyoutItem("Small").also { it.addItemListener(listener) }) }
+            Reclamation.survivesGc(item).shouldBeTrue()
+            onUiThreadGet {
+                sources.clear()
+                val target = checkNotNull(item.get())
+                target.isSelected = true
+                sources.map { if (it === target) "item" else it.javaClass.name }.also { sources.clear() }
+            } shouldContainExactly listOf("item")
+            onUiThread { item.get()?.removeItemListener(listener) }
+            Reclamation.awaitCollected(item).shouldBeTrue()
         }
     }
 }

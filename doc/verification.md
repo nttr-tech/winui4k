@@ -297,3 +297,14 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   - Invoked のハンドラを付けないアクセラレーターは、メニューを閉じたままでも項目を Invoke する (Click が届く)。ContextFlyout の
     メニュー (UIElement::OnProcessKeyboardAcceleratorsImpl) とメニュー バー (MenuBarItem はテンプレートの ContentButton の
     ContextFlyout に項目を移す。MenuBarItem.cpp の PopulateContent) のどちらでも効き、フォーカスは別の要素にあってよい
+- JCheckBoxMenuItem / JRadioButtonMenuItem 風の ItemListener と WButtonGroup のために、ToggleMenuFlyoutItem と RadioMenuFlyoutItem の
+  チェックの変わり方を WinUI のソースと E2E テストで確かめた (`WSelectableMenuItemTest`)
+  - どちらにも Checked のイベントが無いので、IsChecked の依存関係プロパティの変更のコールバックで受け取る。RadioMenuFlyoutItem は
+    実装では ToggleMenuFlyoutItem から派生し (`DeriveFromToggleMenuFlyoutItemHelper_base`)、クリックで反転するのは基底の IsChecked だが、
+    公開の IsChecked は自前の別のプロパティ (`RadioMenuFlyoutItem.cpp` の OnInternalIsCheckedChanged が同期する) なので、そちらを見る
+  - doClick (Invoke) では IsChecked が変わってから Click が届くので、ItemListener が ActionListener より先に呼ばれる (Swing と同じ)。
+    チェック済みのラジオの項目をクリックすると、基底の IsChecked を戻すだけで公開の IsChecked は変わらない (ItemListener は呼ばれない)
+  - RadioMenuFlyoutItem の排他は GroupName をキーにした UI スレッド全体の表 (`s_selectionMap`) による。既定の "" の項目はアプリ全体で
+    1 つのグループになるため、WRadioMenuFlyoutItem は名前の無い項目に一意の名前を付ける。名前だけで排他にしたときは、選んだ項目の
+    SELECTED が外れた項目の DESELECTED より先に届く。WButtonGroup に入れたときは、外れた方の通知でグループが選択を移すので Swing と同じく
+    DESELECTED が先になる

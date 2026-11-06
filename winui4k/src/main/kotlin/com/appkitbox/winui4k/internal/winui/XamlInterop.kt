@@ -1707,6 +1707,8 @@ internal object XamlInterop {
     const val IID_IToggleMenuFlyoutItem = "1803f260-67e4-5bc1-a63a-123510167bb8"
     const val IToggleMenuFlyoutItem_get_IsChecked = 6  // get_IsChecked(out boolean)
     const val IToggleMenuFlyoutItem_put_IsChecked = 7  // put_IsChecked(boolean)
+    const val IID_IToggleMenuFlyoutItemStatics = "7411e854-c59a-5463-beab-64ddb052c6dc"
+    const val IToggleMenuFlyoutItemStatics_get_IsCheckedProperty = 6 // get_IsCheckedProperty(out DependencyProperty)
 
     // ---- Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem ----
     const val CLS_RadioMenuFlyoutItem = "Microsoft.UI.Xaml.Controls.RadioMenuFlyoutItem"
@@ -1716,6 +1718,8 @@ internal object XamlInterop {
     const val IRadioMenuFlyoutItem_put_IsChecked = 7   // put_IsChecked(boolean)
     const val IRadioMenuFlyoutItem_get_GroupName = 8   // get_GroupName(out HSTRING)
     const val IRadioMenuFlyoutItem_put_GroupName = 9   // put_GroupName(HSTRING)
+    const val IID_IRadioMenuFlyoutItemStatics = "47117e20-e03d-53f0-938e-eccbfffb5421"
+    const val IRadioMenuFlyoutItemStatics_get_IsCheckedProperty = 6 // get_IsCheckedProperty(out DependencyProperty)
 
     // ---- Microsoft.UI.Xaml.Controls.AppBar (CommandBar's base) ----
     const val IID_IAppBar = "3d8c2927-5ac5-51bb-8bec-13ff4c1bd6c8"

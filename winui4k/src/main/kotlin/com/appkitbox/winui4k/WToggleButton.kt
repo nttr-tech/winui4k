@@ -18,7 +18,7 @@ import kotlin.jvm.JvmSynthetic
  * [addItemListener] / [removeItemListener] (Checked / Unchecked / Indeterminate).
  * It can be created with the same constructors as Swing's JToggleButton (text, icon, selection state, [WAction]).
  */
-open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable) {
+open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase(inspectable), WSelectable {
     @JvmOverloads
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_ToggleButton, XamlInterop.IID_IToggleButtonFactory),
@@ -193,7 +193,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      * It is true only when [isChecked] is true; false and indeterminate (null) are both treated as false.
      * Use [isChecked] when the indeterminate state has to be kept or read.
      */
-    var isSelected: Boolean
+    override var isSelected: Boolean
         get() = isChecked == true
         set(value) {
             isChecked = value
@@ -287,7 +287,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
      * the SELECTED_KEY of [action] is rewritten after all listeners are called (both as in Swing, regardless of whether
      * the listener was added before or after the button joined the group).
      */
-    fun addItemListener(listener: WItemListener) {
+    override fun addItemListener(listener: WItemListener) {
         itemListeners.add(listener)
     }
 
@@ -305,7 +305,7 @@ open class WToggleButton internal constructor(inspectable: ComPtr) : WButtonBase
     }
 
     /** Unsubscribes a [WItemListener] registered with [addItemListener]. */
-    fun removeItemListener(listener: WItemListener) {
+    override fun removeItemListener(listener: WItemListener) {
         itemListeners.remove(listener)
     }
 }

@@ -27,7 +27,7 @@ class WButtonGroupForJavaTest {
             group.add(large);
             assertEquals(3, group.getButtonCount());
             List<String> texts = new ArrayList<>();
-            Enumeration<WToggleButton> elements = group.getElements();
+            Enumeration<WSelectable> elements = group.getElements();
             while (elements.hasMoreElements()) {
                 texts.add(elements.nextElement().getText());
             }

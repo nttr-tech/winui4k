@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -237,6 +238,9 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         }
     }
 
+    /** The shared selection state part of subclasses with a selection state (check and radio items). null for items without one. */
+    internal open val menuSelection: MenuItemSelection? get() = null
+
     /** Copies [WAction.SELECTED_KEY] of [action] to the selection state. Only subclasses with a selection state (check and radio items) override it. */
     internal open fun applyActionSelected(action: WAction?) {
         // Items without a selection state do not read SELECTED_KEY (same as Swing's JMenuItem)
@@ -325,9 +329,11 @@ private val MENU_ITEM_ACTION_KEYS = listOf(
 
 /**
  * JCheckBoxMenuItem-like: WinUI 3's ToggleMenuFlyoutItem.
- * [isChecked] toggles on every click, and a checkmark is shown accordingly.
+ * Each click toggles [isChecked] (= [isSelected] / [state]) and shows a check mark.
+ * Changes are received with [addItemListener], and adding it to a [WButtonGroup] makes it exclusive. It can be created with the same constructors as
+ * Swing's JCheckBoxMenuItem (text, icon, selection state, [WAction]).
  */
-class WToggleMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyoutItem(inspectable) {
+class WToggleMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyoutItem(inspectable), WSelectable {
     /** JCheckBoxMenuItem(String, Icon)-like: an item with text and an icon. Text only if [icon] is null. */
     @JvmOverloads
     constructor(text: String = "", icon: WIcon? = null) : this(
@@ -340,34 +346,187 @@ class WToggleMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFly
     @Deprecated("Use the constructor that takes a WIcon", level = DeprecationLevel.HIDDEN)
     constructor(text: String = "", icon: Symbol? = null) : this(text, icon as WIcon?)
 
+    /** JCheckBoxMenuItem(String, boolean)-like: an item with the given text and selection state. */
+    constructor(text: String, selected: Boolean) : this(text) {
+        if (selected) isSelected = true
+    }
+
+    /** JCheckBoxMenuItem(Icon)-like: an item with only an icon. */
+    constructor(icon: WIcon) : this("", icon)
+
+    /** JCheckBoxMenuItem(String, Icon, boolean)-like: an item with the given text, icon and selection state. Text only if [icon] is null. */
+    constructor(text: String, icon: WIcon?, selected: Boolean) : this(text, icon) {
+        if (selected) isSelected = true
+    }
+
+    /** JCheckBoxMenuItem(Action)-like: an item that copies the values of [action] (including the SELECTED_KEY selection state) and calls the action on click. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
+
     /** The checked state (ToggleMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
         get() = inspectable.getBool(XamlInterop.IToggleMenuFlyoutItem_get_IsChecked)
         set(value) = inspectable.putBool(XamlInterop.IToggleMenuFlyoutItem_put_IsChecked, value)
+
+    /** AbstractButton.isSelected / setSelected-like: an alias of [isChecked]. */
+    override var isSelected: Boolean
+        get() = isChecked
+        set(value) {
+            isChecked = value
+        }
+
+    /** JCheckBoxMenuItem.getState / setState-like: an alias of [isChecked]. */
+    var state: Boolean
+        get() = isChecked
+        set(value) {
+            isChecked = value
+        }
+
+    override val menuSelection = MenuItemSelection(this, this) {
+        MenuItemSelection.dependencyProperty(
+            XamlInterop.CLS_ToggleMenuFlyoutItem,
+            XamlInterop.IID_IToggleMenuFlyoutItemStatics,
+            XamlInterop.IToggleMenuFlyoutItemStatics_get_IsCheckedProperty,
+        )
+    }
+
+    /**
+     * ItemListener-like: receives a [WItemEvent] (SELECTED / DESELECTED) every time the check state changes. Called both on clicks and
+     * when [isChecked] etc. is set (as in Swing). On [doClick] and clicks, ItemListeners are called before ActionListeners.
+     * Implemented as a change callback of ToggleMenuFlyoutItem.IsChecked (since there is no Checked event).
+     */
+    override fun addItemListener(listener: WItemListener) {
+        menuSelection.itemListeners.add(listener)
+    }
+
+    /** Removes a listener added with [addItemListener]. */
+    override fun removeItemListener(listener: WItemListener) {
+        menuSelection.itemListeners.remove(listener)
+    }
+
+    override fun applyActionSelected(action: WAction?) = menuSelection.applyActionSelected(action)
+
+    override fun onActionChanged(action: WAction?) = menuSelection.onActionChanged(action)
 }
 
 /**
  * JRadioButtonMenuItem-like: WinUI 3's RadioMenuFlyoutItem.
- * Only one item within the same [groupName] can be checked at a time (mutually exclusive).
+ * Only one item among those with the same [groupName] is checked (exclusive selection). Adding it to a [WButtonGroup] makes it exclusive within that group.
+ *
+ * An item without a [groupName] (the default "") is independent of every other item, as with Swing's JRadioButtonMenuItem (a unique name is
+ * given internally per item; it still reads as ""). WinUI's RadioMenuFlyoutItem shares GroupName across the whole UI thread, so
+ * items with the same name are exclusive even in different menus or windows (use [WButtonGroup] to separate groups).
+ * With exclusion by name only, the ItemListener receives the selected item's SELECTED before the deselected item's DESELECTED (because WinUI
+ * changes IsChecked of the selected item before unchecking the previous one). In a [WButtonGroup], DESELECTED comes first as in Swing.
+ * Clicking a checked item does not uncheck it (WinUI's RadioMenuFlyoutItem behavior. Swing's JRadioButtonMenuItem outside a group
+ * is unchecked by a click, but not here).
  */
-class WRadioMenuFlyoutItem @JvmOverloads constructor(text: String = "", groupName: String = "") : WMenuFlyoutItem(
-    Activation.composeDefault(XamlInterop.CLS_RadioMenuFlyoutItem, XamlInterop.IID_IRadioMenuFlyoutItemFactory),
-) {
+class WRadioMenuFlyoutItem internal constructor(inspectable: ComPtr) : WMenuFlyoutItem(inspectable), WSelectable {
+    /** An item with the given text and exclusive selection group name ([groupName]). */
+    @JvmOverloads
+    constructor(text: String = "", groupName: String = "") : this(
+        Activation.composeDefault(XamlInterop.CLS_RadioMenuFlyoutItem, XamlInterop.IID_IRadioMenuFlyoutItemFactory),
+    ) {
+        initLabel(text, null)
+        if (groupName.isNotEmpty()) this.groupName = groupName
+    }
+
+    /** JRadioButtonMenuItem(String, boolean)-like: an item with the given text and selection state. */
+    constructor(text: String, selected: Boolean) : this(text) {
+        if (selected) isSelected = true
+    }
+
+    /** JRadioButtonMenuItem(Icon)-like: an item with only an icon. */
+    constructor(icon: WIcon) : this("") {
+        this.icon = icon
+    }
+
+    /**
+     * JRadioButtonMenuItem(String, Icon)-like: an item with text and an icon. Text only if [icon] is null.
+     * Java's `new WRadioMenuFlyoutItem("x", null)` is ambiguous with the (String, String) form, so pass it with a type.
+     */
+    constructor(text: String, icon: WIcon?) : this(text) {
+        if (icon != null) this.icon = icon
+    }
+
+    /** JRadioButtonMenuItem(String, Icon, boolean)-like: an item with the given text, icon and selection state. */
+    constructor(text: String, icon: WIcon?, selected: Boolean) : this(text, icon) {
+        if (selected) isSelected = true
+    }
+
+    /** JRadioButtonMenuItem(Action)-like: an item that copies the values of [action] (including the SELECTED_KEY selection state) and calls the action on click. */
+    constructor(action: WAction) : this("") {
+        this.action = action
+    }
+
     /** The checked state (RadioMenuFlyoutItem.IsChecked). */
     var isChecked: Boolean
         get() = inspectable.getBool(XamlInterop.IRadioMenuFlyoutItem_get_IsChecked)
         set(value) = inspectable.putBool(XamlInterop.IRadioMenuFlyoutItem_put_IsChecked, value)
 
-    /** The mutually-exclusive group name (RadioMenuFlyoutItem.GroupName). */
+    /** AbstractButton.isSelected / setSelected-like: an alias of [isChecked]. */
+    override var isSelected: Boolean
+        get() = isChecked
+        set(value) {
+            isChecked = value
+        }
+
+    /**
+     * The exclusive selection group name (RadioMenuFlyoutItem.GroupName). The default "" means "not in any group", independent of other items
+     * (a per-item name is given internally, but it reads as ""). Setting "" makes it an independent item again.
+     * While it is in a [WButtonGroup], returns the name of that group.
+     */
     var groupName: String
+        get() = nativeGroupName.let { if (it.startsWith(UNGROUPED_PREFIX)) "" else it }
+        set(value) {
+            nativeGroupName = value.ifEmpty { newUngroupedName() }
+        }
+
+    private var nativeGroupName: String
         get() = inspectable.getString(XamlInterop.IRadioMenuFlyoutItem_get_GroupName)
         set(value) = Hstring.use(value) { h ->
             inspectable.call(XamlInterop.IRadioMenuFlyoutItem_put_GroupName, h)
         }
 
     init {
-        if (text.isNotEmpty()) this.text = text
-        if (groupName.isNotEmpty()) this.groupName = groupName
+        // Make unnamed items independent (WinUI's default "" makes all unnamed items on the UI thread one group)
+        nativeGroupName = newUngroupedName()
+    }
+
+    override val menuSelection = MenuItemSelection(this, this) {
+        MenuItemSelection.dependencyProperty(
+            XamlInterop.CLS_RadioMenuFlyoutItem,
+            XamlInterop.IID_IRadioMenuFlyoutItemStatics,
+            XamlInterop.IRadioMenuFlyoutItemStatics_get_IsCheckedProperty,
+        )
+    }
+
+    /**
+     * ItemListener-like: receives a [WItemEvent] (SELECTED / DESELECTED) every time the check state changes. Called on clicks, on setting,
+     * and when it is unchecked because another item of the same group is selected. Clicking a checked item does not change the state, so it is not called
+     * (ActionListeners are called. Same as a JRadioButtonMenuItem in a Swing ButtonGroup).
+     * Implemented as a change callback of RadioMenuFlyoutItem's own IsChecked (a property separate from the base ToggleMenuFlyoutItem.IsChecked).
+     */
+    override fun addItemListener(listener: WItemListener) {
+        menuSelection.itemListeners.add(listener)
+    }
+
+    /** Removes a listener added with [addItemListener]. */
+    override fun removeItemListener(listener: WItemListener) {
+        menuSelection.itemListeners.remove(listener)
+    }
+
+    override fun applyActionSelected(action: WAction?) = menuSelection.applyActionSelected(action)
+
+    override fun onActionChanged(action: WAction?) = menuSelection.onActionChanged(action)
+
+    private companion object {
+        /** The prefix of the names given internally to items without a group name (one that does not collide with other names). */
+        const val UNGROUPED_PREFIX = "WinUI4K.UngroupedRadioMenuItem#"
+        val counter = AtomicLong()
+
+        fun newUngroupedName(): String = UNGROUPED_PREFIX + counter.incrementAndGet()
     }
 }
 
