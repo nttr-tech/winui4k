@@ -46,6 +46,24 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
     }
 
     /**
+     * JComponent.getInsets-like: the width inside the border (DIP). The sum of the border thickness (Control.BorderThickness) and the inner padding (Control.Padding),
+     * both read as native effective values (the theme default if not set; the theme applies when it is put in a window, so 0 before that).
+     * As Swing's JButton margin is included in the border, [padding] and the empty border of [border] are included here too.
+     */
+    val insets: WInsets
+        get() {
+            val padding = XamlStructs.getThickness(control, XamlInterop.IControl_get_Padding)
+            val border = XamlStructs.getThickness(control, XamlInterop.IControl_get_BorderThickness)
+            // Thickness is in left, top, right, bottom order
+            return WInsets(
+                top = padding[1] + border[1],
+                left = padding[0] + border[0],
+                bottom = padding[3] + border[3],
+                right = padding[2] + border[2],
+            )
+        }
+
+    /**
      * JComponent.getFont / setFont-like: the font (Control.FontFamily / FontWeight / FontStyle / FontSize).
      * Reading returns the native effective value, which is the theme's default font before it is set (a weight of 600 or
      * more is [WFont.BOLD]).
