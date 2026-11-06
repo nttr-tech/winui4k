@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -77,14 +78,57 @@ class WStoragePickersTest : FunSpec() {
         }
 
         test("WFileSavePicker accepts file type choices (display name + extension list)") {
-            // FileTypeChoices has no read-back API, so verify that IMap.Insert (passing a
-            // StringVector as the value) succeeds without an HRESULT exception
             val frame = UiTestHarness.sharedFrame()
-            onUiThread {
+            onUiThreadGet {
                 val picker = WFileSavePicker(frame)
                 picker.addFileTypeChoice("Text", ".txt")
                 picker.addFileTypeChoice("Images", ".jpg", ".png")
-            }
+                picker.addFileTypeChoice("Text", ".log") // The same display name is replaced without changing its position
+                picker.fileTypeChoices
+            } shouldContainExactly listOf("Text" to listOf(".log"), "Images" to listOf(".jpg", ".png"))
+        }
+
+        test("WFileSavePicker's title and initialFileTypeIndex can be read back (empty and -1 by default)") {
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFileSavePicker(frame)
+                val defaults = listOf(picker.title, picker.initialFileTypeIndex)
+                picker.title = "Export"
+                picker.addFileTypeChoice("Text", ".txt")
+                picker.initialFileTypeIndex = 0
+                defaults + listOf(picker.title, picker.initialFileTypeIndex)
+            } shouldContainExactly listOf("", -1, "Export", 0)
+        }
+
+        test("WFileOpenPicker's title, suggestedFolder, file types with display names and initialFileTypeIndex can be read back") {
+            val folder = System.getProperty("java.io.tmpdir").trimEnd('\\')
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFileOpenPicker(frame)
+                picker.title = "Open an image"
+                picker.suggestedFolder = folder
+                picker.addFileTypeChoice("Images", ".png", ".jpg")
+                picker.addFileTypeChoice("All", "*")
+                picker.initialFileTypeIndex = 1
+                listOf(picker.title, picker.suggestedFolder, picker.fileTypeChoices, picker.initialFileTypeIndex)
+            } shouldContainExactly listOf("Open an image", folder, listOf("Images" to listOf(".png", ".jpg"), "All" to listOf("*")), 1)
+        }
+
+        test("putting an extension containing a dot into a WFileOpenPicker file type is rejected by the OS and throws") {
+            val frame = UiTestHarness.sharedFrame()
+            shouldThrow<RuntimeException> { onUiThread { WFileOpenPicker(frame).addFileTypeFilter(".tar.gz") } }
+            shouldThrow<RuntimeException> { onUiThread { WFileOpenPicker(frame).addFileTypeChoice("Archive", ".tar.gz") } }
+        }
+
+        test("WFolderPicker's title and suggestedFolder can be read back") {
+            val folder = System.getProperty("java.io.tmpdir").trimEnd('\\')
+            val frame = UiTestHarness.sharedFrame()
+            onUiThreadGet {
+                val picker = WFolderPicker(frame)
+                picker.title = "Output folder"
+                picker.suggestedFolder = folder
+                listOf(picker.title, picker.suggestedFolder)
+            } shouldContainExactly listOf("Output folder", folder)
         }
 
         test("WFolderPicker properties read back the values that were set") {

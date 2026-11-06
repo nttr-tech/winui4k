@@ -98,6 +98,10 @@ internal object WindowingInterop {
     const val IAppWindow2_get_ClientSize = 6            // get_ClientSize(out SizeInt32) — out of a struct
     const val IAppWindow2_ResizeClient = 10             // ResizeClient(SizeInt32) — struct passed by value
 
+    // ---- Microsoft.UI.Content.ContentIslandEnvironment (Microsoft.UI.winmd) ----
+    const val IID_IContentIslandEnvironment = "c334236d-da88-566d-811d-74aef2eba978"
+    const val IContentIslandEnvironment_get_AppWindowId = 6 // get_AppWindowId(out WindowId)
+
     const val IID_IAppWindowStatics = "3c315c24-d540-5d72-b518-b226b83627cb"
     const val IAppWindowStatics_Create = 8              // Create(AppWindowPresenter, WindowId) -> AppWindow (for modal windows)
 

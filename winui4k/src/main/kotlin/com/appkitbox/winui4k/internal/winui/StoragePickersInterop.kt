@@ -32,6 +32,16 @@ internal object StoragePickersInterop {
     const val IFileOpenPicker_PickSingleFileAsync = 13     // () -> IAsyncOperation<PickFileResult>
     const val IFileOpenPicker_PickMultipleFilesAsync = 14  // () -> IAsyncOperation<IVectorView<PickFileResult>>
 
+    // IFileOpenPicker2 / IFileSavePicker2 / IFolderPicker2 are extracted from the Foundation 2.3.13-experimental winmd (not in 2.1.0)
+    const val IID_IFileOpenPicker2 = "b77a4106-895b-5af9-91c3-93e5b058706c"
+    const val IFileOpenPicker2_get_Title = 6
+    const val IFileOpenPicker2_put_Title = 7               // put_Title(HSTRING)
+    const val IFileOpenPicker2_get_FileTypeChoices = 10    // get_FileTypeChoices(out IMap<HSTRING, IVector<HSTRING>>)
+    const val IFileOpenPicker2_get_InitialFileTypeIndex = 11
+    const val IFileOpenPicker2_put_InitialFileTypeIndex = 12 // put_InitialFileTypeIndex(i4)
+    const val IFileOpenPicker2_get_SuggestedFolder = 13
+    const val IFileOpenPicker2_put_SuggestedFolder = 14    // put_SuggestedFolder(HSTRING)
+
     // ---- Microsoft.Windows.Storage.Pickers.FileSavePicker ----
     const val CLS_FileSavePicker = "Microsoft.Windows.Storage.Pickers.FileSavePicker"
     const val IID_IFileSavePickerFactory = "2e256696-30b6-5a05-a8f5-c752db6dd268"
@@ -49,6 +59,12 @@ internal object StoragePickersInterop {
     const val IFileSavePicker_put_SuggestedFolder = 16     // put_SuggestedFolder(HSTRING)
     const val IFileSavePicker_PickSaveFileAsync = 17       // () -> IAsyncOperation<PickFileResult>
 
+    const val IID_IFileSavePicker2 = "a18feba7-3fbc-5ecb-9693-ba876a9c0c27"
+    const val IFileSavePicker2_get_Title = 6
+    const val IFileSavePicker2_put_Title = 7               // put_Title(HSTRING)
+    const val IFileSavePicker2_get_InitialFileTypeIndex = 10
+    const val IFileSavePicker2_put_InitialFileTypeIndex = 11 // put_InitialFileTypeIndex(i4)
+
     // ---- Microsoft.Windows.Storage.Pickers.FolderPicker ----
     const val CLS_FolderPicker = "Microsoft.Windows.Storage.Pickers.FolderPicker"
     const val IID_IFolderPickerFactory = "e1550d89-b389-5886-8395-022b1588d6a8"
@@ -60,6 +76,13 @@ internal object StoragePickersInterop {
     const val IFolderPicker_get_CommitButtonText = 10
     const val IFolderPicker_put_CommitButtonText = 11      // put_CommitButtonText(HSTRING)
     const val IFolderPicker_PickSingleFolderAsync = 12     // () -> IAsyncOperation<PickFolderResult>
+
+    const val IID_IFolderPicker2 = "12647ff3-8cca-5d1f-9ee4-ee4195ee155d"
+    const val IFolderPicker2_get_Title = 6
+    const val IFolderPicker2_put_Title = 7                 // put_Title(HSTRING)
+    const val IFolderPicker2_get_SuggestedFolder = 10
+    const val IFolderPicker2_put_SuggestedFolder = 11      // put_SuggestedFolder(HSTRING)
+    const val IFolderPicker2_PickMultipleFoldersAsync = 14 // () -> IAsyncOperation<IVectorView<PickFolderResult>>
 
     // ---- Microsoft.Windows.Storage.Pickers.PickFileResult / PickFolderResult ----
     const val IID_IPickFileResult = "e6f2e3d6-7bb0-5d81-9e7d-6fd35a1f25ab"
@@ -82,6 +105,15 @@ internal object StoragePickersInterop {
             "pinterface({${FoundationInterop.IID_AsyncOperationCompletedHandler_OPEN}};" +
                 "pinterface({${FoundationInterop.IID_IVectorView_OPEN}};" +
                 "rc(Microsoft.Windows.Storage.Pickers.PickFileResult;{$IID_IPickFileResult})))",
+        )
+    }
+
+    /** Concrete IID of AsyncOperationCompletedHandler<IVectorView<PickFolderResult>> (PickMultipleFoldersAsync). */
+    val IID_AsyncOperationCompletedHandler_PickFolderResultList: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_AsyncOperationCompletedHandler_OPEN}};" +
+                "pinterface({${FoundationInterop.IID_IVectorView_OPEN}};" +
+                "rc(Microsoft.Windows.Storage.Pickers.PickFolderResult;{$IID_IPickFolderResult})))",
         )
     }
 

@@ -235,10 +235,22 @@ internal object FoundationInterop {
     // IIterable: First=6. IIterator: get_Current=6 get_HasCurrent=7 MoveNext=8 GetMany=9
     internal const val IID_IIterable_OPEN = "faa585ea-6214-4217-afda-7f46de5869b3" // Base IID of IIterable`1
     internal const val IID_IIterator_OPEN = "6a79e863-4300-459a-9966-cbb660963ee1" // Base IID of IIterator`1
-    const val IIterable_First = 6
-    const val IIterator_get_Current = 6
-    const val IIterator_get_HasCurrent = 7
-    const val IIterator_MoveNext = 8
+    const val IIterable_First = 6                      // First(out IIterator<T>)
+    const val IIterator_get_Current = 6                // get_Current(out T)
+    const val IIterator_get_HasCurrent = 7             // get_HasCurrent(out boolean)
+    const val IIterator_MoveNext = 8                   // MoveNext(out boolean)
+
+    // ---- Windows.Foundation.Collections.IKeyValuePair<K, V> (FoundationContract.winmd) ----
+    internal const val IID_IKeyValuePair_OPEN = "02b51929-c1c4-4a7e-8940-0312b5c18500" // The base IID of IKeyValuePair`2
+    const val IKeyValuePair_get_Key = 6                // get_Key(out K)
+    const val IKeyValuePair_get_Value = 7              // get_Value(out V)
+
+    /** Concrete IID of IIterable<IKeyValuePair<String, IVector<String>>> (to read the picker's FileTypeChoices in order). */
+    val IID_IIterable_KeyValuePair_String_VectorString: String by lazy {
+        Pinterface.iid(
+            "pinterface({$IID_IIterable_OPEN};pinterface({$IID_IKeyValuePair_OPEN};string;pinterface({$IID_IVector_OPEN};string)))",
+        )
+    }
 
     /** Concrete IID of IIterable<Object> (passed to ItemsControl.ItemsSource). */
     val IID_IIterable_Object: String by lazy {

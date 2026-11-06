@@ -340,3 +340,14 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     InputSystemCursor.Create(SizeWestEast / SizeNorthSouth) を IInputCursor にして put_ProtectedCursor すると、get で読み戻せる
   - Grid の SizeChanged の中で ColumnDefinition.Width を変えても例外にならず、続くレイアウトで配置し直される
     (同じ UpdateLayout の中で済むかは確かめておらず、テストは validate を 2 回回してから位置を読む)
+- JFileChooser 風の `WFileChooser` のために、Windows App SDK のピッカー (Microsoft.Windows.Storage.Pickers) を確かめた
+  (`WStoragePickersTest`・`WFileChooserTest`)
+  - Foundation 2.3.13-experimental の winmd には IFileOpenPicker2・IFileSavePicker2・IFolderPicker2 があり (2.1.0 には無い)、
+    Title・SuggestedFolder (開く・フォルダー)・FileTypeChoices と InitialFileTypeIndex (開く)・PickMultipleFoldersAsync が使える。
+    実行時のランタイムで QueryInterface でき、設定した値をそのまま読み戻せる。Title は OS のダイアログ (ウィンドウ クラス #32770) の
+    タイトルになる
+  - FileTypeChoices は追加した順を保ち、同じ表示名の Insert は位置を変えずに拡張子を置き換える。拡張子は ".txt" か "*" で、
+    ".tar.gz" のように 2 文字目以降に "." を含むものは Append / Insert の時点で例外になる。開くピッカーでは FileTypeChoices が
+    FileTypeFilter より優先される (WindowsAppSDK の PickerCommon.cpp の CaptureFilterSpecData)
+  - ピッカーの OS のダイアログは持ち主のウィンドウにモーダルで、開いている間も UI スレッドの入れ子のループ (ModalLoop) は回り、
+    ダイアログに WM_CLOSE を送るとキャンセル (結果は null) で完了する

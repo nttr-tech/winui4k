@@ -152,19 +152,30 @@ internal object Async {
      * [onResult] is called on the completion-notification thread (not necessarily the UI
      * thread), so dispatch on the caller's side if it needs to touch W* APIs.
      * [handlerIid] is the actual IID of AsyncOperationCompletedHandler<T> (a pinterface-computed value).
+     * If the operation fails, calls [onError] with that exception if given (without calling [onResult]); otherwise throws inside the completion notification.
      */
-    fun onPtrResult(operation: ComPtr, handlerIid: String, what: String, onResult: (ComPtr?) -> Unit) {
+    fun onPtrResult(
+        operation: ComPtr,
+        handlerIid: String,
+        what: String,
+        onError: ((RuntimeException) -> Unit)? = null,
+        onResult: (ComPtr?) -> Unit,
+    ) {
         val handler = KComObject("WinUI4K.AsyncPtrResultHandler", inspectable = false)
             .addInterface(
                 handlerIid,
                 listOf(
                     KComObject.Method(DESC_COMPLETED_HANDLER) {
-                        try {
+                        val result = try {
                             checkStatus(operation, what) // throws an HRESULT exception here on failure
-                            onResult(operation.getPtrOrNull(IAsyncOperation_GetResults))
+                            Result.success(operation.getPtrOrNull(IAsyncOperation_GetResults))
+                        } catch (e: RuntimeException) {
+                            if (onError == null) throw e
+                            Result.failure(e)
                         } finally {
                             operation.release()
                         }
+                        result.fold(onResult) { onError?.invoke(it as RuntimeException) }
                         KComObject.S_OK
                     },
                 ),

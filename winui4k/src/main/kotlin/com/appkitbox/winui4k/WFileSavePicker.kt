@@ -18,13 +18,18 @@ import java.util.function.Consumer
  * The picker only returns a path — it doesn't create the file — so writing to the received
  * path is the caller's job. The result is delivered via a callback instead of waiting
  * ([pickSaveFile]). Callbacks run on the UI thread.
+ * [title] / [initialFileTypeIndex] are features from Windows App SDK 2.3 (IFileSavePicker2 etc.); if the runtime does not have them,
+ * reading returns empty ("") and setting throws [UnsupportedOperationException].
  */
-class WFileSavePicker(owner: WFrame) {
+class WFileSavePicker internal constructor(windowId: Long) {
     private val picker: ComPtr = StoragePickers.create(
         StoragePickersInterop.CLS_FileSavePicker,
         StoragePickersInterop.IID_IFileSavePickerFactory,
-        owner,
+        windowId,
     )
+
+    /** Creates a picker that opens on the window of [owner]. */
+    constructor(owner: WFrame) : this(owner.appWindow.id)
 
     init {
         // Release the picker on the UI thread once it becomes unreachable to GC (same mechanism as WComponent)
@@ -74,17 +79,53 @@ class WFileSavePicker(owner: WFrame) {
     fun addFileTypeChoice(displayName: String, vararg extensions: String) {
         val choices = picker.getPtr(StoragePickersInterop.IFileSavePicker_get_FileTypeChoices)
         try {
-            val vector = StringVector(extensions.toList())
-            Ffi.backend.withScope { scope ->
-                val replaced = scope.allocate(1, 1) // Insert(key, value, out boolean replaced)
-                Hstring.use(displayName) { key ->
-                    choices.call(FoundationInterop.IMap_Insert, key, vector.comObject.primary, replaced)
-                }
-            }
-            vector.comObject.release() // Insert holds a reference to it; the picker's Release reclaims it
+            StoragePickers.insertChoice(choices, displayName, extensions.toList())
         } finally {
             choices.release()
         }
+    }
+
+    /** The choices added with [addFileTypeChoice] (display names and extensions, in the order added). For checking in tests. */
+    internal val fileTypeChoices: List<Pair<String, List<String>>>
+        get() {
+            val choices = picker.getPtr(StoragePickersInterop.IFileSavePicker_get_FileTypeChoices)
+            try {
+                return StoragePickers.readChoices(choices)
+            } finally {
+                choices.release()
+            }
+        }
+
+    /** The dialog title (FileSavePicker.Title). Empty means the OS default ("Save As"). */
+    var title: String
+        get() = StoragePickers.withV2(picker, StoragePickersInterop.IID_IFileSavePicker2) {
+            it.getString(StoragePickersInterop.IFileSavePicker2_get_Title)
+        }.orEmpty()
+        set(value) = StoragePickers.requireV2(picker, StoragePickersInterop.IID_IFileSavePicker2, "FileSavePicker.Title") {
+            Hstring.use(value) { h -> it.call(StoragePickersInterop.IFileSavePicker2_put_Title, h) }
+        }
+
+    /**
+     * The position of the "file type" selected when opened (FileSavePicker.InitialFileTypeIndex, 0-based). -1 means the OS default.
+     * If it is larger than the number of [addFileTypeChoice] choices, the dialog does not open (HRESULT exception).
+     */
+    var initialFileTypeIndex: Int
+        get() = StoragePickers.withV2(picker, StoragePickersInterop.IID_IFileSavePicker2) {
+            it.getInt(StoragePickersInterop.IFileSavePicker2_get_InitialFileTypeIndex)
+        } ?: -1
+        set(value) = StoragePickers.requireV2(picker, StoragePickersInterop.IID_IFileSavePicker2, "FileSavePicker.InitialFileTypeIndex") {
+            it.call(StoragePickersInterop.IFileSavePicker2_put_InitialFileTypeIndex, value)
+        }
+
+    /** A version of [pickSaveFile] that receives failures with [onError] (for WFileChooser). */
+    internal fun pickSaveFile(onError: (RuntimeException) -> Unit, onPicked: (String?) -> Unit) {
+        StoragePickers.pick(
+            { picker.getPtr(StoragePickersInterop.IFileSavePicker_PickSaveFileAsync) },
+            StoragePickersInterop.IID_AsyncOperationCompletedHandler_PickFileResult,
+            "FileSavePicker.PickSaveFileAsync",
+            StoragePickers::pathOf,
+            StoragePickers.deliver(onError, onPicked),
+        )
     }
 
     /**
