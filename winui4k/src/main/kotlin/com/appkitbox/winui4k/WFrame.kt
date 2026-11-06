@@ -12,7 +12,9 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
+import java.io.File
 import java.lang.ref.WeakReference
+import java.net.URI
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -51,8 +53,11 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     internal var content: WComponent = contentPane
         private set
 
+    /** The root Grid with a menu row and a content row, created when [jMenuBar] is set. null until then (Window.Content is the content itself). */
+    private var rootGrid: WGrid? = null
+
     /** The element put in Window.Content (measured by [pack]). */
-    private val rootContent: WComponent get() = content
+    private val rootContent: WComponent get() = rootGrid ?: content
 
     var title: String = ""
         set(value) {
@@ -211,6 +216,11 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
     private fun onChanged(visibilityChanged: Boolean) {
         if (closed) return
         if (visibilityChanged && appWindow.isVisible) fireOpenedOnce()
+        if (!applyingState) syncState()
+    }
+
+    /** Compares OverlappedPresenter.State with the previously read value, and fires iconify / maximize events if it changed. */
+    private fun syncState() {
         val state = readState() ?: return
         val old = lastState
         if (state == old) return
@@ -561,8 +571,40 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
      * Subsequent [add] / [remove] apply to [component] (if it is a container). [contentPane] stays the default panel.
      */
     fun setContentPane(component: WComponent) {
-        window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
+        val grid = rootGrid
+        if (grid == null) {
+            window.call(XamlInterop.IWindow_put_Content, component.uiElement.ptr)
+        } else {
+            grid.remove(content)
+            grid.add(component, CONTENT_ROW, 0)
+        }
         content = component
+    }
+
+    /**
+     * JFrame.getJMenuBar / setJMenuBar-like: the menu bar placed at the top of the window (below the title bar, above the content). null removes it.
+     * When first set, replaces Window.Content with a Grid that has a menu row and a content row (the element tree of windows without one stays as before).
+     * The Grid remains after removal, and the content row spreads over the whole.
+     */
+    var jMenuBar: WMenuBar? = null
+        set(value) {
+            val previous = field
+            if (previous === value) return
+            val grid = rootGrid ?: createRootGrid()
+            if (previous != null) grid.remove(previous)
+            field = value
+            if (value != null) grid.add(value, MENU_ROW, 0)
+        }
+
+    private fun createRootGrid(): WGrid {
+        val grid = WGrid()
+        grid.addRow(GridLength.AUTO)
+        grid.addRow(GridLength.star())
+        // First replace Window.Content with the Grid to detach the content from the window, then put it into the Grid
+        window.call(XamlInterop.IWindow_put_Content, grid.uiElement.ptr)
+        grid.add(content, CONTENT_ROW, 0)
+        rootGrid = grid
+        return grid
     }
 
     /**
@@ -596,11 +638,156 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
         set(value) {
             if (value) {
                 check(!closed) { "A closed (disposed) WFrame cannot be shown again" }
+                val pending = pendingState
+                pendingState = null
+                // Maximizing is done together with showing (so it does not first appear at the normal size). Minimizing is done after showing (because Activate restores it)
+                if (pending != null && pending != ICONIFIED) applyState(pending)
                 window.call(XamlInterop.IWindow_Activate)
+                if (pending == ICONIFIED) applyState(pending)
             } else if (!closed) {
                 appWindow.hide()
             }
         }
+
+    // ---- State and decorations ----
+
+    /** The value put into [extendedState] while hidden ([NORMAL] / [ICONIFIED] / [MAXIMIZED_BOTH]). Applied the next time it is shown. */
+    private var pendingState: Int? = null
+
+    /**
+     * Frame.getExtendedState / setExtendedState-like: the normal ([NORMAL]), iconified ([ICONIFIED]) or maximized ([MAXIMIZED_BOTH]) state
+     * (OverlappedPresenter.State and Restore / Minimize / Maximize). Windows has no horizontal-only or vertical-only maximization, so
+     * [MAXIMIZED_HORIZ] and [MAXIMIZED_VERT] are treated as [MAXIMIZED_BOTH], and values including [ICONIFIED] (ICONIFIED | MAXIMIZED_BOTH, etc.)
+     * minimize it. The value read is one of [NORMAL], [ICONIFIED] and [MAXIMIZED_BOTH].
+     * A value set while hidden (also before it is shown) is applied the next time it is shown with [isVisible] = true (as in Swing, setting alone does not show it).
+     * With presenters such as full screen, it reads as [NORMAL] and setting does nothing. Setting after it is closed also does nothing.
+     */
+    var extendedState: Int
+        get() = pendingState ?: readState() ?: NORMAL
+        set(value) {
+            if (closed) return
+            val state = normalizeState(value)
+            if (appWindow.isVisible) {
+                pendingState = null
+                applyState(state)
+            } else {
+                pendingState = state
+            }
+        }
+
+    private fun normalizeState(value: Int): Int = when {
+        value and ICONIFIED != 0 -> ICONIFIED
+        value and MAXIMIZED_BOTH != 0 -> MAXIMIZED_BOTH
+        else -> NORMAL
+    }
+
+    /** true inside [applyState] (no events for intermediate states; compared only once at the end). */
+    private var applyingState = false
+
+    private fun applyState(state: Int) {
+        applyingState = true
+        try {
+            withOverlapped { presenter ->
+                when (state) {
+                    ICONIFIED -> presenter.minimize()
+                    MAXIMIZED_BOTH -> presenter.maximize()
+                    else -> {
+                        presenter.restore()
+                        // A window minimized from maximized goes back to maximized with Restore (Windows' SW_RESTORE). Restore once more to make it normal
+                        if (presenter.state == OverlappedPresenterState.MAXIMIZED) presenter.restore()
+                    }
+                }
+            }
+        } finally {
+            applyingState = false
+        }
+        if (!closed) syncState()
+    }
+
+    /**
+     * Frame.isResizable / setResizable-like: true (default) if the user can resize it with the border and maximize it.
+     * Changes OverlappedPresenter's IsResizable and IsMaximizable together (as a non-resizable JFrame has no maximize button).
+     * Programmatic [setSize] and [pack] work even when false. With presenters such as full screen, it reads as true and setting does nothing.
+     */
+    var isResizable: Boolean
+        get() = withOverlapped { it.isResizable } ?: true
+        set(value) {
+            withOverlapped {
+                it.isResizable = value
+                it.isMaximizable = value
+            }
+        }
+
+    /**
+     * Window.isAlwaysOnTop / setAlwaysOnTop-like: true to always keep it in front of other apps' windows (OverlappedPresenter.IsAlwaysOnTop).
+     * The default is false. With presenters such as full screen, it reads as false and setting does nothing.
+     */
+    var isAlwaysOnTop: Boolean
+        get() = withOverlapped { it.isAlwaysOnTop } ?: false
+        set(value) {
+            withOverlapped { it.isAlwaysOnTop = value }
+        }
+
+    /**
+     * Frame.isUndecorated / setUndecorated-like: true to remove the border and title bar (OverlappedPresenter.SetBorderAndTitleBar(false, false)).
+     * The default is false. Unlike Swing, it may be changed after it is shown (no IllegalComponentStateException).
+     * With presenters such as full screen, it reads as false and setting does nothing.
+     */
+    var isUndecorated: Boolean
+        get() = withOverlapped { !it.hasBorder && !it.hasTitleBar } ?: false
+        set(value) {
+            withOverlapped { it.setBorderAndTitleBar(!value, !value) }
+        }
+
+    /**
+     * Window.toFront-like: if shown, brings it in front of other windows and activates it (IAppWindow2.MoveInZOrderAtTop and
+     * Window.Activate). Does nothing while hidden or after it is closed (as in Swing). Whether it can come to the foreground while another app is in front
+     * depends on Windows' foreground rules.
+     */
+    fun toFront() {
+        if (!isVisible) return
+        appWindow.moveInZOrderAtTop()
+        window.call(XamlInterop.IWindow_Activate)
+    }
+
+    /** Window.toBack-like: if shown, sends it behind other windows (IAppWindow2.MoveInZOrderAtBottom). Does nothing while hidden or after it is closed. */
+    fun toBack() {
+        if (!isVisible) return
+        appWindow.moveInZOrderAtBottom()
+    }
+
+    /** The path of the icon file last set with [setIconImage] (as passed). null if not set. */
+    var iconImage: String? = null
+        private set
+
+    /**
+     * Frame.setIconImage-like: makes the image in file [path] the icon of the title bar and taskbar (AppWindow.SetIcon).
+     * Besides .ico, .png can be used (an .ico holding the PNG as is as one image is created in a temporary file and passed; the temporary file is deleted at exit).
+     *
+     * @throws IllegalArgumentException if the file does not exist, the extension is not .ico or .png, or it cannot be read as a PNG
+     */
+    fun setIconImage(path: String) {
+        val file = File(path)
+        require(file.isFile) { "The icon file does not exist: $path" }
+        val icoPath = when (file.extension.lowercase()) {
+            "ico" -> file.absolutePath
+            "png" -> IcoFiles.temporaryIcoFromPng(file.readBytes()).absolutePath
+            else -> throw IllegalArgumentException("The icon must be a .ico or .png file: $path")
+        }
+        appWindow.setIcon(icoPath)
+        iconImage = path
+    }
+
+    /**
+     * Frame.setIconImage(Image)-like: makes the file of [icon] the icon (same as [setIconImage]).
+     *
+     * @throws IllegalArgumentException for images that are not files (file URIs) (http:// or ms-appx:///), or when the file conditions are not met
+     */
+    fun setIconImage(icon: WImageIcon) {
+        val uri = URI(icon.uri)
+        require(uri.scheme.equals("file", ignoreCase = true)) { "Only file images can be used for the icon: ${icon.path}" }
+        setIconImage(File(uri).path)
+    }
 
     /**
      * The window background's system material (Window.SystemBackdrop).
@@ -669,6 +856,10 @@ class WFrame @JvmOverloads constructor(title: String = "") : WWindowConstants {
 
         /** Same as [WWindowConstants.EXIT_ON_CLOSE]. */
         const val EXIT_ON_CLOSE: Int = WWindowConstants.EXIT_ON_CLOSE
+
+        /** The menu row and content row of the root Grid when [jMenuBar] is set. */
+        private const val MENU_ROW = 0
+        private const val CONTENT_ROW = 1
 
         /** The DPI at 100% scaling. */
         private const val BASE_DPI = 96.0

@@ -379,3 +379,7 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   その UpdateLayout は表示前の仮の大きさで並べるので、表示した直後は ActualWidth が古い値のことがある (次のレイアウトで直る)
 - OverlappedPresenter.PreferredMinimumWidth / PreferredMinimumHeight は、タイトル バーと枠を含むウィンドウ全体の物理ピクセルで効き、
   AppWindow.Resize で小さくしようとしても止まる (WFrameGeometryTest)。WindowId の値は HWND そのもので、GetDpiForWindow に渡せる
+- 最大化から最小化したウィンドウに OverlappedPresenter.Restore を呼ぶと、通常ではなく最大化に戻る (Win32 の SW_RESTORE と同じ)。
+  WFrame.extendedState = NORMAL はもう一度 Restore して通常にし、途中の最大化では windowStateChanged を出さない (WFrameStateTest)。
+  OverlappedPresenter.SetBorderAndTitleBar(false, false) の後もウィンドウのスタイルに WS_DLGFRAME が残るが、WS_BORDER が消えるので
+  タイトル バーは出ない。WFrame.setIconImage の PNG は、PNG をそのまま 1 枚入れた .ico にすると AppWindow.SetIcon が読める (WM_GETICON で確認)

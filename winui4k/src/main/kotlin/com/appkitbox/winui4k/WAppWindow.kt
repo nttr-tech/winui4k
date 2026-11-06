@@ -64,6 +64,12 @@ class WAppWindow internal constructor(internal val appWindow: ComPtr) {
     fun show(activate: Boolean = true) =
         appWindow.putBool(WindowingInterop.IAppWindow_ShowWithActivation, activate)
 
+    /** Brings it in front of other windows (IAppWindow2.MoveInZOrderAtTop). Does not activate it. */
+    internal fun moveInZOrderAtTop() = appWindow2.call(WindowingInterop.IAppWindow2_MoveInZOrderAtTop)
+
+    /** Sends it behind other windows (IAppWindow2.MoveInZOrderAtBottom). */
+    internal fun moveInZOrderAtBottom() = appWindow2.call(WindowingInterop.IAppWindow2_MoveInZOrderAtBottom)
+
     /** Hides the window without closing it (AppWindow.Hide). Can be shown again via [show]. */
     fun hide() = appWindow.call(WindowingInterop.IAppWindow_Hide)
 
