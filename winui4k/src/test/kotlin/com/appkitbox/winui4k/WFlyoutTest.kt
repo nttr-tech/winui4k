@@ -115,5 +115,26 @@ class WFlyoutTest : FunSpec() {
                 awaitOpen(flyout, false)
             }
         }
+
+        context("Reading and writing") {
+            test("overlayInputPassThroughElement is null by default, reads back the set element and null removes it. It can be opened and closed while set") {
+                withButton { button ->
+                    val flyout = onUiThreadGet { WFlyout(WLabel("Content")) }
+                    onUiThreadGet {
+                        val initial = flyout.overlayInputPassThroughElement
+                        flyout.overlayInputPassThroughElement = button
+                        listOf(initial, flyout.overlayInputPassThroughElement === button)
+                    } shouldContainExactly listOf(null, true)
+                    onUiThread { flyout.showAt(button) }
+                    awaitOpen(flyout, true)
+                    onUiThread { flyout.hide() }
+                    awaitOpen(flyout, false)
+                    onUiThreadGet {
+                        flyout.overlayInputPassThroughElement = null
+                        flyout.overlayInputPassThroughElement
+                    } shouldBe null
+                }
+            }
+        }
     }
 }

@@ -163,5 +163,26 @@ class WPopupTest : FunSpec() {
                 onUiThreadGet { popup.popupMenuListeners.size } shouldBe 0
             }
         }
+
+        context("Events") {
+            test("a lambda removed with removeCloseListener is not called on closing, and the remaining listeners are called") {
+                withOwner { owner ->
+                    val events = mutableListOf<String>()
+                    val popup = onUiThreadGet { WPopup(WLabel("Content")) }
+                    val removed: () -> Unit = { events += "removed" }
+                    onUiThread {
+                        popup.addCloseListener(removed)
+                        popup.addCloseListener { events += "close" }
+                        popup.removeCloseListener(removed)
+                        popup.removeCloseListener(removed) // The second time does nothing
+                    }
+                    onUiThread { popup.show(owner) }
+                    awaitOpen(popup, true)
+                    onUiThread { popup.hide() }
+                    awaitOpen(popup, false)
+                    eventually(5.seconds) { onUiThreadGet { events.toList() } shouldContainExactly listOf("close") }
+                }
+            }
+        }
     }
 }
