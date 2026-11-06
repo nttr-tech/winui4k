@@ -4,9 +4,12 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import com.appkitbox.winui4k.tree.DefaultMutableTreeNode
 import com.appkitbox.winui4k.tree.DefaultTreeModel
+import com.appkitbox.winui4k.tree.ExpandVetoException
 import com.appkitbox.winui4k.tree.TreeExpansionEvent
 import com.appkitbox.winui4k.tree.TreeExpansionListener
 import com.appkitbox.winui4k.tree.TreePath
+import com.appkitbox.winui4k.tree.TreeSelectionModel
+import com.appkitbox.winui4k.tree.TreeWillExpandListener
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -286,6 +289,141 @@ class WTreeModelTest : FunSpec() {
                 }
             } finally {
                 UiTestHarness.detach(tree)
+            }
+        }
+
+        context("Swing compatibility") {
+            test("setSelectionInterval selects the rows with both ends clamped to the row range, and add / removeSelectionInterval and removeSelectionRow(s) add and subtract") {
+                val s = Sample()
+                val steps = onUiThreadGet {
+                    val tree = WTree(s.model)
+                    tree.selectionModel.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION)
+                    val rows = { tree.getSelectionRows()?.sorted().orEmpty() }
+                    val result = mutableListOf<List<Int>>()
+                    tree.setSelectionInterval(-3, 1)
+                    result += rows()
+                    tree.addSelectionInterval(10, 3)
+                    result += rows()
+                    tree.removeSelectionInterval(1, 0)
+                    result += rows()
+                    tree.addSelectionRows(intArrayOf(0, 2))
+                    tree.removeSelectionRow(2)
+                    result += rows()
+                    tree.removeSelectionRows(intArrayOf(0, 99))
+                    result += rows()
+                    tree.setSelectionInterval(10, 20)
+                    result += rows()
+                    result
+                }
+                steps shouldBe listOf(listOf(0, 1), listOf(0, 1, 3), listOf(3), listOf(0, 3), listOf(3), emptyList())
+            }
+
+            test("getExpandedDescendants returns the visible expanded descendants in row order, excluding the parent itself, and null if the parent is not expanded") {
+                val s = Sample()
+                val results = onUiThreadGet {
+                    val tree = WTree(s.model)
+                    tree.expandPath(s.path(s.fruit))
+                    tree.expandPath(s.path(s.vegetable, s.carrot))
+                    val all = tree.getExpandedDescendants(TreePath(s.root))?.toList()
+                    tree.collapsePath(s.path(s.vegetable))
+                    listOf(
+                        all,
+                        tree.getExpandedDescendants(TreePath(s.root))?.toList(),
+                        tree.getExpandedDescendants(s.path(s.fruit))?.toList(),
+                        tree.getExpandedDescendants(s.path(s.vegetable)),
+                        tree.getExpandedDescendants(null),
+                    )
+                }
+                results shouldBe listOf(
+                    listOf(s.path(s.fruit), s.path(s.vegetable), s.path(s.vegetable, s.carrot)),
+                    listOf(s.path(s.fruit)),
+                    emptyList<TreePath>(),
+                    null,
+                    null,
+                )
+            }
+
+            test("the fireTree methods call listeners in the order added without changing the expansion state, and a vetoing ExpandVetoException reaches the caller") {
+                val s = Sample()
+                val calls = mutableListOf<String>()
+                val vetoed = onUiThreadGet {
+                    val tree = WTree(s.model)
+                    tree.addTreeExpansionListener(object : TreeExpansionListener {
+                        override fun treeExpanded(event: TreeExpansionEvent) {
+                            calls += "expanded:${event.getPath()?.getLastPathComponent()}:${event.source === tree}"
+                        }
+
+                        override fun treeCollapsed(event: TreeExpansionEvent) {
+                            calls += "collapsed:${event.getPath()?.getLastPathComponent()}"
+                        }
+                    })
+                    tree.addTreeWillExpandListener(object : TreeWillExpandListener {
+                        override fun treeWillExpand(event: TreeExpansionEvent) {
+                            calls += "will-expand-1"
+                            throw ExpandVetoException(event)
+                        }
+
+                        override fun treeWillCollapse(event: TreeExpansionEvent) {
+                            calls += "will-collapse-1"
+                        }
+                    })
+                    tree.addTreeWillExpandListener(object : TreeWillExpandListener {
+                        override fun treeWillExpand(event: TreeExpansionEvent) {
+                            calls += "will-expand-2"
+                        }
+
+                        override fun treeWillCollapse(event: TreeExpansionEvent) {
+                            calls += "will-collapse-2"
+                        }
+                    })
+                    tree.fireTreeExpanded(s.path(s.fruit))
+                    tree.fireTreeCollapsed(s.path(s.fruit))
+                    tree.fireTreeWillCollapse(s.path(s.fruit))
+                    shouldThrow<ExpandVetoException> { tree.fireTreeWillExpand(s.path(s.fruit)) }
+                    tree.isExpanded(s.path(s.fruit))
+                }
+                vetoed shouldBe false
+                calls shouldBe listOf("expanded:Fruit:true", "collapsed:Fruit", "will-collapse-1", "will-collapse-2", "will-expand-1")
+            }
+
+            test("as with JTree(TreeNode, boolean), setting asksAllowsChildren to true keeps a folder node without children from being a leaf") {
+                val folder = DefaultMutableTreeNode("Empty folder", true)
+                val root = DefaultMutableTreeNode("Root").also { it.add(folder) }
+                onUiThreadGet {
+                    val asks = WTree(root, true)
+                    val plain = WTree(root, false)
+                    listOf(
+                        (asks.model as DefaultTreeModel).asksAllowsChildren(),
+                        asks.model?.isLeaf(folder),
+                        plain.model?.isLeaf(folder),
+                        asks.rowCount,
+                    )
+                } shouldBe listOf(true, false, true, 2)
+            }
+
+            test("getRowBounds, getPathBounds and getClosestRowForLocation answer with the positions of shown rows, and null / -1 for invisible rows and before it is shown") {
+                val s = Sample()
+                val tree = onUiThreadGet { WTree(s.model) }
+                onUiThreadGet { listOf(tree.getRowBounds(0), tree.getClosestRowForLocation(0, 0)) } shouldBe listOf(null, -1)
+                UiTestHarness.attachAndAwaitLoaded(tree)
+                try {
+                    Reclamation.awaitWithGc { onUiThreadGet { tree.getRowBounds(3) } != null }.shouldBeTrue()
+                    onUiThread {
+                        val first = checkNotNull(tree.getRowBounds(0))
+                        val second = checkNotNull(tree.getRowBounds(1))
+                        tree.getPathBounds(TreePath(s.root)) shouldBe first
+                        (first.width > 0 && first.height > 0).shouldBeTrue()
+                        (second.y >= first.y + first.height - 1).shouldBeTrue()
+                        tree.getRowForLocation(second.x + 1, second.y + second.height / 2) shouldBe 1
+                        tree.getClosestRowForLocation(second.x + 1, 100_000) shouldBe tree.rowCount - 1
+                        tree.getPathBounds(s.path(s.fruit, s.apple)).shouldBeNull()
+                        tree.getPathBounds(null).shouldBeNull()
+                        tree.getRowBounds(-1).shouldBeNull()
+                        tree.getRowBounds(tree.rowCount).shouldBeNull()
+                    }
+                } finally {
+                    UiTestHarness.detach(tree)
+                }
             }
         }
     }

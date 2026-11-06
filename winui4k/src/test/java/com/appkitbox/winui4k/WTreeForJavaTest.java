@@ -226,4 +226,85 @@ class WTreeForJavaTest {
         }
         assertEquals(Arrays.asList("expanding Root", "collapsed Root"), calls);
     }
+
+    @Test
+    void selectByRowIntervalsRemoveWithRemoveSelectionRowsAndIterateGetExpandedDescendantsWithWhile() {
+        onUiThread(() -> {
+            DefaultMutableTreeNode root = sampleRoot();
+            WTree tree = new WTree(root, true);
+            tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+            tree.setSelectionInterval(0, 2);
+            assertEquals(3, tree.getSelectionCount());
+            assertEquals(0, tree.getMinSelectionRow());
+            assertEquals(2, tree.getMaxSelectionRow());
+            tree.removeSelectionInterval(1, 1);
+            tree.removeSelectionRows(new int[] {0});
+            assertEquals(2, tree.getLeadSelectionRow());
+            tree.addSelectionInterval(0, 0);
+            tree.removeSelectionRow(2);
+            assertEquals(tree.getPathForRow(0), tree.getSelectionPath());
+            tree.removeSelectionPaths(new TreePath[] {tree.getPathForRow(0)});
+            assertTrue(tree.isSelectionEmpty());
+
+            tree.expandRow(1);
+            List<String> expanded = new ArrayList<>();
+            java.util.Enumeration<TreePath> e = tree.getExpandedDescendants(tree.getPathForRow(0));
+            while (e.hasMoreElements()) {
+                expanded.add(e.nextElement().getLastPathComponent().toString());
+            }
+            assertEquals(Arrays.asList("Documents"), expanded);
+            assertNull(tree.getExpandedDescendants(tree.getPathForRow(2)));
+            assertNull(tree.getRowBounds(0)); // No row positions before it is shown
+            assertEquals(-1, tree.getClosestRowForLocation(5, 5));
+        });
+    }
+
+    @Test
+    void fireTreeWillExpandThrowsExpandVetoExceptionAsACheckedExceptionAndListenersCanBeRemoved() {
+        onUiThread(() -> {
+            WTree tree = new WTree(sampleRoot());
+            List<String> calls = new ArrayList<>();
+            TreeWillExpandListener veto = new TreeWillExpandListener() {
+                @Override
+                public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+                    throw new ExpandVetoException(event);
+                }
+
+                @Override
+                public void treeWillCollapse(TreeExpansionEvent event) {
+                    calls.add("will collapse");
+                }
+            };
+            TreeExpansionListener expansion = new TreeExpansionListener() {
+                @Override
+                public void treeExpanded(TreeExpansionEvent event) {
+                    calls.add("expanded " + event.getPath().getLastPathComponent());
+                }
+
+                @Override
+                public void treeCollapsed(TreeExpansionEvent event) {
+                    calls.add("collapsed");
+                }
+            };
+            tree.addTreeWillExpandListener(veto);
+            tree.addTreeExpansionListener(expansion);
+            assertEquals(1, tree.getTreeWillExpandListeners().length);
+            assertEquals(1, tree.getTreeExpansionListeners().length);
+            TreePath documents = tree.getPathForRow(1);
+            boolean vetoed = false;
+            try {
+                tree.fireTreeWillExpand(documents);
+            } catch (ExpandVetoException ex) {
+                vetoed = true;
+            }
+            assertTrue(vetoed);
+            tree.fireTreeExpanded(documents);
+            tree.removeTreeWillExpandListener(veto);
+            tree.removeTreeExpansionListener(expansion);
+            tree.fireTreeExpanded(documents);
+            tree.collapseRow(0);
+            assertEquals(0, tree.getTreeWillExpandListeners().length);
+            assertEquals(Arrays.asList("expanded Documents"), calls);
+        });
+    }
 }

@@ -23,10 +23,13 @@ import com.appkitbox.winui4k.tree.TreePath
 import com.appkitbox.winui4k.tree.TreeSelectionListener
 import com.appkitbox.winui4k.tree.TreeSelectionModel
 import com.appkitbox.winui4k.tree.TreeWillExpandListener
+import java.util.Collections
+import java.util.Enumeration
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
+import kotlin.math.roundToInt
 
 /**
  * Microsoft.UI.Xaml.Controls.TreeViewSelectionMode (how many nodes can be selected).
@@ -194,6 +197,12 @@ class WTree() : WControl(
 
     /** Creates a tree that shows a [DefaultTreeModel] rooted at [root] (Swing's `JTree(TreeNode)`). */
     constructor(root: TreeNode?) : this(DefaultTreeModel(root))
+
+    /**
+     * Creates a tree that shows a [DefaultTreeModel] rooted at [root] (Swing's `JTree(TreeNode, boolean)`).
+     * If [asksAllowsChildren] is true, a node that can have children (getAllowsChildren) is not treated as a leaf even without children.
+     */
+    constructor(root: TreeNode?, asksAllowsChildren: Boolean) : this(DefaultTreeModel(root, asksAllowsChildren))
 
     /** ITreeView2 view, which has CanDragItems / SelectedNode and the like. */
     private val treeView2: ComPtr by lazy {
@@ -610,6 +619,36 @@ class WTree() : WControl(
         rowBounds().minByOrNull { (_, bounds) -> distance(y.toDouble(), bounds[1], bounds[1] + bounds[3]) }
             ?.let { (node, _) -> binding.pathOf(node) }
 
+    /** The row of [getClosestPathForLocation] (Swing's `getClosestRowForLocation`). -1 if there are no rows. */
+    fun getClosestRowForLocation(x: Int, y: Int): Int = getRowForPath(getClosestPathForLocation(x, y))
+
+    /**
+     * The bounds of the row of [path] (Swing's `getPathBounds`). DIP with the tree's top-left as the origin, rounded to the nearest integers.
+     * Unlike Swing, the bounds are the whole row (TreeViewItem), not the indentation and text width. null if it is not visible or the row is not realized
+     * on screen (before it is shown, or scrolled out).
+     */
+    fun getPathBounds(path: TreePath?): WRectangle? {
+        if (path == null || !isVisible(path)) return null
+        val node = binding.nodeOf(path, false) ?: return null
+        val bounds = rowBounds().firstOrNull { it.first === node }?.second ?: return null
+        return WRectangle(bounds[0].roundToInt(), bounds[1].roundToInt(), bounds[2].roundToInt(), bounds[3].roundToInt())
+    }
+
+    /** The bounds of row [row] (Swing's `getRowBounds`). null if out of range. See [getPathBounds] for details. */
+    fun getRowBounds(row: Int): WRectangle? = getPathBounds(getPathForRow(row))
+
+    /**
+     * The paths of the descendants of [parent] that are expanded and visible (Swing's `getExpandedDescendants`). [parent] itself is not included.
+     * In row order. null if [parent] is not expanded.
+     */
+    fun getExpandedDescendants(parent: TreePath?): Enumeration<TreePath>? {
+        if (parent == null || !isExpanded(parent)) return null
+        val paths = binding.rows().mapNotNull { node ->
+            binding.pathOf(node)?.takeIf { node.isExpanded && it != parent && parent.isDescendant(it) }
+        }
+        return Collections.enumeration(paths)
+    }
+
     /** The visible rows that are realized on screen, and their bounds within the tree [x, y, width, height] (DIP). */
     private fun rowBounds(): List<Pair<WTreeNode, DoubleArray>> {
         if (!isTemplateApplied()) return emptyList()
@@ -657,25 +696,25 @@ class WTree() : WControl(
     /** Expands one node of [path] (creating its children if not created yet). false if it cannot be expanded or was vetoed. */
     private fun expandOne(path: TreePath): Boolean {
         val node = binding.nodeOf(path, true) ?: return false
-        if (isVetoed { it.treeWillExpand(TreeExpansionEvent(this, path)) }) return false
+        if (isVetoed { fireTreeWillExpand(path) }) return false
         binding.realize(node)
         muted { node.isExpanded = true }
-        expansionListeners.forEach { it.treeExpanded(TreeExpansionEvent(this, path)) }
+        fireTreeExpanded(path)
         return true
     }
 
     /** Collapses one node of [path]. A hidden root cannot be collapsed. */
     private fun collapseOne(path: TreePath): Boolean {
         val node = binding.nodeOf(path, false) ?: return false
-        if (isVetoed { it.treeWillCollapse(TreeExpansionEvent(this, path)) }) return false
+        if (isVetoed { fireTreeWillCollapse(path) }) return false
         muted { node.isExpanded = false }
-        expansionListeners.forEach { it.treeCollapsed(TreeExpansionEvent(this, path)) }
+        fireTreeCollapsed(path)
         return true
     }
 
-    /** Calls TreeWillExpandListeners in the order added, and returns true if one of them throws [ExpandVetoException] (without calling the rest). */
-    private fun isVetoed(call: (TreeWillExpandListener) -> Unit): Boolean = try {
-        willExpandListeners.forEach(call)
+    /** true if [fire] (which calls TreeWillExpandListeners) was stopped by an [ExpandVetoException] from one of the listeners. */
+    private inline fun isVetoed(fire: () -> Unit): Boolean = try {
+        fire()
         false
     } catch (_: ExpandVetoException) {
         true
@@ -703,11 +742,11 @@ class WTree() : WControl(
         if (expansionMuted > 0) return
         val path = binding.pathOf(node) ?: return
         // A veto collapses it again within the same notification right after expanding (before drawing, so the expanded state never appears on screen)
-        if (isVetoed { it.treeWillExpand(TreeExpansionEvent(this, path)) }) {
+        if (isVetoed { fireTreeWillExpand(path) }) {
             muted { node.isExpanded = false }
             return
         }
-        expansionListeners.forEach { it.treeExpanded(TreeExpansionEvent(this, path)) }
+        fireTreeExpanded(path)
     }
 
     /** Native Collapsed (after collapsing, by user operation etc.): notifies TreeExpansionListeners. */
@@ -720,7 +759,7 @@ class WTree() : WControl(
             pointer.release()
         }
         val path = node?.let(binding::pathOf) ?: return
-        expansionListeners.forEach { it.treeCollapsed(TreeExpansionEvent(this, path)) }
+        fireTreeCollapsed(path)
     }
 
     // ---- Expansion and selection listeners ----
@@ -754,6 +793,38 @@ class WTree() : WControl(
 
     /** The added TreeWillExpandListeners (in the order added). */
     fun getTreeWillExpandListeners(): Array<TreeWillExpandListener> = willExpandListeners.toTypedArray()
+
+    /** Calls treeExpanded of TreeExpansionListeners in the order added with an event for [path] (Swing's `fireTreeExpanded`). Does not change the expansion state. */
+    fun fireTreeExpanded(path: TreePath?) {
+        val event = TreeExpansionEvent(this, path)
+        expansionListeners.forEach { it.treeExpanded(event) }
+    }
+
+    /** Calls treeCollapsed of TreeExpansionListeners in the order added with an event for [path] (Swing's `fireTreeCollapsed`). */
+    fun fireTreeCollapsed(path: TreePath?) {
+        val event = TreeExpansionEvent(this, path)
+        expansionListeners.forEach { it.treeCollapsed(event) }
+    }
+
+    /**
+     * Calls treeWillExpand of TreeWillExpandListeners in the order added with an event for [path] (Swing's `fireTreeWillExpand`).
+     * @throws ExpandVetoException if a listener vetoes it (the remaining listeners are not called)
+     */
+    @Throws(ExpandVetoException::class)
+    fun fireTreeWillExpand(path: TreePath?) {
+        val event = TreeExpansionEvent(this, path)
+        willExpandListeners.forEach { it.treeWillExpand(event) }
+    }
+
+    /**
+     * Calls treeWillCollapse of TreeWillExpandListeners in the order added with an event for [path] (Swing's `fireTreeWillCollapse`).
+     * @throws ExpandVetoException if a listener vetoes it (the remaining listeners are not called)
+     */
+    @Throws(ExpandVetoException::class)
+    fun fireTreeWillCollapse(path: TreePath?) {
+        val event = TreeExpansionEvent(this, path)
+        willExpandListeners.forEach { it.treeWillCollapse(event) }
+    }
 
     /** Adds a listener that receives selection changes (Swing's `addTreeSelectionListener`). The event source is this tree, and listeners are called in the order added. */
     fun addTreeSelectionListener(listener: TreeSelectionListener) = selectionBridge.addListener(listener)
@@ -853,6 +924,44 @@ class WTree() : WControl(
 
     /** true if row [row] is selected. */
     fun isRowSelected(row: Int): Boolean = selectionModel.isRowSelected(row)
+
+    /** Removes row [row] from the selection (Swing's `removeSelectionRow`). */
+    fun removeSelectionRow(row: Int) = removeSelectionRows(intArrayOf(row))
+
+    /** Removes the rows in [rows] from the selection (Swing's `removeSelectionRows`; out-of-range rows are ignored). */
+    fun removeSelectionRows(rows: IntArray?) {
+        rows ?: return
+        selectionModel.removeSelectionPaths(rows.toList().mapNotNull(::getPathForRow).toTypedArray())
+    }
+
+    /**
+     * Selects only rows [index0]..[index1] (in either order) (Swing's `setSelectionInterval`). As in Swing, both ends are clamped to the row range,
+     * and if both ends are out of range on the same side, the selection is cleared.
+     */
+    fun setSelectionInterval(index0: Int, index1: Int) = selectionModel.setSelectionPaths(pathsBetweenRows(index0, index1))
+
+    /** Adds rows [index0]..[index1] to the selection (Swing's `addSelectionInterval`; the range is clamped as with [setSelectionInterval]). */
+    fun addSelectionInterval(index0: Int, index1: Int) {
+        val paths = pathsBetweenRows(index0, index1)
+        if (paths.isNotEmpty()) selectionModel.addSelectionPaths(paths)
+    }
+
+    /** Removes rows [index0]..[index1] from the selection (Swing's `removeSelectionInterval`; the range is clamped as with [setSelectionInterval]). */
+    fun removeSelectionInterval(index0: Int, index1: Int) {
+        val paths = pathsBetweenRows(index0, index1)
+        if (paths.isNotEmpty()) selectionModel.removeSelectionPaths(paths)
+    }
+
+    /** Swing's `getPathBetweenRows`: the paths of the rows between both ends clamped to the row range. Empty if both ends are out of range on the same side or there are no rows. */
+    private fun pathsBetweenRows(index0: Int, index1: Int): Array<TreePath> {
+        val count = rowCount
+        val bothBefore = index0 < 0 && index1 < 0
+        val bothAfter = index0 >= count && index1 >= count
+        if (count == 0 || bothBefore || bothAfter) return emptyArray()
+        val first = index0.coerceIn(0, count - 1)
+        val last = index1.coerceIn(0, count - 1)
+        return (minOf(first, last)..maxOf(first, last)).mapNotNull(::getPathForRow).toTypedArray()
+    }
 
     /**
      * Subscribes to node clicks (TreeView.ItemInvoked).
