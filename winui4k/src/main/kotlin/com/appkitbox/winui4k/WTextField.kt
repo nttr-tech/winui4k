@@ -372,6 +372,48 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     var actionCommand: String? = null
         get() = field ?: text
 
+    /**
+     * JTextField.getAction / setAction-like: the [WAction] bound to the text field. When bound, as with Swing's JTextField,
+     * the following values of the action are copied to the text field and followed whenever the action's values change, and Enter ([postActionEvent]) calls the action's
+     * [WAction.actionPerformed] (the action is one entry in [actionListeners] and is called in the same order and with the same [WActionEvent] as
+     * the [addActionListener] listeners. Because there is a listener, Enter does not press the default button).
+     * - [WAction.isEnabled] to [isEnabled] (binding a disabled action disables the text field itself, the same as Swing)
+     * - [WAction.SHORT_DESCRIPTION] to [toolTipText], and [WAction.ACTION_COMMAND_KEY] to [actionCommand]
+     *
+     * Unlike buttons, [WAction.NAME] (the text field's text) and icons are not copied (the same as Swing). Items without a value are left unset
+     * (the tooltip is null, and actionCommand is null so it falls back to the text field's text). Switching to another action or null unbinds
+     * the previous action, and with null the items above are put in the no-value state. The action refers to the text field through a weak reference, so even if the action is shared,
+     * text fields that are no longer used can be collected.
+     */
+    var action: WAction? = null
+        set(value) {
+            if (field === value) return
+            actionBinder.detach()
+            field = value
+            actionBinder.attach(value)
+        }
+
+    /** The binding to [action] (following its values and calling it on Enter). The action looks up the text field through a weak reference. */
+    private val actionBinder = ActionBinder(
+        object : ActionTarget {
+            override fun applyActionValue(action: WAction?, key: String) = this@WTextField.applyActionValue(action, key)
+
+            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+        },
+        TEXT_FIELD_ACTION_KEYS,
+    )
+
+    /** Copies the value of [action] to the text field item corresponding to [key] (unset if action is null). */
+    private fun applyActionValue(action: WAction?, key: String) {
+        when (key) {
+            WAction.SHORT_DESCRIPTION -> toolTipText = action?.stringValue(key)
+            WAction.ACTION_COMMAND_KEY -> actionCommand = action?.stringValue(key)
+            WAction.ENABLED -> isEnabled = action?.isEnabled ?: true
+        }
+    }
+
     init {
         if (placeholder.isNotEmpty()) placeholderText = placeholder
         actions.install()
@@ -668,6 +710,9 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         for ((_, invoke) in textChangedListeners.toList()) invoke(current)
     }
 }
+
+/** The items copied from [WTextField.action] (the same as Swing's JTextField.configurePropertiesFromAction). */
+private val TEXT_FIELD_ACTION_KEYS = listOf(WAction.ENABLED, WAction.SHORT_DESCRIPTION, WAction.ACTION_COMMAND_KEY)
 
 /** Whether the TextBox that raised the Enter event is multi-line and accepts line breaks (AcceptsReturn). [sender] is borrowed. */
 private fun acceptsReturnOf(sender: ComPtr): Boolean {
