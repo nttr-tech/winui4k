@@ -394,24 +394,7 @@ abstract class WComponent internal constructor(
      * the position may not have changed yet when the call returns (Swing moves it inside the call). Does nothing when not in a window.
      */
     fun scrollRectToVisible(rect: WRectangle) {
-        val options = Activation.activate(XamlInterop.CLS_BringIntoViewOptions, XamlInterop.IID_IBringIntoViewOptions)
-        try {
-            options.putBool(XamlInterop.IBringIntoViewOptions_put_AnimationDesired, false)
-            val boxed = PropertyValues.boxRect(rect.x.toDouble(), rect.y.toDouble(), rect.width.toDouble(), rect.height.toDouble())
-            val target = try {
-                boxed.queryInterface(FoundationInterop.IID_IReference_Rect)
-            } finally {
-                boxed.release()
-            }
-            try {
-                options.call(XamlInterop.IBringIntoViewOptions_put_TargetRect, target.ptr)
-            } finally {
-                target.release()
-            }
-            uiElement.call(XamlInterop.IUIElement_StartBringIntoViewWithOptions, options.ptr)
-        } finally {
-            options.release()
-        }
+        ComponentSupport.scrollRectToVisible(uiElement, rect)
     }
 
     /**
@@ -1140,27 +1123,7 @@ abstract class WComponent internal constructor(
      * ([WToolTip.tipText]); null for non-string content ([WToolTip.content]) or when there is no hint.
      */
     var toolTip: String?
-        get() {
-            val current = toolTipServiceStatics.getPtrOrNull(XamlInterop.IToolTipServiceStatics_GetToolTip, dependencyObject)
-                ?: return null
-            try {
-                val contentControl = current.queryInterfaceOrNull(XamlInterop.IID_IContentControl)
-                    ?: return PropertyValues.unboxString(current) // A string hint
-                try {
-                    // A ToolTip (WToolTip) hint: its string if the content is a string
-                    val content = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return null
-                    try {
-                        return PropertyValues.unboxString(content)
-                    } finally {
-                        content.release()
-                    }
-                } finally {
-                    contentControl.release()
-                }
-            } finally {
-                current.release()
-            }
-        }
+        get() = ComponentSupport.toolTipText(dependencyObject)
         set(value) {
             detachToolTip()
             if (value == null) {
@@ -1308,27 +1271,8 @@ abstract class WComponent internal constructor(
      * Removes the first accelerator in KeyboardAccelerators whose key is [key] (a Windows virtual key) and whose modifiers are
      * [modifiers] (VirtualKeyModifiers). Returns true if one was removed, false if there was none.
      */
-    internal fun removeKeyboardAccelerator(key: Int, modifiers: Int): Boolean {
-        val accelerators = uiElement.getPtr(XamlInterop.IUIElement_get_KeyboardAccelerators)
-        try {
-            for (index in 0 until accelerators.getInt(FoundationInterop.IVector_get_Size)) {
-                val accelerator = accelerators.getPtr(FoundationInterop.IVector_GetAt, index)
-                val matches = try {
-                    accelerator.getInt(XamlInterop.IKeyboardAccelerator_get_Key) == key &&
-                        accelerator.getInt(XamlInterop.IKeyboardAccelerator_get_Modifiers) == modifiers
-                } finally {
-                    accelerator.release()
-                }
-                if (matches) {
-                    accelerators.call(FoundationInterop.IVector_RemoveAt, index)
-                    return true
-                }
-            }
-            return false
-        } finally {
-            accelerators.release()
-        }
-    }
+    internal fun removeKeyboardAccelerator(key: Int, modifiers: Int): Boolean =
+        ComponentSupport.removeKeyboardAccelerator(uiElement, key, modifiers)
 
     companion object {
         /** Like Component.TOP_ALIGNMENT: top alignment for [alignmentY]. */
