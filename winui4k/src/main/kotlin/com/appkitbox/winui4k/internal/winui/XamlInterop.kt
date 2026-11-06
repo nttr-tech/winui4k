@@ -112,6 +112,8 @@ internal object XamlInterop {
     const val IFrameworkElement_remove_Loaded = 62     // remove_Loaded(token)
     const val IFrameworkElement_add_SizeChanged = 67   // add_SizeChanged(SizeChangedEventHandler, out token)
     const val IFrameworkElement_remove_SizeChanged = 68 // remove_SizeChanged(token)
+    const val IFrameworkElement_add_LayoutUpdated = 69 // add_LayoutUpdated(EventHandler<Object>, out token) — arrives on every layout anywhere in the tree
+    const val IFrameworkElement_remove_LayoutUpdated = 70 // remove_LayoutUpdated(token)
     const val IFrameworkElement_add_ActualThemeChanged = 73 // add_ActualThemeChanged(TypedEventHandler<FrameworkElement, Object>, out token)
     const val IFrameworkElement_remove_ActualThemeChanged = 74 // remove_ActualThemeChanged(token)
     const val IFrameworkElement_FindName = 77          // FindName(HSTRING, out Object) — finds an element in the XAML name scope
@@ -187,8 +189,10 @@ internal object XamlInterop {
     const val IID_ICanvasFactory = "374c5050-3481-5557-9948-804c0b8eea89"
     const val IID_ICanvas = "457ba139-1146-51d2-807e-d9d65c927060" // default interface (no members)
     const val IID_ICanvasStatics = "c00d5e0f-77e3-5c59-8fcd-86761f0c6607"
+    const val ICanvasStatics_get_LeftProperty = 6     // get_LeftProperty(out DependencyProperty)
     const val ICanvasStatics_GetLeft = 7               // GetLeft(UIElement, out DOUBLE)
     const val ICanvasStatics_SetLeft = 8               // SetLeft(UIElement, DOUBLE)
+    const val ICanvasStatics_get_TopProperty = 9      // get_TopProperty(out DependencyProperty)
     const val ICanvasStatics_GetTop = 10               // GetTop(UIElement, out DOUBLE)
     const val ICanvasStatics_SetTop = 11               // SetTop(UIElement, DOUBLE)
     const val ICanvasStatics_SetZIndex = 14            // SetZIndex(UIElement, INT32)
@@ -1735,6 +1739,7 @@ internal object XamlInterop {
     const val IDependencyObject_SetValue = 7           // SetValue(DependencyProperty, object)
     const val IDependencyObject_ClearValue = 8         // ClearValue(DependencyProperty)
     const val IDependencyObject_RegisterPropertyChangedCallback = 11 // (DependencyProperty, DependencyPropertyChangedCallback, out i8 token)
+    const val IDependencyObject_UnregisterPropertyChangedCallback = 12 // (DependencyProperty, i8 token)
 
     /** delegate DependencyPropertyChangedCallback(DependencyObject sender, DependencyProperty dp) — Invoke is vtbl[3] */
     const val IID_DependencyPropertyChangedCallback = "f055bb21-219b-5b0c-805d-bcaedae15458"
@@ -2265,6 +2270,7 @@ internal object XamlInterop {
     // ---- Microsoft.UI.Xaml.UIElement (statics: routed events) ----
     const val CLS_UIElement = "Microsoft.UI.Xaml.UIElement"
     const val IID_IUIElementStatics = "d2921d87-3584-5e22-8a3a-c2c78dab4f6e"
+    const val IUIElementStatics_get_VisibilityProperty = 45 // get_VisibilityProperty(out DependencyProperty)
     const val IUIElementStatics_get_KeyDownEvent = 6
     const val IUIElementStatics_get_KeyUpEvent = 7
     const val IUIElementStatics_get_PointerPressedEvent = 9

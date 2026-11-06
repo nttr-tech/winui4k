@@ -217,3 +217,8 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (ソースを読んだだけ。ポインターの入力は E2E テストから送れない (TestMouse 参照) ので、実際のドラッグでは確かめていない)
   - RatingControl.ValueChanged はユーザーの入力 (RatingControl.cpp の SetRatingTo) でだけ届き、Value の設定では届かない。
     最大の星でさらに増やすキーを押したときなど、値が変わらなくても届く。WRatingControl は設定でも自分で知らせ、同じ値の通知は捨てる
+- WComponent.addComponentListener のために、位置と表示の変わり方を E2E テストで確かめた (`WComponentEventTest`)
+  - Canvas の子の Canvas.Left / Top を替えても、WinUI はレイアウトをせずに ActualOffset だけを替える
+    (microsoft-ui-xaml の dxaml/xcp/core/core/elements/uielement.cpp の Canvas_Left / Canvas_Top → OnActualOffsetChanged)。
+    FrameworkElement.LayoutUpdated は来ないので、componentMoved は LayoutUpdated に加えて Canvas.Left / Top の変更のコールバックでも位置を比べる
+  - Visibility を Collapsed にしても、その要素の SizeChanged は来ない (Swing の setVisible(false) と同じく componentResized は来ない)

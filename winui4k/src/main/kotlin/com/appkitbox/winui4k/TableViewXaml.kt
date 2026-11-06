@@ -95,8 +95,9 @@ internal object TableViewXaml {
     /**
      * Calls [onChanged] whenever the [property] of [target] (a DependencyObject) changes
      * (DependencyObject.RegisterPropertyChangedCallback). The callback's sender is the element that changed.
+     * Returns the token to pass to UnregisterPropertyChangedCallback.
      */
-    fun registerPropertyChangedCallback(target: ComPtr, property: ComPtr, onChanged: (sender: Ptr) -> Unit) {
+    fun registerPropertyChangedCallback(target: ComPtr, property: ComPtr, onChanged: (sender: Ptr) -> Unit): Long {
         val callback = KComObject("WinUI4K.DependencyPropertyChangedCallback", inspectable = false)
             .addInterface(
                 XamlInterop.IID_DependencyPropertyChangedCallback,
@@ -108,10 +109,11 @@ internal object TableViewXaml {
                     },
                 ),
             )
-        try {
+        return try {
             Ffi.backend.withScope { scope ->
                 val token = scope.allocate(8) // out i8
                 target.call(XamlInterop.IDependencyObject_RegisterPropertyChangedCallback, property.ptr, callback.primary, token)
+                Ffi.backend.memory.getLong(token, 0)
             }
         } finally {
             // The registration target holds a reference, so release the creation reference

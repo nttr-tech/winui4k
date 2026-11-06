@@ -629,6 +629,36 @@ abstract class WComponent internal constructor(
     val keyListeners: Array<WKeyListener>
         get() = inputOrNull?.keys?.keyListeners() ?: emptyArray()
 
+    /** The size, position and visibility listeners (created when the first listener is added). */
+    internal var componentEventsOrNull: ComponentEvents? = null
+        private set
+
+    /**
+     * Component.addComponentListener-style: adds a listener called when this component's size, position or visibility changes.
+     * Does nothing if null. Adding the same listener twice makes it called twice (same as Swing).
+     *
+     * - componentResized: after the size changed in a layout (FrameworkElement.SizeChanged; also arrives on the first layout)
+     * - componentMoved: after the position relative to the parent (UIElement.ActualOffset) changed in a layout. Does not arrive when only the parent moved
+     * - componentShown / componentHidden: after this component's own [isVisible] changed. As in Swing, hiding a parent does not trigger them,
+     *   and as with Swing posting them to the event queue, they are called after returning from the call that changed [isVisible]
+     *
+     * While listeners are added, the position is read every time a layout runs anywhere in the tree (FrameworkElement.LayoutUpdated).
+     */
+    fun addComponentListener(listener: WComponentListener?) {
+        if (listener == null) return
+        val events = componentEventsOrNull ?: ComponentEvents(this).also { componentEventsOrNull = it }
+        events.add(listener)
+    }
+
+    /** Component.removeComponentListener-style: removes one listener added with [addComponentListener]. Does nothing if it was not added. */
+    fun removeComponentListener(listener: WComponentListener?) {
+        if (listener != null) componentEventsOrNull?.remove(listener)
+    }
+
+    /** Component.getComponentListeners-style: the size, position and visibility listeners that are added (in the order they were added). */
+    val componentListeners: Array<WComponentListener>
+        get() = componentEventsOrNull?.listeners() ?: emptyArray()
+
     /**
      * Invalidates the natural size cache. Call this alongside the parent [WLayoutPanel]'s revalidate whenever the
      * content's size changes, e.g. from a text change ([revalidate] does both).

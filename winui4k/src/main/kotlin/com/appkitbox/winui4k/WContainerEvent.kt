@@ -1,27 +1,23 @@
 package com.appkitbox.winui4k
 
 import java.util.EventListener
-import java.util.EventObject
 
 /**
  * ContainerEvent-style: an event that tells a [WContainerListener] that a child was added to or removed from a [WContainer].
  * [getSource] (`source` in Kotlin) and [container] are the container whose children changed, [child] is the child added or removed,
- * and [id] is [COMPONENT_ADDED] or [COMPONENT_REMOVED].
+ * and [id] is [COMPONENT_ADDED] or [COMPONENT_REMOVED]. As in Swing, it derives from [WComponentEvent], and [component] is the container too.
  *
  * This class does not depend on java.awt, so it defines its own constants with the same values as AWT's ContainerEvent.
  */
 class WContainerEvent(
     source: WContainer,
-    /** The kind of event ([COMPONENT_ADDED] / [COMPONENT_REMOVED]). `getID()` in Java, as in AWT. */
-    @get:JvmName("getID") val id: Int,
+    /** The kind of event ([COMPONENT_ADDED] / [COMPONENT_REMOVED]). */
+    id: Int,
     /** The child that was added or removed (equivalent to ContainerEvent.getChild). */
     val child: WComponent,
-) : EventObject(source) {
+) : WComponentEvent(source, id) {
     /** The container whose children changed (equivalent to ContainerEvent.getContainer). Same as [getSource]. */
     val container: WContainer get() = source as WContainer
-
-    /** The component the event originated from (equivalent to ComponentEvent.getComponent). Same as [getSource]. */
-    val component: WComponent get() = source as WComponent
 
     companion object {
         /** The smallest ID of container events (same value as AWT's ContainerEvent.CONTAINER_FIRST). */
