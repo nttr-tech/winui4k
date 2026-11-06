@@ -82,6 +82,47 @@ class WPopupTest : FunSpec() {
             }
         }
 
+        test("child, horizontalOffset, verticalOffset and isLightDismissEnabled read back the set values from their defaults") {
+            // The defaults are WinUI's Popup defaults (offset 0, light dismiss disabled)
+            val label = onUiThreadGet { WLabel("Content") }
+            val results = onUiThreadGet {
+                val popup = WPopup()
+                val initial = listOf(popup.child == null, popup.horizontalOffset, popup.verticalOffset, popup.isLightDismissEnabled)
+                popup.child = label
+                popup.horizontalOffset = 12.5
+                popup.verticalOffset = -7.25
+                popup.isLightDismissEnabled = true
+                val set = listOf(popup.child === label, popup.horizontalOffset, popup.verticalOffset, popup.isLightDismissEnabled)
+                popup.isLightDismissEnabled = false
+                initial + set + popup.isLightDismissEnabled
+            }
+            results shouldContainExactly listOf(true, 0.0, 0.0, false, true, 12.5, -7.25, true, false)
+        }
+
+        test("show(owner) opens without changing the offsets and shows child. Even with light dismiss enabled, hide closes it and Closed is called") {
+            withOwner { owner ->
+                val label = onUiThreadGet { WLabel("Content") }
+                val events = mutableListOf<String>()
+                val popup = onUiThreadGet {
+                    WPopup(label).also {
+                        it.horizontalOffset = 30.0
+                        it.verticalOffset = 40.0
+                        it.isLightDismissEnabled = true
+                        it.addCloseListener { events += "close" }
+                    }
+                }
+                onUiThread { popup.show(owner) }
+                awaitOpen(popup, true)
+                eventually(5.seconds) {
+                    onUiThreadGet { label.frameworkElement.getBool(XamlInterop.IFrameworkElement_get_IsLoaded) } shouldBe true
+                }
+                onUiThreadGet { listOf(popup.horizontalOffset, popup.verticalOffset) } shouldContainExactly listOf(30.0, 40.0)
+                onUiThread { popup.hide() }
+                awaitOpen(popup, false)
+                eventually(5.seconds) { onUiThreadGet { events.toList() } shouldContainExactly listOf("close") }
+            }
+        }
+
         test("the PopupMenuListener does not treat closing with hide as a cancellation, and when closed otherwise calls canceled before willBecomeInvisible") {
             withOwner { owner ->
                 val events = mutableListOf<String>()
