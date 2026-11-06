@@ -708,6 +708,7 @@ internal object XamlInterop {
     const val IListViewBase_put_IsItemClickEnabled = 16 // put_IsItemClickEnabled(boolean)
     const val IListViewBase_add_ItemClick = 32         // add_ItemClick(ItemClickEventHandler, out token)
     const val IListViewBase_remove_ItemClick = 33      // remove_ItemClick(token)
+    const val IListViewBase_ScrollIntoView = 44        // ScrollIntoView(IInspectable)
     const val IListViewBase_SelectAll = 45             // SelectAll()
     const val IListViewBase_get_Header = 54            // get_Header(out IInspectable)
     const val IListViewBase_put_Header = 55            // put_Header(IInspectable)
