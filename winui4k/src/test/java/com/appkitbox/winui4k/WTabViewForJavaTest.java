@@ -113,4 +113,62 @@ class WTabViewForJavaTest {
             assertEquals(-1, tabs.getSelectedIndex());
         });
     }
+
+    @Test
+    void tabsCanBeAddedWithAddLikeJTabbedPaneWithNameTitleIconAndPosition() {
+        onUiThread(() -> {
+            WTabView tabs = new WTabView();
+            WPanel general = new WPanel();
+            general.setName("General");
+            WPanel detail = new WPanel();
+            WLabel about = new WLabel("about");
+            WLabel first = new WLabel("first");
+            WLabel saved = new WLabel("saved");
+            assertSame(general, tabs.add(general));
+            assertSame(detail, tabs.add("Detail", detail));
+            tabs.add(about, "About");
+            assertSame(first, tabs.add(first, 0));
+            tabs.add(saved, Symbol.SAVE, -1);
+            assertEquals(5, tabs.getTabCount());
+            assertEquals("", tabs.getTitleAt(0));
+            assertEquals("General", tabs.getTitleAt(1));
+            assertEquals("Detail", tabs.getTitleAt(2));
+            assertEquals("About", tabs.getTitleAt(3));
+            assertSame(Symbol.SAVE, tabs.getIconAt(4));
+            assertSame(saved, tabs.getComponentAt(4));
+            assertThrows(IndexOutOfBoundsException.class, () -> tabs.add(new WLabel("x"), 9));
+        });
+    }
+
+    @Test
+    void anonymousClassAndLambdaListenersCanBeAddedAndRemoved() {
+        onUiThread(() -> {
+            WTabView tabs = new WTabView();
+            List<String> calls = new ArrayList<>();
+            Runnable selection = () -> calls.add("selection");
+            Runnable addButton = new Runnable() {
+                @Override
+                public void run() {
+                    calls.add("add");
+                }
+            };
+            java.util.function.IntConsumer close = index -> calls.add("close " + index);
+            tabs.addSelectionListener(selection);
+            tabs.addAddTabButtonClickListener(addButton);
+            tabs.addTabCloseRequestedListener(close);
+            tabs.removeSelectionListener(selection);
+            tabs.removeAddTabButtonClickListener(addButton);
+            tabs.removeTabCloseRequestedListener(close);
+            tabs.addTab("A", new WLabel("a"));
+            tabs.addTab("B", new WLabel("b"));
+            tabs.setSelectedIndex(1);
+            assertEquals(new ArrayList<String>(), calls);
+            tabs.setTabWidthMode(TabViewWidthMode.COMPACT);
+            assertEquals(TabViewWidthMode.COMPACT, tabs.getTabWidthMode());
+            tabs.setAddTabButtonVisible(false);
+            tabs.setCanReorderTabs(false);
+            assertFalse(tabs.isAddTabButtonVisible());
+            assertFalse(tabs.getCanReorderTabs());
+        });
+    }
 }

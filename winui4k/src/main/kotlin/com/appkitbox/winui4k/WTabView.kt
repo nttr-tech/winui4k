@@ -109,7 +109,7 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
 /**
  * A JTabbedPane-like: WinUI 3's TabView.
  *
- * Tabs are managed with the Swing-shaped [addTab] (title, icon, content, tooltip) / [insertTab] / [removeTabAt] / [removeAll] /
+ * Swing-shaped [addTab] (title, icon, content, tooltip) / [insertTab] / [add] / [removeTabAt] / [removeAll] /
  * [indexOfTab] / [indexOfComponent] / [getTitleAt] and so on, and with [addTab] / [removeTab] / [getTab] that take a [WTabViewItem] directly.
  * Indexes are computed from the order of the native TabItems, so they match the on-screen order even after the user reorders tabs by dragging.
  * Selection changes are notified by [addChangeListener] (ChangeListener-style), and close buttons by [addTabCloseRequestedListener].
@@ -239,6 +239,51 @@ class WTabView : WControl(
         tab.toolTipText = tip
         tab.content = component
         insertItem(tab, newIndex)
+    }
+
+    /**
+     * JTabbedPane.add(Component)-like: appends a tab titled with the name of [component] ([WComponent.name], "" if unset), and
+     * returns [component] (a tab without a close button, the same as [addTab] (title, component)).
+     * If [component] is a [WTabViewItem], adds that tab itself (the same as [addTab] (WTabViewItem)).
+     */
+    fun add(component: WComponent): WComponent {
+        if (component is WTabViewItem) addTab(component) else addTab(component.name, component)
+        return component
+    }
+
+    /** JTabbedPane.add(String, Component)-like: the same as [addTab] (title, component), returning [component]. */
+    fun add(title: String?, component: WComponent): WComponent {
+        addTab(title, component)
+        return component
+    }
+
+    /**
+     * JTabbedPane.add(Component, int)-like: inserts a tab titled with the name of [component] at [index] (-1 for the end), and returns [component].
+     * Other out-of-range [index] values throw [IndexOutOfBoundsException] (the same as [insertTab]).
+     */
+    fun add(component: WComponent, index: Int): WComponent {
+        insertTab(component.name, null, component, null, if (index == -1) tabCount else index)
+        return component
+    }
+
+    /**
+     * JTabbedPane.add(Component, Object)-like: appends a tab whose title is [constraints] if it is a string, or whose icon is [constraints] if it is a [WIcon]
+     * (title ""). Other values (including null) use the name as the title, the same as [add] (component).
+     */
+    fun add(component: WComponent, constraints: Any?) {
+        when (constraints) {
+            is String -> addTab(constraints, component)
+            is WIcon -> addTab(null, constraints, component)
+            else -> add(component)
+        }
+    }
+
+    /**
+     * JTabbedPane.add(Component, Object, int)-like: inserts a tab whose title is [constraints] if it is a string, or whose icon it is if it is a [WIcon],
+     * at [index] (-1 for the end). Otherwise the title is "" (as in Swing, the name is not used).
+     */
+    fun add(component: WComponent, constraints: Any?, index: Int) {
+        insertTab(constraints as? String, constraints as? WIcon, component, null, if (index == -1) tabCount else index)
     }
 
     /** Removes the [index]th tab (TabItems.RemoveAt). [IndexOutOfBoundsException] if out of range. */

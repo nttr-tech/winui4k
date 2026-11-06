@@ -517,5 +517,116 @@ class WTabViewTest : FunSpec() {
             }
             result shouldBe listOf(listOf("B", "C", "A"), 2, listOf(2))
         }
+
+        context("Events") {
+            test("pressing the \"+\" button calls addAddTabButtonClickListener listeners, and removed listeners are not called") {
+                val tabView = onUiThreadGet { WTabView().also { it.addTab("A", WLabel("a")) } }
+                val calls = withShown(tabView) {
+                    val calls = mutableListOf<String>()
+                    val first: () -> Unit = { calls += "first" }
+                    val second: () -> Unit = { calls += "second" }
+                    tabView.addAddTabButtonClickListener(first)
+                    tabView.addAddTabButtonClickListener(second)
+                    val addButton = checkNotNull(Xaml.templatePartOrNull(tabView.inspectable, "AddButton"))
+                    try {
+                        Xaml.invoke(addButton)
+                        tabView.removeAddTabButtonClickListener(first)
+                        Xaml.invoke(addButton)
+                    } finally {
+                        addButton.release()
+                    }
+                    calls
+                }
+                calls shouldBe listOf("first", "second", "second")
+            }
+
+            test("listeners removed with removeTabCloseRequestedListener and removeSelectionListener are not called") {
+                val tabView = onUiThreadGet {
+                    WTabView().also { tabView -> listOf("A", "B").forEach { tabView.addTab(WTabViewItem(it)) } }
+                }
+                val result = withShown(tabView) {
+                    val closes = mutableListOf<Int>()
+                    var selections = 0
+                    val close: (Int) -> Unit = { closes += it }
+                    val selection: () -> Unit = { selections++ }
+                    tabView.addTabCloseRequestedListener(close)
+                    tabView.addSelectionListener(selection)
+                    tabView.removeTabCloseRequestedListener(close)
+                    tabView.removeSelectionListener(selection)
+                    tabView.selectedIndex = 1
+                    val closeButton = checkNotNull(Xaml.templatePartOrNull(tabView.getTab(0).inspectable, "CloseButton"))
+                    try {
+                        Xaml.invoke(closeButton)
+                    } finally {
+                        closeButton.release()
+                    }
+                    listOf(closes, selections, tabView.tabCount)
+                }
+                result shouldBe listOf(emptyList<Int>(), 0, 2) // A close request only notifies the listeners and does not remove the tab
+            }
+        }
+
+        context("Swing compatibility") {
+            test("JTabbedPane's add forms: (title, c), (c, \"title\") and (c, icon) are addTab, (c) and (c, null) use the name as the title, and all return c") {
+                val result = onUiThreadGet {
+                    val tabView = WTabView()
+                    val named = WLabel("named").also { it.name = "Name" }
+                    val a = WLabel("a")
+                    val b = WLabel("b")
+                    val c = WLabel("c")
+                    val unnamed = WLabel("unnamed")
+                    val returned = listOf(tabView.add("A", a), tabView.add(named))
+                    tabView.add(b, "B")
+                    tabView.add(c, Symbol.SAVE)
+                    tabView.add(unnamed, null as Any?)
+                    listOf(
+                        returned[0] === a && returned[1] === named,
+                        (0 until tabView.tabCount).map(tabView::getTitleAt),
+                        (0 until tabView.tabCount).map(tabView::getIconAt),
+                        (0 until tabView.tabCount).map { tabView.getComponentAt(it)?.name },
+                        (0 until tabView.tabCount).map { tabView.getTab(it).isClosable },
+                    )
+                }
+                result shouldBe listOf(
+                    true,
+                    listOf("A", "Name", "B", "", ""),
+                    listOf(null, null, null, Symbol.SAVE, null),
+                    listOf("", "Name", "", "", ""),
+                    listOf(false, false, false, false, false),
+                )
+            }
+
+            test("add(c, index) and add(c, constraints, index) insert at index (-1 for the end), and out of range throws IndexOutOfBoundsException") {
+                val result = onUiThreadGet {
+                    val tabView = WTabView()
+                    tabView.addTab("A", WLabel("a"))
+                    tabView.add(WLabel("z").also { it.name = "Z" }, 0)
+                    tabView.add(WLabel("e").also { it.name = "E" }, -1)
+                    tabView.add(WLabel("m"), "M", 1)
+                    tabView.add(WLabel("i"), Symbol.SAVE, -1)
+                    val outOfRange = runCatching { tabView.add(WLabel("x"), 9) }.exceptionOrNull()
+                    listOf(
+                        (0 until tabView.tabCount).map(tabView::getTitleAt),
+                        tabView.getIconAt(4),
+                        outOfRange?.javaClass,
+                        tabView.tabCount,
+                    )
+                }
+                result shouldBe listOf(listOf("Z", "M", "A", "E", ""), Symbol.SAVE, IndexOutOfBoundsException::class.java, 5)
+            }
+
+            test("add(WTabViewItem) adds that tab itself (the same as addTab), and add of a component that is already the content of a tab moves it from the original tab") {
+                val result = onUiThreadGet {
+                    val tabView = WTabView()
+                    val item = WTabViewItem("Item")
+                    val content = WLabel("Content")
+                    tabView.add(item)
+                    tabView.add("Before", content)
+                    tabView.add("After", content)
+                    listOf(tabView.tabCount, tabView.getTab(0) === item, tabView.getTitleAt(1), tabView.getComponentAt(1) === content)
+                }
+                result shouldBe listOf(2, true, "After", true)
+            }
+        }
     }
 }
