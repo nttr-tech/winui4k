@@ -11,6 +11,37 @@ import java.time.LocalTime
 /** Tests verifying WTimePicker's time (LocalTime <-> WinRT TimeSpan conversion) and listeners. */
 class WTimePickerTest : FunSpec() {
     init {
+        test("an unselected time returns null without throwing (TimePicker's default Time is the sentinel value -1 for unselected)") {
+            val (time, selected) = onUiThreadGet { WTimePicker().let { it.time to it.selectedTime } }
+            time.shouldBeNull()
+            selected.shouldBeNull()
+        }
+
+        test("setting time to null goes back to unselected, and both time and selectedTime return null") {
+            val (before, after) = onUiThreadGet {
+                val timePicker = WTimePicker()
+                timePicker.time = LocalTime.of(23, 59)
+                val before = timePicker.time to timePicker.selectedTime
+                timePicker.time = null
+                before to (timePicker.time to timePicker.selectedTime)
+            }
+            before shouldBe (LocalTime.of(23, 59) to LocalTime.of(23, 59))
+            after shouldBe (null to null)
+        }
+
+        test("time is truncated to the minuteIncrement step, and midnight 00:00 is distinguished from unselected") {
+            val (snapped, midnight) = onUiThreadGet {
+                val timePicker = WTimePicker()
+                timePicker.minuteIncrement = 15
+                timePicker.time = LocalTime.of(10, 29)
+                val snapped = timePicker.time
+                timePicker.time = LocalTime.MIDNIGHT
+                snapped to timePicker.time
+            }
+            snapped shouldBe LocalTime.of(10, 15)
+            midnight shouldBe LocalTime.MIDNIGHT
+        }
+
         test("time returns exactly the time that was set") {
             onUiThreadGet {
                 val timePicker = WTimePicker()

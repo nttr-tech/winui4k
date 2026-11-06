@@ -41,17 +41,52 @@ class WDatePicker : WControl(
             boxed.release()
         }
 
-    /** The current date (DatePicker.Date, never null). DateTime is 100ns ticks from 1601-01-01 UTC. */
-    var date: LocalDate
+    /**
+     * The current date (DatePicker.Date). Null means unselected (WinUI represents unselected with Date's sentinel value 0 = 1601-01-01 UTC, which is mapped to null).
+     * Setting null goes back to unselected (sets SelectedDate to null). WinUI keeps Date and [selectedDate] in sync, so this always returns the same value as [selectedDate].
+     *
+     * Dates outside [minYear] / [maxYear] are pulled into the range by the native side after the template is applied (after it is placed on screen).
+     * Before it is placed they are returned as is, and pulled in when it is placed.
+     */
+    var date: LocalDate?
         get() {
             val ticks = Ffi.backend.withScope { scope ->
                 val out = scope.allocate(8)
                 inspectable.call(XamlInterop.IDatePicker_get_Date, out)
                 Ffi.backend.memory.getLong(out, 0)
             }
-            return DateTimeConversions.ticksToLocalDate(ticks)
+            return if (ticks == NULL_DATE_TICKS) null else DateTimeConversions.ticksToLocalDate(ticks)
         }
-        set(value) = inspectable.call(XamlInterop.IDatePicker_put_Date, DateTimeConversions.localDateToTicks(value))
+        set(value) {
+            if (value == null) {
+                inspectable.call(XamlInterop.IDatePicker_put_SelectedDate, null)
+            } else {
+                inspectable.call(XamlInterop.IDatePicker_put_Date, DateTimeConversions.localDateToTicks(value))
+            }
+        }
+
+    /** The selected date (DatePicker.SelectedDate, null = unselected). WinUI keeps it in sync with Date, so it is the same value as [date]. */
+    var selectedDate: LocalDate?
+        get() {
+            val boxed = inspectable.getPtrOrNull(XamlInterop.IDatePicker_get_SelectedDate) ?: return null
+            return try {
+                PropertyValues.unboxDateTime(boxed)?.let { DateTimeConversions.ticksToLocalDate(it) }
+            } finally {
+                boxed.release()
+            }
+        }
+        set(value) {
+            if (value == null) {
+                inspectable.call(XamlInterop.IDatePicker_put_SelectedDate, null)
+            } else {
+                val boxed = PropertyValues.boxDateTime(DateTimeConversions.localDateToTicks(value))
+                try {
+                    inspectable.call(XamlInterop.IDatePicker_put_SelectedDate, boxed.ptr)
+                } finally {
+                    boxed.release()
+                }
+            }
+        }
 
     /** Whether the day spinner is shown (DatePicker.DayVisible). */
     var dayVisible: Boolean
@@ -140,5 +175,10 @@ class WDatePicker : WControl(
     fun removeSelectedDateChangedListenerForJava(listener: Consumer<LocalDate?>) {
         val token = selectedDateChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IDatePicker_remove_SelectedDateChanged, token)
+    }
+
+    private companion object {
+        /** The sentinel value of DatePicker.Date that represents unselected (DateTime.UniversalTime = 0). */
+        const val NULL_DATE_TICKS = 0L
     }
 }

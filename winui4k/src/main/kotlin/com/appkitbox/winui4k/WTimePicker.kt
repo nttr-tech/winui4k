@@ -51,17 +51,27 @@ class WTimePicker : WControl(
         get() = inspectable.getInt(XamlInterop.ITimePicker_get_MinuteIncrement)
         set(value) = inspectable.call(XamlInterop.ITimePicker_put_MinuteIncrement, value)
 
-    /** The current time (TimePicker.Time, never null). TimeSpan is 100ns ticks. */
-    var time: LocalTime
+    /**
+     * The current time (TimePicker.Time). Null means unselected (WinUI represents unselected with Time's sentinel value -1 (TimeSpan), which is mapped to null).
+     * Setting null goes back to unselected (sets SelectedTime to null). WinUI keeps Time and [selectedTime] in sync, so this always returns the same value as [selectedTime].
+     * A time that is set is truncated to the [minuteIncrement] step (WinUI's behavior).
+     */
+    var time: LocalTime?
         get() {
             val ticks = Ffi.backend.withScope { scope ->
                 val out = scope.allocate(8)
                 inspectable.call(XamlInterop.ITimePicker_get_Time, out)
                 Ffi.backend.memory.getLong(out, 0)
             }
-            return DateTimeConversions.ticksToLocalTime(ticks)
+            return if (ticks == NULL_TIME_TICKS) null else DateTimeConversions.ticksToLocalTime(ticks)
         }
-        set(value) = inspectable.call(XamlInterop.ITimePicker_put_Time, DateTimeConversions.localTimeToTicks(value))
+        set(value) {
+            if (value == null) {
+                inspectable.call(XamlInterop.ITimePicker_put_SelectedTime, null)
+            } else {
+                inspectable.call(XamlInterop.ITimePicker_put_Time, DateTimeConversions.localTimeToTicks(value))
+            }
+        }
 
     /** The selected time (TimePicker.SelectedTime, null = nothing selected). */
     var selectedTime: LocalTime?
@@ -119,5 +129,10 @@ class WTimePicker : WControl(
     fun removeSelectedTimeChangedListenerForJava(listener: Consumer<LocalTime?>) {
         val token = selectedTimeChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITimePicker_remove_SelectedTimeChanged, token)
+    }
+
+    private companion object {
+        /** The sentinel value of TimePicker.Time that represents unselected (TimeSpan.Duration = -1). */
+        const val NULL_TIME_TICKS = -1L
     }
 }
