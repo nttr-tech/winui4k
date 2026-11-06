@@ -123,6 +123,12 @@ internal class ListSelectionSync<T : WComponent>(
         block(model)
     }
 
+    /** The selected indices (within the element range, ascending). Copies the native selection first. */
+    fun selectedIndices(): IntArray {
+        pullFromNative()
+        return wantedIndices()
+    }
+
     fun addListener(listener: WListSelectionListener) {
         listeners += listener
     }

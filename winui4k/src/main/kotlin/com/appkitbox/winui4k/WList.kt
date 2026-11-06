@@ -119,11 +119,11 @@ class WList(model: WListModel<*>) : WControl(
      * Returns the model's element itself, not a string.
      */
     val selectedValue: Any?
-        get() = listItems.selectedIndices().firstOrNull()?.let { listItems.valueAt(it) }
+        get() = currentSelection().firstOrNull()?.let { listItems.valueAt(it) }
 
     /** All selected elements (JList.getSelectedValuesList). In index order. */
     val selectedValuesList: List<Any?>
-        get() = listItems.selectedIndices().map { listItems.valueAt(it) }
+        get() = currentSelection().map { listItems.valueAt(it) }
 
     /** A gate that collapses notifications to Runnable selection listeners into one per Swing-style operation. */
     private val selectionGate = SelectionChangeGate()
@@ -143,6 +143,13 @@ class WList(model: WListModel<*>) : WControl(
         // resolve does not capture the wrapper (it looks it up from the argument wrapper on every call)
         ListSelectionSync(this, listItems, selector, selectionModes, selectionGate) { list: WList -> list.selectionSync }
     }
+
+    /**
+     * The selected indices (ascending). If Swing-style selection has started being used, reads them from the selection model (as in Swing's JList,
+     * the new selection is visible before being copied to the display even when read from inside a selection model listener).
+     */
+    private fun currentSelection(): IntArray =
+        if (selectionSyncHolder.isInitialized()) selectionSync.selectedIndices() else listItems.selectedIndices()
 
     /** The core of the Swing-style selection API (starts syncing with the native selection on first use). */
     internal val selectionSync: ListSelectionSync<WList>
@@ -272,10 +279,10 @@ class WList(model: WListModel<*>) : WControl(
 
     /**
      * The selected index, or -1 if nothing is selected (Selector.SelectedIndex).
-     * With multiple selection, this is the first selected position.
+     * With multiple selection, the first selected position. After Swing-style selection starts being used, reads from the selection model, as in JList.
      */
     var selectedIndex: Int
-        get() = selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
+        get() = if (selectionSyncHolder.isInitialized()) currentSelection().firstOrNull() ?: -1 else selector.getInt(XamlInterop.ISelector_get_SelectedIndex)
         set(value) = selector.call(XamlInterop.ISelector_put_SelectedIndex, value)
 
     /** The string of the selected item (toString() of [selectedValue]). Null when nothing is selected. */
