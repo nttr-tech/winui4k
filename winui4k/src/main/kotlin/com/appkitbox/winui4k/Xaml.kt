@@ -267,27 +267,11 @@ internal object Xaml {
      * released when the element is destroyed).
      */
     fun addHandlerHandledToo(component: WComponent, eventSlot: Int, delegateIid: String, referenceIid: String, handler: (Ptr, Ptr) -> Unit): () -> Unit {
-        val delegate = KComObject("WinUI4K.HandledTooHandler", inspectable = false).addInterface(
-            delegateIid,
-            listOf(
-                // Invoke(this, sender, args)
-                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)) { args ->
-                    handler(args[1] as Ptr, args[2] as Ptr)
-                    KComObject.S_OK
-                },
-            ),
-        )
-        // AddHandler takes the delegate out of the IReference and holds its own reference (UnboxValue in
-        // UIElementGenerated::EventAddHandlerByIndex), so both the IReference and the delegate's creation reference are
-        // released right after registering. RemoveHandler likewise searches by the unwrapped delegate, so wrap it again
-        // when unsubscribing (the element keeps holding a reference to the delegate, so the delegate is still alive then)
-        try {
-            withBoxedHandler(eventSlot, delegate, referenceIid) { routedEvent, boxed ->
-                component.uiElement.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed, 1)
-            }
-        } finally {
-            delegate.release()
-        }
+        val delegate = handledTooDelegate(delegateIid, handler)
+        // AddHandler takes the delegate out of the IReference and holds its own reference (UnboxValue in UIElementGenerated::EventAddHandlerByIndex),
+        // so both the IReference and the delegate's creation reference are released right after registering. RemoveHandler likewise searches by the unwrapped delegate,
+        // so wrap it again when unsubscribing (the element keeps holding a reference to the delegate, so the delegate is still alive then)
+        addHandlerHandledToo(component.uiElement, eventSlot, delegate, referenceIid)
         var removed = false
         return {
             if (!removed) {
@@ -298,6 +282,39 @@ internal object Xaml {
             }
         }
     }
+
+    /**
+     * Subscribes including handled events, like [addHandlerHandledToo], but attaches to an element without a component ([element] is an IUIElement,
+     * such as a part inside a template) and is never removed (the handler is released when the element is destroyed).
+     */
+    fun addHandlerHandledToo(element: ComPtr, eventSlot: Int, delegateIid: String, referenceIid: String, handler: (Ptr, Ptr) -> Unit) {
+        addHandlerHandledToo(element, eventSlot, handledTooDelegate(delegateIid, handler), referenceIid)
+    }
+
+    /** Attaches [delegate] (takes and releases its creation reference) to the [eventSlot] event of [element] (IUIElement), including handled events. */
+    private fun addHandlerHandledToo(element: ComPtr, eventSlot: Int, delegate: KComObject, referenceIid: String) {
+        try {
+            withBoxedHandler(eventSlot, delegate, referenceIid) { routedEvent, boxed ->
+                element.call(XamlInterop.IUIElement_AddHandler, routedEvent, boxed, 1)
+            }
+        } finally {
+            delegate.release()
+        }
+    }
+
+    /** A [delegateIid] delegate that passes Invoke(sender, args) to [handler]. */
+    private fun handledTooDelegate(delegateIid: String, handler: (Ptr, Ptr) -> Unit): KComObject =
+        KComObject("WinUI4K.HandledTooHandler", inspectable = false).addInterface(
+
+            delegateIid,
+            listOf(
+                // Invoke(this, sender, args)
+                KComObject.Method(CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)) { args ->
+                    handler(args[1] as Ptr, args[2] as Ptr)
+                    KComObject.S_OK
+                },
+            ),
+        )
 
     /**
      * Passes the RoutedEvent of [eventSlot] (get_XxxEvent of IUIElementStatics) and an IReference wrapping [delegate] to
@@ -649,6 +666,16 @@ internal object Xaml {
             routed.getPtrOrNull(XamlInterop.IRoutedEventArgs_get_OriginalSource)
         } finally {
             routed.release()
+        }
+    }
+
+    /** The identity of a COM reference (the IUnknown address). It holds no reference, so use it only for comparisons while alive. */
+    fun identityOf(pointer: ComPtr): Long {
+        val unknown = pointer.queryInterface(IID_IUNKNOWN)
+        return try {
+            unknown.ptr.address
+        } finally {
+            unknown.release()
         }
     }
 
