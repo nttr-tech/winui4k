@@ -354,4 +354,5 @@ abstract class ListModelBindingSpec(
 class WListModelTest : ListModelBindingSpec({ WList(it) }, { WList(it) })
 
 /** The model API of [WListBox] (ListBox). */
+@Tags("E2E")
 class WListBoxModelTest : ListModelBindingSpec({ WListBox(it) }, { WListBox(it) })

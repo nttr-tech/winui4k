@@ -399,4 +399,5 @@ class WListSelectionTest : ListSelectionBindingSpec({ WList(it) }) {
 }
 
 /** The Swing-style selection API of [WListBox] (ListBox). */
+@Tags("E2E")
 class WListBoxSelectionTest : ListSelectionBindingSpec({ WListBox(it) })
