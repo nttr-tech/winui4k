@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * (DefaultBoundedRangeModel-style) (no window is used). The expected values were worked out by hand by following
  * the same operations on Swing's DefaultBoundedRangeModel. The shape seen from Java is in WBoundedRangeModelForJavaTest.
  */
+@Tags("Pure")
 class WDefaultBoundedRangeModelTest : FunSpec() {
     /** The (value, extent, min, max) quadruple. */
     private fun WBoundedRangeModel.state() = listOf(value, extent, minimum, maximum)

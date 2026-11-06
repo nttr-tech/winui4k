@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -8,6 +9,7 @@ import io.kotest.matchers.shouldBe
  * Tests WDefaultListSelectionModel (no UI needed). The expected values were derived by hand from the rules of Swing's DefaultListSelectionModel.
  * Events are compared as (firstIndex, lastIndex, valueIsAdjusting) triples.
  */
+@Tags("Pure")
 class WDefaultListSelectionModelTest : FunSpec() {
     private fun WDefaultListSelectionModel.record(): MutableList<Triple<Int, Int, Boolean>> {
         val events = mutableListOf<Triple<Int, Int, Boolean>>()

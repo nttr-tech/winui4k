@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.ink
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests the stroke operations and change notifications of DefaultInkStrokeModel / AbstractInkStrokeModel (no UI needed). */
+@Tags("Pure")
 class DefaultInkStrokeModelTest : FunSpec() {
     /** A one-point stroke distinguishable only by its x coordinate. */
     private fun stroke(x: Double) = InkStroke(listOf(InkPoint(x, 0.0)))

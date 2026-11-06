@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -13,6 +14,7 @@ import java.util.NoSuchElementException
  * (no window is used). The expected values are the type and range of the ListDataEvents that Swing's DefaultListModel sends for the same operations.
  * The shape seen from Java is in WDefaultListModelForJavaTest.
  */
+@Tags("Pure")
 class WDefaultListModelTest : FunSpec() {
     /** A listener that records each event as a string like "A0-0" (A = added, R = removed, C = replaced, followed by index0-index1). */
     private class Recorder : WListDataListener {

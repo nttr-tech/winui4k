@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.tree
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.util.Enumeration
@@ -22,6 +23,7 @@ import java.util.NoSuchElementException
  *    └─ c2
  * ```
  */
+@Tags("Pure")
 class DefaultMutableTreeNodeTest : FunSpec() {
     private class Fixture {
         val root = DefaultMutableTreeNode("root")

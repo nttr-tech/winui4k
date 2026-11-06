@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.tree
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -8,6 +9,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 /** Tests for DefaultTreeSelectionModel and TreeSelectionEvent (no UI needed). Expected values are derived from the rules of Swing's DefaultTreeSelectionModel. */
+@Tags("Pure")
 class DefaultTreeSelectionModelTest : FunSpec() {
     private val a = TreePath(arrayOf<Any?>("root", "a"))
     private val b = TreePath(arrayOf<Any?>("root", "b"))

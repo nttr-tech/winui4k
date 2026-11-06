@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.chart
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests the data operations and change notifications (SampleModelEvent) of DefaultSampleModel / AbstractSampleModel (no UI needed). */
+@Tags("Pure")
 class DefaultSampleModelTest : FunSpec() {
     /** Attaches a listener that records the received events as (type, index0, index1). */
     private fun SampleModel<*>.recordEvents(): MutableList<List<Int>> {

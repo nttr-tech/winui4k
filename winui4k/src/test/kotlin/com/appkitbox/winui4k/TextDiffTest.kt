@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  * window is used).
  * The expected values are the offsets and lengths of insertString / remove when the same edit is made in a Swing Document.
  */
+@Tags("Pure")
 class TextDiffTest : FunSpec() {
     init {
         test("identical strings have no difference (null)") {

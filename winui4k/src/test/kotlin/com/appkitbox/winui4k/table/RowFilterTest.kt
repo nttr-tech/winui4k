@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.table
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.util.Date
 
 /** Tests for each RowFilter filter and for TableRowSorter settings before display (no UI required). */
+@Tags("Pure")
 class RowFilterTest : FunSpec() {
     private val model = DefaultTableModel(
         listOf(

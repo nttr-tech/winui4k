@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k.tree
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -9,6 +10,7 @@ import io.kotest.matchers.shouldBe
  *
  * The tree used: root ─ a (a1, a2) / b / c (c1)
  */
+@Tags("Pure")
 class DefaultTreeModelTest : FunSpec() {
     private data class Ev(val kind: String, val path: List<String>?, val indices: List<Int>?, val children: List<String>?)
 

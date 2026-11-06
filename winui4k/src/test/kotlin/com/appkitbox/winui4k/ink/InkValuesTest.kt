@@ -2,6 +2,7 @@ package com.appkitbox.winui4k.ink
 
 import com.appkitbox.winui4k.WColor
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
@@ -11,6 +12,7 @@ import java.time.Instant
 import kotlin.math.PI
 
 /** Tests the value objects of the Ink model (InkPoint / InkTransform / InkDrawingAttributes / InkStroke / InkRect) (no UI needed). */
+@Tags("Pure")
 class InkValuesTest : FunSpec() {
     init {
         test("InkPoint defaults to pressure 0.5, tilt 0, and timestamp 0") {

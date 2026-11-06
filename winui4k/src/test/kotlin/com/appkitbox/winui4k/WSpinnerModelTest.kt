@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -15,6 +16,7 @@ import java.time.temporal.ChronoUnit
  * (no window is used). The expected values were worked out by hand by following the same operations on Swing's SpinnerNumberModel and others.
  * The shape seen from Java is in WSpinnerModelForJavaTest.
  */
+@Tags("Pure")
 class WSpinnerModelTest : FunSpec() {
     /** Adds a listener that counts how many times it is called. */
     private fun WSpinnerModel.countChanges(): IntArray {

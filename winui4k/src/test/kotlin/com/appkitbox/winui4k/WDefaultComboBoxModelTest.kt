@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -10,6 +11,7 @@ import io.kotest.matchers.shouldBe
  * Tests that WDefaultComboBoxModel handles the selection and fires the same notifications as Swing's DefaultComboBoxModel (no window is used).
  * The shape seen from Java is tested in WDefaultComboBoxModelForJavaTest.
  */
+@Tags("Pure")
 class WDefaultComboBoxModelTest : FunSpec() {
     /** A listener that records received notifications as "type:index0:index1". */
     private class Recorder : WListDataListener {

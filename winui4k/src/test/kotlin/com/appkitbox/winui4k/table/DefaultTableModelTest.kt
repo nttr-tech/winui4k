@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.table
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests for data operations and change notifications (TableModelEvent) of DefaultTableModel / AbstractTableModel (no UI required). */
+@Tags("Pure")
 class DefaultTableModelTest : FunSpec() {
     /** Attaches a listener that records received events as (type, firstRow, lastRow, column). */
     private fun DefaultTableModel.recordEvents(): MutableList<List<Int>> {

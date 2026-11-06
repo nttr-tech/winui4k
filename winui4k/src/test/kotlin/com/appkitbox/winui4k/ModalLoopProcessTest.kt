@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.io.File
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit
  * Exiting the app (Application.Exit, closing the last window, System.exit) from inside the loop ends the process,
  * so it is checked in child processes rather than in shared-window tests. Child processes are cut off after [TIMEOUT_SECONDS] (a hang is a failure).
  */
+@Tags("Process")
 class ModalLoopProcessTest : FunSpec() {
     /** The child process's exit code, the standard output lines starting with "RESULT " (without the leading "RESULT "), and whether the JVM crashed (left an hs_err). */
     private data class Outcome(val exitCode: Int, val results: List<String>, val crashed: Boolean = false)

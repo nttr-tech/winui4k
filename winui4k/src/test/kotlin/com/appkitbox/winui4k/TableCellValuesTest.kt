@@ -1,11 +1,13 @@
 package com.appkitbox.winui4k
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.math.BigDecimal
 
 /** Tests for TableCellValues.convert, which converts cell values written by editing to the model column's type (no UI needed). */
+@Tags("Pure")
 class TableCellValuesTest : FunSpec() {
     init {
         test("text box strings are converted to the numeric column's type (surrounding whitespace is ignored)") {

@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k.tree
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /** Tests TreePath (no UI needed). The expected values were derived from the rules of Swing's javax.swing.tree.TreePath. */
+@Tags("Pure")
 class TreePathTest : FunSpec() {
     private fun path(vararg components: Any): TreePath = TreePath(arrayOf(*components))
 

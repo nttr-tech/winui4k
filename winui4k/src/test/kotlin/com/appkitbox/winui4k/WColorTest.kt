@@ -1,10 +1,12 @@
 package com.appkitbox.winui4k
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 /** Tests WColor's value equality (equals / hashCode) (no UI needed). */
+@Tags("Pure")
 class WColorTest : FunSpec() {
     init {
         test("colors with the same four components are equal even as different instances, and their hash codes match") {

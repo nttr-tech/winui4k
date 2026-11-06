@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k
 
+import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -8,6 +9,7 @@ import io.kotest.matchers.shouldBe
  * Tests only the WPopupMenuListener / WPopupMenuEvent / WPopupMenuAdapter types (not connected to any control; no window is used).
  * The shape seen from Java is in WPopupMenuListenerForJavaTest.
  */
+@Tags("Pure")
 class WPopupMenuListenerTest : FunSpec() {
     init {
         test("the source of WPopupMenuEvent is the object passed in") {
