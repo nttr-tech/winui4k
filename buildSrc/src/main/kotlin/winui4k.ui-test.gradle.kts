@@ -36,6 +36,21 @@ tasks.named<Test>("test") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
+// Test layers are expressed with Kotest @Tags (Pure / E2E / Integration / Process / Memory).
+// pureTest runs only the Pure layer, which does not start WinUI (it works without a display). Java tests (JUnit Jupiter) are not included
+tasks.register<Test>("pureTest") {
+    description = "Runs only the Pure layer tests, which do not start WinUI"
+    group = "verification"
+    val test = project.the<SourceSetContainer>().named("test").get()
+    testClassesDirs = test.output.classesDirs
+    classpath = test.runtimeClasspath
+    useJUnitPlatform {
+        excludeEngines("junit-jupiter")
+    }
+    systemProperty("kotest.tags", "Pure")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
 // WinUI test processes compete for the clipboard, so run the Test tasks of all modules and all JDKs one at a time (UiTestLock)
 val uiTestLock = gradle.sharedServices.registerIfAbsent("uiTestLock", UiTestLock::class) {
     maxParallelUsages = 1
