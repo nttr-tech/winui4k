@@ -436,3 +436,9 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   リスナーの後)、WHEN_ANCESTOR_OF_FOCUSED_COMPONENT は各コンポーネントの KeyDown / KeyUp / CharacterReceived のバブリング、
   WHEN_IN_FOCUSED_WINDOW は XamlRoot.Content のバブリングで引く (KeyBindings.kt。根のバブリングはグローバルなアクセラレーター
   (WComponent.addKeyboardAccelerator など) より先で、Swing でメニューのアクセラレーターが WHEN_IN_FOCUSED_WINDOW の後なのと同じ順)
+- WLayoutPanel を Window.Content に置いたウィンドウを閉じて参照を手放すと、その子のラッパーが回収されなかった
+  (WFrame.setLayout・setContentPane(WLayoutPanel) のどちらでも)。原因はウィンドウや Unloaded ではなく WLayoutPanel 自身で、
+  init で付けていた SizeChanged / Loaded のハンドラ (addSizeChangedListener / addLoadedListener のラムダ) がパネルを強く捕捉し、
+  「Canvas → ハンドラ → パネル → Canvas」の循環になっていた。一度も載せていない WLayoutPanel も、載せて外したものも回収されなかった。
+  ハンドラがパネルを弱く参照するようにして、どの場合も回収される (WrapperReleaseLayoutTest)。WSettingsCard の init の
+  addSizeChangedListener も同じ形

@@ -2,7 +2,10 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 
 /**
  * JPanel-with-a-LayoutManager-like: a [WLayoutManager] (a Kotlin implementation) computes where
@@ -71,14 +74,28 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     }
 
     init {
-        addSizeChangedListener { scheduleLayout() }
-        addLoadedListener {
-            loaded = true
-            // A measurement taken before joining the visual tree can incorrectly return 0, and once
-            // cached it stays 0 on later passes. Force every child to be re-measured once it joins
-            componentList.forEach { it.invalidateNaturalSize() }
-            scheduleLayout()
-        }
+        // The handlers stay in native code (the Canvas), so refer to the panel weakly. Capturing it strongly would form the cycle "Canvas → handler → panel → Canvas",
+        // and neither the panel nor its children would be collected even after the window is closed or the panel removed (doc/memory_management.md "Handling cycles that cross the boundary").
+        // While shown, the panel is held by its parent container (the WFrame if it is the window content)
+        val panel = WeakReference(this)
+        frameworkElement.addEventHandler(
+            "WinUI4K.LayoutPanelSizeChangedHandler",
+            XamlInterop.IID_SizeChangedEventHandler,
+            XamlInterop.IFrameworkElement_add_SizeChanged,
+        ) { _, _ -> ModalLoop.duringLayout { panel.get()?.scheduleLayout() } }
+        frameworkElement.addEventHandler(
+            "WinUI4K.LayoutPanelLoadedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
+        ) { _, _ -> ModalLoop.duringLayout { panel.get()?.onLoaded() } }
+    }
+
+    private fun onLoaded() {
+        loaded = true
+        // A measurement taken before joining the visual tree can incorrectly return 0, and once
+        // cached it stays 0 on later passes. Force every child to be re-measured once it joins
+        componentList.forEach { it.invalidateNaturalSize() }
+        scheduleLayout()
     }
 
     /**
