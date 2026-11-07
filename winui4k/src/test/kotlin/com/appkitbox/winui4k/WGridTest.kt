@@ -18,8 +18,8 @@ class WGridTest : FunSpec() {
         WGrid(rowSpacing, columnSpacing).also {
             it.width = 300.0
             it.height = 200.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
         }
 
     private fun <T> shown(grid: WGrid, block: () -> T): T {

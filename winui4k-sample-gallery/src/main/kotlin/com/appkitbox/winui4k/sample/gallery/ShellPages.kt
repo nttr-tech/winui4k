@@ -206,7 +206,7 @@ private fun buildBadgeGlyphExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(glyphComboBox)
     // The ComboBox is taller because of its header, so nudge this down to align with the input box
-    row.add(applyButton.also { it.verticalAlignment = VerticalAlignment.BOTTOM })
+    row.add(applyButton.also { it.verticalAlignmentInParent = VerticalAlignment.BOTTOM })
 
     val body = WPanel(spacing = 8.0)
     body.add(row)

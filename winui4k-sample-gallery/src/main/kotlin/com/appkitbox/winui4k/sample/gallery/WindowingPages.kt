@@ -823,7 +823,7 @@ private fun buildTitleBarEndToEndExample(): WComponent {
         navigationView.addItem(item1)
         navigationView.addItem(item2)
         val content = WLabel("Page 1")
-        content.horizontalAlignment = HorizontalAlignment.LEFT
+        content.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         navigationView.content = content
         navigationView.addSelectionListener { item -> content.text = item?.text ?: "" }
         navigationView.selectedItem = item1

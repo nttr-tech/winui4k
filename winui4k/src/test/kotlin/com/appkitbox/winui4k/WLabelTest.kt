@@ -140,7 +140,7 @@ class WLabelTest : FunSpec() {
         test("the desired size of a label without an icon is the same as that of a TextBlock alone with the same text") {
             val panel = onUiThreadGet {
                 val panel = WPanel()
-                panel.add(WLabel("Save now").also { it.horizontalAlignment = HorizontalAlignment.LEFT })
+                panel.add(WLabel("Save now").also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT })
                 panel.add(XamlElement.load("""<TextBlock Text="Save now" HorizontalAlignment="Left" />"""))
                 panel
             }
@@ -168,7 +168,7 @@ class WLabelTest : FunSpec() {
             val label = onUiThreadGet {
                 WLabel("a very long label string").also {
                     it.width = 40.0
-                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 }
             }
             UiTestHarness.attachAndAwaitLoaded(label)
@@ -187,7 +187,7 @@ class WLabelTest : FunSpec() {
                 WLabel("a very long label string").also {
                     it.textTrimming = TextTrimming.CHARACTER_ELLIPSIS
                     it.width = 40.0
-                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 }
             }
             UiTestHarness.attachAndAwaitLoaded(label)
@@ -214,7 +214,7 @@ class WLabelTest : FunSpec() {
                 panel.add(
                     WLabel("Right").also {
                         it.width = 300.0
-                        it.horizontalAlignment = HorizontalAlignment.LEFT
+                        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                         it.textAlignment = TextAlignment.RIGHT
                     },
                 )

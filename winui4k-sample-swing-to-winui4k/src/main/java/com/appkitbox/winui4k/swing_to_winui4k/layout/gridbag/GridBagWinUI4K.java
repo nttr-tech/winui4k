@@ -25,18 +25,18 @@ public class GridBagWinUI4K {
             grid.addRow(GridLength.star());              // row 2: the rest of the height (weighty = 1)
 
             WLabel name = new WLabel("Name:");
-            name.setVerticalAlignment(VerticalAlignment.CENTER);
+            name.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
             grid.add(name, 0, 0);                        // (row, column): the reverse of gridx / gridy
             WLabel email = new WLabel("Email:");
-            email.setVerticalAlignment(VerticalAlignment.CENTER);
+            email.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
             grid.add(email, 1, 0);
 
             grid.add(new WTextField(), 0, 1);            // fills the cell (fill = BOTH) by default
             grid.add(new WTextField(), 1, 1);
 
             WButton submit = new WButton("Submit");
-            submit.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-            submit.setVerticalAlignment(VerticalAlignment.TOP);
+            submit.setHorizontalAlignmentInParent(HorizontalAlignment.RIGHT);
+            submit.setVerticalAlignmentInParent(VerticalAlignment.TOP);
             grid.add(submit, 2, 0, 1, 2);                // row span 1, column span 2 (gridwidth = 2)
 
             frame.setContentPane(grid);

@@ -69,7 +69,7 @@ final class DialogsFlyoutsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(showButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A basic dialog (PrimaryButton / SecondaryButton / CloseButton / DefaultButton)", row);
     }
@@ -101,7 +101,7 @@ final class DialogsFlyoutsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(showButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Enabling/disabling a button (IsPrimaryButtonEnabled)", row);
     }
@@ -138,7 +138,7 @@ final class DialogsFlyoutsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(flyoutButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A confirmation flyout attached to a button (Button.Flyout / Hide)", row);
     }
@@ -167,7 +167,7 @@ final class DialogsFlyoutsPages {
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(placementComboBox);
         // The ComboBox is taller because of its header, so nudge this down to align with the input box
-        showButton.setVerticalAlignment(VerticalAlignment.BOTTOM);
+        showButton.setVerticalAlignmentInParent(VerticalAlignment.BOTTOM);
         row.add(showButton);
         return GalleryScaffold.buildExample("Display position (Placement / ShowAt)", row);
     }
@@ -229,7 +229,7 @@ final class DialogsFlyoutsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(showButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
 
         WPanel body = new WPanel(8.0);
@@ -278,7 +278,7 @@ final class DialogsFlyoutsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(showButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         row.add(tip); // Placed in the XAML tree, same as the official Gallery (nothing is drawn while it is closed)
         return GalleryScaffold.buildExample("A callout pointing at an element (Target / ActionButtonClick / Closed)", row);

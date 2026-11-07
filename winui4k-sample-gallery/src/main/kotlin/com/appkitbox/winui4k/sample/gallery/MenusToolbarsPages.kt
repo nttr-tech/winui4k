@@ -67,7 +67,7 @@ private fun buildSimpleAppBarButtonExample(): WComponent {
     row.add(likeButton)
     row.add(saveButton)
     row.add(disabledButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple AppBarButton (Label / Icon / IsEnabled)", row)
 }
 
@@ -89,7 +89,7 @@ private fun buildFlyoutAppBarButtonExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(exportButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("An AppBarButton with a menu (Flyout)", row)
 }
 
@@ -144,7 +144,7 @@ private fun buildSimpleAppBarToggleButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(shuffleButton)
     row.add(boldButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple AppBarToggleButton (IsChecked)", row)
 }
 
@@ -186,7 +186,7 @@ private fun buildSimpleCommandBarExample(): WComponent {
     body.add(
         WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL).also { controls ->
             controls.add(openButton)
-            controls.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+            controls.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
         },
     )
     return buildExample("A simple command bar (PrimaryCommands / SecondaryCommands / IsOpen)", body)
@@ -245,7 +245,7 @@ private fun buildCommandBarFlyoutExample(): WComponent {
     body.add(
         WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL).also { controls ->
             controls.add(showButton)
-            controls.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+            controls.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
         },
     )
     return buildExample("A context menu with a mini toolbar attached (ContextFlyout / ShowAt)", body)
@@ -389,7 +389,7 @@ private fun buildSimpleMenuFlyoutExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(button)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple menu flyout", row)
 }
 
@@ -410,7 +410,7 @@ private fun buildRadioMenuFlyoutExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(button)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Mutually-exclusive selection with radio items (WRadioMenuFlyoutItem)", row)
 }
 
@@ -438,7 +438,7 @@ private fun buildContextMenuFlyoutExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(target)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A context menu (ContextFlyout)", row)
 }
 
@@ -569,9 +569,9 @@ private fun buildXamlUICommandExample(): WComponent {
     appBarButton.command = command
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
-    row.add(button.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(button.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     row.add(appBarButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
 
     val body = WPanel(spacing = 8.0)
     body.add(row)

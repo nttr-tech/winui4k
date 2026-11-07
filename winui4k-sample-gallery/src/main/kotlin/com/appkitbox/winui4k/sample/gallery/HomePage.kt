@@ -201,7 +201,7 @@ private fun buildScrollButton(glyph: String): WButton {
     button.padding = 0.0
     button.width = 16.0
     button.height = 38.0
-    button.verticalAlignment = VerticalAlignment.CENTER
+    button.verticalAlignmentInParent = VerticalAlignment.CENTER
     button.margin = 8.0
     button.isVisible = false // stays hidden until overflow is detected
     return button
@@ -219,9 +219,9 @@ private fun buildHorizontalScroller(content: WComponent): WComponent {
 
     // Segoe Fluent Icons: EDD9 = ChevronLeftSmall, EDDA = ChevronRightSmall (same glyphs as the real Gallery)
     val backButton = buildScrollButton("")
-    backButton.horizontalAlignment = HorizontalAlignment.LEFT
+    backButton.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     val forwardButton = buildScrollButton("")
-    forwardButton.horizontalAlignment = HorizontalAlignment.RIGHT
+    forwardButton.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
 
     // Equivalent to the real Gallery's Scroller_ViewChanging / UpdateScrollButtonsVisibility:
     // hide the back button at the left edge, and the forward button at the right edge
@@ -392,13 +392,13 @@ private fun buildLinkTile(
             it.width = 36.0 // the real Gallery fills the whole icon row (height 36) with the image
             it.height = 36.0
             it.stretch = Stretch.UNIFORM
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         }
     } else {
         WLabel(glyph ?: "").also {
             it.fontFamily = "Segoe Fluent Icons"
             it.fontSize = 24.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
             it.setMargin(0.0, 8.0, 0.0, 0.0) // the real FontIcon's Margin="0,8,0,0"
         }
     }
@@ -430,8 +430,8 @@ private fun buildLinkTile(
     cornerIcon.fontFamily = "Segoe Fluent Icons"
     cornerIcon.fontSize = 14.0
     cornerIcon.foreground = TEXT_SECONDARY
-    cornerIcon.horizontalAlignment = HorizontalAlignment.RIGHT
-    cornerIcon.verticalAlignment = VerticalAlignment.BOTTOM
+    cornerIcon.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
+    cornerIcon.verticalAlignmentInParent = VerticalAlignment.BOTTOM
     cornerIcon.margin = 12.0
 
     // Placing them in the same cell draws the icon at the body's bottom-right
@@ -462,10 +462,10 @@ private fun buildFilterToggle(text: String, glyph: String): WToggleButton {
     val icon = WLabel(glyph)
     icon.fontFamily = "Segoe Fluent Icons"
     icon.fontSize = 16.0
-    icon.verticalAlignment = VerticalAlignment.CENTER
+    icon.verticalAlignmentInParent = VerticalAlignment.CENTER
 
     val label = WLabel(text)
-    label.verticalAlignment = VerticalAlignment.CENTER
+    label.verticalAlignmentInParent = VerticalAlignment.CENTER
 
     val content = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     content.add(icon)
@@ -500,7 +500,7 @@ private fun buildFilterSection(navigateTo: (String) -> Unit): WComponent {
     val toggles = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     toggles.add(recentToggle)
     toggles.add(favoritesToggle)
-    toggles.horizontalAlignment = HorizontalAlignment.CENTER
+    toggles.horizontalAlignmentInParent = HorizontalAlignment.CENTER
 
     // The real spacing: the SelectorBar is Margin="36,24,0,16", the content below it is Margin="36,0,36,36"
     // (the 16 gap between the toggle and the content is expressed via spacing)
@@ -550,13 +550,13 @@ private fun buildFavoritesView(navigateTo: (String) -> Unit): WComponent {
     fallback.add(
         WLabel("No favorites yet").also {
             it.fontWeight = 600
-            it.horizontalAlignment = HorizontalAlignment.CENTER
+            it.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         },
     )
     fallback.add(
         WLabel("Click the star icon on any page to have it show up here.").also {
             it.foreground = TEXT_SECONDARY
-            it.horizontalAlignment = HorizontalAlignment.CENTER
+            it.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         },
     )
     return fallback
@@ -611,10 +611,10 @@ private fun buildControlCard(name: String, navigateTo: (String) -> Unit): WCompo
             it.textWrapping = TextWrapping.WRAP
             // Inside a horizontal WPanel the width isn't fixed and wrapping won't kick in, so set it explicitly
             it.width = 235.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         },
     )
-    texts.verticalAlignment = VerticalAlignment.CENTER
+    texts.verticalAlignmentInParent = VerticalAlignment.CENTER
 
     val content = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
     content.add(
@@ -622,12 +622,12 @@ private fun buildControlCard(name: String, navigateTo: (String) -> Unit): WCompo
             it.width = 36.0
             it.height = 36.0
             it.stretch = Stretch.UNIFORM
-            it.verticalAlignment = VerticalAlignment.CENTER
+            it.verticalAlignmentInParent = VerticalAlignment.CENTER
         },
     )
     content.add(texts)
-    content.horizontalAlignment = HorizontalAlignment.LEFT
-    content.verticalAlignment = VerticalAlignment.CENTER
+    content.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+    content.verticalAlignmentInParent = VerticalAlignment.CENTER
 
     val card = WButton()
     card.content = content

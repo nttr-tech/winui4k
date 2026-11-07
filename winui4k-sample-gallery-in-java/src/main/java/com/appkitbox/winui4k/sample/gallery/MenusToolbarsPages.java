@@ -78,7 +78,7 @@ final class MenusToolbarsPages {
         row.add(likeButton);
         row.add(saveButton);
         row.add(disabledButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple AppBarButton (Label / Icon / IsEnabled)", row);
     }
@@ -101,7 +101,7 @@ final class MenusToolbarsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(exportButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("An AppBarButton with a menu (Flyout)", row);
     }
@@ -157,7 +157,7 @@ final class MenusToolbarsPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(shuffleButton);
         row.add(boldButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple AppBarToggleButton (IsChecked)", row);
     }
@@ -205,7 +205,7 @@ final class MenusToolbarsPages {
         body.add(commandBar);
         WPanel controls = new WPanel(16.0, Orientation.HORIZONTAL);
         controls.add(openButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         controls.add(result);
         body.add(controls);
         return GalleryScaffold.buildExample("A simple command bar (PrimaryCommands / SecondaryCommands / IsOpen)", body);
@@ -269,7 +269,7 @@ final class MenusToolbarsPages {
         body.add(target);
         WPanel controls = new WPanel(16.0, Orientation.HORIZONTAL);
         controls.add(showButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         controls.add(result);
         body.add(controls);
         return GalleryScaffold.buildExample("A context menu with a mini toolbar attached (ContextFlyout / ShowAt)", body);
@@ -425,7 +425,7 @@ final class MenusToolbarsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(button);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple menu flyout", row);
     }
@@ -449,7 +449,7 @@ final class MenusToolbarsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(button);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Mutually-exclusive selection with radio items (WRadioMenuFlyoutItem)", row);
     }
@@ -480,7 +480,7 @@ final class MenusToolbarsPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(target);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A context menu (ContextFlyout)", row);
     }
@@ -616,10 +616,10 @@ final class MenusToolbarsPages {
         appBarButton.setCommand(command);
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
-        button.setVerticalAlignment(VerticalAlignment.CENTER);
+        button.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(button);
         row.add(appBarButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
 
         WPanel body = new WPanel(8.0);

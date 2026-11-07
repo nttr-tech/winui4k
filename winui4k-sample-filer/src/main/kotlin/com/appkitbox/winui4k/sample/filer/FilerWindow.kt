@@ -170,7 +170,7 @@ internal class FilerWindow {
         tabView.addKeyboardAccelerator(VirtualKey.W, VirtualKeyModifier.CONTROL) { closeTab(activeTabIndex) }
 
         // Left-align the tab strip like Files does (TitleBar's content area is centered by default)
-        tabView.horizontalAlignment = HorizontalAlignment.LEFT
+        tabView.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         titleBar.content = tabView
         WTitleBar.setIsDragRegion(tabView, false)
         return titleBar
@@ -436,7 +436,7 @@ internal class FilerWindow {
         val glyph = WLabel(if (file.isDirectory) "" else "") // Folder / Document
         glyph.fontFamily = "Segoe Fluent Icons"
         glyph.fontSize = ICON_GLYPH_SIZE
-        glyph.horizontalAlignment = HorizontalAlignment.CENTER
+        glyph.horizontalAlignmentInParent = HorizontalAlignment.CENTER
 
         val name = WLabel(file.name)
         name.textTrimming = TextTrimming.WORD_ELLIPSIS

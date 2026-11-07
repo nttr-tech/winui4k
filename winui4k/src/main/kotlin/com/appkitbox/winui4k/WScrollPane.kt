@@ -297,7 +297,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     /**
      * JScrollPane.setColumnHeaderView-like: the top header (ScrollViewer.TopHeader). It scrolls only horizontally with the content and does not move vertically (same as Swing's column header).
      * While there are headers ([rowHeaderView] and the corner too), ScrollViewer crashes unless the content is aligned top-left, so the content's
-     * [WComponent.horizontalAlignment] is rewritten to LEFT and [WComponent.verticalAlignment] to TOP (content smaller than the viewport is not stretched).
+     * [WComponent.horizontalAlignmentInParent] is rewritten to LEFT and [WComponent.verticalAlignmentInParent] to TOP (content smaller than the viewport is not stretched).
      * Do not change the content's alignment while there are headers.
      */
     var columnHeaderView: WComponent? = null
@@ -419,8 +419,8 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     private fun alignContentForHeaders() {
         val view = content ?: return
         if (columnHeaderView == null && rowHeaderView == null && upperLeadingCorner == null) return
-        view.horizontalAlignment = HorizontalAlignment.LEFT
-        view.verticalAlignment = VerticalAlignment.TOP
+        view.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        view.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     /**

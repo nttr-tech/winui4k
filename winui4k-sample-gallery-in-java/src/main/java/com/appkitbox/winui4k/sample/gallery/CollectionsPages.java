@@ -102,7 +102,7 @@ final class CollectionsPages {
         });
         itemsView.setWidth(520.0);
         itemsView.setHeight(200.0);
-        itemsView.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        itemsView.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WPanel body = new WPanel(10.0);
         body.add(itemsView);
@@ -138,11 +138,11 @@ final class CollectionsPages {
         WBorder output = new WBorder();
         output.setWidth(100.0);
         output.setHeight(30.0);
-        output.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        output.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WListBox listBox = new WListBox(new ArrayList<>(colors.keySet()));
         listBox.setWidth(200.0);
-        listBox.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        listBox.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         listBox.addListSelectionListener(() -> {
             output.setBackground(colors.get(listBox.getSelectedItem()));
         });
@@ -163,7 +163,7 @@ final class CollectionsPages {
         WListBox listBox = new WListBox(fonts);
         listBox.setWidth(200.0);
         listBox.setHeight(164.0);
-        listBox.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        listBox.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         listBox.addListSelectionListener(() -> {
             String selected = listBox.getSelectedItem();
             if (selected != null) {
@@ -187,7 +187,7 @@ final class CollectionsPages {
         WListBox listBox = new WListBox(items);
         listBox.setWidth(240.0);
         listBox.setHeight(200.0);
-        listBox.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        listBox.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WLabel selection = new WLabel("Selected: none");
         listBox.addListSelectionListener(() -> {
@@ -259,7 +259,7 @@ final class CollectionsPages {
         // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
         WList list = new WList(Arrays.asList("Item 1", "Item 2", "Item 3"));
         list.setWidth(240.0);
-        list.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        list.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WLabel count = new WLabel("Item count: " + list.getItemCount());
         WTextField input = new WTextField();
@@ -311,7 +311,7 @@ final class CollectionsPages {
         }
         WList list = new WList(items);
         list.setWidth(240.0);
-        list.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        list.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WLabel mode = new WLabel("Selection mode: " + list.getSelectionMode());
 
@@ -410,7 +410,7 @@ final class CollectionsPages {
         WTable table = new WTable(model);
         table.setWidth(620.0);
         table.setHeight(300.0);
-        table.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        table.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         return table;
     }
 
@@ -662,7 +662,7 @@ final class CollectionsPages {
         progress.setCellRenderer((view, value, isSelected, hasFocus, row, column) -> {
             WProgressBar bar = new WProgressBar(0.0, 100.0, ((Integer) value).doubleValue());
             bar.setMargin(8.0, 0.0, 8.0, 0.0);
-            bar.setVerticalAlignment(VerticalAlignment.CENTER);
+            bar.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
             return bar;
         });
         progress.setHeaderToolTip("Displays a WProgressBar via TableCellRenderer (GenerateElementCore)");
@@ -812,7 +812,7 @@ final class CollectionsPages {
         WTree tree = new WTree();
         tree.setWidth(345.0);
         // Pin it to the left so the tree doesn't shift toward the center if the panel widens (e.g. from a long label)
-        tree.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        tree.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WTreeNode workFolder = new WTreeNode("Work Documents");
         workFolder.add(new WTreeNode("XYZ Functional Spec"));

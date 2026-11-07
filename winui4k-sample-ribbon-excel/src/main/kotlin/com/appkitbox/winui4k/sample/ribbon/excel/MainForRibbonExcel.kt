@@ -97,7 +97,7 @@ private class SheetView(private val viewModel: ExcelViewModel) {
         bar.addColumn(GridLength.AUTO)
         bar.addColumn(GridLength.star())
         bar.add(nameBox, row = 0, column = 0)
-        bar.add(WRibbonTheme.label("fx", "RibbonSecondaryForegroundBrush", FX_SIZE).also { it.verticalAlignment = VerticalAlignment.CENTER }, row = 0, column = 1)
+        bar.add(WRibbonTheme.label("fx", "RibbonSecondaryForegroundBrush", FX_SIZE).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER }, row = 0, column = 1)
         bar.add(formula, row = 0, column = 2)
         bar.margin = BAR_MARGIN
         buildGrid()
@@ -127,7 +127,7 @@ private class SheetView(private val viewModel: ExcelViewModel) {
             grid.add(header(r.toString()).also { headers += it }, row = r, column = 0)
             viewModel.columns.forEachIndexed { c, name ->
                 val label = WLabel("").also {
-                    it.verticalAlignment = VerticalAlignment.CENTER
+                    it.verticalAlignmentInParent = VerticalAlignment.CENTER
                     it.margin = CELL_PADDING
                 }
                 val cell = WBorder(label)
@@ -140,7 +140,7 @@ private class SheetView(private val viewModel: ExcelViewModel) {
     private fun refresh() {
         for ((key, pair) in cells) {
             pair.second.text = viewModel.displayOf(key)
-            pair.second.horizontalAlignment = if (viewModel.valueOf(key) is Number) HorizontalAlignment.RIGHT else HorizontalAlignment.LEFT
+            pair.second.horizontalAlignmentInParent = if (viewModel.valueOf(key) is Number) HorizontalAlignment.RIGHT else HorizontalAlignment.LEFT
             val selected = key == viewModel.selected
             pair.first.borderColor = if (selected) SELECTION else GRID_LINE
             pair.first.borderThickness = if (selected) {
@@ -175,7 +175,7 @@ private class SampleChart(private val viewModel: ExcelViewModel) {
         border.borderColor = SELECTION
         border.borderThickness = SELECTION_THICKNESS
         border.padding = CHART_PADDING
-        border.verticalAlignment = VerticalAlignment.TOP
+        border.verticalAlignmentInParent = VerticalAlignment.TOP
         border.isVisible = viewModel.chartTools.isVisible
         viewModel.chartTools.addPropertyChangeListener { event -> if (event.propertyName == "isVisible") border.isVisible = viewModel.chartTools.isVisible }
         bars.addRow(GridLength.pixel(CHART_HEIGHT))
@@ -183,9 +183,9 @@ private class SampleChart(private val viewModel: ExcelViewModel) {
         quarters.forEachIndexed { index, column ->
             bars.addColumn(GridLength.star())
             columns[index].background = SELECTION
-            columns[index].verticalAlignment = VerticalAlignment.BOTTOM
+            columns[index].verticalAlignmentInParent = VerticalAlignment.BOTTOM
             bars.add(columns[index], row = 0, column = index)
-            bars.add(WLabel(viewModel.displayOf("${column}1")).also { it.horizontalAlignment = HorizontalAlignment.CENTER }, row = 1, column = index)
+            bars.add(WLabel(viewModel.displayOf("${column}1")).also { it.horizontalAlignmentInParent = HorizontalAlignment.CENTER }, row = 1, column = index)
         }
         refresh()
     }
@@ -201,8 +201,8 @@ private class SampleChart(private val viewModel: ExcelViewModel) {
 private fun header(text: String): WComponent {
     val border = WBorder(
         WLabel(text).also {
-            it.horizontalAlignment = HorizontalAlignment.CENTER
-            it.verticalAlignment = VerticalAlignment.CENTER
+            it.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+            it.verticalAlignmentInParent = VerticalAlignment.CENTER
         },
     )
     border.background = HEADER_BACKGROUND

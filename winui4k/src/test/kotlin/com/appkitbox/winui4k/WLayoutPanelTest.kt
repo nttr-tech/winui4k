@@ -37,8 +37,8 @@ class WLayoutPanelTest : FunSpec() {
     /** Puts [host] aligned to the top-left and runs the scheduled layouts twice. */
     private fun <T> shown(host: WPanel, block: () -> T): T {
         onUiThread {
-            host.horizontalAlignment = HorizontalAlignment.LEFT
-            host.verticalAlignment = VerticalAlignment.TOP
+            host.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            host.verticalAlignmentInParent = VerticalAlignment.TOP
         }
         UiTestHarness.attachAndAwaitLoaded(host)
         try {

@@ -20,8 +20,8 @@ class WCanvasTest : FunSpec() {
     private fun canvas(): WCanvas = WCanvas().also {
         it.width = 200.0
         it.height = 100.0
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     private fun <T> shown(canvas: WCanvas, block: () -> T): T {

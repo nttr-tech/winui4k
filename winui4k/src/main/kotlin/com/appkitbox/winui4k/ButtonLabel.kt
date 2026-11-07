@@ -174,9 +174,9 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
         val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
         for (child in children) {
             if (vertical) {
-                child.horizontalAlignment = HorizontalAlignment.CENTER
+                child.horizontalAlignmentInParent = HorizontalAlignment.CENTER
             } else {
-                child.verticalAlignment = if (child === textBlock) verticalTextPosition.alignment else VerticalAlignment.CENTER
+                child.verticalAlignmentInParent = if (child === textBlock) verticalTextPosition.alignment else VerticalAlignment.CENTER
             }
             panel.add(child)
         }

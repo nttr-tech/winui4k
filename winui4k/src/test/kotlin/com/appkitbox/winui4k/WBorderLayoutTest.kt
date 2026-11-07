@@ -25,7 +25,7 @@ class WBorderLayoutTest : FunSpec() {
         WLayoutPanel(layout).also {
             it.width = width
             it.height = height
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         }
 
     /** Places the panel in the window and finishes the scheduled re-layout synchronously. */

@@ -55,8 +55,8 @@ open class DefaultTableCellRenderer : TableCellRenderer {
         column: Int,
     ): WComponent {
         val label = WLabel(getText(value))
-        label.verticalAlignment = VerticalAlignment.CENTER
-        label.horizontalAlignment = horizontalAlignment
+        label.verticalAlignmentInParent = VerticalAlignment.CENTER
+        label.horizontalAlignmentInParent = horizontalAlignment
         label.textTrimming = TextTrimming.CHARACTER_ELLIPSIS
         label.setMargin(CELL_PADDING_HORIZONTAL, CELL_PADDING_VERTICAL, CELL_PADDING_HORIZONTAL, CELL_PADDING_VERTICAL)
         configure(label, value, isSelected, row, column)

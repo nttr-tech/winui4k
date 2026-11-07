@@ -125,7 +125,7 @@ final class LayoutPages {
         border.setPadding(16.0);
         border.setWidth(320.0);
         border.setHeight(80.0);
-        border.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        border.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         double[] angle = {90.0};
         WButton angleButton = new WButton("Change angle (90°)");
@@ -225,7 +225,7 @@ final class LayoutPages {
         WLayoutPanel panel = new WLayoutPanel(new WBorderLayout(hgap, vgap));
         panel.setWidth(400.0);
         panel.setHeight(220.0);
-        panel.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        panel.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         return panel;
     }
 

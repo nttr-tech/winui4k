@@ -31,7 +31,7 @@ class WFlowLayoutTest : FunSpec() {
         val panel = WLayoutPanel(layout).also {
             it.width = panelWidth
             it.height = 100.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
             it.add(a)
             it.add(b)
             it.add(c)

@@ -19,8 +19,8 @@ class WBorderTest : FunSpec() {
     private fun border(): WBorder = WBorder().also {
         it.width = 100.0
         it.height = 60.0
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     private fun <T> shown(border: WBorder, block: () -> T): T {

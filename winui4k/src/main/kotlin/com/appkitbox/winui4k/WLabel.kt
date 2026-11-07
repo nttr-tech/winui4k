@@ -85,14 +85,13 @@ enum class TextTrimming(internal val native: Int) {
  * JLabel-like: a label that shows text with WinUI 3's TextBlock.
  * TextBlock is not a Control but a direct FrameworkElement, so it derives from [WComponent].
  *
- * TextBlock cannot have an image as a child, so the label's element (root) is a Grid holding one TextBlock, and when
- * [icon] is set, a Grid that arranges the icon and the TextBlock goes into that Grid (arranged by
- * [horizontalTextPosition] / [verticalTextPosition] / [iconTextGap]).
- * Text properties ([text] / [font] / [foreground] / [textWrapping], etc.) apply to the inner TextBlock, while placement
- * and size ([horizontalAlignment] / [margin] / [width], etc., those of [WComponent]) apply to the root Grid.
- * The Grid is the same size as the TextBlock, and when it is given a width the TextBlock gets the same width, so
- * [textAlignment] and [textTrimming] work the same as when the root was the TextBlock. UI Automation names such as
- * [accessibleName] go into the TextBlock (the Grid does not appear as an element to screen readers).
+ * TextBlock cannot have an image as a child, so the label's element (root) is a Grid holding one TextBlock, and when [icon] is set, a Grid that arranges
+ * the icon and the TextBlock goes into that Grid (arranged by [horizontalTextPosition] / [verticalTextPosition] / [iconTextGap]).
+ * Text properties ([text] / [font] / [foreground] / [textWrapping], etc.) apply to the inner TextBlock, while placement and size
+ * ([horizontalAlignmentInParent] / [margin] / [width], etc., those of [WComponent]) apply to the root Grid.
+ * The Grid is the same size as the TextBlock, and when it is given a width the TextBlock gets the same width, so [textAlignment] and
+ * [textTrimming] work the same as when the root was the TextBlock. UI Automation names such as [accessibleName] go into the
+ * TextBlock (the Grid does not appear as an element to screen readers).
  *
  * The root Grid has a transparent brush as its Background. A Grid without a Background does not receive mouse events
  * where its children do not paint (such as the gap between the icon and the text), whereas Swing's JLabel receives mouse
@@ -236,12 +235,10 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     private var iconGroup: WGrid? = null
 
     /**
-     * JLabel.getIcon / setIcon-like: the icon shown alongside the text ([Symbol] / [WImageIcon] / [WFontIcon]). null (the
-     * default) means no icon.
-     * If [text] is empty, only the icon is shown. The icon and text group is aligned within the label's width according to
-     * [textAlignment] (instead of Swing's JLabel.setHorizontalAlignment; [horizontalAlignment] is the placement of the
-     * label itself within its parent).
-     * When arranged horizontally and the width is insufficient, the text side shrinks and is trimmed by [textTrimming].
+     * JLabel.getIcon / setIcon-like: the icon shown alongside the text ([Symbol] / [WImageIcon] / [WFontIcon]). null (the default) means no icon.
+     * If [text] is empty, only the icon is shown. The icon and text group is aligned within the label's width according to [textAlignment]
+     * (instead of Swing's JLabel.setHorizontalAlignment; [horizontalAlignmentInParent] is the placement of the label itself in its parent).
+     * When arranged side by side and the width is not enough, the text side shrinks and is trimmed by [textTrimming].
      *
      * @throws IllegalArgumentException when a WIcon implemented on your own in Java is passed
      */
@@ -339,23 +336,23 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         iconGroup = null
         children.call(FoundationInterop.IVector_Clear)
         textElement.setGridCell(0, 0)
-        textElement.horizontalAlignment = HorizontalAlignment.STRETCH
-        textElement.verticalAlignment = VerticalAlignment.STRETCH
+        textElement.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
+        textElement.verticalAlignmentInParent = VerticalAlignment.STRETCH
         val icon = shownIcon
         if (icon == null) {
             // As with JLabel's default vertical alignment (CENTER), the text is centered vertically even when stretched
-            textElement.verticalAlignment = VerticalAlignment.CENTER
+            textElement.verticalAlignmentInParent = VerticalAlignment.CENTER
             children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
             revalidate()
             return
         }
         val iconElement = XamlElement.adopt(icon.createIconElement(this))
-        iconElement.horizontalAlignment = HorizontalAlignment.CENTER
-        iconElement.verticalAlignment = VerticalAlignment.CENTER
+        iconElement.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+        iconElement.verticalAlignmentInParent = VerticalAlignment.CENTER
         val group = WGrid()
-        group.horizontalAlignment = groupAlignment(textAlignment)
+        group.horizontalAlignmentInParent = groupAlignment(textAlignment)
         // The group of the icon and text is also centered vertically in a stretched label (the same as JLabel's default)
-        group.verticalAlignment = VerticalAlignment.CENTER
+        group.verticalAlignmentInParent = VerticalAlignment.CENTER
         when {
             text.isEmpty() -> group.add(iconElement, 0, 0)
             horizontalTextPosition != HorizontalTextPosition.CENTER -> {
@@ -363,7 +360,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
                 group.columnSpacing = iconTextGap
                 group.addColumn(if (textFirst) GridLength.star() else GridLength.AUTO)
                 group.addColumn(if (textFirst) GridLength.AUTO else GridLength.star())
-                textElement.verticalAlignment = verticalTextPosition.alignment
+                textElement.verticalAlignmentInParent = verticalTextPosition.alignment
                 group.add(iconElement, 0, if (textFirst) 1 else 0)
                 group.add(textElement, 0, if (textFirst) 0 else 1)
             }
@@ -372,13 +369,13 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
                 group.rowSpacing = iconTextGap
                 group.addRow()
                 group.addRow()
-                textElement.horizontalAlignment = HorizontalAlignment.CENTER
+                textElement.horizontalAlignmentInParent = HorizontalAlignment.CENTER
                 group.add(iconElement, if (textFirst) 1 else 0, 0)
                 group.add(textElement, if (textFirst) 0 else 1, 0)
             }
             else -> {
-                textElement.horizontalAlignment = HorizontalAlignment.CENTER
-                textElement.verticalAlignment = VerticalAlignment.CENTER
+                textElement.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+                textElement.verticalAlignmentInParent = VerticalAlignment.CENTER
                 group.add(iconElement, 0, 0)
                 group.add(textElement, 0, 0) // The text added later is drawn on top of the icon
             }
@@ -505,17 +502,15 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         set(value) = textBlock.call(XamlInterop.ITextBlock_put_TextTrimming, value.native)
 
     /**
-     * Text alignment (TextBlock.TextAlignment). When there is an [icon], the icon and text group is also aligned in this
-     * direction within the label's width (LEFT, JUSTIFY and DETECT_FROM_CONTENT to the left, CENTER to the center, RIGHT to
-     * the right).
-     * It corresponds to Swing's JLabel.setHorizontalAlignment, but that name is taken by the label's placement within its
-     * parent ([horizontalAlignment]).
+     * Text alignment (TextBlock.TextAlignment). When there is an [icon], the icon and text group is also aligned in this direction within the label's width
+     * (LEFT, JUSTIFY and DETECT_FROM_CONTENT to the left, CENTER to the center, RIGHT to the right).
+     * It corresponds to Swing's JLabel.setHorizontalAlignment, but that name is used by the label's placement in its parent ([horizontalAlignmentInParent]).
      */
     var textAlignment: TextAlignment
         get() = TextAlignment.of(textBlock.getInt(XamlInterop.ITextBlock_get_TextAlignment))
         set(value) {
             textBlock.call(XamlInterop.ITextBlock_put_TextAlignment, value.native)
-            iconGroup?.horizontalAlignment = groupAlignment(value)
+            iconGroup?.horizontalAlignmentInParent = groupAlignment(value)
         }
 
     /** Whether text can be selected with the mouse (TextBlock.IsTextSelectionEnabled). */

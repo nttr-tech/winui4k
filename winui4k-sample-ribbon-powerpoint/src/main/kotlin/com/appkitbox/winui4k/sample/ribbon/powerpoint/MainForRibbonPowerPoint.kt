@@ -73,7 +73,7 @@ private class SlideView {
         WPanel(spacing = 12.0).also {
             it.add(title)
             it.add(subtitle)
-            it.verticalAlignment = VerticalAlignment.CENTER
+            it.verticalAlignmentInParent = VerticalAlignment.CENTER
         },
     )
     val element: WComponent = WScrollPane(page)
@@ -86,7 +86,7 @@ private class SlideView {
         page.padding = SLIDE_PADDING
         page.borderColor = WColor(0xD0, 0xD0, 0xD0)
         page.borderThickness = 1.0
-        page.horizontalAlignment = HorizontalAlignment.CENTER
+        page.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         page.margin = SLIDE_MARGIN
         show(THEMES[0])
     }
@@ -113,7 +113,7 @@ private fun slideList(): WComponent {
         val thumbnail = WBorder(
             WLabel("Slide $index").also {
                 it.foreground = WColor(0x76, 0x76, 0x76)
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
             },
         )
         thumbnail.width = THUMB_WIDTH

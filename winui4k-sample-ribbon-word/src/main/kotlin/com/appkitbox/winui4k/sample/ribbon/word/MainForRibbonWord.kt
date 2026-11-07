@@ -54,8 +54,8 @@ private fun autoSaveSwitch(): WComponent {
     toggle.onContent = ""
     toggle.offContent = ""
     val panel = WPanel(spacing = 6.0, orientation = Orientation.HORIZONTAL)
-    panel.add(toggle.also { it.verticalAlignment = VerticalAlignment.CENTER })
-    panel.add(WRibbonTheme.label("AutoSave", "RibbonTitleBarForegroundBrush", LABEL_SIZE).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    panel.add(toggle.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
+    panel.add(WRibbonTheme.label("AutoSave", "RibbonTitleBarForegroundBrush", LABEL_SIZE).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return panel
 }
 

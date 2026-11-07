@@ -85,8 +85,8 @@ class WFontTest : FunSpec() {
         test("making the font larger increases the button's height after layout") {
             val button = onUiThreadGet {
                 val button = WButton("Size")
-                button.horizontalAlignment = HorizontalAlignment.LEFT
-                button.verticalAlignment = VerticalAlignment.TOP
+                button.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                button.verticalAlignmentInParent = VerticalAlignment.TOP
                 button
             }
             UiTestHarness.attachAndAwaitLoaded(button)

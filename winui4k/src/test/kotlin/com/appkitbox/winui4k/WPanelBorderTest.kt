@@ -54,8 +54,8 @@ class WPanelBorderTest : FunSpec() {
     private fun <T> shown(component: WComponent, block: () -> T): T {
         val host = onUiThreadGet {
             WPanel().also {
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 it.add(component)
             }
         }

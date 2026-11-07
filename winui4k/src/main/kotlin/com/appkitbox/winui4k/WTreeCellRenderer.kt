@@ -59,7 +59,7 @@ open class WDefaultTreeCellRenderer : WTreeCellRenderer {
         hasFocus: Boolean,
     ): WComponent {
         val label = WLabel(getText(tree, value, selected, expanded, leaf, row, hasFocus), getIcon(value, expanded, leaf))
-        label.verticalAlignment = VerticalAlignment.CENTER
+        label.verticalAlignmentInParent = VerticalAlignment.CENTER
         configure(label, value, selected, expanded, leaf, row, hasFocus)
         return label
     }

@@ -49,8 +49,8 @@ class WImageIconLayoutTest : FunSpec() {
                 it.add(actual)
             }
             val root = WPanel().also {
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 it.add(panel)
                 it.add(WPanel(0.0, Orientation.HORIZONTAL).also { row -> row.add(sample) })
             }
@@ -97,8 +97,8 @@ class WImageIconLayoutTest : FunSpec() {
             WLayoutPanel(WFlowLayout(WFlowLayout.LEFT)).also {
                 it.width = 600.0
                 it.height = 200.0
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 it.add(component)
             } to component
         }
@@ -192,8 +192,8 @@ class WImageIconLayoutTest : FunSpec() {
                 WLayoutPanel(WGridLayout(1, 1)).also {
                     it.width = 120.0
                     it.height = 120.0
-                    it.horizontalAlignment = HorizontalAlignment.LEFT
-                    it.verticalAlignment = VerticalAlignment.TOP
+                    it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                    it.verticalAlignmentInParent = VerticalAlignment.TOP
                     it.add(label)
                 } to label
             }

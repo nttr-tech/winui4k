@@ -54,8 +54,8 @@ internal class CadViewport(ribbon: WRibbon) {
         grid.add(surface, row = 0, column = 0)
         grid.add(overlay, row = 0, column = 0)
         viewportLabel.margin = LABEL_MARGIN
-        viewportLabel.horizontalAlignment = HorizontalAlignment.LEFT
-        viewportLabel.verticalAlignment = VerticalAlignment.TOP
+        viewportLabel.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        viewportLabel.verticalAlignmentInParent = VerticalAlignment.TOP
         grid.add(viewportLabel, row = 0, column = 0)
         grid.add(ucsIcon, row = 0, column = 0)
         grid.add(viewCube, row = 0, column = 0)
@@ -115,8 +115,8 @@ internal class CadViewport(ribbon: WRibbon) {
     private fun label(text: String, weight: Int) = WLabel(text).also {
         it.fontSize = CUBE_FONT
         if (weight > 0) it.fontWeight = weight
-        it.horizontalAlignment = HorizontalAlignment.CENTER
-        it.verticalAlignment = VerticalAlignment.CENTER
+        it.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+        it.verticalAlignmentInParent = VerticalAlignment.CENTER
     }
 
     /** The UCS icon (green arrow for Y, red arrow for X). */
@@ -129,8 +129,8 @@ internal class CadViewport(ribbon: WRibbon) {
         box.add(WRibbonIcon(RibbonIcon.path(art, UCS_SIZE), UCS_SIZE), 0.0, 0.0)
         box.add(WLabel("Y").also { it.foreground = WColor(0x5C, 0xB8, 0x5C) }, 14.0, 0.0)
         box.add(WLabel("X").also { it.foreground = WColor(0xE0, 0x5A, 0x5A) }, 58.0, 40.0)
-        box.horizontalAlignment = HorizontalAlignment.LEFT
-        box.verticalAlignment = VerticalAlignment.BOTTOM
+        box.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        box.verticalAlignmentInParent = VerticalAlignment.BOTTOM
         box.setMargin(UCS_MARGIN_LEFT, 0.0, 0.0, UCS_MARGIN_BOTTOM)
         return box
     }
@@ -156,8 +156,8 @@ internal class CadViewport(ribbon: WRibbon) {
         wcsBadge.borderThickness = 1.0
         wcsBadge.setPadding(8.0, 1.0, 8.0, 1.0)
         cube.add(wcsBadge, CUBE_WIDTH / 2 - BADGE_HALF, CUBE_HEIGHT - BADGE_HEIGHT)
-        cube.horizontalAlignment = HorizontalAlignment.RIGHT
-        cube.verticalAlignment = VerticalAlignment.TOP
+        cube.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
+        cube.verticalAlignmentInParent = VerticalAlignment.TOP
         cube.setMargin(0.0, CUBE_MARGIN_TOP, CUBE_MARGIN_RIGHT, 0.0)
         return cube
     }
@@ -185,8 +185,8 @@ internal class CadViewport(ribbon: WRibbon) {
         val bar = WRibbonToolBar(model)
         bar.ribbon = ribbon
         val frame = WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
-        frame.horizontalAlignment = HorizontalAlignment.RIGHT
-        frame.verticalAlignment = VerticalAlignment.TOP
+        frame.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
+        frame.verticalAlignmentInParent = VerticalAlignment.TOP
         frame.setMargin(0.0, NAV_MARGIN_TOP, NAV_MARGIN_RIGHT, 0.0)
         return frame
     }
@@ -252,8 +252,8 @@ internal class CadCommandLine(ribbon: WRibbon) {
         val panel = WPanel(spacing = 0.0, orientation = Orientation.VERTICAL)
         panel.add(historyBox)
         panel.add(WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush"))
-        panel.verticalAlignment = VerticalAlignment.BOTTOM
-        panel.horizontalAlignment = HorizontalAlignment.CENTER
+        panel.verticalAlignmentInParent = VerticalAlignment.BOTTOM
+        panel.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         panel.setMargin(MARGIN_SIDE, 0.0, MARGIN_SIDE, MARGIN_BOTTOM)
         element = panel
         update()

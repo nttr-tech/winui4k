@@ -61,7 +61,7 @@ internal class WordDocument(private val model: RibbonModel, private val window: 
         page.borderThickness = 1.0
         page.cornerRadius = 2.0
         page.padding = PAGE_PADDING
-        page.horizontalAlignment = HorizontalAlignment.CENTER
+        page.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         page.margin = PAGE_MARGIN
         applyStyle(style)
         applyZoom()
@@ -196,14 +196,14 @@ internal class WordDocument(private val model: RibbonModel, private val window: 
         image.fontFamily = "Segoe Fluent Icons"
         image.fontSize = PICTURE_GLYPH_SIZE
         image.foreground = WColor(0x87, 0x64, 0xB8)
-        image.horizontalAlignment = HorizontalAlignment.CENTER
+        image.horizontalAlignmentInParent = HorizontalAlignment.CENTER
         val border = WBorder(image)
         border.width = PICTURE_SIZE
         border.height = PICTURE_SIZE * 2 / 3
         border.background = WColor(0xF3, 0xEE, 0xFA)
         border.borderColor = WColor(0x44, 0x72, 0xC4)
         border.borderThickness = 2.0
-        border.horizontalAlignment = HorizontalAlignment.LEFT
+        border.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         return border
     }
 

@@ -31,7 +31,7 @@ fun interface WListCellRenderer<E> {
 open class WDefaultListCellRenderer : WListCellRenderer<Any?> {
     override fun getListCellRendererComponent(list: WComponent, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): WComponent {
         val label = WLabel(getText(value), getIcon(value))
-        label.verticalAlignment = VerticalAlignment.CENTER
+        label.verticalAlignmentInParent = VerticalAlignment.CENTER
         configure(label, value, index, isSelected, cellHasFocus)
         return label
     }

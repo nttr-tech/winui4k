@@ -25,7 +25,7 @@ class WGridLayoutTest : FunSpec() {
             val panel = WLayoutPanel(layout).also {
                 it.width = width
                 it.height = height
-                it.horizontalAlignment = HorizontalAlignment.LEFT
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 children.forEach { child -> it.add(child) }
             }
             panel to children

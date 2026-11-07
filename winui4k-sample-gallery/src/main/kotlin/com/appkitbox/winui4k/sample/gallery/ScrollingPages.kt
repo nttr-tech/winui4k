@@ -118,7 +118,7 @@ private fun buildAnnotatedScrollBarExample(): WComponent {
 
     val annotatedScrollBar = WAnnotatedScrollBar()
     annotatedScrollBar.height = 500.0
-    annotatedScrollBar.verticalAlignment = VerticalAlignment.TOP
+    annotatedScrollBar.verticalAlignmentInParent = VerticalAlignment.TOP
     annotatedScrollBar.addDetailLabelRequestedListener { offset ->
         // Return the name of the group containing this offset, as the tooltip
         groupStartOffsets.lastOrNull { it.first <= offset }?.second ?: groups.first().name
@@ -188,7 +188,7 @@ private fun buildPipsPagerGalleryExample(): WComponent {
     // Unlike the real Gallery's FlipView example, also show the buttons so paging works via them too
     pager.previousButtonVisibility = PipsPagerButtonVisibility.VISIBLE
     pager.nextButtonVisibility = PipsPagerButtonVisibility.VISIBLE
-    pager.horizontalAlignment = HorizontalAlignment.CENTER
+    pager.horizontalAlignmentInParent = HorizontalAlignment.CENTER
     pager.addSelectedIndexChangedListener { index ->
         image.sourceUri = imageUris[index]
     }

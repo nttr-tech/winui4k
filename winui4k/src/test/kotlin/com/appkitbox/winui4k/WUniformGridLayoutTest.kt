@@ -27,8 +27,8 @@ class WUniformGridLayoutTest : FunSpec() {
         val view = WItemsView().also {
             it.width = 400.0
             it.height = 300.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
             it.setItems(items)
             it.layout = layout
         }

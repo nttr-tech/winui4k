@@ -72,9 +72,9 @@ final class StatusInfoPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(labeledColumn("Unread", badge));
-        addButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        addButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(addButton);
-        clearButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        clearButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(clearButton);
         return GalleryScaffold.buildExample("Updating the number (Value)", row);
     }
@@ -82,11 +82,11 @@ final class StatusInfoPages {
     /** A small column that stacks a control under a label (used by the badge demos). */
     private static WComponent labeledColumn(String label, WComponent control) {
         WPanel column = new WPanel(6.0);
-        column.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        column.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         WLabel labelText = new WLabel(label);
         labelText.setForeground(GalleryTheme.TEXT_SECONDARY());
         column.add(labelText);
-        control.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        control.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         column.add(control);
         return column;
     }
@@ -158,7 +158,7 @@ final class StatusInfoPages {
         WPanel column = new WPanel(12.0);
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(toggleButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         column.add(row);
         column.add(infoBar);
@@ -240,7 +240,7 @@ final class StatusInfoPages {
 
         WPanel column = new WPanel(12.0);
         column.add(progressBar);
-        toggleButton.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        toggleButton.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         column.add(toggleButton);
         return GalleryScaffold.buildExample("Indeterminate progress (IsIndeterminate)", column);
     }
@@ -302,7 +302,7 @@ final class StatusInfoPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(progressRing);
-        toggleButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        toggleButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(toggleButton);
         return GalleryScaffold.buildExample("Indeterminate progress (IsActive / IsIndeterminate)", row);
     }
@@ -329,7 +329,7 @@ final class StatusInfoPages {
         WPanel column = new WPanel(12.0);
         column.add(slider);
         column.add(label);
-        column.setVerticalAlignment(VerticalAlignment.CENTER);
+        column.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(column);
         return GalleryScaffold.buildExample("Determinate progress (IsIndeterminate = false / Value)", row);
     }

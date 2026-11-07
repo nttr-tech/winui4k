@@ -164,11 +164,11 @@ final class SettingsPage {
         WLabel icon = new WLabel(glyph);
         icon.setFontFamily("Segoe Fluent Icons");
         icon.setFontSize(20.0);
-        icon.setVerticalAlignment(VerticalAlignment.CENTER);
+        icon.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         grid.add(icon, 0, 0, 1, 1);
 
         WPanel labels = new WPanel(2.0);
-        labels.setVerticalAlignment(VerticalAlignment.CENTER);
+        labels.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         WLabel headerLabel = new WLabel(header);
         headerLabel.setTextWrapping(TextWrapping.WRAP);
         labels.add(headerLabel);
@@ -181,7 +181,7 @@ final class SettingsPage {
         }
         grid.add(labels, 0, 1, 1, 1);
 
-        control.setVerticalAlignment(VerticalAlignment.CENTER);
+        control.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         grid.add(control, 0, 2, 1, 1);
 
         WBorder card = new WBorder(grid);

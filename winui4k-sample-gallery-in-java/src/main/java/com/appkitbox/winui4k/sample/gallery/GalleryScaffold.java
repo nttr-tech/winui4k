@@ -26,7 +26,7 @@ final class GalleryScaffold {
         titleRow.add(titleLabel);
         if (GalleryNavigation.pages.containsKey(title)) {
             WToggleButton favorite = HomePage.buildFavoriteToggle(title);
-            favorite.setVerticalAlignment(VerticalAlignment.CENTER);
+            favorite.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
             titleRow.add(favorite);
         }
 
@@ -45,7 +45,7 @@ final class GalleryScaffold {
     /** One demo section (heading + body placed on a card). */
     static WComponent buildExample(String title, WComponent body) {
         // Same as the official Gallery: the demo body is left-aligned rather than stretched to the card width
-        body.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        body.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
         WBorder card = new WBorder(body);
         card.setBackground(GalleryTheme.CARD_BACKGROUND());
@@ -70,8 +70,8 @@ final class GalleryScaffold {
      */
     static WComponent buildExample(String title, WComponent example, WComponent options) {
         // The example body. Aligned to the top-left rather than stretched to the card width (matching the single-argument buildExample)
-        example.setHorizontalAlignment(HorizontalAlignment.LEFT);
-        example.setVerticalAlignment(VerticalAlignment.TOP);
+        example.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
+        example.setVerticalAlignmentInParent(VerticalAlignment.TOP);
 
         WBorder exampleCard = new WBorder(example);
         exampleCard.setBackground(GalleryTheme.CARD_BACKGROUND());
@@ -88,7 +88,7 @@ final class GalleryScaffold {
         optionsCard.setCornerRadius(8.0);
         optionsCard.setPadding(16.0);
         optionsCard.setWidth(280.0);
-        optionsCard.setVerticalAlignment(VerticalAlignment.TOP);
+        optionsCard.setVerticalAlignmentInParent(VerticalAlignment.TOP);
 
         // Lay the example (fills remaining width) and Options (fixed width) side by side
         WGrid grid = new WGrid();

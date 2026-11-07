@@ -931,7 +931,7 @@ final class WindowingPages {
             navigationView.addItem(item1);
             navigationView.addItem(item2);
             WLabel content = new WLabel("Page 1");
-            content.setHorizontalAlignment(HorizontalAlignment.LEFT);
+            content.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
             navigationView.setContent(content);
             navigationView.addSelectionListener(item -> {
                 content.setText(item != null ? item.getText() : "");

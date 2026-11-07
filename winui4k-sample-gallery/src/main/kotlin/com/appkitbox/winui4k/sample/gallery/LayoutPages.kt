@@ -109,7 +109,7 @@ private fun buildBorderGradientExample(): WComponent {
     border.padding = 16.0
     border.width = 320.0
     border.height = 80.0
-    border.horizontalAlignment = HorizontalAlignment.LEFT
+    border.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     var angle = 90.0
     val angleButton = WButton("Change angle (90°)")
@@ -210,7 +210,7 @@ private fun buildBorderLayoutPanel(hgap: Double = 4.0, vgap: Double = 4.0): WLay
     val panel = WLayoutPanel(WBorderLayout(hgap = hgap, vgap = vgap))
     panel.width = 400.0
     panel.height = 220.0
-    panel.horizontalAlignment = HorizontalAlignment.LEFT
+    panel.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     return panel
 }
 

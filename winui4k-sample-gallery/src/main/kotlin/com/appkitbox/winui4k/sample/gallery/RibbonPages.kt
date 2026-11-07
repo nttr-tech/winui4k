@@ -452,7 +452,7 @@ private fun buildCadRibbonExample(): WComponent {
     options.add(WButton("Toggle minimize").also { it.addActionListener { ribbon.toggleMinimized() } })
     options.add(WButton("Float [Draw]").also { it.addActionListener { ribbon.floatGroup(model.findGroup("draw")!!) } })
     options.add(WButton("Return all to the ribbon").also { it.addActionListener { ribbon.returnAllPanelsToRibbon() } })
-    options.add(optionsLabel("The minimize behavior can also be chosen with the arrow at the top right.").also { it.verticalAlignment = VerticalAlignment.CENTER })
+    options.add(optionsLabel("The minimize behavior can also be chosen with the arrow at the top right.").also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
 
     val body = WPanel(spacing = 8.0)
     body.add(ribbon)

@@ -602,18 +602,18 @@ class WSplitPane @JvmOverloads constructor(
         if (horizontal) {
             dividerLine.width = 1.0
             dividerLine.height = Double.NaN
-            dividerLine.horizontalAlignment = HorizontalAlignment.CENTER
-            dividerLine.verticalAlignment = VerticalAlignment.STRETCH
-            dragIndicator.horizontalAlignment = HorizontalAlignment.LEFT
-            dragIndicator.verticalAlignment = VerticalAlignment.STRETCH
+            dividerLine.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+            dividerLine.verticalAlignmentInParent = VerticalAlignment.STRETCH
+            dragIndicator.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            dragIndicator.verticalAlignmentInParent = VerticalAlignment.STRETCH
             dragIndicator.height = Double.NaN
         } else {
             dividerLine.height = 1.0
             dividerLine.width = Double.NaN
-            dividerLine.horizontalAlignment = HorizontalAlignment.STRETCH
-            dividerLine.verticalAlignment = VerticalAlignment.CENTER
-            dragIndicator.horizontalAlignment = HorizontalAlignment.STRETCH
-            dragIndicator.verticalAlignment = VerticalAlignment.TOP
+            dividerLine.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
+            dividerLine.verticalAlignmentInParent = VerticalAlignment.CENTER
+            dragIndicator.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
+            dragIndicator.verticalAlignmentInParent = VerticalAlignment.TOP
             dragIndicator.width = Double.NaN
         }
     }

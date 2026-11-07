@@ -334,7 +334,7 @@ class WRibbonStatusBar @JvmOverloads constructor(
         root.addChild(measureHost)
         root.addChild(start.element)
         root.addChild(end.element)
-        start.element.horizontalAlignment = HorizontalAlignment.LEFT
+        start.element.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         end.element.setGridCell(0, 1)
         model.addPropertyChangeListener(modelListener)
         addLoadedListener { applyLayouts() }

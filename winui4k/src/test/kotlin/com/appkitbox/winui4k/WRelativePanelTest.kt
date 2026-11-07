@@ -22,8 +22,8 @@ class WRelativePanelTest : FunSpec() {
     private fun panel(): WRelativePanel = WRelativePanel().also {
         it.width = 300.0
         it.height = 200.0
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     private fun <T> shown(panel: WRelativePanel, block: () -> T): T {

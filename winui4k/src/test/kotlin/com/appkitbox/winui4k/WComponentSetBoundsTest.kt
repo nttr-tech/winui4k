@@ -19,8 +19,8 @@ class WComponentSetBoundsTest : FunSpec() {
         onUiThread {
             parent.width = 400.0
             parent.height = 300.0
-            parent.horizontalAlignment = HorizontalAlignment.LEFT
-            parent.verticalAlignment = VerticalAlignment.TOP
+            parent.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            parent.verticalAlignmentInParent = VerticalAlignment.TOP
             parent.add(child)
         }
         UiTestHarness.attachAndAwaitLoaded(parent)
@@ -115,7 +115,7 @@ class WComponentSetBoundsTest : FunSpec() {
         }
 
         test("for a child of a parent that lays out (WPanel) only the size takes effect and the position is ignored") {
-            val box = onUiThreadGet { WCanvas().also { it.horizontalAlignment = HorizontalAlignment.LEFT } }
+            val box = onUiThreadGet { WCanvas().also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT } }
             withChild(onUiThreadGet { WPanel().also { it.spacing = 0.0 } }, box) {
                 box.setBounds(30.0, 40.0, 50.0, 60.0)
                 box.parent!!.updateLayout()

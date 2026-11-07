@@ -111,7 +111,7 @@ internal class RibbonSeparatorView(model: RibbonSeparatorModel, host: RibbonItem
         val size = measure(layout)
         if (isHorizontal) {
             element.setSize(Double.NaN, 1.0)
-            element.horizontalAlignment = HorizontalAlignment.STRETCH
+            element.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
             element.setMargin(4.0, MARGIN, 4.0, MARGIN)
         } else {
             element.setSize(1.0, size.height - MARGIN * 2)

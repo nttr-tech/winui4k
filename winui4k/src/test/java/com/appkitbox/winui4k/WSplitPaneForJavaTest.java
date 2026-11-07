@@ -62,7 +62,7 @@ class WSplitPaneForJavaTest {
             WSplitPane pane = new WSplitPane(WSplitPane.HORIZONTAL_SPLIT, new WLabel("Left"), new WLabel("Right"));
             pane.setWidth(300);
             pane.setHeight(80);
-            pane.setHorizontalAlignment(HorizontalAlignment.LEFT);
+            pane.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
             pane.setResizeWeight(0.5);
             pane.setDividerLocation(0.5); // A ratio before being shown becomes a position on the first layout
             return pane;

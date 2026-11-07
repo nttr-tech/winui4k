@@ -559,12 +559,12 @@ internal class RibbonColorPickerView(override val model: RibbonColorPickerModel,
         val (p, s) = parts(layout)
         primary!!.setContent(XamlElement.load(p.xaml))
         secondary!!.setContent(XamlElement.load(s.xaml))
-        primary!!.horizontalAlignment = HorizontalAlignment.LEFT
-        secondary!!.horizontalAlignment = HorizontalAlignment.LEFT
+        primary!!.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        secondary!!.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         if (isVertical(layout)) {
             val width = maxOf(p.width, s.width)
-            primary!!.verticalAlignment = VerticalAlignment.TOP
-            secondary!!.verticalAlignment = VerticalAlignment.TOP
+            primary!!.verticalAlignmentInParent = VerticalAlignment.TOP
+            secondary!!.verticalAlignmentInParent = VerticalAlignment.TOP
             primary!!.setSize(width, p.height)
             secondary!!.setSize(width, s.height)
             primary!!.setMargin(0.0, 0.0, 0.0, 0.0)

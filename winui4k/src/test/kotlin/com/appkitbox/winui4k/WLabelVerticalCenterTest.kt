@@ -14,7 +14,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests for the vertical position of the text of a stretched WLabel and of components on a WCommandBar (display issue 14 in doc/swing_to_winui4k_issues.md).
- * JLabel's default vertical alignment (verticalAlignment) is center, so the text of a label placed in a tall area appears vertically centered. The components of a JToolBar
+ * JLabel's default vertical alignment (verticalAlignmentInParent) is center, so the text of a label placed in a tall area appears vertically centered. The components of a JToolBar
  * are also lined up centered vertically.
  */
 @Tags("E2E")
@@ -42,8 +42,8 @@ class WLabelVerticalCenterTest : FunSpec() {
             WLayoutPanel(WBorderLayout()).also {
                 it.width = 300.0
                 it.height = 200.0
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 it.add(label, WBorderLayout.CENTER)
             }
         }

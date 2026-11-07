@@ -131,7 +131,7 @@ private fun backstageHome(): WComponent {
 }
 
 private fun templateCard(label: String, backgroundKey: String): WComponent {
-    val card = WBorder(WLabel(label).also { it.verticalAlignment = VerticalAlignment.BOTTOM })
+    val card = WBorder(WLabel(label).also { it.verticalAlignmentInParent = VerticalAlignment.BOTTOM })
     card.width = CARD_WIDTH
     card.height = CARD_HEIGHT
     card.cornerRadius = CARD_RADIUS

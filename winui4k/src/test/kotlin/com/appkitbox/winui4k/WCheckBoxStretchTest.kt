@@ -48,8 +48,8 @@ class WCheckBoxStretchTest : FunSpec() {
             WLayoutPanel(layout).also {
                 it.width = 300.0
                 it.height = height
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 boxes.forEach(it::add)
             }
         }

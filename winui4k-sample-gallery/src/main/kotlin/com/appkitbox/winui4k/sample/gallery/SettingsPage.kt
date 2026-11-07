@@ -175,11 +175,11 @@ private fun buildSettingsCard(
     val icon = WLabel(glyph)
     icon.fontFamily = "Segoe Fluent Icons"
     icon.fontSize = 20.0
-    icon.verticalAlignment = VerticalAlignment.CENTER
+    icon.verticalAlignmentInParent = VerticalAlignment.CENTER
     grid.add(icon, row = 0, column = 0)
 
     val labels = WPanel(spacing = 2.0)
-    labels.verticalAlignment = VerticalAlignment.CENTER
+    labels.verticalAlignmentInParent = VerticalAlignment.CENTER
     labels.add(WLabel(header).also { it.textWrapping = TextWrapping.WRAP })
     if (description != null) {
         labels.add(
@@ -192,7 +192,7 @@ private fun buildSettingsCard(
     }
     grid.add(labels, row = 0, column = 1)
 
-    control.verticalAlignment = VerticalAlignment.CENTER
+    control.verticalAlignmentInParent = VerticalAlignment.CENTER
     grid.add(control, row = 0, column = 2)
 
     val card = WBorder(grid)

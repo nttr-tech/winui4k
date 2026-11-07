@@ -17,8 +17,8 @@ class WContainerBackgroundTest : FunSpec() {
     private fun <T : WContainer> sized(panel: T): T = panel.also {
         it.width = 200.0
         it.height = 100.0
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     /** Places [panel], finishes the layout, and calls [block] on the UI thread. */

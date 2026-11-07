@@ -84,7 +84,7 @@ final class BasicInputPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(standardButton);
         row.add(toggleButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Simple button", row);
     }
@@ -126,7 +126,7 @@ final class BasicInputPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(commandButton);
         row.add(toggleButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Button with a command", row);
     }
@@ -188,7 +188,7 @@ final class BasicInputPages {
         row.add(duplicateButton);
         row.add(renameButton);
         row.add(toggleButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Buttons with an action (WAction / WAbstractAction)", row);
     }
@@ -228,7 +228,7 @@ final class BasicInputPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(nameField);
         row.add(submitButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         WPanel body = new WPanel(8.0);
         body.add(useDefault);
@@ -261,7 +261,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(checkBox);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple checkbox", row);
     }
@@ -284,7 +284,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(checkBox);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Three states (IsThreeState)", row);
     }
@@ -419,7 +419,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(comboBox);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple combo box (SelectionChanged)", row);
     }
@@ -458,7 +458,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(comboBox);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("An editable combo box (IsEditable / TextSubmitted)", row);
     }
@@ -496,7 +496,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(dropDownButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple drop-down button (Flyout)", row);
     }
@@ -535,7 +535,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(hyperlinkButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Handling the Click event", row);
     }
@@ -638,7 +638,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(rating);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple rating (ValueChanged / IsClearEnabled)", row);
     }
@@ -696,7 +696,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(repeatButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple repeat button", row);
     }
@@ -720,7 +720,7 @@ final class BasicInputPages {
             });
             row.add(repeatButton);
         }
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("Repeat speed (Delay / Interval)", row);
     }
@@ -753,7 +753,7 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(slider);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple slider (ValueChanged)", row);
     }
@@ -827,7 +827,7 @@ final class BasicInputPages {
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
-        splitButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        splitButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(splitButton);
         row.add(tile);
         return GalleryScaffold.buildExample("A simple split button (Click + Flyout)", row);
@@ -862,7 +862,7 @@ final class BasicInputPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(toggleButton);
         row.add(codeButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple toggle button (IsChecked)", row);
     }
@@ -918,9 +918,9 @@ final class BasicInputPages {
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
-        toggleSplitButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        toggleSplitButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(toggleSplitButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple toggle split button (IsChecked + Flyout)", row);
     }
@@ -954,9 +954,9 @@ final class BasicInputPages {
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(toggleSwitch);
-        codeButton.setVerticalAlignment(VerticalAlignment.CENTER);
+        codeButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(codeButton);
-        result.setVerticalAlignment(VerticalAlignment.CENTER);
+        result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
         return GalleryScaffold.buildExample("A simple toggle switch (IsOn / Toggled)", row);
     }

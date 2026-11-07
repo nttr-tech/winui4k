@@ -26,8 +26,8 @@ class WRelativePanelCycleTest : FunSpec() {
         val panel = WRelativePanel().also {
             it.width = 300.0
             it.height = 200.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
             boxes.forEach(it::add)
         }
         return panel to boxes

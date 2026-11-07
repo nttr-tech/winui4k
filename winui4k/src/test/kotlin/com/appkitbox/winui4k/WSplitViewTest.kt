@@ -25,8 +25,8 @@ class WSplitViewTest : FunSpec() {
             it.width = 400.0
             it.height = 200.0
             it.openPaneLength = 100.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
         }
     }
 

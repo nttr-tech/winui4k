@@ -21,8 +21,8 @@ class WPanelTest : FunSpec() {
     /** Puts [panel] aligned to the top-left, finishes layout, and then calls [block] on the UI thread. */
     private fun <T> shown(panel: WPanel, block: () -> T): T {
         onUiThread {
-            panel.horizontalAlignment = HorizontalAlignment.LEFT
-            panel.verticalAlignment = VerticalAlignment.TOP
+            panel.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            panel.verticalAlignmentInParent = VerticalAlignment.TOP
         }
         UiTestHarness.attachAndAwaitLoaded(panel)
         try {

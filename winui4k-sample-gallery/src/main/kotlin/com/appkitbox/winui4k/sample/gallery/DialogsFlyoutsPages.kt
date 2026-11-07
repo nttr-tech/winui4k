@@ -57,7 +57,7 @@ private fun buildSimpleContentDialogExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A basic dialog (PrimaryButton / SecondaryButton / CloseButton / DefaultButton)", row)
 }
 
@@ -88,7 +88,7 @@ private fun buildPrimaryButtonEnabledDialogExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Enabling/disabling a button (IsPrimaryButtonEnabled)", row)
 }
 
@@ -126,7 +126,7 @@ private fun buildSimpleFlyoutExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(flyoutButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A confirmation flyout attached to a button (Button.Flyout / Hide)", row)
 }
 
@@ -148,7 +148,7 @@ private fun buildFlyoutPlacementExample(): WComponent {
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(placementComboBox)
     // The ComboBox is taller because of its header, so nudge this down to align with the input box
-    row.add(showButton.also { it.verticalAlignment = VerticalAlignment.BOTTOM })
+    row.add(showButton.also { it.verticalAlignmentInParent = VerticalAlignment.BOTTOM })
     return buildExample("Display position (Placement / ShowAt)", row)
 }
 
@@ -205,7 +205,7 @@ private fun buildSimplePopupExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
 
     val body = WPanel(spacing = 8.0)
     body.add(lightDismissCheckBox)
@@ -249,7 +249,7 @@ private fun buildTargetedTeachingTipExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     row.add(tip) // placed in the XAML tree, matching the real Gallery (renders nothing while closed)
     return buildExample("A callout pointing at an element (Target / ActionButtonClick / Closed)", row)
 }

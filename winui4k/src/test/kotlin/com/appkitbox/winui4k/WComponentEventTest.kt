@@ -23,7 +23,7 @@ class WComponentEventTest : FunSpec() {
         val outer = WCanvas().also {
             it.width = 400.0
             it.height = 300.0
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         }
         val middle = WCanvas().also {
             it.width = 200.0

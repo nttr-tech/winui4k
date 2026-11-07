@@ -43,8 +43,8 @@ internal object TextMetrics {
         val probe = WLabel(text)
         probe.font = font
         probe.fontWeight = weight
-        probe.horizontalAlignment = HorizontalAlignment.LEFT
-        probe.verticalAlignment = VerticalAlignment.TOP
+        probe.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        probe.verticalAlignmentInParent = VerticalAlignment.TOP
         val popup = Activation.activate(XamlInterop.CLS_Popup, XamlInterop.IID_IPopup)
         val popupElement = popup.queryInterface(XamlInterop.IID_IUIElement)
         try {

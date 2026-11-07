@@ -196,7 +196,7 @@ class WScrollPaneBarTest : FunSpec() {
                     )
                 } shouldBe listOf(true, true, true, true, true)
                 // With headers, ScrollViewer accepts only top-left aligned content, so the content's alignment has been rewritten
-                onUiThreadGet { listOf(pane.content?.horizontalAlignment, pane.content?.verticalAlignment) } shouldBe
+                onUiThreadGet { listOf(pane.content?.horizontalAlignmentInParent, pane.content?.verticalAlignmentInParent) } shouldBe
                     listOf(HorizontalAlignment.LEFT, VerticalAlignment.TOP)
             }
         }

@@ -103,8 +103,8 @@ class RibbonDemoWindow(
                 WLabel(initials).also {
                     it.foreground = WColor(255, 255, 255)
                     it.fontWeight = SEMI_BOLD
-                    it.horizontalAlignment = HorizontalAlignment.CENTER
-                    it.verticalAlignment = VerticalAlignment.CENTER
+                    it.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+                    it.verticalAlignmentInParent = VerticalAlignment.CENTER
                 },
             )
             circle.width = AVATAR_SIZE

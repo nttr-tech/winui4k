@@ -220,7 +220,7 @@ class WTextField() : WControl(
 
     /**
      * JTextField.setHorizontalAlignment-like: the alignment of the text in the field (TextBox.TextAlignment).
-     * The name of Swing's setHorizontalAlignment is used by the field's placement in its parent ([horizontalAlignment]).
+     * The name of Swing's setHorizontalAlignment is used by the field's placement in its parent ([horizontalAlignmentInParent]).
      */
     var textAlignment: TextAlignment
         get() = TextAlignment.of(inspectable.getInt(XamlInterop.ITextBox_get_TextAlignment))

@@ -81,7 +81,7 @@ class WRibbonBarsTest : FunSpec() {
                 }
             }
             // Because it is top-aligned, the toolbar's height is the content height it decides itself (no height constraint comes from outside)
-            val toolBar = onUiThreadGet { WRibbonToolBar(model).also { it.verticalAlignment = VerticalAlignment.TOP } }
+            val toolBar = onUiThreadGet { WRibbonToolBar(model).also { it.verticalAlignmentInParent = VerticalAlignment.TOP } }
             show(toolBar)
             onUiThreadGet { toolBar.overflowItems.map { it.id } } shouldBe emptyList()
         }

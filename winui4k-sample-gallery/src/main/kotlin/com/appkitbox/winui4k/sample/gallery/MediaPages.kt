@@ -346,7 +346,7 @@ private fun buildDemoChart(): WChart = WChart().also { it.height = 320.0 }
 
 /** buildExample left-aligns the example body (to its content width), so stretch the chart back to the full width of the card. */
 private fun stretchChart(chart: WChart) {
-    chart.horizontalAlignment = HorizontalAlignment.STRETCH
+    chart.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
 }
 
 /** A toggle switch for the Options panel (with a header). */

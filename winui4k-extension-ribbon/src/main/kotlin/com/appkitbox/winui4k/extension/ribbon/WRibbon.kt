@@ -423,7 +423,7 @@ class WRibbon @JvmOverloads constructor(
             tabViews[tab] = view
             view.syncGroups()
             view.element.isVisible = false
-            view.element.verticalAlignment = VerticalAlignment.TOP
+            view.element.verticalAlignmentInParent = VerticalAlignment.TOP
             tabContentHost.addChild(view.element)
             val listener = RibbonListListener<RibbonGroupModel> {
                 view.syncGroups()

@@ -22,7 +22,7 @@ internal fun buildPage(title: String, description: String): WPanel {
         },
     )
     if (title in pages) {
-        titleRow.add(buildFavoriteToggle(title).also { it.verticalAlignment = VerticalAlignment.CENTER })
+        titleRow.add(buildFavoriteToggle(title).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     }
 
     val header = WPanel(spacing = 4.0)
@@ -43,7 +43,7 @@ internal fun buildPage(title: String, description: String): WPanel {
 internal fun buildExample(title: String, body: WComponent): WComponent {
     // Like the real Gallery, keep the demo body from stretching to the card's
     // full width; left-align it instead
-    body.horizontalAlignment = HorizontalAlignment.LEFT
+    body.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val card = WBorder(body)
     card.background = CARD_BACKGROUND
@@ -71,8 +71,8 @@ internal fun buildExample(title: String, body: WComponent): WComponent {
 internal fun buildExample(title: String, example: WComponent, options: WComponent): WComponent {
     // The example body. Don't stretch it to the card's full width; align it to the top-left
     // (matches the single-argument buildExample overload)
-    example.horizontalAlignment = HorizontalAlignment.LEFT
-    example.verticalAlignment = VerticalAlignment.TOP
+    example.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+    example.verticalAlignmentInParent = VerticalAlignment.TOP
 
     val exampleCard = WBorder(example)
     exampleCard.background = CARD_BACKGROUND
@@ -90,7 +90,7 @@ internal fun buildExample(title: String, example: WComponent, options: WComponen
     optionsCard.cornerRadius = 8.0
     optionsCard.padding = 16.0
     optionsCard.width = 280.0
-    optionsCard.verticalAlignment = VerticalAlignment.TOP
+    optionsCard.verticalAlignmentInParent = VerticalAlignment.TOP
 
     // Lay the example (fills remaining width) and Options (fixed width) side by side
     val grid = WGrid()

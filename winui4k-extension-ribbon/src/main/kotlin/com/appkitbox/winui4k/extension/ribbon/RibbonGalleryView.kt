@@ -162,7 +162,7 @@ internal class RibbonGalleryView(override val model: RibbonGalleryModel, host: R
             val content = RibbonItemContent.layout(dropDownSpec(layout), host.textWidths)
             dropDownButton.setContent(XamlElement.load(content.xaml))
             dropDownButton.setSize(if (embedded) Double.NaN else content.width + 2, content.height + 2)
-            if (embedded) dropDownButton.horizontalAlignment = HorizontalAlignment.STRETCH
+            if (embedded) dropDownButton.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
             dropDownButton.setAutomationName(model.label)
         }
         val size = measure(layout)

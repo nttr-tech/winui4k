@@ -65,17 +65,17 @@ private fun buildInfoBadgeDynamicExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(labeledColumn("Unread", badge))
-    row.add(addButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
-    row.add(clearButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(addButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
+    row.add(clearButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Updating the number (Value)", row)
 }
 
 /** A small column that stacks a control under a label (used by the badge demos). */
 private fun labeledColumn(label: String, control: WComponent): WComponent {
     val column = WPanel(spacing = 6.0)
-    column.horizontalAlignment = HorizontalAlignment.LEFT
+    column.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     column.add(WLabel(label).also { it.foreground = TEXT_SECONDARY })
-    column.add(control.also { it.horizontalAlignment = HorizontalAlignment.LEFT })
+    column.add(control.also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT })
     return column
 }
 
@@ -139,7 +139,7 @@ private fun buildInfoBarInteractiveExample(): WComponent {
     val column = WPanel(spacing = 12.0)
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(toggleButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     column.add(row)
     column.add(infoBar)
     return buildExample("Opening/closing and the close button (IsOpen / CloseButtonClick)", column)
@@ -218,7 +218,7 @@ private fun buildIndeterminateProgressBarExample(): WComponent {
 
     val column = WPanel(spacing = 12.0)
     column.add(progressBar)
-    column.add(toggleButton.also { it.horizontalAlignment = HorizontalAlignment.LEFT })
+    column.add(toggleButton.also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT })
     return buildExample("Indeterminate progress (IsIndeterminate)", column)
 }
 
@@ -280,7 +280,7 @@ private fun buildIndeterminateProgressRingExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(progressRing)
-    row.add(toggleButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(toggleButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Indeterminate progress (IsActive / IsIndeterminate)", row)
 }
 
@@ -305,7 +305,7 @@ private fun buildDeterminateProgressRingExample(): WComponent {
     val column = WPanel(spacing = 12.0)
     column.add(slider)
     column.add(label)
-    row.add(column.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(column.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Determinate progress (IsIndeterminate = false / Value)", row)
 }
 

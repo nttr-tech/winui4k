@@ -186,7 +186,7 @@ final class HomePage {
         button.setPadding(0.0);
         button.setWidth(16.0);
         button.setHeight(38.0);
-        button.setVerticalAlignment(VerticalAlignment.CENTER);
+        button.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         button.setMargin(8.0);
         button.setVisible(false); // hidden until an overflow is detected
         return button;
@@ -204,9 +204,9 @@ final class HomePage {
 
         // Segoe Fluent Icons: EDD9 = ChevronLeftSmall, EDDA = ChevronRightSmall (same glyphs as the real Gallery)
         WButton backButton = buildScrollButton("");
-        backButton.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        backButton.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         WButton forwardButton = buildScrollButton("");
-        forwardButton.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        forwardButton.setHorizontalAlignmentInParent(HorizontalAlignment.RIGHT);
 
         // Equivalent to the real Gallery's Scroller_ViewChanging / UpdateScrollButtonsVisibility:
         // hide the back button at the left edge, and the forward button at the right edge
@@ -383,13 +383,13 @@ final class HomePage {
             image.setWidth(36.0); // the official Gallery fills the icon row (height 36) with the image
             image.setHeight(36.0);
             image.setStretch(Stretch.UNIFORM);
-            image.setHorizontalAlignment(HorizontalAlignment.LEFT);
+            image.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
             icon = image;
         } else {
             WLabel glyphLabel = new WLabel(glyph != null ? glyph : "");
             glyphLabel.setFontFamily("Segoe Fluent Icons");
             glyphLabel.setFontSize(24.0);
-            glyphLabel.setHorizontalAlignment(HorizontalAlignment.LEFT);
+            glyphLabel.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
             glyphLabel.setMargin(0.0, 8.0, 0.0, 0.0); // the official FontIcon's Margin="0,8,0,0"
             icon = glyphLabel;
         }
@@ -420,8 +420,8 @@ final class HomePage {
         cornerIcon.setFontFamily("Segoe Fluent Icons");
         cornerIcon.setFontSize(14.0);
         cornerIcon.setForeground(GalleryTheme.TEXT_SECONDARY());
-        cornerIcon.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        cornerIcon.setVerticalAlignment(VerticalAlignment.BOTTOM);
+        cornerIcon.setHorizontalAlignmentInParent(HorizontalAlignment.RIGHT);
+        cornerIcon.setVerticalAlignmentInParent(VerticalAlignment.BOTTOM);
         cornerIcon.setMargin(12.0);
 
         // Placing them in the same cell draws the icon at the body's bottom-right
@@ -454,10 +454,10 @@ final class HomePage {
         WLabel icon = new WLabel(glyph);
         icon.setFontFamily("Segoe Fluent Icons");
         icon.setFontSize(16.0);
-        icon.setVerticalAlignment(VerticalAlignment.CENTER);
+        icon.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 
         WLabel label = new WLabel(text);
-        label.setVerticalAlignment(VerticalAlignment.CENTER);
+        label.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 
         WPanel content = new WPanel(8.0, Orientation.HORIZONTAL);
         content.add(icon);
@@ -496,7 +496,7 @@ final class HomePage {
         WPanel toggles = new WPanel(8.0, Orientation.HORIZONTAL);
         toggles.add(recentToggle);
         toggles.add(favoritesToggle);
-        toggles.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        toggles.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
 
         // The real spacing: the SelectorBar is Margin="36,24,0,16", the content below it is Margin="36,0,36,36"
         // (the 16 gap between the toggle and the content is expressed via spacing)
@@ -553,11 +553,11 @@ final class HomePage {
         fallback.add(image);
         WLabel titleLabel = new WLabel("No favorites yet");
         titleLabel.setFontWeight(600);
-        titleLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        titleLabel.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
         fallback.add(titleLabel);
         WLabel descriptionLabel = new WLabel("Click the star icon on any page to have it show up here.");
         descriptionLabel.setForeground(GalleryTheme.TEXT_SECONDARY());
-        descriptionLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        descriptionLabel.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
         fallback.add(descriptionLabel);
         return fallback;
     }
@@ -613,20 +613,20 @@ final class HomePage {
         descriptionLabel.setTextWrapping(TextWrapping.WRAP);
         // Inside a horizontal WPanel the width isn't fixed and wrapping won't kick in, so set it explicitly
         descriptionLabel.setWidth(235.0);
-        descriptionLabel.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        descriptionLabel.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         texts.add(descriptionLabel);
-        texts.setVerticalAlignment(VerticalAlignment.CENTER);
+        texts.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 
         WPanel content = new WPanel(12.0, Orientation.HORIZONTAL);
         WImage image = new WImage(galleryImageUri(controlImageFileName(name)));
         image.setWidth(36.0);
         image.setHeight(36.0);
         image.setStretch(Stretch.UNIFORM);
-        image.setVerticalAlignment(VerticalAlignment.CENTER);
+        image.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         content.add(image);
         content.add(texts);
-        content.setHorizontalAlignment(HorizontalAlignment.LEFT);
-        content.setVerticalAlignment(VerticalAlignment.CENTER);
+        content.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
+        content.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 
         WButton card = new WButton("");
         card.setContent(content);

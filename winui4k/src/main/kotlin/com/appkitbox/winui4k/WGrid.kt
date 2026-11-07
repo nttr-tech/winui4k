@@ -39,8 +39,8 @@ class GridLength private constructor(
  *   swaps rows and columns (in Kotlin you can write them with names, `add(c, row = gridy, column = gridx)`). `gridwidth` / `gridheight` are
  *   columnSpan / rowSpan.
  * - `weightx` / `weighty` are given to columns and rows, not to children (pass [GridLength.star] to [addColumn] / [addRow]). Create the rows and columns first.
- * - `insets` is expressed with the child's [WComponent.setMargin] (in the order left, top, right, bottom), and `fill` / `anchor` with the child's [WComponent.horizontalAlignment] /
- *   [WComponent.verticalAlignment]. There is no `ipadx` / `ipady`.
+ * - `insets` is expressed with the child's [WComponent.setMargin] (in the order left, top, right, bottom), and `fill` / `anchor` with the child's [WComponent.horizontalAlignmentInParent] /
+ *   [WComponent.verticalAlignmentInParent]. There is no `ipadx` / `ipady`.
  * - It is not a layout manager, so it cannot be passed to `setLayout` (it is the panel itself).
  */
 class WGrid @JvmOverloads constructor(

@@ -250,7 +250,7 @@ final class ShellPages {
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
         row.add(glyphComboBox);
         // The ComboBox is taller because of its header, so nudge this down to align with the input box
-        applyButton.setVerticalAlignment(VerticalAlignment.BOTTOM);
+        applyButton.setVerticalAlignmentInParent(VerticalAlignment.BOTTOM);
         row.add(applyButton);
 
         WPanel body = new WPanel(8.0);

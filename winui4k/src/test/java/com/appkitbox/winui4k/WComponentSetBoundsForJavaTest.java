@@ -15,8 +15,8 @@ class WComponentSetBoundsForJavaTest {
             WCanvas c = new WCanvas();
             c.setWidth(400.0);
             c.setHeight(300.0);
-            c.setHorizontalAlignment(HorizontalAlignment.LEFT);
-            c.setVerticalAlignment(VerticalAlignment.TOP);
+            c.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
+            c.setVerticalAlignmentInParent(VerticalAlignment.TOP);
             return c;
         });
         WLabel label = UiTestHarness.onUiThreadGet(() -> new WLabel("Name"));

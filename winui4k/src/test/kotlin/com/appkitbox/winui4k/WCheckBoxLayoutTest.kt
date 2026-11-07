@@ -24,8 +24,8 @@ class WCheckBoxLayoutTest : FunSpec() {
             val panel = WLayoutPanel(WFlowLayout(WFlowLayout.LEFT)).also {
                 it.width = 2000.0
                 it.height = 400.0
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 boxes.forEach(it::add)
             }
             panel to boxes

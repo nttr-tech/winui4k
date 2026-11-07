@@ -137,7 +137,7 @@ private fun layerRow(layer: CadLayer): WComponent {
     row.add(WRibbonIcon(ic(if (layer.isFrozen) CadIcons.LAYER_FREEZE else CadIcons.LAYER_THAW), ICON_SIZE))
     row.add(WRibbonIcon(ic(if (layer.isLocked) CadIcons.LAYER_LOCK else CadIcons.LAYER_UNLOCK), ICON_SIZE))
     row.add(swatch(layer.color).also { it.setMargin(3.0, 0.0, 5.0, 0.0) })
-    row.add(WLabel(layer.name).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(WLabel(layer.name).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return row
 }
 
@@ -152,14 +152,14 @@ private fun colorRow(option: CadColorOption): WComponent {
     } else {
         row.add(WBorder().also { it.width = SWATCH })
     }
-    row.add(WLabel(option.name).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(WLabel(option.name).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return row
 }
 
 private fun sampleRow(sample: RibbonIcon, name: String): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(WRibbonIcon(sample, SAMPLE_WIDTH))
-    row.add(WLabel(name).also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(WLabel(name).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return row
 }
 
@@ -191,7 +191,7 @@ private fun swatch(color: WColor): WBorder = WBorder().also {
     it.background = color
     it.borderColor = WColor(0x80, 0x80, 0x80)
     it.borderThickness = 1.0
-    it.verticalAlignment = VerticalAlignment.CENTER
+    it.verticalAlignmentInParent = VerticalAlignment.CENTER
 }
 
 private fun fmt(value: Double): String = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()

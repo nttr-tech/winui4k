@@ -160,7 +160,7 @@ class WTabViewTest : FunSpec() {
             val tabView = onUiThreadGet {
                 val tabView = WTabView()
                 // Make the width content-dependent so a change in tab count can be observed via actualWidth
-                tabView.horizontalAlignment = HorizontalAlignment.LEFT
+                tabView.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
                 tabView.addTab(WTabViewItem("Tab 1"))
                 tabView.selectedIndex = 0
@@ -187,7 +187,7 @@ class WTabViewTest : FunSpec() {
             val tabView = onUiThreadGet {
                 val tabView = WTabView()
                 // Make the width content-dependent so whether the close button is shown can be observed via actualWidth
-                tabView.horizontalAlignment = HorizontalAlignment.LEFT
+                tabView.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
                 tabView.addTab(WTabViewItem("Tab 1").also { it.isClosable = true })
                 tabView.selectedIndex = 0

@@ -36,7 +36,7 @@ internal open class RibbonButtonView(model: RibbonItemModel, host: RibbonItemHos
 
     init {
         element.onClick { onClick() }
-        if (embedded) element.horizontalAlignment = HorizontalAlignment.STRETCH
+        if (embedded) element.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
         flyout?.let { f ->
             RibbonMenus.onOpened(f) { element.goToState("Active") }
             RibbonMenus.onClosed(f) { element.goToState("Inactive") }
@@ -121,7 +121,7 @@ internal class RibbonToggleButtonView(override val model: RibbonToggleButtonMode
     private var syncing = false
 
     init {
-        if (embedded) element.horizontalAlignment = HorizontalAlignment.STRETCH
+        if (embedded) element.horizontalAlignmentInParent = HorizontalAlignment.STRETCH
         element.onClick { onClick() }
     }
 
@@ -382,8 +382,8 @@ internal class RibbonSplitButtonView(override val model: RibbonSplitButtonModel,
 
     /** Places a part in the Grid with the top-left as the origin (positioned by margins within a single Grid cell). */
     private fun XamlElement.setCanvasPositionInGrid(x: Double, y: Double) {
-        horizontalAlignment = HorizontalAlignment.LEFT
-        verticalAlignment = VerticalAlignment.TOP
+        horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        verticalAlignmentInParent = VerticalAlignment.TOP
         setMargin(x, y, 0.0, 0.0)
     }
 

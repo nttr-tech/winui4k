@@ -17,8 +17,8 @@ class WVariableSizedWrapGridTest : FunSpec() {
     /** 40 × 20 cells, wrapping every 2 vertically (the default orientation is vertical). */
     private fun grid(): WVariableSizedWrapGrid = WVariableSizedWrapGrid(40.0, 20.0).also {
         it.maximumRowsOrColumns = 2
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
     }
 
     private fun <T> shown(grid: WVariableSizedWrapGrid, block: () -> T): T {

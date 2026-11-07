@@ -23,7 +23,7 @@ class WComponentBoundsTest : FunSpec() {
             it.width = 400.0
             it.height = 300.0
             // contentPane (StackPanel) centers children when there is extra width, so align left to fix the position
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         }
         val box = WCanvas().also {
             it.width = 80.0

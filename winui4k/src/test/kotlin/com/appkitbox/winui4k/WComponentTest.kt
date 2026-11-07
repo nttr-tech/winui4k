@@ -51,12 +51,12 @@ class WComponentTest : FunSpec() {
             shown.shouldBeTrue()
         }
 
-        test("horizontalAlignment and verticalAlignment return exactly the values that were set") {
+        test("horizontalAlignmentInParent and verticalAlignmentInParent return exactly the values that were set") {
             val (horizontal, vertical) = onUiThreadGet {
                 val button = WButton()
-                button.horizontalAlignment = HorizontalAlignment.RIGHT
-                button.verticalAlignment = VerticalAlignment.BOTTOM
-                button.horizontalAlignment to button.verticalAlignment
+                button.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
+                button.verticalAlignmentInParent = VerticalAlignment.BOTTOM
+                button.horizontalAlignmentInParent to button.verticalAlignmentInParent
             }
             horizontal shouldBe HorizontalAlignment.RIGHT
             vertical shouldBe VerticalAlignment.BOTTOM
@@ -174,12 +174,12 @@ class WComponentTest : FunSpec() {
         test("minimumSize becomes the actual size after layout when larger than the content, and maximumSize caps the actual size") {
             val (wide, narrow) = onUiThreadGet {
                 val wide = WButton("Short")
-                wide.horizontalAlignment = HorizontalAlignment.LEFT
-                wide.verticalAlignment = VerticalAlignment.TOP
+                wide.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                wide.verticalAlignmentInParent = VerticalAlignment.TOP
                 wide.minimumSize = WSize(300.0, 80.0)
                 val narrow = WButton("A button with a very long label whose width exceeds the maximum")
-                narrow.horizontalAlignment = HorizontalAlignment.LEFT
-                narrow.verticalAlignment = VerticalAlignment.TOP
+                narrow.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                narrow.verticalAlignmentInParent = VerticalAlignment.TOP
                 narrow.maximumSize = WSize(60.0, 30.0)
                 wide to narrow
             }
@@ -208,8 +208,8 @@ class WComponentTest : FunSpec() {
         test("setting preferredSize sets width and height, which reach the actual size after layout") {
             val button = onUiThreadGet {
                 val button = WButton("Preferred")
-                button.horizontalAlignment = HorizontalAlignment.LEFT
-                button.verticalAlignment = VerticalAlignment.TOP
+                button.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                button.verticalAlignmentInParent = VerticalAlignment.TOP
                 button.preferredSize = WSize(210.0, 44.0)
                 button
             }

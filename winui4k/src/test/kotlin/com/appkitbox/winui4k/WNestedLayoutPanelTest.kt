@@ -33,8 +33,8 @@ class WNestedLayoutPanelTest : FunSpec() {
         WLayoutPanel(layout).also {
             it.width = width
             it.height = height
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
         }
 
     init {

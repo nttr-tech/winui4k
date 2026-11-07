@@ -84,7 +84,7 @@ private fun buildSimpleButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(standardButton)
     row.add(toggleButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Simple button", row)
 }
 
@@ -125,7 +125,7 @@ private fun buildCommandButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(commandButton)
     row.add(toggleButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Button with a command", row)
 }
 
@@ -179,7 +179,7 @@ private fun buildActionButtonExample(): WComponent {
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     listOf(saveButton, duplicateButton, renameButton, toggleButton).forEach { row.add(it) }
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Buttons with an action (WAction / WAbstractAction)", row)
 }
 
@@ -215,7 +215,7 @@ private fun buildDefaultButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(nameField)
     row.add(submitButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     val body = WPanel(spacing = 8.0)
     body.add(useDefault)
     body.add(row)
@@ -263,7 +263,7 @@ private fun buildCoroutineButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(startButton)
     row.add(cancelButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Coroutine integration (Dispatchers.WinUi / delay / withContext / cancel)", row)
 }
 
@@ -292,7 +292,7 @@ private fun buildSimpleCheckBoxExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(checkBox)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple checkbox", row)
 }
 
@@ -312,7 +312,7 @@ private fun buildThreeStateCheckBoxExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(checkBox)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Three states (IsThreeState)", row)
 }
 
@@ -430,7 +430,7 @@ private fun buildSimpleComboBoxExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(comboBox)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple combo box (SelectionChanged)", row)
 }
 
@@ -461,7 +461,7 @@ private fun buildEditableComboBoxExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(comboBox)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("An editable combo box (IsEditable / TextSubmitted)", row)
 }
 
@@ -500,7 +500,7 @@ private fun buildSimpleDropDownButtonExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(dropDownButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple drop-down button (Flyout)", row)
 }
 
@@ -539,7 +539,7 @@ private fun buildClickHyperlinkExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(hyperlinkButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Handling the Click event", row)
 }
 
@@ -643,7 +643,7 @@ private fun buildSimpleRatingExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(rating)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple rating (ValueChanged / IsClearEnabled)", row)
 }
 
@@ -700,7 +700,7 @@ private fun buildSimpleRepeatButtonExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(repeatButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple repeat button", row)
 }
 
@@ -725,7 +725,7 @@ private fun buildRepeatButtonSpeedExample(): WComponent {
             },
         )
     }
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("Repeat speed (Delay / Interval)", row)
 }
 
@@ -756,7 +756,7 @@ private fun buildSimpleSliderExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(slider)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple slider (ValueChanged)", row)
 }
 
@@ -825,7 +825,7 @@ private fun buildSimpleSplitButtonExample(): WComponent {
     splitButton.addActionListener { tile.background = currentColor }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
-    row.add(splitButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(splitButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     row.add(tile)
     return buildExample("A simple split button (Click + Flyout)", row)
 }
@@ -859,7 +859,7 @@ private fun buildSimpleToggleButtonExample(): WComponent {
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(toggleButton)
     row.add(codeButton)
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple toggle button (IsChecked)", row)
 }
 
@@ -907,8 +907,8 @@ private fun buildSimpleToggleSplitButtonExample(): WComponent {
     toggleSplitButton.addItemListener { render() }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
-    row.add(toggleSplitButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(toggleSplitButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple toggle split button (IsChecked + Flyout)", row)
 }
 
@@ -941,8 +941,8 @@ private fun buildSimpleToggleSwitchExample(): WComponent {
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(toggleSwitch)
-    row.add(codeButton.also { it.verticalAlignment = VerticalAlignment.CENTER })
-    row.add(result.also { it.verticalAlignment = VerticalAlignment.CENTER })
+    row.add(codeButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
+    row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return buildExample("A simple toggle switch (IsOn / Toggled)", row)
 }
 

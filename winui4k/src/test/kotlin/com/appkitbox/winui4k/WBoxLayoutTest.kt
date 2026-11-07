@@ -29,8 +29,8 @@ class WBoxLayoutTest : FunSpec() {
         panel.layout = WBoxLayout(panel, axis)
         panel.width = width
         panel.height = height
-        panel.horizontalAlignment = HorizontalAlignment.LEFT
-        panel.verticalAlignment = VerticalAlignment.TOP
+        panel.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        panel.verticalAlignmentInParent = VerticalAlignment.TOP
         children.forEach { panel.add(it) }
         return panel
     }

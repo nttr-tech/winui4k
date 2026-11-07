@@ -80,8 +80,8 @@ class WBoxLayoutForJavaTest {
             WLayoutPanel b = WBox.createVerticalBox();
             b.setWidth(100.0);
             b.setHeight(100.0);
-            b.setHorizontalAlignment(HorizontalAlignment.LEFT);
-            b.setVerticalAlignment(VerticalAlignment.TOP);
+            b.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
+            b.setVerticalAlignmentInParent(VerticalAlignment.TOP);
             return b;
         });
         WCanvas first = UiTestHarness.onUiThreadGet(() -> rigid(30.0, 10.0));

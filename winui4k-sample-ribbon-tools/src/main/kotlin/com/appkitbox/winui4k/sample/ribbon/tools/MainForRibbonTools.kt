@@ -255,22 +255,22 @@ private fun toolPalette(onTool: (Tool) -> Unit): WComponent {
     model.items.add(RibbonColorPickerModel("palette.background", "Background Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.WHITE })
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
-    bar.verticalAlignment = VerticalAlignment.TOP
+    bar.verticalAlignmentInParent = VerticalAlignment.TOP
     return WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
 }
 
 /** The canvas (a white image in a dark work area) and the command bar floating above it (overflows into "…" when too narrow). */
 private fun canvas(text: WLabel): WComponent {
-    text.horizontalAlignment = HorizontalAlignment.CENTER
-    text.verticalAlignment = VerticalAlignment.CENTER
+    text.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+    text.verticalAlignmentInParent = VerticalAlignment.CENTER
     text.foreground = WColor(0x55, 0x55, 0x55)
     val page = WBorder(text)
     page.width = PAGE_WIDTH
     page.height = PAGE_HEIGHT
     page.background = WColor.WHITE
     page.cornerRadius = 2.0
-    page.horizontalAlignment = HorizontalAlignment.CENTER
-    page.verticalAlignment = VerticalAlignment.CENTER
+    page.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+    page.verticalAlignmentInParent = VerticalAlignment.CENTER
     val floatingModel = RibbonToolBarModel("floating")
     floatingModel.showLabels = false
     listOf(
@@ -292,8 +292,8 @@ private fun canvas(text: WLabel): WComponent {
     floating.maxWidth = FLOATING_WIDTH
     floating.cornerRadius = BAR_RADIUS
     floating.padding = FLOATING_PADDING
-    floating.horizontalAlignment = HorizontalAlignment.CENTER
-    floating.verticalAlignment = VerticalAlignment.BOTTOM
+    floating.horizontalAlignmentInParent = HorizontalAlignment.CENTER
+    floating.verticalAlignmentInParent = VerticalAlignment.BOTTOM
     floating.margin = FLOATING_MARGIN
     WRibbonTheme.setThemeBrush(floating, "RibbonCommandBarBackgroundBrush") { floating.background = it }
     WRibbonTheme.setThemeBrush(floating, "RibbonCommandBarBorderBrush") { floating.borderColor = it }
@@ -323,7 +323,7 @@ private fun panelRail(): WComponent {
     model.items.add(panel("panel.library", "Libraries", RibbonIcon.glyph("")))
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
-    bar.verticalAlignment = VerticalAlignment.TOP
+    bar.verticalAlignmentInParent = VerticalAlignment.TOP
     return WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
 }
 

@@ -27,8 +27,8 @@ class WRangeControlPreferredSizeTest : FunSpec() {
             WLayoutPanel(WFlowLayout(WFlowLayout.LEFT)).also {
                 it.width = 600.0
                 it.height = 300.0
-                it.horizontalAlignment = HorizontalAlignment.LEFT
-                it.verticalAlignment = VerticalAlignment.TOP
+                it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+                it.verticalAlignmentInParent = VerticalAlignment.TOP
                 it.add(component)
             }
         }

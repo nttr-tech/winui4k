@@ -25,7 +25,7 @@ class WLayoutRightToLeftTest : FunSpec() {
     private fun rtlPanel(layout: WLayoutManager?, width: Double = 100.0): WLayoutPanel = WLayoutPanel(layout).also {
         it.width = width
         it.height = 100.0
-        it.horizontalAlignment = HorizontalAlignment.LEFT
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         it.flowDirection = FlowDirection.RIGHT_TO_LEFT
     }
 

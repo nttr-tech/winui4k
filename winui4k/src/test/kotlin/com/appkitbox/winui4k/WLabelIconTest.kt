@@ -79,8 +79,8 @@ class WLabelIconTest : FunSpec() {
     /** A label placed at the top-left without a set width (it takes the size of its content). */
     private fun compactLabel(text: String, icon: WIcon?, configure: WLabel.() -> Unit = {}): WLabel = onUiThreadGet {
         WLabel(text, icon).also {
-            it.horizontalAlignment = HorizontalAlignment.LEFT
-            it.verticalAlignment = VerticalAlignment.TOP
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+            it.verticalAlignmentInParent = VerticalAlignment.TOP
             it.configure()
         }
     }
@@ -109,7 +109,7 @@ class WLabelIconTest : FunSpec() {
                     it.horizontalTextPosition = HorizontalTextPosition.LEADING
                     it.iconTextGap = 10.0
                     it.width = 400.0
-                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 }
             }
             val placement = placementOf(label)
@@ -171,14 +171,14 @@ class WLabelIconTest : FunSpec() {
         }
 
         test("with empty text there is only the icon and no spacing (the label is the size of the icon)") {
-            val placement = placementOf(onUiThreadGet { WLabel(Symbol.SAVE).also { it.horizontalAlignment = HorizontalAlignment.LEFT } })
+            val placement = placementOf(onUiThreadGet { WLabel(Symbol.SAVE).also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT } })
             val icon = checkNotNull(placement.icon)
             placement.text shouldBe null
             placement.label.width shouldBe (icon.width plusOrMinus TOLERANCE)
         }
 
         test("putting text in an icon-only label lays them out together, and emptying it returns to only the icon") {
-            val label = onUiThreadGet { WLabel(Symbol.SAVE).also { it.horizontalAlignment = HorizontalAlignment.LEFT } }
+            val label = onUiThreadGet { WLabel(Symbol.SAVE).also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT } }
             onUiThreadGet { label.text = "Save" }
             val withText = placementOf(label)
             checkNotNull(withText.text).x shouldBe (checkNotNull(withText.icon).right + 4.0 plusOrMinus TOLERANCE)
@@ -202,7 +202,7 @@ class WLabelIconTest : FunSpec() {
                 WLabel("a very long label string", Symbol.SAVE).also {
                     it.textTrimming = TextTrimming.CHARACTER_ELLIPSIS
                     it.width = 80.0
-                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                 }
             }
             UiTestHarness.attachAndAwaitLoaded(label)
@@ -224,7 +224,7 @@ class WLabelIconTest : FunSpec() {
                 onUiThreadGet {
                     WLabel("Right", Symbol.SAVE).also {
                         it.width = 300.0
-                        it.horizontalAlignment = HorizontalAlignment.LEFT
+                        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
                         it.textAlignment = TextAlignment.RIGHT
                     }
                 },

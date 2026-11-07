@@ -18,8 +18,8 @@ class WContentChangeRelayoutTest : FunSpec() {
     private fun panelOf(vararg components: WComponent): WLayoutPanel = WLayoutPanel(WFlowLayout(WFlowLayout.LEFT)).also {
         it.width = PANEL_WIDTH
         it.height = PANEL_HEIGHT
-        it.horizontalAlignment = HorizontalAlignment.LEFT
-        it.verticalAlignment = VerticalAlignment.TOP
+        it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
+        it.verticalAlignmentInParent = VerticalAlignment.TOP
         components.forEach(it::add)
     }
 

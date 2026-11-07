@@ -507,7 +507,7 @@ final class RibbonPages {
         dock.addActionListener(ribbon::returnAllPanelsToRibbon);
         options.add(dock);
         WLabel hint = GalleryScaffold.optionsLabel("The minimize behavior can also be chosen with the arrow at the top right.");
-        hint.setVerticalAlignment(VerticalAlignment.CENTER);
+        hint.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         options.add(hint);
 
         WPanel body = new WPanel(8.0);

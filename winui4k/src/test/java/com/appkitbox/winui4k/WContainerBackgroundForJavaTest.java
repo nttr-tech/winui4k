@@ -30,8 +30,8 @@ class WContainerBackgroundForJavaTest {
             WPanel p = new WPanel();
             p.setWidth(200.0);
             p.setHeight(100.0);
-            p.setHorizontalAlignment(HorizontalAlignment.LEFT);
-            p.setVerticalAlignment(VerticalAlignment.TOP);
+            p.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
+            p.setVerticalAlignmentInParent(VerticalAlignment.TOP);
             p.addMouseListener(new WMouseAdapter() {
                 @Override
                 public void mouseClicked(WMouseEvent e) {

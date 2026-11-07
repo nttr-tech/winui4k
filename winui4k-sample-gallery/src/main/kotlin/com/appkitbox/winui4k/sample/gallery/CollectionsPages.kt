@@ -90,7 +90,7 @@ private fun buildUniformGridItemsViewExample(): WComponent {
     }
     itemsView.width = 520.0
     itemsView.height = 200.0
-    itemsView.horizontalAlignment = HorizontalAlignment.LEFT
+    itemsView.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val body = WPanel(spacing = 10.0)
     body.add(itemsView)
@@ -126,11 +126,11 @@ private fun buildListBoxColorExample(): WComponent {
     val output = WBorder()
     output.width = 100.0
     output.height = 30.0
-    output.horizontalAlignment = HorizontalAlignment.LEFT
+    output.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val listBox = WListBox(colors.keys.toList())
     listBox.width = 200.0
-    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+    listBox.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     listBox.addListSelectionListener {
         output.background = colors[listBox.selectedItem]
     }
@@ -151,7 +151,7 @@ private fun buildListBoxFontExample(): WComponent {
     val listBox = WListBox(fonts)
     listBox.width = 200.0
     listBox.height = 164.0
-    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+    listBox.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     listBox.addListSelectionListener {
         listBox.selectedItem?.let { output.fontFamily = it }
     }
@@ -168,7 +168,7 @@ private fun buildListBoxSelectionModeExample(): WComponent {
     val listBox = WListBox((1..20).map { "Option $it" })
     listBox.width = 240.0
     listBox.height = 200.0
-    listBox.horizontalAlignment = HorizontalAlignment.LEFT
+    listBox.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val selection = WLabel("Selection: none")
     listBox.addListSelectionListener {
@@ -239,7 +239,7 @@ private fun buildListItemOperationsExample(): WComponent {
     // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
     val list = WList(listOf("Item 1", "Item 2", "Item 3"))
     list.width = 240.0
-    list.horizontalAlignment = HorizontalAlignment.LEFT
+    list.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val count = WLabel("Item count: ${list.itemCount}")
     val input = WTextField().apply { placeholderText = "Item name to add" }.also { it.width = 200.0 }
@@ -285,7 +285,7 @@ private fun buildListItemOperationsExample(): WComponent {
 private fun buildListSelectionModeExample(): WComponent {
     val list = WList((1..5).map { "Option $it" })
     list.width = 240.0
-    list.horizontalAlignment = HorizontalAlignment.LEFT
+    list.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val mode = WLabel("Selection mode: ${list.selectionMode}")
 
@@ -378,7 +378,7 @@ private fun buildProductTable(model: TableModel = ProductTableModel()): WTable {
     val table = WTable(model)
     table.width = 620.0
     table.height = 300.0
-    table.horizontalAlignment = HorizontalAlignment.LEFT
+    table.horizontalAlignmentInParent = HorizontalAlignment.LEFT
     return table
 }
 
@@ -627,7 +627,7 @@ private fun buildTableCellsExample(): WComponent {
     progress.cellRenderer = TableCellRenderer { _, value, _, _, _, _ ->
         val bar = WProgressBar(value = (value as Int).toDouble())
         bar.setMargin(8.0, 0.0, 8.0, 0.0)
-        bar.verticalAlignment = VerticalAlignment.CENTER
+        bar.verticalAlignmentInParent = VerticalAlignment.CENTER
         bar
     }
     progress.headerToolTip = "Displays a WProgressBar via TableCellRenderer (GenerateElementCore)"
@@ -767,7 +767,7 @@ private fun buildSampleTree(): WTree {
     val tree = WTree()
     tree.width = 345.0
     // Pin it to the left so the tree doesn't shift toward the center if the panel widens (e.g. from a long label)
-    tree.horizontalAlignment = HorizontalAlignment.LEFT
+    tree.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     val workFolder = WTreeNode("Work Documents")
     workFolder.add(WTreeNode("XYZ Functional Spec"))

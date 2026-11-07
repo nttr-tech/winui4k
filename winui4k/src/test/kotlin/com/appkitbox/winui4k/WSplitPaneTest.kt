@@ -43,7 +43,7 @@ class WSplitPaneTest : FunSpec() {
         val pane = WSplitPane(orientation, left, right).also {
             it.width = width
             it.height = height
-            it.horizontalAlignment = HorizontalAlignment.LEFT
+            it.horizontalAlignmentInParent = HorizontalAlignment.LEFT
             configure(it)
         }
         Scene(pane, left, right)

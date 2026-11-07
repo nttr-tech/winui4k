@@ -271,7 +271,7 @@ private fun buildNotePage(note: Note, onDelete: () -> Unit): WComponent {
     }
 
     val buttonRow = WPanel(spacing = 4.0, orientation = Orientation.HORIZONTAL)
-    buttonRow.horizontalAlignment = HorizontalAlignment.RIGHT
+    buttonRow.horizontalAlignmentInParent = HorizontalAlignment.RIGHT
     buttonRow.add(saveButton)
     buttonRow.add(deleteButton)
 

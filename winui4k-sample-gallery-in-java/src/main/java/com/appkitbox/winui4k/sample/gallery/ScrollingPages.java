@@ -150,7 +150,7 @@ final class ScrollingPages {
 
         WAnnotatedScrollBar annotatedScrollBar = new WAnnotatedScrollBar();
         annotatedScrollBar.setHeight(500.0);
-        annotatedScrollBar.setVerticalAlignment(VerticalAlignment.TOP);
+        annotatedScrollBar.setVerticalAlignmentInParent(VerticalAlignment.TOP);
         annotatedScrollBar.addDetailLabelRequestedListener(offset -> {
             // Return the name of the group containing this offset, as the tooltip
             for (int i = groupStartOffsets.size() - 1; i >= 0; i--) {
@@ -230,7 +230,7 @@ final class ScrollingPages {
         // Unlike the real Gallery's FlipView example, also show the buttons so paging works via them too
         pager.setPreviousButtonVisibility(PipsPagerButtonVisibility.VISIBLE);
         pager.setNextButtonVisibility(PipsPagerButtonVisibility.VISIBLE);
-        pager.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        pager.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
         pager.addSelectedIndexChangedListener(index -> {
             image.setSourceUri(imageUris.get(index));
         });

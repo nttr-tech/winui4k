@@ -563,7 +563,7 @@ abstract class WComponent internal constructor(
      * Like JComponent.getAlignmentX / setAlignmentX: the horizontal alignment (0 = left [LEFT_ALIGNMENT], 0.5 = center [CENTER_ALIGNMENT],
      * 1 = right [RIGHT_ALIGNMENT]). Values below 0 become 0 and values above 1 become 1 (same as Swing).
      *
-     * A value kept on the Kotlin side, separate from the native [horizontalAlignment] (WinUI's panels do not look at it). It is used by
+     * A value kept on the Kotlin side, separate from the native [horizontalAlignmentInParent] (WinUI's panels do not look at it). It is used by
      * layout managers such as [WBoxLayout]. The default, as in Swing, is 0 for labels ([WLabel]) and buttons (subclasses of [WButtonBase]),
      * the manager's value ([WLayoutManager.getLayoutAlignmentX]) for a [WLayoutPanel] with a layout manager, and 0.5 otherwise.
      * As in Swing, changing it does not rearrange (call [revalidate]).
@@ -1114,14 +1114,14 @@ abstract class WComponent internal constructor(
         }
 
     /**
-     * This component's own horizontal position within the width its parent assigns (FrameworkElement.HorizontalAlignment).
+     * This component's own horizontal position within the width its parent assigns (FrameworkElement.HorizontalAlignment). The default for most components is
+     * [HorizontalAlignment.STRETCH]. It decides where the component itself is placed in its parent, and for a component with a fixed width it often changes nothing.
+     * Swing has no equivalent (the closest are [alignmentX] and the fill / anchor of GridBagConstraints).
      *
-     * **Difference from Swing**: the name is the same as setHorizontalAlignment of JLabel / JTextField / AbstractButton, but the meaning differs.
-     * Swing's aligns the text or content inside the component, while this decides where the component itself is placed in its parent (for a component with a fixed width
-     * it often changes nothing). For text alignment use [WLabel.textAlignment] / [WTextField.textAlignment], and for the content alignment of buttons etc.
-     * use [WControl.horizontalContentAlignment].
+     * Change from earlier versions: it used to be named `horizontalAlignment`. It had the same name as setHorizontalAlignment of Swing's JLabel / JTextField / AbstractButton
+     * (the alignment of the text or content inside the component) with a different meaning, so it was moved to this name.
      */
-    var horizontalAlignment: HorizontalAlignment
+    var horizontalAlignmentInParent: HorizontalAlignment
         get() = HorizontalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_HorizontalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_HorizontalAlignment, value.native)
 
@@ -1131,13 +1131,13 @@ abstract class WComponent internal constructor(
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_FlowDirection, value.native)
 
     /**
-     * This component's own vertical position within the height its parent assigns (FrameworkElement.VerticalAlignment).
+     * This component's own vertical position within the height its parent assigns (FrameworkElement.VerticalAlignment). The default for most components is
+     * [VerticalAlignment.STRETCH]. Swing has no equivalent (the closest is [alignmentY]).
      *
-     * **Difference from Swing**: the name is the same as setVerticalAlignment of JLabel / AbstractButton, but the meaning differs. Swing's aligns the text or
-     * content inside the component vertically, while this decides where the component itself is placed in its parent. For the vertical content alignment of buttons etc.
-     * use [WControl.verticalContentAlignment].
+     * Change from earlier versions: it used to be named `verticalAlignment`. It had the same name as setVerticalAlignment of Swing's JLabel / AbstractButton
+     * (the vertical alignment of the text or content inside the component) with a different meaning, so it was moved to this name.
      */
-    var verticalAlignment: VerticalAlignment
+    var verticalAlignmentInParent: VerticalAlignment
         get() = VerticalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_VerticalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_VerticalAlignment, value.native)
 
