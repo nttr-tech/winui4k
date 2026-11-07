@@ -26,7 +26,7 @@ import kotlin.math.min
  * Values extracted from the winmd (Disabled=0, Auto=1, Hidden=2, Visible=3).
  */
 enum class ScrollBarVisibility(internal val native: Int) {
-    /** Don't allow scrolling (the default for the horizontal direction). */
+    /** No scrolling (the content shrinks to the viewport's width and height). */
     DISABLED(0),
 
     /** Show only when the content overflows. */
@@ -49,10 +49,12 @@ enum class ScrollBarVisibility(internal val native: Int) {
  * JScrollPane-like: WinUI 3's ScrollViewer (a ContentControl subclass).
  * Shows scrollbars when [content] is larger than the viewport.
  *
- * Horizontal scrolling of `WScrollPane(view)` and `WScrollPane()` is disabled by default (DISABLED; the content shrinks to the viewport width).
- * This differs from the default of Swing's JScrollPane (HORIZONTAL_SCROLLBAR_AS_NEEDED horizontally too), so to scroll horizontally as well,
- * use the constructor that takes scroll bar policies as in Swing (`WScrollPane(view, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED)`)
- * or set [horizontalScrollBarPolicy] / [horizontalScrollBarVisibility].
+ * The default of the horizontal scroll bar is [ScrollBarVisibility.AUTO], the same as Swing's JScrollPane (HORIZONTAL_SCROLLBAR_AS_NEEDED), and
+ * content wider than the viewport scrolls horizontally without shrinking (the default of WinUI's ScrollViewer is DISABLED).
+ * To shrink the content to the viewport's width (to make the text wrap), set [horizontalScrollBarVisibility] to
+ * [ScrollBarVisibility.DISABLED].
+ *
+ * **Change from earlier versions**: the horizontal default was DISABLED (the policy read as NEVER).
  */
 class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     WControl(
@@ -78,7 +80,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     }
 
     /**
-     * How the horizontal scrollbar is shown (ScrollViewer.HorizontalScrollBarVisibility, default DISABLED).
+     * How the horizontal scroll bar is shown (ScrollViewer.HorizontalScrollBarVisibility, default AUTO; the same as JScrollPane's AS_NEEDED).
      * Setting anything other than DISABLED also enables scrolling (HorizontalScrollMode = Enabled).
      */
     var horizontalScrollBarVisibility: ScrollBarVisibility
@@ -127,7 +129,8 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     /**
      * JScrollPane.getHorizontalScrollBarPolicy / setHorizontalScrollBarPolicy-like: reads and writes the horizontal scroll bar policy with Swing constants.
-     * The mapping is the same as [verticalScrollBarPolicy]. The horizontal default is DISABLED, so it returns NEVER if nothing is set.
+     * The mapping is the same as [verticalScrollBarPolicy]. The default is HORIZONTAL_SCROLLBAR_AS_NEEDED (the same as Swing).
+     * Returns NEVER when [horizontalScrollBarVisibility] is DISABLED.
      *
      * @throws IllegalArgumentException for values other than HORIZONTAL_SCROLLBAR_* (as in Swing)
      */
@@ -650,6 +653,8 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     }
 
     init {
+        // As with JScrollPane, make the horizontal one AS_NEEDED by default too (ScrollViewer's default is Disabled)
+        horizontalScrollBarVisibility = ScrollBarVisibility.AUTO
         if (content != null) this.content = content
     }
 

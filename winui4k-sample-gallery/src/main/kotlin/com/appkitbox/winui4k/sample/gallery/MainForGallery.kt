@@ -3,6 +3,7 @@ package com.appkitbox.winui4k.sample.gallery
 import com.appkitbox.winui4k.ElementTheme
 import com.appkitbox.winui4k.GridLength
 import com.appkitbox.winui4k.NavigationViewPaneDisplayMode
+import com.appkitbox.winui4k.ScrollBarVisibility
 import com.appkitbox.winui4k.Symbol
 import com.appkitbox.winui4k.SystemBackdropType
 import com.appkitbox.winui4k.TextChangeReason
@@ -55,7 +56,10 @@ fun main() {
         pageArea.margin = 24.0
 
         // The content area is translucent white, matching the real Gallery's Layer; the Mica behind it shows through faintly
-        val pageBackground = WBorder(WScrollPane(pageArea))
+        // The page shrinks to the viewport's width (wrapping the descriptions) and scrolls only vertically
+        val pageScroller = WScrollPane(pageArea)
+        pageScroller.horizontalScrollBarVisibility = ScrollBarVisibility.DISABLED
+        val pageBackground = WBorder(pageScroller)
         pageBackground.background = PAGE_BACKGROUND
 
         // History of page names to go back through via the back button (null = the startup home state).

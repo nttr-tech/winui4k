@@ -67,12 +67,34 @@ class WScrollPaneTest : FunSpec() {
             )
         }
 
-        test("the horizontal default of WScrollPane(view) stays DISABLED, and the horizontal policy reads as NEVER (S-D2: the default is not changed)") {
+        test("the horizontal default of WScrollPane(view) and WScrollPane() is AUTO, and the horizontal policy reads as AS_NEEDED (the same as JScrollPane)") {
             val read = onUiThreadGet {
                 val pane = WScrollPane(content())
-                listOf(pane.horizontalScrollBarVisibility, pane.horizontalScrollBarPolicy, pane.verticalScrollBarPolicy)
+                val empty = WScrollPane()
+                listOf(
+                    pane.horizontalScrollBarVisibility,
+                    pane.horizontalScrollBarPolicy,
+                    pane.verticalScrollBarPolicy,
+                    empty.horizontalScrollBarVisibility,
+                    empty.horizontalScrollBarPolicy,
+                )
             }
-            read shouldBe listOf(ScrollBarVisibility.DISABLED, WScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER, WScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS)
+            read shouldBe listOf(
+                ScrollBarVisibility.AUTO,
+                WScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED,
+                WScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                ScrollBarVisibility.AUTO,
+                WScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED,
+            )
+        }
+
+        test("the default WScrollPane(view) scrolls content wider than the viewport horizontally without shrinking it (the same as JScrollPane)") {
+            val pane = onUiThreadGet { WScrollPane(content()).sized() }
+            shown(pane) {
+                onUiThreadGet { listOf(pane.extentWidth, pane.scrollableWidth) } shouldBe listOf(CONTENT_WIDTH, CONTENT_WIDTH - PANE_WIDTH)
+                onUiThread { pane.viewport.viewPosition = WPoint(300, 0) }
+                awaitOnUiThread { pane.viewport.viewPosition == WPoint(300, 0) } shouldBe true
+            }
         }
 
         test("a swapped vertical / horizontal or out-of-range policy throws IllegalArgumentException and the value does not change (as in Swing)") {
@@ -84,7 +106,7 @@ class WScrollPaneTest : FunSpec() {
                 shouldThrow<IllegalArgumentException> { WScrollPane(null, 23, WScrollPane.HORIZONTAL_SCROLLBAR_NEVER) }
             }
             onUiThreadGet { listOf(pane.verticalScrollBarVisibility, pane.horizontalScrollBarVisibility) } shouldBe
-                listOf(ScrollBarVisibility.VISIBLE, ScrollBarVisibility.DISABLED)
+                listOf(ScrollBarVisibility.VISIBLE, ScrollBarVisibility.AUTO)
         }
 
         test("NEVER only hides the bar without shrinking the content width (HIDDEN), and the overflow can be scrolled with viewPosition") {
@@ -99,8 +121,10 @@ class WScrollPaneTest : FunSpec() {
             }
         }
 
-        test("with the default DISABLED, the content is fitted to the viewport width (the difference from NEVER)") {
-            val disabled = onUiThreadGet { WScrollPane(content()).sized() }
+        test("setting the horizontal one to DISABLED fits the content to the viewport's width (the difference from NEVER)") {
+            val disabled = onUiThreadGet {
+                WScrollPane(content()).sized().apply { horizontalScrollBarVisibility = ScrollBarVisibility.DISABLED }
+            }
             shown(disabled) {
                 // The Canvas has an explicit Width, so with DISABLED it is measured only up to 200 DIP horizontally, and ExtentWidth becomes the viewport width
                 onUiThreadGet { disabled.extentWidth } shouldBe PANE_WIDTH

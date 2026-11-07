@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.ElementTheme;
 import com.appkitbox.winui4k.GridLength;
 import com.appkitbox.winui4k.NavigationViewPaneDisplayMode;
 import com.appkitbox.winui4k.Orientation;
+import com.appkitbox.winui4k.ScrollBarVisibility;
 import com.appkitbox.winui4k.Symbol;
 import com.appkitbox.winui4k.SystemBackdropType;
 import com.appkitbox.winui4k.TextChangeReason;
@@ -81,7 +82,10 @@ public class MainForGallery {
             pageArea.setMargin(24.0);
 
             // The content area is translucent white, matching the real Gallery's Layer; the Mica behind it shows through faintly
-            WBorder pageBackground = new WBorder(new WScrollPane(pageArea));
+            // The page shrinks to the viewport's width (wrapping the descriptions) and scrolls only vertically
+            WScrollPane pageScroller = new WScrollPane(pageArea);
+            pageScroller.setHorizontalScrollBarVisibility(ScrollBarVisibility.DISABLED);
+            WBorder pageBackground = new WBorder(pageScroller);
             pageBackground.setBackground(GalleryTheme.PAGE_BACKGROUND());
 
             // History of page names to go back through via the back button (null = the startup home state).

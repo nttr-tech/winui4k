@@ -279,7 +279,10 @@ class WColorPicker() : WControl(
             picker.isAlphaEnabled = alphaEnabled
             // A ContentDialog appears inside the window, and the template's ContentScrollViewer does not scroll vertically. Make the content scroll vertically
             // so that even in a small window the brightness slider and the RGB fields can be reached (Swing uses a separate window, so it is not cut off)
-            val scroller = WScrollPane(picker).also { it.verticalScrollBarVisibility = ScrollBarVisibility.AUTO }
+            val scroller = WScrollPane(picker).also {
+                it.verticalScrollBarVisibility = ScrollBarVisibility.AUTO
+                it.horizontalScrollBarVisibility = ScrollBarVisibility.DISABLED
+            }
             val dialog = WContentDialog(title, scroller)
             dialog.primaryButtonText = WOptionPane.okButtonText
             dialog.closeButtonText = WOptionPane.cancelButtonText
