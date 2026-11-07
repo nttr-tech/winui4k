@@ -228,13 +228,6 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
     /** Writes the column attributes (header, width, frozen, visibility, editability, tooltip) to the native column. */
     fun applyProperties() {
         putHeader()
-        if (column.headerTemplate == null) {
-            native.call(TabularInterop.ITableViewColumn_put_HeaderTemplate, null)
-        } else {
-            val template = TableViewXaml.createDataTemplate(checkNotNull(column.headerTemplate))
-            native.call(TabularInterop.ITableViewColumn_put_HeaderTemplate, template.ptr)
-            template.release()
-        }
         when (val toolTip = column.headerToolTip) {
             null -> native.call(TabularInterop.ITableViewColumn_put_HeaderToolTip, null)
             is WComponent -> native.call(TabularInterop.ITableViewColumn_put_HeaderToolTip, toolTip.uiElement.ptr)
@@ -246,7 +239,8 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
         }
         val width = column.preferredWidth
         if (width.isNaN()) {
-            XamlStructs.putGridLength(native, TabularInterop.ITableViewColumn_put_Width, 1.0, GRID_UNIT_AUTO)
+            // As with JTable's default (AUTO_RESIZE_SUBSEQUENT_COLUMNS), the columns without a width split the rest of the table's width equally
+            XamlStructs.putGridLength(native, TabularInterop.ITableViewColumn_put_Width, 1.0, GRID_UNIT_STAR)
         } else {
             XamlStructs.putGridLength(native, TabularInterop.ITableViewColumn_put_Width, width, GRID_UNIT_PIXEL)
         }
@@ -287,16 +281,31 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
     }
 
     /**
-     * Writes whether sorting is allowed and the comparator (TableRowSorter settings and the column's isSortable) to
-     * the native column.
+     * The column header's DataTemplate: [TableColumn.headerTemplate] if set, otherwise the default template that shows a text header
+     * (leaving room for the sort indicator on the right if [sortable]). Not used when the header is a component (null).
+     */
+    private fun putHeaderTemplate(sortable: Boolean) {
+        val content = column.headerTemplate
+            ?: SORTABLE_HEADER_TEMPLATE.takeIf { sortable && column.headerValue !is WComponent }
+        if (content == null) {
+            native.call(TabularInterop.ITableViewColumn_put_HeaderTemplate, null)
+        } else {
+            val template = TableViewXaml.createDataTemplate(content)
+            native.call(TabularInterop.ITableViewColumn_put_HeaderTemplate, template.ptr)
+            template.release()
+        }
+    }
+
+    /**
+     * Writes whether sorting is possible and the comparator (the TableRowSorter settings and the column's isSortable) to the native column.
+     * Whether to leave room for the sort indicator changes, so the column header template is also written here.
      */
     fun applySortProperties() {
         val currentSorter = host.sorter
         val modelIndex = column.modelIndex
-        native.putBool(
-            TabularInterop.ITableViewColumn_put_CanSort,
-            column.isSortable && (currentSorter == null || currentSorter.isSortable(modelIndex)),
-        )
+        val sortable = column.isSortable && (currentSorter == null || currentSorter.isSortable(modelIndex))
+        native.putBool(TabularInterop.ITableViewColumn_put_CanSort, sortable)
+        putHeaderTemplate(sortable)
         @Suppress("UNCHECKED_CAST") // The app specifies a comparator that matches the column's value type
         val comparator = currentSorter?.getComparator(modelIndex) as Comparator<Any?>?
         if (comparator == null) {
@@ -343,15 +352,23 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
 }
 
 // Values extracted from winmd, like TableViewGridLinesVisibility
-// GridUnitType: Auto = 0, Pixel = 1 / Visibility: Visible = 0, Collapsed = 1
-private const val GRID_UNIT_AUTO = 0
+// GridUnitType: Pixel = 1, Star = 2 / Visibility: Visible = 0, Collapsed = 1
 private const val GRID_UNIT_PIXEL = 1
+private const val GRID_UNIT_STAR = 2
 private const val VISIBILITY_VISIBLE = 0
 private const val VISIBILITY_COLLAPSED = 1
 
 private val DESC_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR)
 private val DESC_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
 private val DESC_PTR_PTR_PTR = CallDescriptor(ValueKind.I32, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR, ArgKind.PTR)
+
+/**
+ * The default display of a text header of a sortable column. TableView (2.5.4-experimental) only overlays the sort indicator
+ * (SortIndicator, 16 wide) at the right end of the header without leaving room for it, so in narrow columns the indicator overlaps the text. Padding of the indicator's width is added on the right,
+ * and text that does not fit is truncated (...) (microsoft-ui-xaml's newer TableView also adds the indicator's width to the header's padding).
+ */
+private const val SORTABLE_HEADER_TEMPLATE =
+    "<TextBlock Text=\"{Binding}\" Margin=\"0,0,16,0\" TextTrimming=\"CharacterEllipsis\" VerticalAlignment=\"Center\" />"
 
 /** The default display for Boolean columns (a check box that cannot be operated). */
 private const val BOOLEAN_TEMPLATE =

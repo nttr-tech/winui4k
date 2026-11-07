@@ -117,7 +117,12 @@ open class TableColumn @JvmOverloads constructor(
             fireChanged(Change.PROPERTY)
         }
 
-    /** The preferred column width (in pixels; TableViewColumn.Width). NaN means the default width (120). */
+    /**
+     * The preferred column width (pixels; TableViewColumn.Width). The column is fixed at that width.
+     * If NaN (default), as with JTable's default (autoResizeMode = AUTO_RESIZE_SUBSEQUENT_COLUMNS), it grows to fit the table's width,
+     * and the NaN columns split what the columns with a width leave equally (TableViewColumn.Width becomes Star).
+     * In a container where the table's width is not decided (one that scrolls horizontally, etc.), it gets TableView's default width (120).
+     */
     var preferredWidth: Double = preferredWidth
         set(value) {
             field = value
