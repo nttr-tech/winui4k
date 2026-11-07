@@ -14,6 +14,8 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_CheckBox, XamlInterop.IID_ICheckBoxFactory), // Default interface = ICheckBox
     ) {
+        // The same value as the theme. Set so that horizontalAlignment returns LEADING (LEFT), the same as JCheckBox, even before being added to a window
+        horizontalContentAlignment = HorizontalAlignment.LEFT
         alignTextWithBox()
         if (text.isNotEmpty()) this.text = text
     }

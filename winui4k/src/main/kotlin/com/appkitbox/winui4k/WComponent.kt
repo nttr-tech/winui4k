@@ -1116,7 +1116,8 @@ abstract class WComponent internal constructor(
     /**
      * This component's own horizontal position within the width its parent assigns (FrameworkElement.HorizontalAlignment). The default for most components is
      * [HorizontalAlignment.STRETCH]. It decides where the component itself is placed in its parent, and for a component with a fixed width it often changes nothing.
-     * Swing has no equivalent (the closest are [alignmentX] and the fill / anchor of GridBagConstraints).
+     * Swing has no equivalent (the closest are [alignmentX] and the fill / anchor of GridBagConstraints). The alignment of the text or content inside a component is
+     * [WLabel.horizontalAlignment] / [WTextField.horizontalAlignment] / [WButtonBase.horizontalAlignment], with the same names as Swing.
      *
      * Change from earlier versions: it used to be named `horizontalAlignment`. It had the same name as setHorizontalAlignment of Swing's JLabel / JTextField / AbstractButton
      * (the alignment of the text or content inside the component) with a different meaning, so it was moved to this name.
@@ -1132,7 +1133,8 @@ abstract class WComponent internal constructor(
 
     /**
      * This component's own vertical position within the height its parent assigns (FrameworkElement.VerticalAlignment). The default for most components is
-     * [VerticalAlignment.STRETCH]. Swing has no equivalent (the closest is [alignmentY]).
+     * [VerticalAlignment.STRETCH]. Swing has no equivalent (the closest is [alignmentY]). The vertical alignment of the text or content inside a component is
+     * [WLabel.verticalAlignment] / [WButtonBase.verticalAlignment], with the same names as Swing.
      *
      * Change from earlier versions: it used to be named `verticalAlignment`. It had the same name as setVerticalAlignment of Swing's JLabel / AbstractButton
      * (the vertical alignment of the text or content inside the component) with a different meaning, so it was moved to this name.

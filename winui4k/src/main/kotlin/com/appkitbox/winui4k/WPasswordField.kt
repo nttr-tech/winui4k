@@ -48,6 +48,9 @@ enum class PasswordRevealMode(internal val native: Int) {
  * The constructors have the same forms as JPasswordField, and the string of `(String)` and `(String, int)` becomes the password ([password]).
  * The placeholder text is set with [placeholderText].
  *
+ * There is no setHorizontalAlignment (text alignment) of JPasswordField. WinUI's PasswordBox has no TextAlignment, and the masked characters are
+ * always aligned to the left (WinUI's CTextBoxBase::GetAlignment returns Left). The position in the parent is [horizontalAlignmentInParent].
+ *
  * **Change from earlier versions**: the constructor `(String)` used to take the placeholder text. It now becomes the password, as with JPasswordField(String).
  * Code that passed placeholder text should set [placeholderText] instead.
  */

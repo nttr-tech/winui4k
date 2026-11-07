@@ -213,6 +213,36 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
             label.content = value
         }
 
+    /**
+     * AbstractButton.getHorizontalAlignment / setHorizontalAlignment-like: the horizontal alignment of the text and icon (the content) inside the button.
+     * An alias with Swing's name of [horizontalContentAlignment] (Control.HorizontalContentAlignment). The default is the theme's value; as in Swing,
+     * CENTER for [WButton] / [WToggleButton] and LEFT for [WCheckBox] / [WRadioButton] (corresponding to Swing's LEADING; when [flowDirection] is
+     * right to left, left and right are swapped as in WinUI) (before being added to a window the theme is not applied, so it may return STRETCH).
+     * If the button's width stays the content's width, the look does not change (the same as Swing; it takes effect in a widened button). [HorizontalAlignment.STRETCH], which Swing does not have,
+     * stretches the content to the full width as in WinUI. The position of the button itself in its parent is [horizontalAlignmentInParent], and they do not affect each other.
+     *
+     * Change from earlier versions: the former `horizontalAlignment` was the position in the parent (now [horizontalAlignmentInParent]).
+     */
+    var horizontalAlignment: HorizontalAlignment
+        get() = horizontalContentAlignment
+        set(value) {
+            horizontalContentAlignment = value
+        }
+
+    /**
+     * AbstractButton.getVerticalAlignment / setVerticalAlignment-like: the vertical alignment of the text and icon (the content) inside the button.
+     * An alias with Swing's name of [verticalContentAlignment] (Control.VerticalContentAlignment). The default is CENTER, the same as Swing
+     * (before being added to a window the theme is not applied, so it may return STRETCH). [VerticalAlignment.STRETCH] stretches the content to the full height
+     * as in WinUI. The position of the button itself in its parent is [verticalAlignmentInParent], and they do not affect each other.
+     *
+     * Change from earlier versions: the former `verticalAlignment` was the position in the parent (now [verticalAlignmentInParent]).
+     */
+    var verticalAlignment: VerticalAlignment
+        get() = verticalContentAlignment
+        set(value) {
+            verticalContentAlignment = value
+        }
+
     /** When Click fires (ButtonBase.ClickMode). */
     var clickMode: ClickMode
         get() = ClickMode.of(buttonBase.getInt(XamlInterop.IButtonBase_get_ClickMode))

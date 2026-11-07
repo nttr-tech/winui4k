@@ -21,6 +21,10 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
         Activation.composeDefault(XamlInterop.CLS_RadioButton, XamlInterop.IID_IRadioButtonFactory), // Default interface = IRadioButton
     ) {
         groupName = ""
+        // The same values as the theme. Set so that horizontalAlignment / verticalAlignment return the theme's values even before being added to a window
+        // (horizontally LEADING (LEFT), the same as JRadioButton; vertically TOP as in WinUI's template, unlike Swing's CENTER)
+        horizontalContentAlignment = HorizontalAlignment.LEFT
+        verticalContentAlignment = VerticalAlignment.TOP
         if (text.isNotEmpty()) this.text = text
     }
 
