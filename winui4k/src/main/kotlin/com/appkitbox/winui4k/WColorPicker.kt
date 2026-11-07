@@ -233,7 +233,7 @@ class WColorPicker() : WControl(
          * Starts from white if [initial] is null. How it blocks, where it can be used and the exceptions are the same as [WContentDialog.showAndWait]
          * (call it on the UI thread, outside layout notifications; [IllegalStateException] if another dialog is open).
          * The button texts are [WOptionPane.okButtonText] / [WOptionPane.cancelButtonText]. To receive the result without blocking, use
-         * the next [showDialog].
+         * The following [showDialog]. The dialog appears inside the owner window, so when the window is too small for it, the content scrolls vertically.
          */
         @JvmStatic
         fun showDialog(owner: WComponent, title: String, initial: WColor?): WColor? {
@@ -253,7 +253,10 @@ class WColorPicker() : WControl(
 
         private fun chooserDialog(title: String, initial: WColor?): Pair<WContentDialog, WColorPicker> {
             val picker = WColorPicker(initial ?: WColor.WHITE)
-            val dialog = WContentDialog(title, picker)
+            // A ContentDialog appears inside the window, and the template's ContentScrollViewer does not scroll vertically. Make the content scroll vertically
+            // so that even in a small window the brightness slider and the RGB fields can be reached (Swing uses a separate window, so it is not cut off)
+            val scroller = WScrollPane(picker).also { it.verticalScrollBarVisibility = ScrollBarVisibility.AUTO }
+            val dialog = WContentDialog(title, scroller)
             dialog.primaryButtonText = WOptionPane.okButtonText
             dialog.closeButtonText = WOptionPane.cancelButtonText
             dialog.defaultButton = ContentDialogButton.PRIMARY

@@ -129,6 +129,33 @@ internal object OpenContentDialogs {
         }
     }
 
+    /**
+     * The maximum vertical scroll amount (ScrollViewer.ScrollableHeight) among the dialog's content (Content) and the ScrollViewers in it.
+     * 0 if the content fits in the visible height or cannot scroll vertically. null if no dialog is open.
+     */
+    @JvmStatic
+    fun contentScrollableHeight(owner: WComponent): Double? = onUiThreadGet {
+        withDialog(owner) { dialog ->
+            val content = content(dialog) ?: return@withDialog 0.0
+            try {
+                var max = 0.0
+                walk(content) { element ->
+                    element.queryInterfaceOrNull(XamlInterop.IID_IScrollViewer)?.let { viewer ->
+                        try {
+                            max = maxOf(max, viewer.getDouble(XamlInterop.IScrollViewer_get_ScrollableHeight))
+                        } finally {
+                            viewer.release()
+                        }
+                    }
+                    false
+                }
+                max
+            } finally {
+                content.release()
+            }
+        }
+    }
+
     /** The result of [inputExtent]. */
     data class InputExtent(val leftInset: Double, val rightInset: Double, val width: Double)
 

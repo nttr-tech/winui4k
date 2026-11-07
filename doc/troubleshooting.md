@@ -54,6 +54,11 @@
   折り返さない (NoWrap と同じ 1 行の高さ) 表示になる (WTextPaneWrapTest で、同じ幅・同じ文字列の欄の高さを比べて確認)。
   RichEditBox の `Wrap` は初めから単語の切れ目で折り返す (1 語が幅に収まらないときだけ語の途中で折る) ので、
   WTextPane は WrapWholeWords を受けたら Wrap を入れる。Swing の setWrapStyleWord(false) の文字の切れ目での折り返しはできない
+- **ContentDialog: 小さなウィンドウで、背の高い中身が切れてスクロールもできない**
+  ContentDialog は持ち主のウィンドウの中に出て、ウィンドウより高くならない。テンプレートの中身の ScrollViewer
+  (`ContentScrollViewer`、ContentDialog_themeresources.xaml) は `VerticalScrollBarVisibility="Disabled"` なので、収まらない中身は
+  下が切れるだけでスクロールできない。WColorPicker.showDialog は中身を縦にスクロールする WScrollPane に入れる
+  (WColorPickerTest で、480×320 のウィンドウに開いたときの ScrollableHeight が 0 より大きいことを確認)
 - **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
   どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
   DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、

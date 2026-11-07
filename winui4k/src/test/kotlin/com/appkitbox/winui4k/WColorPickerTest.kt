@@ -8,10 +8,13 @@ import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.util.Collections
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.time.Duration.Companion.seconds
 
@@ -271,11 +274,36 @@ class WColorPickerTest : FunSpec() {
                 awaitClosed(owner)
             }
         }
+
+        test("the content of showDialog opened in a small window (480x320) scrolls vertically down to the fields at the bottom") {
+            val frame = onUiThreadGet { WFrame("Small owner").also { it.setSize(SMALL_WIDTH, SMALL_HEIGHT) } }
+            val owner = onUiThreadGet { WButton("Owner").also { frame.add(it) } }
+            val loaded = CountDownLatch(1)
+            onUiThread {
+                owner.addLoadedListener { loaded.countDown() }
+                frame.isVisible = true
+            }
+            try {
+                loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                onUiThread { WColorPicker.showDialog(owner, "Color", orange) { events += "cb:$it" } }
+                awaitOpen(owner)
+                eventually(3.seconds) {
+                    OpenContentDialogs.contentScrollableHeight(owner).shouldNotBeNull() shouldBeGreaterThan 0.0
+                }
+                OpenContentDialogs.press(owner, "PrimaryButton")
+                awaitEvents("cb:$orange")
+                awaitClosed(owner)
+            } finally {
+                onUiThread { frame.dispose() }
+            }
+        }
     }
 
     private companion object {
         const val VK_ESCAPE = 0x1B
         const val SCAN_ESCAPE = 0x01
         const val OPEN_SETTLE_MILLIS = 600L
+        const val SMALL_WIDTH = 480
+        const val SMALL_HEIGHT = 320
     }
 }
