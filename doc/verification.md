@@ -233,6 +233,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (components/elements/UIElementLayout.cpp の PropagateOnPathInternal)。WLayoutPanel.setBounds は、Canvas の子の大きさを替えたら
     その子孫のレイアウト要素の InvalidateMeasure を呼ぶ (WComponent.remeasureInCanvas)。レイアウト要素の子孫が無い空の Canvas は測り直されない
   - Canvas の子のレイアウト要素 (Border・Control・TextBlock など) や、ScrollViewer・Border の中の Canvas は、普通に測り直される
+- WImageIcon (ImageIcon + BitmapImage) の大きさを E2E テストで確かめた (`WImageIconLayoutTest`)
+  - BitmapImage の読み込みは非同期で、読み込む前の ImageIcon の DesiredSize は 0。WLayoutPanel が先に測ると 0 の大きさで並べたままになるので、
+    BitmapImage.ImageOpened でアイコンを表示している部品を revalidate する
+  - ImageIcon の中の Image は Stretch が Uniform で (controls/dev/ImageIcon/ImageIcon.cpp)、制約のある幅・高さで測ると画像を引き伸ばす。
+    縦に並べた StackPanel や列の定義の無い Grid の中では、ボタンやラベルの幅 (文字の幅) まで広がり、その分の高さで文字が押し出される。
+    制約なしで測れば画像の画素数 (20 px の PNG なら 20 DIP) になるので、ImageOpened で MaxWidth / MaxHeight を BitmapSource.PixelWidth /
+    PixelHeight にして、元の大きさより大きくならないようにする (Swing の ImageIcon と同じ)
 - 閉じるまで呼び出し元を止めるダイアログ (Swing の JOptionPane.showConfirmDialog などの形) のために、UI スレッドで入れ子の
   メッセージ ループ (`internal.winui.ModalLoop`) を回したときの挙動を E2E テストで確かめた (2.5.4-experimental。`ModalLoopTest` は
   Panama、`ModalLoopProcessTest` は子のプロセスを Panama・JNA・JNR のそれぞれで起動)

@@ -1,6 +1,7 @@
 package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.com.Guid
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
@@ -88,10 +89,17 @@ class WImageIcon(
     /** The image URI. A file path is converted to an absolute file URI such as "file:///C:/icons/save.png". */
     val uri: String = toUri(path)
 
+    /**
+     * Creates an ImageIcon that shows the image. The Image inside an ImageIcon has Stretch Uniform and stretches the image to fit the
+     * width or height it is given (in a vertical StackPanel or Grid it grows to the width of the button or label and pushes the text out). To show it
+     * at its original size as Swing's ImageIcon does, MaxWidth / MaxHeight are set to the image's pixel size (DIP) when the image finishes loading.
+     */
     @JvmSynthetic
     internal fun createImageIconElement(owner: WComponent? = null): ComPtr {
-        val imageSource = createImageSource(uri, owner)
         val imageIcon = Activation.composeDefault(XamlInterop.CLS_ImageIcon, XamlInterop.IID_IImageIconFactory)
+        // The handler stays on the native BitmapImage, and the ImageIcon holds the BitmapImage, so the ImageIcon is referenced weakly
+        val icon = NativeWeakReference(imageIcon)
+        val imageSource = createImageSource(uri, owner) { bitmap -> icon.resolveAndRelease()?.let { limitToPixelSize(it, bitmap) } }
         return try {
             imageIcon.call(XamlInterop.IImageIcon_put_Source, imageSource.ptr)
             imageIcon.queryInterface(XamlInterop.IID_IIconElement)
@@ -198,6 +206,62 @@ class WFontIcon @JvmOverloads constructor(
     }
 }
 
+/** Sets MaxWidth / MaxHeight of [element] (taken over and released) to the pixel size of the loaded [bitmap] (borrowed). */
+private fun limitToPixelSize(element: ComPtr, bitmap: ComPtr) {
+    try {
+        val source = bitmap.queryInterface(XamlInterop.IID_IBitmapSource)
+        val (width, height) = try {
+            source.getInt(XamlInterop.IBitmapSource_get_PixelWidth) to source.getInt(XamlInterop.IBitmapSource_get_PixelHeight)
+        } finally {
+            source.release()
+        }
+        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
+        try {
+            framework.call(XamlInterop.IFrameworkElement_put_MaxWidth, width.toDouble())
+            framework.call(XamlInterop.IFrameworkElement_put_MaxHeight, height.toDouble())
+        } finally {
+            framework.release()
+        }
+    } finally {
+        element.release()
+    }
+}
+
+/**
+ * A weak reference to a native object (IWeakReference). It is taken out only once with [resolveAndRelease] (null after that).
+ * If it is collected without being taken out (when the image cannot be loaded), one small IWeakReference object remains.
+ */
+private class NativeWeakReference(target: ComPtr) {
+    private var weak: ComPtr? = target.queryInterface(IID_IWEAK_REFERENCE_SOURCE).let { source ->
+        try {
+            source.getPtr(GET_WEAK_REFERENCE)
+        } finally {
+            source.release()
+        }
+    }
+
+    /** The IInspectable of the referenced object (the caller releases it). null if it is destroyed or already taken out. The weak reference is released. */
+    fun resolveAndRelease(): ComPtr? {
+        val reference = weak ?: return null
+        weak = null
+        return try {
+            reference.getPtrOrNull(RESOLVE, Guid.of(IID_IINSPECTABLE))
+        } finally {
+            reference.release()
+        }
+    }
+
+    private companion object {
+        /** IWeakReferenceSource (weakreference.h). GetWeakReference(out IWeakReference) is vtbl[3]. */
+        const val IID_IWEAK_REFERENCE_SOURCE = "00000038-0000-0000-c000-000000000046"
+        const val GET_WEAK_REFERENCE = 3
+
+        /** IWeakReference.Resolve(REFIID, out IInspectable) is vtbl[3]. */
+        const val RESOLVE = 3
+        const val IID_IINSPECTABLE = "af86e2e0-b12d-4c6a-9c5a-d7aa65101e90"
+    }
+}
+
 /**
  * Creates a new ImageSource (BitmapImage) that loads the image at [uri]. The caller must release it.
  * Shared by the ImageIcon of [WImageIcon] and the Image of [WImage]. Loading is asynchronous and does not throw on failure.
@@ -205,8 +269,9 @@ class WFontIcon @JvmOverloads constructor(
  * If [owner] is given, [owner] is [WComponent.revalidate]d when loading finishes (BitmapImage.ImageOpened). Before loading,
  * the image size is 0, so this keeps [WLayoutPanel] from leaving it laid out with that size (Swing's ImageIcon loads when created).
  * The handler stays on the native BitmapImage, so [owner] is referenced weakly (doc/memory_management.md "Handling cycles that cross the boundary").
+ * [onOpened] is called with the BitmapImage (borrowed) when loading finishes, before [owner] is revalidated.
  */
-internal fun createImageSource(uri: String, owner: WComponent? = null): ComPtr {
+internal fun createImageSource(uri: String, owner: WComponent? = null, onOpened: ((bitmap: ComPtr) -> Unit)? = null): ComPtr {
     val uriFactory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
     val nativeUri = try {
         Hstring.use(uri) { h -> uriFactory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h) }
@@ -221,13 +286,16 @@ internal fun createImageSource(uri: String, owner: WComponent? = null): ComPtr {
         nativeUri.release()
     }
     return try {
-        if (owner != null) {
-            val target = WeakReference(owner)
+        if (owner != null || onOpened != null) {
+            val target = owner?.let { WeakReference(it) }
             bitmap.addEventHandler(
                 "WinUI4K.ImageOpenedHandler",
                 XamlInterop.IID_RoutedEventHandler,
                 XamlInterop.IBitmapImage_add_ImageOpened,
-            ) { _, _ -> target.get()?.revalidate() }
+            ) { sender, _ ->
+                onOpened?.invoke(ComPtr(sender))
+                target?.get()?.revalidate()
+            }
         }
         bitmap.queryInterface(XamlInterop.IID_IImageSource)
     } finally {

@@ -2,9 +2,12 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.com.ComPtr
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import java.awt.image.BufferedImage
@@ -63,6 +66,65 @@ class WImageIconLayoutTest : FunSpec() {
         }
     }
 
+    /** Collects the elements under [element] depth first (without looking inside icons; the caller releases them). */
+    private fun descendants(element: ComPtr, into: MutableList<ComPtr>) {
+        for (index in 0 until Xaml.childCount(element)) {
+            val child = Xaml.childAt(element, index) ?: continue
+            into += child
+            if (!IconElements.isIconElement(child)) descendants(child, into)
+        }
+    }
+
+    private fun actualSizeOf(element: ComPtr): WSize {
+        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
+        return try {
+            WSize(
+                framework.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth),
+                framework.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight),
+            )
+        } finally {
+            framework.release()
+        }
+    }
+
+    /**
+     * Shows a component made with [make] in a 600-wide [WFlowLayout] panel and returns the sizes of the icon inside and of the text (TextBlock)
+     * after the image loads and it is laid out again (waits until the icon's height is no longer 0).
+     */
+    private suspend fun innerSizes(make: () -> WComponent): Pair<WSize, WSize> {
+        val (panel, component) = onUiThreadGet {
+            val component = make()
+            WLayoutPanel(WFlowLayout(WFlowLayout.LEFT)).also {
+                it.width = 600.0
+                it.height = 200.0
+                it.horizontalAlignment = HorizontalAlignment.LEFT
+                it.verticalAlignment = VerticalAlignment.TOP
+                it.add(component)
+            } to component
+        }
+        UiTestHarness.attachAndAwaitLoaded(panel)
+        try {
+            val read = {
+                onUiThreadGet {
+                    val elements = mutableListOf<ComPtr>()
+                    descendants(component.inspectable, elements)
+                    try {
+                        val icon = elements.first { IconElements.isIconElement(it) }
+                        val text = elements.first { it.queryInterfaceOrNull(XamlInterop.IID_ITextBlock)?.also { t -> t.release() } != null }
+                        actualSizeOf(icon) to actualSizeOf(text)
+                    } finally {
+                        elements.forEach { it.release() }
+                    }
+                }
+            }
+            eventually(5.seconds) { read().first.height shouldBeGreaterThan 0.0 }
+            repeat(SETTLE_TURNS) { onUiThread { panel.updateLayout() } }
+            return read()
+        } finally {
+            UiTestHarness.detach(panel)
+        }
+    }
+
     init {
         test("a WLabel with text to the right of an image icon gets the reference size after the image loads, and the text is not cut") {
             val icon = WImageIcon(pngFile(ICON_SIZE).path)
@@ -99,6 +161,60 @@ class WImageIconLayoutTest : FunSpec() {
             actual shouldBe expected
         }
 
+        test("the image icon of a WLabel with text below is not stretched to the label's width and keeps the image size (20 x 20), and the text is visible") {
+            val icon = WImageIcon(pngFile(SMALL_ICON).path)
+            val (iconSize, textSize) = innerSizes {
+                WLabel("Profile name", icon).also {
+                    it.horizontalTextPosition = HorizontalTextPosition.CENTER
+                    it.verticalTextPosition = VerticalTextPosition.BOTTOM
+                }
+            }
+            iconSize shouldBe WSize(SMALL_ICON.toDouble(), SMALL_ICON.toDouble())
+            textSize.height shouldBeGreaterThan 0.0
+        }
+
+        test("the image icon of a WButton with text below is not stretched to the button's width and keeps the image size (20 x 20), and the text is visible") {
+            val icon = WImageIcon(pngFile(SMALL_ICON).path)
+            val (iconSize, textSize) = innerSizes {
+                WButton("Download", icon).also {
+                    it.horizontalTextPosition = HorizontalTextPosition.CENTER
+                    it.verticalTextPosition = VerticalTextPosition.BOTTOM
+                }
+            }
+            iconSize shouldBe WSize(SMALL_ICON.toDouble(), SMALL_ICON.toDouble())
+            textSize.height shouldBeGreaterThan 0.0
+        }
+
+        test("even in a WLabel with only an image icon stretched to a large WGridLayout cell, the icon keeps the image size (20 x 20)") {
+            val icon = WImageIcon(pngFile(SMALL_ICON).path)
+            val (panel, label) = onUiThreadGet {
+                val label = WLabel(icon)
+                WLayoutPanel(WGridLayout(1, 1)).also {
+                    it.width = 120.0
+                    it.height = 120.0
+                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                    it.verticalAlignment = VerticalAlignment.TOP
+                    it.add(label)
+                } to label
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                eventually(5.seconds) {
+                    onUiThreadGet {
+                        val elements = mutableListOf<ComPtr>()
+                        descendants(label.inspectable, elements)
+                        try {
+                            actualSizeOf(elements.first { IconElements.isIconElement(it) })
+                        } finally {
+                            elements.forEach { it.release() }
+                        }
+                    } shouldBe WSize(SMALL_ICON.toDouble(), SMALL_ICON.toDouble())
+                }
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
         test("a WButton with only an image icon gets the reference size") {
             val icon = WImageIcon(pngFile(ICON_SIZE).path)
             val (actual, expected) = measured(ICON_SIZE) { WButton(icon) }
@@ -115,6 +231,7 @@ class WImageIconLayoutTest : FunSpec() {
 
     private companion object {
         const val ICON_SIZE = 48
+        const val SMALL_ICON = 20
         const val SETTLE_TURNS = 6
         const val OPAQUE_GREEN = 0xFF20A040.toInt()
     }

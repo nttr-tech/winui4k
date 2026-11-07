@@ -2208,6 +2208,11 @@ internal object XamlInterop {
     const val IBitmapImage_get_UriSource = 8            // get_UriSource(out Uri)
     const val IBitmapImage_add_ImageOpened = 22         // add_ImageOpened(RoutedEventHandler, out token)
 
+    // ---- Microsoft.UI.Xaml.Media.Imaging.BitmapSource (the base of BitmapImage) ----
+    const val IID_IBitmapSource = "8424269d-9b82-534f-8fea-af5b5ef96bf2"
+    const val IBitmapSource_get_PixelWidth = 6          // get_PixelWidth(out INT32)
+    const val IBitmapSource_get_PixelHeight = 7         // get_PixelHeight(out INT32)
+
     // ---- Microsoft.UI.Xaml.Controls.Image ----
     const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"
     const val IID_IImage = "220d3d8d-66de-53a1-a215-ba9c165565ab"
