@@ -48,7 +48,7 @@ enum class TickPlacement(internal val native: Int) {
     /** On both sides of the track. */
     OUTSIDE(3),
 
-    /** On the track (Slider's default; ticks are drawn only when [WSlider.tickFrequency] is greater than 0). */
+    /** On the track (WinUI Slider's default; WSlider's default is [NONE]). Ticks are drawn only when [WSlider.tickFrequency] is greater than 0. */
     INLINE(4),
     ;
 
@@ -198,7 +198,10 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         get() = inspectable.getDouble(XamlInterop.ISlider_get_TickFrequency)
         set(value) = inspectable.call(XamlInterop.ISlider_put_TickFrequency, value)
 
-    /** Where ticks are drawn (Slider.TickPlacement). [TickPlacement.INLINE] by default (confirmed in an E2E test). */
+    /**
+     * Where to draw the ticks (Slider.TickPlacement). The default is [TickPlacement.NONE] (the same as JSlider's paintTicks default of false;
+     * WinUI's default INLINE overlays the ticks on the track and makes them hard to see, so it is set to NONE on creation).
+     */
     var tickPlacement: TickPlacement
         get() = TickPlacement.of(inspectable.getInt(XamlInterop.ISlider_get_TickPlacement))
         set(value) = inspectable.call(XamlInterop.ISlider_put_TickPlacement, value.native)
@@ -255,11 +258,9 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         }
 
     /**
-     * JSlider.getPaintTicks / setPaintTicks-style: whether ticks are drawn (whether [tickPlacement] is other than NONE).
+     * JSlider.getPaintTicks / setPaintTicks-like: whether to draw ticks (whether [tickPlacement] is not NONE). Default false (the same as JSlider).
      * When set to true, if [tickPlacement] is NONE it becomes [TickPlacement.BOTTOM_RIGHT], the same side as JSlider (below when horizontal, right when vertical),
-     * and any other placement is kept. Setting it to false makes it NONE.
-     * Unlike Swing, WinUI's default placement is INLINE, so it returns true if nothing is set (ticks are not drawn until a spacing is set;
-     * the default placement is not made NONE so as not to change the existing appearance).
+     * Any other position is kept. Setting false makes it NONE. Ticks are not drawn until the spacing ([majorTickSpacing] etc.) is decided.
      */
     var paintTicks: Boolean
         get() = tickPlacement != TickPlacement.NONE
@@ -301,6 +302,8 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         }
 
     init {
+        // As with JSlider, no ticks are drawn by default (WinUI's default INLINE overlaps the track)
+        tickPlacement = TickPlacement.NONE
         rangeModel.addChangeListener(modelListener)
         addValueChangedHandler()
         this.minimum = minimum

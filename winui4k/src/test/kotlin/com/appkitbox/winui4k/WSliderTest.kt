@@ -274,7 +274,7 @@ class WSliderTest : FunSpec() {
             frequencies shouldContainExactly listOf(0.0, 0.0, 5.0, 25.0, 5.0)
         }
 
-        test("paintTicks false makes it NONE, true from NONE makes it BOTTOM_RIGHT, and other placements are kept (the default is WinUI's INLINE, which is true)") {
+        test("paintTicks false makes it NONE, true from NONE makes it BOTTOM_RIGHT, and other positions are kept (the default is NONE and false, as with JSlider)") {
             val placements = onUiThreadGet {
                 val slider = WSlider()
                 val result = mutableListOf("${slider.tickPlacement}:${slider.paintTicks}")
@@ -287,7 +287,7 @@ class WSliderTest : FunSpec() {
                 result += "${slider.tickPlacement}"
                 result
             }
-            placements shouldContainExactly listOf("INLINE:true", "NONE:false", "BOTTOM_RIGHT:true", "OUTSIDE")
+            placements shouldContainExactly listOf("NONE:false", "NONE:false", "BOTTOM_RIGHT:true", "OUTSIDE")
         }
 
         test("snapToTicks is snapsTo's TICKS / STEP_VALUES, and inverted is the same as isDirectionReversed") {
