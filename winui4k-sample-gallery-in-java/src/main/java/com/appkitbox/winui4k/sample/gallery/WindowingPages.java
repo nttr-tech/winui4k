@@ -56,8 +56,7 @@ final class WindowingPages {
     static WComponent buildAppWindowPage() {
         WPanel page = GalleryScaffold.buildPage(
             "AppWindow",
-            "WinUI 3's AppWindow, which manages a native window (title, position, size, behavior). "
-                + "All operations are performed on a child window and never affect the Gallery itself.");
+            Messages.get("appwindow.description"));
 
         page.add(buildAppWindowBasicExample());
         page.add(buildAppWindowCenterExample());
@@ -86,7 +85,7 @@ final class WindowingPages {
 
     /** The "close" button always placed at the top of a child window's content. */
     private static void addCloseButton(WFrame frame) {
-        WButton closeButton = new WButton("Close this window");
+        WButton closeButton = new WButton(Messages.get("appwindow.child.close"));
         closeButton.addActionListener(() -> {
             frame.dispose();
         });
@@ -95,25 +94,25 @@ final class WindowingPages {
 
     /** 1) Title / Resize / Move / SetIcon. */
     private static WComponent buildAppWindowBasicExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
         WFrame[] child = new WFrame[1];
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindow.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("AppWindow demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.basic.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("You can operate this window's AppWindow."));
+            frame.add(new WLabel(Messages.get("appwindow.basic.child.label")));
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window (Title = \"" + frame.getAppWindow().getTitle() + "\")");
+            status.setText(Messages.get("appwindow.basic.opened", frame.getAppWindow().getTitle()));
         });
 
-        WButton titleButton = new WButton("Change the title");
+        WButton titleButton = new WButton(Messages.get("appwindow.basic.changetitle"));
         titleButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
             }
-            frame.getAppWindow().setTitle("Changed title (" + (System.currentTimeMillis() % 1000) + ")");
+            frame.getAppWindow().setTitle(Messages.get("appwindow.basic.newtitle", String.valueOf(System.currentTimeMillis() % 1000)));
             status.setText("Title = \"" + frame.getAppWindow().getTitle() + "\"");
         });
 
@@ -146,26 +145,26 @@ final class WindowingPages {
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample(
-            "Title, size, and position (Title / Resize / Move / Size / ClientSize / Position)", body);
+            Messages.get("appwindow.basic.title"), body);
     }
 
     /** 2) Screen centering: computes the center point from WDisplayArea.nearest(appWindow).workArea. */
     private static WComponent buildAppWindowCenterExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
         WFrame[] child = new WFrame[1];
 
-        WButton openButton = new WButton("Open a child window (placed toward the bottom-right of the screen)");
+        WButton openButton = new WButton(Messages.get("appwindow.center.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("Screen centering demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.center.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("The \"Center it\" button computes the center point from DisplayArea.WorkArea."));
+            frame.add(new WLabel(Messages.get("appwindow.center.child.label")));
             frame.getAppWindow().resize(360, 240);
             frame.getAppWindow().move(50, 50); // first place it near the edge of the screen
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindow.child.opened"));
         });
 
-        WButton centerButton = new WButton("Center it");
+        WButton centerButton = new WButton(Messages.get("appwindow.center.button"));
         centerButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
@@ -185,20 +184,20 @@ final class WindowingPages {
         WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
-        return GalleryScaffold.buildExample("Screen centering (WDisplayArea.nearest / workArea)", body);
+        return GalleryScaffold.buildExample(Messages.get("appwindow.center.title"), body);
     }
 
     /** 3) OverlappedPresenter's 6 toggles + Maximize/Minimize/Restore + the State display. */
     private static WComponent buildAppWindowPresenterExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
         WFrame[] child = new WFrame[1];
         WOverlappedPresenter[] presenter = new WOverlappedPresenter[1];
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindow.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("OverlappedPresenter demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.presenter.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Use the toggles and buttons to operate OverlappedPresenter's properties."));
+            frame.add(new WLabel(Messages.get("appwindow.presenter.child.label")));
             frame.getAppWindow().resize(480, 360);
             WOverlappedPresenter newPresenter = WOverlappedPresenter.create();
             frame.getAppWindow().setPresenter(newPresenter);
@@ -241,7 +240,7 @@ final class WindowingPages {
         borderCheck.setSelected(true);
         WCheckBox titleBarCheck = new WCheckBox("HasTitleBar");
         titleBarCheck.setSelected(true);
-        WButton applyBorderButton = new WButton("Apply Border/TitleBar (SetBorderAndTitleBar)");
+        WButton applyBorderButton = new WButton(Messages.get("appwindow.presenter.applyborder"));
         applyBorderButton.addActionListener(() -> {
             if (presenter[0] != null) {
                 presenter[0].setBorderAndTitleBar(
@@ -301,14 +300,14 @@ final class WindowingPages {
 
     /** 4) Min/max size (PreferredMinimum/MaximumWidth/Height, null clears them). */
     private static WComponent buildAppWindowMinMaxSizeExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
         WOverlappedPresenter[] presenter = new WOverlappedPresenter[1];
 
-        WButton openButton = new WButton("Open a child window (min 300x200 / max 800x600)");
+        WButton openButton = new WButton(Messages.get("appwindow.minmax.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("Min/max size demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.minmax.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Drag-resize the window to see the constraints in action."));
+            frame.add(new WLabel(Messages.get("appwindow.minmax.child.label")));
             frame.getAppWindow().resize(400, 300);
             WOverlappedPresenter newPresenter = WOverlappedPresenter.create();
             newPresenter.setPreferredMinimumWidth(300);
@@ -317,10 +316,10 @@ final class WindowingPages {
             newPresenter.setPreferredMaximumHeight(600);
             frame.getAppWindow().setPresenter(newPresenter);
             presenter[0] = newPresenter;
-            status.setText("Set Min = (300, 200) / Max = (800, 600)");
+            status.setText(Messages.get("appwindow.minmax.set"));
         });
 
-        WButton clearButton = new WButton("Clear the constraints (null)");
+        WButton clearButton = new WButton(Messages.get("appwindow.minmax.clear"));
         clearButton.addActionListener(() -> {
             WOverlappedPresenter p = presenter[0];
             if (p == null) {
@@ -329,7 +328,7 @@ final class WindowingPages {
             p.setPreferredMinimumHeight(null);
             p.setPreferredMaximumWidth(null);
             p.setPreferredMaximumHeight(null);
-            status.setText("Cleared the constraints");
+            status.setText(Messages.get("appwindow.minmax.cleared"));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -339,7 +338,7 @@ final class WindowingPages {
         WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
-        return GalleryScaffold.buildExample("Min/max size (PreferredMinimum/MaximumWidth/Height)", body);
+        return GalleryScaffold.buildExample(Messages.get("appwindow.minmax.title"), body);
     }
 
     /**
@@ -347,9 +346,9 @@ final class WindowingPages {
      * It creates a raw AppWindow with an owner (unrelated to WFrame), so note that the window has no content.
      */
     private static WComponent buildAppWindowModalExample() {
-        WLabel status = new WLabel("Not created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.modal.none"));
 
-        WButton openButton = new WButton("Open a modal-like child window (empty content)");
+        WButton openButton = new WButton(Messages.get("appwindow.modal.open"));
         openButton.addActionListener(() -> {
             // Creates a raw AppWindow that requires an owner (the Gallery itself). Even with IsModal=true it is
             // a bare AppWindow with no Content, so a real app would have to layer its own UI on top of it.
@@ -357,16 +356,13 @@ final class WindowingPages {
             WOverlappedPresenter presenter = WOverlappedPresenter.createForDialog();
             presenter.setModal(true);
             WAppWindow modalWindow = WAppWindow.create(presenter, mainFrame);
-            modalWindow.setTitle("Modal AppWindow (no content)");
+            modalWindow.setTitle(Messages.get("appwindow.modal.window.title"));
             modalWindow.resize(360, 200);
-            status.setText("Created an AppWindow with IsModal = " + presenter.isModal() + " "
-                + "(it looks like an empty window since Content isn't set)");
+            status.setText(Messages.get("appwindow.modal.created", String.valueOf(presenter.isModal())));
         });
 
         WLabel note = new WLabel(
-            "IsModal requires an owner window. An AppWindow with an owner can only be created via "
-                + "AppWindowStatics.Create(presenter, ownerWindowId), and is a separate \"raw AppWindow\" "
-                + "unrelated to a WFrame's Content.");
+            Messages.get("appwindow.modal.note"));
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
         note.setTextWrapping(TextWrapping.WRAP);
 
@@ -375,43 +371,43 @@ final class WindowingPages {
         body.add(openButton);
         body.add(status);
         return GalleryScaffold.buildExample(
-            "Modal (CreateForDialog / IsModal / WAppWindow.create(presenter, owner))", body);
+            Messages.get("appwindow.modal.title"), body);
     }
 
     /** 6) FullScreen (a "restore" button is required). */
     private static WComponent buildAppWindowFullScreenExample() {
         WFrame[] child = new WFrame[1];
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindow.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("FullScreen demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.fullscreen.child.title"));
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindow.child.opened"));
             // addCloseButton is skipped since it can be unreachable while full-screen; provide a separate restore button instead
-            frame.add(new WLabel("Try \"Go full screen\" followed by \"Restore\"."));
+            frame.add(new WLabel(Messages.get("appwindow.fullscreen.child.label")));
         });
 
-        WButton fullScreenButton = new WButton("Go full screen");
+        WButton fullScreenButton = new WButton(Messages.get("appwindow.fullscreen.enter"));
         fullScreenButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
             }
             frame.getAppWindow().setPresenter(WFullScreenPresenter.create());
-            status.setText("Switched to FullScreenPresenter");
+            status.setText(Messages.get("appwindow.fullscreen.entered"));
         });
 
-        WButton restoreButton = new WButton("Restore (back to the default Presenter)");
+        WButton restoreButton = new WButton(Messages.get("appwindow.restore"));
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
-            status.setText("Restored to the default Presenter");
+            status.setText(Messages.get("appwindow.restored"));
         });
 
-        WButton closeButton = new WButton("Close this window");
+        WButton closeButton = new WButton(Messages.get("appwindow.child.close"));
         closeButton.addActionListener(() -> {
             if (child[0] != null) {
                 child[0].dispose();
@@ -428,22 +424,22 @@ final class WindowingPages {
         body.add(buttons);
         body.add(status);
         return GalleryScaffold.buildExample(
-            "Full screen (FullScreenPresenter / restore via the default Presenter)", body);
+            Messages.get("appwindow.fullscreen.title"), body);
     }
 
     /** 7) CompactOverlay (a size ComboBox). */
     private static WComponent buildAppWindowCompactOverlayExample() {
         WFrame[] child = new WFrame[1];
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindow.child.none"));
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindow.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("CompactOverlay demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindow.compactoverlay.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Try a compact display that always floats on top (picture-in-picture-like)."));
+            frame.add(new WLabel(Messages.get("appwindow.compactoverlay.child.label")));
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindow.child.opened"));
         });
 
         List<String> sizeNames = new ArrayList<String>();
@@ -453,7 +449,7 @@ final class WindowingPages {
         WComboBox sizeCombo = new WComboBox(sizeNames);
         sizeCombo.setSelectedIndex(1); // MEDIUM
 
-        WButton applyButton = new WButton("Switch to CompactOverlay");
+        WButton applyButton = new WButton(Messages.get("appwindow.compactoverlay.apply"));
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
@@ -462,16 +458,16 @@ final class WindowingPages {
             WCompactOverlayPresenter presenter = WCompactOverlayPresenter.create();
             presenter.setInitialSize(size);
             frame.getAppWindow().setPresenter(presenter);
-            status.setText("Switched to CompactOverlayPresenter (InitialSize = " + size + ")");
+            status.setText(Messages.get("appwindow.compactoverlay.applied", size.toString()));
         });
 
-        WButton restoreButton = new WButton("Restore (back to the default Presenter)");
+        WButton restoreButton = new WButton(Messages.get("appwindow.restore"));
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
-            status.setText("Restored to the default Presenter");
+            status.setText(Messages.get("appwindow.restored"));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -521,9 +517,7 @@ final class WindowingPages {
     static WComponent buildAppWindowTitleBarPage() {
         WPanel page = GalleryScaffold.buildPage(
             "AppWindowTitleBar",
-            "WAppWindowTitleBar, which sets the system title bar's appearance (color, height, theme). "
-                + "Colors like BackgroundColor only take visual effect on the system-drawn title bar "
-                + "(ExtendsContentIntoTitleBar = false), and the Inactive-prefixed colors are used while inactive.");
+            Messages.get("appwindowtitlebar.description"));
 
         page.add(buildTitleBarColorExample());
         page.add(buildTitleBarExtendAndHeightExample());
@@ -534,20 +528,20 @@ final class WindowingPages {
     /** 1) The 12 colors (choose the target with a WComboBox + WColorPicker + ResetToDefault). */
     private static WComponent buildTitleBarColorExample() {
         WFrame[] child = new WFrame[1];
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindowtitlebar.child.none"));
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindowtitlebar.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("TitleBar color demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindowtitlebar.color.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Pick a target color property from the combo below and change it with the ColorPicker."));
+            frame.add(new WLabel(Messages.get("appwindowtitlebar.color.child.label")));
             // BackgroundColor/ForegroundColor and friends only take visual effect on the system-drawn
             // title bar (legacy colors, ExtendsContentIntoTitleBar = false). Setting it to true means the
             // app's content draws the title bar area itself, so the background/text colors stop being
             // used (the real WinUI-Gallery's AppWindowTitleBarWindow.xaml.cs leaves it unset too).
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindowtitlebar.child.opened"));
         });
 
         List<String> slotNames = new ArrayList<String>();
@@ -560,22 +554,22 @@ final class WindowingPages {
         WColorPicker picker = new WColorPicker();
         picker.setColor(GalleryTheme.DEMO_BLUE);
 
-        WButton applyButton = new WButton("Apply this color");
+        WButton applyButton = new WButton(Messages.get("appwindowtitlebar.color.apply"));
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
             }
             TitleBarColorSlot slot = TITLE_BAR_COLOR_SLOTS.get(Math.max(targetCombo.getSelectedIndex(), 0));
             slot.set.accept(frame.getAppWindow().getTitleBar(), picker.getColor());
-            status.setText("Applied " + slot.name + " = " + picker.getColor());
+            status.setText(Messages.get("appwindowtitlebar.color.applied", slot.name, String.valueOf(picker.getColor())));
         });
 
-        WButton resetButton = new WButton("ResetToDefault (restore all colors)");
+        WButton resetButton = new WButton(Messages.get("appwindowtitlebar.color.reset"));
         resetButton.addActionListener(() -> {
             if (child[0] != null) {
                 child[0].getAppWindow().getTitleBar().resetToDefault();
             }
-            status.setText("Restored all colors to their defaults");
+            status.setText(Messages.get("appwindowtitlebar.color.resetdone"));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -588,22 +582,22 @@ final class WindowingPages {
         body.add(buttons);
         body.add(picker);
         body.add(status);
-        return GalleryScaffold.buildExample("The 12 color properties (IReference<Windows.UI.Color> / ResetToDefault)", body);
+        return GalleryScaffold.buildExample(Messages.get("appwindowtitlebar.color.title"), body);
     }
 
     /** 2) ExtendsContentIntoTitleBar + PreferredHeightOption (a child window). */
     private static WComponent buildTitleBarExtendAndHeightExample() {
         WFrame[] child = new WFrame[1];
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindowtitlebar.child.none"));
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindowtitlebar.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("ExtendsContentIntoTitleBar demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindowtitlebar.extend.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Extend the content into the title bar area, and switch its height."));
+            frame.add(new WLabel(Messages.get("appwindowtitlebar.extend.child.label")));
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindowtitlebar.child.opened"));
         });
 
         WCheckBox extendCheck = new WCheckBox("ExtendsContentIntoTitleBar");
@@ -638,18 +632,18 @@ final class WindowingPages {
     /** 3) PreferredTheme. */
     private static WComponent buildTitleBarThemeExample() {
         WFrame[] child = new WFrame[1];
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("appwindowtitlebar.child.none"));
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("appwindowtitlebar.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("PreferredTheme demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("appwindowtitlebar.theme.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("Switch the title bar's color theme."));
+            frame.add(new WLabel(Messages.get("appwindowtitlebar.theme.child.label")));
             // PreferredTheme also needs ExtendsContentIntoTitleBar = true, otherwise it stays the legacy colors and the change won't be visible
             frame.setExtendsContentIntoTitleBar(true);
             frame.getAppWindow().resize(480, 320);
             child[0] = frame;
-            status.setText("Opened a child window");
+            status.setText(Messages.get("appwindowtitlebar.child.opened"));
         });
 
         WPanel themeButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -669,7 +663,7 @@ final class WindowingPages {
         body.add(openButton);
         body.add(themeButtons);
         body.add(status);
-        return GalleryScaffold.buildExample("Color theme (PreferredTheme)", body);
+        return GalleryScaffold.buildExample(Messages.get("appwindowtitlebar.theme.title"), body);
     }
 
     // endregion
@@ -680,8 +674,7 @@ final class WindowingPages {
     static WComponent buildSystemBackdropPage() {
         WPanel page = GalleryScaffold.buildPage(
             "SystemBackdrop",
-            "The system materials for a window's background (Mica / Mica Alt / Acrylic). "
-                + "Mica is already applied to the Gallery itself; try switching materials in the child window.");
+            Messages.get("systembackdrop.description"));
 
         page.add(buildSystemBackdropSwitchExample());
         return page;
@@ -689,14 +682,14 @@ final class WindowingPages {
 
     /** Switching backdrops: applies every SystemBackdropType to a child window. */
     private static WComponent buildSystemBackdropSwitchExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("systembackdrop.child.none"));
         WFrame[] child = new WFrame[1];
 
-        WButton openButton = new WButton("Open a child window");
+        WButton openButton = new WButton(Messages.get("systembackdrop.child.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = openChildFrame("SystemBackdrop demo (child window)");
+            WFrame frame = openChildFrame(Messages.get("systembackdrop.child.title"));
             addCloseButton(frame);
-            frame.add(new WLabel("The buttons switch this window's backdrop."));
+            frame.add(new WLabel(Messages.get("systembackdrop.child.label")));
             frame.getAppWindow().resize(480, 320);
             frame.setSystemBackdrop(SystemBackdropType.MICA);
             child[0] = frame;
@@ -720,7 +713,7 @@ final class WindowingPages {
         WPanel body = new WPanel(8.0);
         body.add(buttons);
         body.add(status);
-        return GalleryScaffold.buildExample("Switching backdrops (MICA / MICA_ALT / ACRYLIC / NONE)", body);
+        return GalleryScaffold.buildExample(Messages.get("systembackdrop.switch.title"), body);
     }
 
     // endregion
@@ -731,7 +724,7 @@ final class WindowingPages {
     static WComponent buildMultipleWindowsPage() {
         WPanel page = GalleryScaffold.buildPage(
             "Multiple windows",
-            "A demo of opening and managing several native windows (WFrame) at the same time.");
+            Messages.get("multiplewindows.description"));
 
         page.add(buildMultipleWindowsExample());
         return page;
@@ -739,25 +732,25 @@ final class WindowingPages {
 
     private static WComponent buildMultipleWindowsExample() {
         List<WFrame> children = new ArrayList<WFrame>();
-        WLabel count = new WLabel("Open windows: 0");
+        WLabel count = new WLabel(Messages.get("multiplewindows.count", "0"));
 
         Runnable updateCount = () -> {
             children.removeIf(frame -> !frame.isDisplayable());
-            count.setText("Open windows: " + children.size());
+            count.setText(Messages.get("multiplewindows.count", String.valueOf(children.size())));
         };
 
-        WButton openButton = new WButton("Open another child window");
+        WButton openButton = new WButton(Messages.get("multiplewindows.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = new WFrame("Child window #" + (children.size() + 1));
+            WFrame frame = new WFrame(Messages.get("multiplewindows.child.title", String.valueOf(children.size() + 1)));
             frame.setContentPane(stackedContent());
             // Matching the real Gallery's Multiple windows demo, open it with an extended title bar
             frame.setExtendsContentIntoTitleBar(true);
-            WButton closeButton = new WButton("Close this window");
+            WButton closeButton = new WButton(Messages.get("multiplewindows.child.close"));
             closeButton.addActionListener(() -> {
                 frame.dispose();
                 updateCount.run();
             });
-            frame.add(new WLabel("This window is a WFrame independent of the Gallery itself."));
+            frame.add(new WLabel(Messages.get("multiplewindows.child.label")));
             frame.add(closeButton);
             frame.setVisible(true);
             frame.getAppWindow().resizeClient(600, 400);
@@ -765,7 +758,7 @@ final class WindowingPages {
             updateCount.run();
         });
 
-        WButton closeAllButton = new WButton("Close all");
+        WButton closeAllButton = new WButton(Messages.get("multiplewindows.closeall"));
         closeAllButton.addActionListener(() -> {
             for (WFrame frame : children) {
                 frame.dispose();
@@ -781,7 +774,7 @@ final class WindowingPages {
         body.add(buttons);
         body.add(count);
         return GalleryScaffold.buildExample(
-            "Creating and managing multiple windows (extendsContentIntoTitleBar / resizeClient)", body);
+            Messages.get("multiplewindows.title"), body);
     }
 
     // endregion
@@ -792,8 +785,7 @@ final class WindowingPages {
     static WComponent buildTitleBarPage() {
         WPanel page = GalleryScaffold.buildPage(
             "TitleBar",
-            "WTitleBar, a custom title bar that can have a back button, a pane-toggle button, and "
-                + "arbitrary content. It's also used for the Gallery's own title bar.");
+            Messages.get("titlebar.description"));
 
         page.add(buildTitleBarInlineExample());
         page.add(buildTitleBarDragRegionExample());
@@ -804,29 +796,29 @@ final class WindowingPages {
     /** 1) Operating properties inline (Title/Subtitle/back/pane-toggle/content=WAutoSuggestBox). */
     private static WComponent buildTitleBarInlineExample() {
         WTitleBar titleBar = new WTitleBar();
-        titleBar.setTitle("Sample title");
-        titleBar.setSubtitle("Subtitle");
+        titleBar.setTitle(Messages.get("titlebar.inline.sampletitle"));
+        titleBar.setSubtitle(Messages.get("titlebar.inline.subtitle"));
         titleBar.setBackButtonVisible(true);
         titleBar.setPaneToggleButtonVisible(true);
 
-        WLabel log = new WLabel("Event: none");
+        WLabel log = new WLabel(Messages.get("titlebar.inline.event.none"));
         log.setTextWrapping(TextWrapping.WRAP);
         titleBar.addBackRequestedListener(() -> {
-            log.setText("Event: BackRequested");
+            log.setText(Messages.get("titlebar.inline.event.back"));
         });
         titleBar.addPaneToggleRequestedListener(() -> {
-            log.setText("Event: PaneToggleRequested");
+            log.setText(Messages.get("titlebar.inline.event.panetoggle"));
         });
 
         WTextField titleField = new WTextField();
-        titleField.setPlaceholderText("Title");
+        titleField.setPlaceholderText(Messages.get("titlebar.inline.placeholder.title"));
         titleField.setWidth(200.0);
         titleField.setText(titleBar.getTitle());
         WTextField subtitleField = new WTextField();
-        subtitleField.setPlaceholderText("Subtitle");
+        subtitleField.setPlaceholderText(Messages.get("titlebar.inline.subtitle"));
         subtitleField.setWidth(200.0);
         subtitleField.setText(titleBar.getSubtitle());
-        WButton applyButton = new WButton("Apply Title/Subtitle");
+        WButton applyButton = new WButton(Messages.get("titlebar.inline.apply"));
         applyButton.addActionListener(() -> {
             titleBar.setTitle(titleField.getText());
             titleBar.setSubtitle(subtitleField.getText());
@@ -848,9 +840,9 @@ final class WindowingPages {
             titleBar.setPaneToggleButtonVisible(e.getStateChange() == WItemEvent.SELECTED);
         });
 
-        WCheckBox useSearchBoxCheck = new WCheckBox("Show a search box as Content");
+        WCheckBox useSearchBoxCheck = new WCheckBox(Messages.get("titlebar.inline.searchbox"));
         useSearchBoxCheck.addItemListener(e -> {
-            titleBar.setContent(e.getStateChange() == WItemEvent.SELECTED ? new WAutoSuggestBox("Find") : null);
+            titleBar.setContent(e.getStateChange() == WItemEvent.SELECTED ? new WAutoSuggestBox(Messages.get("titlebar.inline.search")) : null);
         });
 
         WPanel fields = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -870,20 +862,19 @@ final class WindowingPages {
         body.add(checks);
         body.add(log);
         return GalleryScaffold.buildExample(
-            "Inline display (Title / Subtitle / IsBackButtonVisible / IsBackButtonEnabled / "
-                + "IsPaneToggleButtonVisible / Content / BackRequested / PaneToggleRequested)",
+            Messages.get("titlebar.inline.title"),
             body);
     }
 
     /** 2) Drag region (setIsDragRegion). */
     private static WComponent buildTitleBarDragRegionExample() {
         WTitleBar titleBar = new WTitleBar();
-        titleBar.setTitle("Drag region demo");
+        titleBar.setTitle(Messages.get("titlebar.drag.sampletitle"));
 
-        WButton dragButton = new WButton("This spot is a drag region (SetIsDragRegion = true)");
+        WButton dragButton = new WButton(Messages.get("titlebar.drag.region"));
         WTitleBar.setIsDragRegion(dragButton, true);
 
-        WButton autoButton = new WButton("Restore default auto-detection (null)");
+        WButton autoButton = new WButton(Messages.get("titlebar.drag.auto"));
         autoButton.addActionListener(() -> {
             WTitleBar.setIsDragRegion(dragButton, null);
         });
@@ -894,8 +885,7 @@ final class WindowingPages {
         });
 
         WLabel note = new WLabel(
-            "The TitleBar.IsDragRegion attached property lets you make any component a draggable "
-                + "region (by default, AutoRefreshDragRegions automatically makes things like buttons non-draggable).");
+            Messages.get("titlebar.drag.note"));
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
         note.setTextWrapping(TextWrapping.WRAP);
 
@@ -908,29 +898,29 @@ final class WindowingPages {
         body.add(note);
         body.add(titleBar);
         body.add(buttons);
-        return GalleryScaffold.buildExample("Drag region (TitleBar.SetIsDragRegion)", body);
+        return GalleryScaffold.buildExample(Messages.get("titlebar.drag.title"), body);
     }
 
     /** 3) An end-to-end child window (a full WTitleBar + WNavigationView setup). */
     private static WComponent buildTitleBarEndToEndExample() {
-        WLabel status = new WLabel("No child window has been created yet");
+        WLabel status = new WLabel(Messages.get("titlebar.endtoend.none"));
 
-        WButton openButton = new WButton("Open a WTitleBar + NavigationView child window");
+        WButton openButton = new WButton(Messages.get("titlebar.endtoend.open"));
         openButton.addActionListener(() -> {
-            WFrame frame = new WFrame("TitleBar full setup demo");
+            WFrame frame = new WFrame(Messages.get("titlebar.endtoend.window.title"));
 
             WTitleBar titleBar = new WTitleBar();
-            titleBar.setTitle("TitleBar full setup demo");
+            titleBar.setTitle(Messages.get("titlebar.endtoend.window.title"));
             titleBar.setPaneToggleButtonVisible(true);
 
             WNavigationView navigationView = new WNavigationView();
             navigationView.setPaneToggleButtonVisible(false); // avoid showing it twice - only the TitleBar side is shown
             navigationView.setBackButtonVisible(NavigationViewBackButtonVisible.COLLAPSED);
-            WNavigationViewItem item1 = new WNavigationViewItem("Page 1");
-            WNavigationViewItem item2 = new WNavigationViewItem("Page 2");
+            WNavigationViewItem item1 = new WNavigationViewItem(Messages.get("titlebar.endtoend.page1"));
+            WNavigationViewItem item2 = new WNavigationViewItem(Messages.get("titlebar.endtoend.page2"));
             navigationView.addItem(item1);
             navigationView.addItem(item2);
-            WLabel content = new WLabel("Page 1");
+            WLabel content = new WLabel(Messages.get("titlebar.endtoend.page1"));
             content.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
             navigationView.setContent(content);
             navigationView.addSelectionListener(item -> {
@@ -954,13 +944,13 @@ final class WindowingPages {
             frame.getAppWindow().getTitleBar().setPreferredHeightOption(TitleBarHeightOption.TALL);
             frame.getAppWindow().resize(560, 400);
             frame.setVisible(true);
-            status.setText("Opened a child window");
+            status.setText(Messages.get("titlebar.endtoend.opened"));
         });
 
         WPanel body = new WPanel(8.0);
         body.add(openButton);
         body.add(status);
-        return GalleryScaffold.buildExample("End-to-end (WTitleBar + WNavigationView + Grid + setTitleBar)", body);
+        return GalleryScaffold.buildExample(Messages.get("titlebar.endtoend.title"), body);
     }
 
     // endregion

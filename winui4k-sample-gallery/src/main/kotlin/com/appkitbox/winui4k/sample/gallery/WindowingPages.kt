@@ -46,8 +46,7 @@ import com.appkitbox.winui4k.WTitleBar
 internal fun buildAppWindowPage(): WComponent {
     val page = buildPage(
         "AppWindow",
-        "WinUI 3's AppWindow, which manages a native window (title, position, size, behavior). " +
-            "All operations are performed on a child window and never affect the Gallery itself.",
+        Messages.get("appwindow.description"),
     )
 
     page.add(buildAppWindowBasicExample())
@@ -73,30 +72,30 @@ private fun stackedContent(): WPanel = WPanel(spacing = 12.0).also { it.margin =
 
 /** The "close" button always placed at the top of a child window's content. */
 private fun WFrame.addCloseButton() {
-    val closeButton = WButton("Close this window")
+    val closeButton = WButton(Messages.get("appwindow.child.close"))
     closeButton.addActionListener { dispose() }
     add(closeButton)
 }
 
 /** 1) Title / Resize / Move / SetIcon. */
 private fun buildAppWindowBasicExample(): WComponent {
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
     var child: WFrame? = null
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindow.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("AppWindow demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.basic.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("You can operate this window's AppWindow."))
+        frame.add(WLabel(Messages.get("appwindow.basic.child.label")))
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window (Title = \"${frame.appWindow.title}\")"
+        status.text = Messages.get("appwindow.basic.opened", frame.appWindow.title)
     }
 
-    val titleButton = WButton("Change the title")
+    val titleButton = WButton(Messages.get("appwindow.basic.changetitle"))
     titleButton.addActionListener {
         val frame = child ?: return@addActionListener
-        frame.appWindow.title = "Changed title (${System.currentTimeMillis() % 1000})"
+        frame.appWindow.title = Messages.get("appwindow.basic.newtitle", (System.currentTimeMillis() % 1000).toString())
         status.text = "Title = \"${frame.appWindow.title}\""
     }
 
@@ -123,26 +122,26 @@ private fun buildAppWindowBasicExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(status)
-    return buildExample("Title, size, and position (Title / Resize / Move / Size / ClientSize / Position)", body)
+    return buildExample(Messages.get("appwindow.basic.title"), body)
 }
 
 /** 2) Screen centering: computes the center point from WDisplayArea.nearest(appWindow).workArea. */
 private fun buildAppWindowCenterExample(): WComponent {
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
     var child: WFrame? = null
 
-    val openButton = WButton("Open a child window (placed toward the bottom-right of the screen)")
+    val openButton = WButton(Messages.get("appwindow.center.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("Screen centering demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.center.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("The \"Center it\" button computes the center point from DisplayArea.WorkArea."))
+        frame.add(WLabel(Messages.get("appwindow.center.child.label")))
         frame.appWindow.resize(360, 240)
         frame.appWindow.move(50, 50) // First place it toward a screen edge
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindow.child.opened")
     }
 
-    val centerButton = WButton("Center it")
+    val centerButton = WButton(Messages.get("appwindow.center.button"))
     centerButton.addActionListener {
         val frame = child ?: return@addActionListener
         val workArea = WDisplayArea.nearest(frame.appWindow).workArea
@@ -160,21 +159,21 @@ private fun buildAppWindowCenterExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(status)
-    return buildExample("Screen centering (WDisplayArea.nearest / workArea)", body)
+    return buildExample(Messages.get("appwindow.center.title"), body)
 }
 
 /** 3) OverlappedPresenter's 6 toggles + Maximize/Minimize/Restore + the State display. */
 @Suppress("LongMethod") // Declarative UI-building sample code
 private fun buildAppWindowPresenterExample(): WComponent {
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
     var child: WFrame? = null
     var presenter: WOverlappedPresenter? = null
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindow.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("OverlappedPresenter demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.presenter.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Use the toggles and buttons to operate OverlappedPresenter's properties."))
+        frame.add(WLabel(Messages.get("appwindow.presenter.child.label")))
         frame.appWindow.resize(480, 360)
         val newPresenter = WOverlappedPresenter.create()
         frame.appWindow.setPresenter(newPresenter)
@@ -197,7 +196,7 @@ private fun buildAppWindowPresenterExample(): WComponent {
     resizableCheck.addItemListener { checked -> presenter?.isResizable = checked == true }
     val borderCheck = WCheckBox("HasBorder").also { it.isChecked = true }
     val titleBarCheck = WCheckBox("HasTitleBar").also { it.isChecked = true }
-    val applyBorderButton = WButton("Apply Border/TitleBar (SetBorderAndTitleBar)")
+    val applyBorderButton = WButton(Messages.get("appwindow.presenter.applyborder"))
     applyBorderButton.addActionListener {
         presenter?.setBorderAndTitleBar(borderCheck.isChecked == true, titleBarCheck.isChecked == true)
     }
@@ -248,14 +247,14 @@ private fun buildAppWindowPresenterExample(): WComponent {
 
 /** 4) Min/max size (PreferredMinimum/MaximumWidth/Height, null clears them). */
 private fun buildAppWindowMinMaxSizeExample(): WComponent {
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
     var presenter: WOverlappedPresenter? = null
 
-    val openButton = WButton("Open a child window (min 300x200 / max 800x600)")
+    val openButton = WButton(Messages.get("appwindow.minmax.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("Min/max size demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.minmax.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Drag-resize the window to see the constraints in action."))
+        frame.add(WLabel(Messages.get("appwindow.minmax.child.label")))
         frame.appWindow.resize(400, 300)
         val newPresenter = WOverlappedPresenter.create()
         newPresenter.preferredMinimumWidth = 300
@@ -264,17 +263,17 @@ private fun buildAppWindowMinMaxSizeExample(): WComponent {
         newPresenter.preferredMaximumHeight = 600
         frame.appWindow.setPresenter(newPresenter)
         presenter = newPresenter
-        status.text = "Set Min = (300, 200) / Max = (800, 600)"
+        status.text = Messages.get("appwindow.minmax.set")
     }
 
-    val clearButton = WButton("Clear the constraints (null)")
+    val clearButton = WButton(Messages.get("appwindow.minmax.clear"))
     clearButton.addActionListener {
         val p = presenter ?: return@addActionListener
         p.preferredMinimumWidth = null
         p.preferredMinimumHeight = null
         p.preferredMaximumWidth = null
         p.preferredMaximumHeight = null
-        status.text = "Cleared the constraints"
+        status.text = Messages.get("appwindow.minmax.cleared")
     }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -284,7 +283,7 @@ private fun buildAppWindowMinMaxSizeExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(status)
-    return buildExample("Min/max size (PreferredMinimum/MaximumWidth/Height)", body)
+    return buildExample(Messages.get("appwindow.minmax.title"), body)
 }
 
 /**
@@ -293,9 +292,9 @@ private fun buildAppWindowMinMaxSizeExample(): WComponent {
  * content ends up empty.
  */
 private fun buildAppWindowModalExample(): WComponent {
-    val status = WLabel("Not created yet")
+    val status = WLabel(Messages.get("appwindow.modal.none"))
 
-    val openButton = WButton("Open a modal-like child window (empty content)")
+    val openButton = WButton(Messages.get("appwindow.modal.open"))
     openButton.addActionListener {
         // Creates a raw AppWindow that requires an owner (the Gallery itself). Even with
         // IsModal=true it ends up a pure AppWindow with no Content, so real usage would need
@@ -304,16 +303,13 @@ private fun buildAppWindowModalExample(): WComponent {
         val presenter = WOverlappedPresenter.createForDialog()
         presenter.isModal = true
         val modalWindow = WAppWindow.create(presenter, owner = mainFrame)
-        modalWindow.title = "Modal AppWindow (no content)"
+        modalWindow.title = Messages.get("appwindow.modal.window.title")
         modalWindow.resize(360, 200)
-        status.text = "Created an AppWindow with IsModal = ${presenter.isModal} " +
-            "(it looks like an empty window since Content isn't set)"
+        status.text = Messages.get("appwindow.modal.created", presenter.isModal.toString())
     }
 
     val note = WLabel(
-        "IsModal requires an owner window. An AppWindow with an owner can only be created via " +
-            "AppWindowStatics.Create(presenter, ownerWindowId), and is a separate \"raw AppWindow\" " +
-            "unrelated to a WFrame's Content.",
+        Messages.get("appwindow.modal.note"),
     ).also {
         it.foreground = TEXT_SECONDARY
         it.textWrapping = TextWrapping.WRAP
@@ -323,39 +319,39 @@ private fun buildAppWindowModalExample(): WComponent {
     body.add(note)
     body.add(openButton)
     body.add(status)
-    return buildExample("Modal (CreateForDialog / IsModal / WAppWindow.create(presenter, owner))", body)
+    return buildExample(Messages.get("appwindow.modal.title"), body)
 }
 
 /** 6) FullScreen (a "restore" button is required). */
 private fun buildAppWindowFullScreenExample(): WComponent {
     var child: WFrame? = null
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindow.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("FullScreen demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.fullscreen.child.title"))
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindow.child.opened")
         // addCloseButton is skipped since it can be unreachable while full-screen; provide a separate restore button instead
-        frame.add(WLabel("Try \"Go full screen\" followed by \"Restore\"."))
+        frame.add(WLabel(Messages.get("appwindow.fullscreen.child.label")))
     }
 
-    val fullScreenButton = WButton("Go full screen")
+    val fullScreenButton = WButton(Messages.get("appwindow.fullscreen.enter"))
     fullScreenButton.addActionListener {
         val frame = child ?: return@addActionListener
         frame.appWindow.setPresenter(WFullScreenPresenter.create())
-        status.text = "Switched to FullScreenPresenter"
+        status.text = Messages.get("appwindow.fullscreen.entered")
     }
 
-    val restoreButton = WButton("Restore (back to the default Presenter)")
+    val restoreButton = WButton(Messages.get("appwindow.restore"))
     restoreButton.addActionListener {
         val frame = child ?: return@addActionListener
         frame.appWindow.setPresenter(WAppWindowPresenterKind.DEFAULT)
-        status.text = "Restored to the default Presenter"
+        status.text = Messages.get("appwindow.restored")
     }
 
-    val closeButton = WButton("Close this window")
+    val closeButton = WButton(Messages.get("appwindow.child.close"))
     closeButton.addActionListener { child?.dispose() }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -367,42 +363,42 @@ private fun buildAppWindowFullScreenExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(status)
-    return buildExample("Full screen (FullScreenPresenter / restore via the default Presenter)", body)
+    return buildExample(Messages.get("appwindow.fullscreen.title"), body)
 }
 
 /** 7) CompactOverlay (a size ComboBox). */
 private fun buildAppWindowCompactOverlayExample(): WComponent {
     var child: WFrame? = null
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindow.child.none"))
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindow.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("CompactOverlay demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindow.compactoverlay.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Try a compact display that always floats on top (picture-in-picture-like)."))
+        frame.add(WLabel(Messages.get("appwindow.compactoverlay.child.label")))
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindow.child.opened")
     }
 
     val sizeCombo = WComboBox(CompactOverlaySize.entries.map { it.name })
     sizeCombo.selectedIndex = 1 // MEDIUM
 
-    val applyButton = WButton("Switch to CompactOverlay")
+    val applyButton = WButton(Messages.get("appwindow.compactoverlay.apply"))
     applyButton.addActionListener {
         val frame = child ?: return@addActionListener
         val size = CompactOverlaySize.entries[sizeCombo.selectedIndex.coerceAtLeast(0)]
         val presenter = WCompactOverlayPresenter.create()
         presenter.initialSize = size
         frame.appWindow.setPresenter(presenter)
-        status.text = "Switched to CompactOverlayPresenter (InitialSize = $size)"
+        status.text = Messages.get("appwindow.compactoverlay.applied", size.toString())
     }
 
-    val restoreButton = WButton("Restore (back to the default Presenter)")
+    val restoreButton = WButton(Messages.get("appwindow.restore"))
     restoreButton.addActionListener {
         val frame = child ?: return@addActionListener
         frame.appWindow.setPresenter(WAppWindowPresenterKind.DEFAULT)
-        status.text = "Restored to the default Presenter"
+        status.text = Messages.get("appwindow.restored")
     }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -443,9 +439,7 @@ private val TITLE_BAR_COLOR_SLOTS: List<TitleBarColorSlot> = listOf(
 internal fun buildAppWindowTitleBarPage(): WComponent {
     val page = buildPage(
         "AppWindowTitleBar",
-        "WAppWindowTitleBar, which sets the system title bar's appearance (color, height, theme). " +
-            "Colors like BackgroundColor only take visual effect on the system-drawn title bar " +
-            "(ExtendsContentIntoTitleBar = false), and the Inactive-prefixed colors are used while inactive.",
+        Messages.get("appwindowtitlebar.description"),
     )
 
     page.add(buildTitleBarColorExample())
@@ -457,20 +451,20 @@ internal fun buildAppWindowTitleBarPage(): WComponent {
 /** 1) The 12 colors (choose the target with a WComboBox + WColorPicker + ResetToDefault). */
 private fun buildTitleBarColorExample(): WComponent {
     var child: WFrame? = null
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindowtitlebar.child.none"))
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindowtitlebar.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("TitleBar color demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindowtitlebar.color.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Pick a target color property from the combo below and change it with the ColorPicker."))
+        frame.add(WLabel(Messages.get("appwindowtitlebar.color.child.label")))
         // BackgroundColor/ForegroundColor and friends only take visual effect on the system-drawn
         // title bar (legacy colors, ExtendsContentIntoTitleBar = false). Setting it to true means the
         // app's content draws the title bar area itself, so the background/text colors stop being
         // used (the real WinUI-Gallery's AppWindowTitleBarWindow.xaml.cs leaves it unset too).
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindowtitlebar.child.opened")
     }
 
     val targetCombo = WComboBox(TITLE_BAR_COLOR_SLOTS.map { it.name })
@@ -479,18 +473,18 @@ private fun buildTitleBarColorExample(): WComponent {
     val picker = WColorPicker()
     picker.color = DEMO_BLUE
 
-    val applyButton = WButton("Apply this color")
+    val applyButton = WButton(Messages.get("appwindowtitlebar.color.apply"))
     applyButton.addActionListener {
         val frame = child ?: return@addActionListener
         val slot = TITLE_BAR_COLOR_SLOTS[targetCombo.selectedIndex.coerceAtLeast(0)]
         slot.set(frame.appWindow.titleBar, picker.color)
-        status.text = "Applied ${slot.name} = ${picker.color}"
+        status.text = Messages.get("appwindowtitlebar.color.applied", slot.name, picker.color.toString())
     }
 
-    val resetButton = WButton("ResetToDefault (restore all colors)")
+    val resetButton = WButton(Messages.get("appwindowtitlebar.color.reset"))
     resetButton.addActionListener {
         child?.appWindow?.titleBar?.resetToDefault()
-        status.text = "Restored all colors to their defaults"
+        status.text = Messages.get("appwindowtitlebar.color.resetdone")
     }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -503,22 +497,22 @@ private fun buildTitleBarColorExample(): WComponent {
     body.add(buttons)
     body.add(picker)
     body.add(status)
-    return buildExample("The 12 color properties (IReference<Windows.UI.Color> / ResetToDefault)", body)
+    return buildExample(Messages.get("appwindowtitlebar.color.title"), body)
 }
 
 /** 2) ExtendsContentIntoTitleBar + PreferredHeightOption (a child window). */
 private fun buildTitleBarExtendAndHeightExample(): WComponent {
     var child: WFrame? = null
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindowtitlebar.child.none"))
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindowtitlebar.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("ExtendsContentIntoTitleBar demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindowtitlebar.extend.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Extend the content into the title bar area, and switch its height."))
+        frame.add(WLabel(Messages.get("appwindowtitlebar.extend.child.label")))
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindowtitlebar.child.opened")
     }
 
     val extendCheck = WCheckBox("ExtendsContentIntoTitleBar")
@@ -548,18 +542,18 @@ private fun buildTitleBarExtendAndHeightExample(): WComponent {
 /** 3) PreferredTheme. */
 private fun buildTitleBarThemeExample(): WComponent {
     var child: WFrame? = null
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("appwindowtitlebar.child.none"))
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("appwindowtitlebar.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("PreferredTheme demo (child window)")
+        val frame = openChildFrame(Messages.get("appwindowtitlebar.theme.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("Switch the title bar's color theme."))
+        frame.add(WLabel(Messages.get("appwindowtitlebar.theme.child.label")))
         // PreferredTheme also needs ExtendsContentIntoTitleBar = true, otherwise it stays the legacy colors and the change won't be visible
         frame.extendsContentIntoTitleBar = true
         frame.appWindow.resize(480, 320)
         child = frame
-        status.text = "Opened a child window"
+        status.text = Messages.get("appwindowtitlebar.child.opened")
     }
 
     val themeButtons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -579,7 +573,7 @@ private fun buildTitleBarThemeExample(): WComponent {
     body.add(openButton)
     body.add(themeButtons)
     body.add(status)
-    return buildExample("Color theme (PreferredTheme)", body)
+    return buildExample(Messages.get("appwindowtitlebar.theme.title"), body)
 }
 
 // endregion
@@ -590,8 +584,7 @@ private fun buildTitleBarThemeExample(): WComponent {
 internal fun buildSystemBackdropPage(): WComponent {
     val page = buildPage(
         "SystemBackdrop",
-        "The system materials for a window's background (Mica / Mica Alt / Acrylic). " +
-            "Mica is already applied to the Gallery itself; try switching materials in the child window.",
+        Messages.get("systembackdrop.description"),
     )
 
     page.add(buildSystemBackdropSwitchExample())
@@ -600,14 +593,14 @@ internal fun buildSystemBackdropPage(): WComponent {
 
 /** Switching backdrops: applies every SystemBackdropType to a child window. */
 private fun buildSystemBackdropSwitchExample(): WComponent {
-    val status = WLabel("No child window created yet")
+    val status = WLabel(Messages.get("systembackdrop.child.none"))
     var child: WFrame? = null
 
-    val openButton = WButton("Open a child window")
+    val openButton = WButton(Messages.get("systembackdrop.child.open"))
     openButton.addActionListener {
-        val frame = openChildFrame("SystemBackdrop demo (child window)")
+        val frame = openChildFrame(Messages.get("systembackdrop.child.title"))
         frame.addCloseButton()
-        frame.add(WLabel("The buttons switch this window's backdrop."))
+        frame.add(WLabel(Messages.get("systembackdrop.child.label")))
         frame.appWindow.resize(480, 320)
         frame.systemBackdrop = SystemBackdropType.MICA
         child = frame
@@ -631,7 +624,7 @@ private fun buildSystemBackdropSwitchExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(status)
-    return buildExample("Switching backdrops (MICA / MICA_ALT / ACRYLIC / NONE)", body)
+    return buildExample(Messages.get("systembackdrop.switch.title"), body)
 }
 
 // endregion
@@ -642,7 +635,7 @@ private fun buildSystemBackdropSwitchExample(): WComponent {
 internal fun buildMultipleWindowsPage(): WComponent {
     val page = buildPage(
         "Multiple windows",
-        "A demo of opening and managing several native windows (WFrame) at the same time.",
+        Messages.get("multiplewindows.description"),
     )
 
     page.add(buildMultipleWindowsExample())
@@ -651,25 +644,25 @@ internal fun buildMultipleWindowsPage(): WComponent {
 
 private fun buildMultipleWindowsExample(): WComponent {
     val children = mutableListOf<WFrame>()
-    val count = WLabel("Open windows: 0")
+    val count = WLabel(Messages.get("multiplewindows.count", "0"))
 
     fun updateCount() {
         children.removeAll { !it.isDisplayable }
-        count.text = "Open windows: ${children.size}"
+        count.text = Messages.get("multiplewindows.count", children.size.toString())
     }
 
-    val openButton = WButton("Open another child window")
+    val openButton = WButton(Messages.get("multiplewindows.open"))
     openButton.addActionListener {
-        val frame = WFrame(title = "Child window #${children.size + 1}")
+        val frame = WFrame(title = Messages.get("multiplewindows.child.title", (children.size + 1).toString()))
         frame.setContentPane(stackedContent())
         // Matching the real Gallery's Multiple windows demo, open it with an extended title bar
         frame.extendsContentIntoTitleBar = true
-        val closeButton = WButton("Close this window")
+        val closeButton = WButton(Messages.get("multiplewindows.child.close"))
         closeButton.addActionListener {
             frame.dispose()
             updateCount()
         }
-        frame.add(WLabel("This window is a WFrame independent of the Gallery itself."))
+        frame.add(WLabel(Messages.get("multiplewindows.child.label")))
         frame.add(closeButton)
         frame.isVisible = true
         frame.appWindow.resizeClient(600, 400)
@@ -677,7 +670,7 @@ private fun buildMultipleWindowsExample(): WComponent {
         updateCount()
     }
 
-    val closeAllButton = WButton("Close all")
+    val closeAllButton = WButton(Messages.get("multiplewindows.closeall"))
     closeAllButton.addActionListener {
         for (frame in children) frame.dispose()
         updateCount()
@@ -690,7 +683,7 @@ private fun buildMultipleWindowsExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(count)
-    return buildExample("Creating and managing multiple windows (extendsContentIntoTitleBar / resizeClient)", body)
+    return buildExample(Messages.get("multiplewindows.title"), body)
 }
 
 // endregion
@@ -701,8 +694,7 @@ private fun buildMultipleWindowsExample(): WComponent {
 internal fun buildTitleBarPage(): WComponent {
     val page = buildPage(
         "TitleBar",
-        "WTitleBar, a custom title bar that can have a back button, a pane-toggle button, and " +
-            "arbitrary content. It's also used for the Gallery's own title bar.",
+        Messages.get("titlebar.description"),
     )
 
     page.add(buildTitleBarInlineExample())
@@ -714,21 +706,21 @@ internal fun buildTitleBarPage(): WComponent {
 /** 1) Operating properties inline (Title/Subtitle/back/pane-toggle/content=WAutoSuggestBox). */
 private fun buildTitleBarInlineExample(): WComponent {
     val titleBar = WTitleBar()
-    titleBar.title = "Sample title"
-    titleBar.subtitle = "Subtitle"
+    titleBar.title = Messages.get("titlebar.inline.sampletitle")
+    titleBar.subtitle = Messages.get("titlebar.inline.subtitle")
     titleBar.isBackButtonVisible = true
     titleBar.isPaneToggleButtonVisible = true
 
-    val log = WLabel("Event: none")
+    val log = WLabel(Messages.get("titlebar.inline.event.none"))
     log.textWrapping = TextWrapping.WRAP
-    titleBar.addBackRequestedListener { log.text = "Event: BackRequested" }
-    titleBar.addPaneToggleRequestedListener { log.text = "Event: PaneToggleRequested" }
+    titleBar.addBackRequestedListener { log.text = Messages.get("titlebar.inline.event.back") }
+    titleBar.addPaneToggleRequestedListener { log.text = Messages.get("titlebar.inline.event.panetoggle") }
 
-    val titleField = WTextField().apply { placeholderText = "Title" }.also { it.width = 200.0 }
+    val titleField = WTextField().apply { placeholderText = Messages.get("titlebar.inline.placeholder.title") }.also { it.width = 200.0 }
     titleField.text = titleBar.title
-    val subtitleField = WTextField().apply { placeholderText = "Subtitle" }.also { it.width = 200.0 }
+    val subtitleField = WTextField().apply { placeholderText = Messages.get("titlebar.inline.subtitle") }.also { it.width = 200.0 }
     subtitleField.text = titleBar.subtitle
-    val applyButton = WButton("Apply Title/Subtitle")
+    val applyButton = WButton(Messages.get("titlebar.inline.apply"))
     applyButton.addActionListener {
         titleBar.title = titleField.text
         titleBar.subtitle = subtitleField.text
@@ -741,9 +733,9 @@ private fun buildTitleBarInlineExample(): WComponent {
     val paneToggleCheck = WCheckBox("IsPaneToggleButtonVisible").also { it.isChecked = true }
     paneToggleCheck.addItemListener { checked -> titleBar.isPaneToggleButtonVisible = checked == true }
 
-    val useSearchBoxCheck = WCheckBox("Show a search box as Content")
+    val useSearchBoxCheck = WCheckBox(Messages.get("titlebar.inline.searchbox"))
     useSearchBoxCheck.addItemListener { checked ->
-        titleBar.content = if (checked == true) WAutoSuggestBox("Search") else null
+        titleBar.content = if (checked == true) WAutoSuggestBox(Messages.get("titlebar.inline.search")) else null
     }
 
     val fields = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -763,8 +755,7 @@ private fun buildTitleBarInlineExample(): WComponent {
     body.add(checks)
     body.add(log)
     return buildExample(
-        "Inline display (Title / Subtitle / IsBackButtonVisible / IsBackButtonEnabled / " +
-            "IsPaneToggleButtonVisible / Content / BackRequested / PaneToggleRequested)",
+        Messages.get("titlebar.inline.title"),
         body,
     )
 }
@@ -772,20 +763,19 @@ private fun buildTitleBarInlineExample(): WComponent {
 /** 2) Drag region (setIsDragRegion). */
 private fun buildTitleBarDragRegionExample(): WComponent {
     val titleBar = WTitleBar()
-    titleBar.title = "Drag region demo"
+    titleBar.title = Messages.get("titlebar.drag.sampletitle")
 
-    val dragButton = WButton("This spot is a drag region (SetIsDragRegion = true)")
+    val dragButton = WButton(Messages.get("titlebar.drag.region"))
     WTitleBar.setIsDragRegion(dragButton, true)
 
-    val autoButton = WButton("Restore default auto-detection (null)")
+    val autoButton = WButton(Messages.get("titlebar.drag.auto"))
     autoButton.addActionListener { WTitleBar.setIsDragRegion(dragButton, null) }
 
     val nonDragButton = WButton("SetIsDragRegion = false")
     nonDragButton.addActionListener { WTitleBar.setIsDragRegion(dragButton, false) }
 
     val note = WLabel(
-        "The TitleBar.IsDragRegion attached property lets you make any component a draggable " +
-            "region (by default, AutoRefreshDragRegions automatically makes things like buttons non-draggable).",
+        Messages.get("titlebar.drag.note"),
     ).also {
         it.foreground = TEXT_SECONDARY
         it.textWrapping = TextWrapping.WRAP
@@ -800,29 +790,29 @@ private fun buildTitleBarDragRegionExample(): WComponent {
     body.add(note)
     body.add(titleBar)
     body.add(buttons)
-    return buildExample("Drag region (TitleBar.SetIsDragRegion)", body)
+    return buildExample(Messages.get("titlebar.drag.title"), body)
 }
 
 /** 3) An end-to-end child window (a full WTitleBar + WNavigationView setup). */
 private fun buildTitleBarEndToEndExample(): WComponent {
-    val status = WLabel("No child window has been created yet")
+    val status = WLabel(Messages.get("titlebar.endtoend.none"))
 
-    val openButton = WButton("Open a WTitleBar + NavigationView child window")
+    val openButton = WButton(Messages.get("titlebar.endtoend.open"))
     openButton.addActionListener {
-        val frame = WFrame(title = "TitleBar full setup demo")
+        val frame = WFrame(title = Messages.get("titlebar.endtoend.window.title"))
 
         val titleBar = WTitleBar()
-        titleBar.title = "TitleBar full setup demo"
+        titleBar.title = Messages.get("titlebar.endtoend.window.title")
         titleBar.isPaneToggleButtonVisible = true
 
         val navigationView = WNavigationView()
         navigationView.isPaneToggleButtonVisible = false // Avoid showing it twice; only the TitleBar side shows it
         navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
-        val item1 = WNavigationViewItem("Page 1")
-        val item2 = WNavigationViewItem("Page 2")
+        val item1 = WNavigationViewItem(Messages.get("titlebar.endtoend.page1"))
+        val item2 = WNavigationViewItem(Messages.get("titlebar.endtoend.page2"))
         navigationView.addItem(item1)
         navigationView.addItem(item2)
-        val content = WLabel("Page 1")
+        val content = WLabel(Messages.get("titlebar.endtoend.page1"))
         content.horizontalAlignmentInParent = HorizontalAlignment.LEFT
         navigationView.content = content
         navigationView.addSelectionListener { item -> content.text = item?.text ?: "" }
@@ -842,13 +832,13 @@ private fun buildTitleBarEndToEndExample(): WComponent {
         frame.appWindow.titleBar.preferredHeightOption = TitleBarHeightOption.TALL
         frame.appWindow.resize(560, 400)
         frame.isVisible = true
-        status.text = "Opened a child window"
+        status.text = Messages.get("titlebar.endtoend.opened")
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(openButton)
     body.add(status)
-    return buildExample("End-to-end (WTitleBar + WNavigationView + Grid + setTitleBar)", body)
+    return buildExample(Messages.get("titlebar.endtoend.title"), body)
 }
 
 // endregion
