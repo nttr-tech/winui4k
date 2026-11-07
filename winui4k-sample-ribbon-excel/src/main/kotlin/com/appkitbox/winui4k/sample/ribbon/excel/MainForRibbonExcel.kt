@@ -36,8 +36,8 @@ fun main() {
         val model = createExcelModel(viewModel)
         val ribbon = WRibbon(model)
         ribbon.addItemInvokedListener { event -> if (event.commandId == null) viewModel.record(event.item.label ?: event.item.id) }
-        val window = RibbonDemoWindow("Budget 2026 - Excel (WinUI4K Ribbon)", RibbonDemoApp.EXCEL, ribbon)
-        window.titleBar!!.subtitle = "• MVVM ribbon"
+        val window = RibbonDemoWindow(Messages.get("window.title"), RibbonDemoApp.EXCEL, ribbon)
+        window.titleBar!!.subtitle = Messages.get("title.subtitle")
         window.setTop(ribbon)
         val sheet = SheetView(viewModel)
         // [Gridlines], [Formula Bar], and [Headings] on [View] are view-only state, so the view toggles them when the item is invoked
@@ -128,7 +128,8 @@ private class SheetView(private val viewModel: ExcelViewModel) {
             viewModel.columns.forEachIndexed { c, name ->
                 val label = WLabel("").also {
                     it.verticalAlignmentInParent = VerticalAlignment.CENTER
-                    it.margin = CELL_PADDING
+                    // Padding above and below cuts off the descenders of letters (g, y) at the line height, so pad only left and right
+                    it.setMargin(CELL_PADDING, 0.0, CELL_PADDING, 0.0)
                 }
                 val cell = WBorder(label)
                 grid.add(cell, row = r, column = c + 1)
@@ -169,7 +170,7 @@ private class SampleChart(private val viewModel: ExcelViewModel) {
 
     init {
         val panel = border.child as WPanel
-        panel.add(WLabel("Total by Quarter").also { it.fontWeight = SEMI_BOLD })
+        panel.add(WLabel(Messages.get("chart.title")).also { it.fontWeight = SEMI_BOLD })
         panel.add(bars)
         border.background = WColor.WHITE
         border.borderColor = SELECTION
@@ -214,7 +215,7 @@ private fun header(text: String): WComponent {
 /** The status bar (Ready / last command, and average, count, sum, and zoom). */
 private fun statusBar(viewModel: ExcelViewModel, ribbon: WRibbon): WComponent {
     val model = RibbonStatusBarModel()
-    val ready = RibbonLabelModel("status.ready", "Ready")
+    val ready = RibbonLabelModel("status.ready", Messages.get("status.ready"))
     model.items.add(ready)
     val average = RibbonLabelModel("status.average", "")
     val count = RibbonLabelModel("status.count", "")
@@ -226,9 +227,9 @@ private fun statusBar(viewModel: ExcelViewModel, ribbon: WRibbon): WComponent {
     fun refresh() {
         val (avg, n, total) = viewModel.statistics()
         ready.label = viewModel.lastCommand
-        average.label = "Average: ${"%,.0f".format(avg)}"
-        count.label = "Count: $n"
-        sum.label = "Sum: ${"%,.0f".format(total)}"
+        average.label = Messages.get("status.average", "%,.0f".format(avg))
+        count.label = Messages.get("status.count", n)
+        sum.label = Messages.get("status.sum", "%,.0f".format(total))
     }
     viewModel.addChangeListener { refresh() }
     refresh()

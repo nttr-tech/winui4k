@@ -7,21 +7,20 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonContextualGroupModel
 import com.appkitbox.winui4k.extension.ribbon.model.RibbonRelayCommand
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.Locale
 
 /** The number format of a cell. */
 enum class NumberFormat(val label: String) {
-    GENERAL("General"),
-    NUMBER("Number"),
-    CURRENCY("Currency"),
-    ACCOUNTING("Accounting"),
-    SHORT_DATE("Short Date"),
-    LONG_DATE("Long Date"),
-    TIME("Time"),
-    PERCENT("Percentage"),
-    FRACTION("Fraction"),
-    SCIENTIFIC("Scientific"),
-    TEXT("Text"),
+    GENERAL(Messages.get("format.general")),
+    NUMBER(Messages.get("format.number")),
+    CURRENCY(Messages.get("format.currency")),
+    ACCOUNTING(Messages.get("format.accounting")),
+    SHORT_DATE(Messages.get("format.short.date")),
+    LONG_DATE(Messages.get("format.long.date")),
+    TIME(Messages.get("format.time")),
+    PERCENT(Messages.get("format.percentage")),
+    FRACTION(Messages.get("format.fraction")),
+    SCIENTIFIC(Messages.get("format.scientific")),
+    TEXT(Messages.get("format.text")),
     ;
 
     override fun toString(): String = label
@@ -56,7 +55,7 @@ class ExcelViewModel {
     val catalog = RibbonCommandCatalog()
 
     /** The [Chart Tools] contextual group (shown when the sample chart is selected). */
-    val chartTools: RibbonContextualGroupModel = RibbonContextualGroupModel("chart", "Chart Tools").also {
+    val chartTools: RibbonContextualGroupModel = RibbonContextualGroupModel("chart", Messages.get("chart.tools")).also {
         it.color = RibbonColor.parse("#107C41")
         it.activation = RibbonContextualActivation.SELECT_ON_SHOW
         it.isVisible = false
@@ -65,23 +64,23 @@ class ExcelViewModel {
     /** The command that toggles selection of the sample chart ([Select Sample Chart] on [Insert]). */
     val toggleChartCommand: RibbonRelayCommand = RibbonRelayCommand.of({
         chartTools.isVisible = !chartTools.isVisible
-        record(if (chartTools.isVisible) "Chart selected" else "Chart deselected")
+        record(if (chartTools.isVisible) Messages.get("log.chart.selected") else Messages.get("log.chart.deselected"))
     })
 
     /** The last executed command (shown in the status bar). */
-    var lastCommand: String = "Ready"
+    var lastCommand: String = Messages.get("status.ready")
         private set
 
     init {
         val data = listOf(
-            listOf("Category", "Q1", "Q2", "Q3", "Q4"),
-            listOf("Rent", 1200, 1200, 1250, 1250),
-            listOf("Software", 860, 910, 940, 990),
-            listOf("Travel", 420, 380, 610, 300),
-            listOf("Marketing", 1900, 2400, 2100, 2650),
+            listOf(Messages.get("sheet.category"), "Q1", "Q2", "Q3", "Q4"),
+            listOf(Messages.get("sheet.rent"), 1200, 1200, 1250, 1250),
+            listOf(Messages.get("sheet.software"), 860, 910, 940, 990),
+            listOf(Messages.get("sheet.travel"), 420, 380, 610, 300),
+            listOf(Messages.get("sheet.marketing"), 1900, 2400, 2100, 2650),
         )
         data.forEachIndexed { r, row -> row.forEachIndexed { c, v -> values["${columns[c]}${r + 1}"] = v } }
-        values["A6"] = "Total"
+        values["A6"] = Messages.get("sheet.total")
         for (c in 1..4) values["${columns[c]}6"] = "=SUM(${columns[c]}2:${columns[c]}5)"
         registerCommands()
     }
@@ -91,19 +90,19 @@ class ExcelViewModel {
         for ((id, label, shortcut) in COMMANDS) {
             catalog.register(id, label, RibbonRelayCommand({ p -> record(label + (p?.let { " ($it)" } ?: "")) }), shortcut = shortcut, category = "Excel")
         }
-        catalog.register("formatCellsLauncher", "Format Cells dialog", RibbonRelayCommand.of({ record("Format Cells dialog") }))
-        catalog.register("accounting", "Accounting Number Format", RibbonRelayCommand.of({ setFormat(NumberFormat.ACCOUNTING, "Accounting Number Format") }), category = "Number")
-        catalog.register("percent", "Percent Style", RibbonRelayCommand.of({ setFormat(NumberFormat.PERCENT, "Percent Style") }), shortcut = "Ctrl+Shift+%", category = "Number")
-        catalog.register("comma", "Comma Style", RibbonRelayCommand.of({ setFormat(NumberFormat.NUMBER, "Comma Style") }), category = "Number")
-        catalog.register("increaseDecimal", "Increase Decimal", RibbonRelayCommand.of({ changeDecimals(1) }), category = "Number")
-        catalog.register("decreaseDecimal", "Decrease Decimal", RibbonRelayCommand.of({ changeDecimals(-1) }), category = "Number")
-        catalog.register("autoSum", "AutoSum", RibbonRelayCommand.of({ autoSum() }), shortcut = "Alt+=", category = "Editing")
-        catalog.register("clear", "Clear", RibbonRelayCommand.of({ clear() }), category = "Editing")
+        catalog.register("formatCellsLauncher", Messages.get("command.format.cells.dialog"), RibbonRelayCommand.of({ record(Messages.get("command.format.cells.dialog")) }))
+        catalog.register("accounting", Messages.get("command.accounting"), RibbonRelayCommand.of({ setFormat(NumberFormat.ACCOUNTING, Messages.get("command.accounting")) }), category = Messages.get("format.number"))
+        catalog.register("percent", Messages.get("command.percent"), RibbonRelayCommand.of({ setFormat(NumberFormat.PERCENT, Messages.get("command.percent")) }), shortcut = "Ctrl+Shift+%", category = Messages.get("format.number"))
+        catalog.register("comma", Messages.get("command.comma"), RibbonRelayCommand.of({ setFormat(NumberFormat.NUMBER, Messages.get("command.comma")) }), category = Messages.get("format.number"))
+        catalog.register("increaseDecimal", Messages.get("command.increase.decimal"), RibbonRelayCommand.of({ changeDecimals(1) }), category = Messages.get("format.number"))
+        catalog.register("decreaseDecimal", Messages.get("command.decrease.decimal"), RibbonRelayCommand.of({ changeDecimals(-1) }), category = Messages.get("format.number"))
+        catalog.register("autoSum", Messages.get("command.auto.sum"), RibbonRelayCommand.of({ autoSum() }), shortcut = "Alt+=", category = Messages.get("common.editing"))
+        catalog.register("clear", Messages.get("command.clear"), RibbonRelayCommand.of({ clear() }), category = Messages.get("common.editing"))
         catalog.register(
             "numberFormat",
-            "Number Format",
+            Messages.get("command.number.format"),
             RibbonRelayCommand({ parameter -> (parameter as? NumberFormat)?.let { setFormat(it, it.label) } }),
-            category = "Number",
+            category = Messages.get("format.number"),
         )
     }
 
@@ -130,19 +129,19 @@ class ExcelViewModel {
 
     private fun changeDecimals(delta: Int) {
         decimals[selected] = ((decimals[selected] ?: 0) + delta).coerceIn(0, MAX_DECIMALS)
-        record(if (delta > 0) "Increase Decimal" else "Decrease Decimal")
+        record(if (delta > 0) Messages.get("command.increase.decimal") else Messages.get("command.decrease.decimal"))
     }
 
     private fun autoSum() {
         val column = selected.takeWhile { it.isLetter() }
         values[selected] = "=SUM(${column}2:${column}5)"
-        record("AutoSum")
+        record(Messages.get("command.auto.sum"))
     }
 
     private fun clear() {
         values.remove(selected)
         formats.remove(selected)
-        record("Clear")
+        record(Messages.get("command.clear"))
     }
 
     /** The input of [cell] (formulas as is). */
@@ -166,9 +165,9 @@ class ExcelViewModel {
         if (value !is Number) return value.toString()
         val digits = decimals[cell] ?: 0
         val pattern = "#,##0" + if (digits > 0) "." + "0".repeat(digits) else ""
-        val format = DecimalFormat(pattern, DecimalFormatSymbols.getInstance(Locale.JAPAN))
+        val format = DecimalFormat(pattern, DecimalFormatSymbols.getInstance(Messages.locale))
         return when (formats[cell] ?: NumberFormat.GENERAL) {
-            NumberFormat.CURRENCY, NumberFormat.ACCOUNTING -> "¥" + format.format(value.toDouble())
+            NumberFormat.CURRENCY, NumberFormat.ACCOUNTING -> Messages.get("number.currency.symbol") + format.format(value.toDouble())
             NumberFormat.PERCENT -> format.format(value.toDouble() * PERCENT) + "%"
             NumberFormat.SCIENTIFIC -> DecimalFormat("0.00E0").format(value.toDouble())
             NumberFormat.TEXT -> value.toString()
@@ -195,30 +194,30 @@ class ExcelViewModel {
 
         // The commands registered by ExcelViewModel in the RibbonSpace demo (id, label, shortcut)
         val COMMANDS: List<Triple<String, String, String?>> = listOf(
-            Triple("paste", "Paste", "Ctrl+V"),
-            Triple("cut", "Cut", "Ctrl+X"),
-            Triple("copy", "Copy", "Ctrl+C"),
-            Triple("formatPainter", "Format Painter", null),
-            Triple("insertCells", "Insert", null),
-            Triple("deleteCells", "Delete", null),
-            Triple("formatCells", "Format Cells", "Ctrl+1"),
-            Triple("fill", "Fill", null),
-            Triple("sortFilter", "Sort & Filter", null),
-            Triple("findSelect", "Find & Select", "Ctrl+F"),
-            Triple("pivotTable", "PivotTable", null),
-            Triple("table", "Table", "Ctrl+T"),
-            Triple("recommendedCharts", "Recommended Charts", null),
-            Triple("insertFunction", "Insert Function", "Shift+F3"),
-            Triple("calculateNow", "Calculate Now", "F9"),
-            Triple("refreshAll", "Refresh All", "Ctrl+Alt+F5"),
-            Triple("freezePanes", "Freeze Panes", null),
-            Triple("newWindow", "New Window", null),
-            Triple("wrapText", "Wrap Text", null),
-            Triple("mergeCenter", "Merge & Center", null),
-            Triple("chartStyles", "Change Colors", null),
-            Triple("switchRowColumn", "Switch Row/Column", null),
-            Triple("selectData", "Select Data", null),
-            Triple("changeChartType", "Change Chart Type", null),
+            Triple("paste", Messages.get("common.paste"), "Ctrl+V"),
+            Triple("cut", Messages.get("common.cut"), "Ctrl+X"),
+            Triple("copy", Messages.get("common.copy"), "Ctrl+C"),
+            Triple("formatPainter", Messages.get("common.format.painter"), null),
+            Triple("insertCells", Messages.get("common.insert"), null),
+            Triple("deleteCells", Messages.get("common.delete"), null),
+            Triple("formatCells", Messages.get("command.format.cells"), "Ctrl+1"),
+            Triple("fill", Messages.get("command.fill"), null),
+            Triple("sortFilter", Messages.get("command.sort.filter"), null),
+            Triple("findSelect", Messages.get("command.find.select"), "Ctrl+F"),
+            Triple("pivotTable", Messages.get("command.pivot.table"), null),
+            Triple("table", Messages.get("command.table"), "Ctrl+T"),
+            Triple("recommendedCharts", Messages.get("command.recommended.charts"), null),
+            Triple("insertFunction", Messages.get("command.insert.function"), "Shift+F3"),
+            Triple("calculateNow", Messages.get("command.calculate.now"), "F9"),
+            Triple("refreshAll", Messages.get("command.refresh.all"), "Ctrl+Alt+F5"),
+            Triple("freezePanes", Messages.get("command.freeze.panes"), null),
+            Triple("newWindow", Messages.get("common.new.window"), null),
+            Triple("wrapText", Messages.get("command.wrap.text"), null),
+            Triple("mergeCenter", Messages.get("command.merge.center"), null),
+            Triple("chartStyles", Messages.get("command.chart.colors"), null),
+            Triple("switchRowColumn", Messages.get("command.switch.row.column"), null),
+            Triple("selectData", Messages.get("command.select.data"), null),
+            Triple("changeChartType", Messages.get("command.change.chart.type"), null),
         )
     }
 }
