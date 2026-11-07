@@ -45,13 +45,17 @@ open class WButton internal constructor(inspectable: ComPtr) : WButtonBase(inspe
     /** The IButton view with Flyout (QI'd, since the derived class [WDropDownButton] has a different default interface). */
     private val button: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IButton)) }
 
-    /** The flyout opened by clicking the button (Button.Flyout). */
+    /**
+     * The flyout opened by clicking (Button.Flyout). Even with [doClick] right after showing (before the first layout), it opens after layout.
+     */
     var flyout: WFlyoutBase? = null
         set(value) {
             field = value
             button.call(XamlInterop.IButton_put_Flyout, value?.flyoutBase?.ptr)
             value?.attachedTo(this)
         }
+
+    override fun flyoutToOpenAfterLayout(): WFlyoutBase? = flyout?.takeIf { laidOutRequests.awaitsFirstLayout() }
 
     /**
      * Whether to apply the built-in accent-colored style (AccentButtonStyle).

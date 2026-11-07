@@ -280,11 +280,21 @@ abstract class WButtonBase internal constructor(inspectable: ComPtr) : WControl(
      * it selects it (if already selected it stays selected and only the ActionListener is called, same as Swing's
      * JRadioButton).
      * Does nothing if disabled ([isEnabled] is false) (same as Swing).
+     * Even right after showing (before the first layout), the listeners are called right away, and [WButton.flyout] opens after layout (WinUI silently does not open
+     * a Button's Flyout before the first layout).
      */
     fun doClick() {
         if (!isEnabled) return
+        val flyoutAfterLayout = flyoutToOpenAfterLayout()
         Xaml.invoke(inspectable)
+        flyoutAfterLayout?.showAt(this)
     }
+
+    /**
+     * Of the flyouts that [doClick]'s Invoke should open, the one to open after layout because WinUI does not open it before the first layout yet
+     * (overridden by [WButton]). null if none.
+     */
+    internal open fun flyoutToOpenAfterLayout(): WFlyoutBase? = null
 
     /**
      * AbstractButton.doClick(int pressTime)-like: clicks once, the same as [doClick]. Swing keeps the button looking pressed and

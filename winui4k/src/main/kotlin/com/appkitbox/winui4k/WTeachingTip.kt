@@ -131,9 +131,12 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
             field = value
         }
 
-    /** Whether the callout is open (TeachingTip.IsOpen). */
+    /** Whether the teaching tip is open (TeachingTip.IsOpen). Also true while waiting to open after layout when [show] was called right after showing. */
     val isOpen: Boolean
-        get() = inspectable.getBool(XamlInterop.ITeachingTip_get_IsOpen)
+        get() = pendingAnchor?.laidOutRequests?.isPending(this) == true || inspectable.getBool(XamlInterop.ITeachingTip_get_IsOpen)
+
+    /** The reference element [show] is waiting to be laid out before opening ([target], or the parent of a closed teaching tip without a size). */
+    private var pendingAnchor: WComponent? = null
 
     /** The button Content (object) if it is a string, otherwise "". */
     private fun contentText(slot: Int): String = inspectable.getPtrOrNull(slot)?.let { boxed ->
@@ -149,9 +152,27 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
         if (subtitle.isNotEmpty()) this.subtitle = subtitle
     }
 
-    /** Opens the callout (TeachingTip.IsOpen = true). */
+    /**
+     * Opens the teaching tip (TeachingTip.IsOpen = true). When called on a window that was just shown (before the first layout), it opens after [target] (or, if none,
+     * the parent the teaching tip is in) is laid out (WinUI would show the teaching tip at the position of a [target] that is not laid out yet).
+     */
     fun show() {
-        inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, true)
+        cancelPendingShow()
+        val anchor = target ?: parent ?: this
+        if (!anchor.laidOutRequests.awaitsFirstLayout()) {
+            inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, true)
+            return
+        }
+        pendingAnchor = anchor
+        anchor.laidOutRequests.runOrDefer(this) {
+            pendingAnchor = null
+            inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, true)
+        }
+    }
+
+    private fun cancelPendingShow() {
+        pendingAnchor?.laidOutRequests?.cancel(this)
+        pendingAnchor = null
     }
 
     /**
@@ -159,6 +180,7 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
      * If called during the opening animation, TeachingTip sets IsOpen back to true and does not close (WinUI behavior).
      */
     fun hide() {
+        cancelPendingShow()
         inspectable.putBool(XamlInterop.ITeachingTip_put_IsOpen, false)
     }
 

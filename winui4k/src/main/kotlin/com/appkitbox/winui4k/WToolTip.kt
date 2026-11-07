@@ -106,11 +106,20 @@ class WToolTip : WControl(
 
     /**
      * Whether the hint is shown (ToolTip.IsOpen). Setting true shows it right away if the attached component is in a window,
-     * and false hides it. It goes back to false when WinUI closes it, such as when the mouse leaves.
+     * false hides it. When WinUI closes it, for example when the mouse leaves, it returns to false. Setting it to true on a window that was just shown (before the first layout of
+     * the attached component) shows it after layout (WinUI silently does not show IsOpen set before that). It also reads as true until then.
      */
     var isOpen: Boolean
-        get() = inspectable.getBool(XamlInterop.IToolTip_get_IsOpen)
-        set(value) = inspectable.putBool(XamlInterop.IToolTip_put_IsOpen, value)
+        get() = component?.laidOutRequests?.isPending(this) == true || inspectable.getBool(XamlInterop.IToolTip_get_IsOpen)
+        set(value) {
+            val target = component
+            target?.laidOutRequests?.cancel(this)
+            if (value && target != null && target.laidOutRequests.awaitsFirstLayout()) {
+                target.laidOutRequests.runOrDefer(this) { inspectable.putBool(XamlInterop.IToolTip_put_IsOpen, true) }
+            } else {
+                inspectable.putBool(XamlInterop.IToolTip_put_IsOpen, value)
+            }
+        }
 
     /** From setting [WComponent.toolTip]: attached to [component] (detached if null). */
     internal fun attachedTo(component: WComponent?) {

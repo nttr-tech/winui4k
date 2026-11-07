@@ -519,7 +519,10 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   文字列と同じなら知らせない (TextChangeNotices、TextChangedBeforeShowTest)
 - 最初のレイアウトの前 (表示する前・ウィンドウに入れた直後) は、ListView / ListBox の ScrollIntoView、TableView の Select
   (読み込むと SelectedIndex が -1 に戻る)、MenuBarItem の Invoke が黙って効かず、表示した直後のウィンドウの中身は XamlRoot を
-  まだ持たないので FlyoutBase.ShowAt は E_INVALIDARG (This element does not have a XamlRoot)、ContentDialog も開けない。WinUI4K は頼みを覚えて、Loaded の後の周回で行う (LaidOutRequests、BeforeShowRequestsTest)
+  まだ持たないので FlyoutBase.ShowAt は E_INVALIDARG (This element does not have a XamlRoot)、ContentDialog も開けない。WinUI4K は頼みを覚えて、Loaded の後の周回で行う (LaidOutRequests、BeforeShowRequestsTest)。
+  同じく表示した直後は、Button の Invoke で開くはずの Flyout (Click は届く) と ToolTip.IsOpen = true (IsOpen は true のまま) が黙って
+  開かず、TeachingTip.IsOpen = true はまだ並んでいない Target の位置 (ウィンドウの左上) に吹き出しを出す (起動した直後のプロセスで
+  撮って確かめた。暖まったテストのプロセスでは再現しない)。AppBar.IsOpen (CommandBar の「…」) は表示した直後でも開く
 - SizeChanged は UIElement.UpdateLayout の中で同期的に届く (microsoft-ui-xaml の LayoutManager.cpp の RaiseSizeChangedEvents)。
   WLayoutPanel は子の自然な大きさを測るとき、子の Width / Height を外して UpdateLayout するので、その子には中身の大きさで
   SizeChanged が届き、ScrollViewer はその大きさでスクロールの位置を 0 に丸める。表示した直後には 0 を割り当てることもある。

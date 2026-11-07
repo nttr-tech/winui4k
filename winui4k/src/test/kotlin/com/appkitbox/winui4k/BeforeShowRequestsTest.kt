@@ -2,7 +2,10 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winrt.Activation
+import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.TabularInterop
+import com.appkitbox.winui4k.internal.winui.XamlInterop
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -33,6 +36,64 @@ class BeforeShowRequestsTest : FunSpec() {
             Thread.sleep(50)
         }
         return false
+    }
+
+    /** The number of Popups open in the window of [owner] (VisualTreeHelper.GetOpenPopupsForXamlRoot). 0 if not attached. Call on the UI thread. */
+    private fun openPopupCount(owner: WComponent): Int {
+        val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return 0
+        val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
+        val popups = try {
+            statics.getPtr(XamlInterop.IVisualTreeHelperStatics_GetOpenPopupsForXamlRoot, root.ptr)
+        } finally {
+            statics.release()
+            root.release()
+        }
+        return try {
+            popups.getInt(FoundationInterop.IVectorView_get_Size)
+        } finally {
+            popups.release()
+        }
+    }
+
+    /**
+     * The [left, top, content width, content height] of the first Popup open in the window of [owner] (Popup.HorizontalOffset / VerticalOffset and
+     * the child's ActualWidth / ActualHeight; DIP). null if none is open. Call on the UI thread.
+     */
+    private fun firstOpenPopupBounds(owner: WComponent): DoubleArray? {
+        val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return null
+        val statics = Activation.factory(XamlInterop.CLS_VisualTreeHelper, XamlInterop.IID_IVisualTreeHelperStatics)
+        val popups = try {
+            statics.getPtr(XamlInterop.IVisualTreeHelperStatics_GetOpenPopupsForXamlRoot, root.ptr)
+        } finally {
+            statics.release()
+            root.release()
+        }
+        try {
+            if (popups.getInt(FoundationInterop.IVectorView_get_Size) == 0) return null
+            val popup = popups.getPtr(FoundationInterop.IVectorView_GetAt, 0)
+            try {
+                val child = popup.getPtrOrNull(XamlInterop.IPopup_get_Child) ?: return null
+                val element = try {
+                    child.queryInterface(XamlInterop.IID_IFrameworkElement)
+                } finally {
+                    child.release()
+                }
+                return try {
+                    doubleArrayOf(
+                        popup.getDouble(XamlInterop.IPopup_get_HorizontalOffset),
+                        popup.getDouble(XamlInterop.IPopup_get_VerticalOffset),
+                        element.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth),
+                        element.getDouble(XamlInterop.IFrameworkElement_get_ActualHeight),
+                    )
+                } finally {
+                    element.release()
+                }
+            } finally {
+                popup.release()
+            }
+        } finally {
+            popups.release()
+        }
     }
 
     init {
@@ -398,6 +459,150 @@ class BeforeShowRequestsTest : FunSpec() {
                     awaitUi { popup.isOpen } shouldBe true
                     onUiThread { popup.hide() }
                     awaitUi { !popup.isOpen } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+        }
+
+        context("flyouts, hints and the toolbar's \"...\" right after showing") {
+            /** Lays out [components] with WFlowLayout in a 480 x 360 window, shows it without activating it, and calls [afterShow] (call on the UI thread). */
+            fun showFrame(vararg components: WComponent, afterShow: () -> Unit): WFrame = WFrame("BeforeShowRequestsTest").also {
+                it.layout = WFlowLayout()
+                components.forEach { component -> it.add(component) }
+                it.setSize(480, 360)
+                it.setLocationRelativeTo(null)
+                it.isAutoRequestFocus = false
+                it.isVisible = true
+                afterShow()
+            }
+
+            test("calling doClick() of a button right after showing opens the flyout set with setFlyout after layout (as with Swing's JButton)") {
+                lateinit var popup: WMenuFlyout
+                val frame = onUiThreadGet {
+                    popup = WMenuFlyout().also {
+                        it.add("Export as PDF")
+                        it.add("Export as CSV")
+                    }
+                    val export = WButton("Export").also { it.flyout = popup }
+                    showFrame(export) { export.doClick() }
+                }
+                try {
+                    awaitUi { popup.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    onUiThread { popup.hide() }
+                    awaitUi { !popup.isOpen } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("even calling doClick() of a button twice right after showing opens only one flyout after layout") {
+                lateinit var popup: WMenuFlyout
+                val frame = onUiThreadGet {
+                    popup = WMenuFlyout().also { it.add("Export as PDF") }
+                    val export = WButton("Export").also { it.flyout = popup }
+                    showFrame(export) {
+                        export.doClick()
+                        export.doClick()
+                    }
+                }
+                try {
+                    awaitUi { popup.isOpen } shouldBe true
+                    Thread.sleep(500)
+                    onUiThreadGet { popup.isOpen to openPopupCount(frame.content) } shouldBe (true to 1)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("setting WToolTip.isOpen to true right after showing shows the hint after layout, and isOpen is true in the meantime") {
+                lateinit var tip: WToolTip
+                var openedRightAway = false
+                val frame = onUiThreadGet {
+                    val zip = WTextField(10).also { it.text = "12-345" }
+                    tip = WToolTip().also { it.text = "Enter 7 digits" }
+                    zip.setToolTip(tip)
+                    showFrame(zip) {
+                        tip.isOpen = true
+                        openedRightAway = tip.isOpen
+                    }
+                }
+                try {
+                    openedRightAway shouldBe true
+                    awaitUi { tip.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    Thread.sleep(500) // It must not close in a later layout
+                    onUiThreadGet { tip.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    onUiThread { tip.isOpen = false }
+                    awaitUi { !tip.isOpen } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("setting WToolTip.isOpen to true right after showing and back to false shows no hint after layout") {
+                lateinit var tip: WToolTip
+                val frame = onUiThreadGet {
+                    val zip = WTextField(10)
+                    tip = WToolTip().also { it.text = "Enter 7 digits" }
+                    zip.setToolTip(tip)
+                    showFrame(zip) {
+                        tip.isOpen = true
+                        tip.isOpen = false
+                    }
+                }
+                try {
+                    awaitUi { frame.content.actualWidth > 0.0 } shouldBe true
+                    Thread.sleep(500)
+                    onUiThreadGet { tip.isOpen to openPopupCount(frame.content) } shouldBe (false to 0)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("setting WCommandBar.isOpen to true right after showing has the \"...\" menu open after layout") {
+                lateinit var toolBar: WCommandBar
+                val frame = onUiThreadGet {
+                    toolBar = WCommandBar().also {
+                        it.add(WAppBarButton("Add", Symbol.ADD))
+                        it.addSecondaryCommand(WAppBarButton("Settings", Symbol.SETTING))
+                        it.addSecondaryCommand(WAppBarButton("Help", Symbol.HELP))
+                    }
+                    showFrame(toolBar) { toolBar.isOpen = true }
+                }
+                try {
+                    awaitUi { toolBar.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    Thread.sleep(500)
+                    onUiThreadGet { toolBar.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    onUiThread { toolBar.isOpen = false }
+                    awaitUi { !toolBar.isOpen } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("calling WTeachingTip.show() right after showing opens the teaching tip right below the laid-out target after layout") {
+                lateinit var tip: WTeachingTip
+                lateinit var sync: WButton
+                val frame = onUiThreadGet {
+                    sync = WButton("Sync", Symbol.SYNC)
+                    tip = WTeachingTip("New: Sync", "Click here to sync your files with the cloud.").also {
+                        it.target = sync
+                        it.actionButtonText = "Try it"
+                        it.closeButtonText = "Got it"
+                    }
+                    showFrame(sync, WLabel(), tip) { tip.show() }
+                }
+                try {
+                    awaitUi { tip.isOpen && openPopupCount(frame.content) > 0 } shouldBe true
+                    Thread.sleep(1_000) // Wait for the opening animation and later layouts
+                    onUiThreadGet {
+                        val bounds = checkNotNull(firstOpenPopupBounds(frame.content)) { "the teaching tip's Popup is not open" }
+                        val target = Xaml.positionInRoot(sync.uiElement)
+                        // The teaching tip's center is at the target's center (laid out in the horizontal middle by WFlowLayout), and its top is below the target's bottom
+                        val centerGap = Math.abs(bounds[0] + bounds[2] / 2 - (target[0] + sync.actualWidth / 2))
+                        val below = bounds[1] >= target[1] + sync.actualHeight - 1.0
+                        "centerGap=${centerGap.toInt()} below=$below" to (centerGap < 20.0 && below)
+                    }.let { (detail, ok) -> (detail to ok) shouldBe (detail to true) }
                 } finally {
                     onUiThread { frame.dispose() }
                 }
