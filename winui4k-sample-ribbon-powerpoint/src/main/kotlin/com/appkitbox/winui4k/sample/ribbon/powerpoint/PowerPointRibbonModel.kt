@@ -36,14 +36,14 @@ internal data class SlideTheme(val name: String, val background: String, val for
 
 /** The themes on [Design] (same colors as Themes in PowerPointPage.xaml). */
 internal val THEMES = listOf(
-    SlideTheme("Office Theme", "#FFFFFF", "#262626"),
-    SlideTheme("Facet", "#90C226", "#FFFFFF"),
-    SlideTheme("Ion", "#1E5155", "#FFFFFF"),
-    SlideTheme("Retrospect", "#E48312", "#FFFFFF"),
-    SlideTheme("Slice", "#146194", "#FFFFFF"),
-    SlideTheme("Wisp", "#EFE3C6", "#5E3A1B"),
-    SlideTheme("Berlin", "#A6452E", "#FFFFFF"),
-    SlideTheme("Dividend", "#4D1434", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.office"), "#FFFFFF", "#262626"),
+    SlideTheme(Messages.get("theme.facet"), "#90C226", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.ion"), "#1E5155", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.retrospect"), "#E48312", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.slice"), "#146194", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.wisp"), "#EFE3C6", "#5E3A1B"),
+    SlideTheme(Messages.get("theme.berlin"), "#A6452E", "#FFFFFF"),
+    SlideTheme(Messages.get("theme.dividend"), "#4D1434", "#FFFFFF"),
 )
 
 private val LARGE = RibbonItemSize.LARGE
@@ -61,48 +61,48 @@ private fun <T : RibbonItemModel> T.alwaysLarge(): T = also { it.sizeDefinition 
 /** The PowerPoint ribbon model. */
 internal fun createPowerPointModel(): RibbonModel = RibbonModel().apply {
     displayMode = RibbonDisplayMode.SIMPLIFIED
-    applicationButtonLabel = "File"
-    title = "Product Launch"
+    applicationButtonLabel = Messages.get("common.file")
+    title = Messages.get("title")
     tabs.add(createHomeTab())
     tabs.add(createInsertTab())
     tabs.add(createDesignTab())
     tabs.add(createTransitionsTab())
     tabs.add(createSlideShowTab())
     tabs.add(createViewTab())
-    quickAccessItems.add(button("pp.save", "Save", glyph('')))
-    quickAccessItems.add(button("pp.undo", "Undo", glyph('')))
-    quickAccessItems.add(button("pp.fromBeginning", "From Beginning", glyph('')).also { it.shortcut = "F5" })
-    tabStripItems.add(button("pp.record", "Record", glyph('')).also { it.showLabelInSimplified = true })
-    tabStripItems.add(split("pp.present", "Present", glyph(''), SMALL, menuItem("pp.present.beginning", "From Beginning"), menuItem("pp.present.current", "From Current Slide")).also { it.showLabelInSimplified = true })
-    tabStripItems.add(button("pp.share", "Share", glyph('')).also { it.showLabelInSimplified = true })
+    quickAccessItems.add(button("pp.save", Messages.get("common.save"), glyph('\uE74E')))
+    quickAccessItems.add(button("pp.undo", Messages.get("common.undo"), glyph('\uE7A7')))
+    quickAccessItems.add(button("pp.fromBeginning", Messages.get("from.beginning"), glyph('\uE768')).also { it.shortcut = "F5" })
+    tabStripItems.add(button("pp.record", Messages.get("record"), glyph('\uE7C8')).also { it.showLabelInSimplified = true })
+    tabStripItems.add(split("pp.present", Messages.get("present"), glyph('\uE7F4'), SMALL, menuItem("pp.present.beginning", Messages.get("from.beginning")), menuItem("pp.present.current", Messages.get("from.current"))).also { it.showLabelInSimplified = true })
+    tabStripItems.add(button("pp.share", Messages.get("common.share"), glyph('\uE72D')).also { it.showLabelInSimplified = true })
 }
 
 @Suppress("LongMethod", "CyclomaticComplexMethod") // Declaratively builds the [Home] tab's groups from top to bottom (only the scope functions count as branches)
 private fun createHomeTab(): RibbonTabModel = tab(
     "home",
-    "Home",
+    Messages.get("common.home"),
     "H",
     group(
         "clipboard",
-        "Clipboard",
-        split("pp.paste", "Paste", glyph(''), LARGE, menuItem("pp.paste.keep", "Keep Source Formatting"), menuItem("pp.paste.picture", "Picture"), menuItem("pp.paste.text", "Keep Text Only")).alwaysLarge().pinned(),
-        button("pp.cut", "Cut", glyph('')),
-        button("pp.copy", "Copy", glyph('')),
-        toggle("pp.formatPainter", "Format Painter", glyph(''), MEDIUM).overflow(),
+        Messages.get("common.clipboard"),
+        split("pp.paste", Messages.get("common.paste"), glyph('\uE77F'), LARGE, menuItem("pp.paste.keep", Messages.get("common.paste.keep")), menuItem("pp.paste.picture", Messages.get("home.paste.picture")), menuItem("pp.paste.text", Messages.get("common.paste.text"))).alwaysLarge().pinned(),
+        button("pp.cut", Messages.get("common.cut"), glyph('\uE8C6')),
+        button("pp.copy", Messages.get("common.copy"), glyph('\uE8C8')),
+        toggle("pp.formatPainter", Messages.get("common.format.painter"), glyph('\uE771'), MEDIUM).overflow(),
     ).withIcon(glyph('\uE77F')),
     group(
         "slides",
-        "Slides",
-        split("pp.newSlide", "New Slide", glyph(''), LARGE, menuItem("pp.newSlide.title", "Title Slide"), menuItem("pp.newSlide.content", "Title and Content"), menuItem("pp.newSlide.blank", "Blank"))
+        Messages.get("home.slides"),
+        split("pp.newSlide", Messages.get("home.new.slide"), glyph('\uE710'), LARGE, menuItem("pp.newSlide.title", Messages.get("home.title.slide")), menuItem("pp.newSlide.content", Messages.get("home.title.content")), menuItem("pp.newSlide.blank", Messages.get("home.blank")))
             .alwaysLarge()
             .also { it.shortcut = "Ctrl+M" },
-        dropDown("pp.layout", "Layout", glyph(''), MEDIUM, menuItem("pp.layout.title", "Title Slide"), menuItem("pp.layout.twoContent", "Two Content")),
-        button("pp.reset", "Reset", glyph('')).overflow(),
-        dropDown("pp.section", "Section", glyph(''), MEDIUM, menuItem("pp.section.add", "Add Section")).overflow(),
+        dropDown("pp.layout", Messages.get("common.layout"), glyph('\uE8A9'), MEDIUM, menuItem("pp.layout.title", Messages.get("home.title.slide")), menuItem("pp.layout.twoContent", Messages.get("home.two.content"))),
+        button("pp.reset", Messages.get("home.reset"), glyph('\uE72C')).overflow(),
+        dropDown("pp.section", Messages.get("home.section"), glyph('\uE8FD'), MEDIUM, menuItem("pp.section.add", Messages.get("home.section.add"))).overflow(),
     ).withIcon(glyph('\uE7F4')),
     group(
         "font",
-        "Font",
+        Messages.get("common.font"),
         RibbonRowModel(
             RibbonFontComboBoxModel("pp.font").also {
                 it.items.add(0, "Aptos Display")
@@ -112,11 +112,11 @@ private fun createHomeTab(): RibbonTabModel = tab(
         ),
         RibbonRowModel(
             RibbonButtonGroupModel(
-                toggle("pp.bold", "Bold", RibbonIcons.BOLD).also { it.shortcut = "Ctrl+B" },
-                toggle("pp.italic", "Italic", RibbonIcons.ITALIC).also { it.shortcut = "Ctrl+I" },
-                toggle("pp.underline", "Underline", RibbonIcons.UNDERLINE).also { it.shortcut = "Ctrl+U" },
+                toggle("pp.bold", Messages.get("common.bold"), RibbonIcons.BOLD).also { it.shortcut = "Ctrl+B" },
+                toggle("pp.italic", Messages.get("common.italic"), RibbonIcons.ITALIC).also { it.shortcut = "Ctrl+I" },
+                toggle("pp.underline", Messages.get("common.underline"), RibbonIcons.UNDERLINE).also { it.shortcut = "Ctrl+U" },
             ),
-            RibbonColorPickerModel("pp.fontColor", "Font Color", RibbonIcons.FONT_COLOR).also { it.selectedColor = RibbonColor.parse("#C43E1C") },
+            RibbonColorPickerModel("pp.fontColor", Messages.get("common.font.color"), RibbonIcons.FONT_COLOR).also { it.selectedColor = RibbonColor.parse("#C43E1C") },
         ),
     ).also {
         it.icon = glyph('\uE8D2')
@@ -125,65 +125,65 @@ private fun createHomeTab(): RibbonTabModel = tab(
     },
     group(
         "paragraph",
-        "Paragraph",
-        split("pp.bullets", "Bullets", RibbonIcons.BULLETS, SMALL, menuItem("pp.bullets.dot", "• Filled Round Bullets"), menuItem("pp.bullets.square", "■ Filled Square Bullets")).also { it.isCheckable = true },
+        Messages.get("common.paragraph"),
+        split("pp.bullets", Messages.get("common.bullets"), RibbonIcons.BULLETS, SMALL, menuItem("pp.bullets.dot", Messages.get("common.bullets.dot")), menuItem("pp.bullets.square", Messages.get("common.bullets.square"))).also { it.isCheckable = true },
         RibbonButtonGroupModel(
-            toggle("pp.left", "Align Left", RibbonIcons.ALIGN_LEFT).also {
+            toggle("pp.left", Messages.get("common.align.left"), RibbonIcons.ALIGN_LEFT).also {
                 it.groupName = "ppalign"
                 it.isChecked = true
             },
-            toggle("pp.center", "Center", RibbonIcons.ALIGN_CENTER).also { it.groupName = "ppalign" },
-            toggle("pp.right", "Align Right", RibbonIcons.ALIGN_RIGHT).also { it.groupName = "ppalign" },
+            toggle("pp.center", Messages.get("common.align.center"), RibbonIcons.ALIGN_CENTER).also { it.groupName = "ppalign" },
+            toggle("pp.right", Messages.get("common.align.right"), RibbonIcons.ALIGN_RIGHT).also { it.groupName = "ppalign" },
         ),
-        dropDown("pp.textDirection", "Text Direction", glyph(''), MEDIUM, menuItem("pp.textDirection.horizontal", "Horizontal"), menuItem("pp.textDirection.vertical", "Stacked")).overflow(),
+        dropDown("pp.textDirection", Messages.get("home.text.direction"), glyph('\uE8D2'), MEDIUM, menuItem("pp.textDirection.horizontal", Messages.get("home.horizontal")), menuItem("pp.textDirection.vertical", Messages.get("home.vertical"))).overflow(),
     ).withIcon(RibbonIcons.BULLETS),
     group(
         "drawing",
-        "Drawing",
-        dropDown("pp.shapes", "Shapes", glyph(''), LARGE, menuItem("pp.shapes.rect", "Rectangle"), menuItem("pp.shapes.oval", "Oval"), menuItem("pp.shapes.arrow", "Arrow")).alwaysLarge(),
-        dropDown("pp.arrange", "Arrange", glyph(''), MEDIUM, menuItem("pp.arrange.front", "Bring to Front"), menuItem("pp.arrange.back", "Send to Back")),
-        RibbonColorPickerModel("pp.shapeFill", "Shape Fill", glyph('')).also { it.selectedColor = RibbonColor.parse("#C43E1C") },
-        RibbonColorPickerModel("pp.shapeOutline", "Shape Outline", glyph('')).also { it.selectedColor = RibbonColor.parse("#404040") },
+        Messages.get("home.drawing"),
+        dropDown("pp.shapes", Messages.get("common.shapes"), glyph('\uE91B'), LARGE, menuItem("pp.shapes.rect", Messages.get("common.shape.rectangle")), menuItem("pp.shapes.oval", Messages.get("common.shape.oval")), menuItem("pp.shapes.arrow", Messages.get("home.arrow"))).alwaysLarge(),
+        dropDown("pp.arrange", Messages.get("home.arrange"), glyph('\uE8F4'), MEDIUM, menuItem("pp.arrange.front", Messages.get("common.bring.to.front")), menuItem("pp.arrange.back", Messages.get("common.send.to.back"))),
+        RibbonColorPickerModel("pp.shapeFill", Messages.get("home.shape.fill"), glyph('\uE790')).also { it.selectedColor = RibbonColor.parse("#C43E1C") },
+        RibbonColorPickerModel("pp.shapeOutline", Messages.get("home.shape.outline"), glyph('\uE80A')).also { it.selectedColor = RibbonColor.parse("#404040") },
     ).withIcon(glyph('\uE91B')),
-    group("designer", "Designer", button("pp.designer", "Designer", glyph(''), LARGE).pinned()).withIcon(glyph('')),
+    group("designer", Messages.get("home.designer"), button("pp.designer", Messages.get("home.designer"), glyph('\uE790'), LARGE).pinned()).withIcon(glyph('\uE790')),
 )
 
 private fun createInsertTab(): RibbonTabModel = tab(
     "insert",
-    "Insert",
+    Messages.get("common.insert"),
     "N",
-    group("insertSlides", "Slides", split("pp.newSlide2", "New Slide", glyph(''), LARGE, menuItem("pp.newSlide2.title", "Title Slide")).alwaysLarge()),
-    group("insertTables", "Tables", dropDown("pp.table", "Table", glyph(''), LARGE, menuItem("pp.table.insert", "Insert Table..."))),
+    group("insertSlides", Messages.get("home.slides"), split("pp.newSlide2", Messages.get("home.new.slide"), glyph('\uE710'), LARGE, menuItem("pp.newSlide2.title", Messages.get("home.title.slide"))).alwaysLarge()),
+    group("insertTables", Messages.get("insert.tables"), dropDown("pp.table", Messages.get("common.table"), glyph('\uE80A'), LARGE, menuItem("pp.table.insert", Messages.get("common.insert.table")))),
     group(
         "images",
-        "Images",
-        dropDown("pp.pictures", "Pictures", glyph(''), LARGE, menuItem("pp.pictures.device", "This Device..."), menuItem("pp.pictures.stock", "Stock Images...")),
-        button("pp.screenshot", "Screenshot", glyph('')),
-        button("pp.photoAlbum", "Photo Album", glyph('')),
+        Messages.get("insert.images"),
+        dropDown("pp.pictures", Messages.get("common.pictures"), glyph('\uEB9F'), LARGE, menuItem("pp.pictures.device", Messages.get("common.pictures.device")), menuItem("pp.pictures.stock", Messages.get("insert.stock.images"))),
+        button("pp.screenshot", Messages.get("common.screenshot"), glyph('\uE722')),
+        button("pp.photoAlbum", Messages.get("insert.photo.album"), glyph('\uE8F1')),
     ),
     group(
         "pp.illustrations",
-        "Illustrations",
-        dropDown("pp.shapes2", "Shapes", glyph(''), LARGE, menuItem("pp.shapes2.rect", "Rectangle")),
-        button("pp.icons", "Icons", glyph(''), LARGE),
-        button("pp.chart", "Chart", glyph('')),
+        Messages.get("common.illustrations"),
+        dropDown("pp.shapes2", Messages.get("common.shapes"), glyph('\uE91B'), LARGE, menuItem("pp.shapes2.rect", Messages.get("common.shape.rectangle"))),
+        button("pp.icons", Messages.get("common.icons"), glyph('\uED58'), LARGE),
+        button("pp.chart", Messages.get("common.chart"), glyph('\uE9D2')),
     ),
     group(
         "pp.media",
-        "Media",
-        dropDown("pp.video", "Video", glyph(''), LARGE, menuItem("pp.video.device", "This Device...")),
-        dropDown("pp.audio", "Audio", glyph(''), LARGE, menuItem("pp.audio.record", "Record Audio...")),
+        Messages.get("common.media"),
+        dropDown("pp.video", Messages.get("insert.video"), glyph('\uE714'), LARGE, menuItem("pp.video.device", Messages.get("common.pictures.device"))),
+        dropDown("pp.audio", Messages.get("insert.audio"), glyph('\uE8D6'), LARGE, menuItem("pp.audio.record", Messages.get("insert.audio.record"))),
     ),
 )
 
 private fun createDesignTab(): RibbonTabModel = tab(
     "design",
-    "Design",
+    Messages.get("common.design"),
     "G",
     group(
         "themes",
-        "Themes",
-        RibbonGalleryModel("pp.themes", "Themes").also { gallery ->
+        Messages.get("design.themes"),
+        RibbonGalleryModel("pp.themes", Messages.get("design.themes")).also { gallery ->
             gallery.icon = glyph('\uE790')
             gallery.maxColumns = THEME_MAX_COLUMNS
             gallery.minColumns = MIN_COLUMNS
@@ -205,21 +205,21 @@ private fun createDesignTab(): RibbonTabModel = tab(
     ).also { it.reductionOrder = 1 },
     group(
         "customize",
-        "Customize",
-        dropDown("pp.slideSize", "Slide Size", glyph(''), LARGE, menuItem("pp.slideSize.standard", "Standard (4:3)"), menuItem("pp.slideSize.wide", "Widescreen (16:9)")),
-        button("pp.formatBackground", "Format Background", glyph(''), LARGE),
+        Messages.get("design.customize"),
+        dropDown("pp.slideSize", Messages.get("design.slide.size"), glyph('\uE740'), LARGE, menuItem("pp.slideSize.standard", Messages.get("design.slide.size.standard")), menuItem("pp.slideSize.wide", Messages.get("design.slide.size.wide"))),
+        button("pp.formatBackground", Messages.get("design.format.background"), glyph('\uE790'), LARGE),
     ),
 )
 
 private fun createTransitionsTab(): RibbonTabModel = tab(
     "transitions",
-    "Transitions",
+    Messages.get("transitions"),
     "K",
-    group("preview", "Preview", button("pp.previewTransition", "Preview", glyph(''), LARGE)),
+    group("preview", Messages.get("transitions.preview"), button("pp.previewTransition", Messages.get("transitions.preview"), glyph('\uE768'), LARGE)),
     group(
         "transitionGallery",
-        "Transition to This Slide",
-        RibbonGalleryModel("pp.transitions", "Transitions").also { gallery ->
+        Messages.get("transitions.this.slide"),
+        RibbonGalleryModel("pp.transitions", Messages.get("transitions")).also { gallery ->
             gallery.icon = glyph('\uE8AB')
             gallery.maxColumns = TRANSITION_MAX_COLUMNS
             gallery.minColumns = MIN_COLUMNS
@@ -228,60 +228,60 @@ private fun createTransitionsTab(): RibbonTabModel = tab(
             for ((label, code) in TRANSITIONS) gallery.items.add(RibbonGalleryItemModel("transition.$label", label, glyph(code)))
             gallery.selectedItem = gallery.items[0]
         },
-        dropDown("pp.effectOptions", "Effect Options", glyph(''), LARGE, menuItem("pp.effect.smoothly", "Smoothly"), menuItem("pp.effect.black", "Through Black")),
+        dropDown("pp.effectOptions", Messages.get("transitions.effect.options"), glyph('\uE713'), LARGE, menuItem("pp.effect.smoothly", Messages.get("transitions.smoothly")), menuItem("pp.effect.black", Messages.get("transitions.through.black"))),
     ).also { it.reductionOrder = 1 },
     group(
         "timing",
-        "Timing",
-        RibbonSpinnerModel("pp.duration", "Duration:", DURATION).also {
+        Messages.get("transitions.timing"),
+        RibbonSpinnerModel("pp.duration", Messages.get("transitions.duration"), DURATION).also {
             it.maximum = DURATION_MAX
             it.increment = DURATION_STEP
             it.format = "00.00"
         },
-        RibbonCheckBoxModel("pp.onMouseClick", "On Mouse Click", isChecked = true),
-        button("pp.applyToAll", "Apply To All", glyph('')),
+        RibbonCheckBoxModel("pp.onMouseClick", Messages.get("transitions.on.click"), isChecked = true),
+        button("pp.applyToAll", Messages.get("transitions.apply.all"), glyph('\uE8B3')),
     ),
 )
 
 private fun createSlideShowTab(): RibbonTabModel = tab(
     "slideShow",
-    "Slide Show",
+    Messages.get("slide.show"),
     "S",
     group(
         "start",
-        "Start Slide Show",
-        button("pp.fromBeginning2", "From Beginning", glyph(''), LARGE).also { it.shortcut = "F5" },
-        button("pp.fromCurrent", "From Current Slide", glyph(''), LARGE).also { it.shortcut = "Shift+F5" },
+        Messages.get("slide.show.start"),
+        button("pp.fromBeginning2", Messages.get("from.beginning"), glyph('\uE768'), LARGE).also { it.shortcut = "F5" },
+        button("pp.fromCurrent", Messages.get("from.current"), glyph('\uE768'), LARGE).also { it.shortcut = "Shift+F5" },
     ),
     group(
         "setUp",
-        "Set Up",
-        button("pp.setUpShow", "Set Up Slide Show", glyph(''), LARGE),
-        toggle("pp.hideSlide", "Hide Slide", glyph(''), LARGE),
-        RibbonCheckBoxModel("pp.useTimings", "Use Timings", isChecked = true),
+        Messages.get("slide.show.set.up"),
+        button("pp.setUpShow", Messages.get("slide.show.set.up.show"), glyph('\uE713'), LARGE),
+        toggle("pp.hideSlide", Messages.get("slide.show.hide.slide"), glyph('\uE890'), LARGE),
+        RibbonCheckBoxModel("pp.useTimings", Messages.get("slide.show.use.timings"), isChecked = true),
     ),
 )
 
 private fun createViewTab(): RibbonTabModel = tab(
     "view",
-    "View",
+    Messages.get("common.view"),
     "W",
     group(
         "presentationViews",
-        "Presentation Views",
-        toggle("pp.normal", "Normal", glyph(''), LARGE).also {
+        Messages.get("view.presentation.views"),
+        toggle("pp.normal", Messages.get("view.normal"), glyph('\uE7F4'), LARGE).also {
             it.groupName = "ppview"
             it.isChecked = true
         },
-        toggle("pp.sorter", "Slide Sorter", glyph(''), LARGE).also { it.groupName = "ppview" },
-        toggle("pp.notesPage", "Notes Page", glyph(''), LARGE).also { it.groupName = "ppview" },
+        toggle("pp.sorter", Messages.get("view.sorter"), glyph('\uE80A'), LARGE).also { it.groupName = "ppview" },
+        toggle("pp.notesPage", Messages.get("view.notes.page"), glyph('\uE70B'), LARGE).also { it.groupName = "ppview" },
     ),
     group(
         "ppShow",
-        "Show",
-        RibbonCheckBoxModel("pp.ruler", "Ruler"),
-        RibbonCheckBoxModel("pp.gridlines", "Gridlines"),
-        RibbonCheckBoxModel("pp.guides", "Guides"),
+        Messages.get("view.show"),
+        RibbonCheckBoxModel("pp.ruler", Messages.get("common.ruler")),
+        RibbonCheckBoxModel("pp.gridlines", Messages.get("common.gridlines")),
+        RibbonCheckBoxModel("pp.guides", Messages.get("view.guides")),
     ),
 )
 
@@ -289,15 +289,15 @@ private fun RibbonGroupModel.withIcon(icon: RibbonIcon): RibbonGroupModel = also
 
 // Items in the [Transitions] gallery (label and glyph)
 private val TRANSITIONS = listOf(
-    "None" to '',
-    "Morph" to '',
-    "Fade" to '',
-    "Push" to '',
-    "Wipe" to '',
-    "Split" to '',
-    "Reveal" to '',
-    "Cut" to '',
-    "Random Bars" to '',
+    Messages.get("transition.none") to '\uE711',
+    Messages.get("transition.morph") to '\uE8AB',
+    Messages.get("transition.fade") to '\uE706',
+    Messages.get("transition.push") to '\uE76C',
+    Messages.get("transition.wipe") to '\uE8B3',
+    Messages.get("transition.split") to '\uE8A0',
+    Messages.get("transition.reveal") to '\uE890',
+    Messages.get("transition.cut") to '\uE8C6',
+    Messages.get("transition.random.bars") to '\uE9D2',
 )
 
 private const val FONT_SIZE = 28.0

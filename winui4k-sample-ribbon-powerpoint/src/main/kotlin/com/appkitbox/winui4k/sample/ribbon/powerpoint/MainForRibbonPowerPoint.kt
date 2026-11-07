@@ -39,14 +39,14 @@ fun main() {
         val themes = model.findItem("pp.themes") as RibbonGalleryModel
         themes.addPreviewListener { event -> slide.show((event.item?.value as? SlideTheme) ?: slide.applied) }
         val ribbon = WRibbon(model)
-        val status = RibbonLabelModel("status.hint", "Point at the theme gallery on [Design] for a live preview")
+        val status = RibbonLabelModel("status.hint", Messages.get("status.hint"))
         ribbon.addItemInvokedListener { event ->
             (event.parameter as? SlideTheme)?.let { slide.apply(it) }
             val parameter = event.parameter?.let { if (it is SlideTheme) it.name else it.toString() }
             status.label = event.item.id + (parameter?.let { " ($it)" } ?: "")
         }
-        val window = RibbonDemoWindow("Product Launch - PowerPoint (WinUI4K Ribbon)", RibbonDemoApp.POWER_POINT, ribbon)
-        window.titleBar!!.subtitle = "• Simplified ribbon"
+        val window = RibbonDemoWindow(Messages.get("window.title"), RibbonDemoApp.POWER_POINT, ribbon)
+        window.titleBar!!.subtitle = Messages.get("title.subtitle")
         window.setTop(ribbon)
         val body = WGrid()
         body.addColumn(GridLength.AUTO)
@@ -61,11 +61,11 @@ fun main() {
 
 /** The slide (reflects the theme colors). */
 private class SlideView {
-    private val title = WLabel("Introducing WinUI4K").also {
+    private val title = WLabel(Messages.get("slide.title")).also {
         it.fontSize = TITLE_SIZE
         it.fontWeight = SEMI_BOLD
     }
-    private val subtitle = WLabel("A modern Office-style ribbon, written in Kotlin").also {
+    private val subtitle = WLabel(Messages.get("slide.subtitle")).also {
         it.fontSize = SUBTITLE_SIZE
         it.textWrapping = TextWrapping.WRAP
     }
@@ -111,7 +111,7 @@ private fun slideList(): WComponent {
     panel.margin = LIST_MARGIN
     for (index in 1..SLIDES) {
         val thumbnail = WBorder(
-            WLabel("Slide $index").also {
+            WLabel(Messages.get("slide.thumbnail", index)).also {
                 it.foreground = WColor(0x76, 0x76, 0x76)
                 it.verticalAlignmentInParent = VerticalAlignment.TOP
             },
@@ -131,9 +131,9 @@ private fun slideList(): WComponent {
 /** The status bar (slide number and hint, and notes and zoom). */
 private fun statusBar(ribbon: WRibbon, status: RibbonLabelModel): WComponent {
     val model = RibbonStatusBarModel()
-    model.items.add(RibbonLabelModel("status.slide", "Slide 1 of $SLIDES"))
+    model.items.add(RibbonLabelModel("status.slide", Messages.get("status.slide", SLIDES)))
     model.items.add(status)
-    model.endItems.add(button("status.notes", "Notes", RibbonIcon.glyph("")))
+    model.endItems.add(button("status.notes", Messages.get("status.notes"), RibbonIcon.glyph("\uE70B")))
     model.endItems.add(RibbonZoomModel("status.zoom", ZOOM))
     val bar = WRibbonStatusBar(model)
     bar.ribbon = ribbon
