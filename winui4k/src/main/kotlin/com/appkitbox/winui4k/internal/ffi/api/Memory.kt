@@ -5,6 +5,10 @@ package com.appkitbox.winui4k.internal.ffi.api
  * (corresponds to Panama's Arena, or a group of JNA Memory instances).
  */
 interface MemoryScope : AutoCloseable {
+    /**
+     * Allocates [byteSize] bytes. The content is zero-filled (the same as Panama's Arena). COM out arguments are read assuming the caller
+     * initialized them to null (some WinRT methods do not write the out argument even with S_OK), so every backend must keep this.
+     */
     fun allocate(byteSize: Long, alignment: Long = 8): Ptr
 }
 

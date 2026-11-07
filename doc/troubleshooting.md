@@ -356,3 +356,10 @@
   SelectionStart は 2 で選択は無い。変更の前の選択から編集の位置を求めると、同じ文字が続く所 (`"aad"` の 2 文字目の Backspace など) で位置を
   取り違える。`WDocumentFilter` に渡す位置は、前後の文字列の違いと、変更の後のキャレットの位置から求める (`WDocumentFilterTest`。
   2026-10-20、Panama で確認)。
+- **FrameworkElement.Parent は S_OK を返しても出力の引数に書かないことがある (JNA でヒープの破損 0xC0000374)**
+  ウィンドウの中身の要素からビジュアル ツリーの根までたどって `get_Parent` (IFrameworkElement の vtbl[54]) を呼ぶと、途中のどれかの要素 (どれかは確かめていない) で
+  S_OK を返したまま出力の引数を書かなかった (呼ぶ前に目印の値を入れておくと、そのまま残る)。出力の領域がゼロでないと、前の中身を
+  ポインターとして読んで Release し、`Invalid memory access` やヒープの破損 (終了コード -1073740940 = 0xC0000374) でプロセスが落ちる。
+  Panama の Arena と JNR の確保はゼロで埋めるが、JNA の `Memory` は malloc のままだったので、JNA でだけ落ちた (ウィンドウの初めのフォーカスで
+  `WrapperLookup.nearestWrapper` が祖先をたどるようになってから、`ModalLoopProcessTest` の jna が約半分の確率で落ちた)。
+  `MemoryScope.allocate` はどのバックエンドもゼロで埋める (`MemoryScopeZeroFillTest`。2026-11-07、JNA で確認)。

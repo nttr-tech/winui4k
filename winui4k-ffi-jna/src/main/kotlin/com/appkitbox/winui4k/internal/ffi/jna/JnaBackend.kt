@@ -211,6 +211,9 @@ internal object JnaBackend : FfiBackend {
 
         override fun allocate(byteSize: Long, alignment: Long): Ptr = synchronized(chunks) {
             val chunk = Memory(maxOf(byteSize, 1L)) // malloc is 16B-aligned on Win x64 (the vocabulary's max alignment is 8)
+            // Memory is left as malloc returns it, without zeroing. Zero-fill it as with Panama and JNR (some WinRT methods do not write the out argument
+            // even with S_OK (FrameworkElement.Parent, etc.), and reading the previous content as a pointer corrupts the heap)
+            chunk.clear()
             val address = Pointer.nativeValue(chunk)
             require(address % alignment == 0L) { "cannot satisfy alignment $alignment: $address" }
             chunks.add(chunk)
