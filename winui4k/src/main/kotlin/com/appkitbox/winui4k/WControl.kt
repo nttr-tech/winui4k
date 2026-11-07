@@ -54,6 +54,12 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         revalidate() // As with AbstractButton.setMargin, the size changes, so lay out again
     }
 
+    /**
+     * Sets the inner padding like AbstractButton.setMargin(Insets) / JTextComponent.setMargin(Insets) with [setPadding]
+     * (called from each component's public setMargin(WInsets)). [insets] is top, left, bottom, right, as with Swing's Insets.
+     */
+    internal fun setPaddingFromInsets(insets: WInsets) = setPadding(insets.left, insets.top, insets.right, insets.bottom)
+
     /** Clears the Control.Padding setting and returns to the theme default ([padding] returns to 0). */
     private fun clearPadding() {
         clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)

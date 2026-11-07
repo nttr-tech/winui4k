@@ -1154,7 +1154,11 @@ abstract class WComponent internal constructor(
     /** The last set margin returned by [margin] (0 if the four sides are not equal). */
     private var marginValue: Double = 0.0
 
-    /** Sets the margin on each side individually (FrameworkElement.Margin). The value read from [margin] changes too. */
+    /**
+     * Sets the margin (the space outside the component) on each side individually (FrameworkElement.Margin). The value read from [margin] changes too.
+     * The arguments are in the order left, top, right, bottom. The inner padding corresponding to Swing's AbstractButton.setMargin(Insets) / JTextComponent.setMargin(Insets)
+     * is set with setMargin([WInsets]) (Control.Padding) of buttons and text fields.
+     */
     fun setMargin(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(frameworkElement, XamlInterop.IFrameworkElement_put_Margin, left, top, right, bottom)
         marginValue = uniformThickness(left, top, right, bottom)

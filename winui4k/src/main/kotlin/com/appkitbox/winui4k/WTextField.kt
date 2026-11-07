@@ -226,6 +226,15 @@ class WTextField() : WControl(
         get() = TextAlignment.of(inspectable.getInt(XamlInterop.ITextBox_get_TextAlignment))
         set(value) = inspectable.call(XamlInterop.ITextBox_put_TextAlignment, value.native)
 
+    /**
+     * JTextComponent.setMargin(Insets)-like: the inner padding between the component's border and its content (Control.Padding). [WInsets] is top, left, bottom, right, as with Swing's Insets.
+     * If all four sides are equal it can be read with [padding], and the actual margin including the border's width is read with [insets].
+     *
+     * It has the same name and meaning as in Swing, but [WComponent.margin] / [WComponent.setMargin] with only numbers as arguments are WinUI's Margin
+     * (the space outside the component), so do not confuse them. There is no getter corresponding to Swing's getMargin ([margin] returns the outer space).
+     */
+    fun setMargin(margin: WInsets) = setPaddingFromInsets(margin)
+
     /** The maximum number of characters that can be entered. 0 means unlimited (TextBox.MaxLength). */
     var maxLength: Int
         get() = inspectable.getInt(XamlInterop.ITextBox_get_MaxLength)
