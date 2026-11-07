@@ -446,7 +446,7 @@ abstract class WComponent internal constructor(
      * preparation for re-measuring the natural size (in XAML, DesiredSize keeps tracking an
      * explicitly-set Width even after it's set).
      */
-    internal fun clearLayoutSizeForMeasure() {
+    internal open fun clearLayoutSizeForMeasure() {
         if (width.isNaN()) applyWidth(Double.NaN)
         if (height.isNaN()) applyHeight(Double.NaN)
     }

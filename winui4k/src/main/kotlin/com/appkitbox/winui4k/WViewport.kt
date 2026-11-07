@@ -21,7 +21,7 @@ class WViewport internal constructor(private val scrollPane: WScrollPane) {
      * setting a value outside the range stops at the edge (Swing's JViewport accepts values outside the range too).
      */
     var viewPosition: WPoint
-        get() = WPoint(Math.round(scrollPane.horizontalOffset).toInt(), Math.round(scrollPane.verticalOffset).toInt())
+        get() = WPoint(Math.round(scrollPane.requestedHorizontalOffset).toInt(), Math.round(scrollPane.requestedVerticalOffset).toInt())
         set(value) {
             scrollPane.changeViewImmediately(value.x.toDouble(), value.y.toDouble())
         }

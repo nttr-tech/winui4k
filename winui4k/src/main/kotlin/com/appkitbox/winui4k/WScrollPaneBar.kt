@@ -27,7 +27,7 @@ class WScrollPaneBar internal constructor(
         get() = Math.round(if (horizontal) scrollPane.extentWidth else scrollPane.extentHeight).toInt()
 
     override var value: Int
-        get() = Math.round(if (horizontal) scrollPane.horizontalOffset else scrollPane.verticalOffset).toInt()
+        get() = Math.round(if (horizontal) scrollPane.requestedHorizontalOffset else scrollPane.requestedVerticalOffset).toInt()
         set(value) {
             if (horizontal) {
                 scrollPane.changeViewImmediately(value.toDouble(), null)

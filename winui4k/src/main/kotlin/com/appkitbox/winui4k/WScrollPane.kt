@@ -10,6 +10,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import kotlin.jvm.JvmName
@@ -291,11 +292,79 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     /** JScrollPane.getCorner-like: the component placed with [setCorner]. Always null for unaccepted corners (Swing returns null if it is not a corner name). */
     fun getCorner(key: String): WComponent? = if (key == UPPER_LEADING_CORNER || key == UPPER_LEFT_CORNER) upperLeadingCorner else null
 
+    /** Applies the scroll position requested before the first layout after laying out. */
+    private val laidOutRequests = LaidOutRequests(this)
+
+    /** The horizontal and vertical positions requested before the first layout (null for a direction not requested). */
+    private var pendingHorizontalOffset: Double? = null
+    private var pendingVerticalOffset: Double? = null
+
+    /** The horizontal position ([horizontalOffset]). The requested value if a position was requested before the first layout (as in Swing, the set value can be read right away). */
+    internal val requestedHorizontalOffset: Double get() = pendingHorizontalOffset ?: horizontalOffset
+
+    /** The vertical position ([verticalOffset]). The same as [requestedHorizontalOffset]. */
+    internal val requestedVerticalOffset: Double get() = pendingVerticalOffset ?: verticalOffset
+
     /**
      * Changes the scroll position without animation (disableAnimation = true of ScrollViewer.ChangeView).
      * A null direction is not changed.
+     *
+     * Before the first layout (before or right after showing), the content's size is not decided yet and the scrollable amount is 0, so
+     * the ScrollViewer rounds the position to 0. So the requested position is remembered and applied after laying out (after the layout in the window is done)
+     * (Swing's setViewPosition works even right after showing).
      */
     internal fun changeViewImmediately(horizontalOffset: Double?, verticalOffset: Double?) {
+        if (laidOutRequests.isPending(VIEW_REQUEST) || !laidOutRequests.isLaidOut()) {
+            if (horizontalOffset != null) pendingHorizontalOffset = horizontalOffset
+            if (verticalOffset != null) pendingVerticalOffset = verticalOffset
+            laidOutRequests.runOrDefer(VIEW_REQUEST) { applyPendingView() }
+            return
+        }
+        applyChangeView(horizontalOffset, verticalOffset)
+    }
+
+    /** Applies the remembered position after the layout in the window (relayout of WLayoutPanels) is done. */
+    private fun applyPendingView() {
+        val horizontal = pendingHorizontalOffset
+        val vertical = pendingVerticalOffset
+        pendingHorizontalOffset = null
+        pendingVerticalOffset = null
+        generateSequence<WComponent>(this) { it.parent }.last().validate()
+        applyChangeView(horizontal, vertical)
+    }
+
+    /**
+     * While the parent [WLayoutPanel] measures the natural size again, the size is removed and it grows to the content's size, so the ScrollViewer rounds
+     * the scroll position to 0 (Swing's getPreferredSize does not change the position). The position before measuring is remembered and restored after measuring, once the size is assigned.
+     */
+    override fun clearLayoutSizeForMeasure() {
+        if (canLoseOffsets()) {
+            val horizontal = horizontalOffset
+            val vertical = verticalOffset
+            if (horizontal > 0.0 || vertical > 0.0) {
+                savedOffsets = doubleArrayOf(horizontal, vertical)
+                // WLayoutPanel assigns the size within the same task after measuring. Restore it in a later turn after the layout is done
+                Dispatcher.invokeLater { restoreSavedOffsets() }
+            }
+        }
+        super.clearLayoutSizeForMeasure()
+    }
+
+    /** Whether measuring again changes the size (no explicit size), no position is remembered, it is shown, and no position was requested before the first layout. */
+    private fun canLoseOffsets(): Boolean =
+        (width.isNaN() || height.isNaN()) && savedOffsets == null && !laidOutRequests.isPending(VIEW_REQUEST) && isDisplayable
+
+    /** The [horizontal, vertical] position before measuring again, remembered in [clearLayoutSizeForMeasure]. */
+    private var savedOffsets: DoubleArray? = null
+
+    private fun restoreSavedOffsets() {
+        val saved = savedOffsets ?: return
+        savedOffsets = null
+        updateLayout()
+        if (horizontalOffset != saved[0] || verticalOffset != saved[1]) applyChangeView(saved[0], saved[1])
+    }
+
+    private fun applyChangeView(horizontalOffset: Double?, verticalOffset: Double?) {
         val horizontal = horizontalOffset?.let { boxedDoubleReference(it) }
         val vertical = verticalOffset?.let { boxedDoubleReference(it) }
         try {
@@ -390,6 +459,9 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     /** The [WScrollPaneConstants] values so that Kotlin can write `WScrollPane.VERTICAL_SCROLLBAR_ALWAYS` (Java sees them as the same fields as the interface values). */
     companion object {
+        /** The kind of scroll position request in [laidOutRequests]. */
+        private const val VIEW_REQUEST = "view"
+
         /** Same as [WScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED]. */
         const val VERTICAL_SCROLLBAR_AS_NEEDED = WScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 

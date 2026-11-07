@@ -220,5 +220,58 @@ class BeforeShowRequestsTest : FunSpec() {
                 }
             }
         }
+
+        context("WScrollPane scroll position") {
+            /** Shows a WScrollPane containing a WPanel with 50 labels stacked vertically in CENTER of a 400 x 260 window with WBorderLayout. */
+            fun showScroll(afterShow: (WScrollPane) -> Unit): Pair<WFrame, WScrollPane> = onUiThreadGet {
+                val items = WPanel().also { panel -> (1..50).forEach { panel.add(WLabel("Item $it")) } }
+                val scroll = WScrollPane(items)
+                val frame = WFrame("BeforeShowRequestsTest").also {
+                    it.layout = WBorderLayout()
+                    it.add(scroll, WBorderLayout.CENTER)
+                    it.setSize(400, 260)
+                    it.isAutoRequestFocus = false
+                    it.isVisible = true
+                }
+                afterShow(scroll)
+                frame to scroll
+            }
+
+            test("setting viewport.viewPosition to (0, 300) right after showing keeps that position visible after layout") {
+                val (frame, scroll) = showScroll { it.viewport.viewPosition = WPoint(0, 300) }
+                try {
+                    awaitUi { scroll.viewport.viewPosition == WPoint(0, 300) } shouldBe true
+                    Thread.sleep(500) // It must not be reset by a later layout
+                    onUiThreadGet { scroll.viewport.viewPosition } shouldBe WPoint(0, 300)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("setting the value of the vertical scroll bar to 200 right after showing keeps that position visible after layout") {
+                val (frame, scroll) = showScroll { it.verticalScrollBar.value = 200 }
+                try {
+                    awaitUi { scroll.viewport.viewPosition.y == 200 } shouldBe true
+                    Thread.sleep(500)
+                    onUiThreadGet { scroll.verticalScrollBar.value } shouldBe 200
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("a position requested right after showing is replaced by a position requested next (the last request takes effect)") {
+                val (frame, scroll) = showScroll {
+                    it.viewport.viewPosition = WPoint(0, 300)
+                    it.viewport.viewPosition = WPoint(0, 120)
+                }
+                try {
+                    awaitUi { scroll.viewport.viewPosition == WPoint(0, 120) } shouldBe true
+                    Thread.sleep(500)
+                    onUiThreadGet { scroll.viewport.viewPosition } shouldBe WPoint(0, 120)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+        }
     }
 }
