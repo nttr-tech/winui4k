@@ -21,7 +21,7 @@ public class BottomWinUI4K {
             WButton add = new WButton("Add a line");
             add.addActionListener(e -> {
                 log.add(new WLabel("Line " + (log.getComponentCount() + 1)));
-                // no revalidate(): WPanel measures itself again
+                log.revalidate();
                 // the maximum grows after the layout, so scroll later
                 WinUiUtilities.invokeLater(() -> {
                     WAdjustable bar = scroll.getVerticalScrollBar();
@@ -36,12 +36,9 @@ public class BottomWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // add 30 lines (after the first layout: getMaximum() is 0 until the content is measured)
-            WinUiUtilities.schedule(500, () -> {
-                for (int i = 0; i < 30; i++) {
-                    add.doClick();
-                }
-            });
+            for (int i = 0; i < 30; i++) {
+                add.doClick();      // add 30 lines
+            }
         });
     }
 }

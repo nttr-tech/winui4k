@@ -26,7 +26,7 @@ public class ListenerWinUI4K {
             WViewport viewport = scroll.getViewport();
             viewport.addChangeListener(e -> {
                 WPoint p = viewport.getViewPosition();
-                status.setText("Top: " + p.getY() + " / " + (int) viewport.getViewSize().getHeight());
+                status.setText("Top: " + p.y + " / " + viewport.getViewSize().height);
             });
 
             frame.add(scroll, WBorderLayout.CENTER);

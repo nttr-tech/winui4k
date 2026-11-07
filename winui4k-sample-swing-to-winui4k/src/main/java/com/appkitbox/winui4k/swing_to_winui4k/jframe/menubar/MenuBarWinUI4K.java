@@ -21,8 +21,7 @@ public class MenuBarWinUI4K {
             menuBar.add(file);
             frame.setJMenuBar(menuBar);   // above the content
 
-            WTextPane text = new WTextPane();
-            text.setText("Type here");
+            WTextPane text = new WTextPane("Type here");
             frame.add(text, WBorderLayout.CENTER);
             frame.add(new WLabel("Ready"), WBorderLayout.SOUTH);
 

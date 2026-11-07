@@ -22,8 +22,7 @@ public class BasicWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            WTextField name = new WTextField(16);
-            name.setText("report.txt");
+            WTextField name = new WTextField("report.txt", 16);
             WContentDialog dialog = new WContentDialog(frame, "Rename", true);   // always modal
             dialog.add(new WLabel("New name:"), WBorderLayout.NORTH);
             dialog.add(name, WBorderLayout.CENTER);

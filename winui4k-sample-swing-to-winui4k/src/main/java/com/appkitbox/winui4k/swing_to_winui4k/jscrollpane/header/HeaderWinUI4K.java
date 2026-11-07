@@ -1,5 +1,6 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jscrollpane.header;
 
+import com.appkitbox.winui4k.WBorderFactory;
 import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -20,7 +21,7 @@ public class HeaderWinUI4K {
                 lines.add(new WLabel("Line " + i));
                 numbers.add(new WLabel(String.valueOf(i)));
             }
-            numbers.setMargin(4, 0, 8, 0);     // left, top, right, bottom
+            numbers.setBorder(WBorderFactory.createEmptyBorder(0, 4, 0, 8));    // top, left, bottom, right
             WScrollPane scroll = new WScrollPane(lines);
             scroll.setRowHeaderView(numbers);
             scroll.setColumnHeaderView(new WLabel("Text"));

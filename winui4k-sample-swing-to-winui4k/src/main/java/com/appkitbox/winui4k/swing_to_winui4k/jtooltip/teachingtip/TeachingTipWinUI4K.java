@@ -34,7 +34,7 @@ public class TeachingTipWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            WinUiUtilities.schedule(500, tip::show);
+            tip.show();
         });
     }
 }

@@ -1,11 +1,11 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jpanel.padding;
 
+import com.appkitbox.winui4k.WBorderFactory;
 import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WGridLayout;
-import com.appkitbox.winui4k.WInsets;
 import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
@@ -17,7 +17,7 @@ public class PaddingWinUI4K {
             frame.setLayout(new WBorderLayout());
 
             WLayoutPanel content = new WLayoutPanel(new WGridLayout(2, 2, 8, 8));
-            content.setInsets(new WInsets(24));
+            content.setBorder(WBorderFactory.createEmptyBorder(24, 24, 24, 24));
             content.setBackground(new WColor(230, 240, 250));
             content.add(new WButton("One"));
             content.add(new WButton("Two"));

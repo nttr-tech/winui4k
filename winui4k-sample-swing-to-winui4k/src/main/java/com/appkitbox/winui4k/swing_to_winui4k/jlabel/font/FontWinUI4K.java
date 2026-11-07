@@ -19,7 +19,7 @@ public class FontWinUI4K {
             WLabel error = new WLabel("The file could not be saved.");
             error.setForeground(WColor.RED);
             WLabel note = new WLabel("Last updated: 2026-11-07");
-            note.setFont(new WFont("Segoe UI", WFont.ITALIC, 12));
+            note.setFont(new WFont("SansSerif", WFont.ITALIC, 12));
 
             frame.add(heading);
             frame.add(error);

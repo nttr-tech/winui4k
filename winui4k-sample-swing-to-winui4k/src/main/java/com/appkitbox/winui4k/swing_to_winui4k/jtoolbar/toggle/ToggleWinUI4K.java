@@ -23,8 +23,7 @@ public class ToggleWinUI4K {
             toolBar.add(new WAppBarButton("Paste", Symbol.PASTE));
             toolBar.addSeparator();
 
-            WAppBarToggleButton bold = new WAppBarToggleButton("Bold", Symbol.BOLD);
-            bold.setSelected(true);
+            WAppBarToggleButton bold = new WAppBarToggleButton("Bold", Symbol.BOLD, true);
             bold.setToolTipText("Bold");
             bold.addItemListener(e -> status.setText("Bold: " + bold.isSelected()));
             WAppBarToggleButton italic = new WAppBarToggleButton("Italic", Symbol.ITALIC);

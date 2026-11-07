@@ -13,10 +13,8 @@ public class VerticalWinUI4K {
             WFrame frame = new WFrame("17.3 Vertical (WinUI4K)");
             frame.setLayout(new WBorderLayout());
 
-            WTextPane editor = new WTextPane();         // scrolls by itself
-            editor.setText("Editor");
-            WTextPane console = new WTextPane();
-            console.setText("Console");
+            WTextPane editor = new WTextPane("Editor");     // scrolls by itself
+            WTextPane console = new WTextPane("Console");
             WSplitPane split = new WSplitPane(WSplitPane.VERTICAL_SPLIT, editor, console);
             split.setResizeWeight(0.7);     // the editor gets 70% of extra space
             split.setDividerLocation(0.7);  // can be called before the window is shown

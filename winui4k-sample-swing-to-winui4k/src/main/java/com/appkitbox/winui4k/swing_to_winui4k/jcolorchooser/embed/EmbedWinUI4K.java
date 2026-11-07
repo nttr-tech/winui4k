@@ -17,7 +17,7 @@ public class EmbedWinUI4K {
 
             WColorPicker picker = new WColorPicker(WColor.ORANGE);
             WLabel preview = new WLabel("Sample text");
-            preview.setFont(new WFont("Segoe UI", WFont.BOLD, 24));
+            preview.setFont(new WFont(WFont.SANS_SERIF, WFont.BOLD, 24));
             picker.getSelectionModel().addChangeListener(e -> preview.setForeground(picker.getColor()));
 
             frame.add(picker);

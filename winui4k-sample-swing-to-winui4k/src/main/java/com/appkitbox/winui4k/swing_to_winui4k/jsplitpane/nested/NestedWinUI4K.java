@@ -15,10 +15,8 @@ public class NestedWinUI4K {
             frame.setLayout(new WBorderLayout());
 
             WList files = new WList(new String[] {"Main.java", "Util.java"});
-            WTextPane editor = new WTextPane();
-            editor.setText("class Main {}");
-            WTextPane console = new WTextPane();
-            console.setText("BUILD SUCCESSFUL");
+            WTextPane editor = new WTextPane("class Main {}");
+            WTextPane console = new WTextPane("BUILD SUCCESSFUL");
 
             WSplitPane right = new WSplitPane(WSplitPane.VERTICAL_SPLIT, editor, console);
             right.setResizeWeight(1.0);         // only the editor grows

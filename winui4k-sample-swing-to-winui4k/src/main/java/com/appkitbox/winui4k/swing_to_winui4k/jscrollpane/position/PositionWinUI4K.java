@@ -29,7 +29,7 @@ public class PositionWinUI4K {
             WButton down = new WButton("Down 200");
             down.addActionListener(e -> {
                 WPoint p = scroll.getViewport().getViewPosition();
-                scroll.getViewport().setViewPosition(new WPoint(p.getX(), p.getY() + 200));
+                scroll.getViewport().setViewPosition(new WPoint(p.x, p.y + 200));
             });
             WLayoutPanel buttons = new WLayoutPanel(new WFlowLayout(WFlowLayout.LEFT));
             buttons.add(top);

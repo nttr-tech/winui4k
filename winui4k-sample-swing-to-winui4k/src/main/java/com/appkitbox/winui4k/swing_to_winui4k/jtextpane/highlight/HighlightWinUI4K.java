@@ -23,8 +23,7 @@ public class HighlightWinUI4K {
             pane.setText("INFO start\nERROR disk full\nINFO retry\nERROR network down");
             pane.setWidth(400);
             pane.setHeight(120);
-            WTextField word = new WTextField(10);
-            word.setText("ERROR");
+            WTextField word = new WTextField("ERROR", 10);
             WButton mark = new WButton("Mark");
             mark.addActionListener(e -> {
                 WSimpleAttributeSet red = new WSimpleAttributeSet();

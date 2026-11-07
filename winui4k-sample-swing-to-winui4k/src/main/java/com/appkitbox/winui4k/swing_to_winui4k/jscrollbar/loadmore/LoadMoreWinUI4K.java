@@ -22,7 +22,7 @@ public class LoadMoreWinUI4K {
                 for (int i = start + 1; i <= start + 20; i++) {
                     items.add(new WLabel("Item " + i));
                 }
-                // no revalidate(): WPanel measures itself again, and revalidate() would scroll back to the top
+                items.revalidate();
                 status.setText(items.getComponentCount() + " items loaded");
             };
             loadMore.run();
@@ -43,8 +43,7 @@ public class LoadMoreWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll to the end once (after the first layout: getMaximum() is 0 until the content is measured)
-            WinUiUtilities.schedule(500, () -> bar.setValue(bar.getMaximum()));
+            bar.setValue(bar.getMaximum());     // scroll to the end once
         });
     }
 }

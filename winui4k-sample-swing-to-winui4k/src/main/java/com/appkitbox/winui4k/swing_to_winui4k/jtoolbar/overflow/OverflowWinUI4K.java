@@ -41,7 +41,7 @@ public class OverflowWinUI4K {
             frame.setVisible(true);
 
             // open the "..." menu once so that the screenshot shows it
-            WinUiUtilities.schedule(500, () -> toolBar.setOpen(true));
+            toolBar.setOpen(true);
         });
     }
 }

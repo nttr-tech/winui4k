@@ -4,17 +4,13 @@ import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
+import com.appkitbox.winui4k.WSwingWorker;
 import com.appkitbox.winui4k.WinUiUtilities;
-import java.util.concurrent.CompletableFuture;
 
 /** 1.13 Run long tasks in the background (WinUI4K). */
 public class BackgroundWinUI4K {
-    private static String fetch() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
-        }
+    private static String fetch() throws InterruptedException {
+        Thread.sleep(2000);
         return "Download complete";
     }
 
@@ -28,12 +24,22 @@ public class BackgroundWinUI4K {
             download.addActionListener(e -> {
                 download.setEnabled(false);
                 status.setText("Downloading...");
-                CompletableFuture
-                    .supplyAsync(() -> fetch())               // runs on another thread
-                    .whenComplete((result, error) -> WinUiUtilities.invokeLater(() -> {   // back to the UI thread
+                new WSwingWorker<String, Void>() {
+                    @Override
+                    protected String doInBackground() throws Exception {
+                        return fetch();                       // runs on another thread
+                    }
+
+                    @Override
+                    protected void done() {                   // runs on the UI thread
                         download.setEnabled(true);
-                        status.setText(error == null ? result : "Failed: " + error.getMessage());
-                    }));
+                        try {
+                            status.setText(get());
+                        } catch (Exception ex) {
+                            status.setText("Failed: " + ex.getMessage());
+                        }
+                    }
+                }.execute();
             });
 
             frame.add(download);

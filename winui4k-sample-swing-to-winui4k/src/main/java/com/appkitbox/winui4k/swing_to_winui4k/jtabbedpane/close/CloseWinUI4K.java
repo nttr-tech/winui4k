@@ -29,7 +29,7 @@ public class CloseWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            tabs.removeTabAt(1);    // close "b.txt"
+            tabs.remove(1);     // close "b.txt"
         });
     }
 }

@@ -2,7 +2,6 @@ package com.appkitbox.winui4k.swing_to_winui4k.jlist.delete;
 
 import com.appkitbox.winui4k.WAbstractAction;
 import com.appkitbox.winui4k.WActionEvent;
-import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WDefaultListModel;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
@@ -26,8 +25,7 @@ public class DeleteWinUI4K {
             }
             WList list = new WList(model);
 
-            list.getInputMap(WComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-                .put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), "delete");
+            list.getInputMap().put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), "delete");
             list.getActionMap().put("delete", new WAbstractAction() {
                 @Override
                 public void actionPerformed(WActionEvent e) {

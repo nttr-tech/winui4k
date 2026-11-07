@@ -16,8 +16,7 @@ public class ListenerWinUI4K {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("21.6 Menu Listener (WinUI4K)");
             frame.setLayout(new WFlowLayout());
-            WTextField field = new WTextField(15);
-            field.setText("Hello, menu");
+            WTextField field = new WTextField("Hello, menu", 15);
 
             WMenuBarItem editMenu = new WMenuBarItem("Edit");
             WMenuFlyoutItem cut = editMenu.add("Cut");

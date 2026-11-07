@@ -31,8 +31,7 @@ public class ButtonWinUI4K {
             frame.setVisible(true);
 
             // click the button once so that the screenshot shows the menu
-            // (after the first layout: the flyout of a button does not open before it)
-            WinUiUtilities.schedule(500, () -> export.doClick());
+            export.doClick();
         });
     }
 }

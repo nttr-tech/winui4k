@@ -13,8 +13,7 @@ public class ShowWinUI4K {
             WFrame frame = new WFrame("29.4 Show (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WTextField zip = new WTextField(10);
-            zip.setText("12-345");
+            WTextField zip = new WTextField("12-345", 10);
             WToolTip tip = new WToolTip();
             tip.setText("Enter 7 digits, like 123-4567");
             zip.setToolTip(tip);
@@ -26,7 +25,7 @@ public class ShowWinUI4K {
             frame.setVisible(true);
 
             // e.g. after a failed check
-            WinUiUtilities.schedule(500, () -> tip.setOpen(true));
+            tip.setOpen(true);
         });
     }
 }

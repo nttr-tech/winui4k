@@ -24,8 +24,7 @@ public class ValidateWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            WTextField age = new WTextField(8);
-            age.setText("abc");
+            WTextField age = new WTextField("abc", 8);
             WLabel error = new WLabel(" ");
             error.setForeground(WColor.RED);
             WContentDialog dialog = new WContentDialog(frame, "Age", true);

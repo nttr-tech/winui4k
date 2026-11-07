@@ -20,14 +20,13 @@ public class NonBlockingWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            WTextField text = new WTextField(12);
-            text.setText("needle");
+            WTextField text = new WTextField("needle", 12);
             WContentDialog dialog = new WContentDialog(frame, "Find", true);   // modeless is not available
             dialog.setLayout(new WFlowLayout());
             dialog.add(text);
             dialog.setPrimaryButtonText("Find");
             dialog.setCloseButtonText("Close");
-            dialog.show(status, result -> {           // returns immediately
+            dialog.show(frame, result -> {           // returns immediately
                 if (result == ContentDialogResult.PRIMARY) {
                     status.setText("Searching for " + text.getText());
                 }

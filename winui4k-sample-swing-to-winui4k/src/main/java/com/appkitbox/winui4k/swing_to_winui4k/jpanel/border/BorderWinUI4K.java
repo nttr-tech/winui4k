@@ -1,6 +1,6 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jpanel.border;
 
-import com.appkitbox.winui4k.WBorder;
+import com.appkitbox.winui4k.WBorderFactory;
 import com.appkitbox.winui4k.WCheckBox;
 import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WFlowLayout;
@@ -20,12 +20,11 @@ public class BorderWinUI4K {
             style.add(new WCheckBox("Bold"));
             style.add(new WCheckBox("Italic"));
             style.add(new WCheckBox("Underline"));
-            WBorder box = new WBorder(style);       // a container that draws the border
-            box.setBorderColor(WColor.GRAY);
-            box.setBorderThickness(1);
-            box.setPadding(8);
+            style.setBorder(WBorderFactory.createCompoundBorder(
+                    WBorderFactory.createLineBorder(WColor.GRAY, 1),
+                    WBorderFactory.createEmptyBorder(8, 8, 8, 8)));
 
-            frame.add(box);
+            frame.add(style);
 
             frame.setSize(400, 220);
             frame.setLocationRelativeTo(null);

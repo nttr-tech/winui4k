@@ -1,11 +1,9 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jtextfield.validate;
 
-import com.appkitbox.winui4k.WColor;
+import com.appkitbox.winui4k.WComponent;
 import com.appkitbox.winui4k.WFlowLayout;
-import com.appkitbox.winui4k.WFocusAdapter;
-import com.appkitbox.winui4k.WFocusEvent;
 import com.appkitbox.winui4k.WFrame;
-import com.appkitbox.winui4k.WLabel;
+import com.appkitbox.winui4k.WInputVerifier;
 import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WinUiUtilities;
 
@@ -26,20 +24,15 @@ public class ValidateWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WTextField age = new WTextField(4);
-            WLabel error = new WLabel();
-            error.setForeground(WColor.RED);
-            age.addFocusListener(new WFocusAdapter() {
+            age.setInputVerifier(new WInputVerifier() {
                 @Override
-                public void focusLost(WFocusEvent e) {
-                    error.setText(isValidAge(age.getText()) ? "" : "Enter a number from 0 to 150");
+                public boolean verify(WComponent input) {
+                    return isValidAge(((WTextField) input).getText());   // if false, focus is not released
                 }
             });
             age.setText("200");
-            // show the message at startup (evaluate the same expression as focusLost once)
-            error.setText(isValidAge(age.getText()) ? "" : "Enter a number from 0 to 150");
 
             frame.add(age);
-            frame.add(error);
 
             frame.setSize(400, 200);
             frame.setLocationRelativeTo(null);

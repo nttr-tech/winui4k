@@ -18,12 +18,10 @@ public class RangeWinUI4K {
             WSpinnerNumberModel toModel = new WSpinnerNumberModel(5, 1, 31, 1);
             fromModel.addChangeListener(e -> toModel.setMinimum((Integer) fromModel.getValue()));
 
-            WSpinner from = new WSpinner(fromModel);
-            WSpinner to = new WSpinner(toModel);
             frame.add(new WLabel("From:"));
-            frame.add(from);
+            frame.add(new WSpinner(fromModel));
             frame.add(new WLabel("To:"));
-            frame.add(to);
+            frame.add(new WSpinner(toModel));
 
             frame.setSize(520, 200);
             frame.setLocationRelativeTo(null);

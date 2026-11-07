@@ -34,7 +34,7 @@ public class PlacementSwing {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // for the screenshot: show the tooltip without the mouse (see 32.4)
+            // for the screenshot: show the tooltip without the mouse (see 29.4)
             Timer timer = new Timer(500, e -> {
                 ToolTipManager manager = ToolTipManager.sharedInstance();
                 manager.setInitialDelay(0);

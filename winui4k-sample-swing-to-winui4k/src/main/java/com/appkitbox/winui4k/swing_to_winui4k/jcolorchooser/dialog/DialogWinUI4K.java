@@ -1,11 +1,11 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jcolorchooser.dialog;
 
-import com.appkitbox.winui4k.WBorder;
 import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WColorPicker;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
+import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WSize;
 import com.appkitbox.winui4k.WinUiUtilities;
 
@@ -16,13 +16,12 @@ public class DialogWinUI4K {
             WFrame frame = new WFrame("28.2 Dialog (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WBorder swatch = new WBorder();
+            WLayoutPanel swatch = new WLayoutPanel();
             swatch.setPreferredSize(new WSize(80, 40));
             swatch.setBackground(new WColor(0, 120, 215));
             WButton choose = new WButton("Choose Color...");
             choose.addActionListener(e -> {
-                // the owner is a component on the window (a WFrame cannot be passed)
-                WColor color = WColorPicker.showDialog(choose, "Choose a color", swatch.getBackground());
+                WColor color = WColorPicker.showDialog(frame, "Choose a color", swatch.getBackground());
                 if (color != null) {   // null when canceled
                     swatch.setBackground(color);
                 }
