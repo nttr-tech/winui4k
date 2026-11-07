@@ -195,11 +195,6 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
             }
         }
 
-    /**
-     * Invokes it, as when the header is clicked. In a window that was just shown (before the first layout), WinUI silently ignores Invoke,
-     * so it is invoked after layout (Swing's setPopupMenuVisible and doClick open it even right after showing).
-     * If it is not on a window, it still does nothing.
-     */
     /** Whether this header, or the menu bar it is in if not attached yet, was just shown and is waiting for the first layout. */
     private fun awaitsFirstLayout(): Boolean {
         if (laidOutRequests.awaitsFirstLayout()) return true
@@ -207,6 +202,11 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
         return !isDisplayable && bar.laidOutRequests.awaitsFirstLayout()
     }
 
+    /**
+     * Invokes it, as when the header is clicked. In a window that was just shown (before the first layout), WinUI silently ignores Invoke,
+     * so it is invoked after layout (Swing's setPopupMenuVisible and doClick open it even right after showing).
+     * If it is not on a window, it still does nothing.
+     */
     private fun invokeWhenLaidOut() {
         if (awaitsFirstLayout()) {
             laidOutRequests.runOrDefer(OPEN_REQUEST) { if (withOpeningMenu { it.getBool(XamlInterop.IFlyoutBase_get_IsOpen) } != true) Xaml.invoke(inspectable) }
