@@ -36,6 +36,22 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
     constructor(label: String = "", icon: Symbol? = null) : this(label, icon as WIcon?)
 
     /**
+     * JToggleButton(String, Icon, boolean)-like: creates it with a label, an icon and the selected state ([isSelected]).
+     */
+    constructor(label: String, icon: WIcon?, selected: Boolean) : this(label, icon) {
+        isSelected = selected
+    }
+
+    /** JToggleButton(Icon, boolean)-like: creates it with only an icon and the selected state ([label] is empty). */
+    constructor(icon: WIcon?, selected: Boolean) : this("", icon, selected)
+
+    /**
+     * JToggleButton(Icon)-like: creates a button with only an icon ([label] is empty). Java's `new WAppBarToggleButton(null)` is ambiguous between this form and
+     * `WAppBarToggleButton(String)` and does not compile (write `(String) null` or `(WIcon) null`).
+     */
+    constructor(icon: WIcon?) : this("", icon)
+
+    /**
      * AbstractButton.setIcon-style: the button's icon (AppBarToggleButton.Icon). Returns the icon as set; null for no icon.
      * Unlike [WButtonBase.icon], which is laid out in Content, this creates an IconElement (SymbolIcon / ImageIcon /
      * FontIcon) and passes it to WinUI's AppBarToggleButton's own icon. The template decides the arrangement of icon and

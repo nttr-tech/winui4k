@@ -70,4 +70,22 @@ class WAppBarToggleButtonForJavaTest {
             assertTrue(bold.isCompact());
         });
     }
+
+    @Test
+    void canBeCreatedWithOnlyAnIconAnIconAndSelectionOrALabelAnIconAndSelectionLikeJToggleButton() {
+        onUiThread(() -> {
+            WAppBarToggleButton iconOnly = new WAppBarToggleButton(Symbol.BOLD);
+            WAppBarToggleButton iconSelected = new WAppBarToggleButton(Symbol.ITALIC, true);
+            WAppBarToggleButton full = new WAppBarToggleButton("Underline", Symbol.UNDERLINE, true);
+            WAppBarToggleButton fullOff = new WAppBarToggleButton("Underline", Symbol.UNDERLINE, false);
+            org.junit.jupiter.api.Assertions.assertEquals("", iconOnly.getLabel());
+            org.junit.jupiter.api.Assertions.assertSame(Symbol.BOLD, iconOnly.getIcon());
+            org.junit.jupiter.api.Assertions.assertFalse(iconOnly.isSelected());
+            org.junit.jupiter.api.Assertions.assertSame(Symbol.ITALIC, iconSelected.getIcon());
+            org.junit.jupiter.api.Assertions.assertTrue(iconSelected.isSelected());
+            org.junit.jupiter.api.Assertions.assertEquals("Underline", full.getLabel());
+            org.junit.jupiter.api.Assertions.assertTrue(full.isSelected());
+            org.junit.jupiter.api.Assertions.assertFalse(fullOff.isSelected());
+        });
+    }
 }

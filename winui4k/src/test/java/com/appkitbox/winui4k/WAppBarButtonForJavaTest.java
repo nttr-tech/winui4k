@@ -122,4 +122,13 @@ class WAppBarButtonForJavaTest {
             });
         }
     }
+
+    @Test
+    void canBeCreatedWithOnlyAnIconLikeJButtonAndTheLabelIsEmpty() {
+        onUiThread(() -> {
+            WAppBarButton save = new WAppBarButton(Symbol.SAVE);
+            org.junit.jupiter.api.Assertions.assertEquals("", save.getLabel());
+            org.junit.jupiter.api.Assertions.assertSame(Symbol.SAVE, save.getIcon());
+        });
+    }
 }

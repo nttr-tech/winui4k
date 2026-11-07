@@ -56,6 +56,12 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? =
     constructor(label: String = "", icon: Symbol? = null) : this(label, icon as WIcon?)
 
     /**
+     * JButton(Icon)-like: creates a button with only an icon ([label] is empty). Java's `new WAppBarButton(null)` is ambiguous between this form and
+     * `WAppBarButton(String)` and does not compile (write `(String) null` or `(WIcon) null`).
+     */
+    constructor(icon: WIcon?) : this("", icon)
+
+    /**
      * AbstractButton.setIcon-like: the button's icon (AppBarButton.Icon). Returns the icon as set. null means no icon.
      * Unlike [WButtonBase.icon], which is laid out in Content, this creates an IconElement (SymbolIcon / ImageIcon /
      * FontIcon) and passes it to WinUI's AppBarButton's own icon. The template decides the arrangement of the icon and
