@@ -13,7 +13,6 @@ public class TicksWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSlider level = new WSlider(0, 100, 50);
-            level.setWidth(200);   // a slider has no default width
             level.setMajorTickSpacing(25);
             level.setMinorTickSpacing(5);
             level.setPaintTicks(true);

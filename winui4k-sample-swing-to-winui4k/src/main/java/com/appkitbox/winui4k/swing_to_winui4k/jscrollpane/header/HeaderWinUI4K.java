@@ -31,8 +31,7 @@ public class HeaderWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll once (after the first layout)
-            WinUiUtilities.schedule(500, () -> scroll.getVerticalScrollBar().setValue(100));
+            scroll.getVerticalScrollBar().setValue(100);    // scroll once
         });
     }
 }

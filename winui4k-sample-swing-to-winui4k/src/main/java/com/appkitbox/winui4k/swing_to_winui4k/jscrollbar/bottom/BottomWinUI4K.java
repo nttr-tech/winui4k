@@ -36,7 +36,7 @@ public class BottomWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // add 30 lines (after the first layout)
+            // add 30 lines (after the first layout: getMaximum() is 0 until the content is measured)
             WinUiUtilities.schedule(500, () -> {
                 for (int i = 0; i < 30; i++) {
                     add.doClick();

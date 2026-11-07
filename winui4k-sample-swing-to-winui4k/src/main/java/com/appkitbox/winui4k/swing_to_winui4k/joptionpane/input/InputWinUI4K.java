@@ -18,13 +18,10 @@ public class InputWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                String name = WOptionPane.showInputDialog(frame, "Your name:", "Alice");
-                if (name != null) {                        // null when canceled
-                    status.setText("Hello, " + name);
-                }
-            });
+            String name = WOptionPane.showInputDialog(frame, "Your name:", "Alice");
+            if (name != null) {                        // null when canceled
+                status.setText("Hello, " + name);
+            }
         });
     }
 }

@@ -21,10 +21,8 @@ public class RangeWinUI4K {
 
             WSpinner from = new WSpinner(fromModel);
             from.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-            from.setWidth(160);   // room for the number next to the buttons
             WSpinner to = new WSpinner(toModel);
             to.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-            to.setWidth(160);   // room for the number next to the buttons
             frame.add(new WLabel("From:"));
             frame.add(from);
             frame.add(new WLabel("To:"));

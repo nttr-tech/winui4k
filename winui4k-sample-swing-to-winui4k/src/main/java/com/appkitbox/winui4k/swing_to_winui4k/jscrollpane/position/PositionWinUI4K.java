@@ -2,10 +2,11 @@ package com.appkitbox.winui4k.swing_to_winui4k.jscrollpane.position;
 
 import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WButton;
-import com.appkitbox.winui4k.Orientation;
+import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
+import com.appkitbox.winui4k.WGridLayout;
 import com.appkitbox.winui4k.WLabel;
-import com.appkitbox.winui4k.WPanel;
+import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WPoint;
 import com.appkitbox.winui4k.WScrollPane;
 import com.appkitbox.winui4k.WinUiUtilities;
@@ -17,7 +18,7 @@ public class PositionWinUI4K {
             WFrame frame = new WFrame("15.4 Position (WinUI4K)");
             frame.setLayout(new WBorderLayout());
 
-            WPanel items = new WPanel();
+            WLayoutPanel items = new WLayoutPanel(new WGridLayout(0, 1));
             for (int i = 1; i <= 50; i++) {
                 items.add(new WLabel("Item " + i));
             }
@@ -30,8 +31,7 @@ public class PositionWinUI4K {
                 WPoint p = scroll.getViewport().getViewPosition();
                 scroll.getViewport().setViewPosition(new WPoint(p.getX(), p.getY() + 200));
             });
-            WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
-            buttons.setMargin(4);
+            WLayoutPanel buttons = new WLayoutPanel(new WFlowLayout(WFlowLayout.LEFT));
             buttons.add(top);
             buttons.add(down);
 
@@ -42,8 +42,7 @@ public class PositionWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll down once (after the first layout)
-            WinUiUtilities.schedule(500, down::doClick);
+            down.doClick();     // scroll down once
         });
     }
 }

@@ -22,28 +22,25 @@ public class ValidateWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                WTextField age = new WTextField(8);
-                age.setText("abc");
-                WLabel error = new WLabel(" ");
-                error.setForeground(WColor.RED);
-                WContentDialog dialog = new WContentDialog(frame, "Age", true);
-                dialog.add(new WLabel("Your age:"));
-                dialog.add(age);
-                dialog.add(error);
-                dialog.setPrimaryButtonText("OK");
-                dialog.setDefaultButton(ContentDialogButton.PRIMARY);
-                dialog.addButtonClickListener(e -> {
-                    if (e.getButton() == ContentDialogButton.PRIMARY && !age.getText().matches("\\d+")) {
-                        error.setText("Enter a number");
-                        e.setCancel(true);              // keep the dialog open
-                    }
-                });
-                if (dialog.showAndWait() == ContentDialogResult.PRIMARY) {
-                    status.setText("Age: " + age.getText());
+            WTextField age = new WTextField(8);
+            age.setText("abc");
+            WLabel error = new WLabel(" ");
+            error.setForeground(WColor.RED);
+            WContentDialog dialog = new WContentDialog(frame, "Age", true);
+            dialog.add(new WLabel("Your age:"));
+            dialog.add(age);
+            dialog.add(error);
+            dialog.setPrimaryButtonText("OK");
+            dialog.setDefaultButton(ContentDialogButton.PRIMARY);
+            dialog.addButtonClickListener(e -> {
+                if (e.getButton() == ContentDialogButton.PRIMARY && !age.getText().matches("\\d+")) {
+                    error.setText("Enter a number");
+                    e.setCancel(true);              // keep the dialog open
                 }
             });
+            if (dialog.showAndWait() == ContentDialogResult.PRIMARY) {
+                status.setText("Age: " + age.getText());
+            }
         });
     }
 }

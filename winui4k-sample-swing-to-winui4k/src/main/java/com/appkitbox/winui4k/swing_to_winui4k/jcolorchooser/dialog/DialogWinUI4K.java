@@ -31,12 +31,11 @@ public class DialogWinUI4K {
             frame.add(choose);
             frame.add(swatch);
 
-            frame.setSize(720, 780);
+            frame.setSize(480, 320);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, choose::doClick);
+            choose.doClick();
         });
     }
 }

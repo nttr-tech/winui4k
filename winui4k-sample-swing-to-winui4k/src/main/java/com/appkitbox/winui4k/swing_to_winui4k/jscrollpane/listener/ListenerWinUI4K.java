@@ -36,8 +36,7 @@ public class ListenerWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll once (after the first layout)
-            WinUiUtilities.schedule(500, () -> viewport.setViewPosition(new WPoint(0, 120)));
+            viewport.setViewPosition(new WPoint(0, 120));    // scroll once
         });
     }
 }

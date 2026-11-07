@@ -13,9 +13,7 @@ public class VerticalWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSlider vertical = new WSlider(WSlider.VERTICAL, 0, 100, 60);
-            vertical.setHeight(200);   // a slider has no default height
             WSlider inverted = new WSlider(0, 100, 60);
-            inverted.setWidth(200);   // a slider has no default width
             inverted.setInverted(true);              // the maximum is on the left
 
             frame.add(vertical);

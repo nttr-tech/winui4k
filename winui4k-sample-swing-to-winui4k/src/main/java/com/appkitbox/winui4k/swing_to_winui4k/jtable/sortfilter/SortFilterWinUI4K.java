@@ -47,12 +47,11 @@ public class SortFilterWinUI4K {
             frame.add(filter);
             frame.add(table);
 
+            filter.setText("eng");
+
             frame.setSize(440, 300);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-
-            // the text-changed listener is not called for text set before the window is shown
-            WinUiUtilities.schedule(500, () -> filter.setText("eng"));
         });
     }
 }

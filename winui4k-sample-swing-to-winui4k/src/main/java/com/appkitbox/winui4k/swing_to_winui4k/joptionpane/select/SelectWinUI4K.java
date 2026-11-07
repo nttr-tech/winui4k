@@ -18,15 +18,12 @@ public class SelectWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                String[] sizes = {"Small", "Medium", "Large"};
-                Object size = WOptionPane.showInputDialog(frame, "Choose a size:", "Size",
-                        WOptionPane.QUESTION_MESSAGE, null, sizes, "Medium");
-                if (size != null) {
-                    status.setText("Size: " + size);
-                }
-            });
+            String[] sizes = {"Small", "Medium", "Large"};
+            Object size = WOptionPane.showInputDialog(frame, "Choose a size:", "Size",
+                    WOptionPane.QUESTION_MESSAGE, null, sizes, "Medium");
+            if (size != null) {
+                status.setText("Size: " + size);
+            }
         });
     }
 }

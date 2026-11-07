@@ -19,7 +19,8 @@ public class WrapWinUI4K {
             noWrap.setLineWrap(false);                          // wraps by default, unlike Swing
 
             WTextPane wrapped = new WTextPane(TEXT, 4, 20);
-            wrapped.setLineWrap(true);                          // breaks at word boundaries
+            wrapped.setLineWrap(true);
+            wrapped.setWrapStyleWord(true);                     // break at word boundaries
 
             frame.add(noWrap);
             frame.add(wrapped);

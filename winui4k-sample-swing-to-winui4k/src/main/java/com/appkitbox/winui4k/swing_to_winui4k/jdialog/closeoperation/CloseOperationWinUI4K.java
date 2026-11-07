@@ -19,24 +19,21 @@ public class CloseOperationWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                WLabel message = new WLabel("You have unsaved changes.");
-                WContentDialog dialog = new WContentDialog(frame, "Settings", true);
-                dialog.setDefaultCloseOperation(WContentDialog.DO_NOTHING_ON_CLOSE);   // Esc does not close
-                dialog.addDialogListener(new WContentDialogAdapter() {
-                    @Override
-                    public void dialogClosing(WContentDialogEvent e) {
-                        if (e.getResult() == ContentDialogResult.NONE) {
-                            message.setText("Click Save or Discard to close.");
-                        }
+            WLabel message = new WLabel("You have unsaved changes.");
+            WContentDialog dialog = new WContentDialog(frame, "Settings", true);
+            dialog.setDefaultCloseOperation(WContentDialog.DO_NOTHING_ON_CLOSE);   // Esc does not close
+            dialog.addDialogListener(new WContentDialogAdapter() {
+                @Override
+                public void dialogClosing(WContentDialogEvent e) {
+                    if (e.getResult() == ContentDialogResult.NONE) {
+                        message.setText("Click Save or Discard to close.");
                     }
-                });
-                dialog.add(message);
-                dialog.setPrimaryButtonText("Save");
-                dialog.setSecondaryButtonText("Discard");
-                dialog.showAndWait();
+                }
             });
+            dialog.add(message);
+            dialog.setPrimaryButtonText("Save");
+            dialog.setSecondaryButtonText("Discard");
+            dialog.showAndWait();
         });
     }
 }

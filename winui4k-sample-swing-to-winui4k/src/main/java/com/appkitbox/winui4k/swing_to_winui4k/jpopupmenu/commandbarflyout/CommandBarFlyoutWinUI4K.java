@@ -40,7 +40,7 @@ public class CommandBarFlyoutWinUI4K {
 
             // open the flyout once below the label so that the screenshot shows it
             flyout.setPlacement(FlyoutPlacement.BOTTOM_EDGE_ALIGNED_LEFT);
-            WinUiUtilities.schedule(500, () -> flyout.show(target, 20, 20));
+            flyout.show(target, 20, 20);
         });
     }
 }

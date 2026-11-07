@@ -18,14 +18,11 @@ public class ConfirmWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                int answer = WOptionPane.showConfirmDialog(frame, "Delete the selected file?",
-                        "Delete", WOptionPane.YES_NO_OPTION);
-                if (answer == WOptionPane.YES_OPTION) {
-                    status.setText("Deleted");
-                }
-            });
+            int answer = WOptionPane.showConfirmDialog(frame, "Delete the selected file?",
+                    "Delete", WOptionPane.YES_NO_OPTION);
+            if (answer == WOptionPane.YES_OPTION) {
+                status.setText("Deleted");
+            }
         });
     }
 }

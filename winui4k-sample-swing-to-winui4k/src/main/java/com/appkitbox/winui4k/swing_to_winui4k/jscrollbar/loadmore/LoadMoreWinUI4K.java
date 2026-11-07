@@ -43,7 +43,7 @@ public class LoadMoreWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll to the end once (after the first layout)
+            // scroll to the end once (after the first layout: getMaximum() is 0 until the content is measured)
             WinUiUtilities.schedule(500, () -> bar.setValue(bar.getMaximum()));
         });
     }

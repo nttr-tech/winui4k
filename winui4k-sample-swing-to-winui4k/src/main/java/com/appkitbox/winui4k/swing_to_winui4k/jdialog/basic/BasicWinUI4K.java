@@ -21,21 +21,18 @@ public class BasicWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                WTextField name = new WTextField(16);
-                name.setText("report.txt");
-                WContentDialog dialog = new WContentDialog(frame, "Rename", true);   // always modal
-                dialog.add(new WLabel("New name:"));
-                dialog.add(name);
-                dialog.setPrimaryButtonText("OK");
-                dialog.setCloseButtonText("Cancel");
-                dialog.setDefaultButton(ContentDialogButton.PRIMARY);
-                ContentDialogResult result = dialog.showAndWait();   // blocks until the dialog closes
-                if (result == ContentDialogResult.PRIMARY) {
-                    status.setText("Renamed to " + name.getText());
-                }
-            });
+            WTextField name = new WTextField(16);
+            name.setText("report.txt");
+            WContentDialog dialog = new WContentDialog(frame, "Rename", true);   // always modal
+            dialog.add(new WLabel("New name:"));
+            dialog.add(name);
+            dialog.setPrimaryButtonText("OK");
+            dialog.setCloseButtonText("Cancel");
+            dialog.setDefaultButton(ContentDialogButton.PRIMARY);
+            ContentDialogResult result = dialog.showAndWait();   // blocks until the dialog closes
+            if (result == ContentDialogResult.PRIMARY) {
+                status.setText("Renamed to " + name.getText());
+            }
         });
     }
 }

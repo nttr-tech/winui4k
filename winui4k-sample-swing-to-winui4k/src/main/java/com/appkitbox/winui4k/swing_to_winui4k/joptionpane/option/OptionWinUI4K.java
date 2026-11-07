@@ -18,15 +18,12 @@ public class OptionWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                String[] options = {"Save", "Don't Save", "Cancel"};
-                int choice = WOptionPane.showOptionDialog(frame, "Save changes to report.txt?", "Notepad",
-                        WOptionPane.YES_NO_CANCEL_OPTION, WOptionPane.WARNING_MESSAGE, null, options, options[0]);
-                if (choice == 0) {
-                    status.setText("Saved");
-                }
-            });
+            String[] options = {"Save", "Don't Save", "Cancel"};
+            int choice = WOptionPane.showOptionDialog(frame, "Save changes to report.txt?", "Notepad",
+                    WOptionPane.YES_NO_CANCEL_OPTION, WOptionPane.WARNING_MESSAGE, null, options, options[0]);
+            if (choice == 0) {
+                status.setText("Saved");
+            }
         });
     }
 }

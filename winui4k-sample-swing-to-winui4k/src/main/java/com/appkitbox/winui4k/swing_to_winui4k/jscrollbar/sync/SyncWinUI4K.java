@@ -32,8 +32,7 @@ public class SyncWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // scroll the left pane once (after the first layout)
-            WinUiUtilities.schedule(500, () -> left.getVerticalScrollBar().setValue(200));
+            left.getVerticalScrollBar().setValue(200);      // scroll the left pane once
         });
     }
 }

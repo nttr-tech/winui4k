@@ -17,9 +17,7 @@ public class ModelWinUI4K {
 
             WBoundedRangeModel model = new WDefaultBoundedRangeModel(30, 0, 0, 100);
             WSlider slider = new WSlider(model);
-            slider.setWidth(200);   // a slider has no default width
             WProgressBar progress = new WProgressBar(model);
-            progress.setWidth(150);   // a progress bar has no default width
 
             frame.add(slider);
             frame.add(progress);

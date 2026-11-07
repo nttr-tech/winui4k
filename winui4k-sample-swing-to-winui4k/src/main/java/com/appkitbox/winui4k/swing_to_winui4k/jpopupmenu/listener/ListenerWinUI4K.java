@@ -41,7 +41,7 @@ public class ListenerWinUI4K {
             frame.setVisible(true);
 
             // open the menu once so that the screenshot shows the updated item
-            WinUiUtilities.schedule(500, () -> popup.show(target, 20, 20));
+            popup.show(target, 20, 20);
         });
     }
 }

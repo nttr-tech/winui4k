@@ -3,7 +3,8 @@ package com.appkitbox.winui4k.swing_to_winui4k.jscrollpane.basic;
 import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WCheckBox;
 import com.appkitbox.winui4k.WFrame;
-import com.appkitbox.winui4k.WPanel;
+import com.appkitbox.winui4k.WGridLayout;
+import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WScrollPane;
 import com.appkitbox.winui4k.WinUiUtilities;
 
@@ -14,7 +15,7 @@ public class BasicWinUI4K {
             WFrame frame = new WFrame("15.2 Basic (WinUI4K)");
             frame.setLayout(new WBorderLayout());
 
-            WPanel options = new WPanel();             // a vertical StackPanel
+            WLayoutPanel options = new WLayoutPanel(new WGridLayout(0, 1));
             for (int i = 1; i <= 30; i++) {
                 options.add(new WCheckBox("Option " + i));
             }

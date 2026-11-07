@@ -14,7 +14,6 @@ public class IndeterminateWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WProgressBar progress = new WProgressBar();
-            progress.setWidth(200);   // a progress bar has no default width
             progress.setIndeterminate(true);
 
             frame.add(new WLabel("Connecting..."));

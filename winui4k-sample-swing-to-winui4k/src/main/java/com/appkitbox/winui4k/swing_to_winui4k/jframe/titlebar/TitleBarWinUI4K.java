@@ -2,6 +2,7 @@ package com.appkitbox.winui4k.swing_to_winui4k.jframe.titlebar;
 
 import com.appkitbox.winui4k.GridLength;
 import com.appkitbox.winui4k.SystemBackdropType;
+import com.appkitbox.winui4k.VerticalAlignment;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WGrid;
 import com.appkitbox.winui4k.WLabel;
@@ -28,7 +29,9 @@ public class TitleBarWinUI4K {
             root.addRow(GridLength.AUTO);
             root.addRow(GridLength.star());
             root.add(titleBar, 0, 0);
-            root.add(new WLabel("The content starts right below the title bar"), 1, 0);
+            WLabel content = new WLabel("The content starts right below the title bar");
+            content.setVerticalAlignment(VerticalAlignment.TOP);   // a stretched label is centered vertically
+            root.add(content, 1, 0);
 
             frame.setContentPane(root);
             frame.setExtendsContentIntoTitleBar(true);

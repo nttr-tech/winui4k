@@ -14,17 +14,13 @@ public class RingWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WProgressRing ring = new WProgressRing();         // spins until setActive(false)
-            ring.setWidth(40);                                // the ring has no default size
-            ring.setHeight(40);
 
             WProgressBar paused = new WProgressBar(0, 100);
             paused.setValue(60);
-            paused.setWidth(150);
             paused.setShowPaused(true);
 
             WProgressBar error = new WProgressBar(0, 100);
             error.setValue(80);
-            error.setWidth(150);
             error.setShowError(true);
 
             frame.add(ring);

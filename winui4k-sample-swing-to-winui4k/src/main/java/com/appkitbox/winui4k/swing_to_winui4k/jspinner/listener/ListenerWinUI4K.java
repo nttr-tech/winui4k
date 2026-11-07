@@ -17,7 +17,6 @@ public class ListenerWinUI4K {
 
             WSpinner age = new WSpinner(new WSpinnerNumberModel(20, 0, 120, 1));
             age.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-            age.setWidth(160);   // room for the number next to the buttons
             WLabel result = new WLabel("Age: 20");
             age.addChangeListener(e -> {
                 int value = (int) age.getValue();

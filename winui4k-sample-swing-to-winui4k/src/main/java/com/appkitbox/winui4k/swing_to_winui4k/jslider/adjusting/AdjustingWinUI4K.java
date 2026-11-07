@@ -14,7 +14,6 @@ public class AdjustingWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSlider brightness = new WSlider(0, 100, 50);
-            brightness.setWidth(200);   // a slider has no default width
             WLabel live = new WLabel("Live: 50");
             WLabel applied = new WLabel("Applied: 50");
             brightness.addChangeListener(e -> {

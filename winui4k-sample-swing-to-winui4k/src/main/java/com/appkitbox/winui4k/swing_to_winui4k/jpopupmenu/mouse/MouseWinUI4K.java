@@ -44,7 +44,7 @@ public class MouseWinUI4K {
             frame.setVisible(true);
 
             // open the menu once at (60, 10) of the label, as if it were right-clicked there
-            WinUiUtilities.schedule(500, () -> popup.show(target, 60, 10));
+            popup.show(target, 60, 10);
         });
     }
 }

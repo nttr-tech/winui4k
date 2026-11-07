@@ -35,7 +35,7 @@ public class SubmenuWinUI4K {
             frame.setVisible(true);
 
             // open the File menu once so that the screenshot shows its items
-            WinUiUtilities.schedule(500, () -> fileMenu.setPopupMenuVisible(true));
+            fileMenu.doClick();
         });
     }
 }

@@ -15,7 +15,6 @@ public class BackgroundWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WProgressBar progress = new WProgressBar(0, 100);
-            progress.setWidth(200);   // a progress bar has no default width
             WLabel status = new WLabel("Working...");
             CompletableFuture.runAsync(() -> {
                 for (int i = 1; i <= 100; i++) {

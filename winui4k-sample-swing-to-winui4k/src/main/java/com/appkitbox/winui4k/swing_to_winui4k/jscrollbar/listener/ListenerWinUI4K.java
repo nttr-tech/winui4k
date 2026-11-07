@@ -36,7 +36,7 @@ public class ListenerWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            WinUiUtilities.schedule(500, () -> bar.setValue(300));     // scroll once (after the first layout)
+            bar.setValue(300);      // scroll once
         });
     }
 }

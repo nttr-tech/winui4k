@@ -44,7 +44,7 @@ public class CheckWinUI4K {
             frame.setVisible(true);
 
             // open the View menu once so that the screenshot shows the check marks
-            WinUiUtilities.schedule(500, () -> viewMenu.setPopupMenuVisible(true));
+            viewMenu.doClick();
         });
     }
 }

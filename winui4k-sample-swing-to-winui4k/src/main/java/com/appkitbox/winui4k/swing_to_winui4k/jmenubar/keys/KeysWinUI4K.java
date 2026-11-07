@@ -41,7 +41,7 @@ public class KeysWinUI4K {
             frame.setVisible(true);
 
             // open the File menu once so that the screenshot shows the shortcut keys
-            WinUiUtilities.schedule(500, () -> fileMenu.setPopupMenuVisible(true));
+            fileMenu.doClick();
         });
     }
 }

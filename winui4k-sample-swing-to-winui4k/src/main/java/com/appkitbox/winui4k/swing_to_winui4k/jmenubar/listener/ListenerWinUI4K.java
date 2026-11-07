@@ -45,7 +45,7 @@ public class ListenerWinUI4K {
             frame.setVisible(true);
 
             // open the Edit menu once (nothing is selected, so Cut and Copy are disabled)
-            WinUiUtilities.schedule(500, () -> editMenu.setPopupMenuVisible(true));
+            editMenu.doClick();
         });
     }
 }

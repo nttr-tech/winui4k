@@ -17,8 +17,7 @@ public class DecimalWinUI4K {
 
             WSpinner price = new WSpinner(new WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5));
             price.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-            price.setWidth(160);   // room for the number next to the buttons
-            // There is no editor with a number format: 12.0 is shown as "12"
+            price.setEditor(new WSpinner.NumberEditor(price, "0.00"));
 
             frame.add(new WLabel("Price:"));
             frame.add(price);

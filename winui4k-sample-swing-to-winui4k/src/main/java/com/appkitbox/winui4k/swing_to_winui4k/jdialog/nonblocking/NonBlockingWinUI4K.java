@@ -20,21 +20,18 @@ public class NonBlockingWinUI4K {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // a dialog opens only after the window has been laid out once
-            WinUiUtilities.schedule(500, () -> {
-                WTextField text = new WTextField(12);
-                text.setText("needle");
-                WContentDialog dialog = new WContentDialog(frame, "Find", true);   // modeless is not available
-                dialog.add(text);
-                dialog.setPrimaryButtonText("Find");
-                dialog.setCloseButtonText("Close");
-                dialog.show(status, result -> {           // returns immediately
-                    if (result == ContentDialogResult.PRIMARY) {
-                        status.setText("Searching for " + text.getText());
-                    }
-                });
-                status.setText("The Find dialog is open");
+            WTextField text = new WTextField(12);
+            text.setText("needle");
+            WContentDialog dialog = new WContentDialog(frame, "Find", true);   // modeless is not available
+            dialog.add(text);
+            dialog.setPrimaryButtonText("Find");
+            dialog.setCloseButtonText("Close");
+            dialog.show(status, result -> {           // returns immediately
+                if (result == ContentDialogResult.PRIMARY) {
+                    status.setText("Searching for " + text.getText());
+                }
             });
+            status.setText("The Find dialog is open");
         });
     }
 }
