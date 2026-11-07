@@ -218,7 +218,10 @@ class WTextField() : WControl(
         get() = TextWrapping.of(inspectable.getInt(XamlInterop.ITextBox_get_TextWrapping))
         set(value) = inspectable.call(XamlInterop.ITextBox_put_TextWrapping, value.native)
 
-    /** Text alignment (TextBox.TextAlignment). */
+    /**
+     * JTextField.setHorizontalAlignment-like: the alignment of the text in the field (TextBox.TextAlignment).
+     * The name of Swing's setHorizontalAlignment is used by the field's placement in its parent ([horizontalAlignment]).
+     */
     var textAlignment: TextAlignment
         get() = TextAlignment.of(inspectable.getInt(XamlInterop.ITextBox_get_TextAlignment))
         set(value) = inspectable.call(XamlInterop.ITextBox_put_TextAlignment, value.native)

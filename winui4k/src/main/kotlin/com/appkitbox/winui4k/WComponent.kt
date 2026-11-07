@@ -1093,7 +1093,14 @@ abstract class WComponent internal constructor(
             isMaximumSizeSet = true
         }
 
-    /** Horizontal position within the space the parent allots (FrameworkElement.HorizontalAlignment). */
+    /**
+     * This component's own horizontal position within the width its parent assigns (FrameworkElement.HorizontalAlignment).
+     *
+     * **Difference from Swing**: the name is the same as setHorizontalAlignment of JLabel / JTextField / AbstractButton, but the meaning differs.
+     * Swing's aligns the text or content inside the component, while this decides where the component itself is placed in its parent (for a component with a fixed width
+     * it often changes nothing). For text alignment use [WLabel.textAlignment] / [WTextField.textAlignment], and for the content alignment of buttons etc.
+     * use [WControl.horizontalContentAlignment].
+     */
     var horizontalAlignment: HorizontalAlignment
         get() = HorizontalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_HorizontalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_HorizontalAlignment, value.native)
@@ -1103,7 +1110,13 @@ abstract class WComponent internal constructor(
         get() = FlowDirection.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_FlowDirection))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_FlowDirection, value.native)
 
-    /** Vertical position within the space the parent allots (FrameworkElement.VerticalAlignment). */
+    /**
+     * This component's own vertical position within the height its parent assigns (FrameworkElement.VerticalAlignment).
+     *
+     * **Difference from Swing**: the name is the same as setVerticalAlignment of JLabel / AbstractButton, but the meaning differs. Swing's aligns the text or
+     * content inside the component vertically, while this decides where the component itself is placed in its parent. For the vertical content alignment of buttons etc.
+     * use [WControl.verticalContentAlignment].
+     */
     var verticalAlignment: VerticalAlignment
         get() = VerticalAlignment.of(frameworkElement.getInt(XamlInterop.IFrameworkElement_get_VerticalAlignment))
         set(value) = frameworkElement.call(XamlInterop.IFrameworkElement_put_VerticalAlignment, value.native)
