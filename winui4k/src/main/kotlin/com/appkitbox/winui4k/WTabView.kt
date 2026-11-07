@@ -128,8 +128,10 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
  * The selection follows the same rules as Swing: adding the first tab selects it, adding or removing a tab before the selection shifts the selected index,
  * and removing the selected tab selects the tab at the same position (the previous one if it was last). Without tabs [selectedIndex] is -1.
  *
- * WinUI's defaults (the tabs' close buttons, the "+" button, reordering by dragging) are kept. Only tabs created with the Swing-shaped [addTab] / [insertTab]
- * show no close button (JTabbedPane's tabs have none). Hide the "+" button with [isAddTabButtonVisible].
+ * WinUI's defaults (the tabs' close buttons and reordering by dragging) are kept. Only tabs created with [addTab] / [insertTab], the same forms as Swing,
+ * have no close button (because JTabbedPane's tabs have no close button).
+ * The "+" button is not in JTabbedPane, so it is not shown by default, and it appears when a listener is added with [addAddTabButtonClickListener]
+ * (if [isAddTabButtonVisible] was set, that value is kept). **Change from earlier versions**: the "+" button was shown, as WinUI's default.
  * Combine with [WFrame.extendsContentIntoTitleBar] to place it in the title bar area.
  */
 @Suppress("TooManyFunctions") // Lists JTabbedPane's API (per-tab get / set) as is
@@ -165,10 +167,24 @@ class WTabView : WControl(
         get() = TabViewWidthMode.of(inspectable.getInt(XamlInterop.ITabView_get_TabWidthMode))
         set(value) = inspectable.call(XamlInterop.ITabView_put_TabWidthMode, value.native)
 
-    /** Whether to show the "+" button at the end of the tab strip (TabView.IsAddTabButtonVisible). WinUI's default is true. */
+    /** Whether the user set [isAddTabButtonVisible] (if not, the "+" button appears when a "+" listener is added). */
+    private var addTabButtonVisibilitySet = false
+
+    /**
+     * Whether to show the "+" button at the end of the tab strip (TabView.IsAddTabButtonVisible). The default is false, the same as JTabbedPane
+     * (WinUI's default is true), and adding a listener with [addAddTabButtonClickListener] without setting it makes it true.
+     */
     var isAddTabButtonVisible: Boolean
         get() = inspectable.getBool(XamlInterop.ITabView_get_IsAddTabButtonVisible)
-        set(value) = inspectable.putBool(XamlInterop.ITabView_put_IsAddTabButtonVisible, value)
+        set(value) {
+            addTabButtonVisibilitySet = true
+            inspectable.putBool(XamlInterop.ITabView_put_IsAddTabButtonVisible, value)
+        }
+
+    init {
+        // JTabbedPane has no "+" button, so it is not shown by default (it appears when a listener is added)
+        inspectable.putBool(XamlInterop.ITabView_put_IsAddTabButtonVisible, false)
+    }
 
     /**
      * Whether tabs can be reordered by dragging (TabView.CanReorderTabs). WinUI's default is true.
@@ -469,7 +485,10 @@ class WTabView : WControl(
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_SelectionChanged, token)
     }
 
-    /** Subscribes to a click of the "+" button at the end of the tab strip (TabView.AddTabButtonClick). */
+    /**
+     * Subscribes to clicks of the "+" button at the end of the tab strip (TabView.AddTabButtonClick). If [isAddTabButtonVisible] is not set,
+     * the "+" button is shown.
+     */
     @JvmSynthetic
     fun addAddTabButtonClickListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
@@ -478,6 +497,7 @@ class WTabView : WControl(
     }
 
     fun addAddTabButtonClickListener(listener: Runnable) {
+        if (!addTabButtonVisibilitySet) inspectable.putBool(XamlInterop.ITabView_put_IsAddTabButtonVisible, true)
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewAddTabButtonClickHandler",
             XamlInterop.IID_TabViewAddTabButtonClickHandler,

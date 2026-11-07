@@ -14,7 +14,7 @@ public class AddButtonWinUI4K {
             WFrame frame = new WFrame("18.6 AddButton (WinUI4K)");
             frame.setLayout(new WBorderLayout());
 
-            WTabView tabs = new WTabView();     // the "+" button is shown by default
+            WTabView tabs = new WTabView();     // the "+" button appears when a listener is added
             Runnable newTab = () -> {
                 WTabViewItem tab = new WTabViewItem("Untitled " + (tabs.getTabCount() + 1));
                 tab.setContent(new WLabel("New document"));

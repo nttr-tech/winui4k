@@ -14,7 +14,6 @@ public class SelectWinUI4K {
             frame.setLayout(new WBorderLayout());
 
             WTabView tabs = new WTabView();
-            tabs.setAddTabButtonVisible(false);
             tabs.addTab("Inbox", new WLabel("3 new messages"));
             tabs.addTab("Sent", new WLabel("12 messages"));
             tabs.addTab("Drafts", new WLabel("1 draft"));

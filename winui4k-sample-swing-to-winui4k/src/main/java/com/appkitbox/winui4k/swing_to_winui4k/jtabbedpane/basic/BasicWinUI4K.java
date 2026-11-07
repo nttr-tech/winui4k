@@ -16,7 +16,6 @@ public class BasicWinUI4K {
             frame.setLayout(new WBorderLayout());
 
             WTabView tabs = new WTabView();
-            tabs.setAddTabButtonVisible(false);     // hide the "+" button that WinUI shows by default
             tabs.addTab("General", new WCheckBox("Start with Windows"));
             tabs.addTab("Files", new WImageIcon("icons/save.png"), new WLabel("Save to: C:\\Documents"), "Where files are saved");
             tabs.addTab("About", new WLabel("Version 1.0"));

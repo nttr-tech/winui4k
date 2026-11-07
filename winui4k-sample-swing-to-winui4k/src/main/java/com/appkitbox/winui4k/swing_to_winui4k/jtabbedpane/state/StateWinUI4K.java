@@ -15,7 +15,6 @@ public class StateWinUI4K {
             frame.setLayout(new WBorderLayout());
 
             WTabView tabs = new WTabView();
-            tabs.setAddTabButtonVisible(false);
             tabs.addTab("Document", new WLabel("Hello"));
             tabs.addTab("Preview", new WLabel("Preview"));
             tabs.addTab("Publish", new WLabel("Publish"));
