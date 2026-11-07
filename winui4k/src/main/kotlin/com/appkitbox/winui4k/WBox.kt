@@ -62,6 +62,8 @@ object WBox {
     class Filler(minimum: WSize, preferred: WSize, maximum: WSize) : WComponent(
         Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
     ) {
+        override val isCanvasElement: Boolean get() = true
+
         init {
             isFocusable = false
             applyShape(minimum, preferred, maximum)

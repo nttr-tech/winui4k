@@ -415,6 +415,25 @@ abstract class WComponent internal constructor(
         applyHeight(height)
     }
 
+    /** Whether the native element is a Canvas (it is not a XAML layout element, so changing its size inside a Canvas needs [remeasureInCanvas]). */
+    internal open val isCanvasElement: Boolean get() = false
+
+    /**
+     * Makes this Canvas, a child of a Canvas ([WLayoutPanel] etc.), be measured again with the current Width / Height.
+     *
+     * A Canvas is not a layout element, so when the parent is also a Canvas, changing Width / Height does not make XAML measure again; it only sets
+     * a "measure pending" flag (CUIElement::InvalidateMeasure in microsoft-ui-xaml uielement.cpp, GetIsLayoutElement in canvas.h). That flag
+     * turns into "needs measure" when InvalidateMeasure of a descendant layout element propagates to the ancestors (PropagateOnPathInternal in
+     * UIElementLayout.cpp). So InvalidateMeasure is called on the descendant layout elements (children that are not Canvases; their descendants if a child is a Canvas).
+     * A Canvas without descendant layout elements (an empty one) is not measured again.
+     */
+    internal fun remeasureInCanvas() {
+        uiElement.call(XamlInterop.IUIElement_InvalidateMeasure)
+        (this as? WContainer)?.componentList?.forEach { child ->
+            if (child.isCanvasElement) child.remeasureInCanvas() else child.uiElement.call(XamlInterop.IUIElement_InvalidateMeasure)
+        }
+    }
+
     /**
      * A cache of the natural size (the preferred size measured from the content). null means it
      * hasn't been measured yet, or [invalidateNaturalSize] was called since — the parent

@@ -222,6 +222,17 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (microsoft-ui-xaml の dxaml/xcp/core/core/elements/uielement.cpp の Canvas_Left / Canvas_Top → OnActualOffsetChanged)。
     FrameworkElement.LayoutUpdated は来ないので、componentMoved は LayoutUpdated に加えて Canvas.Left / Top の変更のコールバックでも位置を比べる
   - Visibility を Collapsed にしても、その要素の SizeChanged は来ない (Swing の setVisible(false) と同じく componentResized は来ない)
+- 入れ子の WLayoutPanel (Canvas の中の Canvas) の大きさの変わり方を E2E テストで確かめた (`WNestedLayoutPanelTest`)
+  - Canvas は XAML のレイアウト要素ではない (microsoft-ui-xaml の dxaml/xcp/core/inc/canvas.h の GetIsLayoutElement が false)。
+    Canvas の子の Canvas の Width / Height を、一度測られた後で替えても、InvalidateMeasure は祖先へ伝わらず「測り直し待ち」の印
+    (LF_MEASURE_DIRTY_PENDING) が付くだけで (uielement.cpp の CUIElement::InvalidateMeasure)、DesiredSize・ActualHeight は前のまま。
+    UpdateLayout を呼んでも、Visibility を切り替えても、UIElement.Measure を別の制約で呼んでも変わらない
+    (Measure の制約の比較もレイアウト要素か親がレイアウト要素のときだけ)。Width / Height がネイティブでは新しい値なのに、
+    ActualHeight は 10 のまま、という食い違いになる
+  - 印は、子孫のレイアウト要素 (Button など) の InvalidateMeasure が祖先へ伝わるときに「測り直しが要る」に変わる
+    (components/elements/UIElementLayout.cpp の PropagateOnPathInternal)。WLayoutPanel.setBounds は、Canvas の子の大きさを替えたら
+    その子孫のレイアウト要素の InvalidateMeasure を呼ぶ (WComponent.remeasureInCanvas)。レイアウト要素の子孫が無い空の Canvas は測り直されない
+  - Canvas の子のレイアウト要素 (Border・Control・TextBlock など) や、ScrollViewer・Border の中の Canvas は、普通に測り直される
 - 閉じるまで呼び出し元を止めるダイアログ (Swing の JOptionPane.showConfirmDialog などの形) のために、UI スレッドで入れ子の
   メッセージ ループ (`internal.winui.ModalLoop`) を回したときの挙動を E2E テストで確かめた (2.5.4-experimental。`ModalLoopTest` は
   Panama、`ModalLoopProcessTest` は子のプロセスを Panama・JNA・JNR のそれぞれで起動)

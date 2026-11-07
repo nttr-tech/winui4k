@@ -20,6 +20,12 @@ import java.lang.ref.WeakReference
  *
  * When a child's content (e.g. its text) changes and its natural size changes with it, call that child's [WComponent.revalidate]
  * (equivalent to calling the child's [WComponent.invalidateNaturalSize] and this panel's [revalidate]).
+ *
+ * When the preferred size changes after laying out, the ancestor WLayoutPanels lay out again too (so that a nested WLayoutPanel or a WLayoutPanel in a [WBorder]
+ * is laid out outside with its size after measuring its children, as with nested JPanels in Swing).
+ *
+ * As the content of a [WScrollPane] / [WScrollView], it gets the larger of the preferred size and the viewport, as with JViewport
+ * (the preferred size is set as MinWidth / MinHeight to decide the scroll range, and it is stretched if smaller than the viewport).
  */
 class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
@@ -37,6 +43,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
             field = value
             revalidate()
         }
+
+    override val isCanvasElement: Boolean get() = true
 
     /** The children under layout management (in order; same as [components]). Used by WLayoutManager implementations to enumerate them. */
     val layoutChildren: List<WComponent> get() = componentList
@@ -68,6 +76,15 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
      * when the parent hasn't called setBounds yet).
      */
     private var assignedSize: WSize? = null
+
+    /** The preferred size from the previous layout (the ancestors lay out again when it changes). null if not laid out yet. */
+    private var lastPreferred: WSize? = null
+
+    /** The value the user set to [minimumSize] (kept separately because, as scroll content, the preferred size is written to the native MinWidth / MinHeight). */
+    private var userMinimum: WSize = ZERO_SIZE
+
+    /** Whether the preferred size is written to MinWidth / MinHeight as scroll content. */
+    private var scrollMinimumApplied = false
 
     internal fun noteAssignedSize(width: Double, height: Double) {
         assignedSize = WSize(width, height)
@@ -139,9 +156,11 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
      * the value of [WLayoutManager.minimumLayoutSize]. Without a [layout], stays [WComponent.minimumSize].
      */
     override var minimumSize: WSize
-        get() = layoutOverride(super.minimumSize, ZERO_SIZE) { it.minimumLayoutSize(this) }
+        get() = layoutOverride(userMinimum, ZERO_SIZE) { it.minimumLayoutSize(this) }
         set(value) {
             super.minimumSize = value
+            userMinimum = value
+            if (scrollMinimumApplied) revalidate() // Rewrite the larger of this and the preferred size
         }
 
     /**
@@ -186,7 +205,12 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         if (component is WLayoutPanel) component.noteAssignedSize(width, height)
         statics.call(XamlInterop.ICanvasStatics_SetLeft, component.uiElement.ptr, x)
         statics.call(XamlInterop.ICanvasStatics_SetTop, component.uiElement.ptr, y)
+        val sizeChanged = component.appliedWidth.toRawBits() != width.toRawBits() ||
+            component.appliedHeight.toRawBits() != height.toRawBits()
         component.setLayoutSize(width, height)
+        // A Canvas in a Canvas (a nested WLayoutPanel etc.) is not measured again by XAML just by changing Width / Height
+        // ([WComponent.remeasureInCanvas]、doc/verification.md)
+        if (sizeChanged && component.isCanvasElement) component.remeasureInCanvas()
     }
 
     /**
@@ -262,7 +286,15 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
                 assigned != null -> assigned.height
                 else -> actualHeight
             }
-            if (loaded && assigned == null) {
+            val inScroll = isScrollContent
+            if (inScroll) {
+                val fitted = fitScrollContent(manager, containerWidth, containerHeight)
+                containerWidth = fitted.width
+                containerHeight = fitted.height
+            } else {
+                clearScrollMinimum()
+            }
+            if (loaded && assigned == null && !inScroll) {
                 if (width.isNaN() && containerWidth <= 0.0) selfSizedWidth = true
                 if (height.isNaN() && containerHeight <= 0.0) selfSizedHeight = true
             }
@@ -280,9 +312,77 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         } finally {
             inLayout = false
         }
+        // 6. If measuring the children again changed the preferred size, make the ancestors that used it lay out again
+        notifyIfPreferredSizeChanged()
         if (layoutPending) {
             layoutPending = false
             scheduleLayout()
+        }
+    }
+
+    /**
+     * The layout area of scroll content: as with JViewport, the larger of the preferred size and the viewport ([width] x [height], the size the ScrollViewer gave).
+     * The preferred size is set as MinWidth / MinHeight to decide the scroll range (in this pass right after writing it, the viewport still has
+     * the previous size, so the larger one is taken here too).
+     */
+    private fun fitScrollContent(manager: WLayoutManager, width: Double, height: Double): WSize {
+        val preferred = manager.preferredLayoutSize(this)
+        applyScrollMinimum(preferred)
+        selfSizedWidth = false
+        selfSizedHeight = false
+        return WSize(
+            if (this.width.isNaN()) maxOf(width, preferred.width) else width,
+            if (this.height.isNaN()) maxOf(height, preferred.height) else height,
+        )
+    }
+
+    /** If the preferred size differs from the previous layout, makes the ancestors lay out again ([preferredSizeChanged]). */
+    private fun notifyIfPreferredSizeChanged() {
+        val preferred = preferredSize()
+        if (preferred == lastPreferred) return
+        lastPreferred = preferred
+        preferredSizeChanged()
+    }
+
+    /** Whether this is the content of a [WScrollPane] / [WScrollView]. */
+    private val isScrollContent: Boolean
+        get() = when (val p = parent) {
+            is WScrollPane -> p.content === this
+            is WScrollView -> p.content === this
+            else -> false
+        }
+
+    /** As scroll content, sets MinWidth / MinHeight of the dimensions not given explicitly to the preferred size (or the user's minimum size if the preferred size is smaller). */
+    private fun applyScrollMinimum(preferred: WSize) {
+        scrollMinimumApplied = true
+        val minWidth = if (width.isNaN()) maxOf(userMinimum.width, preferred.width) else userMinimum.width
+        val minHeight = if (height.isNaN()) maxOf(userMinimum.height, preferred.height) else userMinimum.height
+        putMinimum(minWidth, minHeight)
+    }
+
+    /** When it is no longer scroll content, restores MinWidth / MinHeight to the user's minimum size. */
+    private fun clearScrollMinimum() {
+        if (!scrollMinimumApplied) return
+        scrollMinimumApplied = false
+        putMinimum(userMinimum.width, userMinimum.height)
+    }
+
+    private fun putMinimum(minWidth: Double, minHeight: Double) {
+        if (frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinWidth) != minWidth) {
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinWidth, minWidth)
+        }
+        if (frameworkElement.getDouble(XamlInterop.IFrameworkElement_get_MinHeight) != minHeight) {
+            frameworkElement.call(XamlInterop.IFrameworkElement_put_MinHeight, minHeight)
+        }
+    }
+
+    /** Tells the ancestors the preferred size changed: drops the ancestors' natural size cache and schedules a relayout of the ancestor WLayoutPanels. */
+    private fun preferredSizeChanged() {
+        var ancestor = parent
+        while (ancestor != null) {
+            ancestor.invalidateNaturalSize()
+            if (ancestor is WLayoutPanel) ancestor.scheduleLayout()
+            ancestor = ancestor.parent
         }
     }
 

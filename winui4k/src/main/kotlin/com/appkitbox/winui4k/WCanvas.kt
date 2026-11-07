@@ -12,6 +12,8 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 class WCanvas : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
 ) {
+    override val isCanvasElement: Boolean get() = true
+
     /** Adds a child positioned at ([x], [y]). */
     fun add(component: WComponent, x: Double, y: Double) {
         setLocation(component, x, y)
