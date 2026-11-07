@@ -208,6 +208,19 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         get() = Orientation.of(inspectable.getInt(XamlInterop.ISlider_get_Orientation))
         set(value) = inspectable.call(XamlInterop.ISlider_put_Orientation, value.native)
 
+    /**
+     * JSlider.getPreferredSize-like: if the length (the width when horizontal, the height when vertical) is not given explicitly, it is 200, as with JSlider
+     * (or the content's length if longer). WinUI's Slider asks only for the size of the thumb when no length is given.
+     */
+    override fun preferredSize(): WSize {
+        val size = super.preferredSize()
+        return if (orientation == Orientation.VERTICAL) {
+            withDefaultExtent(size, 0.0, SLIDER_PREFERRED_LENGTH)
+        } else {
+            withDefaultExtent(size, SLIDER_PREFERRED_LENGTH, 0.0)
+        }
+    }
+
     /** Whether the increasing direction is reversed (Slider.IsDirectionReversed). */
     var isDirectionReversed: Boolean
         get() = inspectable.getBool(XamlInterop.ISlider_get_IsDirectionReversed)
@@ -456,3 +469,6 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         val VERTICAL: Orientation = Orientation.VERTICAL
     }
 }
+
+/** The default preferred length of JSlider (the longer of PREFERRED_HORIZONTAL_SIZE / PREFERRED_VERTICAL_SIZE in BasicSliderUI; DIP). */
+private const val SLIDER_PREFERRED_LENGTH = 200.0

@@ -452,7 +452,7 @@ abstract class WComponent internal constructor(
     }
 
     /** The preferred size computed by the most recent Measure pass (UIElement.DesiredSize). */
-    internal fun readDesiredSize(): WSize {
+    internal open fun readDesiredSize(): WSize {
         val size = XamlStructs.getSizeFloat(uiElement, XamlInterop.IUIElement_get_DesiredSize)
         return WSize(size[0], size[1])
     }
@@ -469,6 +469,16 @@ abstract class WComponent internal constructor(
             if (height.isNaN()) natural.height else height,
         )
     }
+
+    /**
+     * A helper for [preferredSize]: keeps the dimensions of [size] that are not given explicitly ([width] / [height] is NaN) from being smaller than [minWidth] / [minHeight] (DIP).
+     * Some WinUI controls (Slider, ProgressBar, etc.) ask only for the minimum size of their content (or 0) when no size is given,
+     * so the default preferred size decided by Swing's UI (200 for JSlider, etc.) is supplied here.
+     */
+    internal fun withDefaultExtent(size: WSize, minWidth: Double, minHeight: Double): WSize = WSize(
+        if (width.isNaN()) maxOf(size.width, minWidth) else size.width,
+        if (height.isNaN()) maxOf(size.height, minHeight) else size.height,
+    )
 
     /**
      * The preferred size (equivalent to JComponent.get/setPreferredSize). Reading is the same as the [preferredSize]

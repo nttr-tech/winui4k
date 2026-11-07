@@ -115,6 +115,13 @@ class WProgressRing() : WControl(
         range.push()
     }
 
+    /**
+     * Preferred size: if the width or height is not given explicitly, it is 32 x 32, the same as WinUI's default style. When a layout manager measures it
+     * with the width and height removed (NaN), the style's 32 is removed too and it asks only for the minimum of 16.
+     */
+    override fun preferredSize(): WSize =
+        withDefaultExtent(super.preferredSize(), PROGRESS_RING_PREFERRED_SIZE, PROGRESS_RING_PREFERRED_SIZE)
+
     /** ChangeListener-style: receives a [WChangeEvent] (whose source is this progress ring) every time [model] changes. */
     fun addChangeListener(listener: WChangeListener) {
         range.changeListeners.add(listener)
@@ -128,3 +135,6 @@ class WProgressRing() : WControl(
     /** The ChangeListeners currently added (in the order they were added). */
     fun getChangeListeners(): Array<WChangeListener> = range.changeListeners.toArray()
 }
+
+/** The size of ProgressRing's default style (Width / Height in microsoft-ui-xaml's ProgressRing.xaml; DIP). */
+private const val PROGRESS_RING_PREFERRED_SIZE = 32.0

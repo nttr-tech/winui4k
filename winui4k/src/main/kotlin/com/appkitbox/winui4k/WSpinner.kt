@@ -8,6 +8,7 @@ import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.lang.ref.WeakReference
 import java.text.DecimalFormat
 import java.text.ParseException
@@ -72,6 +73,66 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
 
     /** Its own IsTabStop is false, and UIElement.Focus passes focus to the template's input field (TextBox) ([isFocusable] / [requestFocusInWindow]). */
     override val focusIsDelegated: Boolean get() = true
+
+    /**
+     * The preferred size measured from the content. The width is the width of the input field (the template's InputBox) without the clear button, plus the width of the clear button.
+     * The clear button appears only when it has focus and text, and narrows the text area (WinUI's TextBox). With the width measured
+     * without focus, the value's text disappears as soon as it gets focus (Swing's JSpinner has no clear button).
+     * So that measuring while the clear button is shown gives the same width, the clear button's part is removed from the measured width (not going below the input field's minimum width MinWidth)
+     * and added back.
+     */
+    override fun readDesiredSize(): WSize {
+        val size = super.readDesiredSize()
+        val width = withDeleteButton(size.width) ?: return size
+        return WSize(width, size.height)
+    }
+
+    /**
+     * The measured width [measured] made into the width with the clear button hidden plus the clear button's width. null if there is no template yet.
+     * The width with it hidden is the larger of the input field's minimum width (MinWidth) and the content's width (the measured width minus the button's width if the button is shown).
+     */
+    private fun withDeleteButton(measured: Double): Double? {
+        val box = Xaml.appliedTemplatePartOrNull(inspectable, INPUT_BOX_PART) ?: return null
+        try {
+            val button = Xaml.appliedTemplatePartOrNull(box, DELETE_BUTTON_PART) ?: return null
+            try {
+                val shownWidth = shownWidthOf(button)
+                return if (shownWidth == null) {
+                    measured + button.frameworkDouble(XamlInterop.IFrameworkElement_get_MinWidth)
+                } else {
+                    maxOf(box.frameworkDouble(XamlInterop.IFrameworkElement_get_MinWidth), measured - shownWidth) + shownWidth
+                }
+            } finally {
+                button.release()
+            }
+        } finally {
+            box.release()
+        }
+    }
+
+    /** The measured width (DesiredSize) of [element] (a template element) if it is shown. null if hidden. */
+    private fun shownWidthOf(element: ComPtr): Double? {
+        val view = element.queryInterface(XamlInterop.IID_IUIElement)
+        return try {
+            if (view.getInt(XamlInterop.IUIElement_get_Visibility) == VISIBILITY_VISIBLE) {
+                XamlStructs.getSizeFloat(view, XamlInterop.IUIElement_get_DesiredSize)[0]
+            } else {
+                null
+            }
+        } finally {
+            view.release()
+        }
+    }
+
+    /** Reads a Double property ([slot]) of the FrameworkElement of [this] (a template element). */
+    private fun ComPtr.frameworkDouble(slot: Int): Double {
+        val framework = queryInterface(XamlInterop.IID_IFrameworkElement)
+        return try {
+            framework.getDouble(slot)
+        } finally {
+            framework.release()
+        }
+    }
 
     /** The ChangeListeners. The native ValueChanged is subscribed from creation, so nothing is registered here. */
     private val changeListeners = ChangeListeners(this) {}
@@ -448,6 +509,12 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     private companion object {
         /** The name of the TextBox for entering text in the NumberBox template. */
         const val INPUT_BOX_PART = "InputBox"
+
+        /** The name of the button that clears the text in the input field (TextBox) template. */
+        const val DELETE_BUTTON_PART = "DeleteButton"
+
+        /** Microsoft.UI.Xaml.Visibility.Visible (winmd: Visible=0, Collapsed=1)。 */
+        const val VISIBILITY_VISIBLE = 0
 
         /** Compares treating NaN and NaN as equal too. */
         fun sameValue(a: Double, b: Double): Boolean = a == b || (a.isNaN() && b.isNaN())

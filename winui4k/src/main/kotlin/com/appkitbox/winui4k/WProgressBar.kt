@@ -130,6 +130,12 @@ class WProgressBar @JvmOverloads constructor(minimum: Double = 0.0, maximum: Dou
     }
 
     /**
+     * JProgressBar.getPreferredSize-like: if the width is not given explicitly, it is 146, as with JProgressBar (the height stays WinUI's bar height).
+     * WinUI's ProgressBar asks for a width of 0 when no width is given, and disappears under a layout manager.
+     */
+    override fun preferredSize(): WSize = withDefaultExtent(super.preferredSize(), PROGRESS_BAR_PREFERRED_WIDTH, 0.0)
+
+    /**
      * ChangeListener-style: receives a [WChangeEvent] (whose source is this progress bar) every time the progress bar's state changes.
      * As with JProgressBar, it is called once per change whichever of [model]'s value, minimum, maximum, extent and so on changes
      * (also when a shared model is moved with a [WSlider]). In Kotlin it can be written as `addChangeListener { e -> }`.
@@ -146,3 +152,6 @@ class WProgressBar @JvmOverloads constructor(minimum: Double = 0.0, maximum: Dou
     /** Like JProgressBar.getChangeListeners: the ChangeListeners currently added (in the order they were added). */
     fun getChangeListeners(): Array<WChangeListener> = range.changeListeners.toArray()
 }
+
+/** The default preferred width of JProgressBar (the width of ProgressBar.horizontalSize in BasicProgressBarUI; DIP). */
+private const val PROGRESS_BAR_PREFERRED_WIDTH = 146.0

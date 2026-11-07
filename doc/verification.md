@@ -477,3 +477,13 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   IsLoaded は true なのにビジュアル ツリーの根がウィンドウの中身の根と違う (XamlRoot.Content の根に着かない) ため
   (E2E で確認。根の判定だけにすると WrapperReleaseMenuTest の項目が回収されなくなった)。そのため開いているメニューの項目の
   WComponent.isDisplayable も false になる
+- WinUI の Slider・ProgressBar は幅を指定しないと、内容の最小の大きさしか求めない (DesiredSize の幅が Slider は つまみの 18、
+  ProgressBar は 0)。ProgressRing は既定のスタイルで Width / Height = 32 だが、WLayoutPanel が測る前に幅と高さの指定を外す
+  (ローカル値に NaN を入れる) とスタイルの 32 も隠れて、最小の MinWidth / MinHeight = 16 しか求めない。そのため WSlider (長さ 200)・
+  WProgressBar (幅 146)・WProgressRing (32 × 32) は、明示していない次元の希望サイズを Swing や既定のスタイルの値で補う
+  (WRangeControlPreferredSizeTest)
+- TextBox の消去ボタン (テンプレートの DeleteButton、MinWidth 40) は、フォーカスがあって文字があり、幅が 5em (FontSize × 5) より
+  広いときだけ出る (microsoft-ui-xaml の TextBox.cpp の CanInvokeDeleteButton と ArrangeOverride)。NumberBox の入力欄も
+  この TextBox なので、フォーカスの無いときに測った幅で置くと、フォーカスを受けた途端に消去ボタンが文字の領域を取り、値が見えなくなる
+  (スピン ボタンを INLINE にすると入力欄の最小幅 120 の中に ボタンの 72 も入るので、文字の領域が負になる)。WSpinner の希望の幅は、
+  消去ボタンの分を含めて、フォーカスの有り無しで変わらないようにしている (WRangeControlPreferredSizeTest)
