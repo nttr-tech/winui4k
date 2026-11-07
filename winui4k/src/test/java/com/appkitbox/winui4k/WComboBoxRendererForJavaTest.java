@@ -16,11 +16,15 @@ class WComboBoxRendererForJavaTest {
         onUiThread(() -> {
             WComboBox combo = new WComboBox(Arrays.asList("apple", "orange"));
             combo.setRenderer(value -> value.toString().toUpperCase());
-            assertEquals("APPLE", combo.getItemAt(0));
-            assertEquals("ORANGE", combo.getItemAt(1));
+            assertEquals("APPLE", combo.getItem(0));
+            assertEquals("ORANGE", combo.getItem(1));
+            assertEquals("apple", combo.getItemAt(0));
+            combo.setSelectedIndex(1);
+            assertEquals("orange", combo.getSelectedItem());
+            assertEquals("ORANGE", combo.getSelectedItemText());
             combo.setRenderer(null);
             assertNull(combo.getRenderer());
-            assertEquals("apple", combo.getItemAt(0));
+            assertEquals("apple", combo.getItem(0));
         });
     }
 }

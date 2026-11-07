@@ -107,7 +107,7 @@ final class DateTimePages {
         selectionModeCombo.setWidth(240.0);
         selectionModeCombo.setSelectedIndex(1);
         selectionModeCombo.addListSelectionListener(() -> {
-            String selected = selectionModeCombo.getSelectedItem();
+            String selected = (String) selectionModeCombo.getSelectedItem();
             if ("None".equals(selected)) {
                 calendarView.setSelectionMode(CalendarViewSelectionMode.NONE);
             } else if ("Multiple".equals(selected)) {
@@ -126,7 +126,7 @@ final class DateTimePages {
         calendarIdCombo.setWidth(240.0);
         calendarIdCombo.setSelectedIndex(0);
         calendarIdCombo.addListSelectionListener(() -> {
-            String selected = calendarIdCombo.getSelectedItem();
+            String selected = (String) calendarIdCombo.getSelectedItem();
             if (selected != null) {
                 calendarView.setCalendarIdentifier(selected);
             }
@@ -281,7 +281,7 @@ final class DateTimePages {
         clockCombo.setWidth(240.0);
         clockCombo.setSelectedIndex(0);
         clockCombo.addListSelectionListener(() -> {
-            String selected = clockCombo.getSelectedItem();
+            String selected = (String) clockCombo.getSelectedItem();
             if (selected != null) {
                 picker.setClockIdentifier(selected);
             }
@@ -292,7 +292,7 @@ final class DateTimePages {
         minuteIncrementCombo.setWidth(240.0);
         minuteIncrementCombo.setSelectedIndex(3);
         minuteIncrementCombo.addListSelectionListener(() -> {
-            String selected = minuteIncrementCombo.getSelectedItem();
+            String selected = (String) minuteIncrementCombo.getSelectedItem();
             if (selected != null) {
                 picker.setMinuteIncrement(Integer.parseInt(selected));
             }

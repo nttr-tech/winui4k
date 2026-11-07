@@ -410,7 +410,7 @@ final class BasicInputPages {
         WComboBox comboBox = new WComboBox(Arrays.asList("Red", "Green", "Blue", "Yellow"));
         comboBox.setWidth(200.0);
         comboBox.addListSelectionListener(() -> {
-            String item = comboBox.getSelectedItem();
+            String item = (String) comboBox.getSelectedItem();
             result.setText(item == null
                 ? "Selected: none"
                 : "Selected: " + item + " (index = " + comboBox.getSelectedIndex() + ")");

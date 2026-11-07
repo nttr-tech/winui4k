@@ -116,7 +116,7 @@ private fun buildCalendarViewExample(): WComponent {
     calendarIdCombo.width = 240.0
     calendarIdCombo.selectedIndex = 0
     calendarIdCombo.addListSelectionListener {
-        val selected = calendarIdCombo.selectedItem
+        val selected = calendarIdCombo.selectedItem as String?
         if (selected != null) calendarView.calendarIdentifier = selected
     }
 
@@ -267,7 +267,7 @@ private fun buildTimePickerOptionsExample(): WComponent {
     clockCombo.width = 240.0
     clockCombo.selectedIndex = 0
     clockCombo.addListSelectionListener {
-        val selected = clockCombo.selectedItem
+        val selected = clockCombo.selectedItem as String?
         if (selected != null) picker.clockIdentifier = selected
     }
 
@@ -276,7 +276,7 @@ private fun buildTimePickerOptionsExample(): WComponent {
     minuteIncrementCombo.width = 240.0
     minuteIncrementCombo.selectedIndex = 3
     minuteIncrementCombo.addListSelectionListener {
-        val selected = minuteIncrementCombo.selectedItem
+        val selected = minuteIncrementCombo.selectedItem as String?
         if (selected != null) picker.minuteIncrement = selected.toInt()
     }
 

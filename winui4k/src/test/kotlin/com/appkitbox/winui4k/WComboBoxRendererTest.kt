@@ -51,12 +51,12 @@ class WComboBoxRendererTest : FunSpec() {
         }
 
         context("Reading and writing") {
-            test("setting renderer recreates the native items with its strings, and getItem / getItemAt also return those strings") {
+            test("setting renderer recreates the native items with its text, and getItem and selectedItemText also return that text") {
                 onUiThreadGet {
                     val combo = WComboBox(priceModel())
                     combo.renderer = { value -> (value as Price).let { "${it.name} (${it.yen} yen)" } }
-                    nativeItems(combo) + listOf(combo.getItem(0), combo.getItemAt(1))
-                } shouldContainExactly listOf("apple (120 yen)", "orange (80 yen)", "apple (120 yen)", "orange (80 yen)")
+                    nativeItems(combo) + listOf(combo.getItem(0), combo.getItem(1), combo.selectedItemText)
+                } shouldContainExactly listOf("apple (120 yen)", "orange (80 yen)", "apple (120 yen)", "orange (80 yen)", "apple (120 yen)")
             }
 
             test("items added to the model and items replaced after setting renderer are also shown with its strings") {
@@ -69,13 +69,35 @@ class WComboBoxRendererTest : FunSpec() {
                 } shouldContainExactly listOf("APPLE!", "ORANGE!", "GRAPE!")
             }
 
-            test("setting renderer does not change the selection, and selectedItem stays toString() as before") {
+            test("setting renderer does not change the selection; selectedItem stays the item and selectedItemText becomes the renderer's text") {
                 onUiThreadGet {
                     val combo = WComboBox(listOf("a", "b"))
                     combo.selectedIndex = 1
                     combo.renderer = { value -> "[$value]" }
-                    listOf(combo.selectedIndex, combo.selectedItem, combo.getItem(1))
-                } shouldContainExactly listOf(1, "b", "[b]")
+                    listOf(combo.selectedIndex, combo.selectedItem, combo.selectedItemText, combo.getItem(1))
+                } shouldContainExactly listOf(1, "b", "[b]", "[b]")
+            }
+
+            test("even with renderer set, selectedItem and getItemAt return the item itself, not the displayed text (as with JComboBox)") {
+                onUiThreadGet {
+                    val model = priceModel()
+                    val combo = WComboBox(model)
+                    combo.renderer = { value -> (value as Price).name }
+                    combo.selectedIndex = 1
+                    listOf(combo.selectedItem, combo.getItemAt(0), combo.getItemAt(2))
+                } shouldContainExactly listOf(Price("Orange", 80), Price("Apple", 120), null)
+            }
+
+            test("selectedItemText of an editable combo box with a value not in the list selected is toString() without the renderer, and null if nothing is selected") {
+                onUiThreadGet {
+                    val combo = WComboBox(priceModel())
+                    combo.isEditable = true
+                    combo.renderer = { value -> (value as Price).name }
+                    combo.setSelectedItem("banana")
+                    val custom = listOf(combo.selectedIndex, combo.selectedItem, combo.selectedItemText)
+                    combo.selectedIndex = -1
+                    custom + listOf(combo.selectedItem, combo.selectedItemText)
+                } shouldContainExactly listOf(-1, "banana", "banana", null, null)
             }
 
             test("resetting it to null returns to showing toString()") {

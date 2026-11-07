@@ -23,8 +23,8 @@ import kotlin.jvm.JvmSynthetic
  * by the user are written back to the model's [WComboBoxModel.selectedItem]. One model can be shared by several combos.
  *
  * Item operations: [addItem] / [insertItemAt] / [getItemAt] / [removeItemAt] / [removeItem] / [removeAllItems] / [itemCount]
- * (adding and removing only with a [WMutableComboBoxModel] model). Selection: [selectedIndex] / [selectedItem] (the displayed string) /
- * [setSelectedItem] / [getSelectedObjects] (the model's items themselves). Also [placeholderText] / [header],
+ * (adding and removing only with a [WMutableComboBoxModel] model). Selection: [selectedIndex] / [selectedItem] (the model's item itself) /
+ * [selectedItemText] (the displayed text) / [setSelectedItem] / [getSelectedObjects]. Also [placeholderText] / [header],
  * [isEditable] / [text] / [addTextSubmitListener] (for an editable combo), [showPopup] / [hidePopup] / [isPopupVisible] /
  * [maximumRowCount] (drop-down).
  *
@@ -44,7 +44,7 @@ import kotlin.jvm.JvmSynthetic
  *   [popupMenuWillBecomeInvisible][WPopupMenuListener.popupMenuWillBecomeInvisible] after it has finished closing
  * - The models made by the constructor taking a List and the no-arg constructor still select nothing when items are added, and removing the selected item leaves it unselected
  *   (JComboBox selects the first item and selects an adjacent one on removal. The constructors taking an array or a model behave like JComboBox)
- * - When the model selects a value not in the list, a non-editable combo shows nothing ([selectedItem] is that value's string, [selectedIndex] is -1).
+ * - When the model selects a value not in the list, a non-editable combo box shows nothing ([selectedItem] is that value, and [selectedIndex] is -1).
  *   An editable combo shows that string (after the template that lets WinUI accept custom values is applied, that is, after it is in a window)
  */
 class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : WControl(
@@ -223,11 +223,22 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         }
 
     /**
-     * The display string of the selected item (`toString()` of the selectedItem of [model]). null if unselected. When a string not in the list is
-     * confirmed in an editable combo, that string ([selectedIndex] is then -1). Use [setSelectedItem] to change it. The item itself is [getSelectedObjects] or [model].
+     * JComboBox.getSelectedItem-like: the selected item itself (the selectedItem of [model]). null if nothing is selected. When text not in the list is committed
+     * in an editable combo box, that text (then [selectedIndex] is -1). Use [setSelectedItem] to change it. The displayed text is [selectedItemText].
      */
-    val selectedItem: String?
-        get() = dataModel.selectedItem?.toString()
+    val selectedItem: Any?
+        get() = dataModel.selectedItem
+
+    /**
+     * The displayed text of the selected item. When an item of the list is selected, the [renderer] text, the same as [getItem]; for a value not in the list, `toString()`;
+     * null if nothing is selected. JComboBox does not have it; use it instead of `String.valueOf(combo.getSelectedItem())`.
+     */
+    val selectedItemText: String?
+        get() {
+            val selected = dataModel.selectedItem ?: return null
+            val index = selectedIndex
+            return if (index >= 0) getItem(index) else selected.toString()
+        }
 
     /** The placeholder text shown when nothing is selected (ComboBox.PlaceholderText). */
     var placeholderText: String
@@ -322,8 +333,8 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
      * JComboBox.getRenderer / setRenderer-like: a function that turns the model's items into the strings shown in the list and the closed field. If null (the default),
      * the item's `toString()` ("" for a null item). Setting it recreates the native items (the selection does not change and no listeners are called).
      * Difference from Swing: it returns only a string, not a component like ListCellRenderer (the same element cannot be placed in
-     * two places, the closed field and the list). [getItem] / [getItemAt] return this string, but [selectedItem] and the input field of an editable combo box
-     * stay `toString()` as before, since they also represent values not in the list. The function is called per item on the UI thread every time the model changes.
+     * it cannot be placed in two places). [getItem] and [selectedItemText] return this text, but the input field of an editable combo box
+     * keeps `toString()` because it also represents values not in the list. The function is called on the UI thread for each item whenever the model changes.
      */
     var renderer: ((Any?) -> String)? = null
         set(value) {
@@ -337,8 +348,8 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         return textOf(dataModel.getElementAt(index))
     }
 
-    /** JComboBox.getItemAt-like: the display string of the item at [index]. null if out of range (the item itself is getElementAt of [model]). */
-    fun getItemAt(index: Int): String? = if (index in 0 until itemCount) getItem(index) else null
+    /** JComboBox.getItemAt-like: the item itself at [index] (not the displayed text; that is [getItem]). null if out of range. */
+    fun getItemAt(index: Int): Any? = if (index in 0 until itemCount) dataModel.getElementAt(index) else null
 
     /** JComboBox.removeItemAt-like: removes the item at [index] ([WMutableComboBoxModel.removeElementAt]). */
     fun removeItemAt(index: Int) {

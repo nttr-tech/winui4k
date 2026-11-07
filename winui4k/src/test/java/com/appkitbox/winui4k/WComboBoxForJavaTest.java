@@ -105,6 +105,27 @@ class WComboBoxForJavaTest {
     }
 
     @Test
+    void getSelectedItemAndGetItemAtReturnTheItemItselfNotTheDisplayedTextLikeJComboBox() {
+        onUiThread(() -> {
+            Country japan = new Country("Japan");
+            Country france = new Country("France");
+            WComboBox comboBox = new WComboBox(new WDefaultComboBoxModel<>(new Country[] {japan, france}));
+            assertSame(japan, comboBox.getSelectedItem());
+            comboBox.setSelectedIndex(1);
+            Country selected = (Country) comboBox.getSelectedItem();
+            assertSame(france, selected);
+            assertEquals("France", comboBox.getSelectedItemText());
+            assertSame(japan, comboBox.getItemAt(0));
+            assertSame(france, comboBox.getItemAt(1));
+            assertNull(comboBox.getItemAt(2));
+            assertNull(comboBox.getItemAt(-1));
+            comboBox.setSelectedIndex(-1);
+            assertNull(comboBox.getSelectedItem());
+            assertNull(comboBox.getSelectedItemText());
+        });
+    }
+
+    @Test
     void popupMenuListenerCanBeWrittenWithWPopupMenuAdapterAndReadWithGetPopupMenuListeners() {
         onUiThread(() -> {
             WComboBox comboBox = new WComboBox();
@@ -130,7 +151,8 @@ class WComboBoxForJavaTest {
             WDefaultComboBoxModel<Integer> numbers = new WDefaultComboBoxModel<>(new Integer[] {10, 20, 30});
             WComboBox comboBox = new WComboBox(numbers);
             assertSame(numbers, comboBox.getModel());
-            assertEquals("10", comboBox.getSelectedItem());
+            assertEquals(10, comboBox.getSelectedItem());
+            assertEquals("10", comboBox.getSelectedItemText());
             comboBox.setSelectedIndex(2);
             assertEquals(30, numbers.getSelectedItem());
             assertEquals(30, comboBox.getSelectedObjects()[0]);
@@ -195,6 +217,20 @@ class WComboBoxForJavaTest {
             assertFalse(onUiThreadGet(comboBox::isPopupVisible));
         } finally {
             UiTestHarness.detach(comboBox);
+        }
+    }
+
+    /** An item that is not a string (toString is the name). */
+    private static final class Country {
+        private final String name;
+
+        Country(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 

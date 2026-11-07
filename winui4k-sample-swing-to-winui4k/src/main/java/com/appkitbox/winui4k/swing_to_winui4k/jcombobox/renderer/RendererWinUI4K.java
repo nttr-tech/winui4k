@@ -22,7 +22,7 @@ public class RendererWinUI4K {
                 return c == null ? "" : c.name + " (" + c.code + ")";
             });
             WLabel result = new WLabel();
-            country.addActionListener(e -> result.setText("Code: " + ((Country) model.getSelectedItem()).code));
+            country.addActionListener(e -> result.setText("Code: " + ((Country) country.getSelectedItem()).code));
 
             frame.add(country);
             frame.add(result);

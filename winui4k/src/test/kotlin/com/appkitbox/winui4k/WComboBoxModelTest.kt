@@ -120,7 +120,7 @@ class WComboBoxModelTest : FunSpec() {
             } shouldBe ("Green" to listOf("DESELECTED:Red", "SELECTED:Green", "action:comboBoxChanged"))
         }
 
-        test("non-string items are displayed with toString, and the event item and getSelectedObjects are the items themselves") {
+        test("items that are not strings are displayed with toString, and selectedItem, the event's item and getSelectedObjects are the items themselves") {
             val red = Color("Red", 0xFF0000)
             val green = Color("Green", 0x00FF00)
             onUiThreadGet {
@@ -128,8 +128,14 @@ class WComboBoxModelTest : FunSpec() {
                 val items = mutableListOf<Any>()
                 comboBox.addItemListener(WItemListener { e -> items += e.item })
                 comboBox.setSelectedItem(Color("Green", 0x00FF00)) // An equal but different object selects the item in the list
-                listOf(nativeItems(comboBox), comboBox.selectedItem, items.toList(), comboBox.getSelectedObjects().single() === green)
-            } shouldContainExactly listOf(listOf("Red", "Green"), "Green", listOf(red, green), true)
+                listOf(
+                    nativeItems(comboBox),
+                    comboBox.selectedItem === green,
+                    comboBox.selectedItemText,
+                    items.toList(),
+                    comboBox.getSelectedObjects().single() === green,
+                )
+            } shouldContainExactly listOf(listOf("Red", "Green"), true, "Green", listOf(red, green), true)
         }
 
         test("when two combos share one model, selecting in one selects the same item in the other") {

@@ -287,7 +287,7 @@ final class ScrollingPages {
         combo.setSelectedIndex(0);
         combo.addListSelectionListener(() -> {
             PipsPagerButtonVisibility visibility;
-            String selectedItem = combo.getSelectedItem();
+            String selectedItem = (String) combo.getSelectedItem();
             if ("VisibleOnPointerOver".equals(selectedItem)) {
                 visibility = PipsPagerButtonVisibility.VISIBLE_ON_POINTER_OVER;
             } else if ("Collapsed".equals(selectedItem)) {
@@ -351,7 +351,7 @@ final class ScrollingPages {
         orientationCombo.setSelectedIndex(0);
         orientationCombo.addListSelectionListener(() -> {
             ScrollingContentOrientation orientation;
-            String selectedItem = orientationCombo.getSelectedItem();
+            String selectedItem = (String) orientationCombo.getSelectedItem();
             if ("Vertical".equals(selectedItem)) {
                 orientation = ScrollingContentOrientation.VERTICAL;
             } else if ("Horizontal".equals(selectedItem)) {
@@ -384,7 +384,7 @@ final class ScrollingPages {
         combo.setSelectedIndex(0);
         combo.addListSelectionListener(() -> {
             ScrollingScrollBarVisibility visibility;
-            String selectedItem = combo.getSelectedItem();
+            String selectedItem = (String) combo.getSelectedItem();
             if ("Visible".equals(selectedItem)) {
                 visibility = ScrollingScrollBarVisibility.VISIBLE;
             } else if ("Hidden".equals(selectedItem)) {
@@ -487,7 +487,7 @@ final class ScrollingPages {
         combo.setSelectedIndex(names.indexOf(initialName));
         combo.addListSelectionListener(() -> {
             ScrollBarVisibility visibility;
-            String selectedItem = combo.getSelectedItem();
+            String selectedItem = (String) combo.getSelectedItem();
             if ("Disabled".equals(selectedItem)) {
                 visibility = ScrollBarVisibility.DISABLED;
             } else if ("Hidden".equals(selectedItem)) {
