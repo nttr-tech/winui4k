@@ -342,7 +342,7 @@ class WFrameTest : FunSpec() {
                 north.parent shouldBeSameInstanceAs root
                 center.parent shouldBeSameInstanceAs root
                 (root.layout as WBorderLayout).getLayoutComponent(WBorderLayout.NORTH) shouldBeSameInstanceAs north
-                frame.contentPane.componentCount shouldBe 0 // It does not go into the default panel
+                frame.contentPane shouldBeSameInstanceAs root // getContentPane is also the replaced content (as in Swing)
                 val first = WButton("First")
                 frame.add(first, 0)
                 root.getComponent(0) shouldBeSameInstanceAs first

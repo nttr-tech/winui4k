@@ -30,7 +30,7 @@ class WFrameFocusOwnerTest : FunSpec() {
      */
     private suspend fun showFrame(afterShow: (Fields) -> Unit = {}): Pair<WFrame, Fields> {
         val (frame, fields) = onUiThreadGet {
-            val frame = WFrame(TITLE).also { frame = it }
+            val frame = newFrame()
             val nested = WTextField()
             val fields = Fields(WTextField(), WTextField(), WSpinner(), nested)
             frame.add(fields.first)
@@ -45,6 +45,12 @@ class WFrameFocusOwnerTest : FunSpec() {
         return frame to fields
     }
 
+    /** Creates a window that lays out children from left to right (WFlowLayout). */
+    private fun newFrame(): WFrame = WFrame(TITLE).also {
+        frame = it
+        it.layout = WFlowLayout()
+    }
+
     init {
         beforeSpec { UiTestHarness.sharedFrame() }
         afterTest {
@@ -55,7 +61,7 @@ class WFrameFocusOwnerTest : FunSpec() {
         context("Defaults") {
             test("focusOwner before being shown is null (not active)") {
                 onUiThread {
-                    val frame = WFrame(TITLE).also { frame = it }
+                    val frame = newFrame()
                     frame.add(WTextField())
                     frame.focusOwner.shouldBeNull()
                 }
@@ -122,7 +128,7 @@ class WFrameFocusOwnerTest : FunSpec() {
         context("Boundaries and exceptions") {
             test("the first component with isFocusable false is skipped and the next component has focus") {
                 val (frame, fields) = onUiThreadGet {
-                    val frame = WFrame(TITLE).also { frame = it }
+                    val frame = newFrame()
                     val skipped = WTextField().also { it.isFocusable = false }
                     val next = WTextField()
                     frame.add(skipped)
@@ -136,7 +142,7 @@ class WFrameFocusOwnerTest : FunSpec() {
 
             test("a window without components that can take focus keeps focusOwner null after being shown") {
                 val (frame, label) = onUiThreadGet {
-                    val frame = WFrame(TITLE).also { frame = it }
+                    val frame = newFrame()
                     val label = WLabel("Label only")
                     frame.add(label)
                     frame.isVisible = true
@@ -148,7 +154,7 @@ class WFrameFocusOwnerTest : FunSpec() {
 
             test("requestFocusInWindow before showing is false, and after showing the first component has focus") {
                 val (frame, fields) = onUiThreadGet {
-                    val frame = WFrame(TITLE).also { frame = it }
+                    val frame = newFrame()
                     val first = WTextField()
                     val second = WTextField()
                     frame.add(first)

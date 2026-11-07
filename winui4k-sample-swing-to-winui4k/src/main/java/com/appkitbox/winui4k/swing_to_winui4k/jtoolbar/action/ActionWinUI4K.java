@@ -17,7 +17,6 @@ public class ActionWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("23.3 Toolbar Action (WinUI4K)");
-            frame.setLayout(new WBorderLayout());
             WLabel status = new WLabel("Ready");
 
             WAction saveAction = new WAbstractAction("Save", Symbol.SAVE) {

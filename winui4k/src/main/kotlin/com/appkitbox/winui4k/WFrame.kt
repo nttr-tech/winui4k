@@ -58,14 +58,16 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     }
 
     /**
-     * The default root panel corresponding to JFrame's contentPane (a WPanel, that is, a vertical StackPanel). Even after replacing it with [setContentPane]
-     * or setting [layout], this returns the default panel (to keep the type WPanel). Swing's `getContentPane().add(...)` form goes into this panel, which is not
-     * on screen after the replacement, so use [add] (which goes into the current content) after replacing it.
+     * JFrame.getContentPane-like: the container of the current window content. The default is, as in JFrame, a [WLayoutPanel] with [WBorderLayout]
+     * (no padding, and [add] without a constraint goes to the center). After replacing it with [setContentPane], that container is returned. Setting [layout] does not
+     * replace the content (it replaces the content's manager), so `getContentPane().add(...)` always goes into the shown content.
+     *
+     * @throws IllegalStateException if a component that is not a container is made the content with [setContentPane]
      */
-    val contentPane: WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }
+    val contentPane: WContainer get() = currentContainer()
 
-    /** The current window content (Window.Content). Initially [contentPane], replaced by [setContentPane]. */
-    internal var content: WComponent = contentPane
+    /** The current window content (Window.Content; below the menu bar if any). The default content at first, replaced by [setContentPane]. */
+    internal var content: WComponent = WLayoutPanel(WBorderLayout())
         private set
 
     /** The root Grid with a menu row and a content row, created when [jMenuBar] is set. null until then (Window.Content is the content itself). */
@@ -126,8 +128,8 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     private val focus = FrameFocusTracker()
 
     init {
-        window.call(XamlInterop.IWindow_put_Content, contentPane.uiElement.ptr)
-        focus.track(contentPane)
+        window.call(XamlInterop.IWindow_put_Content, content.uiElement.ptr)
+        focus.track(content)
         if (title.isNotEmpty()) this.title = title
         subscribeNativeEvents()
     }
@@ -417,8 +419,8 @@ class WFrame @JvmOverloads constructor(title: String = "") :
      * - componentMoved: after the window's position on the screen changes ([setLocation], the user dragging the title bar, etc.)
      *
      * Differences from Swing:
-     * - The event's source ([WComponentEvent.getSource]) is this WFrame, but [WComponentEvent.component] is [contentPane]
-     *   (because WFrame is not a [WComponent]).
+     * - The event source ([WComponentEvent.getSource]) is this WFrame, but [WComponentEvent.component] is the current content
+     *   ([contentPane], or the component set with [setContentPane]; because WFrame is not a [WComponent]).
      * - componentShown / componentHidden are not called (receive showing with [WWindowListener.windowOpened] etc.).
      * - Swing calls later from the event queue, but this calls immediately within AppWindow.Changed (it may be called from within [setSize] etc.).
      */
@@ -604,7 +606,9 @@ class WFrame @JvmOverloads constructor(title: String = "") :
 
     /**
      * Window.pack-like: fits the client area (the part excluding the title bar) to the size of the content (Window.Content) measured without constraints
-     * (UIElement.Measure → IAppWindow2.ResizeClient). It can be used before or after it is shown. Enlarges it if smaller than [minimumSize].
+     * (UIElement.Measure -> IAppWindow2.ResizeClient). If the content is a [WLayoutPanel] (the default content, etc.), its preferred size
+     * ([WLayoutPanel.preferredSize]; decided by the layout manager, as with JFrame's pack) plus the height of the menu bar if any.
+     * Can be used before or after showing. If smaller than [minimumSize], it is enlarged.
      */
     fun pack() {
         val root = rootContent.uiElement
@@ -618,8 +622,9 @@ class WFrame @JvmOverloads constructor(title: String = "") :
             root.call(XamlInterop.IUIElement_Measure, available)
         }
         val desired = XamlStructs.getSizeFloat(root, XamlInterop.IUIElement_get_DesiredSize)
+        val size = ContentPanes.packedSize(WSize(desired[0].toDouble(), desired[1].toDouble()), content, jMenuBar)
         val scale = dpiScale
-        appWindow.resizeClient(ceil(desired[0] * scale).toInt(), ceil(desired[1] * scale).toInt())
+        appWindow.resizeClient(ceil(size.width * scale).toInt(), ceil(size.height * scale).toInt())
         growToMinimum()
     }
 
@@ -662,16 +667,19 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         )
     }
 
-    /** Container.add(Component)-like: adds a child to the current content ([contentPane], or the container replaced with [setContentPane]). */
+    /**
+     * Container.add(Component)-like: adds a child to the current content ([contentPane]). In the default content ([WBorderLayout]), it goes to the center,
+     * as in JFrame (if the center already has a child, the new child takes the center).
+     */
     fun add(component: WComponent) = currentContainer().add(component)
 
     /**
-     * Container.add(Component, Object)-like: adds a child with a constraint to the current content (the `frame.add(panel, WBorderLayout.CENTER)` form).
-     * If the content is a [WLayoutPanel] with a layout manager (after setting [layout] etc.), the constraint is passed to that manager.
+     * Container.add(Component, Object)-like: adds a child with constraints to the current content (the form `frame.add(toolBar, WBorderLayout.NORTH)`).
+     * The constraints are passed to the layout manager of the content's [WLayoutPanel] (the default is [WBorderLayout]).
      *
-     * Difference from Swing: the default content ([contentPane]) is a vertical StackPanel, not a BorderLayout, so set [layout] first.
-     * A non-null constraint passed to content without a layout manager is not silently discarded as in Swing but throws [IllegalArgumentException]
-     * (the child is not added). With a null constraint it is the same as [add].
+     * Difference from Swing: passing a non-null constraint to content without a layout manager (a [WPanel] set with [setContentPane], or a [WLayoutPanel]
+     * with a null layout) throws [IllegalArgumentException] instead of silently dropping it as Swing does (the child is not added).
+     * If the constraint is null, the same as [add].
      */
     fun add(component: WComponent, constraints: Any?) = ContentPanes.add(currentContainer(), component, constraints, -1)
 
@@ -685,33 +693,22 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     fun add(component: WComponent, constraints: Any?, index: Int) = ContentPanes.add(currentContainer(), component, constraints, index)
 
     /**
-     * JFrame.getLayout / setLayout-like: the layout manager that arranges the children of the content. The manager if the content is a [WLayoutPanel],
-     * otherwise (such as the vertical StackPanel of the default [contentPane]) null.
+     * JFrame.getLayout / setLayout-like: the layout manager that lays out the children of the content ([contentPane]). The default is [WBorderLayout], as in JFrame.
+     * null if the content is not a [WLayoutPanel].
      *
-     * When set and the content is the default [contentPane], the content is replaced with a [WLayoutPanel] with that manager and the children of [contentPane] are moved
-     * in the same order (null corresponds to Swing's null layout, a WLayoutPanel without a manager). The constraints of the moved children are null
-     * (the center for [WBorderLayout]). If the content is already a [WLayoutPanel], its manager is replaced without replacing the content.
-     *
-     * Differences from Swing:
-     * - The default is null, not BorderLayout (the default content stays a vertical StackPanel as before). To use the `frame.add(c, WBorderLayout.NORTH)`
-     *   form, set this first.
-     * - Because the content is replaced, [contentPane] is not on screen after setting it (to keep the type [WPanel]; the same as after [setContentPane]).
-     *   Add children with `frame.add(...)`.
+     * Setting it replaces the manager of the content's [WLayoutPanel] (as in JFrame, the content itself is not replaced; null is Swing's null layout).
+     * Children already added are not reported to the new manager with a null constraint (as in Swing, add them again or set it first).
      *
      * @throws IllegalStateException when [setContentPane] has made a component other than a [WLayoutPanel] the content (the content is not replaced)
      */
     var layout: WLayoutManager?
         get() = (content as? WLayoutPanel)?.layout
         set(value) {
-            val current = content
-            when {
-                current is WLayoutPanel -> current.layout = value
-                current === contentPane -> setContentPane(ContentPanes.movedToLayoutPanel(contentPane, value))
-                else -> error(
-                    "A layout manager cannot be attached to the content replaced with setContentPane (${current.javaClass.simpleName}). " +
-                        "Use a WLayoutPanel as the content",
-                )
-            }
+            val current = content as? WLayoutPanel ?: error(
+                "The content replaced with setContentPane (${content.javaClass.simpleName}) cannot have a layout manager. " +
+                    "Use a WLayoutPanel as the content",
+            )
+            current.layout = value
         }
 
     /** Container.remove(Component)-like: removes a child from the current content. */
@@ -740,11 +737,11 @@ class WFrame @JvmOverloads constructor(title: String = "") :
     )
 
     /**
-     * Equivalent to JFrame.setContentPane: replaces the root with [component] instead of the
-     * default [contentPane] (Window.Content). Useful when you want a full-bleed layout with,
-     * say, a Grid instead of StackPanel's unconstrained height measurement.
-     * Subsequent [add] / [remove] apply to [component] (if it is a container). [contentPane] stays the default panel.
+     * Equivalent to JFrame.setContentPane: replaces the window content (Window.Content; below the menu bar if any) with [component]
+     * (for example to lay out the whole area with a [WGrid]). From then on, [contentPane], [add], [remove] and [layout] act on [component].
      * If [component] is in another container, it is removed from there first (as in Swing).
+     *
+     * Difference from Swing: a component that is not a container can also be the content (then [contentPane] and [add] throw [IllegalStateException]).
      */
     fun setContentPane(component: WComponent) {
         val grid = rootGrid

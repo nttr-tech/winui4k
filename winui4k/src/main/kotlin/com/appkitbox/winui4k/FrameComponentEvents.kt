@@ -2,7 +2,7 @@ package com.appkitbox.winui4k
 
 /**
  * The list of [WFrame.addComponentListener] listeners and the code that calls them (called from size and position changes in AppWindow.Changed).
- * The event's source is [frame] and [WComponentEvent.component] is [WFrame.contentPane]. Used only by the UI thread.
+ * The event source is [frame], and [WComponentEvent.component] is its current content ([WFrame.contentPane]). Used only by the UI thread.
  */
 internal class FrameComponentEvents(private val frame: WFrame) {
     private val listeners = ArrayList<WComponentListener>()
@@ -25,7 +25,7 @@ internal class FrameComponentEvents(private val frame: WFrame) {
     }
 
     private fun fire(id: Int) {
-        val event = WComponentEvent(frame, id, frame.contentPane)
+        val event = WComponentEvent(frame, id, frame.content)
         for (listener in listeners.toList()) {
             if (id == WComponentEvent.COMPONENT_RESIZED) listener.componentResized(event) else listener.componentMoved(event)
         }

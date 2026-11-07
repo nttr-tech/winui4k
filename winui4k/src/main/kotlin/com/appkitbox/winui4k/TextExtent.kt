@@ -53,17 +53,8 @@ internal class TextExtent(private val owner: WControl) {
         if (columns > 0 || rows > 0) apply()
     }
 
-    /**
-     * The width direction (the width from [columns]). If the parent is a vertical [WPanel] that stretches column-sized children ([WPanel.stretchesColumnSizedChildren]),
-     * Width is not written (it is removed) and the field stretches to the panel's width (the preferred width [preferredSize] stays the column width).
-     * The parent is checked each time it is measured again after being added (Loaded).
-     */
-    private val widthAxis = Axis({ owner.width }, { owner.appliedWidth }) { owner.applyWidth(if (stretchedByParent()) Double.NaN else it) }
-
-    private fun stretchedByParent(): Boolean {
-        val panel = owner.parent as? WPanel ?: return false
-        return panel.stretchesColumnSizedChildren && panel.orientation == Orientation.VERTICAL
-    }
+    /** The width direction (the width from [columns]). */
+    private val widthAxis = Axis({ owner.width }, { owner.appliedWidth }, owner::applyWidth)
 
     /** The height direction (the height derived from [rows]). */
     private val heightAxis = Axis({ owner.height }, { owner.appliedHeight }, owner::applyHeight)

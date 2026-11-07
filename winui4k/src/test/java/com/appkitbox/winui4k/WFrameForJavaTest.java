@@ -147,7 +147,7 @@ class WFrameForJavaTest {
             own.add(center, WBorderLayout.CENTER);
             assertSame(root, center.getParent());
             assertSame(center, ((WBorderLayout) root.getLayout()).getLayoutComponent(WBorderLayout.CENTER));
-            assertEquals(0, own.getContentPane().getComponentCount());
+            assertSame(root, own.getContentPane());
         });
     }
 
@@ -222,6 +222,7 @@ class WFrameForJavaTest {
         WTextField field = onUiThreadGet(() -> {
             own = new WFrame(TITLE);
             WTextField name = new WTextField();
+            own.setLayout(new WFlowLayout());
             own.add(new WTextField());
             own.add(name);
             own.setVisible(true);

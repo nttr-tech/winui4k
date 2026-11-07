@@ -63,9 +63,13 @@ internal fun buildAppWindowPage(): WComponent {
 /** Creates and shows a single child window (with a close button). The basis for each demo below. */
 private fun openChildFrame(title: String): WFrame {
     val frame = WFrame(title = title)
+    frame.setContentPane(stackedContent())
     frame.isVisible = true
     return frame
 }
+
+/** The child window's content: a panel that stacks the added components vertically from the top (the default content is a BorderLayout as in JFrame, so it is replaced). */
+private fun stackedContent(): WPanel = WPanel(spacing = 12.0).also { it.margin = 24.0 }
 
 /** The "close" button always placed at the top of a child window's content. */
 private fun WFrame.addCloseButton() {
@@ -657,6 +661,7 @@ private fun buildMultipleWindowsExample(): WComponent {
     val openButton = WButton("Open another child window")
     openButton.addActionListener {
         val frame = WFrame(title = "Child window #${children.size + 1}")
+        frame.setContentPane(stackedContent())
         // Matching the real Gallery's Multiple windows demo, open it with an extended title bar
         frame.extendsContentIntoTitleBar = true
         val closeButton = WButton("Close this window")

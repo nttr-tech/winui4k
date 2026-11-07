@@ -21,7 +21,6 @@ public class MenuBarWinUI4K {
             menuBar.add(file);
             frame.setJMenuBar(menuBar);   // above the content
 
-            frame.setLayout(new WBorderLayout());   // the default content is a vertical stack, not a BorderLayout
             WTextPane text = new WTextPane();
             text.setText("Type here");
             frame.add(text, WBorderLayout.CENTER);

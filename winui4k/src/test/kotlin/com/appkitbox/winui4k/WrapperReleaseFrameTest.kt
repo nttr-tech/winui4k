@@ -52,6 +52,7 @@ class WrapperReleaseFrameTest : FunSpec() {
                 })
                 frame.addWindowStateListener { }
                 val button = WButton("Default")
+                frame.layout = WFlowLayout()
                 frame.add(button)
                 frame.add(WTextField())
                 frame.defaultButton = button
@@ -79,6 +80,7 @@ class WrapperReleaseFrameTest : FunSpec() {
                     },
                 )
                 val field = WTextField()
+                frame.layout = WFlowLayout()
                 frame.add(WButton("Before"))
                 frame.add(field)
                 frame.jMenuBar = WMenuBar() // The root subscribed to GotFocus changes to the menu's Grid

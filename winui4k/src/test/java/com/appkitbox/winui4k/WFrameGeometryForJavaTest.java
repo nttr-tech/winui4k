@@ -97,17 +97,17 @@ class WFrameGeometryForJavaTest {
             frame.setVisible(true);
             return box;
         });
-        // The client area becomes 248 x 148 (DIP), the contentPane padding of 24 added on every side, and the content lines up at 200 x 100
+        // The 200 x 100 (DIP) of the center child of the default content (BorderLayout) becomes the client area (no padding, as in JFrame)
         long deadline = System.currentTimeMillis() + 5_000;
         while (Math.abs(onUiThreadGet(() -> frame.getContentPane().getActualWidth()) - 200.0) > 1.0
                 && System.currentTimeMillis() < deadline) {
             Thread.sleep(50);
         }
         onUiThread(() -> {
-            assertEquals(200.0, frame.getContentPane().getActualWidth(), 1.0); // getActualWidth does not include the padding
+            assertEquals(200.0, frame.getContentPane().getActualWidth(), 1.0);
             assertEquals(100.0, frame.getContentPane().getActualHeight(), 1.0);
             assertEquals(200.0, panel.getActualWidth(), 0.5);
-            assertTrue(frame.getHeight() > 148, "getHeight is the height of the whole window including the title bar");
+            assertTrue(frame.getHeight() > 100, "getHeight is the height of the whole window including the title bar");
         });
     }
 }

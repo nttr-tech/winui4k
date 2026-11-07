@@ -16,9 +16,9 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Tests for [WFrame.layout], like JFrame.setLayout / getLayout, and [WFrame.add] with constraints. The expected values are decided from the result of JFrame's
- * `frame.setLayout(new BorderLayout()); frame.add(c, BorderLayout.NORTH)`
- * (only the default content not being a BorderLayout differs from Swing). Each test creates its own WFrame and disposes it at the end.
+ * Tests for the JFrame.getContentPane / setLayout / getLayout-like [WFrame.contentPane] and [WFrame.layout], and [WFrame.add] with constraints.
+ * The expected values come from the results of JFrame's `frame.add(c, BorderLayout.NORTH)` (the default content is BorderLayout) and `frame.setLayout(...)`.
+ * Each test creates its own WFrame and disposes it at the end.
  */
 @Tags("Integration")
 class WFrameLayoutTest : FunSpec() {
@@ -34,38 +34,20 @@ class WFrameLayoutTest : FunSpec() {
         }
 
         context("Defaults") {
-            test("layout is null by default (the content is the contentPane WPanel that stacks vertically and has no layout manager)") {
+            test("the content is a WLayoutPanel with WBorderLayout by default (the same as JFrame's default contentPane). getContentPane is that content, and getLayout its manager") {
                 val frame = newFrame()
                 onUiThread {
-                    frame.layout.shouldBeNull()
-                    frame.content shouldBeSameInstanceAs frame.contentPane
-                }
-            }
-        }
-
-        context("Reading and writing") {
-            test("setLayout replaces the content with a WLayoutPanel with that manager and moves the contentPane children in the same order") {
-                val frame = newFrame()
-                onUiThread {
-                    val first = WButton("One")
-                    val second = WButton("Two")
-                    frame.add(first)
-                    frame.add(second)
-                    val layout = WFlowLayout()
-                    frame.layout = layout
-                    frame.layout shouldBeSameInstanceAs layout
-                    val panel = frame.content.shouldBeInstanceOf<WLayoutPanel>()
-                    panel.layout shouldBeSameInstanceAs layout
-                    panel.components.toList() shouldBe listOf(first, second)
-                    first.parent shouldBeSameInstanceAs panel
-                    frame.contentPane.componentCount shouldBe 0
+                    val pane = frame.contentPane.shouldBeInstanceOf<WLayoutPanel>()
+                    frame.content shouldBeSameInstanceAs pane
+                    pane.layout.shouldBeInstanceOf<WBorderLayout>()
+                    frame.layout shouldBeSameInstanceAs pane.layout
+                    pane.insets shouldBe WInsets() // No padding (the same as Swing's contentPane)
                 }
             }
 
-            test("after setLayout(WBorderLayout()), add(c, NORTH) and add without a constraint go to the north and the center, as in Swing") {
+            test("add(c, NORTH) and add without a constraint, without calling setLayout, go to the north and the center, as in Swing") {
                 val frame = newFrame()
                 onUiThread {
-                    frame.layout = WBorderLayout()
                     val north = WButton("North")
                     val center = WButton("Center")
                     frame.add(north, WBorderLayout.NORTH)
@@ -73,14 +55,65 @@ class WFrameLayoutTest : FunSpec() {
                     val layout = frame.layout as WBorderLayout
                     layout.getLayoutComponent(WBorderLayout.NORTH) shouldBeSameInstanceAs north
                     layout.getLayoutComponent(WBorderLayout.CENTER) shouldBeSameInstanceAs center
+                    north.parent shouldBeSameInstanceAs frame.contentPane
+                    // Swing's string constraints (BorderLayout.SOUTH = "South") can also be used as is
+                    val south = WButton("South")
+                    frame.add(south, "South")
+                    layout.getLayoutComponent(WBorderLayout.SOUTH) shouldBeSameInstanceAs south
                 }
             }
 
-            test("if the content is already a WLayoutPanel, setLayout replaces that panel's manager without replacing the content") {
+            test("when shown with the default content, the north child is at the top of the window with the full width, and the center child takes all the rest") {
+                val frame = newFrame()
+                val (north, center) = onUiThreadGet {
+                    frame.setSize(400, 300)
+                    val north = WButton("North").also { frame.add(it, WBorderLayout.NORTH) }
+                    val center = WButton("Center").also { frame.add(it) }
+                    north to center
+                }
+                onUiThread { frame.isVisible = true }
+                eventually(5.seconds) {
+                    onUiThread {
+                        val pane = frame.contentPane
+                        pane.actualWidth shouldBeGreaterThan 300.0
+                        north.bounds.x shouldBe 0
+                        north.bounds.y shouldBe 0
+                        north.actualWidth shouldBe (pane.actualWidth plusOrMinus 0.5)
+                        north.actualHeight shouldBeGreaterThan 0.0
+                        center.bounds.y shouldBe north.bounds.height
+                        center.actualWidth shouldBe (pane.actualWidth plusOrMinus 0.5)
+                        center.actualHeight shouldBe (pane.actualHeight - north.actualHeight plusOrMinus 1.0)
+                    }
+                }
+            }
+        }
+
+        context("Reading and writing") {
+            test("setLayout replaces the content's manager without replacing the content. getContentPane stays the shown content (as in Swing)") {
+                val frame = newFrame()
+                onUiThread {
+                    val pane = frame.contentPane
+                    val first = WButton("One")
+                    frame.add(first)
+                    val layout = WFlowLayout()
+                    frame.layout = layout
+                    frame.layout shouldBeSameInstanceAs layout
+                    frame.contentPane shouldBeSameInstanceAs pane
+                    frame.content shouldBeSameInstanceAs pane
+                    (pane as WLayoutPanel).layout shouldBeSameInstanceAs layout
+                    // getContentPane().add after setLayout also goes into the shown content
+                    val second = WButton("Two")
+                    frame.contentPane.add(second)
+                    pane.components.toList() shouldBe listOf(first, second)
+                }
+            }
+
+            test("after replacing with setContentPane, getContentPane returns that container, and setLayout replaces that panel's manager") {
                 val frame = newFrame()
                 onUiThread {
                     val root = WLayoutPanel(WFlowLayout())
                     frame.setContentPane(root)
+                    frame.contentPane shouldBeSameInstanceAs root
                     val layout = WBorderLayout()
                     frame.layout = layout
                     frame.content shouldBeSameInstanceAs root
@@ -89,11 +122,10 @@ class WFrameLayoutTest : FunSpec() {
                 }
             }
 
-            test("a child put in the center with setLayout(WBorderLayout()) fills the window content below the menu bar when shown") {
+            test("a child put in the center of the default content fills the window content below the menu bar when shown") {
                 val frame = newFrame()
                 val center = onUiThreadGet {
                     frame.jMenuBar = WMenuBar().also { it.add(WMenuBarItem("File")) }
-                    frame.layout = WBorderLayout()
                     frame.setSize(400, 300)
                     WButton("Center").also { frame.add(it, WBorderLayout.CENTER) }
                 }
@@ -101,7 +133,7 @@ class WFrameLayoutTest : FunSpec() {
                 // It first appears at its natural size and expands with the layout manager's arrangement (invokeLater)
                 eventually(5.seconds) {
                     onUiThread {
-                        val panel = frame.content as WLayoutPanel
+                        val panel = frame.contentPane
                         panel.actualWidth shouldBeGreaterThan 300.0
                         center.actualWidth shouldBe (panel.actualWidth plusOrMinus 0.5)
                         center.actualHeight shouldBe (panel.actualHeight plusOrMinus 0.5)
@@ -112,16 +144,18 @@ class WFrameLayoutTest : FunSpec() {
         }
 
         context("Boundaries and exceptions") {
-            test("adding to the default content (WPanel) with a non-null constraint throws IllegalArgumentException and the child is not added. With a null constraint it is added") {
+            test("adding with a non-null constraint to a container without a manager (WPanel) set with setContentPane throws IllegalArgumentException and the child is not added. With a null constraint it is added") {
                 val frame = newFrame()
                 onUiThread {
+                    val stack = WPanel()
+                    frame.setContentPane(stack)
                     val north = WButton("North")
-                    shouldThrow<IllegalArgumentException> { frame.add(north, WBorderLayout.NORTH) }.message shouldContain "setLayout"
+                    shouldThrow<IllegalArgumentException> { frame.add(north, WBorderLayout.NORTH) }
                     shouldThrow<IllegalArgumentException> { frame.add(north, WBorderLayout.NORTH, 0) }
                     north.parent.shouldBeNull()
-                    frame.contentPane.componentCount shouldBe 0
+                    stack.componentCount shouldBe 0
                     frame.add(north, null)
-                    north.parent shouldBeSameInstanceAs frame.contentPane
+                    north.parent shouldBeSameInstanceAs stack
                 }
             }
 
@@ -142,19 +176,32 @@ class WFrameLayoutTest : FunSpec() {
                     frame.setContentPane(grid)
                     shouldThrow<IllegalStateException> { frame.layout = WBorderLayout() }
                     frame.content shouldBeSameInstanceAs grid
+                    frame.contentPane shouldBeSameInstanceAs grid
                     frame.layout.shouldBeNull()
                 }
             }
 
-            test("setLayout(null) replaces the default content with a WLayoutPanel without a manager (Swing's null layout)") {
+            test("when a component that is not a container is made the content with setContentPane, getContentPane throws IllegalStateException") {
                 val frame = newFrame()
                 onUiThread {
+                    val button = WButton("Content")
+                    frame.setContentPane(button)
+                    shouldThrow<IllegalStateException> { frame.contentPane }.message shouldContain "not a container"
+                    frame.content shouldBeSameInstanceAs button
+                }
+            }
+
+            test("setLayout(null) makes the default content a WLayoutPanel without a manager (Swing's null layout) without replacing it") {
+                val frame = newFrame()
+                onUiThread {
+                    val pane = frame.contentPane
                     val child = WButton("Child")
                     frame.add(child)
                     frame.layout = null
-                    val panel = frame.content.shouldBeInstanceOf<WLayoutPanel>()
-                    panel.layout.shouldBeNull()
-                    child.parent shouldBeSameInstanceAs panel
+                    frame.layout.shouldBeNull()
+                    frame.content shouldBeSameInstanceAs pane
+                    (pane as WLayoutPanel).layout.shouldBeNull()
+                    child.parent shouldBeSameInstanceAs pane
                 }
             }
         }

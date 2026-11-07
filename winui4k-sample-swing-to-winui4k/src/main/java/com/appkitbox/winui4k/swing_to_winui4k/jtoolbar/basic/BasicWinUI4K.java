@@ -13,7 +13,6 @@ public class BasicWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("23.2 Toolbar (WinUI4K)");
-            frame.setLayout(new WBorderLayout());       // the default content of WFrame is not a BorderLayout
             WLabel status = new WLabel("Click a toolbar button");
 
             WAppBarButton newButton = new WAppBarButton("New", Symbol.DOCUMENT);

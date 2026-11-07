@@ -42,10 +42,13 @@ class WDialogInputWidthTest : FunSpec() {
         }
     }
 
-    /** Opens, without blocking, a dialog with the text fields [fields] added with [WContentDialog.add]. */
-    private fun showDialogWith(owner: WComponent, field: WComponent) = onUiThread {
+    /**
+     * Opens, without blocking, a dialog with a header in the north and [field] added with [WContentDialog.add] using [layout] (in the center of the default WBorderLayout if null).
+     */
+    private fun showDialogWith(owner: WComponent, field: WComponent, layout: WLayoutManager? = null) = onUiThread {
         val dialog = WContentDialog("Rename")
-        dialog.add(WLabel("New name:"))
+        if (layout != null) dialog.layout = layout
+        dialog.add(WLabel("New name:"), if (layout == null) WBorderLayout.NORTH else null)
         dialog.add(field)
         dialog.closeButtonText = "Cancel"
         dialog.show(owner) { }
@@ -75,7 +78,7 @@ class WDialogInputWidthTest : FunSpec() {
             }
         }
 
-        test("a WTextField with columns added to a WContentDialog is not centered and spans the dialog's width") {
+        test("a WTextField with columns added to the center of WContentDialog's default content (WBorderLayout) spans the dialog's width, as in JDialog") {
             withOwner { owner ->
                 val field = onUiThreadGet { WTextField(16).also { it.text = "report.txt" } }
                 showDialogWith(owner, field)
@@ -88,42 +91,11 @@ class WDialogInputWidthTest : FunSpec() {
             }
         }
 
-        test("a WTextField with an explicit width added to a WContentDialog keeps that width") {
+        test("a WTextField with an explicit width added to a WContentDialog with WFlowLayout keeps that width") {
             withOwner { owner ->
                 val field = onUiThreadGet { WTextField(16).also { it.width = EXPLICIT_WIDTH } }
-                showDialogWith(owner, field)
+                showDialogWith(owner, field, WFlowLayout())
                 inspectAndClose(owner) { extent -> extent.width shouldBe (EXPLICIT_WIDTH plusOrMinus TOLERANCE) }
-            }
-        }
-
-        test("moving a WTextField with columns used in a WContentDialog to a normal vertical WPanel returns it to the column width") {
-            withOwner { owner ->
-                val field = onUiThreadGet { WTextField(16) }
-                showDialogWith(owner, field)
-                var filled = 0.0
-                inspectAndClose(owner) { extent ->
-                    extent.rightInset shouldBe (0.0 plusOrMinus TOLERANCE)
-                    filled = extent.width
-                }
-                val panel = onUiThreadGet {
-                    WPanel().also { panel ->
-                        field.parent?.let { (it as WContainer).remove(field) }
-                        panel.add(field)
-                    }
-                }
-                UiTestHarness.attachAndAwaitLoaded(panel)
-                try {
-                    eventually(3.seconds) {
-                        val (actual, preferred) = onUiThreadGet {
-                            panel.updateLayout()
-                            field.actualWidth to field.preferredSize().width
-                        }
-                        actual shouldBe (preferred plusOrMinus TOLERANCE)
-                        filled shouldBeGreaterThan actual
-                    }
-                } finally {
-                    UiTestHarness.detach(panel)
-                }
             }
         }
     }

@@ -11,7 +11,7 @@ public class BorderWinUI4K {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("30.3 BorderLayout (WinUI4K)");
 
-            frame.setLayout(new WBorderLayout());                // required: the default is not WBorderLayout
+            // the content pane of a WFrame uses WBorderLayout by default
             frame.add(new WButton("North"), WBorderLayout.NORTH);
             frame.add(new WButton("South"), WBorderLayout.SOUTH);
             frame.add(new WButton("West"), WBorderLayout.WEST);

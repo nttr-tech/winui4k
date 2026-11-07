@@ -6,7 +6,9 @@ import com.appkitbox.winui4k.WColor;
 import com.appkitbox.winui4k.WContentDialog;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
+import com.appkitbox.winui4k.WGridLayout;
 import com.appkitbox.winui4k.WLabel;
+import com.appkitbox.winui4k.WLayoutPanel;
 import com.appkitbox.winui4k.WTextField;
 import com.appkitbox.winui4k.WinUiUtilities;
 
@@ -27,9 +29,11 @@ public class ValidateWinUI4K {
             WLabel error = new WLabel(" ");
             error.setForeground(WColor.RED);
             WContentDialog dialog = new WContentDialog(frame, "Age", true);
-            dialog.add(new WLabel("Your age:"));
-            dialog.add(age);
-            dialog.add(error);
+            WLayoutPanel content = new WLayoutPanel(new WGridLayout(0, 1, 4, 4));
+            content.add(new WLabel("Your age:"));
+            content.add(age);
+            content.add(error);
+            dialog.add(content);
             dialog.setPrimaryButtonText("OK");
             dialog.setDefaultButton(ContentDialogButton.PRIMARY);
             dialog.addButtonClickListener(e -> {

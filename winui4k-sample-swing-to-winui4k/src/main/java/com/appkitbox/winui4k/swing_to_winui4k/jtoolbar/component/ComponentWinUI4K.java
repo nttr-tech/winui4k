@@ -13,7 +13,6 @@ public class ComponentWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("23.5 Toolbar Components (WinUI4K)");
-            frame.setLayout(new WBorderLayout());
             WLabel status = new WLabel("Font: Segoe UI");
 
             WComboBox font = new WComboBox(new String[] {"Segoe UI", "Yu Gothic UI", "Consolas"});

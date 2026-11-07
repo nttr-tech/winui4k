@@ -101,6 +101,32 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
     }
 
     /**
+     * Container.add(Component, Object)-like: adds a child with constraints at the end (the form `getContentPane().add(c, WBorderLayout.NORTH)`).
+     * The constraints are passed to the layout manager of the [WLayoutPanel]. If the manager rejects the constraints and throws, the child is not added.
+     *
+     * Difference from Swing: passing a non-null constraint to a container that does not lay out with a layout manager ([WPanel], [WGrid], etc.; anything other than [WLayoutPanel])
+     * throws [IllegalArgumentException] instead of silently dropping it (the child is not added). If the constraint is null, the same as [add].
+     */
+    fun add(component: WComponent, constraints: Any?) {
+        add(component, constraints, -1)
+    }
+
+    /**
+     * Container.add(Component, Object, int)-like: adds a child with constraints at position [index] (-1 for the end).
+     * IllegalArgumentException if [index] is out of range. Constraints are handled the same way as add(component, constraints).
+     */
+    fun add(component: WComponent, constraints: Any?, index: Int) {
+        require(constraints == null || acceptsConstraints) {
+            "${javaClass.simpleName} does not lay out its children with a layout manager, so the constraint ($constraints) cannot be used. " +
+                "Use a WLayoutPanel, or add without a constraint"
+        }
+        addImpl(component, constraints, index)
+    }
+
+    /** Whether it accepts the constraints of add(component, constraints) (true only for [WLayoutPanel]). */
+    internal open val acceptsConstraints: Boolean get() = false
+
+    /**
      * The common part of adding (Container.addImpl-style). Checks the position, removes the child from its old parent, puts it into the native side and the Kotlin list,
      * and then calls [onComponentAdded] (notifying the layout manager). If that throws, the addition is undone and the exception rethrown.
      */

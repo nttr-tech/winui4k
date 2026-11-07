@@ -14,7 +14,6 @@ public class OverflowWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("23.6 Overflow Menu (WinUI4K)");
-            frame.setLayout(new WBorderLayout());
             WLabel status = new WLabel("Ready");
 
             WCommandBar toolBar = new WCommandBar();

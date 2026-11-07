@@ -347,7 +347,7 @@ class WFrameStateTest : FunSpec() {
             eventually(5.seconds) { onUiThreadGet { menuBar.actualHeight } shouldBeGreaterThan 0.0 }
             onUiThread {
                 frame.pack()
-                val expected = ceil((menuBar.actualHeight + 148) * scale).toInt()
+                val expected = ceil((menuBar.actualHeight + 100) * scale).toInt() // The default content (BorderLayout) has no padding
                 frame.appWindow.clientSize.height shouldBeGreaterThanOrEqual expected - 1
                 frame.appWindow.clientSize.height.toDouble() shouldBe (expected.toDouble() plusOrMinus 1.0)
             }

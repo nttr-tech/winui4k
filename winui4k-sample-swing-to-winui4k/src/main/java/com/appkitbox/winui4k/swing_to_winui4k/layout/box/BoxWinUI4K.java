@@ -1,6 +1,5 @@
 package com.appkitbox.winui4k.swing_to_winui4k.layout.box;
 
-import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WBox;
 import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WComponent;
@@ -13,7 +12,6 @@ public class BoxWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("30.5 BoxLayout and Box (WinUI4K)");
-            frame.setLayout(new WBorderLayout());                // the layout that JFrame has by default
 
             // a row of buttons pushed to the right by glue
             WLayoutPanel buttons = WBox.createHorizontalBox();

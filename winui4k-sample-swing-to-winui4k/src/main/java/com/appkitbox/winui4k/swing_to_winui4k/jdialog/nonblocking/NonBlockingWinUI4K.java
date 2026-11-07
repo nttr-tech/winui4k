@@ -23,6 +23,7 @@ public class NonBlockingWinUI4K {
             WTextField text = new WTextField(12);
             text.setText("needle");
             WContentDialog dialog = new WContentDialog(frame, "Find", true);   // modeless is not available
+            dialog.setLayout(new WFlowLayout());
             dialog.add(text);
             dialog.setPrimaryButtonText("Find");
             dialog.setCloseButtonText("Close");

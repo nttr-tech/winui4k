@@ -8,6 +8,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.doubles.plusOrMinus
+import io.kotest.matchers.doubles.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.ints.shouldBeInRange
 import io.kotest.matchers.nulls.shouldBeNull
@@ -139,23 +141,25 @@ class WFrameGeometryTest : FunSpec() {
             }
         }
 
-        test("pack before it is shown fits the client area to the content's preferred size (including padding)") {
+        test("pack before showing fits the client area to the preferred size of the default content (WBorderLayout)") {
             val frame = newFrame()
-            onUiThread {
-                frame.add(box(200.0, 100.0))
-                frame.pack()
+            val center = onUiThreadGet {
+                box(200.0, 100.0).also {
+                    frame.add(it)
+                    frame.pack()
+                }
             }
             show(frame)
             val scale = scaleOf(frame)
             onUiThread {
-                // contentPane is a StackPanel with padding 24, so the content 200 x 100 plus 24 on every side
-                frame.appWindow.clientSize shouldBe WDimension(ceil(248 * scale).toInt(), ceil(148 * scale).toInt())
+                // As in JFrame, the content has no padding, so the center child's 200 x 100 becomes the client area as is
+                frame.appWindow.clientSize shouldBe WDimension(ceil(200 * scale).toInt(), ceil(100 * scale).toInt())
             }
-            // After it is shown, layout lines up the content in the client area (ActualWidth / ActualHeight do not include the padding)
             eventually(5.seconds) {
                 onUiThread {
                     frame.contentPane.actualWidth shouldBe (200.0 plusOrMinus 1.0)
                     frame.contentPane.actualHeight shouldBe (100.0 plusOrMinus 1.0)
+                    center.actualWidth shouldBe (200.0 plusOrMinus 1.0)
                 }
             }
         }
@@ -163,11 +167,13 @@ class WFrameGeometryTest : FunSpec() {
         test("pack after it is shown enlarges it by the added children. Content such as buttons gets the same size as pack before it is shown") {
             val frame = newFrame()
             val before = onUiThreadGet {
-                frame.add(WButton("OK"))
+                frame.add(WButton("OK"), WBorderLayout.NORTH)
                 frame.add(WTextField("Text"))
                 frame.pack()
                 frame.appWindow.clientSize
             }
+            before.width shouldBeGreaterThan 0
+            before.height shouldBeGreaterThan 0
             show(frame)
             val scale = scaleOf(frame)
             onUiThread {
@@ -178,12 +184,47 @@ class WFrameGeometryTest : FunSpec() {
             val other = newFrame("$TITLE 2")
             show(other)
             onUiThread {
-                other.add(box(200.0, 100.0))
+                other.add(box(200.0, 100.0), WBorderLayout.NORTH)
                 other.pack()
-                other.add(box(300.0, 50.0))
+                other.add(box(300.0, 50.0), WBorderLayout.SOUTH)
                 other.pack()
-                // The spacing between children is 12: height is 24 + 100 + 12 + 50 + 24, width is the wider 300 + 48
-                other.appWindow.clientSize shouldBe WDimension(ceil(348 * scale).toInt(), ceil(210 * scale).toInt())
+                // North and south of the BorderLayout: the height is 100 + 50, and the width is the wider 300
+                other.appWindow.clientSize shouldBe WDimension(ceil(300 * scale).toInt(), ceil(150 * scale).toInt())
+            }
+        }
+
+        test("pack of a window with a menu bar adds the content's preferred size to the menu bar's height") {
+            val frame = newFrame()
+            val menuBar = onUiThreadGet {
+                WMenuBar().also {
+                    it.add(WMenuBarItem("File"))
+                    frame.jMenuBar = it
+                    frame.add(box(200.0, 100.0))
+                }
+            }
+            show(frame)
+            val scale = scaleOf(frame)
+            onUiThread {
+                frame.pack()
+                val menuHeight = menuBar.actualHeight
+                menuHeight shouldBeGreaterThan 0.0
+                frame.appWindow.clientSize.height shouldBeInRange
+                    ceil((menuHeight + 100) * scale).toInt() - 1..ceil((menuHeight + 100) * scale).toInt() + 1
+                frame.appWindow.clientSize.width shouldBeGreaterThanOrEqual ceil(200 * scale).toInt()
+            }
+        }
+
+        test("pack of a vertical WPanel set with setContentPane uses the preferred size including the padding and the gaps between children") {
+            val frame = newFrame()
+            show(frame)
+            val scale = scaleOf(frame)
+            onUiThread {
+                frame.setContentPane(WPanel(spacing = 12.0).also { it.margin = 24.0 })
+                frame.add(box(200.0, 100.0))
+                frame.add(box(300.0, 50.0))
+                frame.pack()
+                // The height is 24 + 100 + 12 + 50 + 24, and the width is the wider 300 + 48
+                frame.appWindow.clientSize shouldBe WDimension(ceil(348 * scale).toInt(), ceil(210 * scale).toInt())
             }
         }
 

@@ -86,6 +86,17 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
     /** Whether the preferred size is written to MinWidth / MinHeight as scroll content. */
     private var scrollMinimumApplied = false
 
+    /**
+     * Whether it is shown as the content of a [WContentDialog] (WContentDialog writes it). Then, to expand the dialog to the preferred size as JDialog's pack does,
+     * the preferred size is set as MinWidth / MinHeight as with scroll content, and it is laid out with the larger of that and the dialog's size.
+     */
+    internal var isDialogContent = false
+        set(value) {
+            if (field == value) return
+            field = value
+            revalidate()
+        }
+
     internal fun noteAssignedSize(width: Double, height: Double) {
         assignedSize = WSize(width, height)
     }
@@ -115,21 +126,8 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
         scheduleLayout()
     }
 
-    /**
-     * Adds a child with constraints (like Container.add(Component, Object)). If the manager rejects the constraints and throws,
-     * the child is not added.
-     */
-    fun add(component: WComponent, constraints: Any?) {
-        addImpl(component, constraints, -1)
-    }
-
-    /**
-     * Adds a child with constraints at position [index] (-1 is the end) (like Container.add(Component, Object, int)).
-     * IllegalArgumentException if [index] is out of range.
-     */
-    fun add(component: WComponent, constraints: Any?, index: Int) {
-        addImpl(component, constraints, index)
-    }
+    /** add with constraints passes them to the layout manager (with a null layout, they are not used, as in Swing). */
+    override val acceptsConstraints: Boolean get() = true
 
     override fun onComponentAdded(component: WComponent, constraints: Any?) {
         layout?.addLayoutComponent(component, constraints)
@@ -286,7 +284,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : W
                 assigned != null -> assigned.height
                 else -> actualHeight
             }
-            val inScroll = isScrollContent
+            val inScroll = isScrollContent || isDialogContent
             if (inScroll) {
                 val fitted = fitScrollContent(manager, containerWidth, containerHeight)
                 containerWidth = fitted.width

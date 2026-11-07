@@ -14,7 +14,6 @@ public class ToggleWinUI4K {
     public static void main(String[] args) {
         WinUiUtilities.invokeLater(() -> {
             WFrame frame = new WFrame("23.4 Toggle Buttons (WinUI4K)");
-            frame.setLayout(new WBorderLayout());
             WLabel status = new WLabel("Bold: true");
 
             WCommandBar toolBar = new WCommandBar();

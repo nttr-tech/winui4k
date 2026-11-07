@@ -74,11 +74,11 @@ enum class ContentDialogButton(internal val native: Int) {
  * Opening and closing can be received with [addDialogListener] (Opened, Closing, Closed) and buttons with [addButtonClickListener]; both can
  * cancel the closing (to validate input and so on).
  *
- * As with JDialog, the content can be built either by [add]ing to [contentPane] or by putting one component in [content].
+ * The content can be built either by [add]ing to [contentPane] as in JDialog (the default is [WBorderLayout], and [add] without a constraint goes to the center), or by putting
+ * one component into [content].
  * Setting [defaultCloseOperation] to [DO_NOTHING_ON_CLOSE] keeps the Esc key and the close button from closing it.
  *
  * Differences from Swing (content and position):
- * - [contentPane] is a vertical StackPanel ([WPanel]), not a BorderLayout. To use [add] with constraints, set [layout] first.
  * - The dialog size is always decided by its content and its position is the center of the owner window ([pack] and [setLocationRelativeTo] do nothing).
  */
 class WContentDialog @JvmOverloads constructor(title: String = "", content: WComponent? = null) :
@@ -133,17 +133,23 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         }
 
     /**
-     * The default content corresponding to JDialog's contentPane (a vertical StackPanel). While [content] is null, this becomes the dialog content if it has children
-     * (while it has no children, no content is shown as before; it switches on [add] and on opening). Even after putting another component in [content] or
-     * setting [layout], this returns the default panel (the same as WFrame.contentPane).
-     * Text fields whose width is decided by the column count ([WTextField.columns] etc.) stretch to the dialog's width, as in the center of a JDialog's BorderLayout
-     * (they are not centered as in the vertical stack of a [WFrame]; children with an explicit [WComponent.width] are centered at that width).
+     * The content corresponding to JDialog's default contentPane (a [WLayoutPanel] with [WBorderLayout]). While [content] is null, this becomes the dialog's content
+     * if it has children (no content is shown while it has none; it switches on [add] and when opening).
      */
-    val contentPane: WPanel = WPanel(spacing = 12.0).also { it.stretchesColumnSizedChildren = true }
+    private val defaultContentPane = WLayoutPanel(WBorderLayout())
 
     /**
-     * The dialog's content (ContentControl.Content). While null (the default), [contentPane] is the content (when it has children).
-     * Setting [layout] puts that [WLayoutPanel] here.
+     * JDialog.getContentPane-like: the current content container. If [content] is null, the default content (as in JDialog, a [WLayoutPanel] with
+     * [WBorderLayout]; [add] without a constraint goes to the center), and if a container is put into [content], that container. Setting [layout] does not
+     * replace the content, so `getContentPane().add(...)` always goes into the shown content.
+     *
+     * @throws IllegalStateException if a component that is not a container is put into [content]
+     */
+    val contentPane: WContainer get() = currentContainer()
+
+    /**
+     * The dialog's content (ContentControl.Content; corresponds to JDialog.setContentPane). While null (default), the default content ([contentPane])
+     * is the content (when it has children).
      */
     var content: WComponent? = null
         set(value) {
@@ -151,27 +157,38 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
             updateNativeContent()
         }
 
-    /** Sets the native content to [content], or to [contentPane] if it has children and [content] is null (removes it if neither). */
+    /** The component currently shown as the native content (null if none). */
+    private var shownContent: WComponent? = null
+
+    /**
+     * Makes the native content [content], or, if it is null, the default content if it has children (removes it if neither). A [WLayoutPanel] content
+     * expands the dialog to the layout manager's preferred size, as JDialog's pack does ([WLayoutPanel.isDialogContent]).
+     */
     private fun updateNativeContent() {
-        val shown = content ?: contentPane.takeIf { it.componentCount > 0 }
+        val shown = content ?: defaultContentPane.takeIf { it.componentCount > 0 }
+        if (shown !== shownContent) {
+            (shownContent as? WLayoutPanel)?.isDialogContent = false
+            (shown as? WLayoutPanel)?.isDialogContent = true
+            shownContent = shown
+        }
         contentControl.call(XamlInterop.IContentControl_put_Content, shown?.uiElement?.ptr)
     }
 
-    /** Where children are added (the current content). [contentPane] if [content] is null. [IllegalStateException] if it is not a container. */
-    private fun currentContainer(): WContainer = (content ?: contentPane) as? WContainer ?: error(
+    /** Where children are added (the current content). The default content if [content] is null. [IllegalStateException] if it is not a container. */
+    private fun currentContainer(): WContainer = (content ?: defaultContentPane) as? WContainer ?: error(
         "The content put in content (${content?.javaClass?.simpleName}) is not a container, so children cannot be added. Add them directly to the content's container",
     )
 
-    /** Container.add(Component)-like: adds a child to the current content ([contentPane] if [content] is null). */
+    /** Container.add(Component)-like: adds a child to the current content ([contentPane]). In the default content it goes to the center, as in JDialog. */
     fun add(component: WComponent) {
         currentContainer().add(component)
         updateNativeContent()
     }
 
     /**
-     * Container.add(Component, Object)-like: adds a child with a constraint to the current content. Handled the same as WFrame.add(component, constraints):
-     * a non-null constraint passed to content without a layout manager (the default [contentPane] etc.) throws [IllegalArgumentException]
-     * (unlike Swing, it is not silently discarded; set [layout] first).
+     * Container.add(Component, Object)-like: adds a child with constraints to the current content (the form `dialog.add(buttons, WBorderLayout.SOUTH)`).
+     * It is handled the same way as WFrame.add(component, constraints): passing a non-null constraint to content without a layout manager (a [WPanel] put into [content] or
+     * a null layout) throws [IllegalArgumentException] (unlike Swing, it is not silently dropped).
      */
     fun add(component: WComponent, constraints: Any?) = add(component, constraints, -1)
 
@@ -194,24 +211,19 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     }
 
     /**
-     * JDialog.getLayout / setLayout-like: the layout manager that arranges the children of the content. The manager if the content is a [WLayoutPanel],
-     * otherwise (the default [contentPane] etc.) null (unlike Swing, the default is not BorderLayout).
-     * When set and the content is the default [contentPane], the content ([content]) is replaced with a [WLayoutPanel] with that manager and
-     * the children of [contentPane] are moved in the same order (with null constraints; the center for [WBorderLayout]). If the content is already a [WLayoutPanel], its manager is replaced.
+     * JDialog.getLayout / setLayout-like: the layout manager that lays out the children of the content ([contentPane]). The default is [WBorderLayout], as in JDialog.
+     * null if the content is not a [WLayoutPanel]. Setting it replaces the manager of the content's [WLayoutPanel]
+     * (as in JDialog, the content itself is not replaced; null is Swing's null layout).
      *
      * @throws IllegalStateException when a component other than a [WLayoutPanel] is in [content] (the content is not replaced)
      */
     var layout: WLayoutManager?
-        get() = (content as? WLayoutPanel)?.layout
+        get() = ((content ?: defaultContentPane) as? WLayoutPanel)?.layout
         set(value) {
-            val current = content
-            when {
-                current is WLayoutPanel -> current.layout = value
-                current == null || current === contentPane -> content = ContentPanes.movedToLayoutPanel(contentPane, value)
-                else -> error(
-                    "A layout manager cannot be attached to the content put in content (${current.javaClass.simpleName}). Use a WLayoutPanel as the content",
-                )
-            }
+            val current = (content ?: defaultContentPane) as? WLayoutPanel ?: error(
+                "The content put in content (${content?.javaClass?.simpleName}) cannot have a layout manager. Use a WLayoutPanel as the content",
+            )
+            current.layout = value
         }
 
     /** Window.pack-like: does nothing. The size of a ContentDialog is decided by its content every time it opens (unlike Swing, the size cannot be specified). */

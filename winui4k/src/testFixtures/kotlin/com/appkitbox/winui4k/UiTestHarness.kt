@@ -31,6 +31,8 @@ object UiTestHarness {
         lateinit var created: WFrame
         onUiThread {
             created = WFrame("winui4k tests")
+            // Stack each test's components vertically (the default content is WBorderLayout as in JFrame, which shows only one child in the center)
+            created.setContentPane(WPanel(spacing = 12.0).also { it.margin = 24.0 })
             // Window.Activate (isVisible = true) brings the window to the foreground and steals
             // focus, so show it inactively via AppWindow.Show(false) instead (WebView2
             // initialization needs a visible window, so it can't stay hidden)
@@ -48,7 +50,7 @@ object UiTestHarness {
     @JvmStatic
     fun sharedFrame(): WFrame = ensureFrame()
 
-    /** Adds [component] to the shared window's contentPane. */
+    /** Adds [component] to the content of the shared window (a vertical WPanel). */
     @JvmStatic
     fun attach(component: WComponent) {
         val frame = ensureFrame()

@@ -95,7 +95,7 @@ class WFrameInitialFocusTest : FunSpec() {
 
             test("the keyboard focus rectangle is not shown either when a window operated with the keyboard becomes active again and gets the initial focus") {
                 // A window with no focusable component at first. Send a key to make the window's last input the keyboard
-                val (frame, _) = show { frame -> WLabel("Label only").also { frame.add(it) } }
+                val (frame, _) = show { frame -> WLabel("Label only").also { frame.add(it, WBorderLayout.NORTH) } }
                 TestKeyboard.pressIn(TITLE, VK_F13, SCAN_F13)
                 val button = onUiThreadGet { WButton("OK").also { frame.add(it) } }
                 eventually(5.seconds) { onUiThreadGet { button.actualHeight > 0.0 }.shouldBeTrue() }
@@ -113,6 +113,7 @@ class WFrameInitialFocusTest : FunSpec() {
             test("radio buttons in a button group put the initial focus on the selected button, not the first one (as in Swing)") {
                 val buttons = onUiThreadGet { listOf(WRadioButton("Small"), WRadioButton("Medium", true), WRadioButton("Large")) }
                 val (frame, _) = show { frame ->
+                    frame.layout = WFlowLayout()
                     val group = WButtonGroup()
                     buttons.forEach {
                         group.add(it)
@@ -127,6 +128,7 @@ class WFrameInitialFocusTest : FunSpec() {
             test("if nothing is selected in a button group, the initial focus goes to the first button") {
                 val buttons = onUiThreadGet { listOf(WRadioButton("Small"), WRadioButton("Medium")) }
                 val (frame, _) = show { frame ->
+                    frame.layout = WFlowLayout()
                     val group = WButtonGroup()
                     buttons.forEach {
                         group.add(it)
@@ -142,6 +144,7 @@ class WFrameInitialFocusTest : FunSpec() {
                     listOf(WRadioButton("Small"), WRadioButton("Medium", true).also { it.isFocusable = false })
                 }
                 val (frame, _) = show { frame ->
+                    frame.layout = WFlowLayout()
                     val group = WButtonGroup()
                     buttons.forEach {
                         group.add(it)

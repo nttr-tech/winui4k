@@ -2,6 +2,7 @@ package com.appkitbox.winui4k.swing_to_winui4k.jdialog.basic;
 
 import com.appkitbox.winui4k.ContentDialogButton;
 import com.appkitbox.winui4k.ContentDialogResult;
+import com.appkitbox.winui4k.WBorderLayout;
 import com.appkitbox.winui4k.WContentDialog;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
@@ -24,8 +25,8 @@ public class BasicWinUI4K {
             WTextField name = new WTextField(16);
             name.setText("report.txt");
             WContentDialog dialog = new WContentDialog(frame, "Rename", true);   // always modal
-            dialog.add(new WLabel("New name:"));
-            dialog.add(name);
+            dialog.add(new WLabel("New name:"), WBorderLayout.NORTH);
+            dialog.add(name, WBorderLayout.CENTER);
             dialog.setPrimaryButtonText("OK");
             dialog.setCloseButtonText("Cancel");
             dialog.setDefaultButton(ContentDialogButton.PRIMARY);

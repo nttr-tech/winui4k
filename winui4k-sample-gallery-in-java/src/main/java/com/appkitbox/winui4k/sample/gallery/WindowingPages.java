@@ -72,8 +72,16 @@ final class WindowingPages {
     /** Creates and shows a single child window (with a close button). The basis for each demo below. */
     private static WFrame openChildFrame(String title) {
         WFrame frame = new WFrame(title);
+        frame.setContentPane(stackedContent());
         frame.setVisible(true);
         return frame;
+    }
+
+    /** The child window's content: a panel that stacks the added components vertically from the top (the default content is a BorderLayout as in JFrame, so it is replaced). */
+    private static WPanel stackedContent() {
+        WPanel panel = new WPanel(12.0);
+        panel.setMargin(24.0);
+        return panel;
     }
 
     /** The "close" button always placed at the top of a child window's content. */
@@ -741,6 +749,7 @@ final class WindowingPages {
         WButton openButton = new WButton("Open another child window");
         openButton.addActionListener(() -> {
             WFrame frame = new WFrame("Child window #" + (children.size() + 1));
+            frame.setContentPane(stackedContent());
             // Matching the real Gallery's Multiple windows demo, open it with an extended title bar
             frame.setExtendsContentIntoTitleBar(true);
             WButton closeButton = new WButton("Close this window");

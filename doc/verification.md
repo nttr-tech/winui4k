@@ -233,6 +233,11 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
     (components/elements/UIElementLayout.cpp の PropagateOnPathInternal)。WLayoutPanel.setBounds は、Canvas の子の大きさを替えたら
     その子孫のレイアウト要素の InvalidateMeasure を呼ぶ (WComponent.remeasureInCanvas)。レイアウト要素の子孫が無い空の Canvas は測り直されない
   - Canvas の子のレイアウト要素 (Border・Control・TextBlock など) や、ScrollViewer・Border の中の Canvas は、普通に測り直される
+- ウィンドウやダイアログの中身が WLayoutPanel (Canvas) のときの大きさを E2E テストで確かめた (`WFrameGeometryTest`・`WContentDialogPaneTest`)
+  - Canvas の DesiredSize は Width / Height を書かない限り 0 なので、Window.Content を制約なしで測る pack は 0 x 0 になる。
+    WFrame.pack は中身が WLayoutPanel なら、レイアウトを済ませてレイアウト マネージャーの希望の大きさ (とメニュー バーの高さ) を使う
+  - ContentDialog は中身の DesiredSize で幅を決める (最小 320・最大 548) ので、Canvas の中身ではダイアログが最小の幅になり、それより
+    広い子は切れる。中身の WLayoutPanel の MinWidth / MinHeight に希望の大きさを書く (スクロールの中身と同じ) と、ダイアログが広がる
 - WImageIcon (ImageIcon + BitmapImage) の大きさを E2E テストで確かめた (`WImageIconLayoutTest`)
   - BitmapImage の読み込みは非同期で、読み込む前の ImageIcon の DesiredSize は 0。WLayoutPanel が先に測ると 0 の大きさで並べたままになるので、
     BitmapImage.ImageOpened でアイコンを表示している部品を revalidate する
