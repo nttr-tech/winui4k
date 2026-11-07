@@ -325,8 +325,7 @@ class WInkToolbar : WControl(
         activeToolChangedAdapters.add(listener, adapter)
     }
 
-    @JvmName("addActiveToolChangedListener")
-    fun addActiveToolChangedListenerForJava(listener: Runnable) {
+    fun addActiveToolChangedListener(listener: Runnable) {
         activeToolChangedListeners += listener
     }
 
@@ -336,8 +335,7 @@ class WInkToolbar : WControl(
         activeToolChangedAdapters.remove(listener)?.let { activeToolChangedListeners -= it }
     }
 
-    @JvmName("removeActiveToolChangedListener")
-    fun removeActiveToolChangedListenerForJava(listener: Runnable) {
+    fun removeActiveToolChangedListener(listener: Runnable) {
         activeToolChangedListeners -= listener
     }
 
@@ -349,8 +347,7 @@ class WInkToolbar : WControl(
         inkDrawingAttributesChangedAdapters.add(listener, adapter)
     }
 
-    @JvmName("addInkDrawingAttributesChangedListener")
-    fun addInkDrawingAttributesChangedListenerForJava(listener: Runnable) {
+    fun addInkDrawingAttributesChangedListener(listener: Runnable) {
         inkDrawingAttributesChangedListeners += listener
     }
 
@@ -360,8 +357,7 @@ class WInkToolbar : WControl(
         inkDrawingAttributesChangedAdapters.remove(listener)?.let { inkDrawingAttributesChangedListeners -= it }
     }
 
-    @JvmName("removeInkDrawingAttributesChangedListener")
-    fun removeInkDrawingAttributesChangedListenerForJava(listener: Runnable) {
+    fun removeInkDrawingAttributesChangedListener(listener: Runnable) {
         inkDrawingAttributesChangedListeners -= listener
     }
 
@@ -377,8 +373,7 @@ class WInkToolbar : WControl(
         eraseAllClickedAdapters.add(listener, adapter)
     }
 
-    @JvmName("addEraseAllClickedListener")
-    fun addEraseAllClickedListenerForJava(listener: Runnable) {
+    fun addEraseAllClickedListener(listener: Runnable) {
         eraseAllClickedListeners += listener
     }
 
@@ -388,8 +383,7 @@ class WInkToolbar : WControl(
         eraseAllClickedAdapters.remove(listener)?.let { eraseAllClickedListeners -= it }
     }
 
-    @JvmName("removeEraseAllClickedListener")
-    fun removeEraseAllClickedListenerForJava(listener: Runnable) {
+    fun removeEraseAllClickedListener(listener: Runnable) {
         eraseAllClickedListeners -= listener
     }
 
@@ -401,8 +395,7 @@ class WInkToolbar : WControl(
         stencilCheckedAdapters.add(listener, adapter)
     }
 
-    @JvmName("addStencilCheckedListener")
-    fun addStencilCheckedListenerForJava(listener: Consumer<InkToolbarStencilCheckedEvent>) {
+    fun addStencilCheckedListener(listener: Consumer<InkToolbarStencilCheckedEvent>) {
         stencilCheckedListeners += listener
     }
 
@@ -412,8 +405,7 @@ class WInkToolbar : WControl(
         stencilCheckedAdapters.remove(listener)?.let { stencilCheckedListeners -= it }
     }
 
-    @JvmName("removeStencilCheckedListener")
-    fun removeStencilCheckedListenerForJava(listener: Consumer<InkToolbarStencilCheckedEvent>) {
+    fun removeStencilCheckedListener(listener: Consumer<InkToolbarStencilCheckedEvent>) {
         stencilCheckedListeners -= listener
     }
 

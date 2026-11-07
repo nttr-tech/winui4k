@@ -217,12 +217,11 @@ class WSwipeItem @JvmOverloads constructor(text: String = "", icon: Symbol? = nu
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addActionListenerForJava(adapter)
+        addActionListener(adapter)
         invokedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) {
+    fun addActionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SwipeItemInvokedHandler",
             XamlInterop.IID_SwipeItemInvokedHandler,
@@ -235,11 +234,10 @@ class WSwipeItem @JvmOverloads constructor(text: String = "", icon: Symbol? = nu
     @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {
         val adapter = invokedTokens.removeKotlinAdapter(listener) ?: return
-        removeActionListenerForJava(adapter)
+        removeActionListener(adapter)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) {
+    fun removeActionListener(listener: Runnable) {
         val token = invokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISwipeItem_remove_Invoked, token)
     }

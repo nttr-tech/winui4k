@@ -115,11 +115,11 @@ class WSplitButtonTest : FunSpec() {
                 val events = mutableListOf<String?>()
                 var runs = 0
                 var removed = 0
-                button.addActionListenerForJava(WActionListener { e -> events += e.actionCommand })
-                button.addActionListenerForJava(Runnable { runs++ })
+                button.addActionListener(WActionListener { e -> events += e.actionCommand })
+                button.addActionListener(Runnable { runs++ })
                 val removable = Runnable { removed++ }
-                button.addActionListenerForJava(removable)
-                button.removeActionListenerForJava(removable)
+                button.addActionListener(removable)
+                button.removeActionListener(removable)
                 button.doClick()
                 Triple(events, runs, removed)
             }

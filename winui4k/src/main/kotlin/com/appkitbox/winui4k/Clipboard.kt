@@ -94,13 +94,12 @@ object Clipboard {
     @JvmSynthetic
     fun addContentChangedListener(listener: () -> Unit) {
         val adapter = Runnable { listener() }
-        addContentChangedListenerForJava(adapter)
+        addContentChangedListener(adapter)
         contentChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
     @JvmStatic
-    @JvmName("addContentChangedListener")
-    fun addContentChangedListenerForJava(listener: Runnable) {
+    fun addContentChangedListener(listener: Runnable) {
         val token = statics.addEventHandler(
             "WinUI4K.ClipboardContentChangedHandler",
             FoundationInterop.IID_EventHandler_Object,
@@ -113,12 +112,11 @@ object Clipboard {
     @JvmSynthetic
     fun removeContentChangedListener(listener: () -> Unit) {
         val adapter = contentChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeContentChangedListenerForJava(adapter)
+        removeContentChangedListener(adapter)
     }
 
     @JvmStatic
-    @JvmName("removeContentChangedListener")
-    fun removeContentChangedListenerForJava(listener: Runnable) {
+    fun removeContentChangedListener(listener: Runnable) {
         val token = contentChangedTokens.remove(listener) ?: return
         statics.removeEventHandler(DataTransferInterop.IClipboardStatics_remove_ContentChanged, token)
     }

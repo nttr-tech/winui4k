@@ -80,12 +80,11 @@ class WPipsPager : WControl(
     @JvmSynthetic
     fun addSelectedIndexChangedListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addSelectedIndexChangedListenerForJava(adapter)
+        addSelectedIndexChangedListener(adapter)
         selectedIndexChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectedIndexChangedListener")
-    fun addSelectedIndexChangedListenerForJava(listener: IntConsumer) {
+    fun addSelectedIndexChangedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PipsPagerSelectedIndexChangedHandler",
             XamlInterop.IID_PipsPagerSelectedIndexChangedHandler,
@@ -102,11 +101,10 @@ class WPipsPager : WControl(
     @JvmSynthetic
     fun removeSelectedIndexChangedListener(listener: (Int) -> Unit) {
         val adapter = selectedIndexChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectedIndexChangedListenerForJava(adapter)
+        removeSelectedIndexChangedListener(adapter)
     }
 
-    @JvmName("removeSelectedIndexChangedListener")
-    fun removeSelectedIndexChangedListenerForJava(listener: IntConsumer) {
+    fun removeSelectedIndexChangedListener(listener: IntConsumer) {
         val token = selectedIndexChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPipsPager_remove_SelectedIndexChanged, token)
     }

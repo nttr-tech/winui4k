@@ -332,11 +332,11 @@ class WrapperReleaseTest : FunSpec() {
                 val runnable = Runnable { }
                 val listener = WActionListener { }
                 button.addActionListener(lambda)
-                button.addActionListenerForJava(runnable)
-                button.addActionListenerForJava(listener)
+                button.addActionListener(runnable)
+                button.addActionListener(listener)
                 button.removeActionListener(lambda)
-                button.removeActionListenerForJava(runnable)
-                button.removeActionListenerForJava(listener)
+                button.removeActionListener(runnable)
+                button.removeActionListener(listener)
                 WeakReference(button)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -539,7 +539,7 @@ class WrapperReleaseTest : FunSpec() {
             val reference = shownAndHidden {
                 WTextField().also {
                     it.addTextChangedListener { _ -> }
-                    it.addTextChangedListenerForJava(Consumer { _ -> })
+                    it.addTextChangedListener(Consumer { _ -> })
                 }
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -551,9 +551,9 @@ class WrapperReleaseTest : FunSpec() {
                 val kotlin: (String) -> Unit = { _ -> }
                 val java = Consumer<String> { _ -> }
                 field.addTextChangedListener(kotlin)
-                field.addTextChangedListenerForJava(java)
+                field.addTextChangedListener(java)
                 field.removeTextChangedListener(kotlin)
-                field.removeTextChangedListenerForJava(java)
+                field.removeTextChangedListener(java)
                 WeakReference(field)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()

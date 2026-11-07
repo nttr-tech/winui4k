@@ -49,7 +49,7 @@ class WrapperReleaseTextInputTest : FunSpec() {
             val values = changedValues
             WPasswordField().also {
                 it.addPasswordChangedListener { password -> values += "kotlin:$password" }
-                it.addPasswordChangedListenerForJava(Consumer { password -> values += "java:$password" })
+                it.addPasswordChangedListener(Consumer { password -> values += "java:$password" })
             }
         }
         UiTestHarness.attachAndAwaitLoaded(field)
@@ -62,7 +62,7 @@ class WrapperReleaseTextInputTest : FunSpec() {
             val values = changedValues
             WAutoSuggestBox().also {
                 it.addTextChangedListener { text, reason -> values += "kotlin:$text:$reason" }
-                it.addTextChangedListenerForJava(BiConsumer { text, reason -> values += "java:$text:$reason" })
+                it.addTextChangedListener(BiConsumer { text, reason -> values += "java:$text:$reason" })
             }
         }
         UiTestHarness.attachAndAwaitLoaded(box)
@@ -74,7 +74,7 @@ class WrapperReleaseTextInputTest : FunSpec() {
             val reference = shownAndHidden {
                 WPasswordField().also {
                     it.addPasswordChangedListener { _ -> }
-                    it.addPasswordChangedListenerForJava(Consumer { _ -> })
+                    it.addPasswordChangedListener(Consumer { _ -> })
                 }
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -100,9 +100,9 @@ class WrapperReleaseTextInputTest : FunSpec() {
                 val kotlin: (String) -> Unit = { _ -> }
                 val java = Consumer<String> { _ -> }
                 field.addPasswordChangedListener(kotlin)
-                field.addPasswordChangedListenerForJava(java)
+                field.addPasswordChangedListener(java)
                 field.removePasswordChangedListener(kotlin)
-                field.removePasswordChangedListenerForJava(java)
+                field.removePasswordChangedListener(java)
                 WeakReference(field)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -112,7 +112,7 @@ class WrapperReleaseTextInputTest : FunSpec() {
             val reference = shownAndHidden {
                 WAutoSuggestBox().also {
                     it.addTextChangedListener { _, _ -> }
-                    it.addTextChangedListenerForJava(BiConsumer { _, _ -> })
+                    it.addTextChangedListener(BiConsumer { _, _ -> })
                 }
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -143,9 +143,9 @@ class WrapperReleaseTextInputTest : FunSpec() {
                 val kotlin: (String, TextChangeReason) -> Unit = { _, _ -> }
                 val java = BiConsumer<String, TextChangeReason> { _, _ -> }
                 box.addTextChangedListener(kotlin)
-                box.addTextChangedListenerForJava(java)
+                box.addTextChangedListener(java)
                 box.removeTextChangedListener(kotlin)
-                box.removeTextChangedListenerForJava(java)
+                box.removeTextChangedListener(java)
                 WeakReference(box)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()

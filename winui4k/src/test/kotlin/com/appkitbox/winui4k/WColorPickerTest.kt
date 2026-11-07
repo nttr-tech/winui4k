@@ -169,12 +169,12 @@ class WColorPickerTest : FunSpec() {
                 val picker = WColorPicker(orange)
                 val received = mutableListOf<WColor>()
                 val consumer = Consumer<WColor> { received += it }
-                picker.addChangeListenerForJava(consumer)
+                picker.addChangeListener(consumer)
                 val lambda: (WColor) -> Unit = { received += it }
                 picker.addChangeListener(lambda)
                 picker.color = navy
                 received shouldBe listOf(navy, navy)
-                picker.removeChangeListenerForJava(consumer)
+                picker.removeChangeListener(consumer)
                 picker.removeChangeListener(lambda)
                 picker.color = orange
                 received.size shouldBe 2

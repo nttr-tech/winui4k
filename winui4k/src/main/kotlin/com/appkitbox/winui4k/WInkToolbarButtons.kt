@@ -679,12 +679,11 @@ class WInkToolbarFlyoutItem internal constructor(inspectable: ComPtr) : WButtonB
     @JvmSynthetic
     fun addItemListener(listener: (Boolean) -> Unit) {
         val adapter = Consumer<Boolean> { listener(it) }
-        addItemListenerForJava(adapter)
+        addItemListener(adapter)
         itemListenerAdapters.add(listener, adapter)
     }
 
-    @JvmName("addItemListener")
-    fun addItemListenerForJava(listener: Consumer<Boolean>) {
+    fun addItemListener(listener: Consumer<Boolean>) {
         val tokens = LongArray(ITEM_ADD_SLOTS.size) { i ->
             flyoutItem.addEventHandler(
                 "WinUI4K.InkToolbarFlyoutItemHandler",
@@ -699,11 +698,10 @@ class WInkToolbarFlyoutItem internal constructor(inspectable: ComPtr) : WButtonB
     @JvmSynthetic
     fun removeItemListener(listener: (Boolean) -> Unit) {
         val adapter = itemListenerAdapters.remove(listener) ?: return
-        removeItemListenerForJava(adapter)
+        removeItemListener(adapter)
     }
 
-    @JvmName("removeItemListener")
-    fun removeItemListenerForJava(listener: Consumer<Boolean>) {
+    fun removeItemListener(listener: Consumer<Boolean>) {
         val index = itemTokens.indexOfLast { it.first === listener }
         if (index < 0) return
         val (_, tokens) = itemTokens.removeAt(index)

@@ -36,7 +36,7 @@ class WrapperReleaseSelectorBarTest : FunSpec() {
             val reference = shownAndHidden {
                 WSelectorBar().also {
                     it.addItem(WSelectorBarItem("A"))
-                    it.addSelectionListenerForJava(IntConsumer { index -> sink += index })
+                    it.addSelectionListener(IntConsumer { index -> sink += index })
                 }
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()
@@ -60,7 +60,7 @@ class WrapperReleaseSelectorBarTest : FunSpec() {
             val reference = onUiThreadGet {
                 val bar = WSelectorBar()
                 bar.addItem(WSelectorBarItem("A"))
-                bar.addSelectionListenerForJava(IntConsumer { index -> sink += index })
+                bar.addSelectionListener(IntConsumer { index -> sink += index })
                 WeakReference(bar)
             }
             Reclamation.survivesGc(reference).shouldBeTrue()

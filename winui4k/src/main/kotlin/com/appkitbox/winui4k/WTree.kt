@@ -1044,12 +1044,11 @@ class WTree() : WControl(
     @JvmSynthetic
     fun addItemInvokedListener(listener: (WTreeNode?) -> Unit) {
         val adapter = Consumer<WTreeNode?> { listener(it) }
-        addItemInvokedListenerForJava(adapter)
+        addItemInvokedListener(adapter)
         itemInvokedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addItemInvokedListener")
-    fun addItemInvokedListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun addItemInvokedListener(listener: Consumer<WTreeNode?>) {
         val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
@@ -1072,11 +1071,10 @@ class WTree() : WControl(
     @JvmSynthetic
     fun removeItemInvokedListener(listener: (WTreeNode?) -> Unit) {
         val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
-        removeItemInvokedListenerForJava(adapter)
+        removeItemInvokedListener(adapter)
     }
 
-    @JvmName("removeItemInvokedListener")
-    fun removeItemInvokedListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun removeItemInvokedListener(listener: Consumer<WTreeNode?>) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_ItemInvoked, token)
     }
@@ -1088,12 +1086,11 @@ class WTree() : WControl(
     @JvmSynthetic
     fun addExpandingListener(listener: (WTreeNode?) -> Unit) {
         val adapter = Consumer<WTreeNode?> { listener(it) }
-        addExpandingListenerForJava(adapter)
+        addExpandingListener(adapter)
         expandingTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addExpandingListener")
-    fun addExpandingListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun addExpandingListener(listener: Consumer<WTreeNode?>) {
         val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
@@ -1109,11 +1106,10 @@ class WTree() : WControl(
     @JvmSynthetic
     fun removeExpandingListener(listener: (WTreeNode?) -> Unit) {
         val adapter = expandingTokens.removeKotlinAdapter(listener) ?: return
-        removeExpandingListenerForJava(adapter)
+        removeExpandingListener(adapter)
     }
 
-    @JvmName("removeExpandingListener")
-    fun removeExpandingListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun removeExpandingListener(listener: Consumer<WTreeNode?>) {
         val token = expandingTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Expanding, token)
     }
@@ -1125,12 +1121,11 @@ class WTree() : WControl(
     @JvmSynthetic
     fun addCollapsedListener(listener: (WTreeNode?) -> Unit) {
         val adapter = Consumer<WTreeNode?> { listener(it) }
-        addCollapsedListenerForJava(adapter)
+        addCollapsedListener(adapter)
         collapsedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCollapsedListener")
-    fun addCollapsedListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun addCollapsedListener(listener: Consumer<WTreeNode?>) {
         val roots = roots // Let the handler capture only the root list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.TreeViewHandler",
@@ -1146,11 +1141,10 @@ class WTree() : WControl(
     @JvmSynthetic
     fun removeCollapsedListener(listener: (WTreeNode?) -> Unit) {
         val adapter = collapsedTokens.removeKotlinAdapter(listener) ?: return
-        removeCollapsedListenerForJava(adapter)
+        removeCollapsedListener(adapter)
     }
 
-    @JvmName("removeCollapsedListener")
-    fun removeCollapsedListenerForJava(listener: Consumer<WTreeNode?>) {
+    fun removeCollapsedListener(listener: Consumer<WTreeNode?>) {
         val token = collapsedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITreeView_remove_Collapsed, token)
     }

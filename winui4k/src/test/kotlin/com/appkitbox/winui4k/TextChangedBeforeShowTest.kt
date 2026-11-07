@@ -6,6 +6,7 @@ import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import java.util.function.Consumer
 
 /**
  * Tests that check text change listeners of text fields (addTextChangedListener, addPasswordChangedListener) are called right when the text is set,
@@ -62,7 +63,7 @@ class TextChangedBeforeShowTest : FunSpec() {
             val received = mutableListOf<String>()
             onUiThread {
                 val field = WTextField()
-                field.addTextChangedListenerForJava { text -> received += text }
+                field.addTextChangedListener(Consumer { text -> received += text })
                 field.text = "abc"
             }
             received shouldContainExactly listOf("abc")

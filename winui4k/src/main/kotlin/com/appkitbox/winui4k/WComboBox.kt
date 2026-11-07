@@ -412,12 +412,11 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     @JvmSynthetic
     fun addListSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addListSelectionListenerForJava(adapter)
+        addListSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addListSelectionListener")
-    fun addListSelectionListenerForJava(listener: Runnable) {
+    fun addListSelectionListener(listener: Runnable) {
         val token = selector.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
@@ -430,11 +429,10 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     @JvmSynthetic
     fun removeListSelectionListener(listener: () -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeListSelectionListenerForJava(adapter)
+        removeListSelectionListener(adapter)
     }
 
-    @JvmName("removeListSelectionListener")
-    fun removeListSelectionListenerForJava(listener: Runnable) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -522,12 +520,11 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     @JvmSynthetic
     fun addTextSubmitListener(listener: (String) -> Unit) {
         val adapter = Consumer<String> { listener(it) }
-        addTextSubmitListenerForJava(adapter)
+        addTextSubmitListener(adapter)
         textSubmitTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addTextSubmitListener")
-    fun addTextSubmitListenerForJava(listener: Consumer<String>) {
+    fun addTextSubmitListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TextSubmittedHandler",
             XamlInterop.IID_ComboBoxTextSubmittedHandler,
@@ -543,11 +540,10 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     @JvmSynthetic
     fun removeTextSubmitListener(listener: (String) -> Unit) {
         val adapter = textSubmitTokens.removeKotlinAdapter(listener) ?: return
-        removeTextSubmitListenerForJava(adapter)
+        removeTextSubmitListener(adapter)
     }
 
-    @JvmName("removeTextSubmitListener")
-    fun removeTextSubmitListenerForJava(listener: Consumer<String>) {
+    fun removeTextSubmitListener(listener: Consumer<String>) {
         val token = textSubmitTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IComboBox_remove_TextSubmitted, token)
     }

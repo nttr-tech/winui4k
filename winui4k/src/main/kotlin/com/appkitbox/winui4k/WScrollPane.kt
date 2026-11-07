@@ -488,12 +488,11 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     @JvmSynthetic
     fun addViewChangedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addViewChangedListenerForJava(adapter)
+        addViewChangedListener(adapter)
         viewChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addViewChangedListener")
-    fun addViewChangedListenerForJava(listener: Runnable) {
+    fun addViewChangedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ScrollViewerViewChangedHandler",
             XamlInterop.IID_ScrollViewerViewChangedHandler,
@@ -506,11 +505,10 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     @JvmSynthetic
     fun removeViewChangedListener(listener: () -> Unit) {
         val adapter = viewChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeViewChangedListenerForJava(adapter)
+        removeViewChangedListener(adapter)
     }
 
-    @JvmName("removeViewChangedListener")
-    fun removeViewChangedListenerForJava(listener: Runnable) {
+    fun removeViewChangedListener(listener: Runnable) {
         val token = viewChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IScrollViewer_remove_ViewChanged, token)
     }

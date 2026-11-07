@@ -107,12 +107,11 @@ open class WXamlUICommand internal constructor(
     @JvmSynthetic
     fun addExecuteListener(listener: (String?) -> Unit) {
         val adapter = Consumer<String?> { listener(it) }
-        addExecuteListenerForJava(adapter)
+        addExecuteListener(adapter)
         executeTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addExecuteListener")
-    fun addExecuteListenerForJava(listener: Consumer<String?>) {
+    fun addExecuteListener(listener: Consumer<String?>) {
         val token = xamlUICommand.addEventHandler(
             "WinUI4K.ExecuteRequestedHandler",
             XamlInterop.IID_XamlUICommandExecuteRequestedHandler,
@@ -135,11 +134,10 @@ open class WXamlUICommand internal constructor(
     @JvmSynthetic
     fun removeExecuteListener(listener: (String?) -> Unit) {
         val adapter = executeTokens.removeKotlinAdapter(listener) ?: return
-        removeExecuteListenerForJava(adapter)
+        removeExecuteListener(adapter)
     }
 
-    @JvmName("removeExecuteListener")
-    fun removeExecuteListenerForJava(listener: Consumer<String?>) {
+    fun removeExecuteListener(listener: Consumer<String?>) {
         val token = executeTokens.remove(listener) ?: return
         xamlUICommand.removeEventHandler(XamlInterop.IXamlUICommand_remove_ExecuteRequested, token)
     }

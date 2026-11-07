@@ -247,21 +247,17 @@ class WPasswordField() : WControl(
     @JvmSynthetic
     fun addActionListener(listener: (WActionEvent) -> Unit) = actions.add(listener, listener)
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) = actions.add(listener) { listener.run() }
+    fun addActionListener(listener: Runnable) = actions.add(listener) { listener.run() }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: WActionListener) = actions.add(listener) { listener.actionPerformed(it) }
+    fun addActionListener(listener: WActionListener) = actions.add(listener) { listener.actionPerformed(it) }
 
     /** Removes a listener registered with [addActionListener] (only one if the same listener was registered several times). */
     @JvmSynthetic
     fun removeActionListener(listener: (WActionEvent) -> Unit) = actions.remove(listener)
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) = actions.remove(listener)
+    fun removeActionListener(listener: Runnable) = actions.remove(listener)
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: WActionListener) = actions.remove(listener)
+    fun removeActionListener(listener: WActionListener) = actions.remove(listener)
 
     /** JTextField.postActionEvent-like: calls the registered listeners in registration order, as when Enter is pressed. Does not press the default button. */
     fun postActionEvent() = actions.post()
@@ -343,15 +339,13 @@ class WPasswordField() : WControl(
     @JvmSynthetic
     fun addPasswordChangedListener(listener: (String) -> Unit) = passwordChanges.add(listener, listener)
 
-    @JvmName("addPasswordChangedListener")
-    fun addPasswordChangedListenerForJava(listener: Consumer<String>) = passwordChanges.add(listener) { listener.accept(it) }
+    fun addPasswordChangedListener(listener: Consumer<String>) = passwordChanges.add(listener) { listener.accept(it) }
 
     /** Unsubscribes a listener registered via [addPasswordChangedListener]. */
     @JvmSynthetic
     fun removePasswordChangedListener(listener: (String) -> Unit) = passwordChanges.remove(listener)
 
-    @JvmName("removePasswordChangedListener")
-    fun removePasswordChangedListenerForJava(listener: Consumer<String>) = passwordChanges.remove(listener)
+    fun removePasswordChangedListener(listener: Consumer<String>) = passwordChanges.remove(listener)
 
     /** Subscribes to PasswordBox.PasswordChanged. The handler stays on the native side, so the password field is not captured strongly and is taken from [listenerAnchor]. */
     private fun subscribePasswordChanged() {

@@ -421,9 +421,9 @@ class WTextField() : WControl(
         object : ActionTarget {
             override fun applyActionValue(action: WAction?, key: String) = this@WTextField.applyActionValue(action, key)
 
-            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+            override fun addActionClickListener(listener: WActionListener) = addActionListener(listener)
 
-            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListener(listener)
         },
         TEXT_FIELD_ACTION_KEYS,
     )
@@ -528,21 +528,17 @@ class WTextField() : WControl(
     @JvmSynthetic
     fun addActionListener(listener: (WActionEvent) -> Unit) = addAction(listener, listener)
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) = addAction(listener) { listener.run() }
+    fun addActionListener(listener: Runnable) = addAction(listener) { listener.run() }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: WActionListener) = addAction(listener) { listener.actionPerformed(it) }
+    fun addActionListener(listener: WActionListener) = addAction(listener) { listener.actionPerformed(it) }
 
     /** Removes a listener registered with [addActionListener] (only one if the same listener was registered several times). */
     @JvmSynthetic
     fun removeActionListener(listener: (WActionEvent) -> Unit) = removeAction(listener)
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) = removeAction(listener)
+    fun removeActionListener(listener: Runnable) = removeAction(listener)
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: WActionListener) = removeAction(listener)
+    fun removeActionListener(listener: WActionListener) = removeAction(listener)
 
     private fun addAction(key: Any, invoke: (WActionEvent) -> Unit) = actions.add(key, invoke)
 
@@ -697,15 +693,13 @@ class WTextField() : WControl(
     @JvmSynthetic
     fun addTextChangedListener(listener: (String) -> Unit) = addTextChanged(listener, listener)
 
-    @JvmName("addTextChangedListener")
-    fun addTextChangedListenerForJava(listener: Consumer<String>) = addTextChanged(listener) { listener.accept(it) }
+    fun addTextChangedListener(listener: Consumer<String>) = addTextChanged(listener) { listener.accept(it) }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
     @JvmSynthetic
     fun removeTextChangedListener(listener: (String) -> Unit) = removeTextChanged(listener)
 
-    @JvmName("removeTextChangedListener")
-    fun removeTextChangedListenerForJava(listener: Consumer<String>) = removeTextChanged(listener)
+    fun removeTextChangedListener(listener: Consumer<String>) = removeTextChanged(listener)
 
     private fun addTextChanged(key: Any, invoke: (String) -> Unit) = textChanges.add(key, invoke)
 

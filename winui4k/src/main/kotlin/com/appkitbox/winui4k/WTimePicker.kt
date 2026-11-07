@@ -148,12 +148,11 @@ class WTimePicker : WControl(
     @JvmSynthetic
     fun addSelectedTimeChangedListener(listener: (LocalTime?) -> Unit) {
         val adapter = Consumer<LocalTime?> { listener(it) }
-        addSelectedTimeChangedListenerForJava(adapter)
+        addSelectedTimeChangedListener(adapter)
         selectedTimeChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectedTimeChangedListener")
-    fun addSelectedTimeChangedListenerForJava(listener: Consumer<LocalTime?>) {
+    fun addSelectedTimeChangedListener(listener: Consumer<LocalTime?>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TimePickerSelectedTimeChangedHandler",
             XamlInterop.IID_TimePickerSelectedTimeChangedHandler,
@@ -175,11 +174,10 @@ class WTimePicker : WControl(
     @JvmSynthetic
     fun removeSelectedTimeChangedListener(listener: (LocalTime?) -> Unit) {
         val adapter = selectedTimeChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectedTimeChangedListenerForJava(adapter)
+        removeSelectedTimeChangedListener(adapter)
     }
 
-    @JvmName("removeSelectedTimeChangedListener")
-    fun removeSelectedTimeChangedListenerForJava(listener: Consumer<LocalTime?>) {
+    fun removeSelectedTimeChangedListener(listener: Consumer<LocalTime?>) {
         val token = selectedTimeChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITimePicker_remove_SelectedTimeChanged, token)
     }

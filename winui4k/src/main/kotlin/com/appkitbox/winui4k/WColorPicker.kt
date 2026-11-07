@@ -149,12 +149,11 @@ class WColorPicker() : WControl(
     @JvmSynthetic
     fun addChangeListener(listener: (WColor) -> Unit) {
         val adapter = Consumer<WColor> { listener(it) }
-        addChangeListenerForJava(adapter)
+        addChangeListener(adapter)
         changeTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addChangeListener")
-    fun addChangeListenerForJava(listener: Consumer<WColor>) {
+    fun addChangeListener(listener: Consumer<WColor>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ColorChangedHandler",
             XamlInterop.IID_ColorPickerColorChangedHandler,
@@ -171,11 +170,10 @@ class WColorPicker() : WControl(
     @JvmSynthetic
     fun removeChangeListener(listener: (WColor) -> Unit) {
         val adapter = changeTokens.removeKotlinAdapter(listener) ?: return
-        removeChangeListenerForJava(adapter)
+        removeChangeListener(adapter)
     }
 
-    @JvmName("removeChangeListener")
-    fun removeChangeListenerForJava(listener: Consumer<WColor>) {
+    fun removeChangeListener(listener: Consumer<WColor>) {
         val token = changeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IColorPicker_remove_ColorChanged, token)
     }

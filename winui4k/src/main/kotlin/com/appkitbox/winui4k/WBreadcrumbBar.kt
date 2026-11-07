@@ -48,12 +48,11 @@ class WBreadcrumbBar : WControl(
     @JvmSynthetic
     fun addItemClickedListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addItemClickedListenerForJava(adapter)
+        addItemClickedListener(adapter)
         itemClickedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addItemClickedListener")
-    fun addItemClickedListenerForJava(listener: IntConsumer) {
+    fun addItemClickedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.BreadcrumbBarItemClickedHandler",
             XamlInterop.IID_BreadcrumbBarItemClickedHandler,
@@ -69,11 +68,10 @@ class WBreadcrumbBar : WControl(
     @JvmSynthetic
     fun removeItemClickedListener(listener: (Int) -> Unit) {
         val adapter = itemClickedTokens.removeKotlinAdapter(listener) ?: return
-        removeItemClickedListenerForJava(adapter)
+        removeItemClickedListener(adapter)
     }
 
-    @JvmName("removeItemClickedListener")
-    fun removeItemClickedListenerForJava(listener: IntConsumer) {
+    fun removeItemClickedListener(listener: IntConsumer) {
         val token = itemClickedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IBreadcrumbBar_remove_ItemClicked, token)
     }

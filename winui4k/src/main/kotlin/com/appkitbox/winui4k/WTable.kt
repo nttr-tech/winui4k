@@ -497,12 +497,11 @@ class WTable @JvmOverloads constructor(
     @JvmSynthetic
     fun addRowSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addRowSelectionListenerForJava(adapter)
+        addRowSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addRowSelectionListener")
-    fun addRowSelectionListenerForJava(listener: Runnable) {
+    fun addRowSelectionListener(listener: Runnable) {
         val token = tableView.addEventHandler(
             "WinUI4K.TableViewSelectionChangedHandler",
             TabularInterop.IID_SelectionChangedHandler,
@@ -515,11 +514,10 @@ class WTable @JvmOverloads constructor(
     @JvmSynthetic
     fun removeRowSelectionListener(listener: () -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeRowSelectionListenerForJava(adapter)
+        removeRowSelectionListener(adapter)
     }
 
-    @JvmName("removeRowSelectionListener")
-    fun removeRowSelectionListenerForJava(listener: Runnable) {
+    fun removeRowSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         tableView.removeEventHandler(TabularInterop.ITableView_remove_SelectionChanged, token)
     }
@@ -536,8 +534,7 @@ class WTable @JvmOverloads constructor(
         rowInvoker.add(listener)
     }
 
-    @JvmName("addRowInvokedListener")
-    fun addRowInvokedListenerForJava(listener: IntConsumer) {
+    fun addRowInvokedListener(listener: IntConsumer) {
         rowInvoker.add(listener)
     }
 
@@ -547,8 +544,7 @@ class WTable @JvmOverloads constructor(
         rowInvoker.remove(listener)
     }
 
-    @JvmName("removeRowInvokedListener")
-    fun removeRowInvokedListenerForJava(listener: IntConsumer) {
+    fun removeRowInvokedListener(listener: IntConsumer) {
         rowInvoker.remove(listener)
     }
 

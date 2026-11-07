@@ -166,12 +166,11 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addActionListenerForJava(adapter)
+        addActionListener(adapter)
         actionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) {
+    fun addActionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipObjectHandler,
@@ -184,11 +183,10 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {
         val adapter = actionTokens.removeKotlinAdapter(listener) ?: return
-        removeActionListenerForJava(adapter)
+        removeActionListener(adapter)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) {
+    fun removeActionListener(listener: Runnable) {
         val token = actionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_ActionButtonClick, token)
     }
@@ -197,12 +195,11 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     @JvmSynthetic
     fun addCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
         val adapter = Consumer<TeachingTipCloseReason> { listener(it) }
-        addCloseListenerForJava(adapter)
+        addCloseListener(adapter)
         closeTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCloseListener")
-    fun addCloseListenerForJava(listener: Consumer<TeachingTipCloseReason>) {
+    fun addCloseListener(listener: Consumer<TeachingTipCloseReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TeachingTipHandler",
             XamlInterop.IID_TeachingTipClosedHandler,
@@ -219,11 +216,10 @@ class WTeachingTip @JvmOverloads constructor(title: String = "", subtitle: Strin
     @JvmSynthetic
     fun removeCloseListener(listener: (TeachingTipCloseReason) -> Unit) {
         val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
-        removeCloseListenerForJava(adapter)
+        removeCloseListener(adapter)
     }
 
-    @JvmName("removeCloseListener")
-    fun removeCloseListenerForJava(listener: Consumer<TeachingTipCloseReason>) {
+    fun removeCloseListener(listener: Consumer<TeachingTipCloseReason>) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITeachingTip_remove_Closed, token)
     }

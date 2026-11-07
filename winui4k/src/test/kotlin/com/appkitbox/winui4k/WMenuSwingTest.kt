@@ -130,12 +130,12 @@ class WMenuSwingTest : FunSpec() {
                 val first = recorder(events, "a")
                 val (listeners, after) = onUiThreadGet {
                     val item = WMenuFlyoutItem("Open")
-                    item.addActionListenerForJava(first)
+                    item.addActionListener(first)
                     item.addActionListener { e -> events += "kotlin:${e.actionCommand}" }
-                    item.addActionListenerForJava(Runnable { events += "runnable" })
+                    item.addActionListener(Runnable { events += "runnable" })
                     val listeners = item.actionListeners
                     item.doClick()
-                    listeners.forEach { item.removeActionListenerForJava(it) }
+                    listeners.forEach { item.removeActionListener(it) }
                     item.doClick()
                     listeners to item.actionListeners
                 }
@@ -162,10 +162,10 @@ class WMenuSwingTest : FunSpec() {
                 val events = mutableListOf<String>()
                 val selected = onUiThreadGet {
                     val item = WMenuFlyoutItem("Open")
-                    item.addActionListenerForJava(recorder(events, "item"))
+                    item.addActionListener(recorder(events, "item"))
                     item.doClick(100)
                     val bold = WToggleMenuFlyoutItem("Bold")
-                    bold.addActionListenerForJava(recorder(events, "bold"))
+                    bold.addActionListener(recorder(events, "bold"))
                     bold.doClick(0)
                     bold.isSelected
                 }
@@ -240,7 +240,7 @@ class WMenuSwingTest : FunSpec() {
                 val events = mutableListOf<String>()
                 onUiThreadGet {
                     val item = WMenuFlyoutItem("Open")
-                    item.addActionListenerForJava(recorder(events, "item"))
+                    item.addActionListener(recorder(events, "item"))
                     item.isEnabled = false
                     item.doClick(10)
                     val bold = WToggleMenuFlyoutItem("Bold")

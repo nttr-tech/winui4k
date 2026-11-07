@@ -301,12 +301,11 @@ class WCalendarView : WControl(
     @JvmSynthetic
     fun addSelectedDatesChangedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addSelectedDatesChangedListenerForJava(adapter)
+        addSelectedDatesChangedListener(adapter)
         selectedDatesChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectedDatesChangedListener")
-    fun addSelectedDatesChangedListenerForJava(listener: Runnable) {
+    fun addSelectedDatesChangedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.CalendarViewSelectedDatesChangedHandler",
             XamlInterop.IID_CalendarViewSelectedDatesChangedHandler,
@@ -319,11 +318,10 @@ class WCalendarView : WControl(
     @JvmSynthetic
     fun removeSelectedDatesChangedListener(listener: () -> Unit) {
         val adapter = selectedDatesChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectedDatesChangedListenerForJava(adapter)
+        removeSelectedDatesChangedListener(adapter)
     }
 
-    @JvmName("removeSelectedDatesChangedListener")
-    fun removeSelectedDatesChangedListenerForJava(listener: Runnable) {
+    fun removeSelectedDatesChangedListener(listener: Runnable) {
         val token = selectedDatesChangedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ICalendarView_remove_SelectedDatesChanged, token)
     }

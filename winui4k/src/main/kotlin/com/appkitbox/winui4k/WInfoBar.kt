@@ -167,12 +167,11 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun addCloseButtonListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addCloseButtonListenerForJava(adapter)
+        addCloseButtonListener(adapter)
         closeButtonTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCloseButtonListener")
-    fun addCloseButtonListenerForJava(listener: Runnable) {
+    fun addCloseButtonListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarCloseButtonClickHandler",
             XamlInterop.IID_InfoBarCloseButtonClickHandler,
@@ -185,11 +184,10 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun removeCloseButtonListener(listener: () -> Unit) {
         val adapter = closeButtonTokens.removeKotlinAdapter(listener) ?: return
-        removeCloseButtonListenerForJava(adapter)
+        removeCloseButtonListener(adapter)
     }
 
-    @JvmName("removeCloseButtonListener")
-    fun removeCloseButtonListenerForJava(listener: Runnable) {
+    fun removeCloseButtonListener(listener: Runnable) {
         val token = closeButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_CloseButtonClick, token)
     }
@@ -201,12 +199,11 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun addClosingListener(listener: (WInfoBarClosingEvent) -> Unit) {
         val adapter = Consumer<WInfoBarClosingEvent> { listener(it) }
-        addClosingListenerForJava(adapter)
+        addClosingListener(adapter)
         closingTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addClosingListener")
-    fun addClosingListenerForJava(listener: Consumer<WInfoBarClosingEvent>) {
+    fun addClosingListener(listener: Consumer<WInfoBarClosingEvent>) {
         val anchor = listenerAnchor
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarClosingHandler",
@@ -232,11 +229,10 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun removeClosingListener(listener: (WInfoBarClosingEvent) -> Unit) {
         val adapter = closingTokens.removeKotlinAdapter(listener) ?: return
-        removeClosingListenerForJava(adapter)
+        removeClosingListener(adapter)
     }
 
-    @JvmName("removeClosingListener")
-    fun removeClosingListenerForJava(listener: Consumer<WInfoBarClosingEvent>) {
+    fun removeClosingListener(listener: Consumer<WInfoBarClosingEvent>) {
         val token = closingTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_Closing, token)
         listenerAnchor.listenerRemoved()
@@ -246,12 +242,11 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun addCloseListener(listener: (InfoBarCloseReason) -> Unit) {
         val adapter = Consumer<InfoBarCloseReason> { listener(it) }
-        addCloseListenerForJava(adapter)
+        addCloseListener(adapter)
         closeTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCloseListener")
-    fun addCloseListenerForJava(listener: Consumer<InfoBarCloseReason>) {
+    fun addCloseListener(listener: Consumer<InfoBarCloseReason>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.InfoBarClosedHandler",
             XamlInterop.IID_InfoBarClosedHandler,
@@ -266,11 +261,10 @@ class WInfoBar : WControl(
     @JvmSynthetic
     fun removeCloseListener(listener: (InfoBarCloseReason) -> Unit) {
         val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
-        removeCloseListenerForJava(adapter)
+        removeCloseListener(adapter)
     }
 
-    @JvmName("removeCloseListener")
-    fun removeCloseListenerForJava(listener: Consumer<InfoBarCloseReason>) {
+    fun removeCloseListener(listener: Consumer<InfoBarCloseReason>) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IInfoBar_remove_Closed, token)
     }

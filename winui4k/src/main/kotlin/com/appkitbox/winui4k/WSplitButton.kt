@@ -204,8 +204,9 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
 
     /**
      * The old form that does not receive the event. Kept to preserve the same JVM signature (binary compatibility) as
-     * `addActionListener(Runnable)`. It is not visible from Kotlin (HIDDEN), so calls that passed a value of type
-     * `() -> Unit` must be rewritten as `addActionListener { save() }` (the same as [WButtonBase.addActionListener]).
+     * `addActionListener(Runnable)`. It is not visible from Kotlin (HIDDEN). A value of type `() -> Unit` or a function reference such as `::save`
+     * is passed by SAM conversion to the [addActionListener] that takes a `Runnable`, but it becomes a different `Runnable` each time, so to remove it,
+     * keep the `Runnable` value and pass that.
      */
     @Deprecated("Use addActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
@@ -213,13 +214,11 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         clickListeners.addKotlinWithoutEvent(listener)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) {
+    fun addActionListener(listener: Runnable) {
         clickListeners.add(listener)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: WActionListener) {
+    fun addActionListener(listener: WActionListener) {
         clickListeners.add(listener)
     }
 
@@ -236,13 +235,11 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         clickListeners.removeKotlin(listener)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) {
+    fun removeActionListener(listener: Runnable) {
         clickListeners.remove(listener)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: WActionListener) {
+    fun removeActionListener(listener: WActionListener) {
         clickListeners.remove(listener)
     }
 
@@ -276,9 +273,9 @@ open class WSplitButton internal constructor(inspectable: ComPtr) : WControl(ins
         object : ActionTarget {
             override fun applyActionValue(action: WAction?, key: String) = this@WSplitButton.applyActionValue(action, key)
 
-            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+            override fun addActionClickListener(listener: WActionListener) = addActionListener(listener)
 
-            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListener(listener)
         },
         SPLIT_BUTTON_ACTION_KEYS,
     )

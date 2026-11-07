@@ -133,12 +133,11 @@ class WTitleBar : WControl(
     @JvmSynthetic
     fun addBackRequestedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addBackRequestedListenerForJava(adapter)
+        addBackRequestedListener(adapter)
         backRequestedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addBackRequestedListener")
-    fun addBackRequestedListenerForJava(listener: Runnable) {
+    fun addBackRequestedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarBackRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
@@ -151,11 +150,10 @@ class WTitleBar : WControl(
     @JvmSynthetic
     fun removeBackRequestedListener(listener: () -> Unit) {
         val adapter = backRequestedTokens.removeKotlinAdapter(listener) ?: return
-        removeBackRequestedListenerForJava(adapter)
+        removeBackRequestedListener(adapter)
     }
 
-    @JvmName("removeBackRequestedListener")
-    fun removeBackRequestedListenerForJava(listener: Runnable) {
+    fun removeBackRequestedListener(listener: Runnable) {
         val token = backRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_BackRequested, token)
     }
@@ -164,12 +162,11 @@ class WTitleBar : WControl(
     @JvmSynthetic
     fun addPaneToggleRequestedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addPaneToggleRequestedListenerForJava(adapter)
+        addPaneToggleRequestedListener(adapter)
         paneToggleRequestedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addPaneToggleRequestedListener")
-    fun addPaneToggleRequestedListenerForJava(listener: Runnable) {
+    fun addPaneToggleRequestedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TitleBarPaneToggleRequestedHandler",
             XamlInterop.IID_TitleBarEventHandler,
@@ -182,11 +179,10 @@ class WTitleBar : WControl(
     @JvmSynthetic
     fun removePaneToggleRequestedListener(listener: () -> Unit) {
         val adapter = paneToggleRequestedTokens.removeKotlinAdapter(listener) ?: return
-        removePaneToggleRequestedListenerForJava(adapter)
+        removePaneToggleRequestedListener(adapter)
     }
 
-    @JvmName("removePaneToggleRequestedListener")
-    fun removePaneToggleRequestedListenerForJava(listener: Runnable) {
+    fun removePaneToggleRequestedListener(listener: Runnable) {
         val token = paneToggleRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITitleBar_remove_PaneToggleRequested, token)
     }

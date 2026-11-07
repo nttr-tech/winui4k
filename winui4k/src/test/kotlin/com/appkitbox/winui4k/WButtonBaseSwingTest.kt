@@ -134,11 +134,11 @@ class WButtonBaseSwingTest : FunSpec() {
                     val button = WButton("Save")
                     val listener = WActionListener { calls += "listener" }
                     button.addActionListener { calls += "lambda" }
-                    button.addActionListenerForJava(listener)
-                    button.addActionListenerForJava(Runnable { calls += "runnable" })
+                    button.addActionListener(listener)
+                    button.addActionListener(Runnable { calls += "runnable" })
                     val listeners = button.actionListeners
                     button.doClick()
-                    for (l in listeners) button.removeActionListenerForJava(l)
+                    for (l in listeners) button.removeActionListener(l)
                     button.doClick()
                     (listeners[1] === listener) to listOf(listeners.size, button.actionListeners.size)
                 }
@@ -164,9 +164,9 @@ class WButtonBaseSwingTest : FunSpec() {
                     val button = WSplitButton("Split")
                     val listener = WActionListener { }
                     button.addActionListener { }
-                    button.addActionListenerForJava(listener)
+                    button.addActionListener(listener)
                     val listeners = button.actionListeners
-                    for (l in listeners) button.removeActionListenerForJava(l)
+                    for (l in listeners) button.removeActionListener(l)
                     Triple(listeners.size, listeners[1] === listener, button.actionListeners.size)
                 } shouldBe Triple(2, true, 0)
             }
@@ -256,9 +256,9 @@ class WButtonBaseSwingTest : FunSpec() {
                     val button = WButton("Save")
                     button.addActionListener { }
                     val listener = button.actionListeners.single()
-                    button.removeActionListenerForJava(listener)
-                    button.removeActionListenerForJava(listener)
-                    button.removeActionListenerForJava(WActionListener { })
+                    button.removeActionListener(listener)
+                    button.removeActionListener(listener)
+                    button.removeActionListener(WActionListener { })
                     button.actionListeners.size
                 } shouldBe 0
             }

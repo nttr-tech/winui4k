@@ -152,12 +152,11 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     @JvmSynthetic
     fun addOpenListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addOpenListenerForJava(adapter)
+        addOpenListener(adapter)
         openTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addOpenListener")
-    fun addOpenListenerForJava(listener: Runnable) {
+    fun addOpenListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PopupOpenedHandler",
             FoundationInterop.IID_EventHandler_Object,
@@ -170,11 +169,10 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     @JvmSynthetic
     fun removeOpenListener(listener: () -> Unit) {
         val adapter = openTokens.removeKotlinAdapter(listener) ?: return
-        removeOpenListenerForJava(adapter)
+        removeOpenListener(adapter)
     }
 
-    @JvmName("removeOpenListener")
-    fun removeOpenListenerForJava(listener: Runnable) {
+    fun removeOpenListener(listener: Runnable) {
         val token = openTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Opened, token)
     }
@@ -183,12 +181,11 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     @JvmSynthetic
     fun addCloseListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addCloseListenerForJava(adapter)
+        addCloseListener(adapter)
         closeTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCloseListener")
-    fun addCloseListenerForJava(listener: Runnable) {
+    fun addCloseListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.PopupClosedHandler",
             FoundationInterop.IID_EventHandler_Object,
@@ -201,11 +198,10 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     @JvmSynthetic
     fun removeCloseListener(listener: () -> Unit) {
         val adapter = closeTokens.removeKotlinAdapter(listener) ?: return
-        removeCloseListenerForJava(adapter)
+        removeCloseListener(adapter)
     }
 
-    @JvmName("removeCloseListener")
-    fun removeCloseListenerForJava(listener: Runnable) {
+    fun removeCloseListener(listener: Runnable) {
         val token = closeTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IPopup_remove_Closed, token)
     }

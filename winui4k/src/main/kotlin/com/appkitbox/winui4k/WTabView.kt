@@ -438,12 +438,11 @@ class WTabView : WControl(
     @JvmSynthetic
     fun addSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addSelectionListenerForJava(adapter)
+        addSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectionListener")
-    fun addSelectionListenerForJava(listener: Runnable) {
+    fun addSelectionListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SelectionChangedHandler",
             XamlInterop.IID_SelectionChangedEventHandler,
@@ -456,11 +455,10 @@ class WTabView : WControl(
     @JvmSynthetic
     fun removeSelectionListener(listener: () -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectionListenerForJava(adapter)
+        removeSelectionListener(adapter)
     }
 
-    @JvmName("removeSelectionListener")
-    fun removeSelectionListenerForJava(listener: Runnable) {
+    fun removeSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_SelectionChanged, token)
     }
@@ -469,12 +467,11 @@ class WTabView : WControl(
     @JvmSynthetic
     fun addAddTabButtonClickListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addAddTabButtonClickListenerForJava(adapter)
+        addAddTabButtonClickListener(adapter)
         addTabButtonTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addAddTabButtonClickListener")
-    fun addAddTabButtonClickListenerForJava(listener: Runnable) {
+    fun addAddTabButtonClickListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewAddTabButtonClickHandler",
             XamlInterop.IID_TabViewAddTabButtonClickHandler,
@@ -487,11 +484,10 @@ class WTabView : WControl(
     @JvmSynthetic
     fun removeAddTabButtonClickListener(listener: () -> Unit) {
         val adapter = addTabButtonTokens.removeKotlinAdapter(listener) ?: return
-        removeAddTabButtonClickListenerForJava(adapter)
+        removeAddTabButtonClickListener(adapter)
     }
 
-    @JvmName("removeAddTabButtonClickListener")
-    fun removeAddTabButtonClickListenerForJava(listener: Runnable) {
+    fun removeAddTabButtonClickListener(listener: Runnable) {
         val token = addTabButtonTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_AddTabButtonClick, token)
     }
@@ -504,12 +500,11 @@ class WTabView : WControl(
     @JvmSynthetic
     fun addTabCloseRequestedListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addTabCloseRequestedListenerForJava(adapter)
+        addTabCloseRequestedListener(adapter)
         closeRequestedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addTabCloseRequestedListener")
-    fun addTabCloseRequestedListenerForJava(listener: IntConsumer) {
+    fun addTabCloseRequestedListener(listener: IntConsumer) {
         // The handler stays on the native side, so it does not capture this wrapper. The index is computed from the sender's (TabView) TabItems
         val token = inspectable.addEventHandler(
             "WinUI4K.TabViewTabCloseRequestedHandler",
@@ -526,11 +521,10 @@ class WTabView : WControl(
     @JvmSynthetic
     fun removeTabCloseRequestedListener(listener: (Int) -> Unit) {
         val adapter = closeRequestedTokens.removeKotlinAdapter(listener) ?: return
-        removeTabCloseRequestedListenerForJava(adapter)
+        removeTabCloseRequestedListener(adapter)
     }
 
-    @JvmName("removeTabCloseRequestedListener")
-    fun removeTabCloseRequestedListenerForJava(listener: IntConsumer) {
+    fun removeTabCloseRequestedListener(listener: IntConsumer) {
         val token = closeRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ITabView_remove_TabCloseRequested, token)
     }

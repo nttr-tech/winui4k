@@ -513,19 +513,18 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     @JvmSynthetic
     fun addButtonClickListener(listener: (WContentDialogButtonEvent) -> Unit) {
         val adapter = WContentDialogButtonListener(listener)
-        addButtonClickListenerForJava(adapter)
+        addButtonClickListener(adapter)
         kotlinButtonListeners.add(listener, adapter)
     }
 
     /** Removes a Kotlin lambda added with [addButtonClickListener] (does nothing if not registered). */
     @JvmSynthetic
     fun removeButtonClickListener(listener: (WContentDialogButtonEvent) -> Unit) {
-        removeButtonClickListenerForJava(kotlinButtonListeners.remove(listener) ?: return)
+        removeButtonClickListener(kotlinButtonListeners.remove(listener) ?: return)
     }
 
     /** [addButtonClickListener] for Java. */
-    @JvmName("addButtonClickListener")
-    fun addButtonClickListenerForJava(listener: WContentDialogButtonListener) {
+    fun addButtonClickListener(listener: WContentDialogButtonListener) {
         val anchor = listenerAnchor
         val tokens = BUTTON_EVENTS.map { (button, addSlot) ->
             inspectable.addEventHandler(
@@ -550,8 +549,7 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     }
 
     /** [removeButtonClickListener] for Java. */
-    @JvmName("removeButtonClickListener")
-    fun removeButtonClickListenerForJava(listener: WContentDialogButtonListener) {
+    fun removeButtonClickListener(listener: WContentDialogButtonListener) {
         val index = buttonListeners.indexOfLast { it.first === listener }
         if (index < 0) return
         val tokens = buttonListeners.removeAt(index).second

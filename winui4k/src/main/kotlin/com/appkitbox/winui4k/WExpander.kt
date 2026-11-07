@@ -137,12 +137,11 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     @JvmSynthetic
     fun addExpandListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addExpandListenerForJava(adapter)
+        addExpandListener(adapter)
         expandTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addExpandListener")
-    fun addExpandListenerForJava(listener: Runnable) {
+    fun addExpandListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderExpandingHandler,
@@ -155,11 +154,10 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     @JvmSynthetic
     fun removeExpandListener(listener: () -> Unit) {
         val adapter = expandTokens.removeKotlinAdapter(listener) ?: return
-        removeExpandListenerForJava(adapter)
+        removeExpandListener(adapter)
     }
 
-    @JvmName("removeExpandListener")
-    fun removeExpandListenerForJava(listener: Runnable) {
+    fun removeExpandListener(listener: Runnable) {
         val token = expandTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Expanding, token)
     }
@@ -168,12 +166,11 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     @JvmSynthetic
     fun addCollapseListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addCollapseListenerForJava(adapter)
+        addCollapseListener(adapter)
         collapseTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCollapseListener")
-    fun addCollapseListenerForJava(listener: Runnable) {
+    fun addCollapseListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.ExpanderHandler",
             XamlInterop.IID_ExpanderCollapsedHandler,
@@ -186,11 +183,10 @@ class WExpander @JvmOverloads constructor(header: String = "", content: WCompone
     @JvmSynthetic
     fun removeCollapseListener(listener: () -> Unit) {
         val adapter = collapseTokens.removeKotlinAdapter(listener) ?: return
-        removeCollapseListenerForJava(adapter)
+        removeCollapseListener(adapter)
     }
 
-    @JvmName("removeCollapseListener")
-    fun removeCollapseListenerForJava(listener: Runnable) {
+    fun removeCollapseListener(listener: Runnable) {
         val token = collapseTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IExpander_remove_Collapsed, token)
     }

@@ -154,12 +154,11 @@ class WSelectorBar : WControl(
     @JvmSynthetic
     fun addSelectionListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addSelectionListenerForJava(adapter)
+        addSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectionListener")
-    fun addSelectionListenerForJava(listener: IntConsumer) {
+    fun addSelectionListener(listener: IntConsumer) {
         val anchor = listenerAnchor // The handler does not capture this but looks it up from the anchor (see ListenerAnchor)
         val token = inspectable.addEventHandler(
             "WinUI4K.SelectorBarSelectionChangedHandler",
@@ -174,11 +173,10 @@ class WSelectorBar : WControl(
     @JvmSynthetic
     fun removeSelectionListener(listener: (Int) -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectionListenerForJava(adapter)
+        removeSelectionListener(adapter)
     }
 
-    @JvmName("removeSelectionListener")
-    fun removeSelectionListenerForJava(listener: IntConsumer) {
+    fun removeSelectionListener(listener: IntConsumer) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISelectorBar_remove_SelectionChanged, token)
         listenerAnchor.listenerRemoved()

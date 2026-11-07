@@ -162,11 +162,11 @@ class WTextComponentSwingTest : FunSpec() {
                     val field = WTextField()
                     val listener = WActionListener { calls += "listener" }
                     field.addActionListener { calls += "lambda" }
-                    field.addActionListenerForJava(listener)
-                    field.addActionListenerForJava(Runnable { calls += "runnable" })
+                    field.addActionListener(listener)
+                    field.addActionListener(Runnable { calls += "runnable" })
                     val listeners = field.actionListeners
                     field.postActionEvent()
-                    for (l in listeners) field.removeActionListenerForJava(l)
+                    for (l in listeners) field.removeActionListener(l)
                     field.postActionEvent()
                     listOf(listeners.size, field.actionListeners.size) to (listeners[1] === listener)
                 }
@@ -181,10 +181,10 @@ class WTextComponentSwingTest : FunSpec() {
                     val password = WPasswordField()
                     val suggest = WAutoSuggestBox()
                     password.addActionListener { calls += "password" }
-                    suggest.addActionListenerForJava(Runnable { calls += "suggest" })
+                    suggest.addActionListener(Runnable { calls += "suggest" })
                     val before = listOf(password.actionListeners.size, suggest.actionListeners.size)
-                    for (l in password.actionListeners) password.removeActionListenerForJava(l)
-                    for (l in suggest.actionListeners) suggest.removeActionListenerForJava(l)
+                    for (l in password.actionListeners) password.removeActionListener(l)
+                    for (l in suggest.actionListeners) suggest.removeActionListener(l)
                     password.postActionEvent()
                     suggest.postActionEvent()
                     before + listOf(password.actionListeners.size, suggest.actionListeners.size)

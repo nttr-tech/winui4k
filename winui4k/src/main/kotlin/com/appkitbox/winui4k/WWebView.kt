@@ -346,12 +346,11 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun addNavigationStartingListener(listener: (String) -> Boolean) {
         val adapter = Predicate<String> { listener(it) }
-        addNavigationStartingListenerForJava(adapter)
+        addNavigationStartingListener(adapter)
         navigationStartingTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addNavigationStartingListener")
-    fun addNavigationStartingListenerForJava(listener: Predicate<String>) {
+    fun addNavigationStartingListener(listener: Predicate<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationStartingHandler",
             WebView2Interop.IID_WebView2NavigationStartingHandler,
@@ -371,11 +370,10 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun removeNavigationStartingListener(listener: (String) -> Boolean) {
         val adapter = navigationStartingTokens.removeKotlinAdapter(listener) ?: return
-        removeNavigationStartingListenerForJava(adapter)
+        removeNavigationStartingListener(adapter)
     }
 
-    @JvmName("removeNavigationStartingListener")
-    fun removeNavigationStartingListenerForJava(listener: Predicate<String>) {
+    fun removeNavigationStartingListener(listener: Predicate<String>) {
         val token = navigationStartingTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationStarting, token)
     }
@@ -388,12 +386,11 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun addNavigationCompletedListener(listener: (Boolean, WebErrorStatus) -> Unit) {
         val adapter = BiConsumer<Boolean, WebErrorStatus> { first, second -> listener(first, second) }
-        addNavigationCompletedListenerForJava(adapter)
+        addNavigationCompletedListener(adapter)
         navigationCompletedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addNavigationCompletedListener")
-    fun addNavigationCompletedListenerForJava(listener: BiConsumer<Boolean, WebErrorStatus>) {
+    fun addNavigationCompletedListener(listener: BiConsumer<Boolean, WebErrorStatus>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2NavigationCompletedHandler",
             WebView2Interop.IID_WebView2NavigationCompletedHandler,
@@ -415,11 +412,10 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun removeNavigationCompletedListener(listener: (Boolean, WebErrorStatus) -> Unit) {
         val adapter = navigationCompletedTokens.removeKotlinAdapter(listener) ?: return
-        removeNavigationCompletedListenerForJava(adapter)
+        removeNavigationCompletedListener(adapter)
     }
 
-    @JvmName("removeNavigationCompletedListener")
-    fun removeNavigationCompletedListenerForJava(listener: BiConsumer<Boolean, WebErrorStatus>) {
+    fun removeNavigationCompletedListener(listener: BiConsumer<Boolean, WebErrorStatus>) {
         val token = navigationCompletedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_NavigationCompleted, token)
     }
@@ -432,12 +428,11 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun addWebMessageReceivedListener(listener: (String) -> Unit) {
         val adapter = Consumer<String> { listener(it) }
-        addWebMessageReceivedListenerForJava(adapter)
+        addWebMessageReceivedListener(adapter)
         webMessageReceivedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addWebMessageReceivedListener")
-    fun addWebMessageReceivedListenerForJava(listener: Consumer<String>) {
+    fun addWebMessageReceivedListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2WebMessageReceivedHandler",
             WebView2Interop.IID_WebView2WebMessageReceivedHandler,
@@ -455,11 +450,10 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun removeWebMessageReceivedListener(listener: (String) -> Unit) {
         val adapter = webMessageReceivedTokens.removeKotlinAdapter(listener) ?: return
-        removeWebMessageReceivedListenerForJava(adapter)
+        removeWebMessageReceivedListener(adapter)
     }
 
-    @JvmName("removeWebMessageReceivedListener")
-    fun removeWebMessageReceivedListenerForJava(listener: Consumer<String>) {
+    fun removeWebMessageReceivedListener(listener: Consumer<String>) {
         val token = webMessageReceivedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_WebMessageReceived, token)
     }
@@ -473,12 +467,11 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun addCoreWebView2InitializedListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addCoreWebView2InitializedListenerForJava(adapter)
+        addCoreWebView2InitializedListener(adapter)
         coreWebView2InitializedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addCoreWebView2InitializedListener")
-    fun addCoreWebView2InitializedListenerForJava(listener: IntConsumer) {
+    fun addCoreWebView2InitializedListener(listener: IntConsumer) {
         val token = inspectable.addEventHandler(
             "WinUI4K.WebView2CoreWebView2InitializedHandler",
             WebView2Interop.IID_WebView2CoreWebView2InitializedHandler,
@@ -494,11 +487,10 @@ class WWebView @JvmOverloads constructor(source: String = "") : WComponent(
     @JvmSynthetic
     fun removeCoreWebView2InitializedListener(listener: (Int) -> Unit) {
         val adapter = coreWebView2InitializedTokens.removeKotlinAdapter(listener) ?: return
-        removeCoreWebView2InitializedListenerForJava(adapter)
+        removeCoreWebView2InitializedListener(adapter)
     }
 
-    @JvmName("removeCoreWebView2InitializedListener")
-    fun removeCoreWebView2InitializedListenerForJava(listener: IntConsumer) {
+    fun removeCoreWebView2InitializedListener(listener: IntConsumer) {
         val token = coreWebView2InitializedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(WebView2Interop.IWebView2_remove_CoreWebView2Initialized, token)
     }

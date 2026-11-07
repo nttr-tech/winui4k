@@ -86,12 +86,11 @@ class WAnnotatedScrollBar : WControl(
     @JvmSynthetic
     fun addDetailLabelRequestedListener(listener: (Double) -> String) {
         val adapter = DoubleFunction<String> { listener(it) }
-        addDetailLabelRequestedListenerForJava(adapter)
+        addDetailLabelRequestedListener(adapter)
         detailLabelRequestedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addDetailLabelRequestedListener")
-    fun addDetailLabelRequestedListenerForJava(listener: DoubleFunction<String>) {
+    fun addDetailLabelRequestedListener(listener: DoubleFunction<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.AnnotatedScrollBarDetailLabelRequestedHandler",
             XamlInterop.IID_AnnotatedScrollBarDetailLabelRequestedHandler,
@@ -110,11 +109,10 @@ class WAnnotatedScrollBar : WControl(
     @JvmSynthetic
     fun removeDetailLabelRequestedListener(listener: (Double) -> String) {
         val adapter = detailLabelRequestedTokens.removeKotlinAdapter(listener) ?: return
-        removeDetailLabelRequestedListenerForJava(adapter)
+        removeDetailLabelRequestedListener(adapter)
     }
 
-    @JvmName("removeDetailLabelRequestedListener")
-    fun removeDetailLabelRequestedListenerForJava(listener: DoubleFunction<String>) {
+    fun removeDetailLabelRequestedListener(listener: DoubleFunction<String>) {
         val token = detailLabelRequestedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IAnnotatedScrollBar_remove_DetailLabelRequested, token)
     }

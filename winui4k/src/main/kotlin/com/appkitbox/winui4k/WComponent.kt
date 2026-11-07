@@ -1198,12 +1198,11 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun addActualThemeChangedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addActualThemeChangedListenerForJava(adapter)
+        addActualThemeChangedListener(adapter)
         actualThemeChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addActualThemeChangedListener")
-    fun addActualThemeChangedListenerForJava(listener: Runnable) {
+    fun addActualThemeChangedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.ActualThemeChangedHandler",
             XamlInterop.IID_ActualThemeChangedHandler,
@@ -1216,11 +1215,10 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun removeActualThemeChangedListener(listener: () -> Unit) {
         val adapter = actualThemeChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeActualThemeChangedListenerForJava(adapter)
+        removeActualThemeChangedListener(adapter)
     }
 
-    @JvmName("removeActualThemeChangedListener")
-    fun removeActualThemeChangedListenerForJava(listener: Runnable) {
+    fun removeActualThemeChangedListener(listener: Runnable) {
         val token = actualThemeChangedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_ActualThemeChanged, token)
     }
@@ -1236,12 +1234,11 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun addSizeChangedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addSizeChangedListenerForJava(adapter)
+        addSizeChangedListener(adapter)
         sizeChangedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSizeChangedListener")
-    fun addSizeChangedListenerForJava(listener: Runnable) {
+    fun addSizeChangedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.SizeChangedHandler",
             XamlInterop.IID_SizeChangedEventHandler,
@@ -1254,11 +1251,10 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun removeSizeChangedListener(listener: () -> Unit) {
         val adapter = sizeChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeSizeChangedListenerForJava(adapter)
+        removeSizeChangedListener(adapter)
     }
 
-    @JvmName("removeSizeChangedListener")
-    fun removeSizeChangedListenerForJava(listener: Runnable) {
+    fun removeSizeChangedListener(listener: Runnable) {
         val token = sizeChangedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_SizeChanged, token)
     }
@@ -1276,12 +1272,11 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun addLoadedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addLoadedListenerForJava(adapter)
+        addLoadedListener(adapter)
         loadedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addLoadedListener")
-    fun addLoadedListenerForJava(listener: Runnable) {
+    fun addLoadedListener(listener: Runnable) {
         val token = frameworkElement.addEventHandler(
             "WinUI4K.LoadedHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -1294,11 +1289,10 @@ abstract class WComponent internal constructor(
     @JvmSynthetic
     fun removeLoadedListener(listener: () -> Unit) {
         val adapter = loadedTokens.removeKotlinAdapter(listener) ?: return
-        removeLoadedListenerForJava(adapter)
+        removeLoadedListener(adapter)
     }
 
-    @JvmName("removeLoadedListener")
-    fun removeLoadedListenerForJava(listener: Runnable) {
+    fun removeLoadedListener(listener: Runnable) {
         val token = loadedTokens.remove(listener) ?: return
         frameworkElement.removeEventHandler(XamlInterop.IFrameworkElement_remove_Loaded, token)
     }

@@ -239,9 +239,9 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         object : ActionTarget {
             override fun applyActionValue(action: WAction?, key: String) = this@WMenuFlyoutItem.applyActionValue(action, key)
 
-            override fun addActionClickListener(listener: WActionListener) = addActionListenerForJava(listener)
+            override fun addActionClickListener(listener: WActionListener) = addActionListener(listener)
 
-            override fun removeActionClickListener(listener: WActionListener) = removeActionListenerForJava(listener)
+            override fun removeActionClickListener(listener: WActionListener) = removeActionListener(listener)
         },
         MENU_ITEM_ACTION_KEYS,
     )
@@ -285,8 +285,9 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
 
     /**
      * The legacy form that does not receive the event. Kept to preserve the same JVM signature as `addActionListener(Runnable)` (binary compatibility).
-     * It is not visible from Kotlin (HIDDEN), so calls that passed a value of type `() -> Unit` or a function reference such as `::save`
-     * must be rewritten as `addActionListener { save() }` (same as [WButtonBase.addActionListener]).
+     * It is not visible from Kotlin (HIDDEN). A value of type `() -> Unit` or a function reference such as `::save`
+     * is passed by SAM conversion to the [addActionListener] that takes a `Runnable`, but it becomes a different `Runnable` each time, so to remove it,
+     * keep the `Runnable` value and pass that.
      */
     @Deprecated("Use addActionListener that receives a WActionEvent", level = DeprecationLevel.HIDDEN)
     @JvmSynthetic
@@ -294,13 +295,11 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         clickListeners.addKotlinWithoutEvent(listener)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) {
+    fun addActionListener(listener: Runnable) {
         clickListeners.add(listener)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: WActionListener) {
+    fun addActionListener(listener: WActionListener) {
         clickListeners.add(listener)
     }
 
@@ -317,13 +316,11 @@ open class WMenuFlyoutItem internal constructor(inspectable: ComPtr) :
         clickListeners.removeKotlin(listener)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) {
+    fun removeActionListener(listener: Runnable) {
         clickListeners.remove(listener)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: WActionListener) {
+    fun removeActionListener(listener: WActionListener) {
         clickListeners.remove(listener)
     }
 

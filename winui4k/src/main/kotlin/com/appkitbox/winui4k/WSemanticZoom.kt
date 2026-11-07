@@ -57,12 +57,11 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     @JvmSynthetic
     fun addViewChangeStartedListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addViewChangeStartedListenerForJava(adapter)
+        addViewChangeStartedListener(adapter)
         viewChangeStartedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addViewChangeStartedListener")
-    fun addViewChangeStartedListenerForJava(listener: Runnable) {
+    fun addViewChangeStartedListener(listener: Runnable) {
         val token = inspectable.addEventHandler(
             "WinUI4K.SemanticZoomViewChangedEventHandler",
             XamlInterop.IID_SemanticZoomViewChangedEventHandler,
@@ -75,11 +74,10 @@ class WSemanticZoom(zoomedInView: WList, zoomedOutView: WList) : WControl(
     @JvmSynthetic
     fun removeViewChangeStartedListener(listener: () -> Unit) {
         val adapter = viewChangeStartedTokens.removeKotlinAdapter(listener) ?: return
-        removeViewChangeStartedListenerForJava(adapter)
+        removeViewChangeStartedListener(adapter)
     }
 
-    @JvmName("removeViewChangeStartedListener")
-    fun removeViewChangeStartedListenerForJava(listener: Runnable) {
+    fun removeViewChangeStartedListener(listener: Runnable) {
         val token = viewChangeStartedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.ISemanticZoom_remove_ViewChangeStarted, token)
     }

@@ -479,12 +479,11 @@ class WListBox(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun addListSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addListSelectionListenerForJava(adapter)
+        addListSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addListSelectionListener")
-    fun addListSelectionListenerForJava(listener: Runnable) {
+    fun addListSelectionListener(listener: Runnable) {
         // The handler captures only the gate and the listener (the gate collapses notifications into one during Swing-style operations)
         val gate = selectionGate
         val key = Any()
@@ -500,11 +499,10 @@ class WListBox(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun removeListSelectionListener(listener: () -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeListSelectionListenerForJava(adapter)
+        removeListSelectionListener(adapter)
     }
 
-    @JvmName("removeListSelectionListener")
-    fun removeListSelectionListenerForJava(listener: Runnable) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }

@@ -259,12 +259,11 @@ class WNavigationView : WControl(
     @JvmSynthetic
     fun addSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
         val adapter = Consumer<WNavigationViewItem?> { listener(it) }
-        addSelectionListenerForJava(adapter)
+        addSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addSelectionListener")
-    fun addSelectionListenerForJava(listener: Consumer<WNavigationViewItem?>) {
+    fun addSelectionListener(listener: Consumer<WNavigationViewItem?>) {
         val registry = registry // The handler stays on the native side, so capture only the item list, not this wrapper (reading the property directly would capture this)
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
@@ -287,11 +286,10 @@ class WNavigationView : WControl(
     @JvmSynthetic
     fun removeSelectionListener(listener: (WNavigationViewItem?) -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeSelectionListenerForJava(adapter)
+        removeSelectionListener(adapter)
     }
 
-    @JvmName("removeSelectionListener")
-    fun removeSelectionListenerForJava(listener: Consumer<WNavigationViewItem?>) {
+    fun removeSelectionListener(listener: Consumer<WNavigationViewItem?>) {
         val token = selectionTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_SelectionChanged, token)
     }
@@ -304,12 +302,11 @@ class WNavigationView : WControl(
     @JvmSynthetic
     fun addItemInvokedListener(listener: (String) -> Unit) {
         val adapter = Consumer<String> { listener(it) }
-        addItemInvokedListenerForJava(adapter)
+        addItemInvokedListener(adapter)
         itemInvokedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addItemInvokedListener")
-    fun addItemInvokedListenerForJava(listener: Consumer<String>) {
+    fun addItemInvokedListener(listener: Consumer<String>) {
         val token = inspectable.addEventHandler(
             "WinUI4K.NavigationViewHandler",
             XamlInterop.IID_NavigationViewItemInvokedHandler,
@@ -331,11 +328,10 @@ class WNavigationView : WControl(
     @JvmSynthetic
     fun removeItemInvokedListener(listener: (String) -> Unit) {
         val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
-        removeItemInvokedListenerForJava(adapter)
+        removeItemInvokedListener(adapter)
     }
 
-    @JvmName("removeItemInvokedListener")
-    fun removeItemInvokedListenerForJava(listener: Consumer<String>) {
+    fun removeItemInvokedListener(listener: Consumer<String>) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.INavigationView_remove_ItemInvoked, token)
     }

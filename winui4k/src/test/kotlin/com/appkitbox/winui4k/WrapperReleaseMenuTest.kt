@@ -117,11 +117,11 @@ class WrapperReleaseMenuTest : FunSpec() {
                 val runnable = Runnable { }
                 val listener = WActionListener { }
                 item.addActionListener(lambda)
-                item.addActionListenerForJava(runnable)
-                item.addActionListenerForJava(listener)
+                item.addActionListener(runnable)
+                item.addActionListener(listener)
                 item.removeActionListener(lambda)
-                item.removeActionListenerForJava(runnable)
-                item.removeActionListenerForJava(listener)
+                item.removeActionListener(runnable)
+                item.removeActionListener(listener)
                 WeakReference(item)
             }
             Reclamation.awaitCollected(reference).shouldBeTrue()

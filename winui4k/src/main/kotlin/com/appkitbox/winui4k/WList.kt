@@ -471,12 +471,11 @@ class WList(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun addListSelectionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addListSelectionListenerForJava(adapter)
+        addListSelectionListener(adapter)
         selectionTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addListSelectionListener")
-    fun addListSelectionListenerForJava(listener: Runnable) {
+    fun addListSelectionListener(listener: Runnable) {
         // The handler captures only the gate and the listener (the gate collapses notifications into one during Swing-style operations)
         val gate = selectionGate
         val key = Any()
@@ -492,11 +491,10 @@ class WList(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun removeListSelectionListener(listener: () -> Unit) {
         val adapter = selectionTokens.removeKotlinAdapter(listener) ?: return
-        removeListSelectionListenerForJava(adapter)
+        removeListSelectionListener(adapter)
     }
 
-    @JvmName("removeListSelectionListener")
-    fun removeListSelectionListenerForJava(listener: Runnable) {
+    fun removeListSelectionListener(listener: Runnable) {
         val token = selectionTokens.remove(listener) ?: return
         selector.removeEventHandler(XamlInterop.ISelector_remove_SelectionChanged, token)
     }
@@ -509,12 +507,11 @@ class WList(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun addItemClickListener(listener: (String) -> Unit) {
         val adapter = Consumer<String> { listener(it) }
-        addItemClickListenerForJava(adapter)
+        addItemClickListener(adapter)
         itemClickTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addItemClickListener")
-    fun addItemClickListenerForJava(listener: Consumer<String>) {
+    fun addItemClickListener(listener: Consumer<String>) {
         val token = listViewBase.addEventHandler(
             "WinUI4K.ItemClickHandler",
             XamlInterop.IID_ItemClickEventHandler,
@@ -537,11 +534,10 @@ class WList(model: WListModel<*>) : WControl(
     @JvmSynthetic
     fun removeItemClickListener(listener: (String) -> Unit) {
         val adapter = itemClickTokens.removeKotlinAdapter(listener) ?: return
-        removeItemClickListenerForJava(adapter)
+        removeItemClickListener(adapter)
     }
 
-    @JvmName("removeItemClickListener")
-    fun removeItemClickListenerForJava(listener: Consumer<String>) {
+    fun removeItemClickListener(listener: Consumer<String>) {
         val token = itemClickTokens.remove(listener) ?: return
         listViewBase.removeEventHandler(XamlInterop.IListViewBase_remove_ItemClick, token)
     }

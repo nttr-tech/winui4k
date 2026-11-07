@@ -84,8 +84,7 @@ class WAppNotification @JvmOverloads constructor(text: String = "") {
 
     /** A Java-friendly overload of [addButton]. The click arguments are passed as a plain Map. */
     @JvmOverloads
-    @JvmName("addButton")
-    fun addButtonForJava(content: String, arguments: Map<String, String> = emptyMap()): WAppNotification =
+    fun addButton(content: String, arguments: Map<String, String> = emptyMap()): WAppNotification =
         addButton(content, *arguments.entries.map { it.key to it.value }.toTypedArray())
 
     /** Sets the notification's purpose (reminder / alarm / urgent, etc.). */
@@ -265,7 +264,7 @@ object WAppNotificationManager {
     @JvmSynthetic
     fun addNotificationInvokedListener(listener: (String) -> Unit) {
         val adapter = Consumer<String> { listener(it) }
-        addNotificationInvokedListenerForJava(adapter)
+        addNotificationInvokedListener(adapter)
         invokedListenerAdapters.add(listener, adapter)
     }
 
@@ -282,34 +281,31 @@ object WAppNotificationManager {
      */
     @JvmSynthetic
     fun addActionListener(listener: (WActionEvent) -> Unit) {
-        addActionListenerForJava(WActionListener(listener).also { actionKotlinAdapters.add(listener, it) })
+        addActionListener(WActionListener(listener).also { actionKotlinAdapters.add(listener, it) })
     }
 
     @JvmStatic
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: WActionListener) {
+    fun addActionListener(listener: WActionListener) {
         val consumer = Consumer<String> { listener.actionPerformed(WActionEvent(this, it)) }
         actionConsumers.add(listener, consumer)
-        addNotificationInvokedListenerForJava(consumer)
+        addNotificationInvokedListener(consumer)
     }
 
     /** Unsubscribes a listener registered with [addActionListener]. */
     @JvmSynthetic
     fun removeActionListener(listener: (WActionEvent) -> Unit) {
         val adapter = actionKotlinAdapters.remove(listener) ?: return
-        removeActionListenerForJava(adapter)
+        removeActionListener(adapter)
     }
 
     @JvmStatic
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: WActionListener) {
+    fun removeActionListener(listener: WActionListener) {
         val consumer = actionConsumers.remove(listener) ?: return
-        removeNotificationInvokedListenerForJava(consumer)
+        removeNotificationInvokedListener(consumer)
     }
 
     @JvmStatic
-    @JvmName("addNotificationInvokedListener")
-    fun addNotificationInvokedListenerForJava(listener: Consumer<String>) {
+    fun addNotificationInvokedListener(listener: Consumer<String>) {
         if (!invokedHandlerAdded) {
             manager.addEventHandler(
                 "WinUI4K.NotificationInvokedHandler",
@@ -331,12 +327,11 @@ object WAppNotificationManager {
     @JvmSynthetic
     fun removeNotificationInvokedListener(listener: (String) -> Unit) {
         val adapter = invokedListenerAdapters.remove(listener) ?: return
-        removeNotificationInvokedListenerForJava(adapter)
+        removeNotificationInvokedListener(adapter)
     }
 
     @JvmStatic
-    @JvmName("removeNotificationInvokedListener")
-    fun removeNotificationInvokedListenerForJava(listener: Consumer<String>) {
+    fun removeNotificationInvokedListener(listener: Consumer<String>) {
         invokedListeners.remove(listener)
     }
 }

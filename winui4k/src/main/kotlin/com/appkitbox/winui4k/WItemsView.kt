@@ -275,12 +275,11 @@ class WItemsView : WControl(
     @JvmSynthetic
     fun addItemInvokedListener(listener: (Int) -> Unit) {
         val adapter = IntConsumer { listener(it) }
-        addItemInvokedListenerForJava(adapter)
+        addItemInvokedListener(adapter)
         itemInvokedTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addItemInvokedListener")
-    fun addItemInvokedListenerForJava(listener: IntConsumer) {
+    fun addItemInvokedListener(listener: IntConsumer) {
         val items = items // Let the handler capture only the item list, not the wrapper (no cycle)
         val token = inspectable.addEventHandler(
             "WinUI4K.ItemsViewItemInvokedHandler",
@@ -303,11 +302,10 @@ class WItemsView : WControl(
     @JvmSynthetic
     fun removeItemInvokedListener(listener: (Int) -> Unit) {
         val adapter = itemInvokedTokens.removeKotlinAdapter(listener) ?: return
-        removeItemInvokedListenerForJava(adapter)
+        removeItemInvokedListener(adapter)
     }
 
-    @JvmName("removeItemInvokedListener")
-    fun removeItemInvokedListenerForJava(listener: IntConsumer) {
+    fun removeItemInvokedListener(listener: IntConsumer) {
         val token = itemInvokedTokens.remove(listener) ?: return
         inspectable.removeEventHandler(XamlInterop.IItemsView_remove_ItemInvoked, token)
     }

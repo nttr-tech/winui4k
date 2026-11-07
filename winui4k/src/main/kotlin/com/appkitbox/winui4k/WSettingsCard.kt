@@ -254,12 +254,11 @@ class WSettingsCard @JvmOverloads constructor(header: String = "", description: 
     @JvmSynthetic
     fun addActionListener(listener: () -> Unit) {
         val adapter = Runnable(listener)
-        addActionListenerForJava(adapter)
+        addActionListener(adapter)
         clickTokens.addKotlinAdapter(listener, adapter)
     }
 
-    @JvmName("addActionListener")
-    fun addActionListenerForJava(listener: Runnable) {
+    fun addActionListener(listener: Runnable) {
         val token = buttonBase.addEventHandler(
             "WinUI4K.ClickHandler",
             XamlInterop.IID_RoutedEventHandler,
@@ -272,11 +271,10 @@ class WSettingsCard @JvmOverloads constructor(header: String = "", description: 
     @JvmSynthetic
     fun removeActionListener(listener: () -> Unit) {
         val adapter = clickTokens.removeKotlinAdapter(listener) ?: return
-        removeActionListenerForJava(adapter)
+        removeActionListener(adapter)
     }
 
-    @JvmName("removeActionListener")
-    fun removeActionListenerForJava(listener: Runnable) {
+    fun removeActionListener(listener: Runnable) {
         val token = clickTokens.remove(listener) ?: return
         buttonBase.removeEventHandler(XamlInterop.IButtonBase_remove_Click, token)
     }

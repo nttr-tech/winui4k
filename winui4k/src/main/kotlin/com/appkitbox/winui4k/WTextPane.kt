@@ -873,15 +873,13 @@ class WTextPane() : WControl(
     @JvmSynthetic
     fun addTextChangedListener(listener: () -> Unit) = textChanges.add(listener) { listener() }
 
-    @JvmName("addTextChangedListener")
-    fun addTextChangedListenerForJava(listener: Runnable) = textChanges.add(listener) { listener.run() }
+    fun addTextChangedListener(listener: Runnable) = textChanges.add(listener) { listener.run() }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
     @JvmSynthetic
     fun removeTextChangedListener(listener: () -> Unit) = textChanges.remove(listener)
 
-    @JvmName("removeTextChangedListener")
-    fun removeTextChangedListenerForJava(listener: Runnable) = textChanges.remove(listener)
+    fun removeTextChangedListener(listener: Runnable) = textChanges.remove(listener)
 
     /** Subscribes to RichEditBox.TextChanged. The handler stays on the native side, so the text pane is not captured strongly and is taken from [listenerAnchor]. */
     private fun subscribeTextChanged() {
