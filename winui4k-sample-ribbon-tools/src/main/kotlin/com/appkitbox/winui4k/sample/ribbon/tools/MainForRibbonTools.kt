@@ -53,12 +53,12 @@ private enum class ToolContext { MOVE, BRUSH, TEXT }
 
 /** The radio tools of the tool palette, and the options bar each tool shows. */
 private enum class Tool(val label: String, val icon: RibbonIcon, val context: ToolContext) {
-    MOVE("Move (V)", RibbonIcon.glyph(""), ToolContext.MOVE),
-    SELECT("Select (M)", RibbonIcon.glyph(""), ToolContext.MOVE),
-    BRUSH("Brush (B)", RibbonIcon.glyph(""), ToolContext.BRUSH),
-    PEN("Pen (P)", RibbonIcon.glyph(""), ToolContext.BRUSH),
-    ERASER("Eraser (E)", RibbonIcon.glyph(""), ToolContext.BRUSH),
-    TYPE("Text (T)", RibbonIcon.glyph(""), ToolContext.TEXT),
+    MOVE(Messages.get("tool.move"), RibbonIcon.glyph("\uE7C2"), ToolContext.MOVE),
+    SELECT(Messages.get("tool.select"), RibbonIcon.glyph("\uE8B3"), ToolContext.MOVE),
+    BRUSH(Messages.get("tool.brush"), RibbonIcon.glyph("\uE771"), ToolContext.BRUSH),
+    PEN(Messages.get("tool.pen"), RibbonIcon.glyph("\uEDFB"), ToolContext.BRUSH),
+    ERASER(Messages.get("tool.eraser"), RibbonIcon.glyph("\uE75C"), ToolContext.BRUSH),
+    TYPE(Messages.get("tool.type"), RibbonIcon.glyph("\uE8D2"), ToolContext.TEXT),
 }
 
 /**
@@ -70,9 +70,9 @@ private enum class Tool(val label: String, val icon: RibbonIcon, val context: To
 fun main() {
     WinUiUtilities.invokeLater {
         WRibbonTheme.applyPalette(RibbonThemePalette.WORD)
-        val window = RibbonDemoWindow("Tools - WinUI4K Ribbon", RibbonDemoApp.TOOLS, null)
+        val window = RibbonDemoWindow(Messages.get("window.title"), RibbonDemoApp.TOOLS, null)
         val status = RibbonLabelModel("status.tool", Tool.BRUSH.label)
-        val canvasText = WLabel("Choose a tool and the options bar follows the active tool")
+        val canvasText = WLabel(Messages.get("canvas.hint"))
         val options = WRibbonContextualToolBar()
         options.setContent(ToolContext.MOVE.name, moveOptions())
         options.setContent(ToolContext.BRUSH.name, brushOptions())
@@ -82,7 +82,7 @@ fun main() {
         val palette = toolPalette { tool ->
             options.activeContext = tool.context.name
             status.label = tool.label
-            canvasText.text = "Using ${tool.label}"
+            canvasText.text = Messages.get("canvas.using", tool.label)
         }
         val top = WGrid()
         top.addRow(GridLength.AUTO)
@@ -111,39 +111,39 @@ private fun menuBarModel(): RibbonMenuBarModel = RibbonMenuBarModel().also { mod
         it.isCheckable = true
         it.isChecked = checked
     }
-    val recent = item("file.recent", "Open Recent").also {
+    val recent = item("file.recent", Messages.get("menu.file.recent")).also {
         it.items.add(item("file.recent.poster", "poster.psd"))
         it.items.add(item("file.recent.logo", "logo.svg"))
     }
     model.items.add(
         menu(
             "file",
-            "File",
-            item("file.new", "New...", "Ctrl+N"),
-            item("file.open", "Open...", "Ctrl+O"),
+            Messages.get("common.file"),
+            item("file.new", Messages.get("menu.file.new"), "Ctrl+N"),
+            item("file.open", Messages.get("menu.file.open"), "Ctrl+O"),
             recent,
             RibbonMenuSeparatorModel(),
-            item("file.save", "Save", "Ctrl+S"),
-            item("file.export", "Export As...", "Alt+Shift+Ctrl+W"),
+            item("file.save", Messages.get("menu.file.save"), "Ctrl+S"),
+            item("file.export", Messages.get("menu.file.export"), "Alt+Shift+Ctrl+W"),
         ),
     )
     model.items.add(
         menu(
             "edit",
-            "Edit",
-            item("edit.undo", "Undo", "Ctrl+Z"),
-            item("edit.redo", "Redo", "Shift+Ctrl+Z"),
+            Messages.get("menu.edit"),
+            item("edit.undo", Messages.get("common.undo"), "Ctrl+Z"),
+            item("edit.redo", Messages.get("common.redo"), "Shift+Ctrl+Z"),
             RibbonMenuSeparatorModel(),
-            item("edit.cut", "Cut", "Ctrl+X"),
-            item("edit.copy", "Copy", "Ctrl+C"),
-            item("edit.paste", "Paste", "Ctrl+V"),
+            item("edit.cut", Messages.get("menu.edit.cut"), "Ctrl+X"),
+            item("edit.copy", Messages.get("common.copy"), "Ctrl+C"),
+            item("edit.paste", Messages.get("menu.edit.paste"), "Ctrl+V"),
         ),
     )
-    model.items.add(menu("image", "Image", item("image.size", "Image Size..."), item("image.canvas", "Canvas Size..."), check("image.aspect", "Pixel Aspect Ratio Correction", true)))
-    model.items.add(menu("layer", "Layer", item("layer.new", "New Layer", "Shift+Ctrl+N"), item("layer.duplicate", "Duplicate Layer")))
-    model.items.add(menu("view", "View", check("view.rulers", "Rulers", true, "Ctrl+R"), check("view.grid", "Grid", false), check("view.snap", "Snap", true)))
-    model.items.add(menu("window", "Window", check("window.layers", "Layers", true), check("window.properties", "Properties", true)))
-    model.items.add(menu("help", "Help", item("help.shortcuts", "Keyboard Shortcuts"), item("help.about", "About")))
+    model.items.add(menu("image", Messages.get("menu.image"), item("image.size", Messages.get("menu.image.size")), item("image.canvas", Messages.get("menu.image.canvas")), check("image.aspect", Messages.get("menu.image.aspect"), true)))
+    model.items.add(menu("layer", Messages.get("menu.layer"), item("layer.new", Messages.get("menu.layer.new"), "Shift+Ctrl+N"), item("layer.duplicate", Messages.get("menu.layer.duplicate"))))
+    model.items.add(menu("view", Messages.get("common.view"), check("view.rulers", Messages.get("menu.rulers"), true, "Ctrl+R"), check("view.grid", Messages.get("menu.grid"), false), check("view.snap", Messages.get("menu.snap"), true)))
+    model.items.add(menu("window", Messages.get("common.window"), check("window.layers", Messages.get("menu.layers"), true), check("window.properties", Messages.get("menu.properties"), true)))
+    model.items.add(menu("help", Messages.get("common.help"), item("help.shortcuts", Messages.get("menu.help.shortcuts")), item("help.about", Messages.get("menu.help.about"))))
 }
 
 /** An options bar (starts with the tool's label and a separator). */
@@ -159,63 +159,63 @@ private fun optionBar(id: String, label: String, icon: RibbonIcon, vararg items:
 /** The options for [Move] and [Select]. */
 private fun moveOptions(): WComponent = optionBar(
     "move",
-    "Move",
+    Messages.get("options.move"),
     Tool.MOVE.icon,
-    RibbonCheckBoxModel("move.autoSelect", "Auto-Select", isChecked = true),
-    RibbonCheckBoxModel("move.transform", "Show Transform Controls"),
+    RibbonCheckBoxModel("move.autoSelect", Messages.get("options.move.auto.select"), isChecked = true),
+    RibbonCheckBoxModel("move.transform", Messages.get("options.move.transform")),
     RibbonSeparatorModel(),
-    button("move.alignLeft", "Align Left", RibbonIcons.ALIGN_LEFT, RibbonItemSize.SMALL),
-    button("move.alignCenter", "Align Center", RibbonIcons.ALIGN_CENTER, RibbonItemSize.SMALL),
-    button("move.alignRight", "Align Right", RibbonIcons.ALIGN_RIGHT, RibbonItemSize.SMALL),
+    button("move.alignLeft", Messages.get("common.align.left"), RibbonIcons.ALIGN_LEFT, RibbonItemSize.SMALL),
+    button("move.alignCenter", Messages.get("common.align.center"), RibbonIcons.ALIGN_CENTER, RibbonItemSize.SMALL),
+    button("move.alignRight", Messages.get("common.align.right"), RibbonIcons.ALIGN_RIGHT, RibbonItemSize.SMALL),
 )
 
 /** The options for [Brush], [Pen], and [Eraser]. */
 private fun brushOptions(): WComponent = optionBar(
     "brush",
-    "Brush",
+    Messages.get("options.brush"),
     Tool.BRUSH.icon,
-    RibbonSpinnerModel("brush.size", "Size:", BRUSH_SIZE).also {
+    RibbonSpinnerModel("brush.size", Messages.get("options.brush.size"), BRUSH_SIZE).also {
         it.minimum = 1.0
         it.maximum = MAX_SIZE
         it.unit = "px"
         it.inputWidth = SIZE_WIDTH
     },
-    RibbonSpinnerModel("brush.hardness", "Hardness:", HARDNESS).also {
+    RibbonSpinnerModel("brush.hardness", Messages.get("options.brush.hardness"), HARDNESS).also {
         it.maximum = PERCENT
         it.unit = "%"
         it.inputWidth = HARDNESS_WIDTH
     },
-    RibbonComboBoxModel("brush.mode", "Mode", listOf("Normal", "Multiply", "Screen", "Overlay")).also {
-        it.selectedItem = "Normal"
-        it.text = "Normal"
+    RibbonComboBoxModel("brush.mode", Messages.get("options.brush.mode"), listOf(Messages.get("options.brush.normal"), Messages.get("options.brush.multiply"), Messages.get("options.brush.screen"), Messages.get("options.brush.overlay"))).also {
+        it.selectedItem = Messages.get("options.brush.normal")
+        it.text = Messages.get("options.brush.normal")
         it.showLabel = true
         it.inputWidth = MODE_WIDTH
     },
-    RibbonSliderModel("brush.opacity", "Opacity").also {
+    RibbonSliderModel("brush.opacity", Messages.get("options.brush.opacity")).also {
         it.value = PERCENT
         it.maximum = PERCENT
         it.sliderWidth = OPACITY_WIDTH
     },
-    toggle("brush.airbrush", "Airbrush", RibbonIcon.glyph("")),
-    toggle("brush.pressure", "Use Pressure for Size", RibbonIcon.glyph("")),
-    RibbonColorPickerModel("brush.color", "Brush Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.parse("#1473E6") },
+    toggle("brush.airbrush", Messages.get("options.brush.airbrush"), RibbonIcon.glyph("\uE706")),
+    toggle("brush.pressure", Messages.get("options.brush.pressure"), RibbonIcon.glyph("\uEDFB")),
+    RibbonColorPickerModel("brush.color", Messages.get("options.brush.color"), RibbonIcon.glyph("\uE790")).also { it.selectedColor = RibbonColor.parse("#1473E6") },
 )
 
 /** The options for [Text] (alignment is a segmented switch). */
 private fun textOptions(): WComponent = optionBar(
     "text",
-    "Text",
+    Messages.get("options.text"),
     Tool.TYPE.icon,
     RibbonFontComboBoxModel("text.font").also { it.selectedItem = "Segoe UI" },
     RibbonFontSizeComboBoxModel("text.size").also { it.selectedItem = TEXT_SIZE },
     RibbonButtonGroupModel(
-        toggle("text.bold", "Bold", RibbonIcons.BOLD),
-        toggle("text.italic", "Italic", RibbonIcons.ITALIC),
+        toggle("text.bold", Messages.get("common.bold"), RibbonIcons.BOLD),
+        toggle("text.italic", Messages.get("common.italic"), RibbonIcons.ITALIC),
     ),
-    RibbonSegmentedModel("text.alignment", "Alignment").also { segmented ->
-        segmented.segments.add(RibbonSegmentModel("left", "Left", RibbonIcons.ALIGN_LEFT))
-        segmented.segments.add(RibbonSegmentModel("center", "Center", RibbonIcons.ALIGN_CENTER))
-        segmented.segments.add(RibbonSegmentModel("right", "Right", RibbonIcons.ALIGN_RIGHT))
+    RibbonSegmentedModel("text.alignment", Messages.get("options.text.alignment")).also { segmented ->
+        segmented.segments.add(RibbonSegmentModel("left", Messages.get("options.text.left"), RibbonIcons.ALIGN_LEFT))
+        segmented.segments.add(RibbonSegmentModel("center", Messages.get("options.text.center"), RibbonIcons.ALIGN_CENTER))
+        segmented.segments.add(RibbonSegmentModel("right", Messages.get("options.text.right"), RibbonIcons.ALIGN_RIGHT))
         segmented.selectedSegment = segmented.segments[0]
     },
 )
@@ -237,22 +237,22 @@ private fun toolPalette(onTool: (Tool) -> Unit): WComponent {
     }
     model.items.add(RibbonSeparatorModel())
     model.items.add(
-        RibbonSplitButtonModel("tool.shape", "Rectangle").also { shape ->
+        RibbonSplitButtonModel("tool.shape", Messages.get("palette.rectangle")).also { shape ->
             shape.icon = RibbonIcon.glyph("\uE739")
             shape.size = RibbonItemSize.SMALL
             shape.followLastChoice = true
-            shape.menuItems.add(RibbonMenuItemModel("shape.rectangle", "Rectangle", RibbonIcon.glyph("")))
-            shape.menuItems.add(RibbonMenuItemModel("shape.ellipse", "Ellipse", RibbonIcon.glyph("")))
-            shape.menuItems.add(RibbonMenuItemModel("shape.polygon", "Polygon", RibbonIcon.glyph("")))
-            shape.menuItems.add(RibbonMenuItemModel("shape.line", "Line", RibbonIcon.glyph("")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.rectangle", Messages.get("palette.rectangle"), RibbonIcon.glyph("\uE739")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.ellipse", Messages.get("palette.ellipse"), RibbonIcon.glyph("\uEA3A")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.polygon", Messages.get("palette.polygon"), RibbonIcon.glyph("\uE879")))
+            shape.menuItems.add(RibbonMenuItemModel("shape.line", Messages.get("palette.line"), RibbonIcon.glyph("\uE7C9")))
         },
     )
-    model.items.add(button("tool.crop", "Crop", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
-    model.items.add(button("tool.zoom", "Zoom", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
-    model.items.add(button("tool.hand", "Hand", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+    model.items.add(button("tool.crop", Messages.get("palette.crop"), RibbonIcon.glyph("\uE7A8"), RibbonItemSize.SMALL))
+    model.items.add(button("tool.zoom", Messages.get("common.zoom"), RibbonIcon.glyph("\uE71E"), RibbonItemSize.SMALL))
+    model.items.add(button("tool.hand", Messages.get("palette.hand"), RibbonIcon.glyph("\uE7C9"), RibbonItemSize.SMALL))
     model.items.add(RibbonSeparatorModel())
-    model.items.add(RibbonColorPickerModel("palette.foreground", "Foreground Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.parse("#1473E6") })
-    model.items.add(RibbonColorPickerModel("palette.background", "Background Color", RibbonIcon.glyph("")).also { it.selectedColor = RibbonColor.WHITE })
+    model.items.add(RibbonColorPickerModel("palette.foreground", Messages.get("palette.foreground"), RibbonIcon.glyph("\uE790")).also { it.selectedColor = RibbonColor.parse("#1473E6") })
+    model.items.add(RibbonColorPickerModel("palette.background", Messages.get("palette.background"), RibbonIcon.glyph("\uE790")).also { it.selectedColor = RibbonColor.WHITE })
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
     bar.verticalAlignmentInParent = VerticalAlignment.TOP
@@ -274,19 +274,19 @@ private fun canvas(text: WLabel): WComponent {
     val floatingModel = RibbonToolBarModel("floating")
     floatingModel.showLabels = false
     listOf(
-        button("float.undo", "Undo", RibbonIcons.UNDO, RibbonItemSize.SMALL),
-        button("float.redo", "Redo", RibbonIcons.REDO, RibbonItemSize.SMALL),
+        button("float.undo", Messages.get("common.undo"), RibbonIcons.UNDO, RibbonItemSize.SMALL),
+        button("float.redo", Messages.get("common.redo"), RibbonIcons.REDO, RibbonItemSize.SMALL),
         RibbonSeparatorModel(),
-        button("float.zoomIn", "Zoom In", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
-        button("float.zoomOut", "Zoom Out", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
-        button("float.fit", "Fit on Screen", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        button("float.zoomIn", Messages.get("floating.zoom.in"), RibbonIcon.glyph("\uE8A3"), RibbonItemSize.SMALL),
+        button("float.zoomOut", Messages.get("floating.zoom.out"), RibbonIcon.glyph("\uE71F"), RibbonItemSize.SMALL),
+        button("float.fit", Messages.get("floating.fit"), RibbonIcon.glyph("\uE740"), RibbonItemSize.SMALL),
         RibbonSeparatorModel(),
-        toggle("float.grid", "Grid", RibbonIcon.glyph("")),
-        toggle("float.snap", "Snap", RibbonIcon.glyph("")).also { it.isChecked = true },
-        toggle("float.rulers", "Rulers", RibbonIcon.glyph("")),
-        button("float.rotate", "Rotate", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
-        button("float.flip", "Flip", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
-        button("float.export", "Export", RibbonIcon.glyph(""), RibbonItemSize.SMALL),
+        toggle("float.grid", Messages.get("menu.grid"), RibbonIcon.glyph("\uE80A")),
+        toggle("float.snap", Messages.get("menu.snap"), RibbonIcon.glyph("\uE8AD")).also { it.isChecked = true },
+        toggle("float.rulers", Messages.get("menu.rulers"), RibbonIcon.glyph("\uECC6")),
+        button("float.rotate", Messages.get("floating.rotate"), RibbonIcon.glyph("\uE7AD"), RibbonItemSize.SMALL),
+        button("float.flip", Messages.get("floating.flip"), RibbonIcon.glyph("\uE8AB"), RibbonItemSize.SMALL),
+        button("float.export", Messages.get("floating.export"), RibbonIcon.glyph("\uEDE1"), RibbonItemSize.SMALL),
     ).forEach { floatingModel.items.add(it) }
     val floating = WBorder(WRibbonToolBar(floatingModel))
     floating.maxWidth = FLOATING_WIDTH
@@ -317,10 +317,10 @@ private fun panelRail(): WComponent {
         it.groupName = "panel"
         it.showLabelInSimplified = true
     }
-    model.items.add(panel("panel.layers", "Layers", RibbonIcon.glyph("")).also { it.isChecked = true })
-    model.items.add(panel("panel.properties", "Properties", RibbonIcon.glyph("")))
-    model.items.add(panel("panel.history", "History", RibbonIcon.glyph("")))
-    model.items.add(panel("panel.library", "Libraries", RibbonIcon.glyph("")))
+    model.items.add(panel("panel.layers", Messages.get("menu.layers"), RibbonIcon.glyph("\uE81E")).also { it.isChecked = true })
+    model.items.add(panel("panel.properties", Messages.get("menu.properties"), RibbonIcon.glyph("\uE713")))
+    model.items.add(panel("panel.history", Messages.get("panel.history"), RibbonIcon.glyph("\uE81C")))
+    model.items.add(panel("panel.library", Messages.get("panel.library"), RibbonIcon.glyph("\uE8F1")))
     val bar = WRibbonToolBar(model)
     bar.margin = 6.0
     bar.verticalAlignmentInParent = VerticalAlignment.TOP
