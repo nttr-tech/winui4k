@@ -66,75 +66,75 @@ final class HomePage {
 
     private static Map<String, String> buildPageDescriptions() {
         Map<String, String> descriptions = new LinkedHashMap<>();
-        descriptions.put("AppBarButton", "An icon button placed on a command bar.");
-        descriptions.put("AppBarSeparator", "A vertical line that divides command bar buttons into groups.");
-        descriptions.put("AppBarToggleButton", "A button placed on a command bar that toggles on/off.");
-        descriptions.put("AutoSuggestBox", "A text box that shows suggestions as you type.");
-        descriptions.put("AppNotification", "Sends a toast notification that arrives in the action center.");
-        descriptions.put("BadgeNotification", "Shows a numeric or glyph badge on the taskbar icon.");
-        descriptions.put("Border", "A container that draws a border, background, and rounded corners around a single child.");
-        descriptions.put("BreadcrumbBar", "A breadcrumb trail that shows your current position in a hierarchy and lets you jump back up it.");
-        descriptions.put("Button", "A button that responds to clicks.");
-        descriptions.put("Canvas", "A panel that positions children with absolute coordinates.");
-        descriptions.put("CheckBox", "A check box that toggles between three states: on, off, and indeterminate.");
-        descriptions.put("ColorPicker", "A control for choosing a color via a spectrum or sliders.");
-        descriptions.put("ComboBox", "A control for choosing an item from a drop-down list.");
-        descriptions.put("CommandBar", "A toolbar that groups an app's commands together.");
-        descriptions.put("CommandBarFlyout", "Shows commands floating near the current selection.");
-        descriptions.put("ContentDialog", "A modal dialog that waits for a user response.");
-        descriptions.put("DropDownButton", "A button with a chevron that opens a menu on click.");
-        descriptions.put("Expander", "A control that expands/collapses its content when the header is clicked.");
-        descriptions.put("Flyout", "Shows content in a lightweight popup.");
-        descriptions.put("Grid", "A layout panel that places children into cells laid out in rows and columns.");
-        descriptions.put("HyperlinkButton", "A button styled as a link that responds to clicks.");
-        descriptions.put("InfoBadge", "A small badge that unobtrusively shows an unread count or draws attention.");
-        descriptions.put("InfoBar", "An inline notification bar that reports an in-app state change.");
-        descriptions.put("JumpList", "Adds items to the taskbar's right-click menu.");
-        descriptions.put("ListBox", "A control for selecting an item from an always-visible list.");
-        descriptions.put("ListView", "A list that lines items up vertically for selection.");
-        descriptions.put("MenuBar", "A menu that runs along the top of a window.");
-        descriptions.put("MenuFlyout", "A transient menu such as a context menu.");
-        descriptions.put("NavigationView", "Provides an app's top-level navigation.");
-        descriptions.put("NumberBox", "Lets you enter a number and adjust it with spin buttons.");
-        descriptions.put("PasswordBox", "A password input field that hides the typed characters.");
-        descriptions.put("Popup", "Shows content floating at an arbitrary position.");
-        descriptions.put("ProgressBar", "Shows a task's progress as a bar (indeterminate display supported too).");
-        descriptions.put("ProgressRing", "Shows an ongoing operation or progress as a circular ring.");
-        descriptions.put("RadioButton", "A button that lets you select just one option from a group.");
-        descriptions.put("RatingControl", "A control for entering and displaying a rating as a number of stars.");
-        descriptions.put("RelativePanel", "A panel that lays children out relative to one another.");
-        descriptions.put("RepeatButton", "A button that repeatedly fires its click event while held down.");
-        descriptions.put("AnnotatedScrollBar", "A control that adds annotations to a vertical scrollbar to make large collections easier to navigate.");
-        descriptions.put("PipsPager", "Lets you page through content without displaying explicit page numbers.");
-        descriptions.put("ScrollView", "A container control that lets you pan and zoom its content.");
-        descriptions.put("ScrollViewer", "A container control that lets you pan and zoom its content.");
-        descriptions.put("SelectorBar", "A control for switching between a small number of options.");
-        descriptions.put("SemanticZoom", "Switches between two zoomed views of a collection to make large numbers of items easier to navigate.");
-        descriptions.put("RichEditBox", "An input field for editing formatted text.");
-        descriptions.put("RichTextBlock", "A control that displays formatted text.");
-        descriptions.put("Slider", "Lets you drag a thumb to choose a value within a range.");
-        descriptions.put("SplitButton", "A button that combines a default action with a menu.");
-        descriptions.put("SplitView", "A container that shows a pane alongside content.");
-        descriptions.put("StackPanel", "A panel that lines children up in a single vertical or horizontal row.");
-        descriptions.put("StandardUICommand", "Provides standard commands such as copy or delete.");
-        descriptions.put("SwipeControl", "A container that lets you run commands via a swipe gesture.");
-        descriptions.put("Table", "A table that displays data in rows and columns.");
-        descriptions.put("TabView", "A control that switches between multiple pages via tabs.");
-        descriptions.put("TeachingTip", "Shows a hint that points to and explains a specific piece of UI.");
-        descriptions.put("TextBlock", "Displays read-only text.");
-        descriptions.put("TextBox", "Lets you enter single-line or multi-line text.");
-        descriptions.put("ToggleButton", "A button that toggles between an on and off state.");
-        descriptions.put("ToggleSplitButton", "A button that combines an on/off toggle with a menu.");
-        descriptions.put("ToggleSwitch", "A switch that toggles between on and off.");
-        descriptions.put("ToolTip", "Shows a floating explanation of an element on hover.");
-        descriptions.put("Tree", "A tree whose hierarchical data can be expanded and collapsed.");
-        descriptions.put("VariableSizedWrapGrid", "A panel that wraps children in cell-sized units.");
-        descriptions.put("XamlUICommand", "A reusable command that carries a label and an icon.");
-        descriptions.put("AppWindow", "Controls a window's size, position, and presenter.");
-        descriptions.put("AppWindowTitleBar", "Customizes the title bar's colors and button region.");
-        descriptions.put("Multiple windows", "Creates and manages multiple windows.");
-        descriptions.put("SystemBackdrop", "Applies a background material such as Mica or Acrylic.");
-        descriptions.put("TitleBar", "A title bar that can host a back button and a search box.");
+        descriptions.put("AppBarButton", Messages.get("home.description.appbarbutton"));
+        descriptions.put("AppBarSeparator", Messages.get("home.description.appbarseparator"));
+        descriptions.put("AppBarToggleButton", Messages.get("home.description.appbartogglebutton"));
+        descriptions.put("AutoSuggestBox", Messages.get("home.description.autosuggestbox"));
+        descriptions.put("AppNotification", Messages.get("home.description.appnotification"));
+        descriptions.put("BadgeNotification", Messages.get("home.description.badgenotification"));
+        descriptions.put("Border", Messages.get("home.description.border"));
+        descriptions.put("BreadcrumbBar", Messages.get("home.description.breadcrumbbar"));
+        descriptions.put("Button", Messages.get("home.description.button"));
+        descriptions.put("Canvas", Messages.get("home.description.canvas"));
+        descriptions.put("CheckBox", Messages.get("home.description.checkbox"));
+        descriptions.put("ColorPicker", Messages.get("home.description.colorpicker"));
+        descriptions.put("ComboBox", Messages.get("home.description.combobox"));
+        descriptions.put("CommandBar", Messages.get("home.description.commandbar"));
+        descriptions.put("CommandBarFlyout", Messages.get("home.description.commandbarflyout"));
+        descriptions.put("ContentDialog", Messages.get("home.description.contentdialog"));
+        descriptions.put("DropDownButton", Messages.get("home.description.dropdownbutton"));
+        descriptions.put("Expander", Messages.get("home.description.expander"));
+        descriptions.put("Flyout", Messages.get("home.description.flyout"));
+        descriptions.put("Grid", Messages.get("home.description.grid"));
+        descriptions.put("HyperlinkButton", Messages.get("home.description.hyperlinkbutton"));
+        descriptions.put("InfoBadge", Messages.get("home.description.infobadge"));
+        descriptions.put("InfoBar", Messages.get("home.description.infobar"));
+        descriptions.put("JumpList", Messages.get("home.description.jumplist"));
+        descriptions.put("ListBox", Messages.get("home.description.listbox"));
+        descriptions.put("ListView", Messages.get("home.description.listview"));
+        descriptions.put("MenuBar", Messages.get("home.description.menubar"));
+        descriptions.put("MenuFlyout", Messages.get("home.description.menuflyout"));
+        descriptions.put("NavigationView", Messages.get("home.description.navigationview"));
+        descriptions.put("NumberBox", Messages.get("home.description.numberbox"));
+        descriptions.put("PasswordBox", Messages.get("home.description.passwordbox"));
+        descriptions.put("Popup", Messages.get("home.description.popup"));
+        descriptions.put("ProgressBar", Messages.get("home.description.progressbar"));
+        descriptions.put("ProgressRing", Messages.get("home.description.progressring"));
+        descriptions.put("RadioButton", Messages.get("home.description.radiobutton"));
+        descriptions.put("RatingControl", Messages.get("home.description.ratingcontrol"));
+        descriptions.put("RelativePanel", Messages.get("home.description.relativepanel"));
+        descriptions.put("RepeatButton", Messages.get("home.description.repeatbutton"));
+        descriptions.put("AnnotatedScrollBar", Messages.get("home.description.annotatedscrollbar"));
+        descriptions.put("PipsPager", Messages.get("home.description.pipspager"));
+        descriptions.put("ScrollView", Messages.get("home.description.scrollview"));
+        descriptions.put("ScrollViewer", Messages.get("home.description.scrollview"));
+        descriptions.put("SelectorBar", Messages.get("home.description.selectorbar"));
+        descriptions.put("SemanticZoom", Messages.get("home.description.semanticzoom"));
+        descriptions.put("RichEditBox", Messages.get("home.description.richeditbox"));
+        descriptions.put("RichTextBlock", Messages.get("home.description.richtextblock"));
+        descriptions.put("Slider", Messages.get("home.description.slider"));
+        descriptions.put("SplitButton", Messages.get("home.description.splitbutton"));
+        descriptions.put("SplitView", Messages.get("home.description.splitview"));
+        descriptions.put("StackPanel", Messages.get("home.description.stackpanel"));
+        descriptions.put("StandardUICommand", Messages.get("home.description.standarduicommand"));
+        descriptions.put("SwipeControl", Messages.get("home.description.swipecontrol"));
+        descriptions.put("Table", Messages.get("home.description.table"));
+        descriptions.put("TabView", Messages.get("home.description.tabview"));
+        descriptions.put("TeachingTip", Messages.get("home.description.teachingtip"));
+        descriptions.put("TextBlock", Messages.get("home.description.textblock"));
+        descriptions.put("TextBox", Messages.get("home.description.textbox"));
+        descriptions.put("ToggleButton", Messages.get("home.description.togglebutton"));
+        descriptions.put("ToggleSplitButton", Messages.get("home.description.togglesplitbutton"));
+        descriptions.put("ToggleSwitch", Messages.get("home.description.toggleswitch"));
+        descriptions.put("ToolTip", Messages.get("home.description.tooltip"));
+        descriptions.put("Tree", Messages.get("home.description.tree"));
+        descriptions.put("VariableSizedWrapGrid", Messages.get("home.description.variablesizedwrapgrid"));
+        descriptions.put("XamlUICommand", Messages.get("home.description.xamluicommand"));
+        descriptions.put("AppWindow", Messages.get("home.description.appwindow"));
+        descriptions.put("AppWindowTitleBar", Messages.get("home.description.appwindowtitlebar"));
+        descriptions.put("Multiple windows", Messages.get("home.description.multiplewindows"));
+        descriptions.put("SystemBackdrop", Messages.get("home.description.systembackdrop"));
+        descriptions.put("TitleBar", Messages.get("home.description.titlebar"));
         return descriptions;
     }
 
@@ -314,42 +314,42 @@ final class HomePage {
         tiles.add(
             buildLinkTile(
                 "Getting started",
-                "See an overview of winui4k and WinUI in the docs.",
+                Messages.get("home.tile.gettingstarted.description"),
                 "Header-WinUI.png",
                 null,
                 "https://github.com/nttr-tech/winui4k#readme"));
         tiles.add(
             buildLinkTile(
                 "Design",
-                "Guidelines and toolkits for building beautiful WinUI experiences.",
+                Messages.get("home.tile.design.description"),
                 "Header-WindowsDesign.png",
                 null,
                 "https://learn.microsoft.com/windows/apps/design/"));
         tiles.add(
             buildLinkTile(
                 "winui4k on GitHub",
-                "View winui4k's source code and repository.",
+                Messages.get("home.tile.github.description"),
                 null,
                 "", // Segoe Fluent Icons: Globe
                 "https://github.com/nttr-tech/winui4k"));
         tiles.add(
             buildLinkTile(
                 "Community Toolkit",
-                "A collection of helper functions, controls, and app services.",
+                Messages.get("home.tile.toolkit.description"),
                 "Header-Toolkit.png",
                 null,
                 "https://apps.microsoft.com/store/detail/windows-community-toolkit-sample-app/9NBLGGH4TLCQ"));
         tiles.add(
             buildLinkTile(
                 "Code samples",
-                "Find samples that show specific tasks, features, and APIs.",
+                Messages.get("home.tile.samples.description"),
                 null,
                 "", // Segoe Fluent Icons: Code
                 "https://learn.microsoft.com/windows/apps/get-started/samples"));
         tiles.add(
             buildLinkTile(
                 "Partner Center",
-                "Publish your app to the Microsoft Store.",
+                Messages.get("home.tile.partnercenter.description"),
                 "Header-Store.light.png",
                 null,
                 "https://developer.microsoft.com/windows/"));
@@ -551,11 +551,11 @@ final class HomePage {
         image.setHeight(36.0);
         image.setStretch(Stretch.UNIFORM);
         fallback.add(image);
-        WLabel titleLabel = new WLabel("No favorites yet");
+        WLabel titleLabel = new WLabel(Messages.get("home.favorites.empty.title"));
         titleLabel.setFontWeight(600);
         titleLabel.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
         fallback.add(titleLabel);
-        WLabel descriptionLabel = new WLabel("Click the star icon on any page to have it show up here.");
+        WLabel descriptionLabel = new WLabel(Messages.get("home.favorites.empty.description"));
         descriptionLabel.setForeground(GalleryTheme.TEXT_SECONDARY());
         descriptionLabel.setHorizontalAlignmentInParent(HorizontalAlignment.CENTER);
         fallback.add(descriptionLabel);
