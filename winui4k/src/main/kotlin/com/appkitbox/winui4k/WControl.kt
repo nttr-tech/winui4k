@@ -47,7 +47,11 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
     /** The last set inner padding returned by [padding] (0 if the four sides are not equal, 0 once the setting is cleared). */
     private var paddingValue: Double = 0.0
 
-    /** Sets the inner padding on each side individually (Control.Padding). The value read from [padding] changes too. */
+    /**
+     * Sets the inner padding on each side individually (Control.Padding). The value read from [padding] changes too.
+     * The arguments are in the order left, top, right, bottom, the same as WinUI's Thickness, which differs from Swing's Insets (top, left, bottom, right). To pass them in Swing's order,
+     * use setPadding([WInsets]).
+     */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(control, XamlInterop.IControl_put_Padding, left, top, right, bottom)
         paddingValue = uniformThickness(left, top, right, bottom)
@@ -65,6 +69,13 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         clearControlProperty(XamlInterop.IControlStatics_get_PaddingProperty)
         paddingValue = 0.0
     }
+
+    /**
+     * Sets the inner padding with a [WInsets] in the order top, left, bottom, right, the same as Swing's Insets (Control.Padding).
+     * The four numbers of `createEmptyBorder(top, left, bottom, right)` or `new Insets(top, left, bottom, right)` can be moved as is to
+     * `setPadding(new WInsets(top, left, bottom, right))`. The value read from [padding] changes too.
+     */
+    fun setPadding(padding: WInsets) = setPadding(padding.left, padding.top, padding.right, padding.bottom)
 
     /**
      * JComponent.getInsets-like: the width inside the border (DIP). The sum of the border thickness (Control.BorderThickness) and the inner padding (Control.Padding),

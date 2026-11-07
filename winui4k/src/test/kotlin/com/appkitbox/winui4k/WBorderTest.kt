@@ -100,6 +100,29 @@ class WBorderTest : FunSpec() {
             shown(border) { child.bounds } shouldBe WRectangle(8, 12, 76, 28)
         }
 
+        test("setPadding(WInsets) is in the order top, left, bottom, right, the same as Swing's Insets (top 8, left 4, bottom 16, right 12)") {
+            val (border, child) = onUiThreadGet {
+                val child = WPanel()
+                border().also {
+                    it.borderThickness = 4.0
+                    it.setPadding(WInsets(top = 8.0, left = 4.0, bottom = 16.0, right = 12.0))
+                    it.child = child
+                } to child
+            }
+            // left = 4 + 4, top = 4 + 8, width = 100 - (8 + 16), height = 60 - (12 + 20). The same placement as the four-number setPadding (left, top, right, bottom)
+            shown(border) { child.bounds } shouldBe WRectangle(8, 12, 76, 28)
+        }
+
+        test("with setPadding(WInsets), padding is the value if all four sides are equal, and 0 otherwise") {
+            onUiThreadGet {
+                val border = WBorder()
+                border.setPadding(WInsets(5.0))
+                val uniform = border.padding
+                border.setPadding(WInsets(1.0, 2.0, 3.0, 4.0))
+                uniform to border.padding
+            } shouldBe (5.0 to 0.0)
+        }
+
         test("changing the padding after it is shown makes the child area follow") {
             val (border, child) = onUiThreadGet {
                 val child = WPanel()

@@ -68,4 +68,23 @@ class WControlInsetsForJavaTest {
             UiTestHarness.detach(button);
         }
     }
+
+    @Test
+    void passingAWInsetsToSetPaddingGivesTheInnerPaddingInTheOrderTopLeftBottomRightLikeSwingInsets() {
+        WButton button = onUiThreadGet(() -> new WButton("Press"));
+        UiTestHarness.attachAndAwaitLoaded(button);
+        try {
+            onUiThread(() -> {
+                button.setBorder(WBorderFactory.createLineBorder(WColor.BLACK, 1));
+                // The same order as new Insets(top, left, bottom, right)
+                button.setPadding(new WInsets(1, 2, 3, 4));
+                assertEquals(new WInsets(2.0, 3.0, 4.0, 5.0), button.getInsets());
+                assertEquals(0.0, button.getPadding());
+                button.setPadding(new WInsets(6, 6, 6, 6));
+                assertEquals(6.0, button.getPadding());
+            });
+        } finally {
+            UiTestHarness.detach(button);
+        }
+    }
 }

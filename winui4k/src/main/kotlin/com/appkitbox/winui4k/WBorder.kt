@@ -79,11 +79,21 @@ class WBorder @JvmOverloads constructor(child: WComponent? = null) : WComponent(
     /** The last set inner padding returned by [padding] (0 if the four sides are not equal). */
     private var paddingValue: Double = 0.0
 
-    /** Sets the padding on each side individually (Border.Padding). The value read from [padding] changes too. */
+    /**
+     * Sets the inner padding on each side individually (Border.Padding). The value read from [padding] changes too.
+     * The arguments are in the order left, top, right, bottom, the same as WinUI's Thickness, which differs from Swing's Insets (top, left, bottom, right). To pass them in Swing's order,
+     * use setPadding([WInsets]).
+     */
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(inspectable, XamlInterop.IBorder_put_Padding, left, top, right, bottom)
         paddingValue = uniformThickness(left, top, right, bottom)
     }
+
+    /**
+     * Sets the inner padding with a [WInsets] in the order top, left, bottom, right, the same as Swing's Insets (Border.Padding).
+     * The value read from [padding] changes too.
+     */
+    fun setPadding(padding: WInsets) = setPadding(padding.left, padding.top, padding.right, padding.bottom)
 
     init {
         if (child != null) this.child = child
