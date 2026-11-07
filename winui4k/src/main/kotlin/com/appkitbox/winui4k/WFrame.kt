@@ -34,7 +34,7 @@ import kotlin.math.roundToInt
  *   process remains after closing with ×).
  * - A [dispose]d window cannot be shown again ([isVisible] = true throws [IllegalStateException]).
  */
-@Suppress("TooManyFunctions") // Lists the JFrame / Window APIs in one class
+@Suppress("TooManyFunctions", "LargeClass") // Lists the JFrame / Window APIs in one class
 class WFrame @JvmOverloads constructor(title: String = "") :
     WWindowConstants,
     WDialogParent {
@@ -522,15 +522,16 @@ class WFrame @JvmOverloads constructor(title: String = "") :
 
     /**
      * Window.setSize(int, int)-like: changes the size of the whole window in DIP (AppWindow.Resize). Values smaller than [minimumSize] are
-     * enlarged to [minimumSize] (as in Swing). Negative values are treated as 0. It does not get smaller than the minimum size the OS decides
-     * (a width that fits the title bar buttons).
+     * enlarged to [minimumSize] (as in Swing). Values larger than [maximumSize] are shrunk to [maximumSize] (when both apply,
+     * [minimumSize] wins). Negative values are treated as 0. It does not get smaller than the minimum size the OS decides (a width that fits the title bar buttons).
      */
     fun setSize(width: Int, height: Int) {
         val minimum = minimumSize
+        val maximum = maximumSize
         val scale = dpiScale
         appWindow.resize(
-            toPixels(maxOf(width, minimum?.width ?: 0, 0), scale),
-            toPixels(maxOf(height, minimum?.height ?: 0, 0), scale),
+            toPixels(maxOf(minOf(width, maximum?.width ?: width), minimum?.width ?: 0, 0), scale),
+            toPixels(maxOf(minOf(height, maximum?.height ?: height), minimum?.height ?: 0, 0), scale),
         )
     }
 
@@ -595,6 +596,29 @@ class WFrame @JvmOverloads constructor(title: String = "") :
                 presenter.preferredMinimumHeight = value?.let { toPixels(it.height, scale) }
             }
             if (value != null) growToMinimum()
+        }
+
+    /**
+     * Window.setMaximumSize / getMaximumSize-like: the maximum size the user can enlarge it to (DIP; OverlappedPresenter.PreferredMaximumWidth /
+     * PreferredMaximumHeight). null removes the constraint (default). Setting a value smaller than the current size shrinks the window to that size.
+     * Swing (AWT on Windows) does not pass the maximum window size to the OS, so it can be enlarged by dragging the frame, but WinUI4K also stops frame dragging.
+     * It is converted to physical pixels with the scale at the time it is set. With presenters such as full screen it only shrinks the size and does not constrain it.
+     *
+     * @throws IllegalArgumentException if the width or height is negative
+     */
+    var maximumSize: WDimension? = null
+        set(value) {
+            require(value == null || (value.width >= 0 && value.height >= 0)) { "the width and height of maximumSize must be 0 or more: $value" }
+            field = value
+            val scale = dpiScale
+            withOverlapped { presenter ->
+                presenter.preferredMaximumWidth = value?.let { toPixels(it.width, scale) }
+                presenter.preferredMaximumHeight = value?.let { toPixels(it.height, scale) }
+            }
+            if (value != null) {
+                val current = size
+                if (current.width > value.width || current.height > value.height) setSize(current.width, current.height)
+            }
         }
 
     /** Enlarges it if the current size is smaller than [minimumSize]. */

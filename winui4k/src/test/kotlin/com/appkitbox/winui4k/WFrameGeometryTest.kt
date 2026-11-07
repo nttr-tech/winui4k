@@ -141,6 +141,42 @@ class WFrameGeometryTest : FunSpec() {
             }
         }
 
+        test("setSize larger than maximumSize shrinks to maximumSize. Enlarging by the user (natively) also stops. null removes it") {
+            val frame = newFrame()
+            show(frame)
+            val scale = scaleOf(frame)
+            onUiThread {
+                frame.maximumSize.shouldBeNull()
+                frame.setSize(400, 300)
+                frame.maximumSize = WDimension(500, 350)
+                frame.maximumSize shouldBe WDimension(500, 350)
+                frame.size shouldBe WDimension(400, 300) // Already smaller, so it does not change
+                frame.setSize(900, 900)
+                frame.size shouldBe WDimension(500, 350)
+                frame.setSize(450, 600)
+                frame.size shouldBe WDimension(450, 350)
+                frame.appWindow.resize(px(1000, scale), px(1000, scale)) // As with dragging the frame, it stops at the maximum size
+                frame.appWindow.size.width shouldBe px(500, scale)
+                frame.appWindow.size.height shouldBe px(350, scale)
+                frame.maximumSize = null
+                frame.setSize(600, 450)
+                frame.size shouldBe WDimension(600, 450)
+            }
+        }
+
+        test("a maximumSize smaller than the current size shrinks the window. Negative values throw IllegalArgumentException, and the value does not change") {
+            val frame = newFrame()
+            show(frame)
+            onUiThread {
+                frame.setSize(500, 400)
+                frame.maximumSize = WDimension(450, 600)
+                frame.size shouldBe WDimension(450, 400)
+                shouldThrow<IllegalArgumentException> { frame.maximumSize = WDimension(-1, 10) }
+                shouldThrow<IllegalArgumentException> { frame.maximumSize = WDimension(10, -1) }
+                frame.maximumSize shouldBe WDimension(450, 600)
+            }
+        }
+
         test("pack before showing fits the client area to the preferred size of the default content (WBorderLayout)") {
             val frame = newFrame()
             val center = onUiThreadGet {
