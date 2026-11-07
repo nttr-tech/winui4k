@@ -38,7 +38,9 @@ class WComboBoxRendererForJavaTest {
             combo.setRenderer(renderer);
             Function<Object, String> read = combo.getRenderer();
             assertSame(renderer, read);
-            assertEquals("[apple]", combo.getItemAt(0));
+            assertEquals("apple", combo.getItemAt(0)); // getItemAt is the item itself, as with JComboBox
+            assertEquals("[apple]", combo.getItem(0));
+            assertEquals("[apple]", combo.getSelectedItemText());
             assertEquals("[orange]", combo.getItem(1));
             combo.setRenderer(null);
             assertNull(combo.getRenderer());
