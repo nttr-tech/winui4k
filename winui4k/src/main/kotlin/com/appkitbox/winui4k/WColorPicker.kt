@@ -232,25 +232,48 @@ class WColorPicker() : WControl(
          * (call it on the UI thread, outside layout notifications; [IllegalStateException] if another dialog is open).
          * The button texts are [WOptionPane.okButtonText] / [WOptionPane.cancelButtonText]. To receive the result without blocking, use
          * The following [showDialog]. The dialog appears inside the owner window, so when the window is too small for it, the content scrolls vertically.
+         *
+         * As in Swing (Java 9 or later), transparency (alpha) can also be chosen (the same as `showDialog(owner, title, initial, true)`
+         * with [colorTransparencySelectionEnabled] set to true).
          */
         @JvmStatic
-        fun showDialog(owner: WComponent, title: String, initial: WColor?): WColor? {
-            val (dialog, picker) = chooserDialog(title, initial)
+        fun showDialog(owner: WComponent, title: String, initial: WColor?): WColor? = showDialog(owner, title, initial, true)
+
+        /**
+         * JColorChooser.showDialog(Component, String, Color, boolean)-like: if [colorTransparencySelectionEnabled] is true,
+         * transparency (alpha) can also be chosen ([isAlphaEnabled]). Otherwise the same as [showDialog] with three arguments.
+         */
+        @JvmStatic
+        fun showDialog(owner: WComponent, title: String, initial: WColor?, colorTransparencySelectionEnabled: Boolean): WColor? {
+            val (dialog, picker) = chooserDialog(title, initial, colorTransparencySelectionEnabled)
             return pickedColor(dialog.showAndWait(owner), picker)
         }
 
         /**
          * Opens the same dialog as [showDialog] without blocking, and passes the selected color (null for Cancel etc.) to [onClosed] when it is closed
-         * (not called when the owner window is closed).
+         * (not called when the owner window is closed). Transparency can also be chosen.
          */
         @JvmStatic
         fun showDialog(owner: WComponent, title: String, initial: WColor?, onClosed: Consumer<WColor?>) {
-            val (dialog, picker) = chooserDialog(title, initial)
+            showDialog(owner, title, initial, true, onClosed)
+        }
+
+        /** The form of the non-blocking [showDialog] that specifies whether transparency can be chosen ([colorTransparencySelectionEnabled]). */
+        @JvmStatic
+        fun showDialog(
+            owner: WComponent,
+            title: String,
+            initial: WColor?,
+            colorTransparencySelectionEnabled: Boolean,
+            onClosed: Consumer<WColor?>,
+        ) {
+            val (dialog, picker) = chooserDialog(title, initial, colorTransparencySelectionEnabled)
             dialog.show(owner) { onClosed.accept(pickedColor(it, picker)) }
         }
 
-        private fun chooserDialog(title: String, initial: WColor?): Pair<WContentDialog, WColorPicker> {
+        internal fun chooserDialog(title: String, initial: WColor?, alphaEnabled: Boolean): Pair<WContentDialog, WColorPicker> {
             val picker = WColorPicker(initial ?: WColor.WHITE)
+            picker.isAlphaEnabled = alphaEnabled
             // A ContentDialog appears inside the window, and the template's ContentScrollViewer does not scroll vertically. Make the content scroll vertically
             // so that even in a small window the brightness slider and the RGB fields can be reached (Swing uses a separate window, so it is not cut off)
             val scroller = WScrollPane(picker).also { it.verticalScrollBarVisibility = ScrollBarVisibility.AUTO }

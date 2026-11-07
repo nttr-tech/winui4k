@@ -245,6 +245,36 @@ class WColorPickerTest : FunSpec() {
             }
         }
 
+        test("the three-argument form of showDialog shows a picker where transparency can be chosen, as in Swing (Java 9 or later), and false as the fourth argument disables it") {
+            onUiThreadGet {
+                listOf(
+                    WColorPicker.chooserDialog("Color", navy, true).second.isAlphaEnabled,
+                    WColorPicker.chooserDialog("Color", navy, false).second.isAlphaEnabled,
+                )
+            } shouldBe listOf(true, false)
+        }
+
+        test("the three-argument form of showDialog returns a translucent initial color as is with OK") {
+            val translucent = WColor(10, 20, 130, 128)
+            withOwner { owner ->
+                WinUiUtilities.invokeLater { events += "r:${WColorPicker.showDialog(owner, "Color", translucent)}" }
+                awaitOpen(owner)
+                OpenContentDialogs.press(owner, "PrimaryButton")
+                awaitEvents("r:$translucent")
+                awaitClosed(owner)
+            }
+        }
+
+        test("the callback form that specifies whether transparency can be chosen also passes the color when closed") {
+            withOwner { owner ->
+                onUiThread { WColorPicker.showDialog(owner, "Color", orange, false) { events += "cb:$it" } }
+                awaitOpen(owner)
+                OpenContentDialogs.press(owner, "PrimaryButton")
+                awaitEvents("cb:$orange")
+                awaitClosed(owner)
+            }
+        }
+
         test("showDialog starts from white if the initial color is null") {
             withOwner { owner ->
                 WinUiUtilities.invokeLater { events += "r:${WColorPicker.showDialog(owner, "Color", null)}" }
