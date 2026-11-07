@@ -363,3 +363,25 @@
   Panama の Arena と JNR の確保はゼロで埋めるが、JNA の `Memory` は malloc のままだったので、JNA でだけ落ちた (ウィンドウの初めのフォーカスで
   `WrapperLookup.nearestWrapper` が祖先をたどるようになってから、`ModalLoopProcessTest` の jna が約半分の確率で落ちた)。
   `MemoryScope.allocate` はどのバックエンドもゼロで埋める (`MemoryScopeZeroFillTest`。2026-11-07、JNA で確認)。
+- **FrameworkElement.Loaded は、ウィンドウを表示する (Activate する) 前でも届く (後から購読したテストが GitHub Actions で時々待ちきれなかった)**
+  `WFrame` を作って中身を足しただけで、まだ表示していないウィンドウでも、UI スレッドが空いた次のレイアウトで中身の Loaded が届き、
+  IsLoaded が true になる (2026-11-07、Panama で 1.5 秒待って確認)。中身を足す処理と `addLoadedListener` を別々の `onUiThread` で
+  呼ぶと、その間に Loaded が済んでしまい、二度と届かない。手元では間が短くてまず起きないが、遅い CI のランナーでは
+  `WContentDialogTest` (x64) と `WOptionPaneTest` (Arm64) の `loaded.await(5, SECONDS)` が 1 回ずつ落ちた
+  (nttr-tech/winui4k の run 42327490850)。ライブラリの不具合ではなくテストの待ち方の問題なので、購読を部品を作って載せるのと
+  同じ UI スレッドの処理の中へ移した (`ModalLoopTest`・`WColorPickerTest`・`WContentDialogTest`・`WOptionPaneTest`・
+  `WrapperReleaseWindowCloseTest`。`UiTestHarness.attachAndAwaitLoaded` は初めから購読してから載せている)。
+- **GitHub Actions の CI でだけ落ちたテスト (2026-11-07 に調べた分)**
+  - `ModalLoopProcessTest` の jna の 5 件と `MemoryScopeZeroFillTest` の JNA (Arm64 で毎回): JNA のバックエンドは Windows x64 専用
+    (`JnaBackendProvider.isAvailable` が Arm64 で false) なので、子のプロセスは「FFI backend 'jna' is not available」で終了コード 1 になる。
+    設計どおりの動きなので、テストの側で x64 以外では JNA を飛ばす (Kotest の `enabledOrReasonIf`) か、確かめる対象から外す。
+  - `WTextFieldColumnsTest` の太さごとの列の幅 (x64・Arm64 で毎回): TextBlock の DesiredSize は物理ピクセルの境目へ切り上げられるので、
+    表示倍率 100% のランナーでは 14 DIP の Segoe UI の 'm' が 400・600・700 のどれも 13 DIP になり、「太さで幅が変わる」という
+    テストの前提が成り立たなかった。どの倍率でも幅が分かれる 20 DIP で測る。
+  - `WFrameStateTest` の「jMenuBar を付けた pack」(Arm64 で 1 回): 中身が XamlRoot に載った直後は、中身の外に置くメニューにはまだ
+    XamlRoot が無いことがあり、null COM pointer になった。表示倍率を読む前に XamlRoot が付くまで待つ。
+  - x64 の `testOnJava8` が 0xC0000374 (ヒープの破損) で落ちた run (2026-10-18) は、上の「FrameworkElement.Parent は S_OK を返しても
+    出力の引数に書かないことがある」と同じく JNA の確保がゼロで埋めていなかったため (直した)。
+  - Arm64 のテストの JVM が最後に `upcallLinker.cpp:77` で落ちるのは、上の未解決の項目と同じ (結果はすべて書き出した後なので、ビルドの成否には響かない)。
+  - ログの「Windows App SDK ランタイムのインストールに失敗しました」は、build.yml のスクリプトの中のエラー処理の行が表示されているだけで、
+    インストールは成功している。
