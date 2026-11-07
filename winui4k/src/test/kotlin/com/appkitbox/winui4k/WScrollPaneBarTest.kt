@@ -96,6 +96,65 @@ class WScrollPaneBarTest : FunSpec() {
             }
         }
 
+        test("when setValue returns, AdjustmentListener has been called once, and the later ViewChanged does not call it again (as in Swing)") {
+            val pane = onUiThreadGet { pane() }
+            shown(pane) {
+                val events = mutableListOf<WAdjustmentEvent>()
+                onUiThreadGet {
+                    pane.verticalScrollBar.addAdjustmentListener { e -> events += e }
+                    pane.verticalScrollBar.value = 250
+                    events.map { listOf(it.value, it.adjustmentType, it.valueIsAdjusting) }
+                } shouldBe listOf(listOf(250, WAdjustmentEvent.TRACK, false))
+                Thread.sleep(SETTLE_MILLIS) // The later ViewChanged
+                onUiThreadGet { events.map { it.value } } shouldBe listOf(250)
+            }
+        }
+
+        test("setValue with the same value does not call the listener, and changing to different values calls it once per value") {
+            val pane = onUiThreadGet { pane() }
+            shown(pane) {
+                val values = mutableListOf<Int>()
+                onUiThreadGet {
+                    pane.horizontalScrollBar.addAdjustmentListener { e -> values += e.value }
+                    pane.horizontalScrollBar.value = 0
+                    pane.horizontalScrollBar.value = 120
+                    pane.horizontalScrollBar.value = 120
+                    pane.horizontalScrollBar.value = 300
+                    values.toList()
+                } shouldBe listOf(120, 300)
+                Thread.sleep(SETTLE_MILLIS)
+                onUiThreadGet { values.toList() } shouldBe listOf(120, 300)
+            }
+        }
+
+        test("when setting viewport.viewPosition returns, ChangeListener has been called once, reads the new position inside, and is not called again later") {
+            val pane = onUiThreadGet { pane() }
+            shown(pane) {
+                val positions = mutableListOf<WPoint>()
+                val vertical = mutableListOf<Int>()
+                onUiThreadGet {
+                    pane.viewport.addChangeListener { positions += pane.viewport.viewPosition }
+                    pane.verticalScrollBar.addAdjustmentListener { e -> vertical += e.value }
+                    pane.viewport.viewPosition = WPoint(40, 260)
+                    positions.toList() to vertical.toList()
+                } shouldBe (listOf(WPoint(40, 260)) to listOf(260))
+                Thread.sleep(SETTLE_MILLIS)
+                onUiThreadGet { positions.toList() to vertical.toList() } shouldBe (listOf(WPoint(40, 260)) to listOf(260))
+            }
+        }
+
+        test("non-programmatic (animated) scrolling is still notified with ViewChanged") {
+            val pane = onUiThreadGet { pane() }
+            shown(pane) {
+                val values = mutableListOf<Int>()
+                onUiThread {
+                    pane.horizontalScrollBar.addAdjustmentListener { e -> if (!e.valueIsAdjusting) values += e.value }
+                    pane.scrollToHorizontalOffset(200.0)
+                }
+                awaitOnUiThread { values.contains(200) } shouldBe true
+            }
+        }
+
         test("a listener removed with removeAdjustmentListener is not called and disappears from getAdjustmentListeners") {
             val pane = onUiThreadGet { pane() }
             shown(pane) {
@@ -193,5 +252,8 @@ class WScrollPaneBarTest : FunSpec() {
         const val HEADER_SIZE = 30.0
         const val TIMEOUT_NANOS = 10_000_000_000L
         const val POLL_MILLIS = 50L
+
+        /** How long to wait for a later ViewChanged. */
+        const val SETTLE_MILLIS = 500L
     }
 }

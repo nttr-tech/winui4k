@@ -258,7 +258,24 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     private fun onViewChanged(intermediate: Boolean) {
         if (isQuietWhileRemeasuring()) return
         lastViewChangeIntermediate = intermediate
-        viewportChangeListeners.fire(WChangeEvent(viewport))
+        notifyViewChange(intermediate)
+    }
+
+    /** The position and whether it was intermediate last notified to the ChangeListeners of [viewport] (not notified if the same). */
+    private var notifiedViewport: Pair<WPoint, Boolean>? = null
+
+    /**
+     * If the position differs from the last notification, notifies the ChangeListeners of [viewport] and the AdjustmentListeners of the scroll bars.
+     * Programmatic changes ([changeViewImmediately]) are notified right away, as in Swing, and a later ViewChanged is not notified if the position is the same.
+     * While the position is temporarily rounded to 0 by measuring again ([savedOffsets]), nothing is notified until it is restored.
+     */
+    private fun notifyViewChange(intermediate: Boolean) {
+        if (savedOffsets != null) return
+        val state = viewport.viewPosition to intermediate
+        if (state != notifiedViewport) {
+            notifiedViewport = state
+            viewportChangeListeners.fire(WChangeEvent(viewport))
+        }
         createdVerticalScrollBar?.onViewChanged(intermediate)
         createdHorizontalScrollBar?.onViewChanged(intermediate)
     }
@@ -453,9 +470,12 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
                 pendingVerticalToEnd = estimated != null && verticalOffset >= estimated[1]
             }
             laidOutRequests.runOrDefer(VIEW_REQUEST) { applyPendingView() }
-            return
+        } else {
+            applyChangeView(horizontalOffset, verticalOffset)
         }
-        applyChangeView(horizontalOffset, verticalOffset)
+        // As with Swing's setViewPosition and setValue, notify the listeners before returning (before the first layout, with the requested position)
+        lastViewChangeIntermediate = false
+        notifyViewChange(false)
     }
 
     /** Applies the remembered position after the layout in the window (relayout of WLayoutPanels) is done. */
@@ -466,12 +486,23 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
         pendingVerticalOffset = null
         estimatedExtent = null
         generateSequence<WComponent>(this) { it.parent }.last().validate()
+        // The listeners notified at the request read the estimated content size and a viewport of 0. Now that the sizes are decided by layout,
+        // notify again even if the position is the same (corresponding to Swing calling AdjustmentListener for range changes too)
+        forgetNotifiedView()
         applyChangeView(
             if (pendingHorizontalToEnd) scrollableWidth else horizontal,
             if (pendingVerticalToEnd) scrollableHeight else vertical,
         )
         pendingHorizontalToEnd = false
         pendingVerticalToEnd = false
+        notifyViewChange(false) // When the position did not change and no ViewChanged came
+    }
+
+    /** Makes the next [notifyViewChange] notify even if the position is the same as the last notification. */
+    private fun forgetNotifiedView() {
+        notifiedViewport = null
+        createdVerticalScrollBar?.forgetNotified()
+        createdHorizontalScrollBar?.forgetNotified()
     }
 
     /**

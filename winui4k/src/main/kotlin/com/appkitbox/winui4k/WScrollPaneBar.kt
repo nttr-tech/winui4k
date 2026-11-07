@@ -6,7 +6,8 @@ package com.appkitbox.winui4k
  * is not exposed). Values are in DIP rounded to integers.
  *
  * - [minimum] is 0, [maximum] is the content length (ExtentWidth / ExtentHeight), and [visibleAmount] is the viewport length (ViewportWidth / ViewportHeight).
- * - [value] is the current scroll position. Setting it is done without animation, as with [WViewport.viewPosition], and it can be read back when the setter returns.
+ * - [value] is the current scroll position. Setting it is done without animation, the same as [WViewport.viewPosition], and it can be read back when the call returns
+ *   (the listeners are also called before it returns).
  * - [valueIsAdjusting] is IsIntermediate of the latest ScrollViewer.ViewChanged (true in the middle of dragging or inertial scrolling).
  */
 class WScrollPaneBar internal constructor(
@@ -56,7 +57,9 @@ class WScrollPaneBar internal constructor(
     /**
      * AdjustmentListener-like: receives a [WAdjustmentEvent] (the source is this bar, the type is [WAdjustmentEvent.TRACK]) every time the scroll position changes
      * (ScrollViewer.ViewChanged). Called only when the value or [valueIsAdjusting] differs from the previous notification, so it is not called for scrolling only in the other direction.
-     * ViewChanged comes asynchronously later, so it has not been called yet when the [value] setter returns (Swing calls it inside setValue).
+     * As with Swing's setValue, it is called inside setting [value] (and [WViewport.viewPosition]) (also before the first layout right after showing,
+     * with the requested value). A later ViewChanged does not call it again if the value is the same. It is not called when only the content's size changes
+     * (Swing calls it for range changes too).
      */
     override fun addAdjustmentListener(listener: WAdjustmentListener) {
         if (listeners.isEmpty()) {
@@ -76,6 +79,11 @@ class WScrollPaneBar internal constructor(
     }
 
     override fun getAdjustmentListeners(): Array<WAdjustmentListener> = listeners.toTypedArray()
+
+    /** Makes the next [onViewChanged] notify even if the value is the same as the last notification (when layout decides the sizes of the content and the viewport). */
+    internal fun forgetNotified() {
+        notifiedValue = Int.MIN_VALUE
+    }
 
     /** Called from the [WScrollPane] that received ViewChanged. If the value or the intermediate state changed, notifies the listeners in the order added. */
     internal fun onViewChanged(adjusting: Boolean) {

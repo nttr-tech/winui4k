@@ -106,6 +106,50 @@ class AfterShowSizesTest : FunSpec() {
             }
         }
 
+        context("scroll listeners right after showing") {
+            test("when setValue(200) returns, AdjustmentListener and the viewport's ChangeListener have been called, and they are called only once more when layout decides the sizes") {
+                // The [value, viewport height] and [position, viewport height] the listeners read
+                val values = Collections.synchronizedList(mutableListOf<List<Int>>())
+                val positions = Collections.synchronizedList(mutableListOf<Pair<WPoint, Int>>())
+                var rightAway = emptyList<List<Int>>() to emptyList<Pair<WPoint, Int>>()
+                val (frame, scroll) = showScroll {
+                    val bar = it.verticalScrollBar
+                    bar.addAdjustmentListener { e -> values += listOf(e.value, bar.visibleAmount) }
+                    it.viewport.addChangeListener { _ -> positions += it.viewport.viewPosition to Math.round(it.viewport.extentSize.height).toInt() }
+                    bar.value = 200
+                    rightAway = values.toList() to positions.toList()
+                }
+                try {
+                    rightAway shouldBe (listOf(listOf(200, 0)) to listOf(WPoint(0, 200) to 0)) // Before layout the viewport's size is 0
+                    awaitLaidOut(scroll)
+                    val visible = onUiThreadGet { scroll.verticalScrollBar.visibleAmount }
+                    (visible > 0) shouldBe true
+                    onUiThreadGet { scroll.viewport.viewPosition } shouldBe WPoint(0, 200)
+                    (values.toList() to positions.toList()) shouldBe (
+                        listOf(listOf(200, 0), listOf(200, visible)) to listOf(WPoint(0, 200) to 0, WPoint(0, 200) to visible)
+                        )
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("if it stops at the end after layout and the position differs from the requested value, it notifies again with the stopped position") {
+                val values = Collections.synchronizedList(mutableListOf<Int>())
+                val (frame, scroll) = showScroll {
+                    it.verticalScrollBar.addAdjustmentListener { e -> values += e.value }
+                    it.verticalScrollBar.value = 5000
+                }
+                try {
+                    awaitLaidOut(scroll)
+                    val end = onUiThreadGet { scroll.verticalScrollBar.value }
+                    (end in 1 until 5000) shouldBe true
+                    values.toList() shouldBe listOf(5000, end)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+        }
+
         test("after adding rows to the content after layout, getMaximum() inside the following invokeLater is the content's height after adding (as in Swing)") {
             val (frame, scroll) = showScroll {}
             try {

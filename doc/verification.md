@@ -528,6 +528,10 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   大きさが 0 でなくなるので「並べた後」と見分けられなくなり、その後に頼んだスクロールの位置が本当のレイアウトの前に当たって
   失われる (E2E で確かめた)。WScrollPane は中身だけを制約なしで Measure して中身の大きさを見積もる。読み込む前の測り方は
   レイアウトの丸めが画面の拡大率と違う (拡大率 150% で 1 行 18.67 → 19 DIP) ので、並べた後の値と少し違う (AfterShowSizesTest)
+- アニメーションなしの ScrollViewer.ChangeView の後に UpdateLayout すると、ViewChanged (IsIntermediate = false) はその
+  UpdateLayout の中で同期的に届く (WScrollPaneBarTest)。最初のレイアウトの前の頼みは並べた後で当てるので、WScrollPane は
+  頼んだときに頼んだ値でリスナーへ知らせ、並べて大きさが決まったときにもう一度知らせる。WBorderLayout などが ScrollViewer を
+  測り直す間は位置が一時的に 0 に丸められ、その ViewChanged も届くので、位置を戻すまでは知らせない
 - SizeChanged は UIElement.UpdateLayout の中で同期的に届く (microsoft-ui-xaml の LayoutManager.cpp の RaiseSizeChangedEvents)。
   WLayoutPanel は子の自然な大きさを測るとき、子の Width / Height を外して UpdateLayout するので、その子には中身の大きさで
   SizeChanged が届き、ScrollViewer はその大きさでスクロールの位置を 0 に丸める。表示した直後には 0 を割り当てることもある。

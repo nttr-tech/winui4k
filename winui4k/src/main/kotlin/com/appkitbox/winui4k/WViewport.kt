@@ -57,8 +57,9 @@ class WViewport internal constructor(private val scrollPane: WScrollPane) {
     /**
      * ChangeListener-like: receives a [WChangeEvent] (the source is this viewport) every time the shown position changes
      * (ScrollViewer.ViewChanged; also called during inertial scrolling and dragging). Inside the listener, [viewPosition] returns the value after the change.
-     * ViewChanged comes asynchronously later, so it has not been called yet when the [viewPosition] setter returns
-     * (Swing's JViewport calls it inside setViewPosition). It is not called when only the content or viewport size changes.
+     * As with Swing's JViewport, it is called inside setting [viewPosition] (and [WScrollPaneBar.value]) (also before the first layout right after showing,
+     * with the requested position). A later ViewChanged does not call it again if the position and whether it is intermediate are the same as the last notification. It is not called when only the sizes of the content or the viewport
+     * change (Swing calls it).
      */
     fun addChangeListener(listener: WChangeListener) {
         scrollPane.viewportChangeListeners.add(listener)
