@@ -164,6 +164,24 @@ class WLabelTest : FunSpec() {
             }
         }
 
+        test("the default of textTrimming is CHARACTER_ELLIPSIS, ending with \"...\" as with JLabel, and a narrow label with nothing set is also trimmed") {
+            val label = onUiThreadGet {
+                WLabel("a very long label string").also {
+                    it.width = 40.0
+                    it.horizontalAlignment = HorizontalAlignment.LEFT
+                }
+            }
+            UiTestHarness.attachAndAwaitLoaded(label)
+            try {
+                onUiThreadGet {
+                    label.updateLayout()
+                    label.textTrimming to label.textBlock.getBool(XamlInterop.ITextBlock_get_IsTextTrimmed)
+                } shouldBe (TextTrimming.CHARACTER_ELLIPSIS to true)
+            } finally {
+                UiTestHarness.detach(label)
+            }
+        }
+
         test("a label without enough width trims its text with textTrimming, and does not trim once widened") {
             val label = onUiThreadGet {
                 WLabel("a very long label string").also {

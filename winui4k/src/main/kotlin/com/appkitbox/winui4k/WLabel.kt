@@ -62,10 +62,10 @@ enum class TextAlignment(internal val native: Int) {
  * Values extracted from the winmd (None=0, CharacterEllipsis=1, WordEllipsis=2, Clip=3).
  */
 enum class TextTrimming(internal val native: Int) {
-    /** Don't trim (default). */
+    /** No trimming (TextBlock's default; the default of [WLabel] is [CHARACTER_ELLIPSIS]). */
     NONE(0),
 
-    /** Trim character-by-character and append an ellipsis ("…"). */
+    /** Trims at character boundaries and adds "..." (the same as JLabel; the default of [WLabel]). */
     CHARACTER_ELLIPSIS(1),
 
     /** Trim word-by-word and append an ellipsis ("…"). */
@@ -496,7 +496,10 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             revalidate()
         }
 
-    /** How text that doesn't fit is trimmed (TextBlock.TextTrimming). */
+    /**
+     * How text that does not fit is trimmed (TextBlock.TextTrimming). The default is [TextTrimming.CHARACTER_ELLIPSIS], ending with "...", the same as JLabel
+     * (TextBlock's default is NONE, which just cuts it). **Change from earlier versions**: the default was NONE.
+     */
     var textTrimming: TextTrimming
         get() = TextTrimming.of(textBlock.getInt(XamlInterop.ITextBlock_get_TextTrimming))
         set(value) = textBlock.call(XamlInterop.ITextBlock_put_TextTrimming, value.native)
@@ -590,6 +593,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     init {
         arrange()
+        // As with JLabel, end with "..." when the width is not enough (TextBlock's default just cuts it)
+        textTrimming = TextTrimming.CHARACTER_ELLIPSIS
         if (text.isNotEmpty()) this.text = text
     }
 }
