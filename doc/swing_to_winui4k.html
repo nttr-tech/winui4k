@@ -238,17 +238,12 @@ public class HelloWinUI {
 <tr>
 <td>ウィンドウの中身の既定</td>
 <td><code>BorderLayout</code>。制約なしの <code>frame.<wbr>add(<wbr>c)</code> は中央</td>
-<td>子を縦に積む <code>WPanel</code> (子の間隔 12、周りの余白 24)。<code>getLayout()</code> は <code>null</code></td>
-</tr>
-<tr>
-<td><code>BorderLayout</code> で並べる</td>
-<td><code>frame.<wbr>add(<wbr>c, BorderLayout.<wbr>NORTH)</code></td>
-<td>先に <code>frame.<wbr>setLayout(<wbr>new WBorderLayout())</code> を呼んでから <code>frame.<wbr>add(<wbr>c, WBorderLayout.<wbr>NORTH)</code>。呼ばずに制約を渡すと <code>IllegalArgumentException</code></td>
+<td>同じ (<code>WBorderLayout</code> の <code>WLayoutPanel</code>、周りの余白なし)。<code>frame.<wbr>add(<wbr>c, WBorderLayout.<wbr>NORTH)</code> がそのまま使え、<code>getContentPane()</code> は中身のパネルを返す</td>
 </tr>
 <tr>
 <td>パネル</td>
 <td><code>new JPanel()</code> (<code>FlowLayout</code>)</td>
-<td><code>new WLayoutPanel(<wbr>new WFlowLayout())</code>。引数なしの <code>new WLayoutPanel()</code> はレイアウト マネージャーが <code>null</code> で、子が左上に重なる。<code>new WLayoutPanel(<wbr>layout)</code> は <code>new JPanel(<wbr>layout)</code> に当たる</td>
+<td><code>new WLayoutPanel()</code> (<code>WFlowLayout</code>)。<code>new WLayoutPanel(<wbr>layout)</code> は <code>new JPanel(<wbr>layout)</code> に当たる</td>
 </tr>
 <tr>
 <td>縦か横に一列に並べる</td>
@@ -263,7 +258,17 @@ public class HelloWinUI {
 <tr>
 <td>時間待ちの実行</td>
 <td><code>javax.<wbr>swing.<wbr>Timer</code></td>
-<td><code>WinUiUtilities.<wbr>schedule(<wbr>ミリ秒, 処理)</code> (1 回だけ実行。戻り値の <code>close()</code> で取り消せる)</td>
+<td><code>WTimer</code> (同じ形。<code>setRepeats(<wbr>false)</code> で 1 回だけ)。1 回だけなら <code>WinUiUtilities.<wbr>schedule(<wbr>ミリ秒, 処理)</code> も使える (戻り値の <code>close()</code> で取り消せる)</td>
+</tr>
+<tr>
+<td>UI スレッドで実行して待つ</td>
+<td><code>SwingUtilities.<wbr>invokeAndWait</code></td>
+<td><code>WinUiUtilities.<wbr>invokeAndWait</code> (同じ)</td>
+</tr>
+<tr>
+<td>時間のかかる処理を裏で動かす</td>
+<td><code>SwingWorker</code></td>
+<td><code>WSwingWorker</code> (同じ形。<a href="#button-background">1.13</a>)</td>
 </tr>
 </tbody>
 </table></div>
@@ -407,8 +412,8 @@ fun main() {
 <tr>
 <td>内側の余白</td>
 <td><code>setMargin(<wbr>new Insets(<wbr>2, 8, 2, 8))</code></td>
-<td><code>setPadding(<wbr>8, 2, 8, 2)</code> / <code>setPadding(<wbr>8.<wbr>0)</code></td>
-<td>名前が違う。引数の順も違い、<code>Insets</code> は上・左・下・右、<code>setPadding</code> は左・上・右・下。WinUI4K の <code>setMargin</code> はボタンの外側の余白</td>
+<td><code>setMargin(<wbr>new WInsets(<wbr>2, 8, 2, 8))</code></td>
+<td><code>Insets</code> → <code>WInsets</code> (同じ上・左・下・右の順)。4 つの数だけの <code>setMargin(<wbr>左, 上, 右, 下)</code> は外側の余白なので取り違えない</td>
 </tr>
 <tr>
 <td>強調したボタン</td>
@@ -706,7 +711,7 @@ for (int i = 1; i &lt;= 9; i++) {
 <li><code>actionCommand</code> を設定しないときは、ボタンの文字が <code>e.getActionCommand()</code> になります (Swing と同じ)。
 文字と違うコマンド名にするときは <code>key.setActionCommand(&quot;digit-1&quot;)</code> を指定します。</li>
 <li>どのボタンが押されたかは <code>e.getSource()</code> でも分かります。</li>
-<li>レイアウト マネージャーを使うパネルは <code>WLayoutPanel</code> です (<code>new JPanel(layout)</code> に当たります)。引数なしの <code>new WLayoutPanel()</code> は <code>new JPanel()</code> と違ってレイアウト マネージャーを持たない (<code>null</code>) ので、<code>new JPanel()</code> は <code>new WLayoutPanel(new WFlowLayout())</code> にします。</li>
+<li>レイアウト マネージャーを使うパネルは <code>WLayoutPanel</code> です (<code>new JPanel(layout)</code> に当たります)。引数なしの <code>new WLayoutPanel()</code> は <code>new JPanel()</code> と同じく <code>WFlowLayout</code> で並べます。</li>
 </ul>
 <h3 id="button-doclick">1.10 プログラムからクリックする<a class="anchor" href="#button-doclick">#</a></h3>
 <p><strong>Swing (Java)</strong></p>
@@ -838,12 +843,22 @@ WButton download = new WButton(&quot;Download&quot;);
 download.addActionListener(e -&gt; {
     download.setEnabled(false);
     status.setText(&quot;Downloading...&quot;);
-    CompletableFuture
-        .supplyAsync(() -&gt; fetch())               // runs on another thread
-        .whenComplete((result, error) -&gt; WinUiUtilities.invokeLater(() -&gt; {   // back to the UI thread
+    new WSwingWorker&lt;String, Void&gt;() {
+        @Override
+        protected String doInBackground() throws Exception {
+            return fetch();                       // runs on another thread
+        }
+
+        @Override
+        protected void done() {                   // runs on the UI thread
             download.setEnabled(true);
-            status.setText(error == null ? result : &quot;Failed: &quot; + error.getMessage());
-        }));
+            try {
+                status.setText(get());
+            } catch (Exception ex) {
+                status.setText(&quot;Failed: &quot; + ex.getMessage());
+            }
+        }
+    }.execute();
 });
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jbutton/background/BackgroundSwing.java"><code>BackgroundSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jbutton/background/BackgroundWinUI4K.java"><code>BackgroundWinUI4K.java</code></a>)</p>
@@ -861,9 +876,10 @@ download.addActionListener(e -&gt; {
 </tr>
 </tbody>
 </table></div>
-<p>WinUI4K には <code>SwingWorker</code> に当たるクラスが無いので、<code>CompletableFuture</code> や <code>ExecutorService</code> で裏の処理を動かし、
-画面を触る処理は <code>WinUiUtilities.invokeLater</code> で UI スレッドへ戻します。UI スレッドの外から <code>W*</code> クラスを触ってはいけないのは
-Swing と同じです。</p>
+<p><code>SwingWorker</code> は <code>WSwingWorker</code> にします。<code>doInBackground</code> は裏のスレッドで、<code>done</code>・<code>process</code> は UI スレッドで呼ばれ、
+<code>get()</code>・<code>publish</code>・<code>setProgress</code>・<code>addPropertyChangeListener</code> も同じ名前で使えます。
+<code>CompletableFuture</code> などで裏の処理を動かすときは、画面を触る処理を <code>WinUiUtilities.invokeLater</code> で UI スレッドへ戻します。
+UI スレッドの外から <code>W*</code> クラスを触ってはいけないのは Swing と同じです。</p>
 <h3 id="button-winui">1.14 アクセントとフライアウト<a class="anchor" href="#button-winui">#</a></h3>
 <p>Swing には無いが、WinUI ではよく使う機能です。</p>
 <pre><code class="language-java">// highlight the primary action with the Windows accent color
@@ -883,7 +899,6 @@ export.setFlyout(menu);
 <h3 id="button-kotlin">1.15 Kotlin で書く<a class="anchor" href="#button-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
 <pre><code class="language-kotlin">import com.appkitbox.winui4k.*
-import java.util.concurrent.CompletableFuture
 
 fun main() {
     WinUiUtilities.invokeLater {
@@ -918,12 +933,18 @@ fun main() {
         val download = WButton(&quot;Download&quot;)
         download.addActionListener {
             download.isEnabled = false
-            CompletableFuture.supplyAsync { fetch() }.whenComplete { result, error -&gt;
-                WinUiUtilities.invokeLater {
+            object : WSwingWorker&lt;String, Unit&gt;() {
+                override fun doInBackground(): String = fetch()      // runs on another thread
+
+                override fun done() {                                // runs on the UI thread
                     download.isEnabled = true
-                    status.text = if (error == null) result else &quot;Failed: ${error.message}&quot;
+                    status.text = try {
+                        get()
+                    } catch (ex: Exception) {
+                        &quot;Failed: ${ex.message}&quot;
+                    }
                 }
-            }
+            }.execute()
         }
 
         // Default button and accent (1.7, 1.14)
@@ -946,14 +967,15 @@ private fun fetch(): String {
 }
 </code></pre>
 <p>Kotlin では <code>isEnabled</code>・<code>isContentAreaFilled</code>・<code>toolTipText</code>・<code>defaultButton</code> のようにプロパティで書けます。
-<code>addActionListener</code> には、イベントを受け取る <code>{ e -&gt; ... }</code> と受け取らない <code>{ ... }</code> のどちらも渡せます。</p>
+<code>addActionListener</code> には、イベントを受け取る <code>{ e -&gt; ... }</code> と受け取らない <code>{ ... }</code> のどちらも渡せます。
+Java と同じく <code>WActionListener</code> の値 (<code>val append = WActionListener { e -&gt; ... }</code>) を作って、いくつものボタンに同じ名前の <code>addActionListener</code> で渡すこともできます。</p>
 <h3 id="button-notes">1.16 注意点<a class="anchor" href="#button-notes">#</a></h3>
 <ul>
 <li>ニーモニックの文字に下線は出ず、Alt を押したときにキーのヒントが出ます。ラベルの文字だけではキーが分からないので、「Save (S)」のように書いたり、ツールチップで知らせたりすると、
 利用者がキーに気づきやすくなります。</li>
 <li>既定ボタンにすると見た目が変わり、アクセントの色になります。外すと元の見た目に戻ります。</li>
-<li><code>JButton</code> の HTML の文字は使えません。Swing の <code>&lt;html&gt;</code> で始まる文字は解釈されず、そのまま表示されます。
-複数行や書式のある中身は <code>setContent(component)</code> に <code>WLabel</code> などを入れます。</li>
+<li><code>&lt;html&gt;</code> で始まる文字は Swing と同じく書式付きの文字として表示します。使えるタグは基本のもの (<code>&lt;b&gt;</code>・<code>&lt;strong&gt;</code>・<code>&lt;i&gt;</code>・<code>&lt;em&gt;</code>・<code>&lt;u&gt;</code>・<code>&lt;br&gt;</code>・<code>&lt;p&gt;</code>・<code>&lt;div&gt;</code>・<code>&lt;font color&gt;</code>) だけで、
+ほかのタグは外して中身の文字だけを出します。表や画像など、それより込み入った中身は <code>setContent(component)</code> に部品を入れます。</li>
 <li>ボタンのグループ: ラジオボタンをまとめる <code>ButtonGroup</code> は <code>WButtonGroup</code> です。</li>
 </ul>
 <h2 id="textfield">2. JTextField → WTextField<a class="anchor" href="#textfield">#</a></h2>
@@ -984,9 +1006,9 @@ private fun fetch(): String {
 </tr>
 <tr>
 <td>初めの文字列</td>
-<td><code>new JTextField(&quot;Tokyo&quot;)</code></td>
-<td><code>WTextField f = new WTextField(); f.<wbr>setText(&quot;Tokyo&quot;);</code></td>
-<td><strong><code>WTextField(<wbr>String)</code> は案内文</strong> (下の注意を参照)</td>
+<td><code>new JTextField(&quot;Tokyo&quot;)</code> / <code>new JTextField(&quot;Tokyo&quot;, 20)</code></td>
+<td><code>new WTextField(&quot;Tokyo&quot;)</code> / <code>new WTextField(&quot;Tokyo&quot;, 20)</code></td>
+<td>同じ</td>
 </tr>
 <tr>
 <td>読み書き</td>
@@ -1023,6 +1045,18 @@ private fun fetch(): String {
 <td><code>setEditable(<wbr>false)</code></td>
 <td><code>setEditable(<wbr>false)</code></td>
 <td>同じ</td>
+</tr>
+<tr>
+<td>フォーカスを外すときの検証</td>
+<td><code>setInputVerifier(<wbr>new InputVerifier() {...})</code></td>
+<td><code>setInputVerifier(<wbr>new WInputVerifier() {...})</code></td>
+<td><code>InputVerifier</code> → <code>WInputVerifier</code></td>
+</tr>
+<tr>
+<td>内側の余白</td>
+<td><code>setMargin(<wbr>new Insets(<wbr>2, 4, 2, 4))</code></td>
+<td><code>setMargin(<wbr>new WInsets(<wbr>2, 4, 2, 4))</code></td>
+<td><code>Insets</code> → <code>WInsets</code></td>
 </tr>
 <tr>
 <td>案内文</td>
@@ -1374,7 +1408,8 @@ frame.add(name);
 // Draw a placeholder by overriding paintComponent, or rely on a library (e.g. FlatLaf's JTextField.placeholderText)
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField name = new WTextField(&quot;e.g. John Smith&quot;);   // the constructor string is the placeholder
+<pre><code class="language-java">WTextField name = new WTextField(20);
+name.setPlaceholderText(&quot;e.g. John Smith&quot;);      // shown while the field is empty
 name.setHeader(&quot;Name&quot;);                             // header shown above the field
 frame.add(name);
 </code></pre>
@@ -1394,7 +1429,7 @@ frame.add(name);
 </tbody>
 </table></div>
 <ul>
-<li>案内文は <code>setPlaceholderText(...)</code> でも設定できます。</li>
+<li>案内文は <code>setPlaceholderText(...)</code> で設定します。コンストラクターの文字列は Swing と同じく初めの文字列です。</li>
 <li>見出しは入力欄の一部として、入力欄の上に描かれます。
 見出しを別のラベルで置きたいときは、Swing と同じく <code>WLabel</code> の <code>setLabelFor(name)</code> を使います。</li>
 </ul>
@@ -1447,12 +1482,10 @@ age.setInputVerifier(new InputVerifier() {
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTextField age = new WTextField(4);
-WLabel error = new WLabel();
-error.setForeground(WColor.RED);
-age.addFocusListener(new WFocusAdapter() {
+age.setInputVerifier(new WInputVerifier() {
     @Override
-    public void focusLost(WFocusEvent e) {
-        error.setText(isValidAge(age.getText()) ? &quot;&quot; : &quot;Enter a number from 0 to 150&quot;);
+    public boolean verify(WComponent input) {
+        return isValidAge(((WTextField) input).getText());   // if false, focus is not released
     }
 });
 </code></pre>
@@ -1471,8 +1504,9 @@ age.addFocusListener(new WFocusAdapter() {
 </tr>
 </tbody>
 </table></div>
-<p>WinUI4K には <code>InputVerifier</code> が無く、フォーカスが移るのを止めることもできません。フォーカスを外したときにメッセージを出すか、
-「Register」ボタンを押したときにまとめて検証します。Windows のアプリではフォーカスを止めず、近くにメッセージを出すのが普通です。</p>
+<p><code>InputVerifier</code> は <code>WInputVerifier</code> にします。Swing と同じく、フォーカスが別の部品へ移る前に <code>verify</code> (<code>shouldYieldFocus</code>) で確かめ、
+<code>false</code> ならフォーカスを元の入力欄に残します。移る先の <code>setVerifyInputWhenFocusTarget(false)</code> で確かめずに移すのも同じです。
+Windows のアプリではフォーカスを止めずに近くにメッセージを出すことも多いので、そうするときは <code>addFocusListener</code> の <code>focusLost</code> でメッセージを出します。</p>
 <h3 id="textfield-caret">2.11 選択範囲とキャレットを操作する<a class="anchor" href="#textfield-caret">#</a></h3>
 <p><strong>Swing (Java)</strong></p>
 <pre><code class="language-java">JTextField text = new JTextField(30);
@@ -1657,6 +1691,8 @@ password.addActionListener(e -&gt; {
 </table></div>
 <ul>
 <li>伏せ字は <code>setEchoChar('*')</code> で変えられます。</li>
+<li><code>getPassword()</code> で受け取った <code>char[]</code> を 0 で埋めても、WinUI のパスワード欄が持つ文字列と、読み出すたびにできる文字列の複製は消えません。
+Swing の <code>JPasswordField</code> ほど中身を消し切れないことに気を付けます。</li>
 <li>WinUI のパスワード欄では入力中に目のボタンで中身を確かめられます。出し方は <code>setPasswordRevealMode(PasswordRevealMode.HIDDEN)</code> などで変えます。</li>
 <li><code>WPasswordField</code> では、利用者の入力は <code>WDocumentFilter</code> を通りません (WinUI が入力の前に断る仕組みを持たないため)。</li>
 </ul>
@@ -1670,7 +1706,10 @@ fun main() {
         frame.layout = WFlowLayout()
 
         // Placeholder, header, Enter, change notification (2.3, 2.4, 2.8)
-        val name = WTextField(&quot;e.g. John Smith&quot;).apply { header = &quot;Name&quot; }
+        val name = WTextField(20).apply {
+            placeholderText = &quot;e.g. John Smith&quot;
+            header = &quot;Name&quot;
+        }
         val count = WLabel(&quot;0 characters&quot;)
         name.addTextChangedListener { text -&gt; count.text = &quot;${text.length} characters&quot; }
         name.addActionListener { register(name.text) }
@@ -1691,16 +1730,13 @@ fun main() {
         }
 
         // Select all on focus, validate on focus lost (2.9, 2.10)
-        val error = WLabel().apply { foreground = WColor.RED }
         val age = WTextField(4).apply { header = &quot;Age&quot; }
         age.addFocusListener(object : WFocusAdapter() {
             override fun focusGained(e: WFocusEvent) = age.selectAll()
-
-            override fun focusLost(e: WFocusEvent) {
-                val valid = age.text.toIntOrNull() in 0..150
-                error.text = if (valid) &quot;&quot; else &quot;Enter a number from 0 to 150&quot;
-            }
         })
+        age.inputVerifier = object : WInputVerifier() {
+            override fun verify(input: WComponent) = (input as WTextField).text.toIntOrNull() in 0..150
+        }
 
         // Clear with Esc (2.12)
         name.inputMap.put(WKeyStroke.getKeyStroke(WKeyEvent.VK_ESCAPE, 0), &quot;clear&quot;)
@@ -1721,7 +1757,7 @@ fun main() {
             isEditable = false
         }
 
-        listOf(name, count, zip, age, error, price).forEach { frame.add(it) }
+        listOf(name, count, zip, age, price).forEach { frame.add(it) }
         frame.setSize(480, 560)
         frame.isVisible = true
         name.requestFocusInWindow()
@@ -1732,11 +1768,9 @@ private fun register(name: String) = println(&quot;Registered: $name&quot;)
 </code></pre>
 <h3 id="textfield-notes">2.17 注意点<a class="anchor" href="#textfield-notes">#</a></h3>
 <ul>
-<li><code>new WTextField(&quot;文字列&quot;)</code> の文字列は初めの文字列ではなく案内文になります。<code>JTextField(String text)</code> と同じつもりで書くと、
-入力欄は空のまま薄い文字が出ます。初めの文字列は <code>setText(...)</code> で入れます。<code>JTextField(String, int)</code> に当たるコンストラクターはありません。
-列数だけを渡す <code>new WTextField(20)</code> は Swing と同じです。</li>
+<li>コンストラクターの文字列は Swing と同じく初めの文字列です (<code>new WTextField(&quot;Tokyo&quot;)</code>・<code>new WTextField(&quot;Tokyo&quot;, 20)</code>)。
+未入力のときの薄い文字 (案内文) は <code>setPlaceholderText(...)</code> で入れます。</li>
 <li><code>setHorizontalAlignment</code> は文字の揃えの設定ではありません。文字の揃えは <code>setTextAlignment</code> です (<a href="#textfield-appearance">2.14</a>)。</li>
-<li><code>InputVerifier</code> が無いので、フォーカスの移動を止める検証はできません (<a href="#textfield-validate">2.10</a>)。</li>
 <li>複数行の入力 (<code>JTextArea</code>): 行数 (<code>setRows</code>)・<code>append</code>・行の数を使うなら <code>WTextPane</code> です (<a href="#textarea">12 章</a>)。
 文字を入れるだけなら、<code>WTextField</code> に <code>setAcceptsReturn(true)</code> と <code>setTextWrapping(TextWrapping.WRAP)</code> を設定しても、
 複数行の入力欄になります。高さは <code>setHeight(...)</code> で決めます。WinUI の入力欄は中身が増えると入力欄の中でスクロールするので
@@ -1803,7 +1837,7 @@ private fun register(name: String) = println(&quot;Registered: $name&quot;)
 <td>選択モード</td>
 <td><code>setSelectionMode(<wbr>ListSelectionModel.<wbr>SINGLE_SELECTION)</code></td>
 <td><code>setSelectionMode(<wbr>WListSelectionModel.<wbr>SINGLE_SELECTION)</code></td>
-<td><strong>既定が違う</strong> (Swing は複数、WinUI4K は 1 つ)</td>
+<td>同じ (既定はどちらも <code>MULTIPLE_INTERVAL_SELECTION</code>)</td>
 </tr>
 <tr>
 <td>選択の通知</td>
@@ -1833,7 +1867,13 @@ private fun register(name: String) = println(&quot;Registered: $name&quot;)
 <td>表示を変える</td>
 <td><code>setCellRenderer(...)</code></td>
 <td><code>setCellRenderer(...)</code></td>
-<td><strong>呼ぶたびに新しいコンポーネントを返す</strong></td>
+<td><strong>呼ぶたびに新しいコンポーネントを返す</strong>。上書きするメソッドが違う (<a href="#list-renderer">3.9</a>)</td>
+</tr>
+<tr>
+<td>キーバインド</td>
+<td><code>getInputMap().<wbr>put(...)</code></td>
+<td><code>getInputMap().<wbr>put(...)</code></td>
+<td>同じ (項目にフォーカスがあるときも効く)</td>
 </tr>
 <tr>
 <td>行の数</td>
@@ -2063,7 +2103,7 @@ open.addActionListener(e -&gt; {
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WList files = new WList(names);
-files.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);   // the default is single selection, so set it explicitly
+// MULTIPLE_INTERVAL_SELECTION by default (Ctrl / Shift for multiple)
 WButton open = new WButton(&quot;Open&quot;);
 open.addActionListener(e -&gt; {
     for (Object name : files.getSelectedValuesList()) openFile((String) name);
@@ -2085,7 +2125,8 @@ open.addActionListener(e -&gt; {
 </tbody>
 </table></div>
 <ul>
-<li><strong>既定の選択モードが違います</strong>。Swing は複数の区間 (<code>MULTIPLE_INTERVAL_SELECTION</code>)、WinUI4K は WinUI の既定に合わせて 1 つだけ (<code>SINGLE_SELECTION</code>) です。</li>
+<li>既定の選択モードは Swing と同じく複数の区間 (<code>MULTIPLE_INTERVAL_SELECTION</code>) で、Ctrl / Shift を押しながらクリックして選び足します。
+1 つだけにするときは、Swing と同じく <code>setSelectionMode(WListSelectionModel.SINGLE_SELECTION)</code> を指定します。</li>
 <li><code>SINGLE_INTERVAL_SELECTION</code> (続いた範囲だけ) も指定できます。</li>
 <li><code>getSelectedIndices()</code>・<code>setSelectionInterval(a, b)</code>・<code>addSelectionInterval(a, b)</code>・<code>clearSelection()</code> も Swing と同じです。</li>
 <li>すべて選ぶのは <code>selectAll()</code> です。</li>
@@ -2228,7 +2269,30 @@ list.setCellRenderer(new WDefaultListCellRenderer() {
 </tbody>
 </table></div>
 <p><code>WDefaultListCellRenderer</code> は、<code>getText</code> (文字)・<code>getIcon</code> (アイコン)・<code>configure</code> (ラベルの飾り) を上書きして使います。
-選んだ項目を太字にするなら <code>configure</code> を上書きします。</p>
+Swing の上書きとは次のように対応します。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing (<code>getListCellRendererComponent</code> の上書き)</th>
+<th>WinUI4K (<code>WDefaultListCellRenderer</code> の上書き)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>super.<wbr>getListCellRendererComponent(...)</code> の後の <code>setText(...)</code></td>
+<td><code>getText(<wbr>value)</code> で文字を返す</td>
+</tr>
+<tr>
+<td><code>super.<wbr>getListCellRendererComponent(...)</code> の後の <code>setIcon(...)</code></td>
+<td><code>getIcon(<wbr>value)</code> でアイコンを返す</td>
+</tr>
+<tr>
+<td><code>setForeground(...)</code>・<code>setFont(...)</code> などの飾り</td>
+<td><code>configure(<wbr>label, value, index, isSelected, cellHasFocus)</code> でラベルを変える</td>
+</tr>
+</tbody>
+</table></div>
+<p>選んだ項目を太字にするなら <code>configure</code> を上書きします。</p>
 <pre><code class="language-java">@Override
 protected void configure(WLabel label, Object value, int index, boolean isSelected, boolean cellHasFocus) {
     if (isSelected) label.setFont(new WFont(&quot;Segoe UI&quot;, WFont.BOLD, 14));
@@ -2291,8 +2355,7 @@ list.getActionMap().put(&quot;delete&quot;, new AbstractAction() {
 });
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">list.getInputMap(WComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-    .put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), &quot;delete&quot;);
+<pre><code class="language-java">list.getInputMap().put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), &quot;delete&quot;);
 list.getActionMap().put(&quot;delete&quot;, new WAbstractAction() {
     @Override
     public void actionPerformed(WActionEvent e) {
@@ -2316,8 +2379,8 @@ list.getActionMap().put(&quot;delete&quot;, new WAbstractAction() {
 </tr>
 </tbody>
 </table></div>
-<p>WinUI のリストでは、キーボードのフォーカスはリストの中の項目にあります。項目にフォーカスがあるときも効くように、
-<code>WHEN_ANCESTOR_OF_FOCUSED_COMPONENT</code> (リストかその中のどれかにフォーカスがあるとき) のマップに入れてください。</p>
+<p>WinUI のリストでは、キーボードのフォーカスはリストの中の項目にありますが、Swing と同じ <code>getInputMap()</code> (<code>WHEN_FOCUSED</code>) に入れたキーは、
+項目にフォーカスがあるときも効きます (イベントの <code>getSource()</code> はリストです)。リストの外にフォーカスがあるときは効きません。</p>
 <h3 id="list-move">3.12 項目を上下に動かす<a class="anchor" href="#list-move">#</a></h3>
 <p>選んだ項目を 1 つ上へ動かし、選択も付いていかせます。</p>
 <p><strong>Swing (Java)</strong></p>
@@ -2384,7 +2447,8 @@ WDefaultListModel&lt;String&gt; model = new WDefaultListModel&lt;&gt;();
 all.forEach(model::addElement);
 WList list = new WList(model);
 
-WTextField filter = new WTextField(&quot;Filter&quot;);
+WTextField filter = new WTextField();
+filter.setPlaceholderText(&quot;Filter&quot;);
 filter.addTextChangedListener(text -&gt; {
     model.clear();
     all.stream().filter(s -&gt; s.contains(text)).forEach(model::addElement);
@@ -2522,15 +2586,14 @@ fun main() {
                 if (index &gt;= 0) model.remove(index)
             }
         }
-        list.getInputMap(WComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-            .put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), &quot;delete&quot;)
+        list.inputMap.put(WKeyStroke.getKeyStroke(WKeyEvent.VK_DELETE, 0), &quot;delete&quot;)
         list.actionMap.put(&quot;delete&quot;, deleteSelected)
 
         // Context menu (3.14)
         list.componentPopupMenu = WMenuFlyout().apply { add(deleteSelected) }
 
         // Add (3.3)
-        val name = WTextField(&quot;Name&quot;)
+        val name = WTextField(10).apply { placeholderText = &quot;Name&quot; }
         val add = WButton(&quot;Add&quot;, Symbol.ADD)
         add.addActionListener {
             if (name.text.isNotBlank()) {
@@ -2557,10 +2620,9 @@ fun main() {
 <ul>
 <li><code>WList</code> には型引数がありません。<code>getSelectedValue()</code> と <code>getSelectedValuesList()</code> は <code>Object</code> を返すので、キャストが要ります。
 モデル (<code>WDefaultListModel&lt;E&gt;</code>) には型引数があるので、要素はモデルから型付きで読むこともできます (<code>model.getElementAt(list.getSelectedIndex())</code>)。</li>
-<li>既定の選択モードが違い、Swing は複数、WinUI4K は 1 つです (<a href="#list-multiple">3.6</a>)。</li>
 <li><code>WList</code> は <code>JScrollPane</code> に当たるものに入れないでください。WinUI のリストは自分でスクロールします。大きさは <code>setWidth</code> / <code>setHeight</code> か <code>setVisibleRowCount</code> で決めます。</li>
 <li>レンダラーは毎回新しいコンポーネントを返す必要があります。Swing のように 1 つのラベルを使い回すと表示に失敗します (<a href="#list-renderer">3.9</a>)。</li>
-<li>フォーカスはリストの中の項目にあるので、キーバインドは <code>WHEN_ANCESTOR_OF_FOCUSED_COMPONENT</code> のマップに入れます (<a href="#list-delete">3.11</a>)。</li>
+<li>フォーカスはリストの中の項目にありますが、<code>getInputMap()</code> に入れたキーバインドは Swing と同じく効きます (<a href="#list-delete">3.11</a>)。</li>
 <li><code>setModel</code> でモデルを差し替えると、表示を作り直して選択を外します (Swing と同じ)。</li>
 <li>ドラッグでの並べ替え・<code>JList</code> の <code>setDragEnabled</code>: この版では扱いません。</li>
 <li><code>setLayoutOrientation</code> (横に流す並べ方): <code>WList</code> にはありません。タイルのように並べるときは WinUI の <code>ItemsView</code> を包んだ <code>WItemsView</code> を使います。</li>
@@ -2644,31 +2706,37 @@ fun main() {
 <td>文字色</td>
 <td><code>setForeground(<wbr>Color.<wbr>RED)</code></td>
 <td><code>setForeground(<wbr>WColor.<wbr>RED)</code></td>
-<td><code>WColor.<wbr>RED</code> は <code>Color.<wbr>RED</code> と少し違う色 (<a href="#label-font">4.3</a>)</td>
+<td><code>Color</code> → <code>WColor</code> (定数は同じ値)</td>
 </tr>
 <tr>
 <td>背景色</td>
 <td><code>setOpaque(<wbr>true)</code> + <code>setBackground(...)</code></td>
-<td>(なし)</td>
-<td></td>
+<td><code>setOpaque(<wbr>true)</code> + <code>setBackground(...)</code></td>
+<td>同じ (既定は透明)</td>
 </tr>
 <tr>
 <td>枠</td>
-<td><code>setBorder(...)</code></td>
-<td>(なし)</td>
-<td></td>
+<td><code>setBorder(<wbr>BorderFactory.<wbr>createLineBorder(...))</code></td>
+<td><code>setBorder(<wbr>WBorderFactory.<wbr>createLineBorder(...))</code></td>
+<td><code>BorderFactory</code> → <code>WBorderFactory</code> (線・空・組み合わせの枠)</td>
 </tr>
 <tr>
-<td>複数行・書式</td>
-<td><code>&quot;&lt;html&gt;...&lt;/html&gt;&quot;</code></td>
-<td><code>setTextWrapping(<wbr>TextWrapping.<wbr>WRAP)</code></td>
-<td>HTML は解釈されない (<a href="#label-wrap">4.7</a>)</td>
+<td>書式</td>
+<td><code>&quot;&lt;html&gt;&lt;b&gt;...&lt;/b&gt;&lt;/html&gt;&quot;</code></td>
+<td><code>&quot;&lt;html&gt;&lt;b&gt;...&lt;/b&gt;&lt;/html&gt;&quot;</code></td>
+<td>基本のタグだけ (<a href="#label-wrap">4.7</a>)</td>
+</tr>
+<tr>
+<td>複数行</td>
+<td><code>&quot;&lt;html&gt;...&lt;/html&gt;&quot;</code> に幅を指定</td>
+<td><code>setTextWrapping(<wbr>TextWrapping.<wbr>WRAP)</code> + <code>setWidth(...)</code></td>
+<td>幅のスタイルは解釈されない (<a href="#label-wrap">4.7</a>)</td>
 </tr>
 <tr>
 <td>収まらない文字を「...」にする</td>
 <td>自動</td>
-<td><code>setTextTrimming(<wbr>TextTrimming.<wbr>CHARACTER_ELLIPSIS)</code></td>
-<td>既定は「...」を付けずに切る</td>
+<td>自動</td>
+<td>同じ (<code>setTextTrimming</code> で切り方を変えられる)</td>
 </tr>
 <tr>
 <td>入力欄の名前にする</td>
@@ -2750,7 +2818,7 @@ heading.setFont(heading.getFont().deriveFont(WFont.BOLD, 20f));
 WLabel error = new WLabel(&quot;The file could not be saved.&quot;);
 error.setForeground(WColor.RED);
 WLabel note = new WLabel(&quot;Last updated: 2026-11-07&quot;);
-note.setFont(new WFont(&quot;Segoe UI&quot;, WFont.ITALIC, 12));
+note.setFont(new WFont(&quot;SansSerif&quot;, WFont.ITALIC, 12));
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jlabel/font/FontSwing.java"><code>FontSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jlabel/font/FontWinUI4K.java"><code>FontWinUI4K.java</code></a>)</p>
 <div class="table"><table>
@@ -2769,8 +2837,9 @@ note.setFont(new WFont(&quot;Segoe UI&quot;, WFont.ITALIC, 12));
 </table></div>
 <ul>
 <li><code>getFont()</code> は設定する前でも今のフォントを返すので、<code>deriveFont</code> で太さや大きさだけを変える書き方がそのまま使えます。</li>
-<li>フォント名は Windows のフォントの名前 (<code>&quot;Segoe UI&quot;</code>、<code>&quot;Yu Gothic UI&quot;</code> など) です。Java の論理フォント名 (<code>&quot;SansSerif&quot;</code>・<code>&quot;Dialog&quot;</code>) はありません。</li>
-<li><code>WColor.RED</code> は <code>(237, 28, 36)</code> で、<code>Color.RED</code> の <code>(255, 0, 0)</code> とは少し違う色です。同じ色にするときは <code>new WColor(255, 0, 0)</code> と書きます。</li>
+<li>フォント名は Windows のフォントの名前 (<code>&quot;Segoe UI&quot;</code>、<code>&quot;Yu Gothic UI&quot;</code> など) です。Java の論理フォント名 (<code>&quot;SansSerif&quot;</code>・<code>&quot;Dialog&quot;</code>・<code>&quot;Serif&quot;</code>・<code>&quot;Monospaced&quot;</code>・<code>&quot;DialogInput&quot;</code>) も
+そのまま書け、部品に入れるときに Windows の書体 (Segoe UI・Times New Roman・Consolas) に置き換えます。<code>WFont.SANS_SERIF</code> などの定数もあります。</li>
+<li><code>WColor.RED</code> などの定数は <code>Color</code> と同じ値です (<code>WColor.RED</code> は <code>(255, 0, 0)</code>)。</li>
 <li>太さだけ・大きさだけを変える <code>setFontWeight(700)</code>・<code>setFontSize(20)</code> も使えます。下線と取り消し線は <code>setUnderline(true)</code>・<code>setStrikethrough(true)</code> です。</li>
 </ul>
 <h3 id="label-icon">4.4 アイコンを付ける<a class="anchor" href="#label-icon">#</a></h3>
@@ -2917,11 +2986,11 @@ wrapped.setWidth(250);
 </tbody>
 </table></div>
 <ul>
-<li><code>WLabel</code> は HTML を解釈しません。<code>&lt;html&gt;</code> で始まる文字はそのまま表示されます。折り返しは <code>setTextWrapping</code> と幅 (<code>setWidth</code>・<code>setMaxWidth</code>) で指定します。</li>
+<li>折り返しは <code>setTextWrapping</code> と幅 (<code>setWidth</code>・<code>setMaxWidth</code>) で指定します。<code>&lt;html&gt;</code> の <code>style='width: ...'</code> のような幅の指定は解釈されません。</li>
 <li>文字に <code>&quot;\n&quot;</code> を入れると、その位置で改行します (Swing の <code>JLabel</code> は HTML でないと改行しません)。</li>
-<li>1 つのラベルの中で一部だけを太字や色にする HTML の書式に当たるものはありません。ラベルを分けて並べます。</li>
-<li>1 行に収めて、収まらない部分を「...」にするときは <code>setTextTrimming(TextTrimming.CHARACTER_ELLIPSIS)</code> です
-(Swing の <code>JLabel</code> は自動で「...」を付けますが、<code>WLabel</code> の既定は付けずに切ります)。</li>
+<li><code>&lt;html&gt;</code> で始まる文字は Swing と同じく書式付きの文字として表示します。使えるタグは基本のもの (<code>&lt;b&gt;</code>・<code>&lt;strong&gt;</code>・<code>&lt;i&gt;</code>・<code>&lt;em&gt;</code>・<code>&lt;u&gt;</code>・<code>&lt;br&gt;</code>・<code>&lt;p&gt;</code>・<code>&lt;div&gt;</code>・<code>&lt;font color&gt;</code>) だけで、
+ほかのタグは外して中身の文字だけを出します。<code>getText()</code> は入れた文字列のまま返します。</li>
+<li>1 行に収まらない部分は、Swing と同じく末尾を「…」にします (<code>setTextTrimming(TextTrimming.CHARACTER_ELLIPSIS)</code> が既定)。切るだけにするときは <code>TextTrimming.NONE</code> です。</li>
 </ul>
 <h3 id="label-kotlin">4.8 Kotlin で書く<a class="anchor" href="#label-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
@@ -2971,11 +3040,10 @@ fun main() {
 <h3 id="label-notes">4.9 注意点<a class="anchor" href="#label-notes">#</a></h3>
 <ul>
 <li><strong>揃えの名前が違います。</strong> ラベルの中の文字の揃えは <code>setTextAlignment(TextAlignment.RIGHT)</code> で、<code>setHorizontalAlignment</code> は親の中でのラベルの位置です (<a href="#label-alignment">4.5</a>)。</li>
-<li><strong>背景色と枠はありません。</strong> <code>setOpaque(true)</code> + <code>setBackground(...)</code> で色を塗ったラベルや、<code>setBorder(...)</code> で枠を付けたラベルは、
-<code>WLabel</code> だけでは作れません。</li>
+<li>背景色は Swing と同じく <code>setOpaque(true)</code> の間だけ塗ります。枠は <code>setBorder(WBorderFactory...)</code> です。</li>
 <li><strong><code>setEnabled(false)</code> で文字は灰色になりません。</strong> <code>WLabel</code> の有効・無効は <code>setDisabledIcon</code> のアイコンを切り替えるだけです。
 灰色にするときは <code>setForeground</code> で色を変えます。</li>
-<li>HTML の文字 (<code>&lt;html&gt;...</code>) は解釈されず、そのまま表示されます。複数行は <code>setTextWrapping</code> か <code>&quot;\n&quot;</code> で書きます (<a href="#label-wrap">4.7</a>)。</li>
+<li>HTML の文字 (<code>&lt;html&gt;...</code>) は基本のタグだけを解釈します。幅を決めて折り返すときは <code>setTextWrapping</code> と <code>setWidth</code> で書きます (<a href="#label-wrap">4.7</a>)。</li>
 <li>ニーモニックの文字に下線は出ず、Alt を押したときにキーのヒントが出ます。</li>
 <li>Java で <code>new WLabel(null)</code> と書くと、<code>WLabel(String)</code> と <code>WLabel(WIcon)</code> のどちらか決まらずコンパイルできません。<code>new WLabel()</code> か <code>(String) null</code> と書きます。</li>
 </ul>
@@ -3285,7 +3353,7 @@ fun main() {
 動くのは <code>setIcon</code> のアイコンに対する文字の位置だけで、印はいつも文字の左です。</li>
 <li>WinUI のチェックボックスの文字は折り返す設定です。幅を決めずに並べたときは 1 行に収まる幅を取るので、Swing と同じく 1 行で出ます。
 幅を決めて狭くしたときは、収まらない文字が 2 行目に回ります。</li>
-<li>HTML の文字 (<code>&lt;html&gt;...</code>) は解釈されず、そのまま表示されます。</li>
+<li>HTML の文字 (<code>&lt;html&gt;...</code>) は、ボタンと同じく基本のタグ (<code>&lt;b&gt;</code>・<code>&lt;i&gt;</code>・<code>&lt;u&gt;</code>・<code>&lt;br&gt;</code>・<code>&lt;font color&gt;</code> など) だけを解釈します (<a href="#button-notes">1.16</a>)。</li>
 </ul>
 <h2 id="radio">6. JRadioButton → WRadioButton<a class="anchor" href="#radio">#</a></h2>
 <p><code>WRadioButton</code> は WinUI の <code>RadioButton</code> を包んだクラスで、<code>JRadioButton</code> の主な API を同じ名前で持っています。
@@ -3633,9 +3701,8 @@ color.add(blue);
 </tbody>
 </table></div>
 <p>サンプルでは、起動したときに <code>blue.setSelected(true)</code> を呼んでいます。色のグループだけが変わり、「Small」は選ばれたままです。</p>
-<p>WinUI のラジオボタンは、<strong>同じ親に置いたものが自動で 1 つのグループ</strong>になります。<code>WButtonGroup</code> に入れると、グループごとに別の名前
-(<code>setGroupName</code>) が付くので、同じ親に置いても 2 つのグループは別々に動き、矢印キーのフォーカスの移動もグループの中で効きます。
-逆に、<code>WButtonGroup</code> に入れずに同じ親に置いたラジオボタンは、Swing と違って独立せず、1 つしか選べません (<a href="#radio-notes">6.8</a>)。</p>
+<p><code>WButtonGroup</code> に入れると、グループごとに別の名前 (<code>setGroupName</code>) が付くので、同じ親に置いても 2 つのグループは別々に動き、
+矢印キーのフォーカスの移動もグループの中で効きます。<code>WButtonGroup</code> に入れないラジオボタンは、Swing と同じくそれぞれ独立してオン・オフできます。</p>
 <h3 id="radio-kotlin">6.7 Kotlin で書く<a class="anchor" href="#radio-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
 <pre><code class="language-kotlin">import com.appkitbox.winui4k.*
@@ -3653,7 +3720,7 @@ fun main() {
 
         // React to the selection (6.4)
         val result = WLabel(&quot;Payment: card&quot;)
-        val listener: (WActionEvent) -&gt; Unit = { e -&gt; result.text = &quot;Payment: ${e.actionCommand}&quot; }
+        val listener = WActionListener { e -&gt; result.text = &quot;Payment: ${e.actionCommand}&quot; }
         card.addActionListener(listener)
         bank.addActionListener(listener)
 
@@ -3670,13 +3737,13 @@ fun main() {
 }
 </code></pre>
 <p>Kotlin では、グループの選択は <code>selection</code> プロパティ (選ばれていなければ <code>null</code>) で読めます。
-複数のボタンで共有するリスナーは、<code>WActionListener</code> ではなく関数の型 (<code>(WActionEvent) -&gt; Unit</code>) の変数にします
-(Kotlin から見える <code>addActionListener</code> は関数の型を受け取る形だけで、<code>WActionListener</code> を受け取る形は <code>addActionListenerForJava</code> という名前になっています)。
+複数のボタンで共有するリスナーは、Java と同じく <code>WActionListener</code> の値にして、同じ名前の <code>addActionListener</code> に渡せます
+(関数の型 <code>(WActionEvent) -&gt; Unit</code> の変数でも渡せます)。
 ボタンの一覧は <code>buttons</code> (<code>List</code>) で、<code>for (b in group.buttons)</code> のように回せます。</p>
 <h3 id="radio-notes">6.8 注意点<a class="anchor" href="#radio-notes">#</a></h3>
 <ul>
-<li><strong><code>WButtonGroup</code> に入れないラジオボタンも排他になります。</strong> Swing では <code>ButtonGroup</code> に入れないラジオボタンはそれぞれ独立してチェックできますが、
-WinUI では同じ親に置いたラジオボタンが自動で 1 つのグループになります。独立したオン・オフが欲しいときは <code>WCheckBox</code> か <code>WToggleButton</code> を使います。</li>
+<li><code>WButtonGroup</code> に入れないラジオボタンは、Swing と同じくそれぞれ独立してチェックできます (WinUI の「同じ親に置くと自動で 1 つのグループ」にはしません)。
+名前で排他にするときは <code>setGroupName</code> を同じ名前にします。</li>
 <li><strong><code>getSelection()</code> はボタンを返します。</strong> <code>ButtonModel</code> は無いので、<code>b.getModel()</code> を渡していたところはボタンをそのまま渡します (<a href="#radio-clear">6.5</a>)。</li>
 <li><strong>アイコンは印を置き換えません。</strong> Swing の <code>setIcon</code> は丸い印そのものを絵に替えますが、WinUI4K では印を残して、その右にアイコンを足します。</li>
 <li>WinUI のラジオボタンは最小の幅が 120 あるので、<code>FlowLayout</code> で並べたときの間隔が Swing より広くなります。</li>
@@ -4078,7 +4145,7 @@ fun main() {
 <td>項目を足す</td>
 <td><code>addItem(&quot;A&quot;)</code></td>
 <td><code>addItem(&quot;A&quot;)</code></td>
-<td>引数は <code>String</code> だけ。引数なしで作ったコンボは最初の項目を足しても選ばない (<a href="#combo-notes">注意点</a>)</td>
+<td>引数は <code>String</code> だけ。最初に足した項目を選ぶのは同じ</td>
 </tr>
 <tr>
 <td>位置を指定して足す</td>
@@ -4096,19 +4163,19 @@ fun main() {
 <td>項目の数・取り出し</td>
 <td><code>getItemCount()</code> / <code>getItemAt(<wbr>i)</code></td>
 <td><code>getItemCount()</code> / <code>getItemAt(<wbr>i)</code></td>
-<td><code>getItemAt</code> は表示の文字列を返す</td>
+<td>同じ (項目そのもの)。表示の文字列は <code>getItem(<wbr>i)</code></td>
 </tr>
 <tr>
 <td>選んだ位置</td>
 <td><code>getSelectedIndex()</code> / <code>setSelectedIndex(<wbr>i)</code></td>
 <td><code>getSelectedIndex()</code> / <code>setSelectedIndex(<wbr>i)</code></td>
-<td>同じ</td>
+<td>同じ (項目の外の位置は <code>IllegalArgumentException</code>)</td>
 </tr>
 <tr>
 <td>選んだ項目</td>
 <td><code>getSelectedItem()</code></td>
 <td><code>getSelectedItem()</code></td>
-<td><strong>戻り値は表示の文字列 (<code>String</code>)</strong>。項目そのものは <code>getModel().<wbr>getSelectedItem()</code></td>
+<td>同じ (項目そのもの)。表示の文字列は <code>getSelectedItemText()</code></td>
 </tr>
 <tr>
 <td>項目を選ぶ</td>
@@ -4132,7 +4199,7 @@ fun main() {
 <td>表示を変える</td>
 <td><code>setRenderer(<wbr>ListCellRenderer)</code></td>
 <td><code>setRenderer(<wbr>value -&gt; &quot;...&quot;)</code></td>
-<td>部品ではなく文字列を返す関数</td>
+<td>部品ではなく文字列を返す関数 (Java では <code>java.<wbr>util.<wbr>function.<wbr>Function</code>)</td>
 </tr>
 <tr>
 <td>一覧に出す行数</td>
@@ -4387,7 +4454,7 @@ country.setRenderer(value -&gt; {
     return c == null ? &quot;&quot; : c.name + &quot; (&quot; + c.code + &quot;)&quot;;
 });
 WLabel result = new WLabel();
-country.addActionListener(e -&gt; result.setText(&quot;Code: &quot; + ((Country) model.getSelectedItem()).code));
+country.addActionListener(e -&gt; result.setText(&quot;Code: &quot; + ((Country) country.getSelectedItem()).code));
 
 frame.add(country);
 frame.add(result);
@@ -4409,9 +4476,10 @@ frame.add(result);
 </table></div>
 <ul>
 <li><code>addItem</code> は <code>String</code> しか受け取らないので、文字列でない項目は <code>WDefaultComboBoxModel&lt;Country&gt;</code> に入れてからコンボに渡します。</li>
-<li><code>setRenderer</code> には、部品 (<code>ListCellRenderer</code>) ではなく、項目から表示の文字列を作る関数を渡します。アイコンや複数行の表示はできません。</li>
-<li><strong><code>getSelectedItem()</code> は項目そのものではなく表示の文字列を返します。</strong> <code>(Country) country.getSelectedItem()</code> は
-<code>String</code> から <code>Country</code> へのキャストになりコンパイルが通らないので、<code>model.getSelectedItem()</code> (または <code>country.getModel().getSelectedItem()</code>) から取り出します。</li>
+<li><code>setRenderer</code> には、部品 (<code>ListCellRenderer</code>) ではなく、項目から表示の文字列を作る関数 (Java では <code>java.util.function.Function&lt;Object, String&gt;</code>) を渡します。
+アイコンや複数行の表示はできません。</li>
+<li><code>getSelectedItem()</code> は Swing と同じく項目そのもの (<code>Object</code>) を返すので、<code>(Country) country.getSelectedItem()</code> のようにキャストして読みます。
+レンダラーで作った表示の文字列は <code>getSelectedItemText()</code> (位置を指定するなら <code>getItem(i)</code>) で読めます。</li>
 </ul>
 <h3 id="combo-winui">8.7 見出しと案内文<a class="anchor" href="#combo-winui">#</a></h3>
 <p>Swing には無いが、WinUI ではよく使う機能です。コンボの上に見出しを付け、何も選んでいないときに案内文を出します。</p>
@@ -4451,7 +4519,7 @@ fun main() {
         )
         val country = WComboBox(countries)
         country.renderer = { value -&gt; (value as Country?)?.let { &quot;${it.name} (${it.code})&quot; } ?: &quot;&quot; }
-        country.addActionListener { status.text = &quot;Code: ${(countries.selectedItem as Country).code}&quot; }
+        country.addActionListener { status.text = &quot;Code: ${(country.selectedItem as Country).code}&quot; }
 
         // Editable combo box (8.5)
         val font = WComboBox(arrayOf(&quot;Arial&quot;, &quot;Segoe UI&quot;, &quot;Consolas&quot;))
@@ -4476,12 +4544,10 @@ fun main() {
 <code>WItemEvent</code> の <code>getStateChange()</code> / <code>getItem()</code> は <code>stateChange</code> / <code>item</code> と書きます。</p>
 <h3 id="combo-notes">8.9 注意点<a class="anchor" href="#combo-notes">#</a></h3>
 <ul>
-<li><strong><code>getSelectedItem()</code> は <code>String</code> を返します。</strong> 文字列でない項目は <code>getModel().getSelectedItem()</code> か <code>getSelectedObjects()[0]</code> で取り出します。
-<code>getItemAt(i)</code> も表示の文字列で、項目そのものは <code>getModel().getElementAt(i)</code> です。</li>
-<li><strong>引数なしの <code>new WComboBox()</code> と <code>List</code> を渡すコンストラクターは、<code>JComboBox</code> と選択の動きが違います。</strong> 最初の項目を <code>addItem</code> で足しても選ばず
-(<code>JComboBox</code> は選ぶ)、選んでいる項目を消すと未選択になります (<code>JComboBox</code> は隣の項目を選ぶ)。Swing と同じ動きにするときは、
-配列を渡すか、<code>new WComboBox(new WDefaultComboBoxModel&lt;&gt;())</code> のようにモデルを渡して作ります。</li>
-<li>項目が無いときに <code>setSelectedIndex(2)</code> としても例外にならず、後から 3 つ目の項目が足されたときにそれを選びます (<code>JComboBox</code> は <code>IllegalArgumentException</code>)。</li>
+<li><code>getSelectedItem()</code>・<code>getItemAt(i)</code> は Swing と同じく項目そのものを返します。レンダラーで作った表示の文字列は <code>getSelectedItemText()</code>・<code>getItem(i)</code> です。</li>
+<li>選択の動きはどのコンストラクターでも <code>JComboBox</code> と同じです。最初に足した項目を選び、選んでいる項目を消すと隣の項目を選び、
+項目の外の位置の <code>setSelectedIndex</code> は <code>IllegalArgumentException</code> です。</li>
+<li><code>removeItem(o)</code> は Swing と同じく <code>o</code> に等しい項目を消します。位置で消すのは <code>removeItemAt(i)</code> です (数の項目を並べたコンボの <code>removeItem(1)</code> は、2 番目ではなく <code>1</code> に等しい項目を消します)。</li>
 <li>編集できないコンボで、一覧に無い値をモデルに選ばせると、閉じた欄には何も出ません。</li>
 <li><code>JComboBox</code> の HTML の文字は使えません。<code>&lt;html&gt;</code> で始まる文字はそのまま表示されます。</li>
 </ul>
@@ -4503,19 +4569,19 @@ fun main() {
 <td>数値のスピナー</td>
 <td><code>new JSpinner(<wbr>new SpinnerNumberModel(<wbr>1, 0, 10, 1))</code></td>
 <td><code>new WSpinner(<wbr>new WSpinnerNumberModel(<wbr>1, 0, 10, 1))</code></td>
-<td><strong>上下のボタンは既定で出ない</strong> (<a href="#spinner-basic">9.2</a>)</td>
+<td>同じ (上下のボタンも出る)</td>
 </tr>
 <tr>
 <td>引数なしで作る</td>
 <td><code>new JSpinner()</code></td>
 <td><code>new WSpinner()</code></td>
-<td>値は <code>0</code> ではなく空欄 (<code>NaN</code>)</td>
+<td>同じ (<code>Integer</code> の 0 から 1 ずつ)</td>
 </tr>
 <tr>
-<td>上下のボタンを出す</td>
+<td>上下のボタンの出し方</td>
 <td>(いつも出る)</td>
-<td><code>setSpinButtonPlacementMode(<wbr>SpinButtonPlacementMode.<wbr>INLINE)</code></td>
-<td>既定は <code>HIDDEN</code></td>
+<td><code>setSpinButtonPlacementMode(<wbr>SpinButtonPlacementMode.<wbr>COMPACT)</code></td>
+<td>既定は <code>INLINE</code> (Swing と同じく欄の右に出す)</td>
 </tr>
 <tr>
 <td>値を読む</td>
@@ -4551,7 +4617,7 @@ fun main() {
 <td>刻み</td>
 <td><code>model.<wbr>setStepSize(<wbr>1)</code></td>
 <td><code>model.<wbr>setStepSize(<wbr>1)</code></td>
-<td>スピナーの <code>setSmallChange(<wbr>1)</code> でもよい</td>
+<td>スピナーの <code>setStepSize(<wbr>1)</code> (<code>setSmallChange(<wbr>1)</code> と同じ) でもよい</td>
 </tr>
 <tr>
 <td>次・前の値</td>
@@ -4619,7 +4685,6 @@ frame.add(quantity);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WSpinner quantity = new WSpinner(new WSpinnerNumberModel(1, 0, 10, 1));
-quantity.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);   // show the up and down buttons
 
 frame.add(new WLabel(&quot;Quantity:&quot;));
 frame.add(quantity);
@@ -4642,8 +4707,8 @@ frame.add(quantity);
 <p>幅を指定しなくても、<code>JSpinner</code> と同じく値が見える幅で置かれます。<code>WSpinner</code> の希望の幅には、フォーカスを受けたときに入力欄に出る
 消去のボタン (×) の分も入っているので、フォーカスの有り無しで幅が変わらず、数字も隠れません。</p>
 <ul>
-<li><strong>WinUI の <code>NumberBox</code> は、既定では上下のボタンを出しません。</strong> <code>JSpinner</code> と同じ見た目にするには
-<code>setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE)</code> を指定します (<code>COMPACT</code> は欄の右に小さな印だけを出し、フォーカスがあるときに上下のボタンを浮かせて出します。<a href="#spinner-winui">9.6</a> の画面)。</li>
+<li>上下のボタンは <code>JSpinner</code> と同じく欄の右に出ます (<code>SpinButtonPlacementMode.INLINE</code> が既定)。<code>COMPACT</code> は欄の右に小さな印だけを出し、
+フォーカスがあるときに上下のボタンを浮かせて出します (<a href="#spinner-winui">9.6</a> の画面)。<code>HIDDEN</code> はボタンを出しません。</li>
 <li>ボタンが無くても、↑↓ キーで増減できます。入力欄にフォーカスがあるときは、マウス ホイールでも増減できます。</li>
 </ul>
 <h3 id="spinner-listener">9.3 値を読んで変化に反応する<a class="anchor" href="#spinner-listener">#</a></h3>
@@ -4660,7 +4725,6 @@ frame.add(result);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WSpinner age = new WSpinner(new WSpinnerNumberModel(20, 0, 120, 1));
-age.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
 WLabel result = new WLabel(&quot;Age: 20&quot;);
 age.addChangeListener(e -&gt; {
     int value = (int) age.getValue();
@@ -4701,7 +4765,6 @@ frame.add(price);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WSpinner price = new WSpinner(new WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5));
-price.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
 price.setEditor(new WSpinner.NumberEditor(price, &quot;0.00&quot;));
 
 frame.add(new WLabel(&quot;Price:&quot;));
@@ -4745,14 +4808,10 @@ frame.add(new JSpinner(toModel));
 WSpinnerNumberModel toModel = new WSpinnerNumberModel(5, 1, 31, 1);
 fromModel.addChangeListener(e -&gt; toModel.setMinimum((Integer) fromModel.getValue()));
 
-WSpinner from = new WSpinner(fromModel);
-from.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-WSpinner to = new WSpinner(toModel);
-to.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
 frame.add(new WLabel(&quot;From:&quot;));
-frame.add(from);
+frame.add(new WSpinner(fromModel));
 frame.add(new WLabel(&quot;To:&quot;));
-frame.add(to);
+frame.add(new WSpinner(toModel));
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jspinner/range/RangeSwing.java"><code>RangeSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jspinner/range/RangeWinUI4K.java"><code>RangeWinUI4K.java</code></a>)</p>
 <div class="table"><table>
@@ -4776,7 +4835,7 @@ WinUI4K は WinUI の <code>NumberBox</code> が値を範囲の端に切り詰�
 </ul>
 <h3 id="spinner-winui">9.6 見出し・案内文と式の入力<a class="anchor" href="#spinner-winui">#</a></h3>
 <p>Swing には無いが、WinUI ではよく使う機能です。見出しと案内文を付け、「12 * 3」のような式を入力すると計算した値にします。</p>
-<pre><code class="language-java">WSpinner amount = new WSpinner();                 // empty (NaN) until the user types
+<pre><code class="language-java">WSpinner amount = new WSpinner(Double.NaN);       // empty (NaN) until the user types
 amount.setHeader(&quot;Amount&quot;);
 amount.setPlaceholderText(&quot;Type 12 * 3&quot;);
 amount.setAcceptsExpression(true);                // &quot;12 * 3&quot; becomes 36
@@ -4787,7 +4846,8 @@ frame.add(amount);
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jspinner/expression/ExpressionWinUI4K.java"><code>ExpressionWinUI4K.java</code></a>)</p>
 <p><img src="images/swing_to_winui4k/JSpinner/ExpressionWinUI4K.png" alt="Expression (WinUI4K)" /></p>
-<p>引数なしの <code>new WSpinner()</code> は空欄 (値は <code>NaN</code>) で始まるので、案内文が見えます。</p>
+<p><code>new WSpinner(Double.NaN)</code> は空欄 (値は <code>NaN</code>) で始まるので、案内文が見えます。<code>Double</code> の値を渡して作ったスピナーは、入力を消すと空欄 (<code>NaN</code>) になります。
+引数なしの <code>new WSpinner()</code> は <code>JSpinner()</code> と同じく 0 から始まり、入力を消すと直前の値に戻ります。</p>
 <h3 id="spinner-kotlin">9.7 Kotlin で書く<a class="anchor" href="#spinner-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
 <pre><code class="language-kotlin">import com.appkitbox.winui4k.*
@@ -4800,12 +4860,10 @@ fun main() {
 
         // Number spinner with buttons and a listener (9.2, 9.3)
         val age = WSpinner(WSpinnerNumberModel(20, 0, 120, 1))
-        age.spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
         age.addChangeListener { value: Double -&gt; status.text = &quot;Age: ${value.toInt()}&quot; }
 
         // Decimal steps (9.4)
         val price = WSpinner(WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5))
-        price.spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
         price.editor = WSpinner.NumberEditor(price, &quot;0.00&quot;)
 
         // Linked range (9.5)
@@ -4814,7 +4872,7 @@ fun main() {
         fromModel.addChangeListener { toModel.minimum = fromModel.number }
 
         // Header, placeholder and expressions (9.6)
-        val amount = WSpinner().apply {
+        val amount = WSpinner(Double.NaN).apply {
             header = &quot;Amount&quot;
             placeholderText = &quot;Type 12 * 3&quot;
             acceptsExpression = true
@@ -4831,11 +4889,10 @@ fun main() {
 最小・最大・刻みの変化も受け取るときは、Java と同じく <code>WChangeListener</code> を渡す形 (<code>addChangeListener(WChangeListener { e -&gt; ... })</code>) を使います。</p>
 <h3 id="spinner-notes">9.8 注意点<a class="anchor" href="#spinner-notes">#</a></h3>
 <ul>
-<li><strong>上下のボタンは既定で出ません。</strong> <code>setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE)</code> を忘れずに付けます。</li>
 <li><strong><code>getValue()</code> は <code>double</code> です。</strong> <code>(Integer) spinner.getValue()</code> はコンパイルが通らないので、<code>(int) spinner.getValue()</code> か
 <code>(Integer) spinner.getModel().getValue()</code> に直します。</li>
-<li>引数なしの <code>new WSpinner()</code> の値は <code>0</code> ではなく <code>NaN</code> (空欄) です。この既定のモデルのまま入力を消すと、値は <code>NaN</code> になります。
-モデルを渡して作ったスピナーは、Swing と同じく、入力を消すと直前の値に戻ります。</li>
+<li>引数なしの <code>new WSpinner()</code> とモデルを渡して作ったスピナーは、Swing と同じく、入力を消すと直前の値に戻ります。
+未入力 (<code>NaN</code>) を許すのは、<code>new WSpinner(Double.NaN)</code> のように <code>Double</code> の値を渡して作ったときだけです。</li>
 <li>範囲の外の値は、モデルに入れても <code>setValue</code> で入れても範囲の端に切り詰められます。上下のボタンで端を越えるときも、止まらずに端の値になります。</li>
 <li><code>SpinnerListModel</code> と <code>SpinnerDateModel</code> に当たる <code>WSpinnerListModel</code> / <code>WSpinnerDateModel</code> はありますが、スピナーに付けると
 <code>IllegalArgumentException</code> になります。一覧からの選択や日時の選択は、今の版の <code>WSpinner</code> ではできません。</li>
@@ -4865,7 +4922,7 @@ fun main() {
 <td>引数なしで作る</td>
 <td><code>new JSlider()</code></td>
 <td><code>new WSlider()</code></td>
-<td>値は 50 ではなく 0</td>
+<td>同じ (0〜100、値は真ん中の 50。<code>WSlider(<wbr>min, max)</code> も <code>(<wbr>min + max) / 2</code>)</td>
 </tr>
 <tr>
 <td>縦向きで作る</td>
@@ -5170,21 +5227,21 @@ fun main() {
         val status = WLabel(&quot;Volume: 30&quot;)
 
         // Slider and its value (10.2)
-        val volume = WSlider(0.0, 100.0, 30.0)
+        val volume = WSlider(0, 100, 30)
         volume.addChangeListener { value: Double -&gt; status.text = &quot;Volume: ${value.toInt()}&quot; }
 
         // Ticks and snapping (10.3)
-        val level = WSlider(0.0, 100.0, 50.0).apply {
+        val level = WSlider(0, 100, 50).apply {
             majorTickSpacing = 25.0
             paintTicks = true
             snapToTicks = true
         }
 
         // Vertical (10.4)
-        val vertical = WSlider(WSlider.VERTICAL, 0.0, 100.0, 60.0)
+        val vertical = WSlider(WSlider.VERTICAL, 0, 100, 60)
 
         // Apply the value when dragging ends (10.5)
-        val brightness = WSlider(0.0, 100.0, 50.0)
+        val brightness = WSlider(0, 100, 50)
         brightness.addChangeListener(WChangeListener {
             if (!brightness.valueIsAdjusting) status.text = &quot;Applied: ${brightness.value.toInt()}&quot;
         })
@@ -5196,13 +5253,13 @@ fun main() {
     }
 }
 </code></pre>
-<p>Kotlin から作るときは、引数が <code>Double</code> なので <code>WSlider(0.0, 100.0, 30.0)</code> と書きます (<code>WSlider(0, 100, 30)</code> は型が合いません)。
+<p>Kotlin からも Java と同じく <code>WSlider(0, 100, 30)</code> と整数で作れます (小数の範囲は <code>WSlider(0.0, 1.0, 0.6)</code>)。読み出す <code>value</code> は <code>Double</code> です。
 <code>addChangeListener { value: Double -&gt; ... }</code> は値が変わったときだけ呼ばれ、変わった後の値を受け取ります。ドラッグ中かの変化も受け取るときは、
 <code>WChangeListener { ... }</code> を渡す形を使います。</p>
 <h3 id="slider-notes">10.8 注意点<a class="anchor" href="#slider-notes">#</a></h3>
 <ul>
 <li><strong>値は <code>double</code> です。</strong> <code>int v = slider.getValue();</code> はコンパイルが通らないので、<code>int v = (int) slider.getValue();</code> と書きます。</li>
-<li>引数なしの <code>new WSlider()</code> の値は、<code>JSlider</code> の 50 ではなく 0 です。</li>
+<li>値を渡さずに作ったスライダーの値は、<code>JSlider</code> と同じく範囲の真ん中です (<code>new WSlider()</code> は 50)。</li>
 <li>目盛りは Swing と同じく、<code>setPaintTicks(true)</code> でトラックの下 (縦向きなら右) に描きます。既定の <code>getPaintTicks()</code> は <code>false</code> です (Swing と同じ)。
 トラックの両側や上に描くときは <code>setTickPlacement(...)</code> を使います (<a href="#slider-winui">10.6</a>)。</li>
 <li>目盛りの数字 (<code>setPaintLabels</code> / <code>setLabelTable</code>) はありません。値を見せるときは、ラベルを横に置くか <code>setHeader</code> を使います。</li>
@@ -5444,13 +5501,26 @@ frame.add(status);
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WProgressBar progress = new WProgressBar(0, 100);
 WLabel status = new WLabel(&quot;Working...&quot;);
-CompletableFuture.runAsync(() -&gt; {
-    for (int i = 1; i &lt;= 100; i++) {
-        sleep(100);                                 // runs on another thread
-        int value = i;
-        WinUiUtilities.invokeLater(() -&gt; progress.setValue(value));   // back to the UI thread
+new WSwingWorker&lt;Void, Integer&gt;() {
+    @Override
+    protected Void doInBackground() throws Exception {
+        for (int i = 1; i &lt;= 100; i++) {
+            Thread.sleep(100);                      // runs on another thread
+            publish(i);
+        }
+        return null;
     }
-}).thenRun(() -&gt; WinUiUtilities.invokeLater(() -&gt; status.setText(&quot;Done&quot;)));
+
+    @Override
+    protected void process(List&lt;Integer&gt; chunks) {  // runs on the UI thread
+        progress.setValue(chunks.get(chunks.size() - 1));
+    }
+
+    @Override
+    protected void done() {
+        status.setText(&quot;Done&quot;);
+    }
+}.execute();
 
 frame.add(progress);
 frame.add(status);
@@ -5471,10 +5541,8 @@ frame.add(status);
 </tbody>
 </table></div>
 <ul>
-<li>WinUI4K には <code>SwingWorker</code> が無いので、<a href="#button-background">1.13</a> と同じく <code>CompletableFuture</code> で裏の処理を動かし、
-バーを触る処理は <code>WinUiUtilities.invokeLater</code> で UI スレッドへ戻します。<code>sleep</code> は <code>Thread.sleep</code> の <code>InterruptedException</code> を包んだ小さなメソッドです。</li>
-<li><code>SwingWorker</code> の <code>publish</code> / <code>process</code> のように更新をまとめる仕組みはありません。更新が多いときは、値が変わったときだけ <code>invokeLater</code> するなど、
-UI スレッドに送る回数を減らします。</li>
+<li><code>SwingWorker</code> は <a href="#button-background">1.13</a> と同じく <code>WSwingWorker</code> にします。<code>publish</code> した値は、Swing と同じくまとめて UI スレッドの <code>process</code> に届きます。</li>
+<li><code>setProgress(0〜100)</code> と <code>addPropertyChangeListener</code> で、進み具合を <code>&quot;progress&quot;</code> のプロパティの変化として受け取ることもできます (Swing と同じ)。</li>
 </ul>
 <h3 id="progress-model">11.6 スライダーとモデルを共有する<a class="anchor" href="#progress-model">#</a></h3>
 <p>1 つのモデルをスライダーと進捗バーで共有すると、スライダーを動かすだけでバーも動きます。</p>
@@ -5536,7 +5604,6 @@ frame.add(error);
 <h3 id="progress-kotlin">11.8 Kotlin で書く<a class="anchor" href="#progress-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
 <pre><code class="language-kotlin">import com.appkitbox.winui4k.*
-import java.util.concurrent.CompletableFuture
 
 fun main() {
     WinUiUtilities.invokeLater {
@@ -5549,12 +5616,18 @@ fun main() {
         progress.addChangeListener { percent.text = progress.string ?: &quot;&quot; }
 
         // Update from a background task (11.5)
-        CompletableFuture.runAsync {
-            for (i in 1..100) {
-                Thread.sleep(100)
-                WinUiUtilities.invokeLater { progress.value = i.toDouble() }
+        object : WSwingWorker&lt;Unit, Int&gt;() {
+            override fun doInBackground() {
+                for (i in 1..100) {
+                    Thread.sleep(100)                        // runs on another thread
+                    publish(i)
+                }
             }
-        }
+
+            override fun process(chunks: List&lt;Int&gt;) {       // runs on the UI thread
+                progress.value = chunks.last().toDouble()
+            }
+        }.execute()
 
         // Indeterminate and paused (11.3, 11.7)
         val waiting = WProgressBar().apply {
@@ -5610,8 +5683,8 @@ fun main() {
 <tr>
 <td>文字列だけで作る</td>
 <td><code>new JTextArea(&quot;...&quot;)</code></td>
-<td><code>WTextPane p = new WTextPane(); p.<wbr>setText(&quot;...&quot;);</code></td>
-<td><strong><code>WTextPane(<wbr>String)</code> は案内文</strong> (<a href="#textarea-notes">12.9</a>)</td>
+<td><code>new WTextPane(&quot;...&quot;)</code></td>
+<td>同じ</td>
 </tr>
 <tr>
 <td>スクロールさせる</td>
@@ -5641,7 +5714,7 @@ fun main() {
 <td>折り返す</td>
 <td><code>setLineWrap(<wbr>true)</code></td>
 <td><code>setLineWrap(<wbr>true)</code></td>
-<td><strong>既定が逆</strong> (WinUI4K は折り返す)</td>
+<td>同じ (既定はどちらも折り返さない)</td>
 </tr>
 <tr>
 <td>単語の切れ目で折り返す</td>
@@ -5700,8 +5773,8 @@ fun main() {
 <tr>
 <td>元に戻す</td>
 <td><code>UndoManager</code> を自分で付ける</td>
-<td>組み込み (Ctrl+Z)。<code>undo()</code> / <code>getCanUndo()</code></td>
-<td><code>WTextField</code> の <code>canUndo()</code> と名前が違う</td>
+<td>組み込み (Ctrl+Z)。<code>undo()</code> / <code>canUndo()</code></td>
+<td><code>WTextField</code> と同じ形</td>
 </tr>
 <tr>
 <td>ファイルの読み書き</td>
@@ -5783,8 +5856,7 @@ frame.add(new JScrollPane(noWrap));
 frame.add(new JScrollPane(wrapped));
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextPane noWrap = new WTextPane(TEXT, 4, 20);
-noWrap.setLineWrap(false);                          // wraps by default, unlike Swing
+<pre><code class="language-java">WTextPane noWrap = new WTextPane(TEXT, 4, 20);      // does not wrap by default
 
 WTextPane wrapped = new WTextPane(TEXT, 4, 20);
 wrapped.setLineWrap(true);
@@ -5809,7 +5881,7 @@ frame.add(wrapped);
 </tbody>
 </table></div>
 <ul>
-<li><strong>既定が逆です</strong>。<code>JTextArea</code> は折り返しませんが、<code>WTextPane</code> は折り返します。折り返さない欄は <code>setLineWrap(false)</code> を書きます。</li>
+<li>既定は <code>JTextArea</code> と同じく折り返しません (ウィンドウに載せる前も後も <code>getLineWrap()</code> は <code>false</code>)。</li>
 <li><code>setLineWrap(true)</code> と <code>setWrapStyleWord(true)</code> は Swing のまま書けます。WinUI の折り返しははじめから単語の切れ目で折り返すので、
 <code>setWrapStyleWord(false)</code> でも単語の切れ目で折り返します (Swing の <code>false</code> のような、文字の切れ目での折り返しはできません)。</li>
 <li>折り返さない欄は、Swing では横のスクロールバーが出ますが、WinUI ではスクロールバーは出ません (はみ出した部分は欄の中でスクロールします)。</li>
@@ -5957,14 +6029,15 @@ frame.add(license);
 </ul>
 <h3 id="textarea-winui">12.7 見出しと案内文<a class="anchor" href="#textarea-winui">#</a></h3>
 <p>Swing には無いが、WinUI ではよく使う機能です。入力欄の上に見出しを出し、空のときは薄い文字で案内を出します。</p>
-<pre><code class="language-java">WTextPane comment = new WTextPane(&quot;Write your feedback here&quot;);   // placeholder, not the text
+<pre><code class="language-java">WTextPane comment = new WTextPane();
+comment.setPlaceholderText(&quot;Write your feedback here&quot;);   // shown while the pane is empty
 comment.setHeader(&quot;Feedback&quot;);
 comment.setRows(4);
 comment.setColumns(30);
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jtextarea/header/HeaderWinUI4K.java"><code>HeaderWinUI4K.java</code></a>)</p>
 <p><img src="images/swing_to_winui4k/JTextArea/HeaderWinUI4K.png" alt="Header (WinUI4K)" /></p>
-<p>コンストラクターの文字列が案内文になるのは <code>WTextField</code> と同じです。後から変えるときは <code>setPlaceholderText(&quot;...&quot;)</code> を使います。
+<p>案内文は <code>WTextField</code> と同じく <code>setPlaceholderText(&quot;...&quot;)</code> で入れます (コンストラクターの文字列は初めの文字列です)。
 今の版の WinUI4K では、<code>setRows</code> で決まる高さに見出しの分も入るため、見出しを付けると入力する部分が行数より低くなります
 (画面では 4 行のつもりが 2 行半ほど)。入力する部分の高さをそろえるときは <code>setHeight(...)</code> で決めます。</p>
 <h3 id="textarea-kotlin">12.8 Kotlin で書く<a class="anchor" href="#textarea-kotlin">#</a></h3>
@@ -5994,7 +6067,6 @@ fun main() {
         // Log with a monospaced font that does not wrap (12.3, 12.4, 12.6)
         val log = WTextPane(6, 40).apply {
             isEditable = false
-            lineWrap = false
             font = WFont(&quot;Consolas&quot;, WFont.PLAIN, 14)
         }
         var count = 0
@@ -6015,14 +6087,13 @@ fun main() {
 <code>getLineOfOffset</code> などの引数のあるものは、Java と同じく関数で呼びます。</p>
 <h3 id="textarea-notes">12.9 注意点<a class="anchor" href="#textarea-notes">#</a></h3>
 <ul>
-<li><code>new WTextPane(&quot;文字列&quot;)</code> の文字列は初めの文字列ではなく案内文になります (<code>WTextField</code> と同じ)。<code>JTextArea(String text)</code> のつもりで
-書くと、欄は空のまま薄い文字が出ます。初めの文字列は <code>setText(...)</code> か <code>new WTextPane(text, rows, columns)</code> で入れます。</li>
-<li>折り返しの既定が逆です。<code>JTextArea</code> は折り返さず、<code>WTextPane</code> は折り返します (<a href="#textarea-wrap">12.3</a>)。</li>
+<li><code>new WTextPane(&quot;文字列&quot;)</code> の文字列は、<code>JTextArea(String text)</code> と同じく初めの文字列です。案内文は <code>setPlaceholderText(...)</code> で入れます。</li>
+<li>折り返しの既定は <code>JTextArea</code> と同じく折り返しません (<a href="#textarea-wrap">12.3</a>)。<code>JTextPane</code> (幅で折り返す) から移すときは <code>setLineWrap(true)</code> を書きます (<a href="#textpane">13 章</a>)。</li>
 <li><code>setWrapStyleWord</code> の値にかかわらず、単語の切れ目で折り返します (WinUI の折り返しは、はじめから単語の切れ目です)。</li>
 <li><code>JScrollPane</code> で包むのをやめます。<code>WTextPane</code> は自分でスクロールします。スクロールバーは既定のスタイルでは出ません。</li>
 <li><code>addTextChangedListener</code> のリスナーは引数を受け取りません (<code>() -&gt; ...</code>)。<code>WTextField</code> の <code>addTextChangedListener</code> (<code>text -&gt; ...</code>) と
 形が違うので、今の文字列は <code>getText()</code> で読みます。</li>
-<li>元に戻せるかは、<code>WTextField</code> では <code>canUndo()</code> ですが、<code>WTextPane</code> では <code>getCanUndo()</code> (Kotlin では <code>canUndo</code>) です。</li>
+<li>元に戻せるかは、<code>WTextField</code> と同じく <code>canUndo()</code>・<code>canRedo()</code> で読みます (<code>UndoManager.canUndo()</code> と同じ形)。</li>
 <li><code>setTabSize</code> はありません。</li>
 <li>1 行の入力欄の <code>WTextField</code> も、<code>setAcceptsReturn(true)</code> と <code>setTextWrapping(TextWrapping.WRAP)</code> で複数行にできます。
 ただし <code>setRows</code>・<code>append</code>・<code>getLineCount</code> などの <code>JTextArea</code> の API は無いので、<code>JTextArea</code> からの移植には <code>WTextPane</code> を使います。</li>
@@ -6050,6 +6121,12 @@ fun main() {
 <td><code>new JTextPane()</code></td>
 <td><code>new WTextPane()</code></td>
 <td>同じ (スクロールは <code>JScrollPane</code> 無しでできる)</td>
+</tr>
+<tr>
+<td>幅で折り返す</td>
+<td>(いつも折り返す)</td>
+<td><code>setLineWrap(<wbr>true)</code></td>
+<td><strong>既定は折り返さない</strong> (<code>JTextArea</code> と同じ。<a href="#textpane-notes">13.9</a>)</td>
 </tr>
 <tr>
 <td>書式のある文書</td>
@@ -6106,10 +6183,10 @@ fun main() {
 <td>同じ</td>
 </tr>
 <tr>
-<td>太字・斜体を切り替える</td>
-<td><code>new StyledEditorKit.<wbr>BoldAction()</code> / <code>ItalicAction()</code></td>
-<td><code>toggleSelectionBold()</code> / <code>toggleSelectionItalic()</code></td>
-<td><code>Action</code> ではなくメソッド。下線の切り替えは無い</td>
+<td>太字・斜体・下線を切り替える</td>
+<td><code>new StyledEditorKit.<wbr>BoldAction()</code> / <code>ItalicAction()</code> / <code>UnderlineAction()</code></td>
+<td><code>toggleSelectionBold()</code> / <code>toggleSelectionItalic()</code> / <code>toggleSelectionUnderline()</code></td>
+<td><code>Action</code> ではなくメソッド</td>
 </tr>
 <tr>
 <td>キャレットの位置の書式</td>
@@ -6190,6 +6267,7 @@ frame.add(new JScrollPane(pane));
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTextPane pane = new WTextPane();
+pane.setLineWrap(true);  // wraps long lines like JTextPane
 pane.setWidth(400);
 pane.setHeight(120);
 
@@ -6252,9 +6330,9 @@ mark.addActionListener(e -&gt; {
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTextPane pane = new WTextPane();
+pane.setLineWrap(true);  // wraps long lines like JTextPane
 pane.setText(&quot;INFO start\nERROR disk full\nINFO retry\nERROR network down&quot;);
-WTextField word = new WTextField(10);
-word.setText(&quot;ERROR&quot;);
+WTextField word = new WTextField(&quot;ERROR&quot;, 10);
 WButton mark = new WButton(&quot;Mark&quot;);
 mark.addActionListener(e -&gt; {
     WSimpleAttributeSet red = new WSimpleAttributeSet();
@@ -6287,7 +6365,7 @@ mark.addActionListener(e -&gt; {
 <ul>
 <li>位置は Swing と同じく <code>getText()</code> の文字の位置 (改行は 1 文字の <code>&quot;\n&quot;</code>) なので、<code>indexOf</code> で探した位置をそのまま渡せます。</li>
 <li>4 つ目の引数 <code>replace</code> が <code>true</code> なら、今の書式を既定に戻してから属性を入れます (Swing と同じ)。</li>
-<li><code>WColor.RED</code> は Swing の <code>Color.RED</code> (255, 0, 0) より少し落ち着いた赤 (237, 28, 36) です。</li>
+<li><code>WColor.RED</code> は Swing の <code>Color.RED</code> と同じ (255, 0, 0) です。</li>
 </ul>
 <h3 id="textpane-toggle">13.4 選んだ文字を太字・斜体にするボタン<a class="anchor" href="#textpane-toggle">#</a></h3>
 <p>書式のツールバーのように、選んだ文字を太字・斜体に切り替えるボタンを置きます。</p>
@@ -6301,6 +6379,7 @@ italic.setText(&quot;Italic&quot;);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTextPane pane = new WTextPane();
+pane.setLineWrap(true);  // wraps long lines like JTextPane
 pane.setText(&quot;Select some words and press a button.&quot;);
 WButton bold = new WButton(&quot;Bold&quot;);
 bold.addActionListener(e -&gt; pane.toggleSelectionBold());
@@ -6326,7 +6405,7 @@ italic.addActionListener(e -&gt; pane.toggleSelectionItalic());
 <ul>
 <li><code>StyledEditorKit.BoldAction</code> のような書式の <code>Action</code> はありません。ボタンのリスナーから <code>toggleSelectionBold()</code> を呼びます。
 Swing の <code>Action</code> はフォーカスのあった入力欄に効きますが、<code>toggleSelectionBold()</code> は呼んだ <code>WTextPane</code> に効きます。</li>
-<li>下線の切り替え (<code>StyledEditorKit.UnderlineAction</code>) に当たるメソッドはありません。下線は <code>setCharacterAttributes</code> で付けます。</li>
+<li>下線の切り替え (<code>StyledEditorKit.UnderlineAction</code>) は <code>toggleSelectionUnderline()</code> です。どれも、選んだ範囲の全部に書式があれば外し、無い所を含めば全部に付けます (Swing と同じ)。</li>
 </ul>
 <h3 id="textpane-caret">13.5 キャレットの位置の書式を読む<a class="anchor" href="#textpane-caret">#</a></h3>
 <p>キャレットが太字の中にあるかを、ラベルに表示します (ツールバーのボタンの状態を合わせるときに使います)。</p>
@@ -6471,6 +6550,7 @@ fun main() {
 
         // Insert styled text (13.2)
         val pane = WTextPane().apply {
+            lineWrap = true      // wraps long lines like JTextPane
             width = 400.0
             height = 120.0
         }
@@ -6521,19 +6601,19 @@ fun main() {
 <li>扱える書式は文字の 6 つだけです。背景色・取り消し線・名前付きのスタイル (<code>addStyle</code>)・段落の書式 (<code>setParagraphAttributes</code>)・
 画像や部品の埋め込み (<code>insertIcon</code> / <code>insertComponent</code>) はありません。</li>
 <li>書式の <code>Action</code> (<code>StyledEditorKit.BoldAction</code> など) はありません。<code>toggleSelectionBold()</code> / <code>toggleSelectionItalic()</code> を呼びます (<a href="#textpane-toggle">13.4</a>)。</li>
-<li><code>new WTextPane(&quot;文字列&quot;)</code> の文字列は案内文です (<a href="#textarea-notes">12.9</a>)。</li>
+<li><code>JTextPane</code> は幅で折り返しますが、<code>WTextPane</code> の既定は <code>JTextArea</code> と同じく折り返さないので、<code>JTextPane</code> から移すときは <code>setLineWrap(true)</code> を書きます。</li>
 <li><code>JEditorPane</code>: HTML の表示 (<code>setContentType(&quot;text/html&quot;)</code>)・<code>setPage(url)</code>・<code>HyperlinkListener</code> に当たるものはありません。
 書式のある読み取り専用の文は <code>WRichTextBlock</code> で組み立てます (<a href="#textpane-html">13.7</a>)。</li>
 </ul>
 <h2 id="panel">14. JPanel → WLayoutPanel<a class="anchor" href="#panel">#</a></h2>
 <p><code>WLayoutPanel</code> は WinUI の <code>Canvas</code> を土台にしたパネルで、子の位置と大きさを <code>WFlowLayout</code> や <code>WBorderLayout</code> などのレイアウト マネージャーが
-Swing と同じ計算で決めます。<code>new JPanel()</code> は <code>new WLayoutPanel(new WFlowLayout())</code>、<code>new JPanel(layout)</code> は <code>new WLayoutPanel(layout)</code> です (引数なしの <code>new WLayoutPanel()</code> はレイアウト マネージャーが <code>null</code> です。<a href="#layout-notes">30.10</a>)。
+Swing と同じ計算で決めます。<code>new JPanel()</code> は <code>new WLayoutPanel()</code> (<code>WFlowLayout</code>)、<code>new JPanel(layout)</code> は <code>new WLayoutPanel(layout)</code> です
+(マネージャーを持たないパネルは <code>new WLayoutPanel(null)</code>。<a href="#layout-absolute">30.8</a>)。
 レイアウト マネージャーそのものの使い方は別の章で扱い、この章ではパネルの使い方 (入れ子・枠・背景・余白・中身の入れ替え) を扱います。</p>
 <p>縦か横に一列に並べるだけなら、WinUI の <code>StackPanel</code> を包んだ <code>WPanel</code> (<code>new WPanel(8.0, Orientation.HORIZONTAL)</code> など。8 は子の間隔) も使えます。
-枠線は <code>WBorder</code> (WinUI の <code>Border</code>) というパネルで囲んで描きます。</p>
+枠は Swing と同じく <code>setBorder(WBorderFactory...)</code> で付けます。</p>
 <p>この章のコード片は、<a href="#basics-minimal">0.1</a> と違い、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> にしたものとします
-(14.3 だけは <code>FlowLayout</code> / <code>WFlowLayout</code>)。<code>JFrame</code> の既定は <code>BorderLayout</code> ですが、<code>WFrame</code> の既定の中身は縦の <code>WPanel</code> で、
-<code>frame.add(c, WBorderLayout.NORTH)</code> の形を使うには先に <code>frame.setLayout(new WBorderLayout())</code> を呼びます (<a href="#panel-notes">14.8</a>)。</p>
+(14.3 だけは <code>FlowLayout</code> / <code>WFlowLayout</code>)。<code>JFrame</code> と同じく <code>WFrame</code> の中身の既定も <code>WBorderLayout</code> なので、<code>frame.add(c, WBorderLayout.NORTH)</code> がそのまま使えます。</p>
 <h3 id="panel-table">14.1 API の対応表<a class="anchor" href="#panel-table">#</a></h3>
 <div class="table"><table>
 <thead>
@@ -6548,8 +6628,8 @@ Swing と同じ計算で決めます。<code>new JPanel()</code> は <code>new W
 <tr>
 <td>パネルを作る</td>
 <td><code>new JPanel()</code></td>
-<td><code>new WLayoutPanel(<wbr>new WFlowLayout())</code></td>
-<td>引数なしの <code>new WLayoutPanel()</code> はレイアウト マネージャーが <code>null</code> (Swing は <code>FlowLayout</code>)</td>
+<td><code>new WLayoutPanel()</code></td>
+<td>同じ (<code>WFlowLayout</code>)</td>
 </tr>
 <tr>
 <td>レイアウトを指定して作る</td>
@@ -6602,8 +6682,8 @@ Swing と同じ計算で決めます。<code>new JPanel()</code> は <code>new W
 <tr>
 <td>線の枠</td>
 <td><code>setBorder(<wbr>BorderFactory.<wbr>createLineBorder(<wbr>Color.<wbr>GRAY))</code></td>
-<td><code>WBorder</code> で囲む (<code>setBorderColor</code> / <code>setBorderThickness</code>)</td>
-<td>パネルに <code>setBorder</code> は無い。<code>WBorder</code> は角を丸める <code>setCornerRadius</code> も持つ</td>
+<td><code>setBorder(<wbr>WBorderFactory.<wbr>createLineBorder(<wbr>WColor.<wbr>GRAY))</code></td>
+<td><code>BorderFactory</code> → <code>WBorderFactory</code>。線の枠は 1 つだけ</td>
 </tr>
 <tr>
 <td>題名付きの枠</td>
@@ -6614,8 +6694,8 @@ Swing と同じ計算で決めます。<code>new JPanel()</code> は <code>new W
 <tr>
 <td>内側の余白</td>
 <td><code>setBorder(<wbr>BorderFactory.<wbr>createEmptyBorder(<wbr>8, 8, 8, 8))</code></td>
-<td><code>setInsets(<wbr>new WInsets(<wbr>8, 8, 8, 8))</code></td>
-<td>引数の順は同じ上・左・下・右。<code>WBorder</code> で囲むなら <code>setPadding</code></td>
+<td><code>setBorder(<wbr>WBorderFactory.<wbr>createEmptyBorder(<wbr>8, 8, 8, 8))</code></td>
+<td>同じ。<code>WLayoutPanel</code> は <code>setInsets(<wbr>new WInsets(<wbr>8, 8, 8, 8))</code> でも取れる</td>
 </tr>
 <tr>
 <td>外側の余白</td>
@@ -6718,12 +6798,11 @@ frame.add(style);
 style.add(new WCheckBox(&quot;Bold&quot;));
 style.add(new WCheckBox(&quot;Italic&quot;));
 style.add(new WCheckBox(&quot;Underline&quot;));
-WBorder box = new WBorder(style);       // a container that draws the border
-box.setBorderColor(WColor.GRAY);
-box.setBorderThickness(1);
-box.setPadding(8);
+style.setBorder(WBorderFactory.createCompoundBorder(
+        WBorderFactory.createLineBorder(WColor.GRAY, 1),
+        WBorderFactory.createEmptyBorder(8, 8, 8, 8)));
 
-frame.add(box);
+frame.add(style);
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jpanel/border/BorderSwing.java"><code>BorderSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jpanel/border/BorderWinUI4K.java"><code>BorderWinUI4K.java</code></a>)</p>
 <div class="table"><table>
@@ -6740,14 +6819,13 @@ frame.add(box);
 </tr>
 </tbody>
 </table></div>
-<p><code>WBorder</code> の中に入れた <code>WLayoutPanel</code> も、中の子の大きさになるので、枠線は 3 つのチェックボックスを囲んで描かれます。</p>
 <ul>
-<li>WinUI4K の <code>WLayoutPanel</code> には <code>setBorder</code> がありません。枠線は、パネルを <code>WBorder</code> に入れて描きます。<code>WBorder</code> は子を 1 つだけ持つ
-コンテナで、枠線の色 <code>setBorderColor</code>・太さ <code>setBorderThickness</code>・角の丸み <code>setCornerRadius</code>・背景 <code>setBackground</code>・内側の余白 <code>setPadding</code> を持ちます。</li>
+<li><code>BorderFactory</code> は <code>WBorderFactory</code> にします。線の枠 (<code>createLineBorder</code>)・空の枠 (<code>createEmptyBorder</code>)・組み合わせ (<code>createCompoundBorder</code>) が使えます。
+Swing と同じく、枠の幅は <code>getInsets()</code> に入り、子はその内側に並びます。</li>
+<li>組み合わせの中の線の枠は 1 つだけです (2 つ以上は <code>IllegalArgumentException</code>)。外側と内側の順は区別せず、線はいつもパネルの外周に描きます。</li>
 <li>枠線の太さは四辺同じです。<code>MatteBorder</code> のように辺ごとに太さを変えることはできません。</li>
 <li><code>TitledBorder</code> (題名付きの枠) に当たるものはありません。</li>
-<li><code>WButton</code> や <code>WTextField</code> などのコントロールには <code>setBorder(WBorderFactory.createLineBorder(WColor.GRAY))</code> で枠を付けられます
-(パネルには付けられません)。</li>
+<li>角を丸めた枠は、パネルを <code>WBorder</code> (WinUI の <code>Border</code>) に入れて <code>setCornerRadius</code> で描きます。</li>
 </ul>
 <h3 id="panel-background">14.4 パネルの背景に色を塗る<a class="anchor" href="#panel-background">#</a></h3>
 <p>画面の上に、色を塗った見出しの帯を置きます。</p>
@@ -6809,7 +6887,7 @@ frame.add(content, BorderLayout.CENTER);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WLayoutPanel content = new WLayoutPanel(new WGridLayout(2, 2, 8, 8));
-content.setInsets(new WInsets(24));
+content.setBorder(WBorderFactory.createEmptyBorder(24, 24, 24, 24));
 content.setBackground(new WColor(230, 240, 250));
 content.add(new WButton(&quot;One&quot;));
 content.add(new WButton(&quot;Two&quot;));
@@ -6834,10 +6912,10 @@ frame.add(content, WBorderLayout.CENTER);
 </tbody>
 </table></div>
 <ul>
-<li><code>setInsets(new WInsets(上, 左, 下, 右))</code> で上下左右を別々に指定できます。引数の順は Swing の <code>Insets</code> / <code>createEmptyBorder</code> と同じです。
-<code>new WInsets(24)</code> は四辺とも 24 です。</li>
-<li><code>WInsets</code> の値は <code>double</code> (DIP) です。</li>
-<li>線の枠と余白の両方が要るときは、<a href="#panel-border">14.3</a> のように <code>WBorder</code> で囲み、<code>WBorder</code> の <code>setPadding</code> で余白を取ります。</li>
+<li>空の枠の幅は <code>getInsets()</code> に入り、子はその内側に並びます (Swing と同じ)。<code>WLayoutPanel</code> では <code>setInsets(new WInsets(24))</code> と書いても同じです。</li>
+<li><code>WInsets</code> の値は <code>double</code> (DIP) で、引数の順は Swing の <code>Insets</code> と同じ上・左・下・右です。</li>
+<li>線の枠と余白の両方が要るときは、<a href="#panel-border">14.3</a> のように <code>createCompoundBorder</code> で組み合わせます。</li>
+<li><code>WPanel</code> (縦か横に一列に並べるパネル) にも <code>setBorder</code> があり、空の枠は内側の余白になります。</li>
 </ul>
 <h3 id="panel-swap">14.6 パネルの中身を入れ替える<a class="anchor" href="#panel-swap">#</a></h3>
 <p>ウィザードのように、ボタンを押したらパネルの中身を次の手順に入れ替えます。</p>
@@ -6906,20 +6984,19 @@ fun main() {
         header.add(WLabel(&quot;Settings&quot;).apply { foreground = WColor.WHITE })
 
         // Options in a border with padding (14.3)
-        val style = WPanel().apply {
+        val style = WLayoutPanel(WGridLayout(0, 1)).apply {
             add(WCheckBox(&quot;Bold&quot;))
             add(WCheckBox(&quot;Italic&quot;))
-        }
-        val box = WBorder(style).apply {
-            borderColor = WColor.GRAY
-            borderThickness = 1.0
-            padding = 8.0
+            border = WBorderFactory.createCompoundBorder(
+                WBorderFactory.createLineBorder(WColor.GRAY, 1),
+                WBorderFactory.createEmptyBorder(8, 8, 8, 8),
+            )
         }
 
         // Space inside the panel (14.5)
         val content = WLayoutPanel(WFlowLayout(WFlowLayout.LEFT))
-        content.insets = WInsets(24.0)
-        content.add(box)
+        content.border = WBorderFactory.createEmptyBorder(24, 24, 24, 24)
+        content.add(style)
 
         // Buttons on the right (14.2)
         val buttons = WLayoutPanel(WFlowLayout(WFlowLayout.RIGHT)).apply {
@@ -6935,16 +7012,14 @@ fun main() {
     }
 }
 </code></pre>
-<p>Kotlin では <code>background</code>・<code>insets</code>・<code>borderThickness</code> などをプロパティとして書きます。<code>WInsets</code> と <code>WBorder</code> の太さ・余白は <code>Double</code> なので、
-<code>24.0</code> のように小数で書きます (Java の <code>int</code> の自動の変換は効きません)。</p>
+<p>Kotlin では <code>background</code>・<code>border</code>・<code>insets</code> などをプロパティとして書きます。<code>WBorderFactory</code> の幅は Swing と同じ <code>Int</code> ですが、
+<code>WInsets</code> の値は <code>Double</code> なので、<code>WInsets(24.0)</code> のように小数で書きます (Java の <code>int</code> の自動の変換は効きません)。</p>
 <h3 id="panel-notes">14.8 注意点<a class="anchor" href="#panel-notes">#</a></h3>
 <ul>
-<li><strong><code>WFrame</code> の既定の中身は <code>BorderLayout</code> ではありません。</strong> <code>JFrame</code> の中身は既定で <code>BorderLayout</code> ですが、<code>WFrame</code> の既定の中身は縦の <code>WPanel</code>
-(<code>StackPanel</code>) です。<code>frame.add(c, WBorderLayout.NORTH)</code> の形を使う前に <code>frame.setLayout(new WBorderLayout())</code> を呼びます。
-呼ばずに制約付きで足すと <code>IllegalArgumentException</code> になります (<a href="#basics-differences">0.2</a> の表の「ウィンドウの中身の既定」とは違うので注意してください)。</li>
-<li><strong>パネルに <code>setBorder</code> が無い。</strong> 枠線は <code>WBorder</code> で囲み、余白は <code>setInsets</code> (<code>WLayoutPanel</code>) か <code>setPadding</code> (<code>WBorder</code>) で取ります。
-<code>TitledBorder</code>・<code>EtchedBorder</code>・<code>BevelBorder</code>・<code>MatteBorder</code> に当たるものはありません。</li>
-<li><strong>背景は既定で透明。</strong> <code>JPanel</code> は既定で不透明で、親の上に Look &amp; Feel の色を塗ります。<code>WLayoutPanel</code> は背景色を設定しない限り何も塗りません。</li>
+<li><code>WFrame</code> の中身の既定は、<code>JFrame</code> と同じく <code>WBorderLayout</code> の <code>WLayoutPanel</code> です。<code>frame.add(c, WBorderLayout.NORTH)</code> がそのまま使えます。</li>
+<li>枠は <code>setBorder(WBorderFactory...)</code> で付けます。使えるのは線・空・組み合わせの枠で、<code>TitledBorder</code>・<code>EtchedBorder</code>・<code>BevelBorder</code>・<code>MatteBorder</code> に当たるものはありません。</li>
+<li><strong>背景は既定で透明。</strong> <code>JPanel</code> は既定で不透明で、親の上に Look &amp; Feel の色を塗ります。<code>WLayoutPanel</code> は背景色を設定しない限り何も塗りません。
+パネルの <code>setOpaque</code> はありません (背景色を設定しなければ透明です)。</li>
 <li>大きさと位置の単位は DIP で、<code>WInsets</code>・<code>WSize</code> の値は <code>double</code> です。</li>
 </ul>
 <h2 id="scroll">15. JScrollPane → WScrollPane<a class="anchor" href="#scroll">#</a></h2>
@@ -6954,7 +7029,7 @@ fun main() {
 スクロールバー (<code>getVerticalScrollBar()</code>) は <a href="#scrollbar">16 章</a> で扱います。</p>
 <p><code>WList</code>・<code>WTable</code>・<code>WTree</code>・<code>WTextPane</code> などは自分でスクロールバーを出すので、<code>WScrollPane</code> に入れる必要はありません (<a href="#list-notes">3.17</a>)。
 <code>WScrollPane</code> を使うのは、パネルなど自分ではスクロールしない部品をスクロールさせるときです。</p>
-<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> にしたものとします (<a href="#panel-notes">14.8</a>)。</p>
+<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> (どちらもウィンドウの中身の既定) にしたものとします。</p>
 <h3 id="scroll-table">15.1 API の対応表<a class="anchor" href="#scroll-table">#</a></h3>
 <div class="table"><table>
 <thead>
@@ -6970,7 +7045,7 @@ fun main() {
 <td>スクロールさせる</td>
 <td><code>new JScrollPane(<wbr>view)</code></td>
 <td><code>new WScrollPane(<wbr>view)</code></td>
-<td>横のスクロールは既定で無効 (中身を幅に合わせて縮める)</td>
+<td>同じ (縦も横も中身がはみ出すときにスクロールする)</td>
 </tr>
 <tr>
 <td>表示方針を指定して作る</td>
@@ -6988,7 +7063,7 @@ fun main() {
 <td>横のバーの出し方</td>
 <td><code>setHorizontalScrollBarPolicy(...)</code></td>
 <td><code>setHorizontalScrollBarPolicy(...)</code></td>
-<td>既定は <code>HORIZONTAL_SCROLLBAR_NEVER</code> に当たる (Swing は <code>AS_NEEDED</code>)</td>
+<td>同じ (既定は <code>HORIZONTAL_SCROLLBAR_AS_NEEDED</code>)</td>
 </tr>
 <tr>
 <td>中身を替える</td>
@@ -7000,7 +7075,7 @@ fun main() {
 <td>見せている位置</td>
 <td><code>getViewport().<wbr>getViewPosition()</code></td>
 <td><code>getViewport().<wbr>getViewPosition()</code></td>
-<td><code>Point</code> → <code>WPoint</code></td>
+<td><code>Point</code> → <code>WPoint</code> (<code>p.<wbr>x</code> / <code>p.<wbr>y</code> で読める)</td>
 </tr>
 <tr>
 <td>位置を変える</td>
@@ -7012,13 +7087,13 @@ fun main() {
 <td>見える範囲の大きさ</td>
 <td><code>getViewport().<wbr>getExtentSize()</code></td>
 <td><code>getViewport().<wbr>getExtentSize()</code></td>
-<td><code>Dimension</code> → <code>WSize</code> (<code>double</code>)</td>
+<td><code>Dimension</code> → <code>WSize</code> (<code>size.<wbr>width</code> は <code>double</code>)。表示した直後は並べるまで 0</td>
 </tr>
 <tr>
 <td>中身の大きさ</td>
 <td><code>getViewport().<wbr>getViewSize()</code></td>
 <td><code>getViewport().<wbr>getViewSize()</code></td>
-<td><code>Dimension</code> → <code>WSize</code> (<code>double</code>)</td>
+<td><code>Dimension</code> → <code>WSize</code> (<code>size.<wbr>height</code> は <code>double</code>)</td>
 </tr>
 <tr>
 <td>見えている範囲</td>
@@ -7030,7 +7105,7 @@ fun main() {
 <td>スクロールに反応する</td>
 <td><code>getViewport().<wbr>addChangeListener(<wbr>e -&gt; ...)</code></td>
 <td><code>getViewport().<wbr>addChangeListener(<wbr>e -&gt; ...)</code></td>
-<td>位置を変えた後、少し遅れて呼ばれる</td>
+<td>同じ (<code>setViewPosition</code> の中で呼ばれる)</td>
 </tr>
 <tr>
 <td>部品が見えるまでスクロール</td>
@@ -7161,8 +7236,8 @@ WScrollPane scroll = new WScrollPane(lines,
 <p>WinUI4K の画面には、<code>ALWAYS</code> にした縦のバーも、はみ出している横のバーも写っていません。WinUI のスクロールバーはマウスを重ねたときに
 太くなって見える作りで、<code>ALWAYS</code> (<code>ScrollBarVisibility.Visible</code>) でも Swing のように常に太いバーが出るわけではありません。</p>
 <ul>
-<li><strong>横のスクロールは既定で無効です。</strong> <code>new WScrollPane(view)</code> の横は <code>HORIZONTAL_SCROLLBAR_NEVER</code> に当たり、中身は表示領域の幅に合わせて
-縮められます。Swing の既定 (<code>AS_NEEDED</code>) と同じにするには、この例のように表示方針を渡すか、<code>setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED)</code> を呼びます。</li>
+<li>横の表示方針の既定は Swing と同じ <code>HORIZONTAL_SCROLLBAR_AS_NEEDED</code> です。この例の表示方針を渡さない <code>new WScrollPane(view)</code> でも、横に長い中身は縮めずに横にスクロールします。
+中身を表示領域の幅に合わせて縮めるときは <code>HORIZONTAL_SCROLLBAR_NEVER</code> ではなく、WinUI の <code>setHorizontalScrollBarVisibility(ScrollBarVisibility.DISABLED)</code> を使います。</li>
 <li><code>NEVER</code> はバーを隠すだけで、プログラムからは (<a href="#scroll-position">15.4</a>) スクロールできます (Swing と同じ)。</li>
 <li>定数は <code>WScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS</code> のほか、<code>WScrollPane.VERTICAL_SCROLLBAR_ALWAYS</code> とも書けます。</li>
 </ul>
@@ -7183,7 +7258,7 @@ top.addActionListener(e -&gt; scroll.getViewport().setViewPosition(new WPoint(0,
 WButton down = new WButton(&quot;Down 200&quot;);
 down.addActionListener(e -&gt; {
     WPoint p = scroll.getViewport().getViewPosition();
-    scroll.getViewport().setViewPosition(new WPoint(p.getX(), p.getY() + 200));
+    scroll.getViewport().setViewPosition(new WPoint(p.x, p.y + 200));
 });
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jscrollpane/position/PositionSwing.java"><code>PositionSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jscrollpane/position/PositionWinUI4K.java"><code>PositionWinUI4K.java</code></a>)</p>
@@ -7202,7 +7277,7 @@ down.addActionListener(e -&gt; {
 </tbody>
 </table></div>
 <ul>
-<li><code>WPoint</code> の座標は <code>getX()</code> / <code>getY()</code> で読みます (<code>Point</code> の <code>p.x</code> / <code>p.y</code> のようなフィールドではありません)。</li>
+<li><code>WPoint</code> の座標は、<code>Point</code> と同じく <code>p.x</code> / <code>p.y</code> のフィールドで読めます (<code>getX()</code> / <code>getY()</code> も使えます)。</li>
 <li>位置の設定はアニメーションなしで行われ、<code>setViewPosition</code> から戻った時点で <code>getViewPosition()</code> は新しい位置を返します (Swing と同じ)。
 中身の範囲の外を指定すると、Swing と違い端で止まります。</li>
 <li>表示する前や <code>setVisible(true)</code> の直後 (最初のレイアウトの前) に設定した位置は、覚えておいて並べた後に当てます。
@@ -7222,7 +7297,7 @@ viewport.addChangeListener(e -&gt; {
 <pre><code class="language-java">WViewport viewport = scroll.getViewport();
 viewport.addChangeListener(e -&gt; {
     WPoint p = viewport.getViewPosition();
-    status.setText(&quot;Top: &quot; + p.getY() + &quot; / &quot; + (int) viewport.getViewSize().getHeight());
+    status.setText(&quot;Top: &quot; + p.y + &quot; / &quot; + viewport.getViewSize().height);
 });
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jscrollpane/listener/ListenerSwing.java"><code>ListenerSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jscrollpane/listener/ListenerWinUI4K.java"><code>ListenerWinUI4K.java</code></a>)</p>
@@ -7241,9 +7316,9 @@ viewport.addChangeListener(e -&gt; {
 </tbody>
 </table></div>
 <ul>
-<li><code>getViewSize()</code> は <code>WSize</code> で、幅と高さは <code>double</code> です (<code>Dimension</code> の <code>int</code> のフィールドではなく <code>getWidth()</code> / <code>getHeight()</code>)。</li>
-<li>リスナーは WinUI の <code>ViewChanged</code> で呼ばれます。<code>setViewPosition</code> から戻った時点ではまだ呼ばれておらず、少し後に呼ばれます
-(Swing は <code>setViewPosition</code> の中で呼びます)。慣性スクロールやドラッグの途中でも呼ばれます。</li>
+<li><code>getViewSize()</code> は <code>WSize</code> で、<code>Dimension</code> と同じく <code>size.width</code> / <code>size.height</code> のフィールドで読めます。値は <code>double</code> なので、
+文字にすると「1200.0」のように小数が付きます (整数にするときは <code>(int)</code> を付けます)。</li>
+<li>リスナーは Swing と同じく <code>setViewPosition</code> の中で呼ばれます (表示した直後に呼んだときも、その場で呼ばれます)。慣性スクロールやドラッグの途中でも呼ばれます。</li>
 <li>中身や表示領域の大きさだけが変わったときは呼ばれません (Swing は呼びます)。</li>
 <li>WinUI の通知をそのまま受けるなら <code>scroll.addViewChangedListener(() -&gt; ...)</code> も使えます。</li>
 </ul>
@@ -7268,7 +7343,7 @@ for (int i = 1; i &lt;= 40; i++) {
     lines.add(new WLabel(&quot;Line &quot; + i));
     numbers.add(new WLabel(String.valueOf(i)));
 }
-numbers.setMargin(4, 0, 8, 0);     // left, top, right, bottom
+numbers.setBorder(WBorderFactory.createEmptyBorder(0, 4, 0, 8));    // top, left, bottom, right
 WScrollPane scroll = new WScrollPane(lines);
 scroll.setRowHeaderView(numbers);
 scroll.setColumnHeaderView(new WLabel(&quot;Text&quot;));
@@ -7293,8 +7368,7 @@ Swing と同じく、下へスクロールした中身は見出しの下に隠�
 <ul>
 <li>見出しは WinUI の <code>ScrollViewer</code> の <code>TopHeader</code> / <code>LeftHeader</code> に置きます。見出しがあるあいだ、中身は左上に寄せられます
 (中身の <code>horizontalAlignment</code> / <code>verticalAlignment</code> が <code>LEFT</code> / <code>TOP</code> に書き換えられます)。</li>
-<li><code>WPanel</code> には内側の余白の API が無いので、サンプルでは <code>setMargin</code> (外側の余白。引数は左・上・右・下) で行番号の右を空けています。
-Swing の <code>createEmptyBorder</code> (上・左・下・右) と引数の順が違うので注意してください。</li>
+<li>行番号の右の空きは、Swing と同じく空の枠 (<code>WBorderFactory.createEmptyBorder</code>。引数は上・左・下・右) で取ります。<code>WPanel</code> の空の枠は内側の余白になります。</li>
 <li>角 (<code>setCorner</code>) は左上だけに置けます。</li>
 </ul>
 <h3 id="scroll-kotlin">15.7 Kotlin で書く<a class="anchor" href="#scroll-kotlin">#</a></h3>
@@ -7310,7 +7384,6 @@ fun main() {
         val items = WPanel()
         for (i in 1..50) items.add(WLabel(&quot;Item $i&quot;))
         val scroll = WScrollPane(items)
-        scroll.horizontalScrollBarPolicy = WScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
         // React to scrolling (15.5)
         val status = WLabel(&quot;Top: 0&quot;)
@@ -7333,14 +7406,11 @@ fun main() {
 <p>Kotlin では <code>scroll.viewport.viewPosition</code> のようにプロパティとして読み書きし、<code>WPoint</code> の座標も <code>p.x</code> / <code>p.y</code> で読めます。</p>
 <h3 id="scroll-notes">15.8 注意点<a class="anchor" href="#scroll-notes">#</a></h3>
 <ul>
-<li><strong>横のスクロールが既定で無効。</strong> <code>new WScrollPane(view)</code> は横にスクロールせず、中身を表示領域の幅に縮めます。横にもスクロールさせるときは、
-表示方針を渡すコンストラクターか <code>setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED)</code> を使います。</li>
 <li><strong>スクロールバーの見た目。</strong> WinUI のスクロールバーは、マウスを重ねたときだけ太く表示されます。<code>ALWAYS</code> でも常に太いバーは出ません。</li>
 <li><strong>表示した直後のスクロール。</strong> <code>setVisible(true)</code> の直後に <code>setViewPosition</code> / <code>setValue</code> を呼ぶと、位置を覚えておいて最初のレイアウトの後に当てます
-(Swing と同じく効きます)。ただし中身の大きさ (<code>getViewSize()</code>・スクロールバーの <code>getMaximum()</code>) は、最初のレイアウトが済むまで 0 です (<a href="#scrollbar-bottom">16.2</a>)。</li>
-<li><strong>リスナーは後から呼ばれる。</strong> <code>WViewport</code> の <code>ChangeListener</code> は、位置を変えた処理の中ではなく、少し後に呼ばれます。</li>
-<li><strong>中身の <code>revalidate()</code> でリスナーが余分に呼ばれる。</strong> <code>WScrollPane</code> の中身の <code>revalidate()</code> を呼ぶと、測り直す間だけスクロールの位置が動き (後で元に戻ります)、
-その位置でスクロールのリスナーが呼ばれます。<code>WPanel</code> は子を足すと自分で測り直すので、<code>revalidate()</code> は要りません (<a href="#scrollbar-loadmore">16.5</a>)。</li>
+(Swing と同じく効き、リスナーもその場で呼ばれます)。中身の大きさ (<code>getViewSize()</code>・スクロールバーの <code>getMaximum()</code>) は表示した直後でも読めますが、
+最初のレイアウトの前は中身だけを測った見積もりなので、並べた後の値と少し違うことがあります。表示領域の大きさ (<code>getExtentSize()</code>・<code>getVisibleAmount()</code>) は並べるまで 0 です。</li>
+<li><code>WScrollPane</code> の中身の <code>revalidate()</code> は、Swing と同じくスクロールの位置を変えず、リスナーも呼びません。<code>WPanel</code> は子を足すと自分で測り直すので、<code>revalidate()</code> は要りません (<a href="#scrollbar-loadmore">16.5</a>)。</li>
 <li><strong><code>JViewport</code> はコンポーネントではない。</strong> <code>WViewport</code> には <code>setView</code> / <code>getView</code> と位置の読み書きはありますが、<code>setBackground</code> や
 <code>setScrollMode</code> などのコンポーネントとしての API はありません。</li>
 <li><strong>リストや表は入れなくてよい。</strong> <code>WList</code>・<code>WTable</code>・<code>WTree</code>・<code>WTextPane</code> は自分でスクロールします。<code>new JScrollPane(list)</code> は <code>list</code> だけにします。</li>
@@ -7392,13 +7462,13 @@ fun main() {
 <td>最小値・最大値</td>
 <td><code>getMinimum()</code> / <code>getMaximum()</code></td>
 <td><code>getMinimum()</code> / <code>getMaximum()</code></td>
-<td>最小は 0、最大は中身の長さ (Swing と同じ)</td>
+<td>最小は 0、最大は中身の長さ (Swing と同じ。表示した直後や中身を足した直後も読める)</td>
 </tr>
 <tr>
 <td>見えている量</td>
 <td><code>getVisibleAmount()</code></td>
 <td><code>getVisibleAmount()</code></td>
-<td>表示領域の長さ (Swing と同じ)</td>
+<td>表示領域の長さ (Swing と同じ)。表示した直後は並べるまで 0</td>
 </tr>
 <tr>
 <td>範囲を変える</td>
@@ -7416,7 +7486,7 @@ fun main() {
 <td>値の変化に反応する</td>
 <td><code>addAdjustmentListener(<wbr>e -&gt; ...)</code></td>
 <td><code>addAdjustmentListener(<wbr>e -&gt; ...)</code></td>
-<td>値を変えた後、少し遅れて呼ばれる。<code>e.<wbr>getAdjustmentType()</code> はいつも <code>TRACK</code></td>
+<td><code>setValue</code> の中で呼ばれるのは同じ。<code>e.<wbr>getAdjustmentType()</code> はいつも <code>TRACK</code></td>
 </tr>
 <tr>
 <td>向き</td>
@@ -7472,7 +7542,7 @@ WScrollPane scroll = new WScrollPane(log);
 WButton add = new WButton(&quot;Add a line&quot;);
 add.addActionListener(e -&gt; {
     log.add(new WLabel(&quot;Line &quot; + (log.getComponentCount() + 1)));
-    // no revalidate(): WPanel measures itself again
+    log.revalidate();
     // the maximum grows after the layout, so scroll later
     WinUiUtilities.invokeLater(() -&gt; {
         WAdjustable bar = scroll.getVerticalScrollBar();
@@ -7496,9 +7566,9 @@ add.addActionListener(e -&gt; {
 </tbody>
 </table></div>
 <ul>
-<li>子を足した直後は、まだ中身の長さ (<code>getMaximum()</code>) が増えていません。Swing と同じく、<code>invokeLater</code> で後から末尾へ動かします。</li>
-<li>表示した直後 (最初のレイアウトの前) は、<code>getMaximum()</code> が 0 のままです。そのためサンプルは、Swing のように <code>setVisible(true)</code> の直後ではなく、
-<code>WinUiUtilities.schedule(500, ...)</code> で最初のレイアウトを待ってから 30 行を足しています (<a href="#scrollbar-loadmore">16.5</a> の末尾へのスクロールも同じ)。</li>
+<li>子を足した後の <code>getMaximum()</code> は、Swing と同じく <code>invokeLater</code> の中で読むと足した後の長さです。</li>
+<li>表示した直後 (最初のレイアウトの前) も <code>getMaximum()</code> は中身を測った長さを返すので、サンプルは Swing と同じく <code>setVisible(true)</code> の直後に 30 行を足しています。</li>
+<li><code>WPanel</code> は子を足すと自分で測り直すので <code>revalidate()</code> は無くても並びますが、Swing と同じく呼んでもかまいません (スクロールの位置は変わりません)。</li>
 <li><code>setValue</code> には最大値をそのまま渡してかまいません。範囲の外は端 (最大値 - 見えている量) で止まります。</li>
 <li>ログを文字で出すだけなら、<code>WTextPane</code> の <code>append</code> を使う方が簡単です (<a href="#textarea">12 章</a>)。</li>
 </ul>
@@ -7538,7 +7608,7 @@ bar.addAdjustmentListener(e -&gt; {
 <ul>
 <li>型を <code>JScrollBar</code> から <code>WAdjustable</code> (または <code>WScrollPaneBar</code>) に替えるだけで、残りは同じです。</li>
 <li>値の単位は DIP です。WinUI の行は Swing より高いので、同じ 50 行でも最大値が大きくなります (Swing 800、WinUI4K 933)。</li>
-<li>リスナーは WinUI の <code>ViewChanged</code> で呼ばれるので、<code>setValue</code> から戻った時点ではまだ呼ばれていません。値も途中かどうかも前回と同じときは呼ばれません
+<li>リスナーは Swing と同じく <code>setValue</code> の中で呼ばれます。マウスやキーでのスクロールでは WinUI の <code>ViewChanged</code> で呼ばれ、値も途中かどうかも前回と同じときは呼ばれません
 (横だけスクロールしたときの縦のバーなど)。</li>
 <li>WinUI4K のリスナーには、ボタンやトラックのクリックの区別 (<code>UNIT_INCREMENT</code> など) は届かず、<code>getAdjustmentType()</code> はいつも <code>TRACK</code> です。</li>
 </ul>
@@ -7606,7 +7676,7 @@ Runnable loadMore = () -&gt; {
     for (int i = start + 1; i &lt;= start + 20; i++) {
         items.add(new WLabel(&quot;Item &quot; + i));
     }
-    // no revalidate(): WPanel measures itself again, and revalidate() would scroll back to the top
+    items.revalidate();
     status.setText(items.getComponentCount() + &quot; items loaded&quot;);
 };
 loadMore.run();
@@ -7636,9 +7706,10 @@ bar.addAdjustmentListener(e -&gt; {
 </tbody>
 </table></div>
 <ul>
-<li><code>WScrollPane</code> の中身の <code>revalidate()</code> を呼ぶと、表示領域が一時的に中身の高さまで広がり、スクロールの位置が一時的に先頭へ動きます (測り直した後に元へ戻ります)。
-その途中で「末尾にいる」と判定されて余分に読み込まれてしまう (サンプルに足して試すと 40 件のはずが 60 件になった) ので、WinUI4K のコードでは
-<code>revalidate()</code> を呼びません。<code>WPanel</code> は子を足すと自分で測り直すので、呼ばなくても正しく並びます。</li>
+<li>中身の <code>revalidate()</code> は Swing と同じくスクロールの位置を変えず、測り直す間の一時的な位置はリスナーに知らせないので、余分に読み込むことはありません。</li>
+<li>サンプルは Swing と同じく、表示した直後に <code>bar.setValue(bar.getMaximum())</code> で 1 回末尾までスクロールし、次の 20 件を読み込ませています。
+ただし WinUI4K の画面は「60 items loaded」で、Swing (40 件) より 1 回多く読み込んでいます。最初のレイアウトの前に頼んだ末尾へのスクロールが、
+リスナーが 20 件を足した後に、足した後の末尾として当たるためです (<code>revalidate()</code> を外しても同じでした)。</li>
 <li><code>getValueIsAdjusting()</code> が true の間 (ドラッグや慣性スクロールの途中) は読み込まず、止まったときに読み込みます (Swing と同じ考え方)。</li>
 <li>たくさんの項目を並べるなら、<code>WList</code> で仮想化して表示する方が軽くなります。</li>
 </ul>
@@ -7665,14 +7736,14 @@ fun main() {
             right.verticalScrollBar.value = e.value
         }
 
-        // Jump to the end (16.2)
-        val bar = left.verticalScrollBar
-        WinUiUtilities.schedule(500) { bar.value = bar.maximum }
-
         frame.add(left)
         frame.add(right)
         frame.setSize(400, 300)
         frame.isVisible = true
+
+        // Jump to the end (16.2)
+        val bar = left.verticalScrollBar
+        bar.value = bar.maximum
     }
 }
 </code></pre>
@@ -7684,17 +7755,17 @@ fun main() {
 <li><strong>範囲は読むだけ。</strong> 最小値は 0、最大値は中身の長さ、見えている量は表示領域の長さで、<code>setMaximum</code> などはありません。</li>
 <li><strong>増分が無い。</strong> <code>setUnitIncrement</code> / <code>setBlockIncrement</code> はありません。ホイールで動く量は WinUI が決めます。Swing でホイールを速くするために
 <code>setUnitIncrement(16)</code> を書いていたなら、その行は消します。</li>
-<li><strong>リスナーは後から呼ばれる。</strong> <code>setValue</code> から戻った時点ではリスナーはまだ呼ばれていません (Swing は <code>setValue</code> の中で呼びます)。</li>
-<li><strong>表示した直後の <code>getMaximum()</code> は 0。</strong> <code>setVisible(true)</code> の直後の <code>setValue(300)</code> は、覚えておいて最初のレイアウトの後に当てます (Swing と同じく効きます)。
-ただし中身の長さ (<code>getMaximum()</code>) は最初のレイアウトが済むまで 0 なので、<code>setValue(bar.getMaximum())</code> で末尾へ動かすときは、レイアウトを待ってから呼びます (<a href="#scrollbar-bottom">16.2</a>)。</li>
-<li><strong>中身の <code>revalidate()</code> でスクロールのリスナーが余分に呼ばれる</strong> ことがあります (<a href="#scrollbar-loadmore">16.5</a>)。</li>
+<li><code>setVisible(true)</code> の直後の <code>setValue(300)</code> は、覚えておいて最初のレイアウトの後に当てます (Swing と同じく効き、リスナーもその場で呼ばれます)。
+表示した直後の <code>getMaximum()</code> は中身を測った見積もりで、並べた後の値と丸めの分だけ違うことがあります。見積もり以上の値は末尾までとして当てるので、
+<code>setValue(bar.getMaximum())</code> で末尾まで動きます。<code>getVisibleAmount()</code> は並べるまで 0 です。</li>
+<li>中身や表示領域の大きさだけが変わったときは、リスナーは呼ばれません (Swing は範囲の変化でも呼びます)。</li>
 </ul>
 <h2 id="split">17. JSplitPane → WSplitPane<a class="anchor" href="#split">#</a></h2>
 <p><code>WSplitPane</code> は、2 つの部品を仕切り (ディバイダー) で左右か上下に分け、仕切りをドラッグして大きさの配分を変えられるパネルです。
 WinUI には仕切りを動かせるパネルが無いので、WinUI の <code>Grid</code> の 3 つのセル (左・仕切り・右) の大きさを WinUI4K が Swing の
 <code>BasicSplitPaneUI</code> と同じ規則で決めています。<code>setDividerLocation</code>・<code>setResizeWeight</code>・<code>setContinuousLayout</code> などを同じ名前で持っています。</p>
 <p>似た名前の <code>WSplitView</code> (WinUI の <code>SplitView</code>) は、仕切りの無い「開け閉めするペイン」で、別物です (<a href="#split-winui">17.6</a>)。</p>
-<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> にしたものとします (<a href="#panel-notes">14.8</a>)。</p>
+<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> (どちらもウィンドウの中身の既定) にしたものとします。</p>
 <h3 id="split-table">17.1 API の対応表<a class="anchor" href="#split-table">#</a></h3>
 <div class="table"><table>
 <thead>
@@ -7862,10 +7933,8 @@ frame.setVisible(true);
 split.setDividerLocation(0.7);  // works only after the split pane has its size
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextPane editor = new WTextPane();         // scrolls by itself
-editor.setText(&quot;Editor&quot;);
-WTextPane console = new WTextPane();
-console.setText(&quot;Console&quot;);
+<pre><code class="language-java">WTextPane editor = new WTextPane(&quot;Editor&quot;);     // scrolls by itself
+WTextPane console = new WTextPane(&quot;Console&quot;);
 WSplitPane split = new WSplitPane(WSplitPane.VERTICAL_SPLIT, editor, console);
 split.setResizeWeight(0.7);     // the editor gets 70% of extra space
 split.setDividerLocation(0.7);  // can be called before the window is shown
@@ -7892,8 +7961,7 @@ frame.setVisible(true);
 <ul>
 <li><code>setDividerLocation(double)</code> は、Swing では大きさが決まる前 (表示前) に呼んでも効かないので、表示した後に呼びます。WinUI4K は表示前に呼ぶと割合を覚えておき、
 最初のレイアウトで位置に直します。</li>
-<li><code>JTextArea</code> に当たる <code>WTextPane</code> は自分でスクロールするので、<code>WScrollPane</code> で包みません。<code>new WTextPane(&quot;Editor&quot;)</code> と書くと、
-文字ではなく案内文 (プレースホルダー) になるので、文字は <code>setText</code> で入れます。</li>
+<li><code>JTextArea</code> に当たる <code>WTextPane</code> は自分でスクロールするので、<code>WScrollPane</code> で包みません。<code>new WTextPane(&quot;Editor&quot;)</code> は Swing と同じく初めの文字列です。</li>
 </ul>
 <h3 id="split-listener">17.4 仕切りの移動に反応する<a class="anchor" href="#split-listener">#</a></h3>
 <p>仕切りの位置が変わるたびに、今の位置と前の位置を表示します。</p>
@@ -7927,7 +7995,7 @@ split.addChangeListener(
 </tbody>
 </table></div>
 <p>サンプルは表示した直後に <code>split.setDividerLocation(200)</code> を呼んでいます。Swing と同じく、仕切りは 200 の位置に来ます。
-ラベルの前の位置は、Swing は「(was 0)」、WinUI4K は「(was -1)」と出ます (ここは Swing と違います)。</p>
+ラベルの前の位置は、Swing と同じく「(was 0)」と出ます (前の位置はリスナーを呼んだ後で替わります)。</p>
 <ul>
 <li>WinUI4K は <code>java.beans</code> を使わないので、<code>PropertyChangeListener</code> の代わりに <code>ChangeListener</code> で受けます。イベントにはプロパティ名も
 古い値・新しい値も無いので、<code>getDividerLocation()</code> / <code>getLastDividerLocation()</code> で読みます。</li>
@@ -8048,8 +8116,8 @@ fun main() {
 <code>setSelectedIndex</code>・<code>addChangeListener</code>・<code>setTitleAt</code> / <code>setEnabledAt</code> / <code>setToolTipTextAt</code> / <code>setMnemonicAt</code> など) を同じ名前で持っています。
 タブ 1 枚は <code>WTabViewItem</code> (WinUI の <code>TabViewItem</code>) で、<code>WTabViewItem</code> を直接作って足すこともできます。</p>
 <p>WinUI の <code>TabView</code> はブラウザーのようなタブで、タブの閉じるボタン・タブ列の右の「+」ボタン・ドラッグでの並べ替えを持っています。
-Swing と同じ形の <code>addTab</code> で作るタブには閉じるボタンを出しませんが、「+」ボタンは既定で出ます (<a href="#tabbed-notes">18.8</a>)。</p>
-<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> にしたものとします (<a href="#panel-notes">14.8</a>)。</p>
+<code>JTabbedPane</code> に合わせて、閉じるボタンと「+」ボタンは既定で出しません (閉じるボタンは <code>setClosable(true)</code>、「+」ボタンは「+」のリスナーを付けたときに出ます)。</p>
+<p>この章のコード片は、<code>frame</code> のレイアウトを <code>BorderLayout</code> / <code>WBorderLayout</code> (どちらもウィンドウの中身の既定) にしたものとします。</p>
 <h3 id="tabbed-table">18.1 API の対応表<a class="anchor" href="#tabbed-table">#</a></h3>
 <div class="table"><table>
 <thead>
@@ -8065,7 +8133,7 @@ Swing と同じ形の <code>addTab</code> で作るタブには閉じるボタ�
 <td>タブの入れ物を作る</td>
 <td><code>new JTabbedPane()</code></td>
 <td><code>new WTabView()</code></td>
-<td>「+」ボタンが既定で出る。消すには <code>setAddTabButtonVisible(<wbr>false)</code></td>
+<td>同じ (「+」ボタンは既定で出ない)</td>
 </tr>
 <tr>
 <td>タブを足す</td>
@@ -8088,8 +8156,8 @@ Swing と同じ形の <code>addTab</code> で作るタブには閉じるボタ�
 <tr>
 <td>タブを外す</td>
 <td><code>remove(<wbr>1)</code> / <code>removeTabAt(<wbr>1)</code></td>
-<td><code>removeTabAt(<wbr>1)</code> / <code>removeTab(<wbr>1)</code></td>
-<td><code>remove(<wbr>int)</code> は無い (<code>remove(<wbr>component)</code> はある)</td>
+<td><code>remove(<wbr>1)</code> / <code>removeTabAt(<wbr>1)</code></td>
+<td>同じ (<code>remove(<wbr>component)</code> もある)</td>
 </tr>
 <tr>
 <td>すべて外す</td>
@@ -8160,7 +8228,7 @@ Swing と同じ形の <code>addTab</code> で作るタブには閉じるボタ�
 <tr>
 <td>閉じるボタン付きのタブ</td>
 <td><code>setTabComponentAt(<wbr>i, 自作の部品)</code></td>
-<td><code>new WTabViewItem(<wbr>title)</code> を <code>addTab</code> + <code>addTabCloseRequestedListener</code></td>
+<td><code>new WTabViewItem(<wbr>title)</code> に <code>setClosable(<wbr>true)</code> で <code>addTab</code> + <code>addTabCloseRequestedListener</code></td>
 <td>WinUI のタブは閉じるボタンを持つ</td>
 </tr>
 <tr>
@@ -8213,7 +8281,6 @@ frame.add(tabs, BorderLayout.CENTER);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTabView tabs = new WTabView();
-tabs.setAddTabButtonVisible(false);     // hide the &quot;+&quot; button that WinUI shows by default
 tabs.addTab(&quot;General&quot;, new WCheckBox(&quot;Start with Windows&quot;));
 tabs.addTab(&quot;Files&quot;, new WImageIcon(&quot;icons/save.png&quot;), new WLabel(&quot;Save to: C:\\Documents&quot;), &quot;Where files are saved&quot;);
 tabs.addTab(&quot;About&quot;, new WLabel(&quot;Version 1.0&quot;));
@@ -8236,7 +8303,7 @@ frame.add(tabs, WBorderLayout.CENTER);
 </tbody>
 </table></div>
 <ul>
-<li><code>setAddTabButtonVisible(false)</code> を書かないと、タブ列の右に「+」ボタンが出ます (押しても何も起きません)。</li>
+<li>タブ列の右の「+」ボタンは、<code>JTabbedPane</code> と同じく既定で出ません (<a href="#tabbed-winui">18.6</a>)。</li>
 <li>タブの幅は既定ですべて同じ (<code>TabViewWidthMode.EQUAL</code>) で、ウィンドウの幅に合わせて伸び縮みします。Swing のように文字に合わせた幅にするときは
 <code>tabs.setTabWidthMode(TabViewWidthMode.SIZE_TO_CONTENT)</code> です。</li>
 <li>アイコンは画像の <code>WImageIcon</code> のほか、Windows のアイコン フォントの <code>Symbol</code> (<code>Symbol.SAVE</code> など) も使えます (<a href="#button-icon">1.4</a>)。</li>
@@ -8258,7 +8325,6 @@ tabs.setSelectedIndex(2);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTabView tabs = new WTabView();
-tabs.setAddTabButtonVisible(false);
 tabs.addTab(&quot;Inbox&quot;, new WLabel(&quot;3 new messages&quot;));
 tabs.addTab(&quot;Sent&quot;, new WLabel(&quot;12 messages&quot;));
 tabs.addTab(&quot;Drafts&quot;, new WLabel(&quot;1 draft&quot;));
@@ -8310,9 +8376,9 @@ for (String name : new String[] {&quot;a.txt&quot;, &quot;b.txt&quot;, &quot;c.t
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WTabView tabs = new WTabView();
-tabs.setAddTabButtonVisible(false);
 for (String name : new String[] {&quot;a.txt&quot;, &quot;b.txt&quot;, &quot;c.txt&quot;}) {
-    WTabViewItem tab = new WTabViewItem(name);  // has a close button by default
+    WTabViewItem tab = new WTabViewItem(name);
+    tab.setClosable(true);                      // show the close button
     tab.setContent(new WLabel(&quot;Contents of &quot; + name));
     tabs.addTab(tab);
 }
@@ -8334,11 +8400,11 @@ tabs.addTabCloseRequestedListener(index -&gt; tabs.removeTabAt(index));
 </tbody>
 </table></div>
 <ul>
-<li><code>new WTabViewItem(title)</code> で作ったタブは、閉じるボタンを持ちます (WinUI の既定)。<code>addTab(title, component)</code> で作るタブは、
-<code>JTabbedPane</code> に合わせて閉じるボタンを出しません。1 枚ずつ変えるときは <code>tab.setClosable(true / false)</code> です。</li>
+<li><code>new WTabViewItem(title)</code> で作ったタブも、<code>addTab(title, component)</code> で作るタブと同じく、<code>JTabbedPane</code> に合わせて閉じるボタンを出しません。
+閉じるボタンを出すタブは <code>tab.setClosable(true)</code> にします。</li>
 <li>× を押しても、タブは自動では閉じません。<code>addTabCloseRequestedListener</code> のリスナーに閉じようとしたタブのインデックスが渡されるので、
 閉じてよければ <code>removeTabAt</code> を呼びます (保存を確かめるダイアログを出すならここで)。</li>
-<li>Swing の <code>remove(int)</code> は無いので、<code>removeTabAt(int)</code> に書き換えます。</li>
+<li>位置でタブを外す <code>remove(int)</code> も Swing と同じく使えます (サンプルは表示した後で <code>tabs.remove(1)</code> を呼んで「b.txt」を閉じています)。</li>
 </ul>
 <h3 id="tabbed-state">18.5 タブを無効にする・名前を変える・ニーモニック<a class="anchor" href="#tabbed-state">#</a></h3>
 <p>変更したことを名前の「*」で示し、まだ使えないタブを無効にしてヒントを付け、Alt+P で「Preview」を選べるようにします。</p>
@@ -8376,9 +8442,10 @@ tabs.setMnemonicAt(1, WKeyEvent.VK_P);      // Alt+P selects &quot;Preview&quot;
 </ul>
 <h3 id="tabbed-winui">18.6 「+」ボタンでタブを足す<a class="anchor" href="#tabbed-winui">#</a></h3>
 <p>Swing には無いが、WinUI ではよく使うブラウザーのようなタブです。「+」ボタンで新しいタブを開き、× で閉じます。</p>
-<pre><code class="language-java">WTabView tabs = new WTabView();     // the &quot;+&quot; button is shown by default
+<pre><code class="language-java">WTabView tabs = new WTabView();     // the &quot;+&quot; button appears when a listener is added
 Runnable newTab = () -&gt; {
     WTabViewItem tab = new WTabViewItem(&quot;Untitled &quot; + (tabs.getTabCount() + 1));
+    tab.setClosable(true);
     tab.setContent(new WLabel(&quot;New document&quot;));
     tabs.addTab(tab);
     tabs.setSelectedIndex(tabs.getTabCount() - 1);
@@ -8389,6 +8456,7 @@ tabs.addTabCloseRequestedListener(index -&gt; tabs.removeTabAt(index));
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/jtabbedpane/addbutton/AddButtonWinUI4K.java"><code>AddButtonWinUI4K.java</code></a>)</p>
 <p><img src="images/swing_to_winui4k/JTabbedPane/AddButtonWinUI4K.png" alt="AddButton (WinUI4K)" /></p>
 <ul>
+<li>「+」ボタンは、<code>addAddTabButtonClickListener</code> でリスナーを付けたときに出ます (<code>setAddTabButtonVisible(true / false)</code> で決めることもできます)。</li>
 <li>タブはドラッグで並べ替えられます (<code>setCanReorderTabs(false)</code> で止められます)。</li>
 <li>タブ列をウィンドウのタイトル バーに置くときは、<code>WFrame</code> の <code>setExtendsContentIntoTitleBar(true)</code> と組み合わせます。</li>
 </ul>
@@ -8404,7 +8472,6 @@ fun main() {
 
         // Tabs like JTabbedPane (18.2, 18.5)
         val tabs = WTabView()
-        tabs.isAddTabButtonVisible = false
         tabs.addTab(&quot;General&quot;, WCheckBox(&quot;Start with Windows&quot;))
         tabs.addTab(&quot;Files&quot;, Symbol.SAVE, WLabel(&quot;Save to: C:\\Documents&quot;), &quot;Where files are saved&quot;)
         tabs.addTab(&quot;About&quot;, WLabel(&quot;Version 1.0&quot;))
@@ -8414,7 +8481,10 @@ fun main() {
         tabs.addChangeListener { status.text = &quot;Selected: ${tabs.getTitleAt(tabs.selectedIndex)}&quot; }
 
         // A closable tab (18.4)
-        val notes = WTabViewItem(&quot;notes.txt&quot;).apply { content = WLabel(&quot;Notes&quot;) }
+        val notes = WTabViewItem(&quot;notes.txt&quot;).apply {
+            isClosable = true
+            content = WLabel(&quot;Notes&quot;)
+        }
         tabs.addTab(notes)
         tabs.addTabCloseRequestedListener { index -&gt; tabs.removeTabAt(index) }
 
@@ -8426,20 +8496,16 @@ fun main() {
     }
 }
 </code></pre>
-<p>Kotlin では <code>isAddTabButtonVisible</code>・<code>selectedIndex</code>・<code>tabCount</code> をプロパティとして書き、閉じるボタンのリスナーは <code>(Int) -&gt; Unit</code> のラムダで渡します。</p>
+<p>Kotlin では <code>isClosable</code>・<code>selectedIndex</code>・<code>tabCount</code> をプロパティとして書き、閉じるボタンのリスナーは <code>(Int) -&gt; Unit</code> のラムダで渡します。</p>
 <h3 id="tabbed-notes">18.8 注意点<a class="anchor" href="#tabbed-notes">#</a></h3>
 <ul>
-<li><strong>「+」ボタンが既定で出る。</strong> <code>new WTabView()</code> のタブ列の右には、WinUI の既定の「+」ボタンが出ます。<code>JTabbedPane</code> のように使うなら
-<code>setAddTabButtonVisible(false)</code> を必ず書きます。</li>
-<li><strong><code>WTabViewItem</code> を直接作ると閉じるボタンが出る。</strong> <code>addTab(title, component)</code> で作るタブには閉じるボタンが出ませんが、<code>new WTabViewItem(title)</code> は
-WinUI の既定どおり閉じるボタンを持ちます。閉じるボタンを押してもタブは自動では閉じないので、<code>addTabCloseRequestedListener</code> で <code>removeTabAt</code> を呼ぶか、
-<code>setClosable(false)</code> にします。</li>
+<li>「+」ボタンと閉じるボタンは、<code>JTabbedPane</code> と同じく既定で出ません。閉じるボタンは <code>setClosable(true)</code>、「+」ボタンは <code>addAddTabButtonClickListener</code> で出します。</li>
+<li>閉じるボタンを押してもタブは自動では閉じないので、<code>addTabCloseRequestedListener</code> で <code>removeTabAt</code> を呼びます。</li>
 <li><strong>タブはドラッグで並べ替えられる。</strong> 利用者が並べ替えると、インデックスも新しい並びを指します。タブの位置を固定の番号で覚えているコードは、
 <code>setCanReorderTabs(false)</code> にするか、<code>indexOfComponent</code> で引き直します。</li>
 <li><strong>タブの位置は上だけ。</strong> <code>setTabPlacement</code> (下・左・右) と <code>setTabLayoutPolicy</code> はありません。左に縦に並ぶタブが要るなら <code>WNavigationView</code> が近いものです。</li>
 <li><strong>タブの見出しに部品を置けない。</strong> <code>setTabComponentAt</code> はありません。閉じるボタンは WinUI のタブが持っています。</li>
 <li><strong>タブの幅。</strong> 既定ではすべてのタブが同じ幅で、ウィンドウの幅に合わせて伸び縮みします (Swing は文字の幅)。</li>
-<li><strong><code>remove(int)</code> が無い。</strong> <code>tabs.remove(1)</code> は <code>tabs.removeTabAt(1)</code> に書き換えます。</li>
 </ul>
 <h2 id="table">19. JTable → WTable<a class="anchor" href="#table">#</a></h2>
 <p><code>WTable</code> は WinUI の <code>TableView</code> (Windows App SDK 2.5 の実験版のコントロール) を包んだクラスです。Swing と同じく、データは
@@ -8794,16 +8860,47 @@ table.getColumnModel().getColumn(2).setCellRenderer(priceRenderer);
 </tbody>
 </table></div>
 <ul>
-<li><code>getColumnClass</code> が <code>Boolean</code> の列は、Swing と同じくチェックボックスで表示し、チェックボックスで編集します。</li>
-<li><code>getColumnClass</code> が <code>Number</code> (とそのサブクラス) の列は、Swing と同じく右に寄せます (画面の Stock の列)。ほかの型の列を右に寄せるときは、価格の列のように
-<code>DefaultTableCellRenderer</code> の <code>setHorizontalAlignment(HorizontalAlignment.RIGHT)</code> を使います。</li>
-<li>列の幅は <code>setPreferredWidth</code> のとおりになり、幅を決めない列が残りの幅を分け合うので、表の右に空きは残りません。
+<li>
+<p><code>getColumnClass</code> が <code>Boolean</code> の列は、Swing と同じくチェックボックスで表示し、チェックボックスで編集します。</p>
+</li>
+<li>
+<p><code>getColumnClass</code> が <code>Number</code> (とそのサブクラス) の列は、Swing と同じく右に寄せます (画面の Stock の列)。ほかの型の列を右に寄せるときは、価格の列のように
+<code>DefaultTableCellRenderer</code> の <code>setHorizontalAlignment(HorizontalAlignment.RIGHT)</code> を使います。</p>
+</li>
+<li>
+<p>列の幅は <code>setPreferredWidth</code> のとおりになり、幅を決めない列が残りの幅を分け合うので、表の右に空きは残りません。
 横にスクロールする <code>WScrollPane</code> の中のように幅の決まらない入れ物では、幅を決めない列は 120 になります。
-<code>setMinWidth</code>・<code>setMaxWidth</code>・<code>setResizable</code> も同じ名前であります (値は <code>double</code>)。</li>
-<li><code>DefaultTableCellRenderer</code> で文字を変えるときは、Swing の <code>setValue(Object)</code> の代わりに <code>getText(Object)</code> をオーバーライドして文字列を返します。
-文字色などの装飾は <code>configure(label, value, isSelected, row, column)</code> をオーバーライドします。</li>
-<li><code>TableCellRenderer</code> を自分で書くときは、Swing と同じ <code>getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)</code> を実装しますが、
-<strong>呼ばれるたびに新しいコンポーネントを返します</strong> (<a href="#list-renderer">3.9</a> のリストのレンダラーと同じ)。<code>hasFocus</code> はいつも <code>false</code> です。</li>
+<code>setMinWidth</code>・<code>setMaxWidth</code>・<code>setResizable</code> も同じ名前であります (値は <code>double</code>)。</p>
+</li>
+<li>
+<p><code>DefaultTableCellRenderer</code> の上書きは次のように対応します。返すラベルは呼び出しごとに新しく作るので、Swing のようにレンダラー自身を変えて <code>this</code> を返す書き方はできません。</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing (<code>DefaultTableCellRenderer</code>)</th>
+<th>WinUI4K (<code>DefaultTableCellRenderer</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setValue(<wbr>Object)</code> の上書き (<code>setText(<wbr>format(<wbr>value))</code>)・<code>super.<wbr>getTableCellRendererComponent(...)</code> の後の <code>setText(...)</code></td>
+<td><code>getText(<wbr>Object)</code> で文字列を返す</td>
+</tr>
+<tr>
+<td><code>setForeground(...)</code> などの飾り</td>
+<td><code>configure(<wbr>label, value, isSelected, row, column)</code></td>
+</tr>
+<tr>
+<td><code>setHorizontalAlignment(<wbr>SwingConstants.<wbr>RIGHT)</code></td>
+<td><code>setHorizontalAlignment(<wbr>HorizontalAlignment.<wbr>RIGHT)</code></td>
+</tr>
+</tbody>
+</table></div>
+</li>
+<li>
+<p><code>TableCellRenderer</code> を自分で書くときは、Swing と同じ <code>getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)</code> を実装しますが、
+<strong>呼ばれるたびに新しいコンポーネントを返します</strong> (<a href="#list-renderer">3.9</a> のリストのレンダラーと同じ)。<code>hasFocus</code> はいつも <code>false</code> です。</p>
+</li>
 </ul>
 <h3 id="table-selection">19.5 選んだ行を読み、ダブルクリックで開く<a class="anchor" href="#table-selection">#</a></h3>
 <p>選んだ行の内容を下に表示し、行をダブルクリックしたら開きます。編集できないモデルにして、ダブルクリックで編集が始まらないようにしています。</p>
@@ -9390,6 +9487,7 @@ tree.setSelectionPath(new TreePath(spec.getPath()));   // also expands &quot;Wor
 <p>木は <a href="#tree-basic">20.2</a> と同じで、<code>spec</code> は Spec.docx の節です。</p>
 <ul>
 <li>選択モードの<strong>既定が違い</strong>、Swing は <code>DISCONTIGUOUS_TREE_SELECTION</code> (複数)、WinUI4K は <code>SINGLE_TREE_SELECTION</code> (1 つ) です。
+WinUI の <code>TreeView</code> には Ctrl / Shift で選び足す形が無く、複数にすると節ごとのチェックボックスの形になるため、<code>WList</code> と違い既定を Swing に合わせていません。
 Swing の既定に頼っていたコードは、<code>setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION)</code> を足します。
 複数を選べる木は、WinUI の形で各節にチェックボックスが付き、親にチェックを入れると子孫もまとめて選ばれます。</li>
 <li><code>setSelectionPath</code> で選ぶと、Swing と同じく親が展開されます (<code>setExpandsSelectedPaths(false)</code> で止められる)。</li>
@@ -9615,7 +9713,8 @@ tree.setCellRenderer(renderer);
 アイコンを <code>getIcon(value, expanded, leaf)</code> の戻り値で、文字色などを <code>configure(label, ...)</code> で変えます。</li>
 <li><code>WTreeCellRenderer</code> を自分で書くときは、Swing と同じ <code>getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)</code> を実装しますが、
 <strong>呼ばれるたびに新しいコンポーネントを返します</strong> (<a href="#list-renderer">3.9</a> と同じ)。開閉の印・字下げ・選んだ節の背景は WinUI が描くので、レンダラーは節の中身だけを作ります。</li>
-<li>節の文字の決め方 <code>convertValueToText</code> は、Swing と違いオーバーライドできません (いつも <code>toString()</code>)。文字を変えるときはレンダラーを使います。</li>
+<li>節の文字の決め方 <code>convertValueToText</code> は、Swing と違いオーバーライドできません (いつも <code>toString()</code>)。Swing で <code>convertValueToText</code> を上書きしていたところは、
+レンダラーの <code>getText(...)</code> の上書きに移します。</li>
 </ul>
 <h3 id="tree-lazy">20.7 根を隠し、展開したときに子を読み込む<a class="anchor" href="#tree-lazy">#</a></h3>
 <p>ファイルの木のように、子をすぐには作らず、節を展開したときに読み込みます。根 (Computer) は表示せず、ドライブを最上位に並べます。</p>
@@ -9725,7 +9824,7 @@ fun main() {
         val detail = WLabel(&quot;Select a node&quot;)
         tree.addTreeSelectionListener {
             val node = tree.lastSelectedPathComponent as DefaultMutableTreeNode?
-            detail.text = node?.let { &quot;${it.getUserObject()} selected&quot; } ?: &quot;Select a node&quot;
+            detail.text = node?.let { &quot;${it.userObject} selected&quot; } ?: &quot;Select a node&quot;
         }
 
         // Expansion (20.4, 20.7)
@@ -9743,8 +9842,8 @@ fun main() {
         val add = WButton(&quot;New folder&quot;, Symbol.NEW_FOLDER)
         add.addActionListener {
             val parent = tree.lastSelectedPathComponent as DefaultMutableTreeNode? ?: root
-            val child = DefaultMutableTreeNode(&quot;Folder ${parent.getChildCount() + 1}&quot;, true)
-            model.insertNodeInto(child, parent, parent.getChildCount())
+            val child = DefaultMutableTreeNode(&quot;Folder ${parent.childCount + 1}&quot;, true)
+            model.insertNodeInto(child, parent, parent.childCount)
             tree.scrollPathToVisible(TreePath(child.getPath()))
         }
         val delete = WButton(&quot;Delete&quot;, Symbol.DELETE)
@@ -9767,8 +9866,8 @@ fun main() {
 }
 </code></pre>
 <p>Kotlin では <code>WTree</code> の <code>lastSelectedPathComponent</code>・<code>cellRenderer</code>・<code>rowCount</code>・<code>selectionPath</code>・<code>rootVisible</code> をプロパティで書けます。
-一方、<code>tree</code> パッケージの <code>DefaultMutableTreeNode</code>・<code>TreePath</code>・<code>TreeExpansionEvent</code> は Swing と同じ形のメソッドで作られているので、
-<code>getUserObject()</code>・<code>getChildCount()</code>・<code>getPath()</code>・<code>getLastPathComponent()</code> のようにメソッドとして呼びます。</p>
+<code>tree</code> パッケージの節 (<code>TreeNode</code>・<code>DefaultMutableTreeNode</code>) も、Swing を Kotlin から使うときと同じく <code>userObject</code>・<code>childCount</code>・<code>parent</code>・<code>isLeaf</code> のように
+プロパティで書けます (<code>com.appkitbox.winui4k.tree.*</code> を import します)。<code>TreePath</code>・<code>TreeExpansionEvent</code> は <code>getPath()</code>・<code>getLastPathComponent()</code> のようにメソッドとして呼びます。</p>
 <h3 id="tree-notes">20.9 注意点<a class="anchor" href="#tree-notes">#</a></h3>
 <ul>
 <li>モデル・節・経路・選択・リスナーのクラス (<code>DefaultTreeModel</code>・<code>DefaultMutableTreeNode</code>・<code>TreePath</code>・<code>TreeSelectionModel</code>・<code>TreeSelectionListener</code>・
@@ -10236,8 +10335,7 @@ editMenu.addMenuListener(new MenuListener() {
 });
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField field = new WTextField(15);
-field.setText(&quot;Hello, menu&quot;);
+<pre><code class="language-java">WTextField field = new WTextField(&quot;Hello, menu&quot;, 15);
 
 WMenuBarItem editMenu = new WMenuBarItem(&quot;Edit&quot;);
 WMenuFlyoutItem cut = editMenu.add(&quot;Cut&quot;);
@@ -10249,7 +10347,7 @@ selectAll.addActionListener(e -&gt; field.selectAll());
 editMenu.addMenuListener(new WMenuAdapter() {
     @Override
     public void menuSelected(WMenuEvent e) {     // the menu is opening
-        boolean hasSelection = !field.getSelectedText().isEmpty();
+        boolean hasSelection = field.getSelectedText() != null;
         cut.setEnabled(hasSelection);
         copy.setEnabled(hasSelection);
     }
@@ -10273,8 +10371,7 @@ editMenu.addMenuListener(new WMenuAdapter() {
 <ul>
 <li><code>MenuListener</code> → <code>WMenuListener</code> です。Swing に無い <code>WMenuAdapter</code> があるので、使うメソッドだけを書けます。</li>
 <li><code>menuCanceled</code> は Swing の <code>JMenu</code> と同じく呼ばれません。</li>
-<li><strong><code>WTextField.getSelectedText()</code> は、選択が無いと <code>null</code> ではなく空の文字列を返します。</strong> Swing のように <code>!= null</code> で調べると、いつも「選んでいる」になります。</li>
-<li><code>WTextField(String)</code> は案内文 (プレースホルダー) を付けるコンストラクターなので、初めの文字列は <code>setText</code> で入れています (<a href="#textfield-table">2.1</a>)。</li>
+<li><code>WTextField.getSelectedText()</code> は、Swing と同じく選択が無いと <code>null</code> を返すので、<code>!= null</code> で調べられます。</li>
 </ul>
 <h3 id="menu-kotlin">21.7 Kotlin で書く<a class="anchor" href="#menu-kotlin">#</a></h3>
 <p>この章のユースケースをまとめて Kotlin で書くと、次のようになります。</p>
@@ -10395,7 +10492,7 @@ fun main() {
 <td>座標を指定して開く</td>
 <td><code>popup.<wbr>show(<wbr>c, x, y)</code></td>
 <td><code>popup.<wbr>show(<wbr>c, x, y)</code></td>
-<td>座標は <code>double</code> (Java からは <code>int</code> も渡せる)。表示した直後なら並べた後で開く</td>
+<td>同じ (<code>int</code> も <code>double</code> も渡せる)。表示した直後なら並べた後で開く</td>
 </tr>
 <tr>
 <td>閉じる</td>
@@ -10582,7 +10679,7 @@ target.addMouseListener(new WMouseAdapter() {
 </table></div>
 <ul>
 <li><code>isPopupTrigger()</code> は Windows の Swing と同じく、右ボタンを離したとき (<code>mouseReleased</code>) に <code>true</code> になります。</li>
-<li>WinUI4K の <code>show</code> の座標は <code>double</code> (DIP) です。Java からは <code>int</code> をそのまま渡せますが、Kotlin では <code>e.x.toDouble()</code> のように変換が要ります (<a href="#popup-kotlin">22.7</a>)。</li>
+<li>WinUI4K の <code>show</code> の座標は DIP です。Java からも Kotlin からも <code>int</code> をそのまま渡せます (<a href="#popup-kotlin">22.7</a>)。</li>
 <li>メニューはウィンドウの外へはみ出さず、WinUI が収まる位置へずらします。</li>
 <li>この書き方では、Shift+F10 やアプリケーション キー、タッチの長押しでは開きません。特別な理由が無ければ <a href="#popup-component">22.2</a> の <code>setComponentPopupMenu</code> を使う方が簡単です。</li>
 </ul>
@@ -10685,9 +10782,8 @@ export.setFlyout(popup);                     // the button opens the menu by its
 </table></div>
 <ul>
 <li>WinUI のボタンはフライアウトを持てるので、<code>ActionListener</code> を書かずに <code>setFlyout</code> だけで済みます (<a href="#button-winui">1.14</a>)。
-画面はサンプルが起動時に <code>export.doClick()</code> でボタンを押した状態です。<code>setFlyout</code> で付けたフライアウトは、表示した直後 (最初のレイアウトの前) の
-<code>doClick()</code> では開かないので、サンプルは <code>WinUiUtilities.schedule(500, ...)</code> で待ってから押しています。プログラムから押して開いたので、
-先頭の項目にキーボードのフォーカスの枠が出ています。</li>
+画面はサンプルが起動時に <code>export.doClick()</code> でボタンを押した状態です。表示した直後 (最初のレイアウトの前) の <code>doClick()</code> でも、
+リスナーはその場で呼び、フライアウトは並べた後で開きます (Swing と同じく、表示した直後に押して開けます)。</li>
 <li><code>setPlacement</code> で開く向きを決めます。<code>BOTTOM_EDGE_ALIGNED_LEFT</code> は、ボタンの下に左端をそろえて開きます (Swing の <code>show(export, 0, export.getHeight())</code> に当たります)。</li>
 <li>右に下向きの矢印が付いたボタンにするときは <code>WDropDownButton</code> を使います。</li>
 </ul>
@@ -10745,7 +10841,7 @@ fun main() {
         val other = WLabel(&quot;Or right-click here&quot;)
         other.addMouseListener(object : WMouseAdapter() {
             override fun mouseReleased(e: WMouseEvent) {
-                if (e.isPopupTrigger) popup.show(e.component, e.x.toDouble(), e.y.toDouble())
+                if (e.isPopupTrigger) popup.show(e.component, e.x, e.y)
             }
         })
 
@@ -10766,7 +10862,7 @@ fun main() {
 }
 </code></pre>
 <p><code>setComponentPopupMenu</code> は <code>componentPopupMenu</code>、<code>setFlyout</code> は <code>flyout</code>、<code>setPlacement</code> は <code>placement</code> のようにプロパティで書けます。
-<code>show</code> の座標は <code>Double</code> なので、<code>WMouseEvent</code> の <code>x</code> / <code>y</code> (<code>Int</code>) は <code>toDouble()</code> で変換します。</p>
+<code>show</code> には <code>WMouseEvent</code> の <code>x</code> / <code>y</code> (<code>Int</code>) をそのまま渡せます (<code>Double</code> の形もあります)。</p>
 <h3 id="popup-notes">22.8 注意点<a class="anchor" href="#popup-notes">#</a></h3>
 <ul>
 <li><code>JPopupMenu</code> → <code>WMenuFlyout</code>、<code>JMenuItem</code> → <code>WMenuFlyoutItem</code> です。メニューには項目のクラス (<code>WMenuFlyoutItem</code>・<code>WToggleMenuFlyoutItem</code>・
@@ -10807,8 +10903,8 @@ fun main() {
 <tr>
 <td>ボタン</td>
 <td><code>new JButton(<wbr>icon)</code></td>
-<td><code>new WAppBarButton(&quot;Save&quot;, Symbol.<wbr>SAVE)</code></td>
-<td>ツールバー用の別のクラス。ラベルが要る</td>
+<td><code>new WAppBarButton(<wbr>Symbol.<wbr>SAVE)</code> / <code>new WAppBarButton(&quot;Save&quot;, Symbol.<wbr>SAVE)</code></td>
+<td>ツールバー用の別のクラス。ラベル (文字) も付けられる</td>
 </tr>
 <tr>
 <td>ボタンを足す</td>
@@ -10831,8 +10927,8 @@ fun main() {
 <tr>
 <td>トグルボタン</td>
 <td><code>new JToggleButton(<wbr>icon, true)</code></td>
-<td><code>new WAppBarToggleButton(&quot;Bold&quot;, Symbol.<wbr>BOLD)</code> + <code>setSelected(<wbr>true)</code></td>
-<td>選んだ状態を渡すコンストラクターが無い</td>
+<td><code>new WAppBarToggleButton(<wbr>Symbol.<wbr>BOLD, true)</code> / <code>new WAppBarToggleButton(&quot;Bold&quot;, Symbol.<wbr>BOLD, true)</code></td>
+<td>同じ形で作れる</td>
 </tr>
 <tr>
 <td>任意の部品を載せる</td>
@@ -10844,7 +10940,7 @@ fun main() {
 <td>ウィンドウの上に置く</td>
 <td><code>frame.<wbr>add(<wbr>toolBar, BorderLayout.<wbr>NORTH)</code></td>
 <td><code>frame.<wbr>add(<wbr>toolBar, WBorderLayout.<wbr>NORTH)</code></td>
-<td>先に <code>frame.<wbr>setLayout(<wbr>new WBorderLayout())</code> が要る</td>
+<td>同じ</td>
 </tr>
 <tr>
 <td>ツールチップ</td>
@@ -10938,8 +11034,7 @@ frame.add(toolBar, BorderLayout.NORTH);
 frame.add(status, BorderLayout.CENTER);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">frame.setLayout(new WBorderLayout());       // the default content of WFrame is not a BorderLayout
-WLabel status = new WLabel(&quot;Click a toolbar button&quot;);
+<pre><code class="language-java">WLabel status = new WLabel(&quot;Click a toolbar button&quot;);
 
 WAppBarButton newButton = new WAppBarButton(&quot;New&quot;, Symbol.DOCUMENT);
 newButton.setToolTipText(&quot;New file&quot;);
@@ -10982,8 +11077,8 @@ frame.add(status, WBorderLayout.CENTER);
 <li>起動した直後のフォーカスは、右端の「…」ボタンではなく最初のボタンに置かれます (キーボードのフォーカスの枠は出ません)。</li>
 <li>中央のラベルは、Swing と同じく上下の中央に出ます。</li>
 </ul>
-<p><strong><code>WFrame</code> の中身は、初めは <code>WBorderLayout</code> ではありません。</strong> <code>frame.add(toolBar, WBorderLayout.NORTH)</code> の前に
-<code>frame.setLayout(new WBorderLayout())</code> を呼ばないと、<code>IllegalArgumentException</code> になります。</p>
+<p><code>WFrame</code> の中身の既定は <code>JFrame</code> と同じく <code>WBorderLayout</code> なので、<code>frame.add(toolBar, WBorderLayout.NORTH)</code> がそのまま使えます。
+ボタンは <code>new WAppBarButton(Symbol.DOCUMENT)</code> のようにアイコンだけでも作れますが、サンプルはバーを開いたときに出るラベルも付けています。</p>
 <h3 id="toolbar-action">23.3 Action をツールバーとメニューで共有する<a class="anchor" href="#toolbar-action">#</a></h3>
 <p><a href="#button-action">1.8</a> と同じく、1 つの Action からツールバーのボタンとメニューの項目を作り、無効にするときは両方まとめて無効にします。</p>
 <p><strong>Swing (Java)</strong></p>
@@ -11082,8 +11177,7 @@ toolBar.add(new WAppBarButton(&quot;Copy&quot;, Symbol.COPY));
 toolBar.add(new WAppBarButton(&quot;Paste&quot;, Symbol.PASTE));
 toolBar.addSeparator();
 
-WAppBarToggleButton bold = new WAppBarToggleButton(&quot;Bold&quot;, Symbol.BOLD);
-bold.setSelected(true);
+WAppBarToggleButton bold = new WAppBarToggleButton(&quot;Bold&quot;, Symbol.BOLD, true);
 bold.setToolTipText(&quot;Bold&quot;);
 bold.addItemListener(e -&gt; status.setText(&quot;Bold: &quot; + bold.isSelected()));
 WAppBarToggleButton italic = new WAppBarToggleButton(&quot;Italic&quot;, Symbol.ITALIC);
@@ -11240,7 +11334,6 @@ fun main() {
 <ul>
 <li>ツールバーのボタンは <code>JButton</code> → <code>WAppBarButton</code>、<code>JToggleButton</code> → <code>WAppBarToggleButton</code> に替えます。どちらもアイコンとラベル (文字) を持ち、
 ラベルは既定では閉じたバーに出ません。</li>
-<li><code>WFrame</code> の中身は初めは <code>WBorderLayout</code> ではないので、<code>frame.add(toolBar, WBorderLayout.NORTH)</code> の前に <code>frame.setLayout(new WBorderLayout())</code> を呼びます。</li>
 <li>ボタンはバーの右に寄り、右端に「…」ボタンが出ます。左に寄せる API は無く、<code>toolBar.setHorizontalAlignment(HorizontalAlignment.LEFT)</code> も <code>WBorderLayout.NORTH</code> に置いたバーでは効きません。</li>
 <li>縦のツールバー、切り離せるツールバー (<code>setFloatable(true)</code>) は作れません。<code>setFloatable</code> と <code>setRollover</code> は呼んでも何も変わりません。</li>
 <li>バーの高さは Swing のツールバーより高くなります (閉じたバーでも 48 ほど)。</li>
@@ -11300,9 +11393,9 @@ fun main() {
 </tr>
 <tr>
 <td>最大の大きさ</td>
-<td><code>setMaximumSize(...)</code></td>
-<td>(なし)</td>
-<td></td>
+<td><code>setMaximumSize(<wbr>new Dimension(<wbr>800, 600))</code></td>
+<td><code>setMaximumSize(<wbr>new WDimension(<wbr>800, 600))</code></td>
+<td>同じ (<code>setSize</code> と枠のドラッグを止める。両方に掛かるときは最小の大きさが勝つ)</td>
 </tr>
 <tr>
 <td>大きさを変えさせない</td>
@@ -11375,6 +11468,12 @@ fun main() {
 <td><code>setContentPane(<wbr>panel)</code></td>
 <td><code>setContentPane(<wbr>component)</code></td>
 <td>同じ</td>
+</tr>
+<tr>
+<td>中身のパネル</td>
+<td><code>getContentPane()</code></td>
+<td><code>getContentPane()</code></td>
+<td>同じ (既定は <code>WBorderLayout</code> の <code>WLayoutPanel</code>。型は <code>WContainer</code>)</td>
 </tr>
 <tr>
 <td>既定ボタン</td>
@@ -11568,9 +11667,7 @@ file.add(&quot;Exit&quot;).addActionListener(e -&gt; frame.dispose());
 menuBar.add(file);
 frame.setJMenuBar(menuBar);   // above the content
 
-frame.setLayout(new WBorderLayout());   // the default content is a vertical stack, not a BorderLayout
-WTextPane text = new WTextPane();
-text.setText(&quot;Type here&quot;);
+WTextPane text = new WTextPane(&quot;Type here&quot;);
 frame.add(text, WBorderLayout.CENTER);
 frame.add(new WLabel(&quot;Ready&quot;), WBorderLayout.SOUTH);
 </code></pre>
@@ -11591,10 +11688,8 @@ frame.add(new WLabel(&quot;Ready&quot;), WBorderLayout.SOUTH);
 </table></div>
 <ul>
 <li>メニュー バーは Swing と同じく、タイトル バーの下、中身の上に付きます。メニューの作り方は <a href="#menu">21 章</a> を見てください。</li>
-<li><strong>今の版の <code>WFrame</code> の既定の中身は、<code>BorderLayout</code> ではなく縦に積むパネル (<code>WPanel</code>) です</strong>。<code>WBorderLayout.SOUTH</code> などの制約を付けて <code>add</code> する前に、
-<code>frame.setLayout(new WBorderLayout())</code> を呼びます。呼ばずに制約を付けると、Swing のように黙って無視せず <code>IllegalArgumentException</code> になります。</li>
-<li><code>setLayout</code> の後は、中身がそのレイアウトの <code>WLayoutPanel</code> に替わり、<code>getContentPane()</code> が返す元のパネルは画面に出なくなります。
-Swing の <code>frame.getContentPane().add(...)</code> は <code>frame.add(...)</code> に書き換えます。</li>
+<li><code>WFrame</code> の既定の中身は、<code>JFrame</code> と同じく <code>WBorderLayout</code> で並べるパネルです。<code>frame.add(c, WBorderLayout.SOUTH)</code> がそのまま使え、制約なしの <code>add</code> は中央に入ります。</li>
+<li><code>frame.getContentPane().add(...)</code> も Swing と同じく書けます。<code>setLayout</code> は中身のパネルを替えずに、そのレイアウト マネージャーだけを替えます。</li>
 <li><code>JTextArea</code> に当たるのは <code>WTextPane</code> です (<a href="#textarea">12 章</a>)。WinUI の入力欄は自分でスクロールするので、<code>JScrollPane</code> で包みません。</li>
 </ul>
 <h3 id="frame-state">24.6 最大化・最小化と大きさの固定<a class="anchor" href="#frame-state">#</a></h3>
@@ -11720,7 +11815,7 @@ fun main() {
 <code>object : WWindowAdapter() { ... }</code> で使うメソッドだけを書きます。</p>
 <h3 id="frame-notes">24.9 注意点<a class="anchor" href="#frame-notes">#</a></h3>
 <ul>
-<li><strong>既定の中身は <code>BorderLayout</code> ではありません</strong>。<code>WBorderLayout.NORTH</code> などの制約を付けて <code>add</code> するときは、先に <code>frame.setLayout(new WBorderLayout())</code> を呼びます (<a href="#frame-menubar">24.5</a>)。</li>
+<li>既定の中身は <code>JFrame</code> と同じく <code>WBorderLayout</code> の <code>WLayoutPanel</code> で、周りの余白はありません (<a href="#frame-menubar">24.5</a>)。<code>setContentPane</code> で <code>WLayoutPanel</code> 以外の部品を中身にした後の <code>setLayout</code> は <code>IllegalStateException</code> です。</li>
 <li><code>frame.setVisible(true)</code> の直後や <code>windowOpened</code> の中でも、Swing と同じく <code>WOptionPane</code> や <code>WContentDialog</code> を開けます。ウィンドウの中身を読み込むまで待ってから
 開きます (<a href="#dialog">25 章</a> と <a href="#optionpane">26 章</a> のサンプルは、<code>setVisible(true)</code> の直後に開いています)。</li>
 <li><code>dispose()</code> したウィンドウは、Swing と違い <code>setVisible(true)</code> で再表示できません (<code>IllegalStateException</code>)。また表示するときは、隠すだけの <code>setVisible(false)</code> を使います。</li>
@@ -11769,15 +11864,15 @@ fun main() {
 </tr>
 <tr>
 <td>中身を足す</td>
-<td><code>add(<wbr>c)</code></td>
-<td><code>add(<wbr>c)</code></td>
-<td>既定は縦に並べる (<code>BorderLayout</code> ではない)</td>
+<td><code>add(<wbr>c)</code> / <code>add(<wbr>c, BorderLayout.<wbr>NORTH)</code></td>
+<td><code>add(<wbr>c)</code> / <code>add(<wbr>c, WBorderLayout.<wbr>NORTH)</code></td>
+<td>同じ (既定は <code>WBorderLayout</code>)</td>
 </tr>
 <tr>
 <td>レイアウト</td>
 <td><code>setLayout(<wbr>new GridLayout(...))</code></td>
 <td><code>setLayout(<wbr>new WGridLayout(...))</code></td>
-<td></td>
+<td>同じ</td>
 </tr>
 <tr>
 <td>開いて閉じるまで待つ</td>
@@ -11788,7 +11883,7 @@ fun main() {
 <tr>
 <td>止めずに開く</td>
 <td>モードレスにして <code>setVisible(<wbr>true)</code></td>
-<td><code>show(<wbr>component, result -&gt; ...)</code></td>
+<td><code>show(<wbr>frame, result -&gt; ...)</code></td>
 <td>開いている間はモーダル (<a href="#dialog-nonblocking">25.5</a>)</td>
 </tr>
 <tr>
@@ -11888,11 +11983,10 @@ if (accepted[0]) {
 }
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField name = new WTextField(16);
-name.setText(&quot;report.txt&quot;);
+<pre><code class="language-java">WTextField name = new WTextField(&quot;report.txt&quot;, 16);
 WContentDialog dialog = new WContentDialog(frame, &quot;Rename&quot;, true);   // always modal
-dialog.add(new WLabel(&quot;New name:&quot;));
-dialog.add(name);
+dialog.add(new WLabel(&quot;New name:&quot;), WBorderLayout.NORTH);
+dialog.add(name, WBorderLayout.CENTER);
 dialog.setPrimaryButtonText(&quot;OK&quot;);
 dialog.setCloseButtonText(&quot;Cancel&quot;);
 dialog.setDefaultButton(ContentDialogButton.PRIMARY);
@@ -11920,9 +12014,8 @@ if (result == ContentDialogResult.PRIMARY) {
 <li><code>showAndWait()</code> は Swing のモーダルの <code>setVisible(true)</code> と同じく、閉じるまで戻りません。その間も画面の描画・入力・<code>invokeLater</code> は動きます。
 戻り値は <code>PRIMARY</code> (プライマリ)・<code>SECONDARY</code> (セカンダリ)・<code>NONE</code> (閉じるボタン・Esc キー・<code>hide()</code>) です。<code>setVisible(true)</code> でも開けますが、戻り値はありません。</li>
 <li>閉じるボタン (<code>setCloseButtonText</code>) と Esc キーは、どちらも <code>NONE</code> で閉じます。閉じるボタンを押したかどうかを分けたいときは <code>addButtonClickListener</code> で受けます。</li>
-<li><code>WContentDialog</code> の既定の中身は縦に並べるパネルです。列数で幅を決めた入力欄 (<code>new WTextField(16)</code> など) は、<code>JDialog</code> の <code>BorderLayout</code> の中央と同じく
-ダイアログの幅いっぱいに広がります (画面の入力欄)。<code>setWidth</code> で幅を指定した部品は、その幅のまま<strong>中央寄せ</strong>になります。左に寄せるときは
-<code>setHorizontalAlignment(HorizontalAlignment.LEFT)</code> を指定します。</li>
+<li><code>WContentDialog</code> の既定の中身は、<code>JDialog</code> と同じく <code>WBorderLayout</code> で並べるパネルです。<code>dialog.add(c, WBorderLayout.NORTH)</code> の形がそのまま使え、
+ダイアログは <code>JDialog</code> の <code>pack()</code> と同じく中身の希望の大きさまで広がります。</li>
 <li>サンプルは、Swing と同じく <code>setVisible(true)</code> の直後にダイアログを開いています。<code>showAndWait()</code> は、ウィンドウの中身を読み込むまで待ってから開きます (<a href="#dialog-notes">25.7</a>)。</li>
 </ul>
 <h3 id="dialog-validate">25.3 入力が正しいときだけ閉じる<a class="anchor" href="#dialog-validate">#</a></h3>
@@ -11954,14 +12047,15 @@ dialog.setLocationRelativeTo(frame);
 dialog.setVisible(true);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField age = new WTextField(8);
-age.setText(&quot;abc&quot;);
+<pre><code class="language-java">WTextField age = new WTextField(&quot;abc&quot;, 8);
 WLabel error = new WLabel(&quot; &quot;);
 error.setForeground(WColor.RED);
 WContentDialog dialog = new WContentDialog(frame, &quot;Age&quot;, true);
-dialog.add(new WLabel(&quot;Your age:&quot;));
-dialog.add(age);
-dialog.add(error);
+WLayoutPanel content = new WLayoutPanel(new WGridLayout(0, 1, 4, 4));
+content.add(new WLabel(&quot;Your age:&quot;));
+content.add(age);
+content.add(error);
+dialog.add(content);
 dialog.setPrimaryButtonText(&quot;OK&quot;);
 dialog.setDefaultButton(ContentDialogButton.PRIMARY);
 dialog.addButtonClickListener(e -&gt; {
@@ -12070,13 +12164,13 @@ dialog.setVisible(true);                 // returns immediately
 status.setText(&quot;The Find dialog is open&quot;);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField text = new WTextField(12);
-text.setText(&quot;needle&quot;);
+<pre><code class="language-java">WTextField text = new WTextField(&quot;needle&quot;, 12);
 WContentDialog dialog = new WContentDialog(frame, &quot;Find&quot;, true);   // modeless is not available
+dialog.setLayout(new WFlowLayout());
 dialog.add(text);
 dialog.setPrimaryButtonText(&quot;Find&quot;);
 dialog.setCloseButtonText(&quot;Close&quot;);
-dialog.show(status, result -&gt; {           // returns immediately
+dialog.show(frame, result -&gt; {           // returns immediately
     if (result == ContentDialogResult.PRIMARY) {
         status.setText(&quot;Searching for &quot; + text.getText());
     }
@@ -12101,7 +12195,7 @@ status.setText(&quot;The Find dialog is open&quot;);
 <ul>
 <li><code>show</code> は呼び出し元を止めませんが、ダイアログは開いている間ウィンドウを覆い、後ろのウィンドウは操作できません。
 Swing の検索のダイアログのように、開いたまま元のウィンドウで作業を続ける使い方はできません。そうするときは、別の <code>WFrame</code> を開きます。</li>
-<li><code>show</code> の第 1 引数は、<code>showAndWait(owner)</code> と違い <code>WFrame</code> を渡せず、ウィンドウに載っている部品 (<code>WComponent</code>) を渡します。サンプルではラベル <code>status</code> を渡しています。
+<li><code>show</code> の第 1 引数は開く先のウィンドウで、<code>showAndWait(owner)</code> と同じく <code>WFrame</code>・ウィンドウに載っている部品 (<code>WComponent</code>)・<code>null</code> (表示中のウィンドウ) を渡せます。
 コンストラクターで渡した持ち主 (<code>owner</code>) は、<code>show</code> では使われません。</li>
 <li>ボタンを押すとダイアログは閉じます。押しても開いたままにするには、<a href="#dialog-validate">25.3</a> と同じく <code>addButtonClickListener</code> で <code>setCancel(true)</code> にします。</li>
 </ul>
@@ -12122,9 +12216,11 @@ fun main() {
         val age = WTextField(8)
         val error = WLabel(&quot; &quot;)
         val dialog = WContentDialog(frame, &quot;Age&quot;, true)
-        dialog.add(WLabel(&quot;Your age:&quot;))
-        dialog.add(age)
-        dialog.add(error)
+        val content = WLayoutPanel(WGridLayout(0, 1, 4, 4))
+        content.add(WLabel(&quot;Your age:&quot;))
+        content.add(age)
+        content.add(error)
+        dialog.add(content)
         dialog.primaryButtonText = &quot;OK&quot;
         dialog.closeButtonText = &quot;Cancel&quot;
         dialog.defaultButton = ContentDialogButton.PRIMARY
@@ -12933,20 +13029,20 @@ fun main() {
 <tr>
 <td>ダイアログで選ぶ</td>
 <td><code>JColorChooser.<wbr>showDialog(<wbr>frame, &quot;Title&quot;, initial)</code></td>
-<td><code>WColorPicker.<wbr>showDialog(<wbr>component, &quot;Title&quot;, initial)</code></td>
-<td>親に <code>WFrame</code> を渡せない。ウィンドウに載っている部品を渡す (<a href="#colorchooser-dialog">28.2</a>)</td>
+<td><code>WColorPicker.<wbr>showDialog(<wbr>frame, &quot;Title&quot;, initial)</code></td>
+<td>同じ (<code>WFrame</code>・部品・<code>null</code> を渡せる。透明度も選べる)</td>
 </tr>
 <tr>
 <td>止めずにダイアログを開く</td>
 <td>(なし)</td>
-<td><code>WColorPicker.<wbr>showDialog(<wbr>component, &quot;Title&quot;, initial, color -&gt; ...)</code></td>
+<td><code>WColorPicker.<wbr>showDialog(<wbr>frame, &quot;Title&quot;, initial, color -&gt; ...)</code></td>
 <td>WinUI4K だけ</td>
 </tr>
 <tr>
-<td>透明度つきのダイアログ</td>
-<td><code>showDialog(<wbr>frame, &quot;Title&quot;, initial, true)</code></td>
-<td>(なし)</td>
-<td>ダイアログでは透明度を選べない</td>
+<td>透明度を選ぶかを決める</td>
+<td><code>showDialog(<wbr>frame, &quot;Title&quot;, initial, false)</code></td>
+<td><code>showDialog(<wbr>frame, &quot;Title&quot;, initial, false)</code></td>
+<td>同じ</td>
 </tr>
 <tr>
 <td>ダイアログを作って使い回す</td>
@@ -13043,13 +13139,12 @@ choose.addActionListener(e -&gt; {
 });
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WBorder swatch = new WBorder();
+<pre><code class="language-java">WLayoutPanel swatch = new WLayoutPanel();
 swatch.setPreferredSize(new WSize(80, 40));
 swatch.setBackground(new WColor(0, 120, 215));
 WButton choose = new WButton(&quot;Choose Color...&quot;);
 choose.addActionListener(e -&gt; {
-    // the owner is a component on the window (a WFrame cannot be passed)
-    WColor color = WColorPicker.showDialog(choose, &quot;Choose a color&quot;, swatch.getBackground());
+    WColor color = WColorPicker.showDialog(frame, &quot;Choose a color&quot;, swatch.getBackground());
     if (color != null) {   // null when canceled
         swatch.setBackground(color);
     }
@@ -13075,8 +13170,9 @@ choose.addActionListener(e -&gt; {
 ウィンドウより大きくならないので、ウィンドウが小さいとき (サンプルは Swing と同じ 480×320) は、ダイアログの中身を縦にスクロールして
 明るさのスライダーや RGB の入力欄まで出します。</li>
 <li>ダイアログを開くと色の面にフォーカスが入り、つまみの上に色の名前のツールチップ (画面では「青」) が、マウスを置いていないのに出ます。</li>
-<li>1 つ目の引数 (持ち主) は <code>WComponent</code> で、<code>WFrame</code> は渡せません。<code>WFileChooser</code> や <code>WOptionPane</code> と違うので注意します。
-ボタンのリスナーの中なら、そのボタンを渡すのが簡単です。</li>
+<li>1 つ目の引数 (持ち主) には、Swing と同じく <code>WFrame</code> を渡せます。ウィンドウに載っている部品や <code>null</code> (表示中のウィンドウ) も渡せます (<code>WFileChooser</code>・<code>WOptionPane</code> と同じ)。</li>
+<li>3 つの引数の <code>showDialog</code> は、Swing (Java 9 以降) と同じく透明度も選べるダイアログです (透明度のスライダーと「不透明度」の欄が出ます)。
+透明度を選ばせないときは、4 つ目の引数に <code>false</code> を渡します。</li>
 <li>Swing の「リセット」ボタンに当たるものはありません。ボタンの文字は <code>WOptionPane.okButtonText</code> / <code>cancelButtonText</code> で変えられます。</li>
 <li>止めずに開くときは、最後の引数に結果を受け取るラムダを渡します (キャンセルでは <code>null</code> が渡ります)。</li>
 </ul>
@@ -13094,7 +13190,7 @@ frame.add(preview);
 <p><strong>WinUI4K (Java)</strong></p>
 <pre><code class="language-java">WColorPicker picker = new WColorPicker(WColor.ORANGE);
 WLabel preview = new WLabel(&quot;Sample text&quot;);
-preview.setFont(new WFont(&quot;Segoe UI&quot;, WFont.BOLD, 24));
+preview.setFont(new WFont(WFont.SANS_SERIF, WFont.BOLD, 24));
 picker.getSelectionModel().addChangeListener(e -&gt; preview.setForeground(picker.getColor()));
 
 frame.add(picker);
@@ -13121,7 +13217,8 @@ frame.add(preview);
 <code>setColor</code> でも呼ばれます。</li>
 <li>WinUI4K では <code>picker.addChangeListener(color -&gt; ...)</code> とピッカーに直接付けることもできます。こちらはイベントではなく
 変わった後の <code>WColor</code> を受け取ります。</li>
-<li><code>WColor.ORANGE</code> は <code>Color.ORANGE</code> (255, 200, 0) と違う色 (255, 127, 39) です。同じ色にするときは <code>new WColor(255, 200, 0)</code> と書きます。</li>
+<li><code>WColor.ORANGE</code> は <code>Color.ORANGE</code> と同じ (255, 200, 0) です。</li>
+<li><code>WFont.SANS_SERIF</code> (<code>&quot;SansSerif&quot;</code>) のような論理フォントの名前は、部品に入れるときに Windows の書体 (Segoe UI) に置き換わります。</li>
 </ul>
 <h3 id="colorchooser-alpha">28.4 透明度も選ばせる<a class="anchor" href="#colorchooser-alpha">#</a></h3>
 <p>半透明の色を選ばせます。Swing の <code>JColorChooser</code> は RGB などのタブに既定でアルファのスライダーがあり、
@@ -13162,8 +13259,7 @@ picker.getSelectionModel().addChangeListener(
 <li>WinUI4K は、アルファを有効にすると透明度のスライダーと「不透明度」の入力欄 (%) が増え、16 進数の欄が <code>#AARRGGBB</code> になります。</li>
 <li>アルファを無効のまま (既定) でも、半透明の色を渡せば <code>getColor()</code> はその透明度のまま返します。ただ、透明度を変える欄が
 出ないので、ユーザーは透明度を選べません。</li>
-<li><code>WColorPicker.showDialog</code> のダイアログでは透明度を選べません (Swing の <code>showDialog(..., true)</code> に当たるものはありません)。
-透明度を選ばせるときは、<code>WColorPicker</code> を自分で <code>WContentDialog</code> に載せます。</li>
+<li><code>WColorPicker.showDialog</code> のダイアログは、Swing と同じく既定で透明度も選べます (<code>showDialog(..., false)</code> で選ばせないこともできます)。</li>
 <li>Swing のタブを選ぶ <code>setChooserPanels</code> に当たるものはありません。WinUI4K は初めから 1 画面です。</li>
 </ul>
 <h3 id="colorchooser-winui">28.5 円のスペクトラムと「さらに表示」<a class="anchor" href="#colorchooser-winui">#</a></h3>
@@ -13186,12 +13282,12 @@ fun main() {
         frame.layout = WFlowLayout()
 
         // A dialog (28.2)
-        val swatch = WBorder()
+        val swatch = WLayoutPanel()
         swatch.preferredSize = WSize(80.0, 40.0)
         swatch.background = WColor(0, 120, 215)
         val choose = WButton(&quot;Choose Color...&quot;)
         choose.addActionListener {
-            WColorPicker.showDialog(choose, &quot;Choose a color&quot;, swatch.background)?.let { swatch.background = it }
+            WColorPicker.showDialog(frame, &quot;Choose a color&quot;, swatch.background)?.let { swatch.background = it }
         }
 
         // On the window, with transparency (28.3, 28.4)
@@ -13214,13 +13310,12 @@ fun main() {
 </code></pre>
 <h3 id="colorchooser-notes">28.7 注意点<a class="anchor" href="#colorchooser-notes">#</a></h3>
 <ul>
-<li><strong><code>showDialog</code> の 1 つ目の引数に <code>WFrame</code> を渡せません</strong>。ウィンドウに載っている部品 (押されたボタンなど) を渡します。</li>
 <li><strong>ダイアログはウィンドウの中に出ます</strong>。ウィンドウより大きくならないので、小さいウィンドウでは中身を縦にスクロールして使います。</li>
-<li><strong>透明度は既定で選べません</strong> (Swing は RGB などのタブで既定で選べます)。透明度を選ばせるときは <code>setAlphaEnabled(true)</code> にします。
-ダイアログ (<code>showDialog</code>) では透明度を選べません。</li>
+<li><strong>ウィンドウに置いた <code>WColorPicker</code> は、透明度を既定で選べません</strong> (Swing は RGB などのタブで既定で選べます)。透明度を選ばせるときは <code>setAlphaEnabled(true)</code> にします。
+ダイアログ (<code>showDialog</code>) は Swing と同じく既定で透明度も選べます。</li>
 <li>タブ (<code>setChooserPanels</code>)・プレビュー (<code>setPreviewPanel</code>)・見本の色と最近使った色はありません。見本の色から選ばせたいときは、
 色のボタンを並べるなどして自分で作ります。</li>
-<li><code>WColor</code> の定数 (<code>ORANGE</code>・<code>RED</code> など) は <code>java.awt.Color</code> の定数と値が違うものがあります。</li>
+<li><code>WColor</code> の定数 (<code>ORANGE</code>・<code>RED</code> など) は <code>java.awt.Color</code> の定数と同じ値です (<code>Color</code> に無い <code>PURPLE</code> もあります)。</li>
 </ul>
 <h2 id="tooltip">29. JToolTip → WToolTip<a class="anchor" href="#tooltip">#</a></h2>
 <p>文字だけのツールチップは、Swing と同じく <code>setToolTipText(&quot;...&quot;)</code> で付けます (<a href="#button-tooltip">1.5</a>)。
@@ -13248,8 +13343,8 @@ fun main() {
 <tr>
 <td>ヒントを消す</td>
 <td><code>setToolTipText(<wbr>null)</code></td>
-<td><code>setToolTipText(<wbr>null)</code></td>
-<td>同じ。<code>setToolTip(<wbr>null)</code> はコンパイルできない (<a href="#tooltip-notes">29.7</a>)</td>
+<td><code>setToolTipText(<wbr>null)</code> / <code>setToolTip(<wbr>null)</code></td>
+<td>同じ (<code>setToolTip(<wbr>null)</code> は結び付けた <code>WToolTip</code> も外す)</td>
 </tr>
 <tr>
 <td>ヒントの部品を作って結び付ける</td>
@@ -13271,9 +13366,9 @@ fun main() {
 </tr>
 <tr>
 <td>何行かの文字・太字</td>
-<td><code>&quot;&lt;html&gt;&lt;b&gt;...&lt;/b&gt;&lt;br&gt;...&lt;/html&gt;&quot;</code></td>
-<td><code>setContent(<wbr>panel)</code></td>
-<td>HTML は解釈されない。部品を並べて載せる</td>
+<td><code>setToolTipText(&quot;&lt;html&gt;&lt;b&gt;...&lt;/b&gt;&lt;br&gt;...&lt;/html&gt;&quot;)</code></td>
+<td><code>setToolTipText(&quot;&lt;html&gt;&lt;b&gt;...&lt;/b&gt;&lt;br&gt;...&lt;/html&gt;&quot;)</code></td>
+<td>同じ (基本のタグだけ)。部品を組んで <code>WToolTip.<wbr>setContent(<wbr>panel)</code> にも載せられる</td>
 </tr>
 <tr>
 <td>プログラムから出す・消す</td>
@@ -13407,8 +13502,10 @@ save.setToolTip(tip);
 </tbody>
 </table></div>
 <ul>
-<li>WinUI4K は HTML を解釈しないので、<code>&lt;html&gt;</code> の文字列はそのまま出ます。部品 (<code>WLabel</code> や <code>WPanel</code>) を組んで <code>setContent</code> に渡します。
-画像 (<code>WImage</code>) なども載せられます。</li>
+<li>文字のヒントは、Swing と同じく <code>save.setToolTipText(&quot;&lt;html&gt;&lt;b&gt;Save&lt;/b&gt;&lt;br&gt;Save the file to disk.&lt;br&gt;&lt;i&gt;Ctrl+S&lt;/i&gt;&lt;/html&gt;&quot;)</code> とも書けます
+(使えるタグは <code>&lt;b&gt;</code>・<code>&lt;i&gt;</code>・<code>&lt;u&gt;</code>・<code>&lt;br&gt;</code>・<code>&lt;p&gt;</code>・<code>&lt;font color&gt;</code> などの基本のものだけ)。ただし文字のヒントはプログラムから出せないので、
+サンプルは <a href="#tooltip-show">29.4</a> の <code>setOpen(true)</code> で出せるように、部品 (<code>WLabel</code> や <code>WPanel</code>) を組んで <code>WToolTip</code> の <code>setContent</code> に渡しています。
+<code>setContent</code> には画像 (<code>WImage</code>) なども載せられます。</li>
 <li><code>setContent</code> と <code>setText</code> は、後から設定した方が有効になります。</li>
 <li>1 つの <code>WToolTip</code> を結び付けられるのは 1 つの部品だけです。別の部品に結び付けると、前の部品からは外れます。</li>
 </ul>
@@ -13427,8 +13524,7 @@ manager.mouseEntered(move);
 manager.mouseMoved(move);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">WTextField zip = new WTextField(10);
-zip.setText(&quot;12-345&quot;);
+<pre><code class="language-java">WTextField zip = new WTextField(&quot;12-345&quot;, 10);
 WToolTip tip = new WToolTip();
 tip.setText(&quot;Enter 7 digits, like 123-4567&quot;);
 zip.setToolTip(tip);
@@ -13451,11 +13547,10 @@ tip.setOpen(true);
 </tbody>
 </table></div>
 <ul>
-<li><code>setOpen(true)</code> は、結び付けた部品がウィンドウに載っていないと効きません。サンプルでは、ウィンドウを表示してから
-<code>WinUiUtilities.schedule(500, () -&gt; tip.setOpen(true))</code> で出しています。</li>
+<li><code>setOpen(true)</code> は、結び付けた部品がウィンドウに載っていないと効きません。表示した直後 (最初のレイアウトの前) に呼んだときは、
+部品を並べた後で開きます (待っている間も <code>isOpen()</code> は <code>true</code>)。サンプルは <code>setVisible(true)</code> の直後に <code>tip.setOpen(true)</code> を呼んでいます。</li>
 <li>マウスが離れるなど WinUI が閉じると、<code>isOpen()</code> は <code>false</code> に戻ります。<code>setOpen(false)</code> で消すこともできます。</li>
 <li>文字だけのヒント (<code>setToolTipText</code>) はプログラムから出せません。出したいときは <code>WToolTip</code> にします。</li>
-<li><code>new WTextField(&quot;12-345&quot;)</code> の文字列は初めの文字ではなく案内文 (プレースホルダー) なので、<code>setText</code> で入れます (<a href="#textfield-placeholder">2.8</a>)。</li>
 </ul>
 <h3 id="tooltip-winui">29.5 新しい機能を吹き出しで知らせる<a class="anchor" href="#tooltip-winui">#</a></h3>
 <p>Swing には無いが、WinUI でよく使う機能です。部品を指す吹き出し (<code>TeachingTip</code>) で、新しい機能や操作のこつを知らせます。
@@ -13480,7 +13575,7 @@ tip.show();
 <p><img src="images/swing_to_winui4k/JToolTip/TeachingTipWinUI4K.png" alt="TeachingTip (WinUI4K)" /></p>
 <ul>
 <li><code>WTeachingTip</code> は、閉じている間も何も描かない部品としてウィンドウに足しておきます。足していないと、開いても中身が出ません。</li>
-<li><code>setTarget</code> を指定しないと、隅に出ます。</li>
+<li><code>setTarget</code> を指定しないと、隅に出ます。表示した直後の <code>show()</code> は、<code>setTarget</code> の部品を並べた後で吹き出しを出します。</li>
 <li>閉じたときの処理は <code>addCloseListener(reason -&gt; ...)</code> で付けます。閉じるボタン・外側のクリック・<code>hide()</code> のどれで閉じたかが渡されます。</li>
 </ul>
 <h3 id="tooltip-kotlin">29.6 Kotlin で書く<a class="anchor" href="#tooltip-kotlin">#</a></h3>
@@ -13500,13 +13595,13 @@ fun main() {
         val saveTip = WToolTip()
         saveTip.content = body
         saveTip.placement = ToolTipPlacement.BOTTOM
-        save.setToolTip(saveTip)   // not &quot;save.toolTip = saveTip&quot;: toolTip is the text
+        save.toolTip = saveTip
 
         // Show it from the program (29.4)
         val zip = WTextField(10)
         val zipTip = WToolTip()
         zipTip.text = &quot;Enter 7 digits, like 123-4567&quot;
-        zip.setToolTip(zipTip)
+        zip.toolTip = zipTip
         val check = WButton(&quot;Check&quot;)
         check.addActionListener { zipTip.isOpen = !zip.text.matches(Regex(&quot;&quot;&quot;\d{3}-\d{4}&quot;&quot;&quot;)) }
 
@@ -13522,20 +13617,19 @@ fun main() {
         frame.setSize(480, 360)
         frame.setLocationRelativeTo(null)
         frame.isVisible = true
-        WinUiUtilities.schedule(500) { tip.show() }
+        tip.show()
     }
 }
 </code></pre>
-<p>Kotlin の <code>toolTip</code> プロパティは文字のヒント (<code>setToolTipText</code> と同じ) なので、<code>WToolTip</code> は <code>setToolTip(...)</code> で結び付けます。</p>
+<p>Kotlin では、文字のヒントは <code>toolTipText</code>、結び付ける <code>WToolTip</code> は <code>toolTip</code> のプロパティです (Java の <code>setToolTipText</code> / <code>setToolTip</code> と同じ)。</p>
 <h3 id="tooltip-notes">29.7 注意点<a class="anchor" href="#tooltip-notes">#</a></h3>
 <ul>
 <li><strong><code>ToolTipManager</code> に当たるものはありません</strong>。出るまでの時間・消えるまでの時間・アプリ全体での有効・無効は変えられず、
 WinUI の既定のまま動きます。</li>
-<li><strong>HTML は解釈されません</strong>。書式や何行かの文字は、<code>WToolTip.setContent</code> に部品を組んで渡します。</li>
+<li><code>setToolTipText</code> の HTML は、基本のタグ (<code>&lt;b&gt;</code>・<code>&lt;i&gt;</code>・<code>&lt;u&gt;</code>・<code>&lt;br&gt;</code>・<code>&lt;p&gt;</code>・<code>&lt;font color&gt;</code> など) だけを解釈します。表や画像などは <code>WToolTip.setContent</code> に部品を組んで渡します。</li>
 <li><code>getToolTipText(MouseEvent)</code> の上書きで場所ごとに違う文字を出す方法はありません。</li>
 <li>何も指定しないと、ヒントは部品の上に出ます (Swing はマウスの下)。上にあるものを隠したくないときは <code>setPlacement</code> で変えます。</li>
-<li>Java で <strong><code>component.setToolTip(null)</code> と書くとコンパイルできません</strong> (文字の <code>setToolTip(String)</code> と <code>setToolTip(WToolTip)</code> の
-どちらか決まらない)。ヒントを消すときは <code>setToolTipText(null)</code> と書きます。</li>
+<li>文字のヒントは <code>setToolTipText</code>、<code>WToolTip</code> は <code>setToolTip</code> で付けます。<code>getToolTip()</code> は結び付けた <code>WToolTip</code> を返し、<code>setToolTipText</code> で付けた文字のヒントなら <code>null</code> です。</li>
 <li>ヒントの色やフォントを <code>UIManager</code> のようにアプリ全体で変える方法はありません。テーマ (ライト・ダーク) に合わせた色になります。</li>
 </ul>
 <h2 id="layout">30. レイアウト マネージャー<a class="anchor" href="#layout">#</a></h2>
@@ -13546,6 +13640,8 @@ WinUI の既定のまま動きます。</li>
 Swing のクラスの名前に <code>W</code> を付けるだけで、コンストラクターや定数も Swing と同じです。</li>
 <li><strong>WinUI のパネルを包んだもの</strong>: <code>WGrid</code> (<code>Grid</code>)・<code>WRelativePanel</code> (<code>RelativePanel</code>)・<code>WCanvas</code> (<code>Canvas</code>)・
 <code>WPanel</code> (<code>StackPanel</code>)・<code>WVariableSizedWrapGrid</code> (<code>VariableSizedWrapGrid</code>)。
+<code>WPanel</code> は <code>JPanel</code>、<code>WUniformGridLayout</code> は <code>GridLayout</code>、<code>WVariableSizedWrapGrid</code> は <code>FlowLayout</code> と名前が似ていますが、
+どれも <code>setLayout</code> には渡せず、並べ方も違います。Swing から移すときは <code>WLayoutPanel</code>・<code>WGridLayout</code>・<code>WFlowLayout</code> を使います。
 レイアウト マネージャーではなくパネル (コンテナ) そのもので、<code>GridBagLayout</code>・<code>SpringLayout</code>・null レイアウトの代わりに使います。
 並べ方は WinUI の決まりに従うので、Swing とは書き方が変わります。</li>
 </ul>
@@ -13563,12 +13659,12 @@ Swing のクラスの名前に <code>W</code> を付けるだけで、コンス�
 <tr>
 <td><code>FlowLayout</code></td>
 <td><code>WFlowLayout</code></td>
-<td>同じ (隙間は <code>double</code>)。ベースラインの揃え (<code>setAlignOnBaseline</code>) は無い</td>
+<td>同じ (隙間は <code>double</code>。<code>int</code> でも作れる)。ベースラインの揃え (<code>setAlignOnBaseline</code>) は無い</td>
 </tr>
 <tr>
 <td><code>BorderLayout</code></td>
 <td><code>WBorderLayout</code></td>
-<td>同じ。ただし <code>WFrame</code> の既定ではないので、<code>frame.<wbr>setLayout(<wbr>new WBorderLayout())</code> が要る</td>
+<td>同じ (<code>WFrame</code> と <code>WContentDialog</code> の中身の既定)</td>
 </tr>
 <tr>
 <td><code>GridLayout</code></td>
@@ -13597,8 +13693,8 @@ Swing のクラスの名前に <code>W</code> を付けるだけで、コンス�
 </tr>
 <tr>
 <td><code>CardLayout</code></td>
-<td>(なし)</td>
-<td>子を <code>remove</code> / <code>add</code> で入れ替える (<a href="#panel-swap">14.6</a>)。近いものは <code>WTabbedPane</code></td>
+<td><code>WCardLayout</code></td>
+<td>同じ (<code>add(<wbr>c, &quot;name&quot;)</code> で入れ、<code>show(<wbr>panel, &quot;name&quot;)</code>・<code>next</code>・<code>previous</code>・<code>first</code>・<code>last</code> で切り替える)</td>
 </tr>
 <tr>
 <td><code>GroupLayout</code></td>
@@ -13617,6 +13713,14 @@ Swing のクラスの名前に <code>W</code> を付けるだけで、コンス�
 </tr>
 </tbody>
 </table></div>
+<p><code>CardLayout</code> は、Swing と同じく名前を付けて子を入れ、<code>show</code> で切り替えます。</p>
+<pre><code class="language-java">WCardLayout cards = new WCardLayout();
+WLayoutPanel pages = new WLayoutPanel(cards);
+pages.add(new WLabel(&quot;Step 1: choose a file&quot;), &quot;step1&quot;);
+pages.add(new WLabel(&quot;Step 2: confirm&quot;), &quot;step2&quot;);
+WButton next = new WButton(&quot;Next&quot;);
+next.addActionListener(e -&gt; cards.next(pages));    // or cards.show(pages, &quot;step2&quot;)
+</code></pre>
 <h3 id="layout-flow">30.2 FlowLayout → WFlowLayout<a class="anchor" href="#layout-flow">#</a></h3>
 <p>子を左から右へ並べ、幅に収まらなくなったら次の行へ折り返します。</p>
 <p><strong>Swing (Java)</strong></p>
@@ -13664,12 +13768,12 @@ frame.add(new JButton(&quot;East&quot;), BorderLayout.EAST);
 frame.add(new JButton(&quot;Center&quot;));                     // no constraint = CENTER
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">frame.setLayout(new WBorderLayout());                 // required: the default is not WBorderLayout
+<pre><code class="language-java">// the content pane of a WFrame uses WBorderLayout by default
 frame.add(new WButton(&quot;North&quot;), WBorderLayout.NORTH);
 frame.add(new WButton(&quot;South&quot;), WBorderLayout.SOUTH);
 frame.add(new WButton(&quot;West&quot;), WBorderLayout.WEST);
 frame.add(new WButton(&quot;East&quot;), WBorderLayout.EAST);
-frame.add(new WButton(&quot;Center&quot;));                     // no constraint = CENTER
+frame.add(new WButton(&quot;Center&quot;));                    // no constraint = CENTER
 </code></pre>
 <p><strong>実行した画面</strong> (<a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/layout/border/BorderSwing.java"><code>BorderSwing.java</code></a> / <a href="../winui4k-sample-swing-to-winui4k/src/main/java/com/appkitbox/winui4k/swing_to_winui4k/layout/border/BorderWinUI4K.java"><code>BorderWinUI4K.java</code></a>)</p>
 <div class="table"><table>
@@ -13689,8 +13793,7 @@ frame.add(new WButton(&quot;Center&quot;));                     // no constraint
 <p>WinUI4K の画面では、ボタンの間に少し隙間があるように見えますが、ボタンの位置と大きさは隙間なく並んでいます
 (WinUI のボタンの角が丸く、縁の線が背景より明るいためです)。</p>
 <ul>
-<li><strong><code>WFrame</code> の既定の中身は <code>WBorderLayout</code> ではありません</strong> (縦に積む <code>WPanel</code>)。<code>setLayout(new WBorderLayout())</code> を呼ばずに
-<code>frame.add(c, WBorderLayout.SOUTH)</code> と書くと、<code>IllegalArgumentException</code> になります。Swing のように黙って無視はされません。</li>
+<li><code>WFrame</code> の中身の既定は、<code>JFrame</code> と同じく <code>WBorderLayout</code> です。<code>frame.add(c, WBorderLayout.SOUTH)</code> がそのまま使えます。</li>
 <li>定数は <code>WBorderLayout.NORTH</code> などのほか、<code>PAGE_START</code>・<code>PAGE_END</code>・<code>LINE_START</code>・<code>LINE_END</code> もあります。
 Swing の文字列の制約 (<code>&quot;North&quot;</code> など) もそのまま受け付けます。</li>
 <li>隙間は <code>new WBorderLayout(5, 5)</code> や <code>setHgap</code> / <code>setVgap</code> で決めます (Swing と同じ)。</li>
@@ -13706,7 +13809,7 @@ for (String key : new String[] {&quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &qu
 }
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">frame.setLayout(new WGridLayout(0, 3, 5, 5));         // any number of rows, 3 columns
+<pre><code class="language-java">frame.setLayout(new WGridLayout(0, 3, 5, 5));        // any number of rows, 3 columns
 for (String key : new String[] {&quot;7&quot;, &quot;8&quot;, &quot;9&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;0&quot;, &quot;.&quot;, &quot;=&quot;}) {
     frame.add(new WButton(key));
 }
@@ -13752,9 +13855,7 @@ column.add(buttons);
 frame.add(column);
 </code></pre>
 <p><strong>WinUI4K (Java)</strong></p>
-<pre><code class="language-java">frame.setLayout(new WBorderLayout());                 // the layout that JFrame has by default
-
-// a row of buttons pushed to the right by glue
+<pre><code class="language-java">// a row of buttons pushed to the right by glue
 WLayoutPanel buttons = WBox.createHorizontalBox();
 buttons.add(WBox.createHorizontalGlue());
 buttons.add(new WButton(&quot;OK&quot;));
@@ -13911,7 +14012,7 @@ frame.setContentPane(grid);
 <tr>
 <td><code>insets</code></td>
 <td>子の <code>setMargin(<wbr>左, 上, 右, 下)</code>、全体の間隔は <code>new WGrid(<wbr>行の間隔, 列の間隔)</code></td>
-<td>引数の順が違う (<code>Insets</code> は上・左・下・右)</td>
+<td>引数の順が違う (<code>Insets</code> は上・左・下・右。外側の余白を <code>WInsets</code> で渡す形は無い)</td>
 </tr>
 <tr>
 <td><code>ipadx</code> / <code>ipady</code></td>
@@ -13929,8 +14030,8 @@ frame.setContentPane(grid);
 </li>
 <li>
 <p>文字列の制約でフォームを組みたいときは、拡張モジュール winui4k-extension-miglayout の <code>MigLayoutManager</code> が使えます (制約の書き方は MigLayout と同じ)。
-Java からは 3 つの引数をすべて渡します。</p>
-<pre><code class="language-java">WLayoutPanel form = new WLayoutPanel(new MigLayoutManager(&quot;wrap 2&quot;, &quot;[right][grow, fill]&quot;, &quot;&quot;));
+Java からも MigLayout と同じく 1 つ・2 つ・3 つの引数で作れます。</p>
+<pre><code class="language-java">WLayoutPanel form = new WLayoutPanel(new MigLayoutManager(&quot;wrap 2&quot;, &quot;[right][grow, fill]&quot;));
 form.add(new WLabel(&quot;Name:&quot;));
 form.add(new WTextField());
 </code></pre>
@@ -14039,8 +14140,10 @@ frame.setContentPane(panel);
 <ul>
 <li>何の指定もしない子は、パネルの左上に置かれます。</li>
 <li><strong>2 つの部品が互いを参照する置き方はできません</strong>。たとえば <code>placeRightOf(field, label)</code> と <code>alignVerticalCenterWith(label, field)</code> を
-両方書くと、WinUI が「Circular dependency detected」のエラーを出し、ウィンドウの中身が何も表示されません
-(横と縦の別の向きでも、互いを参照すれば循環とみなされます)。</li>
+両方書くと、循環になる 2 つ目の呼び出しがその場で <code>IllegalArgumentException</code> になります (横と縦の別の向きでも、互いを参照すれば循環とみなします)。
+基準にした子を <code>remove</code> すると、その子を基準にした指定も外れます。</li>
+<li>Swing のように <code>Container pane = frame.getContentPane()</code> で中身のパネルを取り、<code>pane.add(...)</code> で足すこともできます。<code>WRelativePanel</code> を
+ウィンドウの中身にするときは、上のコードのように <code>frame.setContentPane(panel)</code> を使います。</li>
 <li><code>alignVerticalCenterWith(field, label)</code> のように背の低い部品に揃えると、背の高い部品 (入力欄) が下で切れて表示されます。
 上のコードでは、揃えの代わりにラベルの上の余白で位置を合わせています。</li>
 </ul>
@@ -14099,15 +14202,15 @@ frame.add(stop);
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(&quot;Layout sample&quot;)
-        frame.layout = WBorderLayout()                    // needed before add(c, WBorderLayout.NORTH)
+        frame.layout = WBorderLayout()                    // the default, like JFrame
 
-        // FlowLayout (30.2): gaps are Double in Kotlin
-        val toolbar = WLayoutPanel(WFlowLayout(WFlowLayout.LEFT, 10.0, 10.0))
+        // FlowLayout (30.2)
+        val toolbar = WLayoutPanel(WFlowLayout(WFlowLayout.LEFT, 10, 10))
         listOf(&quot;New&quot;, &quot;Open&quot;, &quot;Save&quot;).forEach { toolbar.add(WButton(it)) }
         frame.add(toolbar, WBorderLayout.NORTH)
 
         // GridLayout (30.4)
-        val keys = WLayoutPanel(WGridLayout(0, 3, 5.0, 5.0))
+        val keys = WLayoutPanel(WGridLayout(0, 3, 5, 5))
         (1..9).forEach { keys.add(WButton(it.toString())) }
         frame.add(keys, WBorderLayout.CENTER)
 
@@ -14137,22 +14240,17 @@ fun main() {
     }
 }
 </code></pre>
-<p>Kotlin では <code>frame.layout = ...</code> のようにプロパティで設定します。隙間や座標の引数は <code>Double</code> なので、Java と違い <code>10</code> ではなく
-<code>10.0</code> と書きます (<code>WGridLayout</code> の行と列の数は <code>Int</code>)。<code>WGrid(rowSpacing = 8.0)</code> のように名前付きの引数も使えます。</p>
+<p>Kotlin では <code>frame.layout = ...</code> のようにプロパティで設定します。<code>WFlowLayout</code>・<code>WBorderLayout</code>・<code>WGridLayout</code> は Swing と同じく <code>int</code> の隙間で作れます。
+<code>WBox.createHorizontalStrut</code>・<code>WInsets</code>・<code>WGrid</code> の間隔などの <code>Double</code> の引数は、<code>8.0</code> のように小数で書きます。<code>WGrid(rowSpacing = 8.0)</code> のように名前付きの引数も使えます。</p>
 <h3 id="layout-notes">30.10 注意点<a class="anchor" href="#layout-notes">#</a></h3>
 <ul>
-<li><strong><code>WFrame</code> の既定の中身は <code>BorderLayout</code> ではありません</strong>。既定は縦に積む <code>WPanel</code> (子の間隔 12、周りの余白 24) で、
-<code>frame.getLayout()</code> は <code>null</code> を返します。<code>frame.add(c, WBorderLayout.SOUTH)</code> のように制約付きで足す前に、
-<code>frame.setLayout(new WBorderLayout())</code> を呼びます。呼ばないと <code>IllegalArgumentException</code> になります。</li>
-<li><code>frame.setLayout(...)</code> を呼ぶと、ウィンドウの中身が新しいパネルに替わり、周りの余白 24 も無くなります。それ以降の
-<code>frame.getContentPane()</code> は画面に出ないパネルを返すので、子は <code>frame.add(...)</code> で足します。Swing のように
-<code>frame.getContentPane().add(...)</code> と書くと、子が表示されません。</li>
-<li><strong><code>new WLayoutPanel()</code> はレイアウト マネージャーを持ちません</strong> (<code>getLayout()</code> は <code>null</code>)。<code>new JPanel()</code> (<code>FlowLayout</code>) と違い、
-子はすべて左上に重なります。<code>FlowLayout</code> のパネルは <code>new WLayoutPanel(new WFlowLayout())</code> と書きます。</li>
+<li><code>WFrame</code> と <code>WContentDialog</code> の中身の既定は、<code>JFrame</code> / <code>JDialog</code> と同じく <code>WBorderLayout</code> の <code>WLayoutPanel</code> です (周りの余白なし)。
+<code>frame.setLayout(...)</code> は中身のパネルを替えずにレイアウト マネージャーだけを替えるので、<code>frame.getContentPane().add(...)</code> も Swing と同じく使えます。</li>
+<li><code>new WLayoutPanel()</code> は <code>new JPanel()</code> と同じく <code>WFlowLayout</code> で並べます。マネージャーを持たないパネルは <code>new WLayoutPanel(null)</code> です。</li>
 <li><code>WGrid</code>・<code>WRelativePanel</code>・<code>WCanvas</code>・<code>WPanel</code> はレイアウト マネージャーではなくパネルです。<code>setLayout</code> には渡せず、
 <code>frame.setContentPane(...)</code> かほかのパネルへの <code>add</code> で使います。</li>
 <li><code>WGrid.add(c, row, column)</code> は<strong>行が先</strong>です。<code>GridBagConstraints</code> の <code>gridx</code> (列)・<code>gridy</code> (行) の順のまま書き写すと、行と列が入れ替わります。</li>
-<li><code>CardLayout</code>・<code>GroupLayout</code>・<code>OverlayLayout</code> に当たるものはありません。</li>
+<li><code>CardLayout</code> は <code>WCardLayout</code> です。<code>GroupLayout</code>・<code>OverlayLayout</code> に当たるものはありません。</li>
 <li>自分で <code>WLayoutManager</code> を実装することもできます (<code>preferredLayoutSize</code> と <code>layoutContainer</code> を書き、子は <code>parent.setBounds(c, x, y, w, h)</code> で置く)。
 <code>LayoutManager</code> と <code>LayoutManager2</code> は 1 つのインターフェースにまとまっています。</li>
 </ul>
@@ -14162,31 +14260,31 @@ fun main() {
 <li>import と型名を替える: <code>javax.swing.J*</code> / <code>java.awt.*</code> の型を <code>com.appkitbox.winui4k.W*</code> に替えます
 (<code>JButton</code> → <code>WButton</code>、<code>Color</code> → <code>WColor</code>、<code>Font</code> → <code>WFont</code>、<code>KeyStroke</code> → <code>WKeyStroke</code>、<code>KeyEvent</code> → <code>WKeyEvent</code>、
 <code>AbstractAction</code> → <code>WAbstractAction</code>、<code>DefaultListModel</code> → <code>WDefaultListModel</code>、<code>Dimension</code> → <code>WSize</code> など)。</li>
-<li>UI スレッドへの投入を替える: <code>SwingUtilities.invokeLater</code> → <code>WinUiUtilities.invokeLater</code>。<code>SwingWorker</code> は
-<code>CompletableFuture</code> などと <code>invokeLater</code> の組み合わせにします (<a href="#button-background">1.13</a>)。</li>
-<li>パネルの型を替える: <code>new JPanel()</code> は <code>new WLayoutPanel(new WFlowLayout())</code>、<code>new JPanel(layout)</code> は
-<code>new WLayoutPanel(layout)</code> にします。引数なしの <code>new WLayoutPanel()</code> はレイアウト マネージャーを持たないので使いません。
-<code>WFrame</code> の中身の既定は <code>BorderLayout</code> ではなく縦に積むパネルなので、<code>frame.add(c, BorderLayout.NORTH)</code> の形を使っていたなら、
-先に <code>frame.setLayout(new WBorderLayout())</code> を足してから <code>frame.add(c, WBorderLayout.NORTH)</code> にします (<a href="#basics-differences">0.2</a>)。</li>
-<li><code>new WTextField(&quot;...&quot;)</code> を確かめる: 初めの文字列のつもりなら <code>setText</code> に直します (<a href="#textfield-notes">2.17</a>)。</li>
-<li>文字の揃えを確かめる: <code>setHorizontalAlignment(JTextField.RIGHT)</code> は <code>setTextAlignment(TextAlignment.RIGHT)</code> に直します。</li>
-<li><code>JScrollPane</code> を外す: <code>JList</code> を包んでいた <code>JScrollPane</code> は外します (<a href="#list-basic">3.2</a>)。</li>
-<li>リストの選択モードを確かめる: Swing の既定 (複数) に頼っていたなら、<code>setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION)</code> を足します。</li>
-<li>リストの型を直す: <code>JList&lt;E&gt;</code> を <code>WList</code> にし、<code>getSelectedValue()</code> にキャストを足します。</li>
-<li>レンダラーを直す: 1 つのラベルを使い回すレンダラーは、毎回新しいコンポーネントを返す形に直します。</li>
-<li>Swing 独自の仕組みを置き換える: <code>InputVerifier</code> はフォーカスのリスナーへ (<a href="#textfield-validate">2.10</a>)、<code>UndoManager</code> は組み込みの元に戻すへ
-(<a href="#textfield-undo">2.13</a>)、HTML の文字はコンポーネントの中身へ (<a href="#button-notes">1.16</a>) 置き換えます。</li>
+<li>UI スレッドへの投入を替える: <code>SwingUtilities.invokeLater</code> → <code>WinUiUtilities.invokeLater</code>、<code>invokeAndWait</code> → <code>WinUiUtilities.invokeAndWait</code>。
+<code>SwingWorker</code> は <code>WSwingWorker</code>、<code>javax.swing.Timer</code> は <code>WTimer</code> にします (<a href="#button-background">1.13</a>・<a href="#basics-differences">0.2</a>)。</li>
+<li>パネルの型を替える: <code>new JPanel()</code> は <code>new WLayoutPanel()</code>、<code>new JPanel(layout)</code> は <code>new WLayoutPanel(layout)</code> にします。
+<code>WFrame</code> と <code>WContentDialog</code> の中身の既定は Swing と同じく <code>WBorderLayout</code> なので、<code>frame.add(c, BorderLayout.NORTH)</code> は <code>frame.add(c, WBorderLayout.NORTH)</code> にするだけです。
+<code>WPanel</code>・<code>WUniformGridLayout</code>・<code>WVariableSizedWrapGrid</code> は名前が似ていても <code>JPanel</code>・<code>GridLayout</code>・<code>FlowLayout</code> には当たりません (<a href="#layout">30 章</a>)。</li>
+<li>文字の揃えを確かめる: <code>setHorizontalAlignment(JTextField.RIGHT)</code> は <code>setTextAlignment(TextAlignment.RIGHT)</code> に直します。
+WinUI4K の <code>setHorizontalAlignment</code> は親の中での部品の位置です (<a href="#textfield-appearance">2.14</a>・<a href="#label-alignment">4.5</a>)。</li>
+<li><code>JScrollPane</code> を外す: <code>JList</code>・<code>JTable</code>・<code>JTree</code>・<code>JTextArea</code> を包んでいた <code>JScrollPane</code> は外します (<a href="#list-basic">3.2</a>)。</li>
+<li>リストとコンボの型を直す: <code>JList&lt;E&gt;</code> / <code>JComboBox&lt;E&gt;</code> を <code>WList</code> / <code>WComboBox</code> にし、<code>getSelectedValue()</code> にキャストを足します
+(<code>WComboBox.getSelectedItem()</code> は Swing と同じく項目そのものを返すので、キャストはそのまま)。</li>
+<li>レンダラーを直す: 1 つのラベルを使い回すレンダラーは、<code>getText</code>・<code>getIcon</code>・<code>configure</code> の上書きか、毎回新しいコンポーネントを返す形に直します (<a href="#list-renderer">3.9</a>)。</li>
+<li><code>JTextPane</code> の折り返しを足す: <code>WTextPane</code> の既定は <code>JTextArea</code> と同じく折り返さないので、<code>JTextPane</code> から移すときは <code>setLineWrap(true)</code> を足します (<a href="#textpane-notes">13.9</a>)。</li>
+<li>枠と余白を直す: <code>setBorder(BorderFactory...)</code> は <code>setBorder(WBorderFactory...)</code> に、<code>setMargin(new Insets(...))</code> は <code>setMargin(new WInsets(...))</code> にします。
+4 つの数だけの <code>setMargin(左, 上, 右, 下)</code> と <code>setPadding(左, 上, 右, 下)</code> は、<code>Insets</code> と引数の順が違うので書き写すときに気を付けます (<a href="#panel-border">14.3</a>)。</li>
 <li>WinUI の機能で簡単にできるところを探す: 案内文 (<code>setPlaceholderText</code>)・見出し (<code>setHeader</code>)・文字数の上限 (<code>setMaxLength</code>)・
-アクセントのボタン (<code>setAccent</code>)・ボタンのフライアウト (<code>setFlyout</code>) は、Swing で自前で書いていたコードを置き換えられます。</li>
-<li>表示した直後の操作を確かめる: <code>setVisible(true)</code> の直後のダイアログ・メニューを開く・スクロールの位置を決める操作は、Swing と同じく効きます。
-ただし、ツールチップやツール バーの「…」のメニューを開く (<code>setOpen(true)</code>)・<code>TeachingTip</code> を出す (<code>show()</code>)・中身の長さ (<code>getMaximum()</code>) を読む操作は、
-<code>WinUiUtilities.schedule(ミリ秒, 処理)</code> で最初のレイアウトを待ってから行います (<a href="#tooltip-show">29.4</a>・<a href="#scrollbar-bottom">16.2</a>)。</li>
-<li>値の型を確かめる: <code>WComboBox.getSelectedItem()</code> は項目そのものではなく表示の文字列を返します。項目は <code>getModel().getSelectedItem()</code> で読みます (<a href="#combo-table">8.1</a>)。
-スライダー・スピナー・進捗バーの値は <code>int</code> ではなく <code>double</code> です。</li>
+アクセントのボタン (<code>setAccent</code>)・ボタンのフライアウト (<code>setFlyout</code>)・組み込みの元に戻す (<a href="#textfield-undo">2.13</a>) は、Swing で自前で書いていたコードを置き換えられます。</li>
+<li>表示した直後の操作を確かめる: <code>setVisible(true)</code> の直後のダイアログ・メニュー・ツールチップ (<code>setOpen(true)</code>)・<code>TeachingTip</code> (<code>show()</code>)・
+ボタンの <code>doClick()</code> で開くフライアウト・スクロールの位置を決める操作は、Swing と同じく効きます。表示した直後の表示領域の大きさ (<code>getVisibleAmount()</code>・<code>getExtentSize()</code>) は並べるまで 0 です (<a href="#scrollbar-notes">16.7</a>)。</li>
+<li>値の型を確かめる: スライダー・スピナー・進捗バーの値は <code>int</code> ではなく <code>double</code> です (<code>(int)</code> を付けて読みます)。</li>
+<li>既定が違うものを確かめる: 閉じたときの動作 (<code>DISPOSE_ON_CLOSE</code>)・木の選択モード (1 つ)・<code>WColorPicker</code> の透明度 (出さない) は Swing と既定が違います (<a href="#basics-differences">0.2</a>・<a href="#tree-notes">20.9</a>・<a href="#colorchooser-notes">28.7</a>)。</li>
 </ol>
 <h2 id="none">付録 B. WinUI4K に対応する部品が無いもの<a class="anchor" href="#none">#</a></h2>
 <p>次の Swing の部品には、WinUI4K に当たるクラスがありません。この文書では章を設けていません。
-レイアウト マネージャーで当たるものが無いもの (<code>CardLayout</code>・<code>GroupLayout</code>・<code>OverlayLayout</code>) は <a href="#layout-table">30.1</a> の表に書いています。</p>
+レイアウト マネージャーで当たるものが無いもの (<code>GroupLayout</code>・<code>OverlayLayout</code>) は <a href="#layout-table">30.1</a> の表に書いています (<code>CardLayout</code> は <code>WCardLayout</code> があります)。
+Swing の部品ではない仕組みのうち、<code>javax.swing.Timer</code> (<code>WTimer</code>)・<code>SwingWorker</code> (<code>WSwingWorker</code>)・<code>InputVerifier</code> (<code>WInputVerifier</code>)・<code>BorderFactory</code> (<code>WBorderFactory</code>) は WinUI4K にもあります。</p>
 <div class="table"><table>
 <thead>
 <tr>
