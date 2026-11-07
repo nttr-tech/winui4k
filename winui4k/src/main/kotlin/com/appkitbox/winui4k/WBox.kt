@@ -27,7 +27,7 @@ object WBox {
     @JvmStatic
     fun createVerticalBox(): WLayoutPanel = boxPanel(WBoxLayout.Y_AXIS)
 
-    private fun boxPanel(axis: Int): WLayoutPanel = WLayoutPanel().also { it.layout = WBoxLayout(it, axis) }
+    private fun boxPanel(axis: Int): WLayoutPanel = WLayoutPanel(null).also { it.layout = WBoxLayout(it, axis) }
 
     /** Like Box.createRigidArea: a gap whose minimum, preferred and maximum are all [size], which neither grows nor shrinks. */
     @JvmStatic

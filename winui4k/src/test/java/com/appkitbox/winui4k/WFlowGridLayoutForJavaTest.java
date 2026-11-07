@@ -2,7 +2,9 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +18,16 @@ class WFlowGridLayoutForJavaTest {
         canvas.setWidth(width);
         canvas.setHeight(height);
         return canvas;
+    }
+
+    @Test
+    void newWLayoutPanelUsesWFlowLayoutLikeJPanelAndPassingNullGivesANullLayout() {
+        onUiThread(() -> {
+            WLayoutPanel panel = new WLayoutPanel();
+            assertTrue(panel.getLayout() instanceof WFlowLayout);
+            assertEquals(WFlowLayout.CENTER, ((WFlowLayout) panel.getLayout()).getAlignment());
+            assertNull(new WLayoutPanel(null).getLayout());
+        });
     }
 
     @Test

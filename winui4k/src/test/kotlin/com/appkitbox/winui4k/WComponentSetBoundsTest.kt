@@ -83,7 +83,7 @@ class WComponentSetBoundsTest : FunSpec() {
 
         test("setBounds stays as is for a child of a WLayoutPanel without a layout manager") {
             val box = onUiThreadGet { WCanvas() }
-            withChild(onUiThreadGet { WLayoutPanel() }, box) {
+            withChild(onUiThreadGet { WLayoutPanel(null) }, box) {
                 box.setBounds(15.0, 25.0, 35.0, 45.0)
                 (box.parent as WLayoutPanel).revalidate()
                 box.parent!!.validate()

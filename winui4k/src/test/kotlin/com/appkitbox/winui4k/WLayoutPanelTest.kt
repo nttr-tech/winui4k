@@ -4,7 +4,12 @@ import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.doubles.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 
 /**
  * Tests for the self-sizing of [WLayoutPanel] (its size inside a WPanel that does not hand down a size) and the collapsing of revalidate within the same turn.
@@ -46,6 +51,34 @@ class WLayoutPanelTest : FunSpec() {
     }
 
     init {
+        test("a WLayoutPanel without arguments uses WFlowLayout as JPanel does (a separate manager per panel). Passing null gives no manager") {
+            onUiThread {
+                val first = WLayoutPanel()
+                val second = WLayoutPanel()
+                val layout = first.layout.shouldBeInstanceOf<WFlowLayout>()
+                layout.alignment shouldBe WFlowLayout.CENTER
+                second.layout shouldNotBeSameInstanceAs layout
+                WLayoutPanel(null).layout.shouldBeNull()
+            }
+        }
+
+        test("two buttons added to a WLayoutPanel without arguments and placed in a vertical WPanel line up horizontally without overlapping, and the panel has a height") {
+            val (host, panel, buttons) = onUiThreadGet {
+                val buttons = WButton("One") to WButton("Two")
+                val panel = WLayoutPanel().also {
+                    it.add(buttons.first)
+                    it.add(buttons.second)
+                }
+                Triple(WPanel().also { it.add(panel) }, panel, buttons)
+            }
+            shown(host) {
+                val (first, second) = buttons
+                first.actualWidth shouldBeGreaterThan 0.0
+                second.bounds.x shouldBeGreaterThan first.bounds.x + first.bounds.width - 1
+                panel.actualHeight shouldBeGreaterThan first.actualHeight
+            }
+        }
+
         test("inside a WPanel that does not hand down a size, it becomes the preferredLayoutSize (120 × 48)") {
             val (host, panel) = onUiThreadGet {
                 val panel = WLayoutPanel(ProbeLayout(WSize(120.0, 48.0))).also { it.add(child()) }
@@ -95,7 +128,7 @@ class WLayoutPanelTest : FunSpec() {
         test("setting layout later relayouts it and places the children") {
             val (host, panel, kid) = onUiThreadGet {
                 val kid = child()
-                val panel = WLayoutPanel().also {
+                val panel = WLayoutPanel(null).also {
                     it.width = 200.0
                     it.height = 100.0
                     it.add(kid)

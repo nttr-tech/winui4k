@@ -58,7 +58,7 @@ class WLayoutManagerTest : FunSpec() {
                 panel.maximumSize = WSize(300.0, 200.0)
                 panel.minimumSize shouldBe WSize(5.0, 6.0)
                 panel.maximumSize shouldBe WSize(300.0, 200.0)
-                val bare = WLayoutPanel()
+                val bare = WLayoutPanel(null)
                 bare.minimumSize shouldBe WSize(0.0, 0.0)
                 bare.maximumSize shouldBe WSize(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)
             }

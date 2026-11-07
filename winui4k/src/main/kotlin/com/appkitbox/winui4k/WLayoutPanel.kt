@@ -8,10 +8,11 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
 
 /**
- * JPanel-with-a-LayoutManager-like: a [WLayoutManager] (a Kotlin implementation) computes where
- * children are placed. It's built on a WinUI 3 Canvas (the only panel that doesn't auto-arrange
- * its children) — the manager's computed position is applied to each child via Canvas.SetLeft/
- * SetTop, and its computed size via Width/Height.
+ * JPanel-with-a-LayoutManager-like: a [WLayoutManager] (a Kotlin implementation) computes where children are placed. Created without arguments, it uses
+ * [WFlowLayout] (centered, gap 5), the same as `new JPanel()`. `WLayoutPanel(null)` is a panel without a manager (as with Swing's `new JPanel(null)`,
+ * the children's positions and sizes are decided by yourself with [setBounds] etc.).
+ * It's built on a WinUI 3 Canvas (the only panel that doesn't auto-arrange its children) — the manager's computed
+ * position is applied to each child via Canvas.SetLeft/SetTop, and its computed size via Width/Height.
  *
  * Canvas always reports its own DesiredSize as 0x0, so in contexts where the parent can't assign
  * it a size (e.g. inside a WPanel), [preferredSize] is applied to itself to determine its own
@@ -27,7 +28,7 @@ import java.lang.ref.WeakReference
  * As the content of a [WScrollPane] / [WScrollView], it gets the larger of the preferred size and the viewport, as with JViewport
  * (the preferred size is set as MinWidth / MinHeight to decide the scroll range, and it is stretched if smaller than the viewport).
  */
-class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = null) : WContainer(
+class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = WFlowLayout()) : WContainer(
     Activation.composeDefault(XamlInterop.CLS_Canvas, XamlInterop.IID_ICanvasFactory),
 ) {
     /** The layout manager that computes where children go. Replacing it triggers a re-layout. */
