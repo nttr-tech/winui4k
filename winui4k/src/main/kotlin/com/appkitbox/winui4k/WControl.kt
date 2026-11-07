@@ -103,6 +103,11 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
      * solid color brush).
      * Setting null clears the value and returns to the theme's default color (DependencyObject.ClearValue).
      * A button's [WButton.foreground] also changes the colors of the pointer-over and pressed visual states.
+     *
+     * The templates of text fields ([WTextField] / [WPasswordField] / [WTextPane] / [WAutoSuggestBox] / [WSpinner]) paint the text
+     * with theme resource colors instead of Control.Foreground when the pointer is over them and when they have focus. As with [background],
+     * TextControlForeground / TextControlForegroundPointerOver / TextControlForegroundFocused are put into the control's own Resources
+     * with the same color so these states use this color too (the text color of Swing's JTextField does not change with focus). The disabled look stays the theme default.
      */
     open var foreground: WColor?
         get() {
@@ -114,6 +119,9 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             }
         }
         set(value) {
+            if (isTextInput) {
+                if (value == null) TEXT_CONTROL_FOREGROUND_KEYS.remove(this) else TEXT_CONTROL_FOREGROUND_KEYS.put(this, value)
+            }
             if (value == null) {
                 clearControlProperty(XamlInterop.IControlStatics_get_ForegroundProperty)
                 return
@@ -153,10 +161,11 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
 
     /** The theme resource keys of the backgrounds per visual state into which the [background] color is put. */
     internal open val backgroundStateKeys: StateColorKeys
-        get() = when (this) {
-            is WTextField, is WPasswordField, is WTextPane, is WAutoSuggestBox, is WSpinner -> TEXT_CONTROL_BACKGROUND_KEYS
-            else -> StateColorKeys.NONE
-        }
+        get() = if (isTextInput) TEXT_CONTROL_BACKGROUND_KEYS else StateColorKeys.NONE
+
+    /** Whether this is a text field whose template decides the color of each visual state with TextControl* theme resources. */
+    private val isTextInput: Boolean
+        get() = this is WTextField || this is WPasswordField || this is WTextPane || this is WAutoSuggestBox || this is WSpinner
 
     /** The border last set to [border]. */
     private var borderValue: WControlBorder? = null
@@ -232,4 +241,9 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
  */
 private val TEXT_CONTROL_BACKGROUND_KEYS = StateColorKeys.uniform(
     listOf("TextControlBackground", "TextControlBackgroundPointerOver", "TextControlBackgroundFocused"),
+)
+
+/** The keys the text field template looks up for the text color in the normal, pointer-over and focused states (the disabled state is not included). */
+private val TEXT_CONTROL_FOREGROUND_KEYS = StateColorKeys.uniform(
+    listOf("TextControlForeground", "TextControlForegroundPointerOver", "TextControlForegroundFocused"),
 )

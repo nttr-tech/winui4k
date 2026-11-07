@@ -42,6 +42,13 @@
     チェック済みのまま表示している (Checked / CheckedNormal の Storyboard が動いている) ところへキーを入れても、状態を
     切り替えずに色が替わった (WToggleButtonColorTest で ToggleButton の文字色と CheckBox の背景色を確認。上のポインタが
     乗っている最中の Button とは違う結果なので、状態ごとに確かめること)
+- **TextBox などの入力欄: Control.Foreground を設定しても、ポインターが乗ったときとフォーカスを持ったときの文字は既定の色**
+  TextBox・PasswordBox・RichEditBox・AutoSuggestBox・NumberBox のテンプレートは、通常の状態の文字を描く ContentElement に
+  `Foreground="{TemplateBinding Foreground}"` を渡すが、PointerOver / Focused の Storyboard は ContentElement.Foreground を
+  `{ThemeResource TextControlForegroundPointerOver}` / `TextControlForegroundFocused` に替える (TextBox_themeresources.xaml)。
+  そのためローカル値だけでは、フォーカスのある入力欄の文字が黒 (明るいテーマで不透明度 0.89) のままになる。
+  背景の `TextControlBackground*` と同じく、コントロール自身の Resources にこのキーを入れると、Loaded の後でも状態を移るときに
+  拾われる (WControlForegroundTest。AutoSuggestBox と NumberBox は中の TextBox の状態で確認)
 - **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
   どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
   DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、
