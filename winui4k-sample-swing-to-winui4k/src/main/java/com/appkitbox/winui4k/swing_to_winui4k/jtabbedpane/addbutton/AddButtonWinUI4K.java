@@ -17,6 +17,7 @@ public class AddButtonWinUI4K {
             WTabView tabs = new WTabView();     // the "+" button appears when a listener is added
             Runnable newTab = () -> {
                 WTabViewItem tab = new WTabViewItem("Untitled " + (tabs.getTabCount() + 1));
+                tab.setClosable(true);
                 tab.setContent(new WLabel("New document"));
                 tabs.addTab(tab);
                 tabs.setSelectedIndex(tabs.getTabCount() - 1);

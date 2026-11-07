@@ -16,7 +16,8 @@ public class CloseWinUI4K {
 
             WTabView tabs = new WTabView();
             for (String name : new String[] {"a.txt", "b.txt", "c.txt"}) {
-                WTabViewItem tab = new WTabViewItem(name);  // has a close button by default
+                WTabViewItem tab = new WTabViewItem(name);
+                tab.setClosable(true);                      // show the close button
                 tab.setContent(new WLabel("Contents of " + name));
                 tabs.addTab(tab);
             }

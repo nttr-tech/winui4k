@@ -38,6 +38,9 @@ enum class TabViewWidthMode(internal val native: Int) {
  * A single JTabbedPane-tab-like: WinUI 3's TabViewItem.
  * Provides [header] (the tab's label) / [icon] / [isClosable] / [content] (what is shown when selected).
  * The tab's tooltip is set with [toolTipText] (corresponds to JTabbedPane's setToolTipTextAt), and whether it can be pressed with [isEnabled].
+ *
+ * The close button ([isClosable]) is not shown by default, as with JTabbedPane's tabs (the same as tabs created with [WTabView.addTab]).
+ * **Change from earlier versions**: tabs created with this constructor showed the close button, as WinUI's default.
  */
 class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     Activation.composeDefault(XamlInterop.CLS_TabViewItem, XamlInterop.IID_ITabViewItemFactory), // default interface = ITabViewItem
@@ -88,7 +91,10 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
         get() = Mnemonics.read(uiElement)
         set(value) = Mnemonics.write(uiElement, value)
 
-    /** Whether to show a close button on the tab (TabViewItem.IsClosable). WinUI's default is true. */
+    /**
+     * Whether to show the close button on the tab (TabViewItem.IsClosable). The default is false, the same as JTabbedPane (WinUI's default is true).
+     * TabView does not close tabs automatically, so when this is true, call [WTabView.removeTab] in [WTabView.addTabCloseRequestedListener].
+     */
     var isClosable: Boolean
         get() = inspectable.getBool(XamlInterop.ITabViewItem_get_IsClosable)
         set(value) = inspectable.putBool(XamlInterop.ITabViewItem_put_IsClosable, value)
@@ -112,6 +118,8 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
     internal var owningTabView: WeakReference<WTabView>? = null
 
     init {
+        // JTabbedPane's tabs have no close button, so it is not shown by default (the same as tabs created with [WTabView.addTab])
+        isClosable = false
         if (header.isNotEmpty()) this.header = header
     }
 }
@@ -128,8 +136,7 @@ class WTabViewItem @JvmOverloads constructor(header: String = "") : WControl(
  * The selection follows the same rules as Swing: adding the first tab selects it, adding or removing a tab before the selection shifts the selected index,
  * and removing the selected tab selects the tab at the same position (the previous one if it was last). Without tabs [selectedIndex] is -1.
  *
- * WinUI's defaults (the tabs' close buttons and reordering by dragging) are kept. Only tabs created with [addTab] / [insertTab], the same forms as Swing,
- * have no close button (because JTabbedPane's tabs have no close button).
+ * The tabs' close buttons are not shown, as with JTabbedPane (the default of [WTabViewItem.isClosable] is false). Reordering by dragging stays WinUI's default.
  * The "+" button is not in JTabbedPane, so it is not shown by default, and it appears when a listener is added with [addAddTabButtonClickListener]
  * (if [isAddTabButtonVisible] was set, that value is kept). **Change from earlier versions**: the "+" button was shown, as WinUI's default.
  * Combine with [WFrame.extendsContentIntoTitleBar] to place it in the title bar area.

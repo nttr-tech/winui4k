@@ -28,5 +28,17 @@ class WTabViewDefaultsTest : FunSpec() {
                 tabView.isAddTabButtonVisible
             }.shouldBeFalse()
         }
+
+        test("tabs of new WTabViewItem(title) also have no close button, as with addTab(title, component) and JTabbedPane. Setting true shows it") {
+            onUiThreadGet {
+                val tabView = WTabView()
+                val item = WTabViewItem("a")
+                tabView.addTab(item)
+                tabView.addTab("b", WLabel("b"))
+                val defaults = listOf(item.isClosable, tabView.getTab(1).isClosable)
+                item.isClosable = true
+                defaults to item.isClosable
+            } shouldBe (listOf(false, false) to true)
+        }
     }
 }

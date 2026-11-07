@@ -189,7 +189,7 @@ class WTabViewTest : FunSpec() {
                 // Make the width content-dependent so whether the close button is shown can be observed via actualWidth
                 tabView.horizontalAlignment = HorizontalAlignment.LEFT
                 tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
-                tabView.addTab(WTabViewItem("Tab 1"))
+                tabView.addTab(WTabViewItem("Tab 1").also { it.isClosable = true })
                 tabView.selectedIndex = 0
                 tabView
             }
@@ -502,7 +502,7 @@ class WTabViewTest : FunSpec() {
 
         test("after reordering by dragging, indexes refer to the native order, and the close button's index is the new position too") {
             val tabView = onUiThreadGet {
-                WTabView().also { tabView -> listOf("A", "B", "C").forEach { tabView.addTab(WTabViewItem(it)) } }
+                WTabView().also { tabView -> listOf("A", "B", "C").forEach { tabView.addTab(WTabViewItem(it).also { tab -> tab.isClosable = true }) } }
             }
             val result = withShown(tabView) {
                 val closeRequested = mutableListOf<Int>()
@@ -545,7 +545,7 @@ class WTabViewTest : FunSpec() {
 
             test("listeners removed with removeTabCloseRequestedListener and removeSelectionListener are not called") {
                 val tabView = onUiThreadGet {
-                    WTabView().also { tabView -> listOf("A", "B").forEach { tabView.addTab(WTabViewItem(it)) } }
+                    WTabView().also { tabView -> listOf("A", "B").forEach { tabView.addTab(WTabViewItem(it).also { tab -> tab.isClosable = true }) } }
                 }
                 val result = withShown(tabView) {
                     val closes = mutableListOf<Int>()

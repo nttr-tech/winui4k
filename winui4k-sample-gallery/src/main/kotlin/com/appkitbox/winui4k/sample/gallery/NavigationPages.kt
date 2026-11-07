@@ -229,6 +229,7 @@ private fun buildTabViewBasicExample(): WComponent {
         val content = WLabel("Tab $tabNumber's content")
         content.margin = 16.0
         val tab = WTabViewItem("Tab $tabNumber")
+        tab.isClosable = true // Show the close button (WTabViewItem does not show it by default, as with JTabbedPane)
         tab.content = content
         return tab
     }

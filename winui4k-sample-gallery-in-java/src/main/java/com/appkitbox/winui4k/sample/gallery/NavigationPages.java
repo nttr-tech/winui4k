@@ -259,6 +259,7 @@ final class NavigationPages {
             WLabel content = new WLabel("Tab " + tabNumber[0] + "'s content");
             content.setMargin(16.0);
             WTabViewItem tab = new WTabViewItem("Tab " + tabNumber[0]);
+            tab.setClosable(true); // Show the close button (WTabViewItem does not show it by default, as with JTabbedPane)
             tab.setContent(content);
             return tab;
         };
