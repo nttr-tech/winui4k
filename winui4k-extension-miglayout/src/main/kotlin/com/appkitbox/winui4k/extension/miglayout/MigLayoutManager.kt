@@ -49,7 +49,7 @@ import kotlin.math.roundToInt
  * panel.add(WTextField())
  * ```
  */
-class MigLayoutManager(
+class MigLayoutManager @JvmOverloads constructor(
     layoutConstraints: String = "",
     columnConstraints: String = "",
     rowConstraints: String = "",
