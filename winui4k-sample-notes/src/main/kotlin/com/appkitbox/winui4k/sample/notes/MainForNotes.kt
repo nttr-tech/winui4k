@@ -27,6 +27,7 @@ import com.appkitbox.winui4k.WTitleBar
 import com.appkitbox.winui4k.WUniformGridLayout
 import com.appkitbox.winui4k.WinUiUtilities
 import java.io.File
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,8 +36,14 @@ import java.util.Locale
 // Since this is an unpackaged app, notes are saved under the home directory
 private val storageDirectory = File(System.getProperty("user.home"), ".winui4k-notes").also { it.mkdirs() }
 
-/** The same "4/2/2025 3:27:02 PM" format as the official sample's Note.Date (DateTime.ToString()). */
-private val dateFormat = SimpleDateFormat("M/d/yyyy h:mm:ss a", Locale.US)
+/**
+ * As with Note.Date (DateTime.ToString()) of the original, the short date of the OS format locale (with a 4-digit year) and the time to the second
+ * (e.g. English (United States) "4/2/2025, 3:27:02 PM", Japanese "2025/04/02 15:27:02").
+ */
+private val dateFormat: DateFormat =
+    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM, Locale.getDefault(Locale.Category.FORMAT)).also {
+        if (it is SimpleDateFormat) it.applyPattern(it.toPattern().replace(Regex("y+"), "yyyy"))
+    }
 
 /** Whether the current theme is dark. Updated by the root element's ActualThemeChanged. */
 private var isDarkTheme = false
@@ -91,11 +98,11 @@ private fun loadAllNotes(): List<Note> {
 @Suppress("LongMethod") // Declarative UI-building sample code
 fun main() {
     WinUiUtilities.invokeLater {
-        val frame = WFrame(title = "WinUINotes")
+        val frame = WFrame(title = Messages.get("app.title"))
 
         // The official sample's MainWindow's TitleBar. The icon is Segoe Fluent Icons' QuickNote (U+F4AA)
         val titleBar = WTitleBar()
-        titleBar.title = "WinUI Notes"
+        titleBar.title = Messages.get("app.title")
         titleBar.iconGlyph = ""
         titleBar.isBackButtonVisible = true
         titleBar.isBackButtonEnabled = false // equivalent to rootFrame.CanGoBack
@@ -173,12 +180,12 @@ private fun buildAllNotesPage(
     onNoteInvoked: (Note) -> Unit,
 ): WComponent {
     // A heading equivalent to the official sample's SubtitleTextBlockStyle (20px SemiBold)
-    val heading = WLabel("Quick notes")
+    val heading = WLabel(Messages.get("page.notes.title"))
     heading.fontSize = 20.0
     heading.fontWeight = 600
     heading.setMargin(12.0, 8.0, 12.0, 8.0)
 
-    val newNoteButton = WAppBarButton("New note", Symbol.ADD)
+    val newNoteButton = WAppBarButton(Messages.get("page.notes.new"), Symbol.ADD)
     newNoteButton.addActionListener { onNewNote() }
 
     val commandBar = WCommandBar()
@@ -252,19 +259,19 @@ private fun buildNotePage(note: Note, onDelete: () -> Unit): WComponent {
     val editor = WTextField()
     editor.acceptsReturn = true
     editor.textWrapping = TextWrapping.WRAP
-    editor.placeholderText = "Enter your note"
+    editor.placeholderText = Messages.get("page.note.placeholder")
     editor.header = dateFormat.format(note.date)
     editor.maxWidth = 400.0
     editor.text = note.text
 
-    val saveButton = WButton("Save")
+    val saveButton = WButton(Messages.get("page.note.save"))
     saveButton.isAccent = true // matching the official sample's AccentButtonStyle
     saveButton.addActionListener {
         note.text = editor.text
         note.save()
     }
 
-    val deleteButton = WButton("Delete")
+    val deleteButton = WButton(Messages.get("page.note.delete"))
     deleteButton.addActionListener {
         note.delete()
         onDelete()
