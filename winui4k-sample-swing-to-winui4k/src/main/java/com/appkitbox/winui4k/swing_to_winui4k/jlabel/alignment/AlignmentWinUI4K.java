@@ -1,6 +1,6 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jlabel.alignment;
 
-import com.appkitbox.winui4k.TextAlignment;
+import com.appkitbox.winui4k.HorizontalAlignment;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -16,9 +16,9 @@ public class AlignmentWinUI4K {
 
             WLabel left = new WLabel("Left");                      // LEFT by default
             WLabel center = new WLabel("Center");
-            center.setTextAlignment(TextAlignment.CENTER);
+            center.setHorizontalAlignment(HorizontalAlignment.CENTER);
             WLabel right = new WLabel("Right");
-            right.setTextAlignment(TextAlignment.RIGHT);
+            right.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             for (WLabel label : new WLabel[] {left, center, right}) {
                 label.setPreferredSize(new WSize(300, 24));
             }

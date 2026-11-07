@@ -30,7 +30,7 @@ public class TitleBarWinUI4K {
             root.addRow(GridLength.star());
             root.add(titleBar, 0, 0);
             WLabel content = new WLabel("The content starts right below the title bar");
-            content.setVerticalAlignmentInParent(VerticalAlignment.TOP);   // a stretched label is centered vertically
+            content.setVerticalAlignment(VerticalAlignment.TOP);   // a stretched label is centered vertically
             root.add(content, 1, 0);
 
             frame.setContentPane(root);
