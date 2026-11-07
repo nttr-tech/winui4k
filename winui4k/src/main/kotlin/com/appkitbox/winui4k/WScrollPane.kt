@@ -13,6 +13,7 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -241,7 +242,9 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
             replaceChild(field, value)
             field = value
             alignContentForHeaders()
-            inspectable.call(XamlInterop.IScrollViewer_put_TopHeader, value?.uiElement?.ptr)
+            if (value != null || columnHeaderBand != null) columnBand().setChild(value)
+            inspectable.call(XamlInterop.IScrollViewer_put_TopHeader, value?.let { columnBand().uiElement.ptr })
+            updateCorner()
         }
 
     /**
@@ -252,7 +255,9 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
             replaceChild(field, value)
             field = value
             alignContentForHeaders()
-            inspectable.call(XamlInterop.IScrollViewer_put_LeftHeader, value?.uiElement?.ptr)
+            if (value != null || rowHeaderBand != null) rowBand().setChild(value)
+            inspectable.call(XamlInterop.IScrollViewer_put_LeftHeader, value?.let { rowBand().uiElement.ptr })
+            updateCorner()
         }
 
     /** The top-left corner (ScrollViewer.TopLeftHeader). */
@@ -261,8 +266,87 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
             replaceChild(field, value)
             field = value
             alignContentForHeaders()
-            inspectable.call(XamlInterop.IScrollViewer_put_TopLeftHeader, value?.uiElement?.ptr)
+            updateCorner()
         }
+
+    /** A reference that weakly refers to this. Captured by the SizeChanged handlers of the bands and the content (capturing this strongly would form a cycle with the native side and prevent collection). */
+    private val weakSelf = WeakReference(this)
+
+    /** The band holding the column header ([ScrollHeaderBand]). Created when a column header is first set. */
+    private var columnHeaderBand: ScrollHeaderBand? = null
+
+    /** The band holding the row header. */
+    private var rowHeaderBand: ScrollHeaderBand? = null
+
+    /** The band holding the top-left corner (even without a corner component, it is placed empty when there are both column and row headers, to hide the headers and content passing under it). */
+    private var cornerBand: ScrollHeaderBand? = null
+
+    private fun columnBand(): ScrollHeaderBand = columnHeaderBand ?: newBand(horizontal = true).also { columnHeaderBand = it }
+
+    private fun rowBand(): ScrollHeaderBand = rowHeaderBand ?: newBand(horizontal = false).also { rowHeaderBand = it }
+
+    private fun newBand(horizontal: Boolean): ScrollHeaderBand {
+        val self = weakSelf
+        return ScrollHeaderBand(this, horizontal) { self.get()?.fitHeaderBands() }
+    }
+
+    /** Places the top-left corner band when there is a corner component or both column and row headers, and removes it otherwise. */
+    private fun updateCorner() {
+        val corner = upperLeadingCorner
+        val shown = corner != null || (columnHeaderView != null && rowHeaderView != null)
+        if (shown || cornerBand != null) {
+            val band = cornerBand ?: newBand(horizontal = false).also { cornerBand = it }
+            band.setChild(corner)
+        }
+        inspectable.call(XamlInterop.IScrollViewer_put_TopLeftHeader, if (shown) cornerBand?.uiElement?.ptr else null)
+        watchSizes()
+        fitHeaderBands()
+    }
+
+    /** Whether this subscribes to its own SizeChanged. */
+    private var watchingOwnSize = false
+
+    /** The content whose SizeChanged is subscribed, and the token of that subscription. */
+    private var watchedContent: WComponent? = null
+    private var watchedContentToken = 0L
+
+    /**
+     * While there are headers, makes changes in the size of this and of the content call [fitHeaderBands] (moving the subscription when the content changes).
+     */
+    private fun watchSizes() {
+        val hasHeaders = columnHeaderView != null || rowHeaderView != null || upperLeadingCorner != null
+        if (!hasHeaders && watchedContent == null) return
+        val self = weakSelf
+        if (hasHeaders && !watchingOwnSize) {
+            watchingOwnSize = true
+            frameworkElement.addEventHandler(
+                "WinUI4K.ScrollPaneHeaderFitHandler",
+                XamlInterop.IID_SizeChangedEventHandler,
+                XamlInterop.IFrameworkElement_add_SizeChanged,
+            ) { _, _ -> self.get()?.fitHeaderBands() }
+        }
+        val view = content
+        if (view === watchedContent) return
+        watchedContent?.frameworkElement?.removeEventHandler(XamlInterop.IFrameworkElement_remove_SizeChanged, watchedContentToken)
+        watchedContent = view
+        watchedContentToken = view?.frameworkElement?.addEventHandler(
+            "WinUI4K.ScrollPaneHeaderFitHandler",
+            XamlInterop.IID_SizeChangedEventHandler,
+            XamlInterop.IFrameworkElement_add_SizeChanged,
+        ) { _, _ -> self.get()?.fitHeaderBands() } ?: 0L
+    }
+
+    /**
+     * Expands the header bands to sizes that can hide the content passing under the headers: the column header band to the width of the content and the viewport, the row header band to the height of the content and
+     * the viewport, and the top-left corner band to the width of the row header band and the height of the column header band (the headers scroll horizontally and vertically with the content).
+     */
+    private fun fitHeaderBands() {
+        val column = columnHeaderBand?.takeIf { columnHeaderView != null }
+        val row = rowHeaderBand?.takeIf { rowHeaderView != null }
+        column?.setMinimumSize(maxOf(actualWidth, inspectable.getDouble(XamlInterop.IScrollViewer_get_ExtentWidth)), 0.0)
+        row?.setMinimumSize(0.0, maxOf(actualHeight, inspectable.getDouble(XamlInterop.IScrollViewer_get_ExtentHeight)))
+        cornerBand?.setMinimumSize(row?.actualWidth ?: 0.0, column?.actualHeight ?: 0.0)
+    }
 
     /**
      * When there is a header or a corner, aligns the content to the top-left (HorizontalAlignment = Left, VerticalAlignment = Top). With headers, ScrollViewer
@@ -441,6 +525,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
+            watchSizes()
         }
 
     override fun detachChild(child: WComponent) {
