@@ -137,7 +137,7 @@ public class MainForGallery {
             }
 
             // Puts a page search box in the center of the title bar, same as the official Gallery (the width of 580 matches its MaxWidth too)
-            WAutoSuggestBox searchBox = new WAutoSuggestBox("Search controls and samples...");
+            WAutoSuggestBox searchBox = new WAutoSuggestBox(Messages.get("main.search.placeholder"));
             searchBox.setWidth(580.0);
             searchBox.setQueryIcon(Symbol.FIND); // the same magnifier as the official QueryIcon="Find"
             titleBar.setContent(searchBox);

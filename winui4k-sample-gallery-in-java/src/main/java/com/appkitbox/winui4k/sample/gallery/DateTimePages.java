@@ -34,8 +34,7 @@ final class DateTimePages {
     static WComponent buildCalendarDatePickerPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "CalendarDatePicker",
-                "A picker that selects a single date from a calendar drop-down. "
-                        + "Header sets the label, and PlaceholderText sets the text shown when nothing is selected.");
+                Messages.get("calendardatepicker.description"));
 
         page.add(buildCalendarDatePickerExample());
         return page;
@@ -47,22 +46,22 @@ final class DateTimePages {
         picker.setHeader("Calendar");
         picker.setPlaceholderText("Pick a date");
 
-        WLabel result = new WLabel("Selected date: (none)");
+        WLabel result = new WLabel(Messages.get("calendardatepicker.result.none"));
         result.setForeground(GalleryTheme.TEXT_SECONDARY());
         result.setTextWrapping(TextWrapping.WRAP);
 
         picker.addDateChangedListener(date -> {
             if (date != null) {
-                result.setText("Selected date: " + date.format(DateTimeFormatter.ISO_LOCAL_DATE));
+                result.setText(Messages.get("calendardatepicker.result.selected", date.format(DateTimeFormatter.ISO_LOCAL_DATE)));
             } else {
-                result.setText("Selected date: (none)");
+                result.setText(Messages.get("calendardatepicker.result.none"));
             }
         });
 
         WPanel body = new WPanel(12.0);
         body.add(picker);
         body.add(result);
-        return GalleryScaffold.buildExample("Header and PlaceholderText (Header / PlaceholderText / DateChanged)", body);
+        return GalleryScaffold.buildExample(Messages.get("calendardatepicker.example.header.title"), body);
     }
 
     // endregion
@@ -73,9 +72,7 @@ final class DateTimePages {
     static WComponent buildCalendarViewPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "CalendarView",
-                "A control that shows a calendar at all times and lets you select dates. "
-                        + "SelectionMode switches the selection style, and DisplayMode switches between "
-                        + "month / year / decade views.");
+                Messages.get("calendarview.description"));
 
         page.add(buildCalendarViewExample());
         return page;
@@ -139,7 +136,7 @@ final class DateTimePages {
         options.add(calendarIdCombo);
 
         return GalleryScaffold.buildExample(
-                "Displaying a calendar (SelectionMode / IsGroupLabelVisible / IsOutOfScopeEnabled / CalendarIdentifier)",
+                Messages.get("calendarview.example.calendar.title"),
                 body,
                 options);
     }
@@ -152,8 +149,7 @@ final class DateTimePages {
     static WComponent buildDatePickerPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "DatePicker",
-                "A picker that selects a date via day / month / year spinners. "
-                        + "Header sets the label, and DayFormat customizes the spinner's display format.");
+                Messages.get("datepicker.description"));
 
         page.add(buildDatePickerSimpleExample());
         page.add(buildDatePickerCustomFormatExample());
@@ -167,7 +163,7 @@ final class DateTimePages {
 
         WPanel body = new WPanel(12.0);
         body.add(picker);
-        return GalleryScaffold.buildExample("A DatePicker with a Header (Header)", body);
+        return GalleryScaffold.buildExample(Messages.get("datepicker.example.header.title"), body);
     }
 
     /** A custom DayFormat + YearVisible=false + MinYear/MaxYear constraints. */
@@ -185,7 +181,7 @@ final class DateTimePages {
 
         picker.addSelectedDateChangedListener(date -> {
             if (date != null) {
-                result.setText("Selected: " + date.format(DateTimeFormatter.ISO_LOCAL_DATE));
+                result.setText(Messages.get("datepicker.result.selected", date.format(DateTimeFormatter.ISO_LOCAL_DATE)));
             } else {
                 result.setText("");
             }
@@ -215,13 +211,13 @@ final class DateTimePages {
         });
 
         WPanel options = new WPanel(12.0);
-        options.add(GalleryScaffold.optionsLabel("Toggle which columns are shown with the checkboxes."));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("datepicker.options.columns")));
         options.add(dayVisibleCheck);
         options.add(monthVisibleCheck);
         options.add(yearVisibleCheck);
 
         return GalleryScaffold.buildExample(
-                "A custom format and constraints (DayFormat / YearVisible / MinYear / MaxYear / SelectedDateChanged)",
+                Messages.get("datepicker.example.customformat.title"),
                 body,
                 options);
     }
@@ -234,9 +230,7 @@ final class DateTimePages {
     static WComponent buildTimePickerPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "TimePicker",
-                "A picker that selects a time via hour / minute spinners. "
-                        + "ClockIdentifier switches between 12-hour and 24-hour notation, and MinuteIncrement "
-                        + "sets the step of the minutes.");
+                Messages.get("timepicker.description"));
 
         page.add(buildTimePickerSimpleExample());
         page.add(buildTimePickerOptionsExample());
@@ -249,7 +243,7 @@ final class DateTimePages {
 
         WPanel body = new WPanel(12.0);
         body.add(picker);
-        return GalleryScaffold.buildExample("The default TimePicker", body);
+        return GalleryScaffold.buildExample(Messages.get("timepicker.example.default.title"), body);
     }
 
     /** Header + MinuteIncrement + ClockIdentifier switched via Options. */
@@ -265,7 +259,7 @@ final class DateTimePages {
 
         picker.addSelectedTimeChangedListener(time -> {
             if (time != null) {
-                result.setText("Selected: " + time.format(DateTimeFormatter.ofPattern("HH:mm")));
+                result.setText(Messages.get("timepicker.result.selected", time.format(DateTimeFormatter.ofPattern("HH:mm"))));
             } else {
                 result.setText("");
             }
@@ -303,7 +297,7 @@ final class DateTimePages {
         options.add(minuteIncrementCombo);
 
         return GalleryScaffold.buildExample(
-                "Header and the step (Header / ClockIdentifier / MinuteIncrement / SelectedTimeChanged)",
+                Messages.get("timepicker.example.options.title"),
                 body,
                 options);
     }

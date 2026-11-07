@@ -37,8 +37,7 @@ final class ShellPages {
     static WComponent buildAppNotificationPage() {
         WPanel page = GalleryScaffold.buildPage(
             "AppNotification",
-            "A notification shown in the Action Center and as a toast popup. "
-                + "Try out WAppNotification / WAppNotificationManager's various features.");
+            Messages.get("appnotification.description"));
 
         page.add(buildNotificationStatusExample());
         page.add(buildSimpleNotificationExample());
@@ -59,15 +58,15 @@ final class ShellPages {
     /** Whether notifications are usable in this environment: isSupported / setting. */
     private static WComponent buildNotificationStatusExample() {
         WLabel supported = new WLabel("IsSupported: " + WAppNotificationManager.isSupported());
-        WLabel setting = new WLabel("Setting: not fetched yet");
+        WLabel setting = new WLabel(Messages.get("appnotification.setting.notloaded"));
 
-        WButton refreshButton = new WButton("Fetch Setting");
+        WButton refreshButton = new WButton(Messages.get("appnotification.button.getsetting"));
         refreshButton.addActionListener(() -> {
             String text;
             try {
                 text = "Setting: " + WAppNotificationManager.getSetting();
             } catch (Exception e) {
-                text = "Failed to fetch Setting: " + e.getMessage();
+                text = Messages.get("appnotification.setting.failed", e.getMessage());
             }
             setting.setText(text);
         });
@@ -76,23 +75,23 @@ final class ShellPages {
         body.add(supported);
         body.add(setting);
         body.add(refreshButton);
-        return GalleryScaffold.buildExample("Whether notifications are usable in this environment (IsSupported / Setting)", body);
+        return GalleryScaffold.buildExample(Messages.get("appnotification.example.status.title"), body);
     }
 
     /** A basic notification: a 2-line body + attribution text + display duration. */
     private static WComponent buildSimpleNotificationExample() {
         WTextField titleField = new WTextField();
-        titleField.setPlaceholderText("Line 1 (title)");
+        titleField.setPlaceholderText(Messages.get("appnotification.field.title.placeholder"));
         titleField.setWidth(320.0);
-        titleField.setText("A notification from winui4k");
+        titleField.setText(Messages.get("appnotification.field.title.default"));
         WTextField bodyField = new WTextField();
-        bodyField.setPlaceholderText("Line 2 (body)");
+        bodyField.setPlaceholderText(Messages.get("appnotification.field.body.placeholder"));
         bodyField.setWidth(320.0);
-        bodyField.setText("A toast notification was sent from Kotlin.");
-        WCheckBox longDuration = new WCheckBox("Use a longer display duration (Duration.LONG)");
+        bodyField.setText(Messages.get("appnotification.field.body.default"));
+        WCheckBox longDuration = new WCheckBox(Messages.get("appnotification.check.longduration"));
         WLabel result = new WLabel("");
 
-        WButton sendButton = new WButton("Send notification");
+        WButton sendButton = new WButton(Messages.get("appnotification.button.send"));
         sendButton.addActionListener(() -> {
             String message;
             try {
@@ -106,9 +105,9 @@ final class ShellPages {
                     notification.setDuration(NotificationDuration.LONG);
                 }
                 WAppNotificationManager.show(notification);
-                message = "Sent";
+                message = Messages.get("appnotification.result.sent");
             } catch (Exception e) {
-                message = "Failed to send: " + e.getMessage();
+                message = Messages.get("appnotification.result.failed", e.getMessage());
             }
             result.setText(message);
         });
@@ -120,7 +119,7 @@ final class ShellPages {
         body.add(sendButton);
         body.add(result);
         return GalleryScaffold.buildExample(
-            "A basic notification (AddText / SetAttributionText / SetTag / SetGroup / SetDuration)", body);
+            Messages.get("appnotification.example.simple.title"), body);
     }
 
     /** A notification with buttons and receiving clicks: AddArgument / AddButton / NotificationInvoked. */
@@ -132,27 +131,27 @@ final class ShellPages {
         }
         scenarioComboBox.setSelectedIndex(0);
 
-        WLabel received = new WLabel("Waiting for a click (clicking the notification body or a button delivers the argument here)");
+        WLabel received = new WLabel(Messages.get("appnotification.received.waiting"));
         WAppNotificationManager.addNotificationInvokedListener(argument -> {
-            received.setText("Received argument: " + argument);
+            received.setText(Messages.get("appnotification.received.argument", argument));
         });
 
-        WButton sendButton = new WButton("Send notification with buttons");
+        WButton sendButton = new WButton(Messages.get("appnotification.button.sendwithbuttons"));
         sendButton.addActionListener(() -> {
             String message;
             try {
                 ensureNotificationRegistered();
                 NotificationScenario scenario = NotificationScenario.values()[scenarioComboBox.getSelectedIndex()];
                 WAppNotificationManager.show(
-                    new WAppNotification("Want to reply?")
-                        .addText("Button clicks can be received on the app side.")
+                    new WAppNotification(Messages.get("appnotification.interactive.title"))
+                        .addText(Messages.get("appnotification.interactive.text"))
                         .addArgument("action", "open")
-                        .addButton("Approve", Collections.singletonMap("action", "approve"))
-                        .addButton("Reject", Collections.singletonMap("action", "reject"))
+                        .addButton(Messages.get("appnotification.interactive.approve"), Collections.singletonMap("action", "approve"))
+                        .addButton(Messages.get("appnotification.interactive.reject"), Collections.singletonMap("action", "reject"))
                         .setScenario(scenario));
-                message = "Sent. Click the notification";
+                message = Messages.get("appnotification.result.sentclick");
             } catch (Exception e) {
-                message = "Failed to send: " + e.getMessage();
+                message = Messages.get("appnotification.result.failed", e.getMessage());
             }
             received.setText(message);
         });
@@ -162,7 +161,7 @@ final class ShellPages {
         body.add(sendButton);
         body.add(received);
         return GalleryScaffold.buildExample(
-            "A notification with buttons and receiving clicks (AddButton / AddArgument / NotificationInvoked)", body);
+            Messages.get("appnotification.example.interactive.title"), body);
     }
 
     // endregion
@@ -173,8 +172,7 @@ final class ShellPages {
     static WComponent buildBadgeNotificationPage() {
         WPanel page = GalleryScaffold.buildPage(
             "BadgeNotification",
-            "A badge overlaid on the app's taskbar icon. Try out WBadgeNotification's various features. "
-                + "Badges can only be shown by an app with a package identity; setting one under an unpackaged run errors out.");
+            Messages.get("badgenotification.description"));
 
         page.add(buildBadgeCountExample());
         page.add(buildBadgeGlyphExample());
@@ -183,16 +181,16 @@ final class ShellPages {
 
     /** A numeric badge: SetBadgeAsCount / ClearBadge. */
     private static WComponent buildBadgeCountExample() {
-        WLabel result = new WLabel("Check the taskbar icon");
+        WLabel result = new WLabel(Messages.get("badgenotification.result.hint"));
 
-        WButton clearButton = new WButton("Clear");
+        WButton clearButton = new WButton(Messages.get("badgenotification.button.clear"));
         clearButton.addActionListener(() -> {
             String message;
             try {
                 WBadgeNotification.clear();
-                message = "Cleared the badge";
+                message = Messages.get("badgenotification.result.cleared");
             } catch (Exception e) {
-                message = "Failed to clear: " + e.getMessage();
+                message = Messages.get("badgenotification.result.clearfailed", e.getMessage());
             }
             result.setText(message);
         });
@@ -206,7 +204,7 @@ final class ShellPages {
         WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
-        return GalleryScaffold.buildExample("A numeric badge (SetBadgeAsCount / ClearBadge)", body);
+        return GalleryScaffold.buildExample(Messages.get("badgenotification.example.count.title"), body);
     }
 
     private static WButton countButton(int count, WLabel result) {
@@ -215,9 +213,11 @@ final class ShellPages {
             String message;
             try {
                 WBadgeNotification.setCount(count);
-                message = "Set the badge to " + count + (count > 99 ? " (100 and above shows as 99+)" : "");
+                message = count > 99
+                    ? Messages.get("badgenotification.result.setcapped", String.valueOf(count))
+                    : Messages.get("badgenotification.result.set", String.valueOf(count));
             } catch (Exception e) {
-                message = "Failed to set: " + e.getMessage();
+                message = Messages.get("badgenotification.result.setfailed", e.getMessage());
             }
             result.setText(message);
         });
@@ -234,15 +234,15 @@ final class ShellPages {
         glyphComboBox.setSelectedIndex(BadgeGlyph.NEW_MESSAGE.ordinal());
 
         WLabel result = new WLabel("");
-        WButton applyButton = new WButton("Set glyph");
+        WButton applyButton = new WButton(Messages.get("badgenotification.button.setglyph"));
         applyButton.addActionListener(() -> {
             BadgeGlyph glyph = BadgeGlyph.values()[glyphComboBox.getSelectedIndex()];
             String message;
             try {
                 WBadgeNotification.setGlyph(glyph);
-                message = "Set the badge to " + glyph;
+                message = Messages.get("badgenotification.result.set", glyph.toString());
             } catch (Exception e) {
-                message = "Failed to set: " + e.getMessage();
+                message = Messages.get("badgenotification.result.setfailed", e.getMessage());
             }
             result.setText(message);
         });
@@ -256,7 +256,7 @@ final class ShellPages {
         WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
-        return GalleryScaffold.buildExample("A status-glyph badge (SetBadgeAsGlyph)", body);
+        return GalleryScaffold.buildExample(Messages.get("badgenotification.example.glyph.title"), body);
     }
 
     // endregion
@@ -267,8 +267,7 @@ final class ShellPages {
     static WComponent buildJumpListPage() {
         WPanel page = GalleryScaffold.buildPage(
             "JumpList",
-            "Adds custom tasks or items to the menu shown when right-clicking the app's taskbar icon. "
-                + "Try out WJumpList / WJumpListItem's various features.");
+            Messages.get("jumplist.description"));
 
         // IsSupported can return true even for a run without a package identity, so verify it by actually loading
         Throwable loadFailure;
@@ -281,15 +280,12 @@ final class ShellPages {
             }
             loadFailure = failure;
         } else {
-            loadFailure = new IllegalStateException("JumpList.IsSupported is false");
+            loadFailure = new IllegalStateException(Messages.get("jumplist.unavailable.notsupported"));
         }
         if (loadFailure != null) {
-            WLabel message = new WLabel(
-                "Jump lists only work for an app with a package identity, so they don't work "
-                    + "under an unpackaged run (launching java.exe directly). "
-                    + "(" + loadFailure.getMessage() + ")");
+            WLabel message = new WLabel(Messages.get("jumplist.unavailable.message", loadFailure.getMessage()));
             message.setTextWrapping(TextWrapping.WRAP);
-            page.add(GalleryScaffold.buildExample("Not usable in this environment", message));
+            page.add(GalleryScaffold.buildExample(Messages.get("jumplist.unavailable.title"), message));
             return page;
         }
 
@@ -300,41 +296,41 @@ final class ShellPages {
     /** Adding an item, removing all, saving, and the current item list. */
     private static WComponent buildJumpListEditExample() {
         WTextField nameField = new WTextField();
-        nameField.setPlaceholderText("DisplayName");
+        nameField.setPlaceholderText(Messages.get("jumplist.field.name.placeholder"));
         nameField.setWidth(320.0);
-        nameField.setText("New document");
+        nameField.setText(Messages.get("jumplist.field.name.default"));
         WTextField argumentsField = new WTextField();
-        argumentsField.setPlaceholderText("Arguments (launch arguments)");
+        argumentsField.setPlaceholderText(Messages.get("jumplist.field.arguments.placeholder"));
         argumentsField.setWidth(320.0);
         argumentsField.setText("/new");
 
         WLabel itemsLabel = new WLabel("");
         WLabel result = new WLabel("");
 
-        WButton addButton = new WButton("Add item and save");
+        WButton addButton = new WButton(Messages.get("jumplist.button.add"));
         addButton.addActionListener(() -> {
             edit(jumpList -> {
                 WJumpListItem item = WJumpListItem.of(argumentsField.getText(), nameField.getText());
-                item.setDescription("An item added by WinUI4K Gallery");
+                item.setDescription(Messages.get("jumplist.item.description"));
                 item.setGroupName("Gallery");
                 jumpList.add(item);
-                return "Added. Right-click the taskbar icon to check";
+                return Messages.get("jumplist.result.added");
             }, result, itemsLabel);
         });
 
-        WButton separatorButton = new WButton("Add separator and save");
+        WButton separatorButton = new WButton(Messages.get("jumplist.button.addseparator"));
         separatorButton.addActionListener(() -> {
             edit(jumpList -> {
                 jumpList.add(WJumpListItem.separator());
-                return "Added a separator";
+                return Messages.get("jumplist.result.separatoradded");
             }, result, itemsLabel);
         });
 
-        WButton clearButton = new WButton("Remove all items and save");
+        WButton clearButton = new WButton(Messages.get("jumplist.button.clear"));
         clearButton.addActionListener(() -> {
             edit(jumpList -> {
                 jumpList.removeAll();
-                return "Removed all items";
+                return Messages.get("jumplist.result.cleared");
             }, result, itemsLabel);
         });
 
@@ -355,7 +351,7 @@ final class ShellPages {
         body.add(itemsLabel);
         body.add(result);
         return GalleryScaffold.buildExample(
-            "Editing items (Items / SaveAsync / CreateWithArguments / CreateSeparator)", body);
+            Messages.get("jumplist.example.edit.title"), body);
     }
 
     private static void refreshItems(WJumpList jumpList, WLabel itemsLabel) {
@@ -365,8 +361,8 @@ final class ShellPages {
         }
         itemsLabel.setText(
             names.isEmpty()
-                ? "No custom items"
-                : "Current items: " + String.join(" / ", names));
+                ? Messages.get("jumplist.items.none")
+                : Messages.get("jumplist.items.current", String.join(" / ", names)));
     }
 
     private static void edit(Function<WJumpList, String> block, WLabel result, WLabel itemsLabel) {
@@ -378,7 +374,7 @@ final class ShellPages {
             refreshItems(jumpList, itemsLabel);
             message = text;
         } catch (Exception e) {
-            message = "Operation failed: " + e.getMessage();
+            message = Messages.get("jumplist.result.failed", e.getMessage());
         }
         result.setText(message);
     }

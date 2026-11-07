@@ -34,7 +34,7 @@ final class NavigationPages {
     static WComponent buildNavigationViewPage() {
         WPanel page = GalleryScaffold.buildPage(
             "NavigationView",
-            "A control that provides an app's top-level navigation. Try out WNavigationView's various features.");
+            Messages.get("navigationview.description"));
 
         page.add(buildSimpleNavigationViewExample());
         page.add(buildNavigationViewPaneExample());
@@ -44,7 +44,7 @@ final class NavigationPages {
 
     /** Basic navigation: items with icons, and responding to selection changes (SelectionChanged). */
     private static WComponent buildSimpleNavigationViewExample() {
-        WLabel contentLabel = new WLabel("Showing Home");
+        WLabel contentLabel = new WLabel(Messages.get("navigationview.simple.showing", Messages.get("navigationview.item.home")));
         contentLabel.setMargin(16.0);
 
         WNavigationView navigationView = new WNavigationView();
@@ -57,20 +57,20 @@ final class NavigationPages {
         navigationView.setBackButtonVisible(NavigationViewBackButtonVisible.COLLAPSED);
         navigationView.setContent(contentLabel);
 
-        WNavigationViewItem home = new WNavigationViewItem("Home", Symbol.HOME);
+        WNavigationViewItem home = new WNavigationViewItem(Messages.get("navigationview.item.home"), Symbol.HOME);
         navigationView.addItem(home);
-        navigationView.addItem(new WNavigationViewItem("Mail", Symbol.MAIL));
-        navigationView.addItem(new WNavigationViewItem("Calendar", Symbol.CALENDAR));
-        navigationView.addFooterItem(new WNavigationViewItem("Help", Symbol.HELP));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.mail"), Symbol.MAIL));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.calendar"), Symbol.CALENDAR));
+        navigationView.addFooterItem(new WNavigationViewItem(Messages.get("navigationview.item.help"), Symbol.HELP));
 
         navigationView.addSelectionListener(item -> {
             if (item != null) {
-                contentLabel.setText("Showing " + item.getText());
+                contentLabel.setText(Messages.get("navigationview.simple.showing", item.getText()));
             }
         });
         navigationView.setSelectedItem(home);
 
-        return GalleryScaffold.buildExample("Simple navigation (MenuItems / Icon / SelectionChanged)", navigationView);
+        return GalleryScaffold.buildExample(Messages.get("navigationview.example.simple.title"), navigationView);
     }
 
     /** Controlling the pane: open/close, title, placement, and showing the settings item. */
@@ -80,22 +80,22 @@ final class NavigationPages {
         navigationView.setHeight(280.0);
         navigationView.setOpenPaneLength(180.0);
         navigationView.setPaneDisplayMode(NavigationViewPaneDisplayMode.LEFT);
-        navigationView.setPaneTitle("Menu");
+        navigationView.setPaneTitle(Messages.get("navigationview.pane.title"));
         navigationView.setBackButtonVisible(NavigationViewBackButtonVisible.COLLAPSED);
-        WLabel contentLabel = new WLabel("Content area");
+        WLabel contentLabel = new WLabel(Messages.get("navigationview.content"));
         contentLabel.setMargin(16.0);
         navigationView.setContent(contentLabel);
 
-        navigationView.addItem(new WNavigationViewItem("Documents", Symbol.DOCUMENT));
-        navigationView.addItem(new WNavigationViewItem("Pictures", Symbol.PICTURES));
-        navigationView.addItem(new WNavigationViewItem("Music", Symbol.AUDIO));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.documents"), Symbol.DOCUMENT));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.pictures"), Symbol.PICTURES));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.music"), Symbol.AUDIO));
 
-        WButton toggleButton = new WButton("Toggle pane");
+        WButton toggleButton = new WButton(Messages.get("navigationview.button.togglepane"));
         toggleButton.addActionListener(() -> {
             navigationView.setPaneOpen(!navigationView.isPaneOpen());
         });
 
-        WButton settingsButton = new WButton("Toggle settings item");
+        WButton settingsButton = new WButton(Messages.get("navigationview.button.togglesettings"));
         settingsButton.addActionListener(() -> {
             navigationView.setSettingsVisible(!navigationView.isSettingsVisible());
         });
@@ -118,12 +118,12 @@ final class NavigationPages {
         body.add(navigationView);
         body.add(buttons);
         body.add(modeButtons);
-        return GalleryScaffold.buildExample("Controlling the pane (IsPaneOpen / PaneTitle / PaneDisplayMode / IsSettingsVisible)", body);
+        return GalleryScaffold.buildExample(Messages.get("navigationview.example.pane.title"), body);
     }
 
     /** A hierarchical menu: nests child items under a parent item, and also responds to clicks (ItemInvoked). */
     private static WComponent buildHierarchicalNavigationViewExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("navigationview.invoked.none"));
 
         WNavigationView navigationView = new WNavigationView();
         navigationView.setWidth(480.0);
@@ -132,28 +132,28 @@ final class NavigationPages {
         navigationView.setPaneDisplayMode(NavigationViewPaneDisplayMode.LEFT);
         navigationView.setSettingsVisible(false);
         navigationView.setBackButtonVisible(NavigationViewBackButtonVisible.COLLAPSED);
-        WLabel contentLabel = new WLabel("Content area");
+        WLabel contentLabel = new WLabel(Messages.get("navigationview.content"));
         contentLabel.setMargin(16.0);
         navigationView.setContent(contentLabel);
 
-        navigationView.addItem(new WNavigationViewItem("Home", Symbol.HOME));
+        navigationView.addItem(new WNavigationViewItem(Messages.get("navigationview.item.home"), Symbol.HOME));
 
         // The parent item isn't selectable (SelectsOnInvoked=false); it only toggles its children open/closed
-        WNavigationViewItem documents = new WNavigationViewItem("Documents", Symbol.FOLDER);
+        WNavigationViewItem documents = new WNavigationViewItem(Messages.get("navigationview.item.documents"), Symbol.FOLDER);
         documents.setSelectsOnInvoked(false);
         documents.setExpanded(true);
-        documents.addItem(new WNavigationViewItem("Specs"));
-        documents.addItem(new WNavigationViewItem("Meeting notes"));
+        documents.addItem(new WNavigationViewItem(Messages.get("navigationview.item.specs")));
+        documents.addItem(new WNavigationViewItem(Messages.get("navigationview.item.minutes")));
         navigationView.addItem(documents);
 
         navigationView.addItemInvokedListener(name -> {
-            result.setText("Clicked: " + name);
+            result.setText(Messages.get("navigationview.invoked", name));
         });
 
         WPanel body = new WPanel(8.0);
         body.add(navigationView);
         body.add(result);
-        return GalleryScaffold.buildExample("A hierarchical menu and clicks (nested MenuItems / IsExpanded / ItemInvoked)", body);
+        return GalleryScaffold.buildExample(Messages.get("navigationview.example.hierarchical.title"), body);
     }
 
     // endregion
@@ -164,7 +164,7 @@ final class NavigationPages {
     static WComponent buildBreadcrumbBarPage() {
         WPanel page = GalleryScaffold.buildPage(
             "BreadcrumbBar",
-            "A breadcrumb trail that shows your current position in a hierarchy and lets you jump back up it. Try out WBreadcrumbBar's various features.");
+            Messages.get("breadcrumbbar.description"));
 
         page.add(buildBreadcrumbBarClickExample());
         return page;
@@ -172,27 +172,31 @@ final class NavigationPages {
 
     /** Truncating the breadcrumb by clicking a level (ItemClicked). */
     private static WComponent buildBreadcrumbBarClickExample() {
-        List<String> fullPath = Arrays.asList("Home", "Documents", "2026", "Report");
-        WLabel result = new WLabel("Click a level to go back to it");
+        List<String> fullPath = Arrays.asList(
+            Messages.get("breadcrumbbar.item.home"),
+            Messages.get("breadcrumbbar.item.documents"),
+            Messages.get("breadcrumbbar.item.year"),
+            Messages.get("breadcrumbbar.item.reports"));
+        WLabel result = new WLabel(Messages.get("breadcrumbbar.result.hint"));
 
         WBreadcrumbBar breadcrumbBar = new WBreadcrumbBar();
         breadcrumbBar.setItems(fullPath);
         breadcrumbBar.addItemClickedListener(index -> {
             breadcrumbBar.setItems(fullPath.subList(0, index + 1));
-            result.setText("Clicked: " + fullPath.get(index) + " (index " + index + ")");
+            result.setText(Messages.get("breadcrumbbar.result.clicked", fullPath.get(index), String.valueOf(index)));
         });
 
-        WButton resetButton = new WButton("Reset the hierarchy");
+        WButton resetButton = new WButton(Messages.get("breadcrumbbar.button.reset"));
         resetButton.addActionListener(() -> {
             breadcrumbBar.setItems(fullPath);
-            result.setText("Hierarchy reset");
+            result.setText(Messages.get("breadcrumbbar.result.reset"));
         });
 
         WPanel body = new WPanel(8.0);
         body.add(breadcrumbBar);
         body.add(result);
         body.add(resetButton);
-        return GalleryScaffold.buildExample("Displaying and clicking the hierarchy (ItemsSource / ItemClicked)", body);
+        return GalleryScaffold.buildExample(Messages.get("breadcrumbbar.example.click.title"), body);
     }
 
     // endregion
@@ -203,7 +207,7 @@ final class NavigationPages {
     static WComponent buildSelectorBarPage() {
         WPanel page = GalleryScaffold.buildPage(
             "SelectorBar",
-            "A control for switching between a small number of options. Try out WSelectorBar's various features.");
+            Messages.get("selectorbar.description"));
 
         page.add(buildSelectorBarSelectionExample());
         return page;
@@ -211,16 +215,19 @@ final class NavigationPages {
 
     /** Switching the selection (SelectionChanged) and setting SelectedItem. */
     private static WComponent buildSelectorBarSelectionExample() {
-        WLabel result = new WLabel("Showing Recent");
+        WLabel result = new WLabel(Messages.get("selectorbar.result.showing", Messages.get("selectorbar.item.recent")));
 
         WSelectorBar selectorBar = new WSelectorBar();
-        List<String> labels = Arrays.asList("Recent", "Share", "Favorite");
+        List<String> labels = Arrays.asList(
+            Messages.get("selectorbar.item.recent"),
+            Messages.get("selectorbar.item.shared"),
+            Messages.get("selectorbar.item.favorites"));
         for (String label : labels) {
             selectorBar.addItem(new WSelectorBarItem(label));
         }
         selectorBar.addSelectionListener(index -> {
             if (index >= 0) {
-                result.setText("Showing " + labels.get(index));
+                result.setText(Messages.get("selectorbar.result.showing", labels.get(index)));
             }
         });
         selectorBar.setSelectedIndex(0);
@@ -228,7 +235,7 @@ final class NavigationPages {
         WPanel body = new WPanel(8.0);
         body.add(selectorBar);
         body.add(result);
-        return GalleryScaffold.buildExample("Switching the selection (Items / SelectedItem / SelectionChanged)", body);
+        return GalleryScaffold.buildExample(Messages.get("selectorbar.example.selection.title"), body);
     }
 
     // endregion
@@ -239,7 +246,7 @@ final class NavigationPages {
     static WComponent buildTabViewPage() {
         WPanel page = GalleryScaffold.buildPage(
             "TabView",
-            "A control that switches between multiple pages via tabs. Try out WTabView's various features.");
+            Messages.get("tabview.description"));
 
         page.add(buildTabViewBasicExample());
         return page;
@@ -247,7 +254,7 @@ final class NavigationPages {
 
     /** Adding, removing, and switching tabs (TabItems / AddTabButtonClick / TabCloseRequested / SelectionChanged). */
     private static WComponent buildTabViewBasicExample() {
-        WLabel result = new WLabel("Selecting Tab 1");
+        WLabel result = new WLabel(Messages.get("tabview.result.selected", Messages.get("tabview.tab.header", "1")));
 
         WTabView tabView = new WTabView();
         tabView.setWidth(480.0);
@@ -256,9 +263,9 @@ final class NavigationPages {
 
         Supplier<WTabViewItem> newTab = () -> {
             tabNumber[0]++;
-            WLabel content = new WLabel("Tab " + tabNumber[0] + "'s content");
+            WLabel content = new WLabel(Messages.get("tabview.tab.content", String.valueOf(tabNumber[0])));
             content.setMargin(16.0);
-            WTabViewItem tab = new WTabViewItem("Tab " + tabNumber[0]);
+            WTabViewItem tab = new WTabViewItem(Messages.get("tabview.tab.header", String.valueOf(tabNumber[0])));
             tab.setClosable(true); // Show the close button (WTabViewItem does not show it by default, as with JTabbedPane)
             tab.setContent(content);
             return tab;
@@ -282,14 +289,14 @@ final class NavigationPages {
         tabView.addSelectionListener(() -> {
             int index = tabView.getSelectedIndex();
             if (index >= 0) {
-                result.setText(tabView.getTab(index).getHeader());
+                result.setText(Messages.get("tabview.result.selected", tabView.getTab(index).getHeader()));
             }
         });
 
         WPanel body = new WPanel(8.0);
         body.add(tabView);
         body.add(result);
-        return GalleryScaffold.buildExample("Adding, removing, and switching tabs (TabItems / AddTabButtonClick / TabCloseRequested)", body);
+        return GalleryScaffold.buildExample(Messages.get("tabview.example.basic.title"), body);
     }
 
     // endregion

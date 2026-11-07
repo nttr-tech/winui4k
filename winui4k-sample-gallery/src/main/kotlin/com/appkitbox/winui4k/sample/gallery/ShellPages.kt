@@ -29,8 +29,7 @@ import com.appkitbox.winui4k.WTextField
 internal fun buildAppNotificationPage(): WComponent {
     val page = buildPage(
         "AppNotification",
-        "A notification shown in the Action Center and as a toast popup. " +
-            "Try out WAppNotification / WAppNotificationManager's various features.",
+        Messages.get("appnotification.description"),
     )
 
     page.add(buildNotificationStatusExample())
@@ -52,31 +51,31 @@ private fun ensureNotificationRegistered() {
 /** Whether notifications are usable in this environment: isSupported / setting. */
 private fun buildNotificationStatusExample(): WComponent {
     val supported = WLabel("IsSupported: ${WAppNotificationManager.isSupported}")
-    val setting = WLabel("Setting: not fetched yet")
+    val setting = WLabel(Messages.get("appnotification.setting.notloaded"))
 
-    val refreshButton = WButton("Fetch Setting")
+    val refreshButton = WButton(Messages.get("appnotification.button.getsetting"))
     refreshButton.addActionListener {
         setting.text = runCatching { "Setting: ${WAppNotificationManager.setting}" }
-            .getOrElse { "Failed to fetch Setting: ${it.message}" }
+            .getOrElse { Messages.get("appnotification.setting.failed", it.message) }
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(supported)
     body.add(setting)
     body.add(refreshButton)
-    return buildExample("Whether notifications are usable in this environment (IsSupported / Setting)", body)
+    return buildExample(Messages.get("appnotification.example.status.title"), body)
 }
 
 /** A basic notification: a 2-line body + attribution text + display duration. */
 private fun buildSimpleNotificationExample(): WComponent {
-    val titleField = WTextField().apply { placeholderText = "Line 1 (title)" }.also { it.width = 320.0 }
-    titleField.text = "A notification from winui4k"
-    val bodyField = WTextField().apply { placeholderText = "Line 2 (body)" }.also { it.width = 320.0 }
-    bodyField.text = "A toast notification was sent from Kotlin."
-    val longDuration = WCheckBox("Use a longer display duration (Duration.LONG)")
+    val titleField = WTextField().apply { placeholderText = Messages.get("appnotification.field.title.placeholder") }.also { it.width = 320.0 }
+    titleField.text = Messages.get("appnotification.field.title.default")
+    val bodyField = WTextField().apply { placeholderText = Messages.get("appnotification.field.body.placeholder") }.also { it.width = 320.0 }
+    bodyField.text = Messages.get("appnotification.field.body.default")
+    val longDuration = WCheckBox(Messages.get("appnotification.check.longduration"))
     val result = WLabel("")
 
-    val sendButton = WButton("Send notification")
+    val sendButton = WButton(Messages.get("appnotification.button.send"))
     sendButton.addActionListener {
         result.text = runCatching {
             ensureNotificationRegistered()
@@ -87,8 +86,8 @@ private fun buildSimpleNotificationExample(): WComponent {
                 .setGroup("gallery")
             if (longDuration.isChecked == true) notification.setDuration(NotificationDuration.LONG)
             WAppNotificationManager.show(notification)
-            "Sent"
-        }.getOrElse { "Failed to send: ${it.message}" }
+            Messages.get("appnotification.result.sent")
+        }.getOrElse { Messages.get("appnotification.result.failed", it.message) }
     }
 
     val body = WPanel(spacing = 8.0)
@@ -97,7 +96,7 @@ private fun buildSimpleNotificationExample(): WComponent {
     body.add(longDuration)
     body.add(sendButton)
     body.add(result)
-    return buildExample("A basic notification (AddText / SetAttributionText / SetTag / SetGroup / SetDuration)", body)
+    return buildExample(Messages.get("appnotification.example.simple.title"), body)
 }
 
 /** A notification with buttons and receiving clicks: AddArgument / AddButton / NotificationInvoked. */
@@ -107,33 +106,33 @@ private fun buildInteractiveNotificationExample(): WComponent {
     for (scenario in NotificationScenario.entries) scenarioComboBox.addItem(scenario.name)
     scenarioComboBox.selectedIndex = 0
 
-    val received = WLabel("Waiting for a click (clicking the notification body or a button delivers the argument here)")
+    val received = WLabel(Messages.get("appnotification.received.waiting"))
     WAppNotificationManager.addNotificationInvokedListener { argument ->
-        received.text = "Received argument: $argument"
+        received.text = Messages.get("appnotification.received.argument", argument)
     }
 
-    val sendButton = WButton("Send notification with buttons")
+    val sendButton = WButton(Messages.get("appnotification.button.sendwithbuttons"))
     sendButton.addActionListener {
         received.text = runCatching {
             ensureNotificationRegistered()
             val scenario = NotificationScenario.entries[scenarioComboBox.selectedIndex]
             WAppNotificationManager.show(
-                WAppNotification("Want to reply?")
-                    .addText("Button clicks can be received on the app side.")
+                WAppNotification(Messages.get("appnotification.interactive.title"))
+                    .addText(Messages.get("appnotification.interactive.text"))
                     .addArgument("action", "open")
-                    .addButton("Approve", "action" to "approve")
-                    .addButton("Reject", "action" to "reject")
+                    .addButton(Messages.get("appnotification.interactive.approve"), "action" to "approve")
+                    .addButton(Messages.get("appnotification.interactive.reject"), "action" to "reject")
                     .setScenario(scenario),
             )
-            "Sent. Click the notification"
-        }.getOrElse { "Failed to send: ${it.message}" }
+            Messages.get("appnotification.result.sentclick")
+        }.getOrElse { Messages.get("appnotification.result.failed", it.message) }
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(scenarioComboBox)
     body.add(sendButton)
     body.add(received)
-    return buildExample("A notification with buttons and receiving clicks (AddButton / AddArgument / NotificationInvoked)", body)
+    return buildExample(Messages.get("appnotification.example.interactive.title"), body)
 }
 
 // endregion
@@ -144,8 +143,7 @@ private fun buildInteractiveNotificationExample(): WComponent {
 internal fun buildBadgeNotificationPage(): WComponent {
     val page = buildPage(
         "BadgeNotification",
-        "A badge overlaid on the app's taskbar icon. Try out WBadgeNotification's various features. " +
-            "Badges can only be shown by an app with a package identity; setting one under an unpackaged run errors out.",
+        Messages.get("badgenotification.description"),
     )
 
     page.add(buildBadgeCountExample())
@@ -155,23 +153,27 @@ internal fun buildBadgeNotificationPage(): WComponent {
 
 /** A numeric badge: SetBadgeAsCount / ClearBadge. */
 private fun buildBadgeCountExample(): WComponent {
-    val result = WLabel("Check the taskbar icon")
+    val result = WLabel(Messages.get("badgenotification.result.hint"))
 
     fun countButton(count: Int) = WButton("$count").also { button ->
         button.addActionListener {
             result.text = runCatching {
                 WBadgeNotification.setCount(count)
-                "Set the badge to $count" + if (count > 99) " (100 and above shows as 99+)" else ""
-            }.getOrElse { "Failed to set: ${it.message}" }
+                if (count > 99) {
+                    Messages.get("badgenotification.result.setcapped", count.toString())
+                } else {
+                    Messages.get("badgenotification.result.set", count.toString())
+                }
+            }.getOrElse { Messages.get("badgenotification.result.setfailed", it.message) }
         }
     }
 
-    val clearButton = WButton("Clear")
+    val clearButton = WButton(Messages.get("badgenotification.button.clear"))
     clearButton.addActionListener {
         result.text = runCatching {
             WBadgeNotification.clear()
-            "Cleared the badge"
-        }.getOrElse { "Failed to clear: ${it.message}" }
+            Messages.get("badgenotification.result.cleared")
+        }.getOrElse { Messages.get("badgenotification.result.clearfailed", it.message) }
     }
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -183,7 +185,7 @@ private fun buildBadgeCountExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(row)
     body.add(result)
-    return buildExample("A numeric badge (SetBadgeAsCount / ClearBadge)", body)
+    return buildExample(Messages.get("badgenotification.example.count.title"), body)
 }
 
 /** A glyph badge: SetBadgeAsGlyph. */
@@ -194,13 +196,13 @@ private fun buildBadgeGlyphExample(): WComponent {
     glyphComboBox.selectedIndex = BadgeGlyph.NEW_MESSAGE.ordinal
 
     val result = WLabel("")
-    val applyButton = WButton("Set glyph")
+    val applyButton = WButton(Messages.get("badgenotification.button.setglyph"))
     applyButton.addActionListener {
         val glyph = BadgeGlyph.entries[glyphComboBox.selectedIndex]
         result.text = runCatching {
             WBadgeNotification.setGlyph(glyph)
-            "Set the badge to $glyph"
-        }.getOrElse { "Failed to set: ${it.message}" }
+            Messages.get("badgenotification.result.set", glyph.toString())
+        }.getOrElse { Messages.get("badgenotification.result.setfailed", it.message) }
     }
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -211,7 +213,7 @@ private fun buildBadgeGlyphExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(row)
     body.add(result)
-    return buildExample("A status-glyph badge (SetBadgeAsGlyph)", body)
+    return buildExample(Messages.get("badgenotification.example.glyph.title"), body)
 }
 
 // endregion
@@ -222,8 +224,7 @@ private fun buildBadgeGlyphExample(): WComponent {
 internal fun buildJumpListPage(): WComponent {
     val page = buildPage(
         "JumpList",
-        "Adds custom tasks or items to the menu shown when right-clicking the app's taskbar icon. " +
-            "Try out WJumpList / WJumpListItem's various features.",
+        Messages.get("jumplist.description"),
     )
 
     // IsSupported can return true even for a run without a package identity, so actually
@@ -231,16 +232,14 @@ internal fun buildJumpListPage(): WComponent {
     val loadFailure = if (WJumpList.isSupported) {
         runCatching { WJumpList.load() }.exceptionOrNull()
     } else {
-        IllegalStateException("JumpList.IsSupported is false")
+        IllegalStateException(Messages.get("jumplist.unavailable.notsupported"))
     }
     if (loadFailure != null) {
         page.add(
             buildExample(
-                "Not usable in this environment",
+                Messages.get("jumplist.unavailable.title"),
                 WLabel(
-                    "Jump lists only work for an app with a package identity, so they don't work " +
-                        "under an unpackaged run (launching java.exe directly). " +
-                        "(${loadFailure.message})",
+                    Messages.get("jumplist.unavailable.message", loadFailure.message),
                 ).also { it.textWrapping = TextWrapping.WRAP },
             ),
         )
@@ -253,9 +252,9 @@ internal fun buildJumpListPage(): WComponent {
 
 /** Adding an item, removing all, saving, and the current item list. */
 private fun buildJumpListEditExample(): WComponent {
-    val nameField = WTextField().apply { placeholderText = "DisplayName" }.also { it.width = 320.0 }
-    nameField.text = "New document"
-    val argumentsField = WTextField().apply { placeholderText = "Arguments (launch arguments)" }.also { it.width = 320.0 }
+    val nameField = WTextField().apply { placeholderText = Messages.get("jumplist.field.name.placeholder") }.also { it.width = 320.0 }
+    nameField.text = Messages.get("jumplist.field.name.default")
+    val argumentsField = WTextField().apply { placeholderText = Messages.get("jumplist.field.arguments.placeholder") }.also { it.width = 320.0 }
     argumentsField.text = "/new"
 
     val itemsLabel = WLabel("")
@@ -265,9 +264,9 @@ private fun buildJumpListEditExample(): WComponent {
         val names = jumpList.items.map { if (it.isSeparator) "――――" else it.displayName }
         itemsLabel.text =
             if (names.isEmpty()) {
-                "No custom items"
+                Messages.get("jumplist.items.none")
             } else {
-                "Current items: " + names.joinToString(" / ")
+                Messages.get("jumplist.items.current", names.joinToString(" / "))
             }
     }
 
@@ -278,33 +277,33 @@ private fun buildJumpListEditExample(): WComponent {
             jumpList.save()
             refreshItems(jumpList)
             message
-        }.getOrElse { "Operation failed: ${it.message}" }
+        }.getOrElse { Messages.get("jumplist.result.failed", it.message) }
     }
 
-    val addButton = WButton("Add item and save")
+    val addButton = WButton(Messages.get("jumplist.button.add"))
     addButton.addActionListener {
         edit { jumpList ->
             val item = WJumpListItem.of(argumentsField.text, nameField.text)
-            item.description = "An item added by WinUI4K Gallery"
+            item.description = Messages.get("jumplist.item.description")
             item.groupName = "Gallery"
             jumpList.add(item)
-            "Added. Right-click the taskbar icon to check"
+            Messages.get("jumplist.result.added")
         }
     }
 
-    val separatorButton = WButton("Add separator and save")
+    val separatorButton = WButton(Messages.get("jumplist.button.addseparator"))
     separatorButton.addActionListener {
         edit { jumpList ->
             jumpList.add(WJumpListItem.separator())
-            "Added a separator"
+            Messages.get("jumplist.result.separatoradded")
         }
     }
 
-    val clearButton = WButton("Remove all items and save")
+    val clearButton = WButton(Messages.get("jumplist.button.clear"))
     clearButton.addActionListener {
         edit { jumpList ->
             jumpList.removeAll()
-            "Removed all items"
+            Messages.get("jumplist.result.cleared")
         }
     }
 
@@ -321,7 +320,7 @@ private fun buildJumpListEditExample(): WComponent {
     body.add(buttons)
     body.add(itemsLabel)
     body.add(result)
-    return buildExample("Editing items (Items / SaveAsync / CreateWithArguments / CreateSeparator)", body)
+    return buildExample(Messages.get("jumplist.example.edit.title"), body)
 }
 
 // endregion

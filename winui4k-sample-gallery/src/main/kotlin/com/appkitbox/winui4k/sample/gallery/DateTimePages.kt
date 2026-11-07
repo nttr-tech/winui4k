@@ -28,8 +28,7 @@ import java.time.format.DateTimeFormatter
 internal fun buildCalendarDatePickerPage(): WComponent {
     val page = buildPage(
         "CalendarDatePicker",
-        "A picker that selects a single date from a calendar drop-down. " +
-            "Header sets the label, and PlaceholderText sets the text shown when nothing is selected.",
+        Messages.get("calendardatepicker.description"),
     )
 
     page.add(buildCalendarDatePickerExample())
@@ -42,22 +41,22 @@ private fun buildCalendarDatePickerExample(): WComponent {
     picker.header = "Calendar"
     picker.placeholderText = "Pick a date"
 
-    val result = WLabel("Selected date: (none)")
+    val result = WLabel(Messages.get("calendardatepicker.result.none"))
     result.foreground = TEXT_SECONDARY
     result.textWrapping = TextWrapping.WRAP
 
     picker.addDateChangedListener { date ->
         result.text = if (date != null) {
-            "Selected date: ${date.format(DateTimeFormatter.ISO_LOCAL_DATE)}"
+            Messages.get("calendardatepicker.result.selected", date.format(DateTimeFormatter.ISO_LOCAL_DATE))
         } else {
-            "Selected date: (none)"
+            Messages.get("calendardatepicker.result.none")
         }
     }
 
     val body = WPanel(spacing = 12.0)
     body.add(picker)
     body.add(result)
-    return buildExample("Header and PlaceholderText (Header / PlaceholderText / DateChanged)", body)
+    return buildExample(Messages.get("calendardatepicker.example.header.title"), body)
 }
 
 // endregion
@@ -68,9 +67,7 @@ private fun buildCalendarDatePickerExample(): WComponent {
 internal fun buildCalendarViewPage(): WComponent {
     val page = buildPage(
         "CalendarView",
-        "A control that shows a calendar at all times and lets you select dates. " +
-            "SelectionMode switches the selection style, and DisplayMode switches between " +
-            "month / year / decade views.",
+        Messages.get("calendarview.description"),
     )
 
     page.add(buildCalendarViewExample())
@@ -127,7 +124,7 @@ private fun buildCalendarViewExample(): WComponent {
     options.add(calendarIdCombo)
 
     return buildExample(
-        "Displaying a calendar (SelectionMode / IsGroupLabelVisible / IsOutOfScopeEnabled / CalendarIdentifier)",
+        Messages.get("calendarview.example.calendar.title"),
         body,
         options,
     )
@@ -141,8 +138,7 @@ private fun buildCalendarViewExample(): WComponent {
 internal fun buildDatePickerPage(): WComponent {
     val page = buildPage(
         "DatePicker",
-        "A picker that selects a date via day / month / year spinners. " +
-            "Header sets the label, and DayFormat customizes the spinner's display format.",
+        Messages.get("datepicker.description"),
     )
 
     page.add(buildDatePickerSimpleExample())
@@ -157,7 +153,7 @@ private fun buildDatePickerSimpleExample(): WComponent {
 
     val body = WPanel(spacing = 12.0)
     body.add(picker)
-    return buildExample("A DatePicker with a Header (Header)", body)
+    return buildExample(Messages.get("datepicker.example.header.title"), body)
 }
 
 /** A custom DayFormat + YearVisible=false + MinYear/MaxYear constraints. */
@@ -175,7 +171,7 @@ private fun buildDatePickerCustomFormatExample(): WComponent {
 
     picker.addSelectedDateChangedListener { date ->
         result.text = if (date != null) {
-            "Selected: ${date.format(DateTimeFormatter.ISO_LOCAL_DATE)}"
+            Messages.get("datepicker.result.selected", date.format(DateTimeFormatter.ISO_LOCAL_DATE))
         } else {
             ""
         }
@@ -199,13 +195,13 @@ private fun buildDatePickerCustomFormatExample(): WComponent {
     yearVisibleCheck.addItemListener { picker.yearVisible = it == true }
 
     val options = WPanel(spacing = 12.0)
-    options.add(optionsLabel("Toggle which columns are shown with the checkboxes."))
+    options.add(optionsLabel(Messages.get("datepicker.options.columns")))
     options.add(dayVisibleCheck)
     options.add(monthVisibleCheck)
     options.add(yearVisibleCheck)
 
     return buildExample(
-        "A custom format and constraints (DayFormat / YearVisible / MinYear / MaxYear / SelectedDateChanged)",
+        Messages.get("datepicker.example.customformat.title"),
         body,
         options,
     )
@@ -219,9 +215,7 @@ private fun buildDatePickerCustomFormatExample(): WComponent {
 internal fun buildTimePickerPage(): WComponent {
     val page = buildPage(
         "TimePicker",
-        "A picker that selects a time via hour / minute spinners. " +
-            "ClockIdentifier switches between 12-hour and 24-hour notation, and MinuteIncrement " +
-            "sets the minute step.",
+        Messages.get("timepicker.description"),
     )
 
     page.add(buildTimePickerSimpleExample())
@@ -235,7 +229,7 @@ private fun buildTimePickerSimpleExample(): WComponent {
 
     val body = WPanel(spacing = 12.0)
     body.add(picker)
-    return buildExample("The default TimePicker", body)
+    return buildExample(Messages.get("timepicker.example.default.title"), body)
 }
 
 /** Header + MinuteIncrement + ClockIdentifier switched via Options. */
@@ -251,7 +245,7 @@ private fun buildTimePickerOptionsExample(): WComponent {
 
     picker.addSelectedTimeChangedListener { time ->
         result.text = if (time != null) {
-            "Selected: ${time.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+            Messages.get("timepicker.result.selected", time.format(DateTimeFormatter.ofPattern("HH:mm")))
         } else {
             ""
         }
@@ -285,7 +279,7 @@ private fun buildTimePickerOptionsExample(): WComponent {
     options.add(minuteIncrementCombo)
 
     return buildExample(
-        "Header and the step (Header / ClockIdentifier / MinuteIncrement / SelectedTimeChanged)",
+        Messages.get("timepicker.example.options.title"),
         body,
         options,
     )

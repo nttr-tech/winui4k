@@ -111,9 +111,8 @@ fun main() {
             frame.appWindow.setIcon(iconFile.absolutePath)
         }
 
-        // Like the real Gallery, put a page search box in the middle of the title bar
-        // (width 580 also matches the real Gallery's MaxWidth)
-        val searchBox = WAutoSuggestBox("Search controls and samples...")
+        // Like the real Gallery, put a page search box in the middle of the title bar (width 580 also matches the real Gallery's MaxWidth)
+        val searchBox = WAutoSuggestBox(Messages.get("main.search.placeholder"))
         searchBox.width = 580.0
         searchBox.queryIcon = Symbol.FIND // the same magnifying glass as the real Gallery's QueryIcon="Find"
         titleBar.content = searchBox

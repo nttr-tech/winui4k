@@ -24,7 +24,7 @@ import com.appkitbox.winui4k.WTabViewItem
 
 /** The NavigationView page: lines up demos for trying out WNavigationView's various features. */
 internal fun buildNavigationViewPage(): WComponent {
-    val page = buildPage("NavigationView", "A control that provides an app's top-level navigation. Try out WNavigationView's various features.")
+    val page = buildPage("NavigationView", Messages.get("navigationview.description"))
 
     page.add(buildSimpleNavigationViewExample())
     page.add(buildNavigationViewPaneExample())
@@ -34,7 +34,7 @@ internal fun buildNavigationViewPage(): WComponent {
 
 /** Basic navigation: items with icons, and responding to selection changes (SelectionChanged). */
 private fun buildSimpleNavigationViewExample(): WComponent {
-    val contentLabel = WLabel("Showing Home")
+    val contentLabel = WLabel(Messages.get("navigationview.simple.showing", Messages.get("navigationview.item.home")))
     contentLabel.margin = 16.0
 
     val navigationView = WNavigationView()
@@ -47,18 +47,18 @@ private fun buildSimpleNavigationViewExample(): WComponent {
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
     navigationView.content = contentLabel
 
-    val home = WNavigationViewItem("Home", Symbol.HOME)
+    val home = WNavigationViewItem(Messages.get("navigationview.item.home"), Symbol.HOME)
     navigationView.addItem(home)
-    navigationView.addItem(WNavigationViewItem("Mail", Symbol.MAIL))
-    navigationView.addItem(WNavigationViewItem("Calendar", Symbol.CALENDAR))
-    navigationView.addFooterItem(WNavigationViewItem("Help", Symbol.HELP))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.mail"), Symbol.MAIL))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.calendar"), Symbol.CALENDAR))
+    navigationView.addFooterItem(WNavigationViewItem(Messages.get("navigationview.item.help"), Symbol.HELP))
 
     navigationView.addSelectionListener { item ->
-        if (item != null) contentLabel.text = "Showing ${item.text}"
+        if (item != null) contentLabel.text = Messages.get("navigationview.simple.showing", item.text)
     }
     navigationView.selectedItem = home
 
-    return buildExample("Simple navigation (MenuItems / Icon / SelectionChanged)", navigationView)
+    return buildExample(Messages.get("navigationview.example.simple.title"), navigationView)
 }
 
 /** Controlling the pane: open/close, title, placement, and showing the settings item. */
@@ -68,18 +68,18 @@ private fun buildNavigationViewPaneExample(): WComponent {
     navigationView.height = 280.0
     navigationView.openPaneLength = 180.0
     navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
-    navigationView.paneTitle = "Menu"
+    navigationView.paneTitle = Messages.get("navigationview.pane.title")
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
-    navigationView.content = WLabel("Content area").also { it.margin = 16.0 }
+    navigationView.content = WLabel(Messages.get("navigationview.content")).also { it.margin = 16.0 }
 
-    navigationView.addItem(WNavigationViewItem("Documents", Symbol.DOCUMENT))
-    navigationView.addItem(WNavigationViewItem("Pictures", Symbol.PICTURES))
-    navigationView.addItem(WNavigationViewItem("Music", Symbol.AUDIO))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.documents"), Symbol.DOCUMENT))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.pictures"), Symbol.PICTURES))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.music"), Symbol.AUDIO))
 
-    val toggleButton = WButton("Toggle pane")
+    val toggleButton = WButton(Messages.get("navigationview.button.togglepane"))
     toggleButton.addActionListener { navigationView.isPaneOpen = !navigationView.isPaneOpen }
 
-    val settingsButton = WButton("Toggle settings item")
+    val settingsButton = WButton(Messages.get("navigationview.button.togglesettings"))
     settingsButton.addActionListener { navigationView.isSettingsVisible = !navigationView.isSettingsVisible }
 
     val modeButtons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -100,12 +100,12 @@ private fun buildNavigationViewPaneExample(): WComponent {
     body.add(navigationView)
     body.add(buttons)
     body.add(modeButtons)
-    return buildExample("Controlling the pane (IsPaneOpen / PaneTitle / PaneDisplayMode / IsSettingsVisible)", body)
+    return buildExample(Messages.get("navigationview.example.pane.title"), body)
 }
 
 /** A hierarchical menu: nests child items under a parent item, and also responds to clicks (ItemInvoked). */
 private fun buildHierarchicalNavigationViewExample(): WComponent {
-    val result = WLabel("Clicked: none")
+    val result = WLabel(Messages.get("navigationview.invoked.none"))
 
     val navigationView = WNavigationView()
     navigationView.width = 480.0
@@ -114,26 +114,26 @@ private fun buildHierarchicalNavigationViewExample(): WComponent {
     navigationView.paneDisplayMode = NavigationViewPaneDisplayMode.LEFT
     navigationView.isSettingsVisible = false
     navigationView.isBackButtonVisible = NavigationViewBackButtonVisible.COLLAPSED
-    navigationView.content = WLabel("Content area").also { it.margin = 16.0 }
+    navigationView.content = WLabel(Messages.get("navigationview.content")).also { it.margin = 16.0 }
 
-    navigationView.addItem(WNavigationViewItem("Home", Symbol.HOME))
+    navigationView.addItem(WNavigationViewItem(Messages.get("navigationview.item.home"), Symbol.HOME))
 
     // The parent item isn't selectable (SelectsOnInvoked=false); it only toggles its children open/closed
-    val documents = WNavigationViewItem("Documents", Symbol.FOLDER)
+    val documents = WNavigationViewItem(Messages.get("navigationview.item.documents"), Symbol.FOLDER)
     documents.selectsOnInvoked = false
     documents.isExpanded = true
-    documents.addItem(WNavigationViewItem("Specs"))
-    documents.addItem(WNavigationViewItem("Meeting notes"))
+    documents.addItem(WNavigationViewItem(Messages.get("navigationview.item.specs")))
+    documents.addItem(WNavigationViewItem(Messages.get("navigationview.item.minutes")))
     navigationView.addItem(documents)
 
     navigationView.addItemInvokedListener { name ->
-        result.text = "Clicked: $name"
+        result.text = Messages.get("navigationview.invoked", name)
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(navigationView)
     body.add(result)
-    return buildExample("A hierarchical menu and clicks (nested MenuItems / IsExpanded / ItemInvoked)", body)
+    return buildExample(Messages.get("navigationview.example.hierarchical.title"), body)
 }
 
 // endregion
@@ -142,7 +142,7 @@ private fun buildHierarchicalNavigationViewExample(): WComponent {
 
 /** The BreadcrumbBar page: lines up demos for trying out WBreadcrumbBar's hierarchy display and click-to-navigate. */
 internal fun buildBreadcrumbBarPage(): WComponent {
-    val page = buildPage("BreadcrumbBar", "A breadcrumb trail that shows your current position in a hierarchy and lets you jump back up it. Try out WBreadcrumbBar's various features.")
+    val page = buildPage("BreadcrumbBar", Messages.get("breadcrumbbar.description"))
 
     page.add(buildBreadcrumbBarClickExample())
     return page
@@ -150,27 +150,32 @@ internal fun buildBreadcrumbBarPage(): WComponent {
 
 /** Truncating the breadcrumb by clicking a level (ItemClicked). */
 private fun buildBreadcrumbBarClickExample(): WComponent {
-    val fullPath = listOf("Home", "Documents", "2026", "Report")
-    val result = WLabel("Click a level to go back to it")
+    val fullPath = listOf(
+        Messages.get("breadcrumbbar.item.home"),
+        Messages.get("breadcrumbbar.item.documents"),
+        Messages.get("breadcrumbbar.item.year"),
+        Messages.get("breadcrumbbar.item.reports"),
+    )
+    val result = WLabel(Messages.get("breadcrumbbar.result.hint"))
 
     val breadcrumbBar = WBreadcrumbBar()
     breadcrumbBar.setItems(fullPath)
     breadcrumbBar.addItemClickedListener { index ->
         breadcrumbBar.setItems(fullPath.subList(0, index + 1))
-        result.text = "Clicked: ${fullPath[index]} (index $index)"
+        result.text = Messages.get("breadcrumbbar.result.clicked", fullPath[index], index.toString())
     }
 
-    val resetButton = WButton("Reset the hierarchy")
+    val resetButton = WButton(Messages.get("breadcrumbbar.button.reset"))
     resetButton.addActionListener {
         breadcrumbBar.setItems(fullPath)
-        result.text = "Hierarchy reset"
+        result.text = Messages.get("breadcrumbbar.result.reset")
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(breadcrumbBar)
     body.add(result)
     body.add(resetButton)
-    return buildExample("Displaying and clicking the hierarchy (ItemsSource / ItemClicked)", body)
+    return buildExample(Messages.get("breadcrumbbar.example.click.title"), body)
 }
 
 // endregion
@@ -179,7 +184,7 @@ private fun buildBreadcrumbBarClickExample(): WComponent {
 
 /** The SelectorBar page: lines up demos for trying out WSelectorBar's selection switching. */
 internal fun buildSelectorBarPage(): WComponent {
-    val page = buildPage("SelectorBar", "A control for switching between a small number of options. Try out WSelectorBar's various features.")
+    val page = buildPage("SelectorBar", Messages.get("selectorbar.description"))
 
     page.add(buildSelectorBarSelectionExample())
     return page
@@ -187,20 +192,24 @@ internal fun buildSelectorBarPage(): WComponent {
 
 /** Switching the selection (SelectionChanged) and setting SelectedItem. */
 private fun buildSelectorBarSelectionExample(): WComponent {
-    val result = WLabel("Showing Recent")
+    val result = WLabel(Messages.get("selectorbar.result.showing", Messages.get("selectorbar.item.recent")))
 
     val selectorBar = WSelectorBar()
-    val labels = listOf("Recent", "Shared", "Favorites")
+    val labels = listOf(
+        Messages.get("selectorbar.item.recent"),
+        Messages.get("selectorbar.item.shared"),
+        Messages.get("selectorbar.item.favorites"),
+    )
     labels.forEach { selectorBar.addItem(WSelectorBarItem(it)) }
     selectorBar.addSelectionListener { index ->
-        if (index >= 0) result.text = "Showing ${labels[index]}"
+        if (index >= 0) result.text = Messages.get("selectorbar.result.showing", labels[index])
     }
     selectorBar.selectedIndex = 0
 
     val body = WPanel(spacing = 8.0)
     body.add(selectorBar)
     body.add(result)
-    return buildExample("Switching the selection (Items / SelectedItem / SelectionChanged)", body)
+    return buildExample(Messages.get("selectorbar.example.selection.title"), body)
 }
 
 // endregion
@@ -209,7 +218,7 @@ private fun buildSelectorBarSelectionExample(): WComponent {
 
 /** The TabView page: lines up demos for trying out WTabView's tab management. */
 internal fun buildTabViewPage(): WComponent {
-    val page = buildPage("TabView", "A control that switches between multiple pages via tabs. Try out WTabView's various features.")
+    val page = buildPage("TabView", Messages.get("tabview.description"))
 
     page.add(buildTabViewBasicExample())
     return page
@@ -217,7 +226,7 @@ internal fun buildTabViewPage(): WComponent {
 
 /** Adding, removing, and switching tabs (TabItems / AddTabButtonClick / TabCloseRequested / SelectionChanged). */
 private fun buildTabViewBasicExample(): WComponent {
-    val result = WLabel("Selecting Tab 1")
+    val result = WLabel(Messages.get("tabview.result.selected", Messages.get("tabview.tab.header", "1")))
 
     val tabView = WTabView()
     tabView.width = 480.0
@@ -226,9 +235,9 @@ private fun buildTabViewBasicExample(): WComponent {
 
     fun newTab(): WTabViewItem {
         tabNumber++
-        val content = WLabel("Tab $tabNumber's content")
+        val content = WLabel(Messages.get("tabview.tab.content", tabNumber.toString()))
         content.margin = 16.0
-        val tab = WTabViewItem("Tab $tabNumber")
+        val tab = WTabViewItem(Messages.get("tabview.tab.header", tabNumber.toString()))
         tab.isClosable = true // Show the close button (WTabViewItem does not show it by default, as with JTabbedPane)
         tab.content = content
         return tab
@@ -248,13 +257,13 @@ private fun buildTabViewBasicExample(): WComponent {
     }
     tabView.addSelectionListener {
         val index = tabView.selectedIndex
-        if (index >= 0) result.text = "Selecting ${tabView.getTab(index).header}"
+        if (index >= 0) result.text = Messages.get("tabview.result.selected", tabView.getTab(index).header)
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(tabView)
     body.add(result)
-    return buildExample("Adding, removing, and switching tabs (TabItems / AddTabButtonClick / TabCloseRequested)", body)
+    return buildExample(Messages.get("tabview.example.basic.title"), body)
 }
 
 // endregion
