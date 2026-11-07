@@ -10,10 +10,21 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 /**
  * SpringLayout-like JPanel: WinUI 3's RelativePanel.
  * Places children relative to each other (e.g. [placeRightOf]) or relative to the panel itself (e.g. [alignRightWithPanel]).
+ *
+ * If the positions of children refer to each other (A to the right of B and B below A, etc.; even on different axes), WinUI cannot lay them out and throws an exception on the UI thread,
+ * and the window is no longer drawn. Such calls throw [IllegalArgumentException] right away (so the calling line is known).
+ * When a child used as an anchor is [remove]d, the position constraints based on it are also removed (left in place, WinUI cannot find the anchor and throws the same way).
+ * Put anchor children into this panel before it is laid out.
+ *
+ * Unlike SpringLayout, there is no distance argument to the anchor (the pad of putConstraint) and no text baseline alignment (BASELINE)
+ * (because WinUI's RelativePanel does not have them). Use the child's [WComponent.margin] for the distance.
  */
 class WRelativePanel : WContainer(
     Activation.composeDefault(XamlInterop.CLS_RelativePanel, XamlInterop.IID_IRelativePanelFactory),
 ) {
+    /** Each child's position constraints pointing to anchor children (the SetXxx slot of IRelativePanelStatics -> the anchor). Used to find cycles. */
+    private val relations = HashMap<WComponent, HashMap<Int, WComponent>>()
+
     /** Places [component] to the left of [anchor] (RelativePanel.LeftOf). */
     fun placeLeftOf(component: WComponent, anchor: WComponent) =
         putElement(XamlInterop.IRelativePanelStatics_SetLeftOf, component, anchor)
@@ -84,9 +95,44 @@ class WRelativePanel : WContainer(
     fun alignVerticalCenterWithPanel(component: WComponent, value: Boolean = true) =
         putBool(XamlInterop.IRelativePanelStatics_SetAlignVerticalCenterWithPanel, component, value)
 
-    /** SetXxx(UIElement, Object value) — value is the anchor element itself. */
+    /**
+     * SetXxx(UIElement, Object value) — the anchor element is passed as value as is. If following the position constraints from [anchor] reaches [component]
+     * (a cycle), does nothing and throws [IllegalArgumentException].
+     */
     private fun putElement(slot: Int, component: WComponent, anchor: WComponent) {
+        require(component !== anchor) { "WRelativePanel: a child cannot be the anchor of its own position ($component)" }
+        require(!dependsOn(anchor, component)) {
+            "WRelativePanel: the position constraints form a cycle ($anchor is positioned based on $component, so it cannot be the anchor of $component)"
+        }
         statics.call(slot, component.uiElement.ptr, anchor.uiElement.ptr)
+        relations.getOrPut(component) { HashMap() }[slot] = anchor
+    }
+
+    /** Whether the position of [from] is based on the position of [target], following the position constraints. */
+    private fun dependsOn(from: WComponent, target: WComponent): Boolean {
+        val visited = HashSet<WComponent>()
+        val pending = ArrayDeque<WComponent>()
+        pending += from
+        while (pending.isNotEmpty()) {
+            val current = pending.removeFirst()
+            if (current === target) return true
+            if (!visited.add(current)) continue
+            relations[current]?.values?.let { pending.addAll(it) }
+        }
+        return false
+    }
+
+    /** Removes the position constraints of the removed child and those of other children based on the removed child. */
+    override fun onComponentRemoved(component: WComponent) {
+        relations.remove(component)?.keys?.forEach { slot -> statics.call(slot, component.uiElement.ptr, null) }
+        for ((other, slots) in relations) {
+            val referring = slots.filterValues { it === component }.keys
+            for (slot in referring) {
+                statics.call(slot, other.uiElement.ptr, null)
+                slots.remove(slot)
+            }
+        }
+        relations.values.removeAll { it.isEmpty() }
     }
 
     /** SetXxxWithPanel(UIElement, boolean) — boolean is 1 byte. */

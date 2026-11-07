@@ -542,3 +542,8 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
 - UIElement.LosingFocus で LosingFocusEventArgs.TryCancel を呼ぶとフォーカスの移動は止まり、元の要素がフォーカスを持ったままになる
   (Tab キーと同じ FocusManager.TryMoveFocus の移動も止まる)。ただし、移動を始めた UIElement.Focus は取り消されても true を返す。
   WComponent.requestFocusInWindow は、その間に WInputVerifier が取り消したかを覚えておき、Swing と同じく false を返す (WInputVerifierTest)
+- RelativePanel は子の位置の指定 (RightOf・Below・AlignTopWith など) を軸に関係なく 1 つのグラフでたどり、自分に戻る循環や、
+  パネルの子でない要素を基準にした指定があると、並べる時 (Measure) に例外を投げる (RPGraph.cpp の MeasureNode・GetNodeByValue。
+  AG_E_RELATIVEPANEL_CIRCULAR_DEP / AG_E_RELATIVEPANEL_REF_NOT_FOUND)。UI スレッドの未処理の例外になり、ウィンドウが描かれなくなる。
+  WRelativePanel は循環になる呼び出しをその場で IllegalArgumentException にし、基準の子を外すとそれを基準にした指定も外す
+  (WRelativePanelCycleTest)
