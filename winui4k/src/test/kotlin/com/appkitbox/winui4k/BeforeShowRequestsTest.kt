@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import com.appkitbox.winui4k.internal.winui.TabularInterop
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -86,6 +87,44 @@ class BeforeShowRequestsTest : FunSpec() {
                     awaitUi { list.firstVisibleIndex in 1..42 && list.lastVisibleIndex >= 42 } shouldBe true
                 } finally {
                     UiTestHarness.detach(list)
+                }
+            }
+        }
+        context("WTable.setRowSelectionInterval") {
+            /** A table of 3 rows of Name / Department. */
+            fun table(): WTable = WTable(
+                arrayOf(arrayOf<Any?>("Alice", "Sales"), arrayOf<Any?>("Bob", "Engineering"), arrayOf<Any?>("Carol", "Support")),
+                arrayOf<Any?>("Name", "Department"),
+            )
+
+            /** The row the table (TableView) selects on screen (ITableView.SelectedIndex). */
+            fun nativeSelectedRow(table: WTable): Int = table.inspectable.getInt(TabularInterop.ITableView_get_SelectedIndex)
+
+            test("selecting the second row before showing makes the table select that row when shown, and selectedRow is 1") {
+                val table = onUiThreadGet { table().also { it.setRowSelectionInterval(1, 1) } }
+                UiTestHarness.attachAndAwaitLoaded(table)
+                try {
+                    awaitUi { nativeSelectedRow(table) == 1 } shouldBe true
+                    onUiThreadGet { table.selectedRow } shouldBe 1
+                } finally {
+                    UiTestHarness.detach(table)
+                }
+            }
+
+            test("selecting and then clearing the selection before showing leaves nothing selected when shown") {
+                val table = onUiThreadGet {
+                    table().also {
+                        it.setRowSelectionInterval(1, 1)
+                        it.clearSelection()
+                    }
+                }
+                UiTestHarness.attachAndAwaitLoaded(table)
+                try {
+                    awaitUi { table.actualHeight > 0.0 } shouldBe true
+                    Thread.sleep(300)
+                    onUiThreadGet { nativeSelectedRow(table) to table.selectedRow } shouldBe (-1 to -1)
+                } finally {
+                    UiTestHarness.detach(table)
                 }
             }
         }

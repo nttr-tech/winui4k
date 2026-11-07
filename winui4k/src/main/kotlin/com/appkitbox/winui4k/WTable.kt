@@ -367,10 +367,8 @@ class WTable @JvmOverloads constructor(
     /** Whether row [row] (view) is selected (JTable.isRowSelected; read from [selectionModel] like [selectedRow]). */
     fun isRowSelected(row: Int): Boolean = row >= 0 && row == selectedRow
 
-    /** Clears the selection (TableView.DeselectAll). */
-    fun clearSelection() {
-        tableView.call(TabularInterop.ITableView_DeselectAll)
-    }
+    /** Clears the selection (JTable.clearSelection; clears the selection of [selectionModel] and the displayed selection). */
+    fun clearSelection() = selection.call { it.clearSelection() }
 
     /**
      * The row selection model (JTable.getSelectionModel / setSelectionModel). Indices are view rows, and it is synced with the display selection both ways.

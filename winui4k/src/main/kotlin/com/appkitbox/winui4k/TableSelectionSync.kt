@@ -12,6 +12,9 @@ import com.appkitbox.winui4k.internal.winui.TabularInterop
  * As with Swing's JTable, the same model row stays selected after sorting, filtering, and adding or removing model rows
  * (the selection of rows that disappeared from the display or were removed is cleared).
  *
+ * Before the first layout (before showing, etc.), TableView's Select has no effect (the selection is dropped when it loads), so the selection copied
+ * from the model during that time is copied again after layout ([LaidOutRequests]). Until it is copied again, the model is authoritative and the native selection is not copied to the model.
+ *
  * WTable calls [pullFromNative] from the native SelectionChanged handler via the anchor (this object is not captured by
  * the handler). The model listener references the table strongly through this object (the table stays while the selection model is held, as in Swing).
  */
@@ -30,6 +33,9 @@ internal class TableSelectionSync(
     private var selectedModelRow = -1
 
     private val modelListener = WListSelectionListener { if (!syncing) push() }
+
+    /** Copies the selection copied before the first layout again after layout. */
+    private val requests = LaidOutRequests(table)
 
     /** The selection model. The default is a single selection [WDefaultListSelectionModel] (Swing's JTable defaults to multiple intervals). */
     var model: WListSelectionModel = WDefaultListSelectionModel().also {
@@ -58,7 +64,7 @@ internal class TableSelectionSync(
 
     /** Copies the native selection to the model if it changed since the last sync (called from the SelectionChanged handler and the APIs). */
     fun pullFromNative() {
-        if (syncing) return
+        if (syncing || requests.isPending(PUSH_REQUEST)) return
         val native = nativeRow()
         if (native == lastNative) return
         lastNative = native
@@ -84,6 +90,7 @@ internal class TableSelectionSync(
             lastNative = nativeRow()
             selectedModelRow = if (lastNative < 0) -1 else table.convertRowIndexToModel(lastNative)
         }
+        pushAgainAfterLayout()
     }
 
     /**
@@ -106,6 +113,7 @@ internal class TableSelectionSync(
             model.clearSelection()
             lastNative = nativeRow()
         }
+        pushAgainAfterLayout()
     }
 
     /** The start of sorting by a column header click (Sorting). Syncing is stopped until the end ([endUserReorder]). */
@@ -184,6 +192,12 @@ internal class TableSelectionSync(
             lastNative = nativeRow()
         }
         if (view < 0) selectedModelRow = -1
+        pushAgainAfterLayout()
+    }
+
+    /** If not laid out yet, copies the model's selection to the native side again after layout (requests until then are merged into the last one). */
+    private fun pushAgainAfterLayout() {
+        if (!requests.isLaidOut()) requests.runOrDefer(PUSH_REQUEST) { push() }
     }
 
     /** The one row of the model's selection copied to the display (the lead if it is selected, otherwise the smallest row). -1 if outside the table's rows. */
@@ -204,5 +218,10 @@ internal class TableSelectionSync(
         } finally {
             syncing = previous
         }
+    }
+
+    private companion object {
+        /** The kind of request in [requests] that copies the selection again. */
+        const val PUSH_REQUEST = "push"
     }
 }
