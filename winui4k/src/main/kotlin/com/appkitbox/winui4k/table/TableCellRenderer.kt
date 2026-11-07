@@ -36,6 +36,11 @@ fun interface TableCellRenderer {
  *
  * Override [getText] to change how the value is converted to a string, and [configure] to change how the label is
  * decorated. Strings that do not fit the cell width are truncated at the end (…).
+ *
+ * Mapping from Swing overrides: an override of DefaultTableCellRenderer's `setValue(Object)` (`setText(format(value))`) and
+ * `setText(...)` after `super.getTableCellRendererComponent(...)` correspond to [getText], decoration such as `setForeground(...)` to [configure],
+ * and `setHorizontalAlignment(SwingConstants.RIGHT)` to [horizontalAlignment]. The returned label is newly created on each call, so
+ * changing the result of `super` and returning `this` does not work.
  */
 open class DefaultTableCellRenderer : TableCellRenderer {
     /** The horizontal alignment of the text. For numeric columns, [HorizontalAlignment.RIGHT] aligns the digits. */

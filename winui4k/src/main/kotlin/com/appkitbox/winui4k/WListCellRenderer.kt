@@ -23,6 +23,10 @@ fun interface WListCellRenderer<E> {
  * The text is decided by [getText] (toString() by default; empty for null) and the icon by [getIcon] (by default the element if it is a [WIcon]; the text is then empty),
  * and the label decoration is changed by overriding [configure]. As with Swing's DefaultListCellRenderer,
  * items with icons are made like `object : WDefaultListCellRenderer() { override fun getIcon(value: Any?) = ... }`.
+ *
+ * Mapping from Swing overrides: write `setText(...)` after `super.getListCellRendererComponent(...)` in [getText], `setIcon(...)` in
+ * [getIcon], and decoration such as `setForeground(...)` and `setFont(...)` in an override of [configure]. Changing the renderer itself (the label)
+ * and returning `this`, as in Swing, does not work (the returned label is newly created on each call, so changes to the result of `super` do not carry over to the next item).
  */
 open class WDefaultListCellRenderer : WListCellRenderer<Any?> {
     override fun getListCellRendererComponent(list: WComponent, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): WComponent {

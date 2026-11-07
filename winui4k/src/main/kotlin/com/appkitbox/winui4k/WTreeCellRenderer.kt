@@ -33,6 +33,10 @@ fun interface WTreeCellRenderer {
  * The text is decided by [getText] ([WTree.convertValueToText] by default; the node's toString()) and the icon by [getIcon] (by default [leafIcon] for a leaf,
  * [openIcon] for an expanded node and [closedIcon] for a collapsed node), and the label decoration is changed by overriding [configure].
  * Unlike Swing, the icons are null by default (WinUI's TreeView does not draw node icons, only the expand / collapse glyph).
+ *
+ * Mapping from Swing overrides: write `setText(...)` after `super.getTreeCellRendererComponent(...)` and overrides of JTree's `convertValueToText`
+ * in [getText], `setIcon(...)` in [getIcon], and decoration such as `setForeground(...)` in an override of [configure]
+ * ([WTree.convertValueToText] cannot be overridden). The returned label is newly created on each call, so changing and returning the result of `super` does not work.
  */
 @Suppress("LongParameterList") // The arguments correspond 1:1 to Swing's TreeCellRenderer.getTreeCellRendererComponent
 open class WDefaultTreeCellRenderer : WTreeCellRenderer {
