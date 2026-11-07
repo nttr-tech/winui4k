@@ -91,11 +91,14 @@ class WTextFieldColumnsTest : FunSpec() {
         }
 
         test("text fields whose native weight is normal (400), SemiBold (600) or bold (700) get a column width determined by the width of 'm' measured in that weight") {
-            // In Segoe UI, 'm' has the same width at 400 and 600, and is wider only at 700 (layout rounding in 1/3 DIP units). Measuring 600 with the bold width shifts the column width
+            // Measuring 600 with the bold width shifts the column width. The advance of 'm' in Segoe UI is 0.861, 0.886 and 0.916 em for 400, 600 and 700.
+            // TextBlock's DesiredSize rounds up to physical pixel boundaries, so at 14 DIP with 100% display scaling (GitHub Actions runners)
+            // every weight became 13 DIP, the width did not change with the weight, and the check of the premise below failed every time (at 150% it passes with 12.67, 12.67, 13.33).
+            // At 20 DIP the difference between 400 and 700 is 1.2 DIP, so the rounded-up widths differ at any display scaling (18, 18, 19 at 100%; 17.33, 18, 18.67 at 150%)
             val widths = mutableListOf<Double>()
             for (weight in listOf(400, 600, 700)) {
                 val row = shownRow {
-                    font = WFont("Segoe UI", WFont.PLAIN, 14.0)
+                    font = WFont("Segoe UI", WFont.PLAIN, 20.0)
                     XamlStructs.putFontWeight(control, XamlInterop.IControl_put_FontWeight, weight)
                     columns = 20
                 }
