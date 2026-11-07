@@ -7,7 +7,7 @@ import com.appkitbox.winui4k.internal.winui.XamlStructs
 /**
  * Writes a [WControlBorder] to a panel (Grid, StackPanel) that has its own border line (BorderBrush, BorderThickness) and inner padding (Padding).
  * [brushSlot] / [thicknessSlot] / [paddingSlot] are put_BorderBrush / put_BorderThickness /
- * put_Padding。
+ * put_Padding of the panel's default interface.
  */
 internal class PanelBorders(private val brushSlot: Int, private val thicknessSlot: Int, private val paddingSlot: Int) {
     /**
@@ -34,7 +34,7 @@ internal class PanelBorders(private val brushSlot: Int, private val thicknessSlo
         /** Grid (the root of [WLabel]). */
         val GRID = PanelBorders(XamlInterop.IGrid_put_BorderBrush, XamlInterop.IGrid_put_BorderThickness, XamlInterop.IGrid_put_Padding)
 
-        /** StackPanel ([WPanel])。 */
+        /** StackPanel ([WPanel]). */
         val STACK_PANEL = PanelBorders(
             XamlInterop.IStackPanel_put_BorderBrush,
             XamlInterop.IStackPanel_put_BorderThickness,

@@ -513,7 +513,7 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
         /** The name of the button that clears the text in the input field (TextBox) template. */
         const val DELETE_BUTTON_PART = "DeleteButton"
 
-        /** Microsoft.UI.Xaml.Visibility.Visible (winmd: Visible=0, Collapsed=1)。 */
+        /** Microsoft.UI.Xaml.Visibility.Visible (winmd: Visible=0, Collapsed=1). */
         const val VISIBILITY_VISIBLE = 0
 
         /** Compares treating NaN and NaN as equal too. */

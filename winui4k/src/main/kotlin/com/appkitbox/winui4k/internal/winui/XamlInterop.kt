@@ -2710,7 +2710,7 @@ internal object XamlInterop {
         )
     }
 
-    // ---- Microsoft.UI.Xaml.Input.LosingFocusEventArgs (UIElement.LosingFocus。WInputVerifier) ----
+    // ---- Microsoft.UI.Xaml.Input.LosingFocusEventArgs (UIElement.LosingFocus; WInputVerifier) ----
     const val CLS_LosingFocusEventArgs = "Microsoft.UI.Xaml.Input.LosingFocusEventArgs"
     const val IID_ILosingFocusEventArgs = "fa0e5ffa-2b1b-52f8-bb66-e35f51e73cf3"
     const val ILosingFocusEventArgs_get_OldFocusedElement = 6 // get_OldFocusedElement(out DependencyObject)

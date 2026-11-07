@@ -279,7 +279,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = WFlowLayo
             component.appliedHeight.toRawBits() != height.toRawBits()
         component.setLayoutSize(width, height)
         // A Canvas in a Canvas (a nested WLayoutPanel etc.) is not measured again by XAML just by changing Width / Height
-        // ([WComponent.remeasureInCanvas]、doc/verification.md)
+        // ([WComponent.remeasureInCanvas], doc/verification.md)
         if (sizeChanged && component.isCanvasElement) component.remeasureInCanvas()
     }
 

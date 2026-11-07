@@ -79,7 +79,7 @@ class WCheckBoxStretchTest : FunSpec() {
             try {
                 eventually(3.seconds) { onUiThreadGet { boxes[0].actualHeight } shouldBe (100.0 plusOrMinus 0.5) }
                 boxes.forEach { box ->
-                    withClue("「${onUiThreadGet { box.text }}」") { textOffset(box) shouldBe (naturalOffset plusOrMinus 0.5) }
+                    withClue("\"${onUiThreadGet { box.text }}\"") { textOffset(box) shouldBe (naturalOffset plusOrMinus 0.5) }
                 }
             } finally {
                 UiTestHarness.detach(grid)
