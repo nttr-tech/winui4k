@@ -74,11 +74,37 @@ abstract class WFlyoutBase internal constructor(
             flyoutBase.call(XamlInterop.IFlyoutBase_put_OverlayInputPassThroughElement, value?.dependencyObject)
         }
 
-    /** Opens relative to [anchor] (FlyoutBase.ShowAt). Only usable on an already-visible element. */
+    /**
+     * Opens with [anchor] as the reference position (FlyoutBase.ShowAt). Use it for elements on a window. For an element in a window that was just shown
+     * (before the first layout), it opens after layout (Swing's show opens even right after showing).
+     */
     fun showAt(anchor: WComponent) {
         explicitInvoker = anchor
-        events.showWhenClosed(isOpen) { flyoutBase.call(XamlInterop.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr) }
+        afterLaidOut(anchor) {
+            events.showWhenClosed(isOpen) { flyoutBase.call(XamlInterop.IFlyoutBase_ShowAt, anchor.frameworkElement.ptr) }
+        }
     }
+
+    /**
+     * If [anchor] was just added to a window and has not done the first layout yet, calls [show] after layout (cancelled by [hide]
+     * before that). WinUI silently ignores ShowAt before the first layout. Otherwise it is called right away.
+     */
+    private fun afterLaidOut(anchor: WComponent, show: () -> Unit) {
+        pendingAnchor?.laidOutRequests?.cancel(this)
+        pendingAnchor = null
+        if (!anchor.laidOutRequests.awaitsFirstLayout()) {
+            show()
+            return
+        }
+        pendingAnchor = anchor
+        anchor.laidOutRequests.runOrDefer(this) {
+            pendingAnchor = null
+            show()
+        }
+    }
+
+    /** The reference element waiting to open after layout ([afterLaidOut]). */
+    private var pendingAnchor: WComponent? = null
 
     /**
      * JPopupMenu.show(Component, int, int)-like: opens at the position ([x], [y]; DIP) in the coordinates of [invoker]
@@ -89,7 +115,7 @@ abstract class WFlyoutBase internal constructor(
      */
     fun show(invoker: WComponent, x: Double, y: Double) {
         explicitInvoker = invoker
-        events.showWhenClosed(isOpen) { showWithPosition(invoker, x, y) }
+        afterLaidOut(invoker) { events.showWhenClosed(isOpen) { showWithPosition(invoker, x, y) } }
     }
 
     private fun showWithPosition(invoker: WComponent, x: Double, y: Double) {
@@ -114,6 +140,8 @@ abstract class WFlyoutBase internal constructor(
 
     /** Closes it (FlyoutBase.Hide). This way of closing does not call [WPopupMenuListener.popupMenuCanceled] (same as Swing's setVisible(false)). */
     fun hide() {
+        pendingAnchor?.laidOutRequests?.cancel(this)
+        pendingAnchor = null
         events.hideRequested = true
         flyoutBase.call(XamlInterop.IFlyoutBase_Hide)
     }

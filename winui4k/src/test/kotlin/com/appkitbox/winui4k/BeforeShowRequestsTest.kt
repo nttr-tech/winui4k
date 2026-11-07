@@ -352,5 +352,56 @@ class BeforeShowRequestsTest : FunSpec() {
             }
         }
 
+        context("menus and popups right after showing") {
+            test("setting WMenuBarItem.isPopupMenuVisible to true right after showing opens the menu after the content loads") {
+                val (frame, menu) = onUiThreadGet {
+                    val menu = WMenuBarItem("File").also {
+                        it.add("Open")
+                        it.add("Exit")
+                    }
+                    val frame = WFrame("BeforeShowRequestsTest").also {
+                        it.jMenuBar = WMenuBar().also { bar -> bar.add(menu) }
+                        it.add(WLabel("Main"))
+                        it.setSize(400, 260)
+                        it.isAutoRequestFocus = false
+                        it.isVisible = true
+                    }
+                    menu.isPopupMenuVisible = true
+                    frame to menu
+                }
+                try {
+                    awaitUi { menu.isPopupMenuVisible } shouldBe true
+                    onUiThread { menu.isPopupMenuVisible = false }
+                    awaitUi { !menu.isPopupMenuVisible } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("calling WMenuFlyout.show(invoker, x, y) right after showing opens the popup after the content loads") {
+                val (frame, popup) = onUiThreadGet {
+                    val target = WLabel("Right-click this label")
+                    val popup = WMenuFlyout().also {
+                        it.add("Rename")
+                        it.add("Delete")
+                    }
+                    val frame = WFrame("BeforeShowRequestsTest").also {
+                        it.add(target)
+                        it.setSize(400, 260)
+                        it.isAutoRequestFocus = false
+                        it.isVisible = true
+                    }
+                    popup.show(target, 60.0, 10.0)
+                    frame to popup
+                }
+                try {
+                    awaitUi { popup.isOpen } shouldBe true
+                    onUiThread { popup.hide() }
+                    awaitUi { !popup.isOpen } shouldBe true
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+        }
     }
 }

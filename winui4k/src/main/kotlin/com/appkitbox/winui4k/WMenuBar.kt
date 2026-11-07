@@ -24,7 +24,10 @@ class WMenuBar : WControl(
         { nativeItems },
         { it.inspectable },
         { it.menuOwner },
-        { menu, owner -> menu.menuOwner = owner },
+        { menu, owner ->
+            menu.menuOwner = owner
+            menu.menuBar = if (owner != null) this else null
+        },
     )
 
     /**
@@ -84,6 +87,15 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
 
     /** The menu bar it is in (set by WMenuBar's item management). It is from child to parent, so it is held weakly (same as [WMenuFlyoutItemBase]). */
     private var menuOwnerReference: WeakReference<MenuItems<WMenuBarItem>>? = null
+
+    /** The [WMenuBar] this menu is in (a weak reference; used to check whether it is the menu bar of a window that was just shown). */
+    private var menuBarReference: WeakReference<WMenuBar>? = null
+
+    internal var menuBar: WMenuBar?
+        get() = menuBarReference?.get()
+        set(value) {
+            menuBarReference = value?.let { WeakReference(it) }
+        }
 
     internal var menuOwner: MenuItems<WMenuBarItem>?
         get() = menuOwnerReference?.get()
@@ -168,17 +180,40 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
      * JMenu.isPopupMenuVisible / setPopupMenuVisible-like: whether the menu is open. true opens it the same as clicking the menu bar heading
      * (does nothing if already open) and false closes it. It does not open before being placed in a window or when there are no items
      * (WinUI's MenuBarItem does not open an empty menu). Opening is asynchronous, and reading returns true only after it starts opening.
+     * Setting it to true in a window that was just shown (before the first layout) opens the menu after layout (it also reads as true until then; as in Swing,
+     * it can be opened right after showing).
      */
     var isPopupMenuVisible: Boolean
-        get() = withOpeningMenu { it.getBool(XamlInterop.IFlyoutBase_get_IsOpen) } ?: false
+        get() = laidOutRequests.isPending(OPEN_REQUEST) || withOpeningMenu { it.getBool(XamlInterop.IFlyoutBase_get_IsOpen) } ?: false
         set(value) {
             if (value == isPopupMenuVisible) return
             if (value) {
-                Xaml.invoke(inspectable) // MenuBarItem's Invoke: opens it if closed
+                invokeWhenLaidOut() // MenuBarItem's Invoke: opens it if closed
             } else {
+                laidOutRequests.cancel(OPEN_REQUEST)
                 withOpeningMenu { it.call(XamlInterop.IFlyoutBase_Hide) }
             }
         }
+
+    /**
+     * Invokes it, as when the header is clicked. In a window that was just shown (before the first layout), WinUI silently ignores Invoke,
+     * so it is invoked after layout (Swing's setPopupMenuVisible and doClick open it even right after showing).
+     * If it is not on a window, it still does nothing.
+     */
+    /** Whether this header, or the menu bar it is in if not attached yet, was just shown and is waiting for the first layout. */
+    private fun awaitsFirstLayout(): Boolean {
+        if (laidOutRequests.awaitsFirstLayout()) return true
+        val bar = menuBar ?: return false
+        return !isDisplayable && bar.laidOutRequests.awaitsFirstLayout()
+    }
+
+    private fun invokeWhenLaidOut() {
+        if (awaitsFirstLayout()) {
+            laidOutRequests.runOrDefer(OPEN_REQUEST) { if (withOpeningMenu { it.getBool(XamlInterop.IFlyoutBase_get_IsOpen) } != true) Xaml.invoke(inspectable) }
+        } else {
+            Xaml.invoke(inspectable)
+        }
+    }
 
     /**
      * JMenu.doClick-like: the same as clicking the menu bar heading, opens the menu if closed and closes it if open
@@ -186,7 +221,7 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
      */
     fun doClick() {
         if (!isEnabled) return
-        Xaml.invoke(inspectable)
+        if (laidOutRequests.isPending(OPEN_REQUEST)) laidOutRequests.cancel(OPEN_REQUEST) else invokeWhenLaidOut()
     }
 
     /** Calls [block] with the menu to open (the ContextFlyout of the template part) if there is one. null if not yet there before being placed. */
@@ -294,3 +329,6 @@ class WMenuBarItem @JvmOverloads constructor(title: String = "") : WControl(
 
 /** The keys of the items copied to menu headings ([WMenuBarItem.action] / [WMenuFlyoutSubItem.action]) (the part of JMenu's configurePropertiesFromAction). */
 internal val MENU_HEADER_ACTION_KEYS = listOf(WAction.NAME, WAction.SMALL_ICON, WAction.MNEMONIC_KEY, WAction.ENABLED, WAction.SHORT_DESCRIPTION)
+
+/** The kind of request in [WComponent.laidOutRequests] that opens the menu ([WMenuBarItem.isPopupMenuVisible]). */
+private const val OPEN_REQUEST = "openMenu"

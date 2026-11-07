@@ -25,6 +25,12 @@ internal class LaidOutRequests(private val owner: WComponent) {
     /** Whether it is connected to the window's visual tree and its size has been decided at least once. */
     fun isLaidOut(): Boolean = owner.isDisplayable && (owner.actualWidth > 0.0 || owner.actualHeight > 0.0)
 
+    /**
+     * Whether it is on a window (or in the content of a window that was just shown) but has not done the first layout yet. The content of a window that was just shown
+     * does not have a XamlRoot yet ([WComponent.isDisplayable] is false), but it is laid out once loaded, so it can wait.
+     */
+    fun awaitsFirstLayout(): Boolean = !isLaidOut() && (owner.isDisplayable || WFrame.isInShownFrame(owner))
+
     /** Performs [action] right away if laid out, and otherwise remembers it as the request of [key] (dropping the previous request of the same [key]). */
     fun runOrDefer(key: Any, action: () -> Unit) {
         if (pending.isEmpty() && isLaidOut()) {
