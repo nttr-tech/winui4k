@@ -42,4 +42,11 @@ class WPanel @JvmOverloads constructor(
         if (spacing > 0) this.spacing = spacing
         if (orientation != Orientation.VERTICAL) this.orientation = orientation
     }
+
+    /**
+     * In a vertical stack, whether children whose width is decided by the column count ([WTextField.columns] / [WTextPane.columns]) stretch to the panel's width
+     * instead of being fixed to that width (default false: they get the column width and are centered). [WContentDialog.contentPane] sets it to true (as in the center
+     * of the BorderLayout of a JDialog's contentPane, text fields span the dialog's width). Children with an explicit [WComponent.width] keep that width.
+     */
+    internal var stretchesColumnSizedChildren = false
 }

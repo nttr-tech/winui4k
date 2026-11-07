@@ -440,11 +440,18 @@ internal class OptionDialog(
     private val state = State()
 
     init {
-        val row = WPanel(spacing = ICON_GAP, orientation = Orientation.HORIZONTAL)
-        if (icon != null) row.add(WLabel(icon))
+        // The icon column is the content's width and the message column takes all the rest (Star). In a horizontal StackPanel no width constraint reaches the message, so the text field
+        // shrinks to the width of its text and long messages do not wrap (the text field of Swing's JOptionPane spans the dialog's width)
+        val row = WGrid(columnSpacing = ICON_GAP)
+        row.addRow(GridLength.AUTO)
+        if (icon != null) {
+            row.addColumn(GridLength.AUTO)
+            row.add(WLabel(icon), 0, 0)
+        }
+        row.addColumn(GridLength.star())
         addMessage(body, message)
         if (input != null) body.add(input)
-        row.add(body)
+        row.add(body, 0, if (icon != null) 1 else 0)
         dialog.content = row
         buttons.getOrNull(0)?.let { dialog.primaryButtonText = it }
         buttons.getOrNull(1)?.let { dialog.secondaryButtonText = it }

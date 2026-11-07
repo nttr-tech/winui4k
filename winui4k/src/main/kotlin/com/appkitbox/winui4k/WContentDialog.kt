@@ -136,8 +136,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
      * The default content corresponding to JDialog's contentPane (a vertical StackPanel). While [content] is null, this becomes the dialog content if it has children
      * (while it has no children, no content is shown as before; it switches on [add] and on opening). Even after putting another component in [content] or
      * setting [layout], this returns the default panel (the same as WFrame.contentPane).
+     * Text fields whose width is decided by the column count ([WTextField.columns] etc.) stretch to the dialog's width, as in the center of a JDialog's BorderLayout
+     * (they are not centered as in the vertical stack of a [WFrame]; children with an explicit [WComponent.width] are centered at that width).
      */
-    val contentPane: WPanel = WPanel(spacing = 12.0)
+    val contentPane: WPanel = WPanel(spacing = 12.0).also { it.stretchesColumnSizedChildren = true }
 
     /**
      * The dialog's content (ContentControl.Content). While null (the default), [contentPane] is the content (when it has children).

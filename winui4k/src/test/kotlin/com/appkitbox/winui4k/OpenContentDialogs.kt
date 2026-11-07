@@ -108,6 +108,41 @@ internal object OpenContentDialogs {
         }
     }
 
+    /**
+     * The distances (DIP, positive if the field is inside the area) from the left and right edges of the dialog's content area (the template's ContentPresenter "Content") to
+     * the left and right edges of the first text field (TextBox) in the content, and the field's width. null if no dialog is open.
+     */
+    @JvmStatic
+    fun inputExtent(owner: WComponent): InputExtent? = onUiThreadGet {
+        withDialog(owner) { dialog ->
+            val area = findNamed(dialog, "Content") ?: error("the dialog has no content area (Content)")
+            val box = firstOf(dialog, XamlInterop.IID_ITextBox)
+            try {
+                checkNotNull(box) { "the dialog has no text field" }
+                val (areaLeft, areaWidth) = horizontalExtent(area)
+                val (boxLeft, boxWidth) = horizontalExtent(box)
+                InputExtent(boxLeft - areaLeft, areaLeft + areaWidth - (boxLeft + boxWidth), boxWidth)
+            } finally {
+                box?.release()
+                area.release()
+            }
+        }
+    }
+
+    /** The result of [inputExtent]. */
+    data class InputExtent(val leftInset: Double, val rightInset: Double, val width: Double)
+
+    /** The left edge seen from the root of [element], and its actual width (FrameworkElement.ActualWidth). */
+    private fun horizontalExtent(element: ComPtr): Pair<Double, Double> {
+        val left = Xaml.positionInRoot(element)[0]
+        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
+        return try {
+            left to framework.getDouble(XamlInterop.IFrameworkElement_get_ActualWidth)
+        } finally {
+            framework.release()
+        }
+    }
+
     /** Selects the [index]th item of the first combo box in the dialog's content. */
     @JvmStatic
     fun select(owner: WComponent, index: Int) = onUiThread {
