@@ -63,12 +63,7 @@ private fun buildScrollingTileContent(): WComponent {
 internal fun buildAnnotatedScrollBarPage(): WComponent {
     val page = buildPage(
         "AnnotatedScrollBar",
-        "A control that extends a vertical scrollbar with labels along the rail so you can jump " +
-            "quickly through a large collection. Try it out with WAnnotatedScrollBar connected " +
-            "as a ScrollView's vertical scroll controller. Clicking a label jumps to that " +
-            "position, and hovering over the rail shows the color group name as a tooltip " +
-            "(DetailLabelRequested). (The real Gallery uses ItemsRepeater for the content, but " +
-            "since winui4k doesn't support that yet, this substitutes a tile grid.)",
+        Messages.get("annotatedscrollbar.description"),
     )
 
     page.add(buildAnnotatedScrollBarExample())
@@ -147,11 +142,11 @@ private fun buildAnnotatedScrollBarExample(): WComponent {
     heightSlider.addChangeListener { annotatedScrollBar.height = it }
 
     val options = WPanel(spacing = 12.0)
-    options.add(optionsLabel("Shrinking the height lets you see labels get thinned out so they don't collide."))
+    options.add(optionsLabel(Messages.get("annotatedscrollbar.example.note")))
     options.add(heightSlider)
 
     return buildExample(
-        "Navigation paired with a ScrollView (Labels / ScrollController / DetailLabelRequested)",
+        Messages.get("annotatedscrollbar.example.title"),
         body,
         options,
     )
@@ -165,8 +160,7 @@ private fun buildAnnotatedScrollBarExample(): WComponent {
 internal fun buildPipsPagerPage(): WComponent {
     val page = buildPage(
         "PipsPager",
-        "A pager that moves between pages via a row of dots (pips) instead of explicit page " +
-            "numbers. Try out WPipsPager's various features.",
+        Messages.get("pipspager.description"),
     )
 
     page.add(buildPipsPagerGalleryExample())
@@ -196,7 +190,7 @@ private fun buildPipsPagerGalleryExample(): WComponent {
     val body = WPanel(spacing = 12.0)
     body.add(image)
     body.add(pager)
-    return buildExample("Paired with an image gallery (NumberOfPages / SelectedPageIndex / SelectedIndexChanged)", body)
+    return buildExample(Messages.get("pipspager.example.gallery.title"), body)
 }
 
 /** Orientation and button visibility: switch Orientation / the previous/next buttons' visibility via Options. */
@@ -206,10 +200,10 @@ private fun buildPipsPagerOptionsExample(): WComponent {
     pager.previousButtonVisibility = PipsPagerButtonVisibility.VISIBLE
     pager.nextButtonVisibility = PipsPagerButtonVisibility.VISIBLE
 
-    val selected = WLabel("Selected page: 1")
+    val selected = WLabel(Messages.get("pipspager.example.options.selected", "1"))
     selected.foreground = TEXT_SECONDARY
     pager.addSelectedIndexChangedListener { index ->
-        selected.text = "Selected page: ${index + 1}"
+        selected.text = Messages.get("pipspager.example.options.selected", (index + 1).toString())
     }
 
     val body = WPanel(spacing = 12.0)
@@ -249,7 +243,7 @@ private fun buildPipsPagerOptionsExample(): WComponent {
     options.add(visibilityCombo("Next button visibility") { pager.nextButtonVisibility = it })
 
     return buildExample(
-        "Orientation and button visibility (Orientation / PreviousButtonVisibility / NextButtonVisibility)",
+        Messages.get("pipspager.example.options.title"),
         body,
         options,
     )
@@ -263,8 +257,7 @@ private fun buildPipsPagerOptionsExample(): WComponent {
 internal fun buildScrollViewPage(): WComponent {
     val page = buildPage(
         "ScrollView",
-        "A container that shows content larger than the viewport by scrolling, panning, and " +
-            "zooming it. Try out the various features of WScrollView, the successor to ScrollViewer.",
+        Messages.get("scrollview.description"),
     )
 
     page.add(buildScrollViewImageExample())
@@ -283,7 +276,7 @@ private fun buildScrollViewImageExample(): WComponent {
     scrollView.contentOrientation = ScrollingContentOrientation.NONE
     scrollView.zoomMode = ScrollingZoomMode.ENABLED
 
-    val note = WLabel("Zoom with Ctrl+mouse wheel, or a touch pinch gesture. Use the settings on the right to change the behavior.")
+    val note = WLabel(Messages.get("scrollview.example.image.note"))
     note.textWrapping = TextWrapping.WRAP
     note.foreground = TEXT_SECONDARY
 
@@ -338,7 +331,7 @@ private fun buildScrollViewImageExample(): WComponent {
     options.add(scrollBarCombo("Vertical ScrollBar") { scrollView.verticalScrollBarVisibility = it })
 
     return buildExample(
-        "Zooming an image (ZoomMode / ContentOrientation / ScrollBarVisibility)",
+        Messages.get("scrollview.example.image.title"),
         body,
         options,
     )
@@ -351,33 +344,37 @@ private fun buildScrollViewProgrammaticExample(): WComponent {
     scrollView.height = 260.0
     scrollView.contentOrientation = ScrollingContentOrientation.BOTH
 
-    val offset = WLabel("Position: (0, 0)")
+    val offset = WLabel(Messages.get("scrollview.example.programmatic.position", "0", "0"))
     offset.foreground = TEXT_SECONDARY
     scrollView.addViewChangedListener {
-        offset.text = "Position: (${scrollView.horizontalOffset.toInt()}, ${scrollView.verticalOffset.toInt()})"
+        offset.text = Messages.get(
+            "scrollview.example.programmatic.position",
+            scrollView.horizontalOffset.toInt().toString(),
+            scrollView.verticalOffset.toInt().toString(),
+        )
     }
 
     val body = WPanel(spacing = 12.0)
     body.add(scrollView)
     body.add(offset)
 
-    val toStart = WButton("To start")
+    val toStart = WButton(Messages.get("scrollview.example.programmatic.start"))
     toStart.addActionListener { scrollView.scrollTo(0.0, 0.0) }
-    val toEnd = WButton("To end")
+    val toEnd = WButton(Messages.get("scrollview.example.programmatic.end"))
     toEnd.addActionListener { scrollView.scrollTo(scrollView.scrollableWidth, scrollView.scrollableHeight) }
-    val down = WButton("Down +100")
+    val down = WButton(Messages.get("scrollview.example.programmatic.down"))
     down.addActionListener { scrollView.scrollBy(0.0, 100.0) }
-    val right = WButton("Right +100")
+    val right = WButton(Messages.get("scrollview.example.programmatic.right"))
     right.addActionListener { scrollView.scrollBy(100.0, 0.0) }
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("ScrollTo animates to an absolute position; ScrollBy animates by a relative amount from the current position."))
+    options.add(optionsLabel(Messages.get("scrollview.example.programmatic.note")))
     options.add(toStart)
     options.add(toEnd)
     options.add(down)
     options.add(right)
 
-    return buildExample("Scrolling programmatically (ScrollTo / ScrollBy / ViewChanged)", body, options)
+    return buildExample(Messages.get("scrollview.example.programmatic.title"), body, options)
 }
 
 // endregion
@@ -388,8 +385,7 @@ private fun buildScrollViewProgrammaticExample(): WComponent {
 internal fun buildScrollViewerPage(): WComponent {
     val page = buildPage(
         "ScrollViewer",
-        "The traditional container that shows content larger than the viewport by scrolling it. " +
-            "Try out WScrollPane's various features.",
+        Messages.get("scrollviewer.description"),
     )
 
     page.add(buildScrollViewerVisibilityExample())
@@ -432,7 +428,7 @@ private fun buildScrollViewerVisibilityExample(): WComponent {
     options.add(visibilityCombo("Horizontal ScrollBar", ScrollBarVisibility.AUTO) { scrollPane.horizontalScrollBarVisibility = it })
     options.add(visibilityCombo("Vertical ScrollBar", ScrollBarVisibility.VISIBLE) { scrollPane.verticalScrollBarVisibility = it })
 
-    return buildExample("How scrollbars are shown (HorizontalScrollBarVisibility / VerticalScrollBarVisibility)", body, options)
+    return buildExample(Messages.get("scrollviewer.example.visibility.title"), body, options)
 }
 
 /** Scrolling horizontally from code: ChangeView and subscribing to scroll position (ViewChanged). */
@@ -442,30 +438,34 @@ private fun buildScrollViewerProgrammaticExample(): WComponent {
     scrollPane.height = 200.0
     scrollPane.horizontalScrollBarVisibility = ScrollBarVisibility.AUTO
 
-    val offset = WLabel("Horizontal position: 0 / Scrollable width: 0")
+    val offset = WLabel(Messages.get("scrollviewer.example.programmatic.position", "0", "0"))
     offset.foreground = TEXT_SECONDARY
     scrollPane.addViewChangedListener {
-        offset.text = "Horizontal position: ${scrollPane.horizontalOffset.toInt()} / Scrollable width: ${scrollPane.scrollableWidth.toInt()}"
+        offset.text = Messages.get(
+            "scrollviewer.example.programmatic.position",
+            scrollPane.horizontalOffset.toInt().toString(),
+            scrollPane.scrollableWidth.toInt().toString(),
+        )
     }
 
     val body = WPanel(spacing = 12.0)
     body.add(scrollPane)
     body.add(offset)
 
-    val toStart = WButton("To left edge")
+    val toStart = WButton(Messages.get("scrollviewer.example.programmatic.left"))
     toStart.addActionListener { scrollPane.scrollToHorizontalOffset(0.0) }
-    val toEnd = WButton("To right edge")
+    val toEnd = WButton(Messages.get("scrollviewer.example.programmatic.right"))
     toEnd.addActionListener { scrollPane.scrollToHorizontalOffset(scrollPane.scrollableWidth) }
-    val center = WButton("To center")
+    val center = WButton(Messages.get("scrollviewer.example.programmatic.center"))
     center.addActionListener { scrollPane.scrollToHorizontalOffset(scrollPane.scrollableWidth / 2.0) }
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("ScrollToHorizontalOffset (ChangeView) animates the horizontal scroll position."))
+    options.add(optionsLabel(Messages.get("scrollviewer.example.programmatic.note")))
     options.add(toStart)
     options.add(center)
     options.add(toEnd)
 
-    return buildExample("Scrolling horizontally from code (ChangeView / ViewChanged)", body, options)
+    return buildExample(Messages.get("scrollviewer.example.programmatic.title"), body, options)
 }
 
 // endregion
@@ -476,11 +476,7 @@ private fun buildScrollViewerProgrammaticExample(): WComponent {
 internal fun buildSemanticZoomPage(): WComponent {
     val page = buildPage(
         "SemanticZoom",
-        "A control that switches between a detail view and a summary view of a single " +
-            "collection, making large collections easier to navigate. Try out WSemanticZoom's " +
-            "various features. (The real Gallery uses a grouped CollectionViewSource, but since " +
-            "winui4k doesn't support that yet, this demo simplifies it to detail view = all " +
-            "items, summary view = range labels.)",
+        Messages.get("semanticzoom.description"),
     )
 
     page.add(buildSemanticZoomExample())
@@ -490,8 +486,14 @@ internal fun buildSemanticZoomPage(): WComponent {
 /** Switching views: ZoomedInView / ZoomedOutView / ToggleActiveView / ViewChangeStarted. */
 private fun buildSemanticZoomExample(): WComponent {
     // Detail view: all 60 items. Summary view: range labels grouped by 20 items
-    val zoomedIn = WList((1..60).map { "Item $it" })
-    val zoomedOut = WList(listOf("Item 1-20", "Item 21-40", "Item 41-60"))
+    val zoomedIn = WList((1..60).map { Messages.get("semanticzoom.example.item", it.toString()) })
+    val zoomedOut = WList(
+        listOf(
+            Messages.get("semanticzoom.example.range", "1", "20"),
+            Messages.get("semanticzoom.example.range", "21", "40"),
+            Messages.get("semanticzoom.example.range", "41", "60"),
+        ),
+    )
 
     val semanticZoom = WSemanticZoom(zoomedIn, zoomedOut)
     semanticZoom.width = 400.0
@@ -499,25 +501,29 @@ private fun buildSemanticZoomExample(): WComponent {
     semanticZoom.canChangeViews = true
     semanticZoom.isZoomOutButtonEnabled = true
 
-    val activeView = WLabel("Showing: detail view (ZoomedIn)")
+    val activeView = WLabel(Messages.get("semanticzoom.example.active.in"))
     activeView.foreground = TEXT_SECONDARY
     semanticZoom.addViewChangeStartedListener {
         // ViewChangeStarted fires at the "start" of a switch, so this shows the view about to be displayed
-        activeView.text = if (semanticZoom.isZoomedInViewActive) "Showing: summary view (ZoomedOut)" else "Showing: detail view (ZoomedIn)"
+        activeView.text = if (semanticZoom.isZoomedInViewActive) {
+            Messages.get("semanticzoom.example.active.out")
+        } else {
+            Messages.get("semanticzoom.example.active.in")
+        }
     }
 
     val body = WPanel(spacing = 12.0)
     body.add(semanticZoom)
     body.add(activeView)
 
-    val toggle = WButton("Switch view (ToggleActiveView)")
+    val toggle = WButton(Messages.get("semanticzoom.example.toggle"))
     toggle.addActionListener { semanticZoom.toggleActiveView() }
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("You can also switch by zooming out with Ctrl+mouse wheel, or via the zoom-out button in the bottom-left of the summary view."))
+    options.add(optionsLabel(Messages.get("semanticzoom.example.note")))
     options.add(toggle)
 
-    return buildExample("Switching views (ZoomedInView / ZoomedOutView / ToggleActiveView)", body, options)
+    return buildExample(Messages.get("semanticzoom.example.title"), body, options)
 }
 
 // endregion

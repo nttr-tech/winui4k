@@ -37,7 +37,7 @@ import com.appkitbox.winui4k.WVariableSizedWrapGrid
 
 /** The Border page: lines up demos for trying out WBorder's various features. */
 internal fun buildBorderPage(): WComponent {
-    val page = buildPage("Border", "A container that draws a border, background, and rounded corners around a single child. Try out WBorder's various features.")
+    val page = buildPage("Border", Messages.get("border.description"))
 
     page.add(buildBorderStyleExample())
     page.add(buildBorderBackgroundExample())
@@ -47,22 +47,22 @@ internal fun buildBorderPage(): WComponent {
 
 /** Switching the border thickness and corner rounding with buttons. */
 private fun buildBorderStyleExample(): WComponent {
-    val border = WBorder(WLabel("Content with a border"))
+    val border = WBorder(WLabel(Messages.get("border.example.style.content")))
     border.borderColor = DEMO_BLUE
     border.borderThickness = 2.0
     border.padding = 16.0
 
-    val thicknessButton = WButton("Increase border thickness")
+    val thicknessButton = WButton(Messages.get("border.example.style.thicker"))
     thicknessButton.addActionListener {
         border.borderThickness = if (border.borderThickness >= 8.0) 2.0 else border.borderThickness + 2.0
     }
 
-    val cornerButton = WButton("Toggle rounded corners")
+    val cornerButton = WButton(Messages.get("border.example.style.corner"))
     cornerButton.addActionListener {
         border.cornerRadius = if (border.cornerRadius > 0) 0.0 else 12.0
     }
 
-    val colorButton = WButton("Change border color")
+    val colorButton = WButton(Messages.get("border.example.style.color"))
     var colorIndex = 0
     val colors = listOf(DEMO_BLUE, DEMO_RED, DEMO_GREEN, DEMO_ORANGE)
     colorButton.addActionListener {
@@ -78,17 +78,17 @@ private fun buildBorderStyleExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(border)
     body.add(buttons)
-    return buildExample("Border and corner rounding (BorderBrush / BorderThickness / CornerRadius)", body)
+    return buildExample(Messages.get("border.example.style.title"), body)
 }
 
 /** Background color and padding. */
 private fun buildBorderBackgroundExample(): WComponent {
-    val border = WBorder(WLabel("Content with a background"))
+    val border = WBorder(WLabel(Messages.get("border.example.background.content")))
     border.background = WColor.LIGHT_GRAY
     border.cornerRadius = 8.0
     border.padding = 16.0
 
-    val paddingButton = WButton("Increase padding")
+    val paddingButton = WButton(Messages.get("border.example.background.padding"))
     paddingButton.addActionListener {
         border.padding = if (border.padding >= 48.0) 16.0 else border.padding + 16.0
     }
@@ -96,14 +96,14 @@ private fun buildBorderBackgroundExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(border)
     body.add(paddingButton)
-    return buildExample("Background and padding (Background / Padding)", body)
+    return buildExample(Messages.get("border.example.background.title"), body)
 }
 
 /** Switching between a gradient background and its angle. */
 private fun buildBorderGradientExample(): WComponent {
     val stops = listOf(0.0 to DEMO_BLUE, 1.0 to WColor.PURPLE)
 
-    val border = WBorder(WLabel("Content with a gradient background").also { it.foreground = WColor.WHITE })
+    val border = WBorder(WLabel(Messages.get("border.example.gradient.content")).also { it.foreground = WColor.WHITE })
     border.backgroundGradient = WLinearGradientPaint(stops)
     border.cornerRadius = 8.0
     border.padding = 16.0
@@ -112,17 +112,17 @@ private fun buildBorderGradientExample(): WComponent {
     border.horizontalAlignmentInParent = HorizontalAlignment.LEFT
 
     var angle = 90.0
-    val angleButton = WButton("Change angle (90°)")
+    val angleButton = WButton(Messages.get("border.example.gradient.angle", "90"))
     angleButton.addActionListener {
         angle = if (angle >= 270.0) 0.0 else angle + 90.0
         border.backgroundGradient = WLinearGradientPaint(stops, angle = angle)
-        angleButton.text = "Change angle (${angle.toInt()}°)"
+        angleButton.text = Messages.get("border.example.gradient.angle", angle.toInt().toString())
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(border)
     body.add(angleButton)
-    return buildExample("Gradient background (LinearGradientBrush)", body)
+    return buildExample(Messages.get("border.example.gradient.title"), body)
 }
 
 // endregion
@@ -131,7 +131,7 @@ private fun buildBorderGradientExample(): WComponent {
 
 /** The Canvas page: lines up demos for trying out WCanvas's various features. */
 internal fun buildCanvasPage(): WComponent {
-    val page = buildPage("Canvas", "A panel that positions children with absolute coordinates. Try out WCanvas's various features.")
+    val page = buildPage("Canvas", Messages.get("canvas.description"))
 
     page.add(buildCanvasPositionExample())
     page.add(buildCanvasZIndexExample())
@@ -150,7 +150,7 @@ private fun buildCanvasPositionExample(): WComponent {
     var y = 16.0
     canvas.add(movingTile, x, y)
 
-    val moveButton = WButton("Move the tile")
+    val moveButton = WButton(Messages.get("canvas.example.position.move"))
     moveButton.addActionListener {
         x = if (x >= 256.0) 16.0 else x + 48.0
         y = if (y >= 96.0) 16.0 else y + 16.0
@@ -160,7 +160,7 @@ private fun buildCanvasPositionExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(canvas)
     body.add(moveButton)
-    return buildExample("Absolute positioning (Canvas.Left / Canvas.Top)", body)
+    return buildExample(Messages.get("canvas.example.position.title"), body)
 }
 
 /** Stacking order: swapping front/back with SetZIndex. */
@@ -175,7 +175,7 @@ private fun buildCanvasZIndexExample(): WComponent {
     canvas.add(greenTile, 48.0, 40.0)
 
     var redOnTop = false
-    val swapButton = WButton("Swap stacking order")
+    val swapButton = WButton(Messages.get("canvas.example.zindex.swap"))
     swapButton.addActionListener {
         redOnTop = !redOnTop
         canvas.setZIndex(redTile, if (redOnTop) 1 else 0)
@@ -185,7 +185,7 @@ private fun buildCanvasZIndexExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(canvas)
     body.add(swapButton)
-    return buildExample("Stacking order (Canvas.ZIndex)", body)
+    return buildExample(Messages.get("canvas.example.zindex.title"), body)
 }
 
 // endregion
@@ -196,7 +196,7 @@ private fun buildCanvasZIndexExample(): WComponent {
 internal fun buildLayoutPanelPage(): WComponent {
     val page = buildPage(
         "LayoutPanel",
-        "A container that positions children Swing LayoutManager-style. Try out WLayoutPanel and WBorderLayout's various features.",
+        Messages.get("layoutpanel.description"),
     )
 
     page.add(buildBorderLayoutBasicExample())
@@ -222,7 +222,7 @@ private fun buildBorderLayoutBasicExample(): WComponent {
     panel.add(buildTile(DEMO_ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
     panel.add(buildTile(WColor.PURPLE, label = "East"), WBorderLayout.Constraint.EAST)
     panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
-    return buildExample("Placement across 5 regions (BorderLayout)", panel)
+    return buildExample(Messages.get("layoutpanel.example.basic.title"), panel)
 }
 
 /** Re-layout in response to visibility toggling, detaching, and content changes. */
@@ -234,13 +234,13 @@ private fun buildBorderLayoutDynamicExample(): WComponent {
     panel.add(westTile, WBorderLayout.Constraint.WEST)
     panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
 
-    val northButton = WButton("Toggle North visibility")
+    val northButton = WButton(Messages.get("layoutpanel.example.dynamic.north"))
     northButton.addActionListener {
         northTile.isVisible = !northTile.isVisible
         panel.revalidate()
     }
 
-    val westButton = WButton("Detach / re-add West")
+    val westButton = WButton(Messages.get("layoutpanel.example.dynamic.west"))
     var westAttached = true
     westButton.addActionListener {
         if (westAttached) {
@@ -251,11 +251,11 @@ private fun buildBorderLayoutDynamicExample(): WComponent {
         westAttached = !westAttached
     }
 
-    val widenButton = WButton("Change West's content")
+    val widenButton = WButton(Messages.get("layoutpanel.example.dynamic.widen"))
     var wideWest = false
     widenButton.addActionListener {
         wideWest = !wideWest
-        westTile.child = WLabel(if (wideWest) "West (wider content)" else "West")
+        westTile.child = WLabel(if (wideWest) Messages.get("layoutpanel.example.dynamic.wide") else "West")
         westTile.invalidateNaturalSize()
         panel.revalidate()
     }
@@ -268,7 +268,7 @@ private fun buildBorderLayoutDynamicExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(panel)
     body.add(buttons)
-    return buildExample("Dynamic changes and re-layout (revalidate / invalidateNaturalSize)", body)
+    return buildExample(Messages.get("layoutpanel.example.dynamic.title"), body)
 }
 
 /** Nesting another WLayoutPanel in CENTER (preferredSize is computed recursively in Kotlin). */
@@ -281,7 +281,7 @@ private fun buildBorderLayoutNestedExample(): WComponent {
     panel.add(buildTile(DEMO_BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
     panel.add(buildTile(DEMO_ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
     panel.add(innerPanel, WBorderLayout.Constraint.CENTER)
-    return buildExample("Nested LayoutPanel (another BorderLayout in CENTER)", panel)
+    return buildExample(Messages.get("layoutpanel.example.nested.title"), panel)
 }
 
 // endregion
@@ -290,7 +290,7 @@ private fun buildBorderLayoutNestedExample(): WComponent {
 
 /** The Expander page: lines up demos for trying out WExpander's various features. */
 internal fun buildExpanderPage(): WComponent {
-    val page = buildPage("Expander", "A control that expands/collapses its content when the header is clicked. Try out WExpander's various features.")
+    val page = buildPage("Expander", Messages.get("expander.description"))
 
     page.add(buildExpanderBasicExample())
     page.add(buildExpanderDirectionExample())
@@ -299,30 +299,30 @@ internal fun buildExpanderPage(): WComponent {
 
 /** Basic expand/collapse plus the Expanding / Collapsed events. */
 private fun buildExpanderBasicExample(): WComponent {
-    val state = WLabel("State: collapsed")
+    val state = WLabel(Messages.get("expander.example.basic.state.collapsed"))
 
     val content = WPanel(spacing = 8.0)
-    content.add(WLabel("This is the expanded content."))
-    content.add(WButton("A button inside"))
+    content.add(WLabel(Messages.get("expander.example.basic.content")))
+    content.add(WButton(Messages.get("expander.example.basic.button")))
 
-    val expander = WExpander("Click to expand or collapse", content)
+    val expander = WExpander(Messages.get("expander.example.basic.header"), content)
     expander.width = 320.0
-    expander.addExpandListener { state.text = "State: expanded" }
-    expander.addCollapseListener { state.text = "State: collapsed" }
+    expander.addExpandListener { state.text = Messages.get("expander.example.basic.state.expanded") }
+    expander.addCollapseListener { state.text = Messages.get("expander.example.basic.state.collapsed") }
 
-    val toggleButton = WButton("Toggle from code")
+    val toggleButton = WButton(Messages.get("expander.example.basic.toggle"))
     toggleButton.addActionListener { expander.isExpanded = !expander.isExpanded }
 
     val body = WPanel(spacing = 8.0)
     body.add(expander)
     body.add(toggleButton)
     body.add(state)
-    return buildExample("Expand/collapse and events (IsExpanded / Expanding / Collapsed)", body)
+    return buildExample(Messages.get("expander.example.basic.title"), body)
 }
 
 /** The expand direction (ExpandDirection). */
 private fun buildExpanderDirectionExample(): WComponent {
-    val expander = WExpander("A header whose expand direction can change", WLabel("Can expand either up or down."))
+    val expander = WExpander(Messages.get("expander.example.direction.header"), WLabel(Messages.get("expander.example.direction.content")))
     expander.width = 320.0
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -337,7 +337,7 @@ private fun buildExpanderDirectionExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(expander)
-    return buildExample("Expand direction (ExpandDirection)", body)
+    return buildExample(Messages.get("expander.example.direction.title"), body)
 }
 
 // endregion
@@ -346,7 +346,7 @@ private fun buildExpanderDirectionExample(): WComponent {
 
 /** The Grid page: lines up demos for trying out WGrid's various features. */
 internal fun buildGridPage(): WComponent {
-    val page = buildPage("Grid", "A panel that defines rows and columns and places children into cells. Try out WGrid's various features.")
+    val page = buildPage("Grid", Messages.get("grid.description"))
 
     page.add(buildGridCellExample())
     page.add(buildGridSpanExample())
@@ -366,10 +366,10 @@ private fun buildGridCellExample(): WComponent {
     grid.add(buildTile(DEMO_RED, label = "80px"), row = 0, column = 0)
     grid.add(buildTile(DEMO_GREEN, label = "1*"), row = 0, column = 1)
     grid.add(buildTile(DEMO_BLUE, label = "2*"), row = 0, column = 2)
-    grid.add(buildTile(DEMO_ORANGE, label = "Row 2"), row = 1, column = 0)
-    grid.add(buildTile(WColor.PURPLE, label = "Row 2"), row = 1, column = 2)
+    grid.add(buildTile(DEMO_ORANGE, label = Messages.get("grid.example.cell.row2")), row = 1, column = 0)
+    grid.add(buildTile(WColor.PURPLE, label = Messages.get("grid.example.cell.row2")), row = 1, column = 2)
 
-    return buildExample("Row/column definitions and cell placement (RowDefinitions / ColumnDefinitions)", grid)
+    return buildExample(Messages.get("grid.example.cell.title"), grid)
 }
 
 /** RowSpan / ColumnSpan and cell spacing. */
@@ -379,12 +379,12 @@ private fun buildGridSpanExample(): WComponent {
     repeat(2) { grid.addRow(GridLength.pixel(48.0)) }
     repeat(3) { grid.addColumn(GridLength.star()) }
 
-    grid.add(buildTile(DEMO_BLUE, label = "2 columns"), row = 0, column = 0, columnSpan = 2)
-    grid.add(buildTile(DEMO_GREEN, label = "2 rows"), row = 0, column = 2, rowSpan = 2)
-    grid.add(buildTile(DEMO_RED, label = "1 cell"), row = 1, column = 0)
-    grid.add(buildTile(DEMO_ORANGE, label = "1 cell"), row = 1, column = 1)
+    grid.add(buildTile(DEMO_BLUE, label = Messages.get("grid.example.span.columns")), row = 0, column = 0, columnSpan = 2)
+    grid.add(buildTile(DEMO_GREEN, label = Messages.get("grid.example.span.rows")), row = 0, column = 2, rowSpan = 2)
+    grid.add(buildTile(DEMO_RED, label = Messages.get("grid.example.span.cell")), row = 1, column = 0)
+    grid.add(buildTile(DEMO_ORANGE, label = Messages.get("grid.example.span.cell")), row = 1, column = 1)
 
-    val spacingButton = WButton("Toggle cell spacing")
+    val spacingButton = WButton(Messages.get("grid.example.span.spacing"))
     spacingButton.addActionListener {
         val next = if (grid.rowSpacing > 4.0) 4.0 else 16.0
         grid.rowSpacing = next
@@ -394,7 +394,7 @@ private fun buildGridSpanExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(grid)
     body.add(spacingButton)
-    return buildExample("Cell spans and spacing (RowSpan / ColumnSpan / Spacing)", body)
+    return buildExample(Messages.get("grid.example.span.title"), body)
 }
 
 // endregion
@@ -403,7 +403,7 @@ private fun buildGridSpanExample(): WComponent {
 
 /** The RelativePanel page: lines up demos for trying out WRelativePanel's various features. */
 internal fun buildRelativePanelPage(): WComponent {
-    val page = buildPage("RelativePanel", "A panel that positions children relative to each other or to the panel. Try out WRelativePanel's various features.")
+    val page = buildPage("RelativePanel", Messages.get("relativepanel.description"))
 
     page.add(buildRelativePanelSiblingExample())
     page.add(buildRelativePanelAlignExample())
@@ -416,10 +416,10 @@ private fun buildRelativePanelSiblingExample(): WComponent {
     panel.width = 320.0
     panel.height = 160.0
 
-    val anchor = buildTile(DEMO_BLUE, label = "Anchor")
-    val right = buildTile(DEMO_GREEN, label = "Right")
-    val below = buildTile(DEMO_RED, label = "Below")
-    val rightBelow = buildTile(DEMO_ORANGE, label = "Right+Below")
+    val anchor = buildTile(DEMO_BLUE, label = Messages.get("relativepanel.example.sibling.anchor"))
+    val right = buildTile(DEMO_GREEN, label = Messages.get("relativepanel.example.sibling.right"))
+    val below = buildTile(DEMO_RED, label = Messages.get("relativepanel.example.sibling.below"))
+    val rightBelow = buildTile(DEMO_ORANGE, label = Messages.get("relativepanel.example.sibling.rightbelow"))
 
     panel.add(anchor)
     panel.add(right)
@@ -431,7 +431,7 @@ private fun buildRelativePanelSiblingExample(): WComponent {
     panel.placeRightOf(rightBelow, below)
     panel.placeBelow(rightBelow, right)
 
-    return buildExample("Placement relative to siblings (RightOf / Below)", panel)
+    return buildExample(Messages.get("relativepanel.example.sibling.title"), panel)
 }
 
 /** Placement relative to the panel (AlignXxxWithPanel). */
@@ -457,7 +457,7 @@ private fun buildRelativePanelAlignExample(): WComponent {
     panel.alignHorizontalCenterWithPanel(center)
     panel.alignVerticalCenterWithPanel(center)
 
-    return buildExample("Placement relative to the panel (AlignXxxWithPanel)", panel)
+    return buildExample(Messages.get("relativepanel.example.align.title"), panel)
 }
 
 // endregion
@@ -466,7 +466,7 @@ private fun buildRelativePanelAlignExample(): WComponent {
 
 /** The SplitView page: lines up demos for trying out WSplitView's various features. */
 internal fun buildSplitViewPage(): WComponent {
-    val page = buildPage("SplitView", "A control that lines up a collapsible pane alongside content. Try out WSplitView's various features.")
+    val page = buildPage("SplitView", Messages.get("splitview.description"))
 
     page.add(buildSplitViewExample())
     return page
@@ -475,15 +475,15 @@ internal fun buildSplitViewPage(): WComponent {
 /** Opening/closing the pane, display mode, and placement. */
 private fun buildSplitViewExample(): WComponent {
     val paneContent = WPanel(spacing = 8.0)
-    paneContent.add(WLabel("Pane"))
-    paneContent.add(WButton("Menu 1"))
-    paneContent.add(WButton("Menu 2"))
+    paneContent.add(WLabel(Messages.get("splitview.example.pane")))
+    paneContent.add(WButton(Messages.get("splitview.example.menu1")))
+    paneContent.add(WButton(Messages.get("splitview.example.menu2")))
 
     val pane = WBorder(paneContent)
     pane.background = WColor.LIGHT_GRAY
     pane.padding = 8.0
 
-    val mainContent = WBorder(WLabel("Main content"))
+    val mainContent = WBorder(WLabel(Messages.get("splitview.example.content")))
     mainContent.padding = 16.0
 
     val splitView = WSplitView(pane = pane, content = mainContent)
@@ -492,7 +492,7 @@ private fun buildSplitViewExample(): WComponent {
     splitView.openPaneLength = 160.0
     splitView.displayMode = SplitViewDisplayMode.INLINE
 
-    val toggleButton = WButton("Toggle pane")
+    val toggleButton = WButton(Messages.get("splitview.example.toggle"))
     toggleButton.addActionListener { splitView.isPaneOpen = !splitView.isPaneOpen }
 
     val modeButtons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -505,7 +505,7 @@ private fun buildSplitViewExample(): WComponent {
         )
     }
 
-    val placementButton = WButton("Flip pane placement")
+    val placementButton = WButton(Messages.get("splitview.example.placement"))
     placementButton.addActionListener {
         splitView.panePlacement = when (splitView.panePlacement) {
             SplitViewPanePlacement.LEFT -> SplitViewPanePlacement.RIGHT
@@ -518,7 +518,7 @@ private fun buildSplitViewExample(): WComponent {
     body.add(toggleButton)
     body.add(modeButtons)
     body.add(placementButton)
-    return buildExample("Opening/closing the pane (IsPaneOpen / DisplayMode / PanePlacement)", body)
+    return buildExample(Messages.get("splitview.example.title"), body)
 }
 
 // endregion
@@ -527,7 +527,7 @@ private fun buildSplitViewExample(): WComponent {
 
 /** The StackPanel page: lines up demos for trying out WPanel's various features. */
 internal fun buildStackPanelPage(): WComponent {
-    val page = buildPage("StackPanel", "A panel that lines up children in one direction. Try out WPanel's various features.")
+    val page = buildPage("StackPanel", Messages.get("stackpanel.description"))
 
     page.add(buildStackPanelExample())
     return page
@@ -540,7 +540,7 @@ private fun buildStackPanelExample(): WComponent {
     panel.add(buildTile(DEMO_GREEN, 48.0, 48.0))
     panel.add(buildTile(DEMO_BLUE, 48.0, 48.0))
 
-    val orientationButton = WButton("Toggle direction")
+    val orientationButton = WButton(Messages.get("stackpanel.example.orientation"))
     orientationButton.addActionListener {
         panel.orientation = when (panel.orientation) {
             Orientation.VERTICAL -> Orientation.HORIZONTAL
@@ -548,7 +548,7 @@ private fun buildStackPanelExample(): WComponent {
         }
     }
 
-    val spacingButton = WButton("Toggle spacing")
+    val spacingButton = WButton(Messages.get("stackpanel.example.spacing"))
     spacingButton.addActionListener {
         panel.spacing = if (panel.spacing > 8.0) 8.0 else 24.0
     }
@@ -560,7 +560,7 @@ private fun buildStackPanelExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(panel)
-    return buildExample("Direction and spacing (Orientation / Spacing)", body)
+    return buildExample(Messages.get("stackpanel.example.title"), body)
 }
 
 // endregion
@@ -569,7 +569,7 @@ private fun buildStackPanelExample(): WComponent {
 
 /** The VariableSizedWrapGrid page: lines up demos for trying out WVariableSizedWrapGrid's various features. */
 internal fun buildVariableSizedWrapGridPage(): WComponent {
-    val page = buildPage("VariableSizedWrapGrid", "A panel that wraps children by cell. Try out WVariableSizedWrapGrid's various features.")
+    val page = buildPage("VariableSizedWrapGrid", Messages.get("variablesizedwrapgrid.description"))
 
     page.add(buildWrapGridSpanExample())
     return page
@@ -588,12 +588,12 @@ private fun buildWrapGridSpanExample(): WComponent {
     grid.add(buildTile(WColor.PURPLE, label = "2×1"), rowSpan = 2, columnSpan = 1)
     grid.add(buildTile(WColor.GRAY, label = "1×1"), rowSpan = 1, columnSpan = 1)
 
-    val maxButton = WButton("Toggle wrap count")
+    val maxButton = WButton(Messages.get("variablesizedwrapgrid.example.maximum"))
     maxButton.addActionListener {
         grid.maximumRowsOrColumns = if (grid.maximumRowsOrColumns == 4) 6 else 4
     }
 
-    val orientationButton = WButton("Toggle direction")
+    val orientationButton = WButton(Messages.get("variablesizedwrapgrid.example.orientation"))
     orientationButton.addActionListener {
         grid.orientation = when (grid.orientation) {
             Orientation.VERTICAL -> Orientation.HORIZONTAL
@@ -608,7 +608,7 @@ private fun buildWrapGridSpanExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(buttons)
     body.add(grid)
-    return buildExample("Cell spans and wrapping (RowSpan / ColumnSpan / MaximumRowsOrColumns)", body)
+    return buildExample(Messages.get("variablesizedwrapgrid.example.title"), body)
 }
 
 // endregion
@@ -619,8 +619,7 @@ private fun buildWrapGridSpanExample(): WComponent {
 internal fun buildSettingsCardPage(): WComponent {
     val page = buildPage(
         "SettingsCard",
-        "A card that represents a single entry on a settings page (equivalent to the Windows Community Toolkit's SettingsCard). " +
-            "Try out WSettingsCard's various features.",
+        Messages.get("settingscard.description"),
     )
 
     page.add(buildSettingsCardBasicExample())
@@ -633,44 +632,62 @@ internal fun buildSettingsCardPage(): WComponent {
 
 /** The basic form: a header, description, and icon on the left, with content on the right. */
 private fun buildSettingsCardBasicExample(): WComponent {
-    val toggleCard = WSettingsCard("Enable the feature", "Write an explanation under Header and Description, and put the control on the right.")
+    val toggleCard = WSettingsCard(
+        Messages.get("settingscard.example.basic.toggle.header"),
+        Messages.get("settingscard.example.basic.toggle.description"),
+    )
     toggleCard.headerIcon = Symbol.SETTING
     toggleCard.content = WToggleSwitch()
 
-    val comboCard = WSettingsCard("Display mode", "Content can hold any component.")
+    val comboCard = WSettingsCard(
+        Messages.get("settingscard.example.basic.combo.header"),
+        Messages.get("settingscard.example.basic.combo.description"),
+    )
     comboCard.headerIcon = Symbol.VIEW_ALL
-    comboCard.content = WComboBox(listOf("Light", "Dark", "Follow the system setting")).also { it.selectedIndex = 2 }
+    comboCard.content = WComboBox(
+        listOf(
+            Messages.get("settingscard.example.basic.combo.light"),
+            Messages.get("settingscard.example.basic.combo.dark"),
+            Messages.get("settingscard.example.basic.combo.system"),
+        ),
+    ).also { it.selectedIndex = 2 }
 
-    val plainCard = WSettingsCard("A card with only a header")
+    val plainCard = WSettingsCard(Messages.get("settingscard.example.basic.plain"))
 
     val body = WPanel(spacing = 4.0)
     body.width = SETTINGS_CARD_DEMO_WIDTH
     body.add(toggleCard)
     body.add(comboCard)
     body.add(plainCard)
-    return buildExample("A basic card (Header / Description / HeaderIcon / Content)", body)
+    return buildExample(Messages.get("settingscard.example.basic.title"), body)
 }
 
 /** A clickable card and its chevron icon (ActionIcon). */
 private fun buildSettingsCardClickExample(): WComponent {
-    val state = WLabel("Click count: 0")
+    val state = WLabel(Messages.get("settingscard.example.click.count", "0"))
     var count = 0
 
-    val card = WSettingsCard("Storage", "With IsClickEnabled=true the whole card becomes a button, and the background changes on hover / press.")
+    val card = WSettingsCard(
+        Messages.get("settingscard.example.click.storage.header"),
+        Messages.get("settingscard.example.click.storage.description"),
+    )
     card.headerIcon = Symbol.SAVE
     card.isClickEnabled = true
     card.addActionListener {
         count++
-        state.text = "Click count: $count"
+        state.text = Messages.get("settingscard.example.click.count", count.toString())
     }
 
-    val linkCard = WSettingsCard("Open a web site", "ActionIcon can be changed to any Symbol, and a tooltip can be attached to it.")
+    val linkCard = WSettingsCard(
+        Messages.get("settingscard.example.click.link.header"),
+        Messages.get("settingscard.example.click.link.description"),
+    )
     linkCard.headerIcon = Symbol.GLOBE
     linkCard.isClickEnabled = true
     linkCard.actionIcon = Symbol.GO
-    linkCard.actionIconToolTip = "Opens in the browser"
+    linkCard.actionIconToolTip = Messages.get("settingscard.example.click.link.tooltip")
 
-    val actionIconSwitch = WToggleSwitch("Show the chevron icon (IsActionIconVisible)")
+    val actionIconSwitch = WToggleSwitch(Messages.get("settingscard.example.click.chevron"))
     actionIconSwitch.isOn = true
     actionIconSwitch.addItemListener { isOn -> card.isActionIconVisible = isOn }
 
@@ -680,24 +697,29 @@ private fun buildSettingsCardClickExample(): WComponent {
     body.add(linkCard)
     body.add(state)
     body.add(actionIconSwitch)
-    return buildExample("A clickable card (IsClickEnabled / ActionIcon / ActionIconToolTip)", body)
+    return buildExample(Messages.get("settingscard.example.click.title"), body)
 }
 
 /** Automatic wrapping based on width (RightWrapped / RightWrappedNoIcon). */
 private fun buildSettingsCardWrapExample(): WComponent {
     val card = WSettingsCard(
-        "A card that wraps by width",
-        "At 476px or less the content moves to the row below, and under 286px the icon is hidden as well.",
+        Messages.get("settingscard.example.wrap.header"),
+        Messages.get("settingscard.example.wrap.description"),
     )
     card.headerIcon = Symbol.SETTING
-    card.content = WComboBox(listOf("Option 1", "Option 2")).also { it.selectedIndex = 0 }
+    card.content = WComboBox(
+        listOf(
+            Messages.get("settingscard.example.wrap.option1"),
+            Messages.get("settingscard.example.wrap.option2"),
+        ),
+    ).also { it.selectedIndex = 0 }
 
-    val widthLabel = WLabel("Card width: ${SETTINGS_CARD_DEMO_WIDTH.toInt()}px")
+    val widthLabel = WLabel(Messages.get("settingscard.example.wrap.width", SETTINGS_CARD_DEMO_WIDTH.toInt().toString()))
     val slider = WSlider(minimum = 200.0, maximum = SETTINGS_CARD_DEMO_WIDTH, value = SETTINGS_CARD_DEMO_WIDTH)
     slider.width = SETTINGS_CARD_DEMO_WIDTH
     slider.addChangeListener { value ->
         card.width = value
-        widthLabel.text = "Card width: ${value.toInt()}px"
+        widthLabel.text = Messages.get("settingscard.example.wrap.width", value.toInt().toString())
     }
 
     val body = WPanel(spacing = 8.0)
@@ -705,14 +727,17 @@ private fun buildSettingsCardWrapExample(): WComponent {
     body.add(card)
     body.add(slider)
     body.add(widthLabel)
-    return buildExample("Automatic wrapping based on width (RightWrapped / RightWrappedNoIcon)", body)
+    return buildExample(Messages.get("settingscard.example.wrap.title"), body)
 }
 
 /** ContentAlignment (Right / Left / Vertical). */
 private fun buildSettingsCardAlignmentExample(): WComponent {
-    val card = WSettingsCard("Content placement", "With Left the header is hidden, and with Vertical the content fills the width of the row below.")
+    val card = WSettingsCard(
+        Messages.get("settingscard.example.alignment.header"),
+        Messages.get("settingscard.example.alignment.description"),
+    )
     card.headerIcon = Symbol.ALIGN_LEFT
-    card.content = WCheckBox("A checkbox as the content")
+    card.content = WCheckBox(Messages.get("settingscard.example.alignment.checkbox"))
 
     val combo = WComboBox(ContentAlignment.entries.map { it.name })
     combo.selectedIndex = 0
@@ -729,16 +754,19 @@ private fun buildSettingsCardAlignmentExample(): WComponent {
     body.width = SETTINGS_CARD_DEMO_WIDTH
     body.add(card)
     body.add(options)
-    return buildExample("Content placement (ContentAlignment)", body)
+    return buildExample(Messages.get("settingscard.example.alignment.title"), body)
 }
 
 /** How the disabled state looks. */
 private fun buildSettingsCardStateExample(): WComponent {
-    val card = WSettingsCard("A card that can be disabled", "With IsEnabled=false the colors switch to the disabled state.")
+    val card = WSettingsCard(
+        Messages.get("settingscard.example.state.header"),
+        Messages.get("settingscard.example.state.description"),
+    )
     card.headerIcon = Symbol.IMPORTANT
     card.content = WToggleSwitch()
 
-    val enabledSwitch = WToggleSwitch("Enable the card (IsEnabled)")
+    val enabledSwitch = WToggleSwitch(Messages.get("settingscard.example.state.switch"))
     enabledSwitch.isOn = true
     enabledSwitch.addItemListener { isOn -> card.isEnabled = isOn }
 
@@ -746,7 +774,7 @@ private fun buildSettingsCardStateExample(): WComponent {
     body.width = SETTINGS_CARD_DEMO_WIDTH
     body.add(card)
     body.add(enabledSwitch)
-    return buildExample("The disabled state (IsEnabled)", body)
+    return buildExample(Messages.get("settingscard.example.state.title"), body)
 }
 
 /** The width of the SettingsCard demos (a width that looks like a real settings page list). */

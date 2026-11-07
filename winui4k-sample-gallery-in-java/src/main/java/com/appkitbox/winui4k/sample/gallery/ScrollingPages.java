@@ -75,12 +75,7 @@ final class ScrollingPages {
     static WComponent buildAnnotatedScrollBarPage() {
         WPanel page = GalleryScaffold.buildPage(
             "AnnotatedScrollBar",
-            "A control that extends a vertical scrollbar with labels along the rail so you can jump "
-                + "quickly through a large collection. Try it out with WAnnotatedScrollBar connected "
-                + "as a ScrollView's vertical scroll controller. Clicking a label jumps to that "
-                + "position, and hovering over the rail shows the color group name as a tooltip "
-                + "(DetailLabelRequested). (The real Gallery uses ItemsRepeater for the content, but "
-                + "since winui4k doesn't support that yet, this substitutes a tile grid.)");
+            Messages.get("annotatedscrollbar.description"));
 
         page.add(buildAnnotatedScrollBarExample());
         return page;
@@ -188,11 +183,11 @@ final class ScrollingPages {
         });
 
         WPanel options = new WPanel(12.0);
-        options.add(GalleryScaffold.optionsLabel("Shrinking the height lets you see labels get thinned out so they don't collide."));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("annotatedscrollbar.example.note")));
         options.add(heightSlider);
 
         return GalleryScaffold.buildExample(
-            "Navigation paired with a ScrollView (Labels / ScrollController / DetailLabelRequested)",
+            Messages.get("annotatedscrollbar.example.title"),
             body,
             options);
     }
@@ -205,8 +200,7 @@ final class ScrollingPages {
     static WComponent buildPipsPagerPage() {
         WPanel page = GalleryScaffold.buildPage(
             "PipsPager",
-            "A pager that moves between pages via a row of dots (pips) instead of explicit page "
-                + "numbers. Try out WPipsPager's various features.");
+            Messages.get("pipspager.description"));
 
         page.add(buildPipsPagerGalleryExample());
         page.add(buildPipsPagerOptionsExample());
@@ -238,7 +232,7 @@ final class ScrollingPages {
         WPanel body = new WPanel(12.0);
         body.add(image);
         body.add(pager);
-        return GalleryScaffold.buildExample("Paired with an image gallery (NumberOfPages / SelectedPageIndex / SelectedIndexChanged)", body);
+        return GalleryScaffold.buildExample(Messages.get("pipspager.example.gallery.title"), body);
     }
 
     /** Orientation and button visibility: switch Orientation / the previous/next buttons' visibility via Options. */
@@ -248,10 +242,10 @@ final class ScrollingPages {
         pager.setPreviousButtonVisibility(PipsPagerButtonVisibility.VISIBLE);
         pager.setNextButtonVisibility(PipsPagerButtonVisibility.VISIBLE);
 
-        WLabel selected = new WLabel("Selected page: 1");
+        WLabel selected = new WLabel(Messages.get("pipspager.example.options.selected", "1"));
         selected.setForeground(GalleryTheme.TEXT_SECONDARY());
         pager.addSelectedIndexChangedListener(index -> {
-            selected.setText("Selected page: " + (index + 1));
+            selected.setText(Messages.get("pipspager.example.options.selected", String.valueOf(index + 1)));
         });
 
         WPanel body = new WPanel(12.0);
@@ -274,7 +268,7 @@ final class ScrollingPages {
         options.add(visibilityCombo("Next button visibility", pager::setNextButtonVisibility));
 
         return GalleryScaffold.buildExample(
-            "Orientation and button visibility (Orientation / PreviousButtonVisibility / NextButtonVisibility)",
+            Messages.get("pipspager.example.options.title"),
             body,
             options);
     }
@@ -308,8 +302,7 @@ final class ScrollingPages {
     static WComponent buildScrollViewPage() {
         WPanel page = GalleryScaffold.buildPage(
             "ScrollView",
-            "A container that shows content larger than the viewport by scrolling, panning, and "
-                + "zooming it. Try out the various features of WScrollView, the successor to ScrollViewer.");
+            Messages.get("scrollview.description"));
 
         page.add(buildScrollViewImageExample());
         page.add(buildScrollViewProgrammaticExample());
@@ -327,7 +320,7 @@ final class ScrollingPages {
         scrollView.setContentOrientation(ScrollingContentOrientation.NONE);
         scrollView.setZoomMode(ScrollingZoomMode.ENABLED);
 
-        WLabel note = new WLabel("Zoom with Ctrl+mouse wheel, or a touch pinch gesture. Use the settings on the right to change the behavior.");
+        WLabel note = new WLabel(Messages.get("scrollview.example.image.note"));
         note.setTextWrapping(TextWrapping.WRAP);
         note.setForeground(GalleryTheme.TEXT_SECONDARY());
 
@@ -371,7 +364,7 @@ final class ScrollingPages {
         options.add(scrollBarCombo("Vertical ScrollBar", scrollView::setVerticalScrollBarVisibility));
 
         return GalleryScaffold.buildExample(
-            "Zooming an image (ZoomMode / ContentOrientation / ScrollBarVisibility)",
+            Messages.get("scrollview.example.image.title"),
             body,
             options);
     }
@@ -404,41 +397,44 @@ final class ScrollingPages {
         scrollView.setHeight(260.0);
         scrollView.setContentOrientation(ScrollingContentOrientation.BOTH);
 
-        WLabel offset = new WLabel("Position: (0, 0)");
+        WLabel offset = new WLabel(Messages.get("scrollview.example.programmatic.position", "0", "0"));
         offset.setForeground(GalleryTheme.TEXT_SECONDARY());
         scrollView.addViewChangedListener(() -> {
-            offset.setText("Position: (" + (int) scrollView.getHorizontalOffset() + ", " + (int) scrollView.getVerticalOffset() + ")");
+            offset.setText(Messages.get(
+                "scrollview.example.programmatic.position",
+                String.valueOf((int) scrollView.getHorizontalOffset()),
+                String.valueOf((int) scrollView.getVerticalOffset())));
         });
 
         WPanel body = new WPanel(12.0);
         body.add(scrollView);
         body.add(offset);
 
-        WButton toStart = new WButton("To start");
+        WButton toStart = new WButton(Messages.get("scrollview.example.programmatic.start"));
         toStart.addActionListener(() -> {
             scrollView.scrollTo(0.0, 0.0);
         });
-        WButton toEnd = new WButton("To end");
+        WButton toEnd = new WButton(Messages.get("scrollview.example.programmatic.end"));
         toEnd.addActionListener(() -> {
             scrollView.scrollTo(scrollView.getScrollableWidth(), scrollView.getScrollableHeight());
         });
-        WButton down = new WButton("Down +100");
+        WButton down = new WButton(Messages.get("scrollview.example.programmatic.down"));
         down.addActionListener(() -> {
             scrollView.scrollBy(0.0, 100.0);
         });
-        WButton right = new WButton("Right +100");
+        WButton right = new WButton(Messages.get("scrollview.example.programmatic.right"));
         right.addActionListener(() -> {
             scrollView.scrollBy(100.0, 0.0);
         });
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("ScrollTo animates to an absolute position; ScrollBy animates by a relative amount from the current position."));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("scrollview.example.programmatic.note")));
         options.add(toStart);
         options.add(toEnd);
         options.add(down);
         options.add(right);
 
-        return GalleryScaffold.buildExample("Scrolling programmatically (ScrollTo / ScrollBy / ViewChanged)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("scrollview.example.programmatic.title"), body, options);
     }
 
     // endregion
@@ -449,8 +445,7 @@ final class ScrollingPages {
     static WComponent buildScrollViewerPage() {
         WPanel page = GalleryScaffold.buildPage(
             "ScrollViewer",
-            "The traditional container that shows content larger than the viewport by scrolling it. "
-                + "Try out WScrollPane's various features.");
+            Messages.get("scrollviewer.description"));
 
         page.add(buildScrollViewerVisibilityExample());
         page.add(buildScrollViewerProgrammaticExample());
@@ -473,7 +468,7 @@ final class ScrollingPages {
         options.add(visibilityCombo("Horizontal ScrollBar", ScrollBarVisibility.AUTO, scrollPane::setHorizontalScrollBarVisibility));
         options.add(visibilityCombo("Vertical ScrollBar", ScrollBarVisibility.VISIBLE, scrollPane::setVerticalScrollBarVisibility));
 
-        return GalleryScaffold.buildExample("How scrollbars are shown (HorizontalScrollBarVisibility / VerticalScrollBarVisibility)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("scrollviewer.example.visibility.title"), body, options);
     }
 
     /** A combo box for switching how the scrollbars are shown (for buildScrollViewerVisibilityExample). */
@@ -509,37 +504,39 @@ final class ScrollingPages {
         scrollPane.setHeight(200.0);
         scrollPane.setHorizontalScrollBarVisibility(ScrollBarVisibility.AUTO);
 
-        WLabel offset = new WLabel("Horizontal position: 0 / Scrollable width: 0");
+        WLabel offset = new WLabel(Messages.get("scrollviewer.example.programmatic.position", "0", "0"));
         offset.setForeground(GalleryTheme.TEXT_SECONDARY());
         scrollPane.addViewChangedListener(() -> {
-            offset.setText("Horizontal position: " + (int) scrollPane.getHorizontalOffset()
-                + " / Scrollable width: " + (int) scrollPane.getScrollableWidth());
+            offset.setText(Messages.get(
+                "scrollviewer.example.programmatic.position",
+                String.valueOf((int) scrollPane.getHorizontalOffset()),
+                String.valueOf((int) scrollPane.getScrollableWidth())));
         });
 
         WPanel body = new WPanel(12.0);
         body.add(scrollPane);
         body.add(offset);
 
-        WButton toStart = new WButton("To left edge");
+        WButton toStart = new WButton(Messages.get("scrollviewer.example.programmatic.left"));
         toStart.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(0.0);
         });
-        WButton toEnd = new WButton("To right edge");
+        WButton toEnd = new WButton(Messages.get("scrollviewer.example.programmatic.right"));
         toEnd.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(scrollPane.getScrollableWidth());
         });
-        WButton center = new WButton("To center");
+        WButton center = new WButton(Messages.get("scrollviewer.example.programmatic.center"));
         center.addActionListener(() -> {
             scrollPane.scrollToHorizontalOffset(scrollPane.getScrollableWidth() / 2.0);
         });
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("ScrollToHorizontalOffset (ChangeView) animates the horizontal scroll position."));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("scrollviewer.example.programmatic.note")));
         options.add(toStart);
         options.add(center);
         options.add(toEnd);
 
-        return GalleryScaffold.buildExample("Scrolling horizontally from code (ChangeView / ViewChanged)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("scrollviewer.example.programmatic.title"), body, options);
     }
 
     // endregion
@@ -550,11 +547,7 @@ final class ScrollingPages {
     static WComponent buildSemanticZoomPage() {
         WPanel page = GalleryScaffold.buildPage(
             "SemanticZoom",
-            "A control that switches between a detail view and a summary view of a single "
-                + "collection, making large collections easier to navigate. Try out WSemanticZoom's "
-                + "various features. (The real Gallery uses a grouped CollectionViewSource, but since "
-                + "winui4k doesn't support that yet, this demo simplifies it to detail view = all "
-                + "items, summary view = range labels.)");
+            Messages.get("semanticzoom.description"));
 
         page.add(buildSemanticZoomExample());
         return page;
@@ -565,10 +558,13 @@ final class ScrollingPages {
         // Detail view: all 60 items. Summary view: range labels grouped by 20 items
         List<String> zoomedInItems = new ArrayList<>();
         for (int i = 1; i <= 60; i++) {
-            zoomedInItems.add("Item " + i);
+            zoomedInItems.add(Messages.get("semanticzoom.example.item", String.valueOf(i)));
         }
         WList zoomedIn = new WList(zoomedInItems);
-        WList zoomedOut = new WList(Arrays.asList("Item 1-20", "Item 21-40", "Item 41-60"));
+        WList zoomedOut = new WList(Arrays.asList(
+            Messages.get("semanticzoom.example.range", "1", "20"),
+            Messages.get("semanticzoom.example.range", "21", "40"),
+            Messages.get("semanticzoom.example.range", "41", "60")));
 
         WSemanticZoom semanticZoom = new WSemanticZoom(zoomedIn, zoomedOut);
         semanticZoom.setWidth(400.0);
@@ -576,28 +572,28 @@ final class ScrollingPages {
         semanticZoom.setCanChangeViews(true);
         semanticZoom.setZoomOutButtonEnabled(true);
 
-        WLabel activeView = new WLabel("Showing: detail view (ZoomedIn)");
+        WLabel activeView = new WLabel(Messages.get("semanticzoom.example.active.in"));
         activeView.setForeground(GalleryTheme.TEXT_SECONDARY());
         semanticZoom.addViewChangeStartedListener(() -> {
             // ViewChangeStarted fires at the "start" of a switch, so this shows the view about to be displayed
             activeView.setText(
-                semanticZoom.isZoomedInViewActive() ? "Showing: summary view (ZoomedOut)" : "Showing: detail view (ZoomedIn)");
+                semanticZoom.isZoomedInViewActive() ? Messages.get("semanticzoom.example.active.out") : Messages.get("semanticzoom.example.active.in"));
         });
 
         WPanel body = new WPanel(12.0);
         body.add(semanticZoom);
         body.add(activeView);
 
-        WButton toggle = new WButton("Switch view (ToggleActiveView)");
+        WButton toggle = new WButton(Messages.get("semanticzoom.example.toggle"));
         toggle.addActionListener(() -> {
             semanticZoom.toggleActiveView();
         });
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("You can also switch by zooming out with Ctrl+mouse wheel, or via the zoom-out button in the bottom-left of the summary view."));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("semanticzoom.example.note")));
         options.add(toggle);
 
-        return GalleryScaffold.buildExample("Switching views (ZoomedInView / ZoomedOutView / ToggleActiveView)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("semanticzoom.example.title"), body, options);
     }
 
     // endregion
