@@ -27,6 +27,9 @@ class WProgressBar @JvmOverloads constructor(minimum: Double = 0.0, maximum: Dou
      */
     constructor(minimum: Int, maximum: Int) : this(minimum.toDouble(), maximum.toDouble(), minimum.toDouble())
 
+    /** The form taking the range and value as Int (so Kotlin can write `WProgressBar(0, 100, 30)`). The same as the Double form. */
+    constructor(minimum: Int, maximum: Int, value: Int) : this(minimum.toDouble(), maximum.toDouble(), value.toDouble())
+
     /** Like JProgressBar(BoundedRangeModel): creates a progress bar that uses [model] for its range of values (the model's extent is set to 0). */
     constructor(model: WBoundedRangeModel) : this() {
         this.model = model

@@ -19,6 +19,12 @@ class WFlowLayout @JvmOverloads constructor(
     /** The vertical gap between rows and outside the first and last rows (like FlowLayout.get/setVgap). */
     var vgap: Double = DEFAULT_GAP,
 ) : WLayoutManager {
+    /**
+     * FlowLayout(int align, int hgap, int vgap)-like: the form taking the gaps as Int (so Kotlin can write `WFlowLayout(LEFT, 10, 10)`).
+     * The same as the Double form.
+     */
+    constructor(alignment: Int, hgap: Int, vgap: Int) : this(alignment, hgap.toDouble(), vgap.toDouble())
+
     companion object {
         /** FlowLayout.LEFT: aligns each row to the left (0). */
         const val LEFT: Int = 0

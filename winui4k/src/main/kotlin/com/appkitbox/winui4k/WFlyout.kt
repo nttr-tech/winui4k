@@ -118,6 +118,12 @@ abstract class WFlyoutBase internal constructor(
         afterLaidOut(invoker) { events.showWhenClosed(isOpen) { showWithPosition(invoker, x, y) } }
     }
 
+    /**
+     * The form taking Int coordinates, as with JPopupMenu.show(Component, int, int) (so Kotlin can write `menu.show(e.component, e.x, e.y)`).
+     * The same as the Double [show].
+     */
+    fun show(invoker: WComponent, x: Int, y: Int) = show(invoker, x.toDouble(), y.toDouble())
+
     private fun showWithPosition(invoker: WComponent, x: Double, y: Double) {
         val options = Activation.composeDefault(XamlInterop.CLS_FlyoutShowOptions, XamlInterop.IID_IFlyoutShowOptionsFactory)
         try {

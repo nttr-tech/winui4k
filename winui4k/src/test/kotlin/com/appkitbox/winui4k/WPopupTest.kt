@@ -56,6 +56,23 @@ class WPopupTest : FunSpec() {
             }
         }
 
+        test("in Kotlin too, show(owner, x, y) can be called with Int coordinates, as with JPopupMenu.show(c, int, int), and opens at the same position as with Double") {
+            withOwner { owner ->
+                val popup = onUiThreadGet { WPopup(WLabel("Content")) }
+                val origin = onUiThreadGet { Xaml.positionInRoot(owner.uiElement) }
+                val x: Int = 12
+                val y: Int = 34
+                onUiThread { popup.show(owner, x, y) }
+                awaitOpen(popup, true)
+                val shown = onUiThreadGet { listOf(popup.horizontalOffset, popup.verticalOffset) }
+                onUiThread { popup.hide() }
+                awaitOpen(popup, false)
+
+                shown[0] shouldBe ((origin[0] + 12.0) plusOrMinus 0.01)
+                shown[1] shouldBe ((origin[1] + 34.0) plusOrMinus 0.01)
+            }
+        }
+
         test("setting isVisible = true on a WPopup that has never been opened throws IllegalStateException") {
             onUiThreadGet {
                 runCatching { WPopup().isVisible = true }.exceptionOrNull()?.javaClass

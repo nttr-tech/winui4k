@@ -17,6 +17,9 @@ class WBorderLayout @JvmOverloads constructor(
     /** The vertical gap between regions (like BorderLayout.get/setVgap). After changing it, rearrange with the parent's [WLayoutPanel.revalidate]. */
     var vgap: Double = 0.0,
 ) : WLayoutManager {
+    /** BorderLayout(int hgap, int vgap)-like: the form taking the gaps as Int (so Kotlin can write `WBorderLayout(4, 4)`). The same as the Double form. */
+    constructor(hgap: Int, vgap: Int) : this(hgap.toDouble(), vgap.toDouble())
+
     /** The region a child is placed in (like BorderLayout.NORTH and the other constraint constants). */
     enum class Constraint {
         /** The top edge (full width x preferred height). */

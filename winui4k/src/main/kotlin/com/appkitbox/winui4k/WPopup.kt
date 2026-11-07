@@ -105,6 +105,12 @@ class WPopup @JvmOverloads constructor(child: WComponent? = null) : WComponent(
         show(owner)
     }
 
+    /**
+     * The form taking Int coordinates, as with JPopupMenu.show(Component, int, int) (so Kotlin can write `popup.show(e.component, e.x, e.y)`).
+     * The same as the Double [show].
+     */
+    fun show(owner: WComponent, x: Int, y: Int) = show(owner, x.toDouble(), y.toDouble())
+
     /** Closes it (Popup.IsOpen = false). This way of closing does not call [WPopupMenuListener.popupMenuCanceled]. */
     fun hide() {
         popupMenuEvents?.hideRequested = true

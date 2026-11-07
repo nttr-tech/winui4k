@@ -108,6 +108,27 @@ class WFlyoutPopupMenuTest : FunSpec() {
             }
         }
 
+        test("in Kotlin too, show can be called with Int coordinates (the x / y of a mouse event), as with JPopupMenu.show(c, int, int), and opens at the same position as with Double") {
+            withPanel { _, button ->
+                val menu = onUiThreadGet { WMenuFlyout().also { it.add("Open") } }
+                onUiThread { menu.show(button, 10.0, 20.0) }
+                awaitOpen(menu, true)
+                val withDouble = onUiThreadGet { openPopupOffset(button)!! }
+                onUiThread { menu.hide() }
+                awaitOpen(menu, false)
+                val x: Int = 10
+                val y: Int = 20
+                onUiThread { menu.show(button, x, y) }
+                awaitOpen(menu, true)
+                val withInt = onUiThreadGet { openPopupOffset(button)!! }
+                onUiThread { menu.hide() }
+                awaitOpen(menu, false)
+
+                withInt.first shouldBe (withDouble.first plusOrMinus 0.5)
+                withInt.second shouldBe (withDouble.second plusOrMinus 0.5)
+            }
+        }
+
         test("closing with Esc calls willBecomeVisible → canceled → willBecomeInvisible in that order, in the order added (as in Swing)") {
             withPanel { _, button ->
                 val events = mutableListOf<String>()

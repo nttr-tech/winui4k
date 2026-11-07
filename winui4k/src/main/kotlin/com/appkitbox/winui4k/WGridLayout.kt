@@ -21,6 +21,12 @@ class WGridLayout @JvmOverloads constructor(
     /** The vertical gap between cells (like GridLayout.get/setVgap). */
     var vgap: Double = 0.0,
 ) : WLayoutManager {
+    /**
+     * GridLayout(int rows, int cols, int hgap, int vgap)-like: the form taking the gaps as Int (so Kotlin can write `WGridLayout(2, 3, 4, 4)`).
+     * The same as the Double form.
+     */
+    constructor(rows: Int, columns: Int, hgap: Int, vgap: Int) : this(rows, columns, hgap.toDouble(), vgap.toDouble())
+
     init {
         require(rows != 0 || columns != 0) { "rows and columns cannot both be 0" }
     }

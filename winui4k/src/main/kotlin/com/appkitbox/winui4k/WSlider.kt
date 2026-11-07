@@ -93,6 +93,19 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
         this.model = model
     }
 
+    /**
+     * JSlider(int min, int max)-like: the form taking the range as Int (so Kotlin can write `WSlider(0, 100)`). The value has the same default as the Double
+     * `WSlider(min, max)`.
+     */
+    constructor(minimum: Int, maximum: Int) : this(minimum.toDouble(), maximum.toDouble())
+
+    /** JSlider(int min, int max, int value)-like: the form taking the range and value as Int (so Kotlin can write `WSlider(0, 100, 30)`). */
+    constructor(minimum: Int, maximum: Int, value: Int) : this(minimum.toDouble(), maximum.toDouble(), value.toDouble())
+
+    /** JSlider(int orientation, int min, int max, int value)-like: the form taking the range and value as Int. */
+    constructor(orientation: Orientation, minimum: Int, maximum: Int, value: Int) :
+        this(orientation, minimum.toDouble(), maximum.toDouble(), value.toDouble())
+
     /** The Primitives.IRangeBase view holding Value / Minimum / Maximum / ValueChanged. */
     private val rangeBase: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IRangeBase))
