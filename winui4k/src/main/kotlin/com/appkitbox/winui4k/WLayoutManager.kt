@@ -3,18 +3,40 @@ package com.appkitbox.winui4k
 /**
  * java.awt.Dimension-like: a width/height pair used in layout computations (in DIP).
  * Use the separate [WDimension] type for a window's pixel size ([WAppWindow.size]).
+ * Java can read it either through the fields (`size.width`) or the getters (`size.getWidth()`).
  */
-data class WSize(val width: Double, val height: Double)
+data class WSize(@JvmField val width: Double, @JvmField val height: Double) {
+    /** A getter for Java (the same as [width]). */
+    fun getWidth(): Double = width
 
-/** java.awt.Insets-like: a container's inner padding (in DIP). */
+    /** A getter for Java (the same as [height]). */
+    fun getHeight(): Double = height
+}
+
+/**
+ * java.awt.Insets-like: the inner margins of a container (in DIP).
+ * Java can read it either through the fields (`insets.top`) or the getters (`insets.getTop()`).
+ */
 data class WInsets(
-    val top: Double = 0.0,
-    val left: Double = 0.0,
-    val bottom: Double = 0.0,
-    val right: Double = 0.0,
+    @JvmField val top: Double = 0.0,
+    @JvmField val left: Double = 0.0,
+    @JvmField val bottom: Double = 0.0,
+    @JvmField val right: Double = 0.0,
 ) {
     /** The same padding on all four sides. */
     constructor(all: Double) : this(all, all, all, all)
+
+    /** A getter for Java (the same as [top]). */
+    fun getTop(): Double = top
+
+    /** A getter for Java (the same as [left]). */
+    fun getLeft(): Double = left
+
+    /** A getter for Java (the same as [bottom]). */
+    fun getBottom(): Double = bottom
+
+    /** A getter for Java (the same as [right]). */
+    fun getRight(): Double = right
 }
 
 /**

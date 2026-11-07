@@ -10,11 +10,29 @@ import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
-/** An integer point on screen (Windows.Graphics.PointInt32). Used by [WAppWindow.position], etc. */
-data class WPoint(val x: Int, val y: Int)
+/**
+ * An integer point on the screen (Windows.Graphics.PointInt32). Used for [WAppWindow.position] etc.
+ * As with java.awt.Point, Java can read it either through the fields (`p.x`) or the getters (`p.getX()`).
+ */
+data class WPoint(@JvmField val x: Int, @JvmField val y: Int) {
+    /** A getter for Java (the same as [x]). */
+    fun getX(): Int = x
 
-/** An integer width/height size (Windows.Graphics.SizeInt32). Used by [WAppWindow.size], etc. */
-data class WDimension(val width: Int, val height: Int)
+    /** A getter for Java (the same as [y]). */
+    fun getY(): Int = y
+}
+
+/**
+ * An integer size of width and height (Windows.Graphics.SizeInt32). Used for [WAppWindow.size] etc.
+ * As with java.awt.Dimension, Java can read it either through the fields (`d.width`) or the getters (`d.getWidth()`).
+ */
+data class WDimension(@JvmField val width: Int, @JvmField val height: Int) {
+    /** A getter for Java (the same as [width]). */
+    fun getWidth(): Int = width
+
+    /** A getter for Java (the same as [height]). */
+    fun getHeight(): Int = height
+}
 
 /**
  * Native window management: WinUI 3's AppWindow. No Swing equivalent.

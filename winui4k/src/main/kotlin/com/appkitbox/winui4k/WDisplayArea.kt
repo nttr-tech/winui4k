@@ -10,8 +10,23 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.WindowingInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 
-/** A rectangular area on screen (x, y, width, height are all integer physical pixels). */
-data class WRectangle(val x: Int, val y: Int, val width: Int, val height: Int)
+/**
+ * A rectangular area on the screen (x, y, width and height are all integer physical pixels).
+ * As with java.awt.Rectangle, Java can read it either through the fields (`r.x`) or the getters (`r.getX()`).
+ */
+data class WRectangle(@JvmField val x: Int, @JvmField val y: Int, @JvmField val width: Int, @JvmField val height: Int) {
+    /** A getter for Java (the same as [x]). */
+    fun getX(): Int = x
+
+    /** A getter for Java (the same as [y]). */
+    fun getY(): Int = y
+
+    /** A getter for Java (the same as [width]). */
+    fun getWidth(): Int = width
+
+    /** A getter for Java (the same as [height]). */
+    fun getHeight(): Int = height
+}
 
 /**
  * GraphicsDevice-like: WinUI 3's DisplayArea (a display's viewable area info).
