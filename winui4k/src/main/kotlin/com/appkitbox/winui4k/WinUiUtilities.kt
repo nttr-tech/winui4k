@@ -28,7 +28,9 @@ import com.appkitbox.winui4k.internal.winui.WinAppSdkBootstrap
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.jvm.JvmSynthetic
 
@@ -84,6 +86,9 @@ object WinUiUtilities {
 
     @Volatile
     private var exited = false
+
+    /** The interval (milliseconds) at which [invokeAndWait] checks whether the app has exited. */
+    private const val EXIT_CHECK_MILLIS = 100L
 
     /**
      * Explicitly selects the FFI backend to use (defaults to Panama).
@@ -174,6 +179,38 @@ object WinUiUtilities {
     }
 
     /**
+     * Runs [block] on the UI thread and waits until it ends (SwingUtilities.invokeAndWait-like). Call it from a thread other than the UI thread.
+     * If WinUI is not started, it is started automatically and waited for.
+     *
+     * An exception thrown from [block] is wrapped in [InvocationTargetException], as in Swing, and thrown to the calling thread (it is not passed to the UI thread's
+     * uncaught exception handler). If interrupted while waiting, [InterruptedException] (then [block] may run
+     * later). Called from the UI thread, it throws [Error], as in Swing (because it would wait for itself and hang).
+     * [IllegalStateException] if the app exits before it runs.
+     */
+    @JvmStatic
+    @Throws(InterruptedException::class, InvocationTargetException::class)
+    @Suppress("TooGenericExceptionThrown") // As with SwingUtilities.invokeAndWait, a call from the UI thread throws Error
+    fun invokeAndWait(block: Runnable) {
+        if (isDispatchThread) throw Error("Cannot call invokeAndWait from the UI thread")
+        val done = CountDownLatch(1)
+        var failure: Throwable? = null
+        invokeLater {
+            try {
+                block.run()
+            } catch (t: Throwable) {
+                failure = t
+            } finally {
+                done.countDown()
+            }
+        }
+        // If the app exits after posting, it does not run, so wait while checking whether it has exited
+        while (!done.await(EXIT_CHECK_MILLIS, TimeUnit.MILLISECONDS)) {
+            check(!exited) { "the app exited before the invokeAndWait work ran" }
+        }
+        failure?.let { throw InvocationTargetException(it) }
+    }
+
+    /**
      * Runs [block] once on the UI thread after [delayMillis] milliseconds (a one-shot
      * javax.swing.Timer-like). Calling close() on the return value cancels it if it hasn't
      * fired yet. Can be called from any thread. If WinUI hasn't started yet, it starts automatically.
@@ -183,6 +220,15 @@ object WinUiUtilities {
     fun schedule(delayMillis: Long, block: Runnable): AutoCloseable {
         ensureStarted()
         return Dispatcher.schedule(delayMillis, block::run)
+    }
+
+    /**
+     * Starts a timer that runs [block] on the UI thread from [initialDelayMillis] milliseconds later (the underpinnings of [WTimer]). If [nextDelayMillis] is
+     * null it runs once, otherwise it repeats at that interval. Stop it with close() of the return value. Can be called from any thread.
+     */
+    internal fun startTimer(initialDelayMillis: Long, nextDelayMillis: (() -> Long)?, block: () -> Unit): AutoCloseable {
+        ensureStarted()
+        return Dispatcher.startTimer(initialDelayMillis, nextDelayMillis, block)
     }
 
     /**

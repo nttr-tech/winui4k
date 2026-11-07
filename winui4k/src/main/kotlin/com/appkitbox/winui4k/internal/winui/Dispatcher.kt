@@ -104,8 +104,15 @@ internal object Dispatcher {
      * Calling close() on the returned value cancels it if it hasn't fired yet.
      * Callable from any thread.
      */
-    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable {
-        // true once fired or cancelled. Whichever of Tick / close() gets there first wins the one-time transition
+    fun schedule(delayMillis: Long, block: () -> Unit): AutoCloseable = startTimer(delayMillis, null, block)
+
+    /**
+     * Starts a DispatcherQueueTimer that runs [block] on the UI thread after [initialDelayMillis] milliseconds. If [nextDelayMillis] is
+     * null it runs once, otherwise it keeps repeating at the then-current value of [nextDelayMillis] (milliseconds) (javax.swing.Timer-like;
+     * changing the interval takes effect from the next firing). Stop it with close() of the return value (no firings after that). Can be called from any thread.
+     */
+    fun startTimer(initialDelayMillis: Long, nextDelayMillis: (() -> Long)?, block: () -> Unit): AutoCloseable {
+        // true if stopped (or, for a one-shot, fired). Transitions only once, whichever of Tick and close() comes first
         val done = AtomicBoolean(false)
         // Creating, starting, and stopping the timer all happen on the UI thread (the queue belongs to its creating thread)
         val timerRef = AtomicReference<ComPtr?>(null)
@@ -113,16 +120,30 @@ internal object Dispatcher {
             if (done.get()) return@runOnDispatchThread
             val queue = checkNotNull(this.queue) { "DispatcherQueue hasn't been captured yet (launch WinUI via WinUiUtilities before using this)" }
             val timer = queue.getPtr(WindowingInterop.IDispatcherQueue_CreateTimer)
-            // TimeSpan is an int64 in 100ns units, passed by value
-            timer.call(WindowingInterop.IDispatcherQueueTimer_put_Interval, delayMillis.coerceAtLeast(0) * 10_000)
-            timer.putBool(WindowingInterop.IDispatcherQueueTimer_put_IsRepeating, false)
+            var interval = initialDelayMillis.coerceAtLeast(0)
+            setInterval(timer, interval)
+            timer.putBool(WindowingInterop.IDispatcherQueueTimer_put_IsRepeating, nextDelayMillis != null)
             val tickHandler = KComObject("WinUI4K.DispatcherQueueTimerTickHandler", inspectable = false)
                 .addInterface(
                     WindowingInterop.IID_DispatcherQueueTimerTickHandler,
                     listOf(
                         KComObject.Method(DESC_TICK_HANDLER) {
-                            if (done.compareAndSet(false, true)) {
-                                stopAndRelease(timerRef)
+                            if (nextDelayMillis == null) {
+                                if (done.compareAndSet(false, true)) {
+                                    stopAndRelease(timerRef)
+                                    runReportingFailure(block)
+                                }
+                            } else if (!done.get()) {
+                                val next = nextDelayMillis().coerceAtLeast(0)
+                                if (next != interval) {
+                                    // When the first wait differs from the following interval or the interval was changed, stop, change the interval and start again
+                                    interval = next
+                                    timerRef.get()?.let { running ->
+                                        running.call(WindowingInterop.IDispatcherQueueTimer_Stop)
+                                        setInterval(running, next)
+                                        running.call(WindowingInterop.IDispatcherQueueTimer_Start)
+                                    }
+                                }
                                 runReportingFailure(block)
                             }
                             KComObject.S_OK
@@ -146,6 +167,11 @@ internal object Dispatcher {
                 runOnDispatchThread { stopAndRelease(timerRef) }
             }
         }
+    }
+
+    /** TimeSpan is an int64 value in 100 ns units, passed by value. */
+    private fun setInterval(timer: ComPtr, millis: Long) {
+        timer.call(WindowingInterop.IDispatcherQueueTimer_put_Interval, millis * 10_000)
     }
 
     /**
