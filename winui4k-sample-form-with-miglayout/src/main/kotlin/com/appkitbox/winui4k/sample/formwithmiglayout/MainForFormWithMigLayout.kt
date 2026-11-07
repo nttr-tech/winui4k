@@ -25,7 +25,7 @@ import com.appkitbox.winui4k.extension.miglayout.MigLayoutManager
  */
 fun main() {
     WinUiUtilities.invokeLater {
-        val frame = WFrame(title = "MigLayout Form Sample")
+        val frame = WFrame(title = Messages.get("app.title"))
 
         // Single column, auto-wrapping. 24epx page margins, 16epx between fields (MigLayout's
         // default insets are about 7epx, so they're overridden explicitly to match Fluent's
@@ -38,38 +38,43 @@ fun main() {
             ),
         )
 
-        // The type ramp's Title (28epx SemiBold). Leaves the default line gap of 16 + 8 = 24epx
-        // below the heading
-        val title = WLabel("Contact Us")
+        // The type ramp's Title (28epx SemiBold). Leave the default line spacing 16 + 8 = 24epx below the heading
+        val title = WLabel(Messages.get("form.title"))
         title.fontSize = 28.0
         title.fontWeight = 600
         form.add(title, "gapbottom 8")
 
-        val nameField = WTextField().apply { placeholderText = "John Doe" }
-        nameField.header = "Name"
+        val nameField = WTextField().apply { placeholderText = Messages.get("form.name.placeholder") }
+        nameField.header = Messages.get("form.name")
         form.add(nameField, "growx")
 
-        val mailField = WTextField().apply { placeholderText = "john@example.com" }
-        mailField.header = "Email"
+        val mailField = WTextField().apply { placeholderText = Messages.get("form.mail.placeholder") }
+        mailField.header = Messages.get("form.mail")
         form.add(mailField, "growx")
 
-        val categoryComboBox = WComboBox(listOf("Contact request", "Bug report", "Other"))
-        categoryComboBox.header = "Category"
+        val categoryComboBox = WComboBox(
+            listOf(
+                Messages.get("form.category.inquiry"),
+                Messages.get("form.category.bug"),
+                Messages.get("form.category.other"),
+            ),
+        )
+        categoryComboBox.header = Messages.get("form.category")
         categoryComboBox.selectedIndex = 0
         form.add(categoryComboBox, "growx")
 
         val bodyField = WTextField()
-        bodyField.header = "Message"
+        bodyField.header = Messages.get("form.body")
         bodyField.acceptsReturn = true
         bodyField.textWrapping = TextWrapping.WRAP
         form.add(bodyField, "grow, h 120::, pushy")
 
-        val submitButton = WButton("Send")
+        val submitButton = WButton(Messages.get("form.submit"))
         submitButton.isAccent = true
         submitButton.addActionListener {
             println("Submit: name=${nameField.text}, email=${mailField.text}, message=${bodyField.text}")
         }
-        val cancelButton = WButton("Cancel")
+        val cancelButton = WButton(Messages.get("form.cancel"))
         cancelButton.addActionListener {
             nameField.text = ""
             mailField.text = ""
