@@ -18,9 +18,12 @@ class MemoryScopeZeroFillTest : FunSpec() {
     private val providers = loadProviders().filter { it.isAvailable() }
 
     init {
-        // Panama is available only on JDK 22 or later (it is excluded in testOnJava8 / 9). JNA and JNR are checked on every JDK
-        test("the JNA and JNR backends (and Panama on JDK 22 or later) can be loaded and are among the targets checked") {
-            val expected = listOf("jna", "jnr") + if (isPanamaJdk()) listOf("panama") else emptyList()
+        // Panama is available only on JDK 22 or later (it is excluded in testOnJava8 / 9). JNR is checked on every JDK.
+        // JNA is Windows x64 only (JnaBackendProvider.isAvailable), so it is not a target on Arm64 JDKs
+        test("the JNR backend (and JNA on x64 and Panama on JDK 22 or later) can be loaded and is among the targets checked") {
+            val expected = listOf("jnr") +
+                (if (isX64()) listOf("jna") else emptyList()) +
+                (if (isPanamaJdk()) listOf("panama") else emptyList())
             providers.map { it.name } shouldContainAll expected
         }
 
@@ -65,6 +68,8 @@ class MemoryScopeZeroFillTest : FunSpec() {
         }
         return providers
     }
+
+    private fun isX64(): Boolean = System.getProperty("os.arch").orEmpty().lowercase() in setOf("amd64", "x86_64")
 
     private fun isPanamaJdk(): Boolean =
         System.getProperty("java.specification.version").substringAfter("1.").toInt() >= PANAMA_JDK
