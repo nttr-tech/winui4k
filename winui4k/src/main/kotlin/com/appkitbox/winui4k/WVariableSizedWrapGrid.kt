@@ -5,9 +5,11 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * FlowLayout-like JPanel: WinUI 3's VariableSizedWrapGrid.
+ * WinUI 3's VariableSizedWrapGrid: a panel that arranges children in cells of the same size, wrapping them.
  * Wraps children in cells of [itemWidth] × [itemHeight], and each child can span more than one
  * cell via the rowSpan / columnSpan parameters of [add].
+ * By default it arranges them vertically, by the cell size rather than the children's sizes, so it behaves differently from Swing's FlowLayout.
+ * What corresponds to `java.awt.FlowLayout` is [WFlowLayout] (set it on a [WLayoutPanel]).
  */
 class WVariableSizedWrapGrid @JvmOverloads constructor(
     itemWidth: Double = Double.NaN,

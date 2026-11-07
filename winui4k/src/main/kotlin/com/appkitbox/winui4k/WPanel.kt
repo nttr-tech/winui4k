@@ -21,7 +21,13 @@ enum class Orientation(internal val native: Int) {
     }
 }
 
-/** JPanel-like with a BoxLayout: WinUI 3's StackPanel. Defaults to vertical. */
+/**
+ * JPanel-with-BoxLayout (Box)-like: WinUI 3's StackPanel. Vertical by default.
+ *
+ * The name resembles JPanel, but what corresponds to Swing's JPanel with a layout manager is [WLayoutPanel]
+ * (`new JPanel(new BorderLayout())` is `new WLayoutPanel(new WBorderLayout())`).
+ * Use this class in place of a panel with `BoxLayout` (`Box.createVerticalBox()` etc.).
+ */
 class WPanel @JvmOverloads constructor(
     spacing: Double = 0.0,
     orientation: Orientation = Orientation.VERTICAL,

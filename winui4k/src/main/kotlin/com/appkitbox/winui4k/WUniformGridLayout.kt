@@ -58,8 +58,10 @@ enum class UniformGridLayoutItemsStretch(internal val native: Int) {
 }
 
 /**
- * GridLayout-like: WinUI 3's UniformGridLayout.
+ * WinUI 3's UniformGridLayout: a layout that arranges the items of a [WItemsView] in cells of the same size.
  * Assign to [WItemsView.layout] to lay out every item in equally sized cells that wrap.
+ * It is only for [WItemsView] and cannot be passed to a panel's setLayout. What corresponds to Swing's `java.awt.GridLayout` is [WGridLayout]
+ * (set it on a [WLayoutPanel]).
  * A cell's minimum size is [minItemWidth] / [minItemHeight]; spacing is [minColumnSpacing] / [minRowSpacing].
  */
 class WUniformGridLayout {
