@@ -1,7 +1,9 @@
 # 検証状況
 
-Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイムで動作検証済みである
+Windows 11 x64 + Windows App SDK 2.6.6-experimental (実験版) ランタイムで動作検証済みである
 (起動 → ウィンドウ表示 → ボタンクリック → クローズ → 正常終了 exit code 0)。
+2.6.6-experimental への移行時 (2026-11-08) に、全モジュールのテスト (`.\gradlew test`、JDK 25) 3,976 件がすべて成功することを確かめた。
+以下の個々の項目に「2.5.4-experimental」とあるものは、その版で確かめた記録である。
 
 実行以外の検証:
 
