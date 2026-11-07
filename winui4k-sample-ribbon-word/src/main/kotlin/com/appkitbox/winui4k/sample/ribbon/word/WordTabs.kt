@@ -33,103 +33,103 @@ private val SMALL = RibbonItemSize.SMALL
 @Suppress("LongMethod", "CyclomaticComplexMethod") // Declaratively builds the [Insert] tab's groups from top to bottom (the only branches are in the also lambdas)
 internal fun createInsertTab(): RibbonTabModel = tab(
     "insert",
-    "Insert",
+    Messages.get("common.insert"),
     "N",
     group(
         "pages",
-        "Pages",
-        dropDown("coverPage", "Cover Page", glyph(''), LARGE, menuItem("cover.builtIn", "Built-In"), menuItem("cover.remove", "Remove Current Cover Page")),
-        button("blankPage", "Blank Page", glyph(''), LARGE),
-        button("pageBreak", "Page Break", glyph(''), LARGE).also { it.shortcut = "Ctrl+Enter" },
+        Messages.get("insert.pages"),
+        dropDown("coverPage", Messages.get("insert.cover.page"), glyph('\uE7C3'), LARGE, menuItem("cover.builtIn", Messages.get("insert.cover.built.in")), menuItem("cover.remove", Messages.get("insert.cover.remove"))),
+        button("blankPage", Messages.get("insert.blank.page"), glyph('\uE8A5'), LARGE),
+        button("pageBreak", Messages.get("insert.page.break"), glyph('\uE7C3'), LARGE).also { it.shortcut = "Ctrl+Enter" },
     ).also { it.icon = glyph('\uE7C3') },
     group(
         "tables",
-        "Tables",
+        Messages.get("insert.tables"),
         dropDown(
             "insertTable",
-            "Table",
+            Messages.get("common.table"),
             glyph('\uE80A'),
             LARGE,
-            RibbonGridPickerModel("tablePicker", "Insert Table"),
+            RibbonGridPickerModel("tablePicker", Messages.get("insert.table.picker")),
             RibbonMenuSeparatorModel(),
-            menuItem("table.insertDialog", "Insert Table...", glyph('')),
-            menuItem("table.draw", "Draw Table", RibbonIcons.PEN),
+            menuItem("table.insertDialog", Messages.get("common.insert.table"), glyph('\uE80A')),
+            menuItem("table.draw", Messages.get("insert.table.draw"), RibbonIcons.PEN),
         ).also { it.keyTip = "T" },
     ).also { it.icon = glyph('\uE80A') },
     group(
         "illustrations",
-        "Illustrations",
-        dropDown("pictures", "Pictures", glyph(''), LARGE, menuItem("pictures.device", "This Device..."), menuItem("pictures.online", "Online Pictures...")),
-        dropDown("shapes", "Shapes", glyph(''), LARGE, menuItem("shapes.line", "Line"), menuItem("shapes.rectangle", "Rectangle"), menuItem("shapes.oval", "Oval")),
-        button("icons", "Icons", glyph(''), LARGE),
-        button("models3d", "3D Models", glyph('')),
+        Messages.get("common.illustrations"),
+        dropDown("pictures", Messages.get("common.pictures"), glyph('\uEB9F'), LARGE, menuItem("pictures.device", Messages.get("common.pictures.device")), menuItem("pictures.online", Messages.get("insert.pictures.online"))),
+        dropDown("shapes", Messages.get("common.shapes"), glyph('\uE91B'), LARGE, menuItem("shapes.line", Messages.get("insert.shape.line")), menuItem("shapes.rectangle", Messages.get("common.shape.rectangle")), menuItem("shapes.oval", Messages.get("common.shape.oval"))),
+        button("icons", Messages.get("common.icons"), glyph('\uED58'), LARGE),
+        button("models3d", Messages.get("insert.models3d"), glyph('\uE7B8')),
         button("smartArt", "SmartArt", glyph('\uE9D2')),
-        button("chart", "Chart", glyph('')),
-        dropDown("screenshot", "Screenshot", glyph(''), MEDIUM, menuItem("screenshot.clipping", "Screen Clipping")),
+        button("chart", Messages.get("common.chart"), glyph('\uE9D2')),
+        dropDown("screenshot", Messages.get("common.screenshot"), glyph('\uE722'), MEDIUM, menuItem("screenshot.clipping", Messages.get("insert.screenshot.clipping"))),
     ).also { it.icon = glyph('\uEB9F') },
-    group("media", "Media", button("onlineVideo", "Online Videos", glyph(''), LARGE)).also { it.icon = glyph('') },
+    group("media", Messages.get("common.media"), button("onlineVideo", Messages.get("insert.online.video"), glyph('\uE714'), LARGE)).also { it.icon = glyph('\uE714') },
     group(
         "links",
-        "Links",
-        button("link", "Link", glyph('')).also { it.shortcut = "Ctrl+K" },
-        button("bookmark", "Bookmark", glyph('')),
-        button("crossReference", "Cross-reference", glyph('')),
+        Messages.get("insert.links"),
+        button("link", Messages.get("insert.link"), glyph('\uE71B')).also { it.shortcut = "Ctrl+K" },
+        button("bookmark", Messages.get("insert.bookmark"), glyph('\uE8A4')),
+        button("crossReference", Messages.get("insert.cross.reference"), glyph('\uE8AD')),
     ).also { it.icon = glyph('\uE71B') },
-    group("insertComments", "Comments", button("newComment", "Comment", glyph(''), LARGE).also { it.shortcut = "Ctrl+Alt+M" }).also { it.icon = glyph('') },
+    group("insertComments", Messages.get("common.comments"), button("newComment", Messages.get("insert.comment"), glyph('\uE90A'), LARGE).also { it.shortcut = "Ctrl+Alt+M" }).also { it.icon = glyph('\uE90A') },
     group(
         "headerFooter",
-        "Header & Footer",
-        dropDown("header", "Header", glyph(''), MEDIUM, menuItem("header.blank", "Blank"), menuItem("header.edit", "Edit Header")),
-        dropDown("footer", "Footer", glyph(''), MEDIUM, menuItem("footer.blank", "Blank"), menuItem("footer.edit", "Edit Footer")),
-        dropDown("pageNumber", "Page Number", glyph(''), MEDIUM, menuItem("pageNumber.top", "Top of Page"), menuItem("pageNumber.bottom", "Bottom of Page")),
+        Messages.get("insert.header.footer"),
+        dropDown("header", Messages.get("insert.header"), glyph('\uE8A1'), MEDIUM, menuItem("header.blank", Messages.get("insert.blank")), menuItem("header.edit", Messages.get("insert.header.edit"))),
+        dropDown("footer", Messages.get("insert.footer"), glyph('\uE8A1'), MEDIUM, menuItem("footer.blank", Messages.get("insert.blank")), menuItem("footer.edit", Messages.get("insert.footer.edit"))),
+        dropDown("pageNumber", Messages.get("insert.page.number"), glyph('\uE8A1'), MEDIUM, menuItem("pageNumber.top", Messages.get("insert.page.number.top")), menuItem("pageNumber.bottom", Messages.get("insert.page.number.bottom"))),
     ).also { it.icon = glyph('\uE8A1') },
     group(
         "text",
-        "Text",
-        dropDown("textBox", "Text Box", glyph(''), LARGE, menuItem("textBox.simple", "Simple Text Box"), menuItem("textBox.draw", "Draw Text Box")),
-        button("quickParts", "Quick Parts", glyph('')),
-        button("wordArt", "WordArt", glyph('')),
-        button("dropCap", "Drop Cap", glyph('')),
+        Messages.get("insert.text"),
+        dropDown("textBox", Messages.get("insert.text.box"), glyph('\uE8D2'), LARGE, menuItem("textBox.simple", Messages.get("insert.text.box.simple")), menuItem("textBox.draw", Messages.get("insert.text.box.draw"))),
+        button("quickParts", Messages.get("insert.quick.parts"), glyph('\uECAA')),
+        button("wordArt", Messages.get("insert.word.art"), glyph('\uE8D2')),
+        button("dropCap", Messages.get("insert.drop.cap"), glyph('\uE8D2')),
     ).also { it.icon = glyph('\uE8D2') },
     group(
         "symbols",
-        "Symbols",
-        split("equation", "Equation", glyph(''), MEDIUM, menuItem("equation.new", "Insert New Equation"), menuItem("equation.ink", "Ink Equation")).also { it.shortcut = "Alt+=" },
-        dropDown("symbol", "Symbol", OMEGA, MEDIUM, menuItem("symbol.copyright", "©"), menuItem("symbol.trademark", "™"), menuItem("symbol.more", "More Symbols...")),
+        Messages.get("insert.symbols"),
+        split("equation", Messages.get("insert.equation"), glyph('\uE94C'), MEDIUM, menuItem("equation.new", Messages.get("insert.equation.new")), menuItem("equation.ink", Messages.get("insert.equation.ink"))).also { it.shortcut = "Alt+=" },
+        dropDown("symbol", Messages.get("insert.symbol"), OMEGA, MEDIUM, menuItem("symbol.copyright", "©"), menuItem("symbol.trademark", "™"), menuItem("symbol.more", Messages.get("insert.symbol.more"))),
     ).also { it.icon = glyph('\uE94C') },
 )
 
 /** The [Design] tab. */
 internal fun createDesignTab(): RibbonTabModel = tab(
     "design",
-    "Design",
+    Messages.get("common.design"),
     "D",
     group(
         "docFormatting",
-        "Document Formatting",
-        dropDown("themes", "Themes", glyph(''), LARGE, radioItem("theme.office", "Office", "theme", checked = true), radioItem("theme.facet", "Facet", "theme"), radioItem("theme.ion", "Ion", "theme")),
+        Messages.get("design.document.formatting"),
+        dropDown("themes", Messages.get("design.themes"), glyph('\uE790'), LARGE, radioItem("theme.office", "Office", "theme", checked = true), radioItem("theme.facet", Messages.get("design.theme.facet"), "theme"), radioItem("theme.ion", Messages.get("design.theme.ion"), "theme")),
         styleSetGallery(),
-        dropDown("colors", "Colors", glyph(''), MEDIUM, radioItem("colors.office", "Office", "colors", checked = true), radioItem("colors.blue", "Blue", "colors"), radioItem("colors.green", "Green", "colors")),
-        dropDown("fonts", "Fonts", glyph(''), MEDIUM, radioItem("fonts.office", "Office", "fonts", checked = true), radioItem("fonts.meiryo", "Meiryo", "fonts")),
-        dropDown("paragraphSpacing", "Paragraph Spacing", glyph(''), MEDIUM, radioItem("pspacing.default", "Default", "pspacing", checked = true), radioItem("pspacing.compact", "Compact", "pspacing"), radioItem("pspacing.open", "Open", "pspacing")),
-        RibbonCheckBoxModel("setAsDefault", "Set as Default"),
+        dropDown("colors", Messages.get("design.colors"), glyph('\uE790'), MEDIUM, radioItem("colors.office", "Office", "colors", checked = true), radioItem("colors.blue", Messages.get("design.colors.blue"), "colors"), radioItem("colors.green", Messages.get("design.colors.green"), "colors")),
+        dropDown("fonts", Messages.get("design.fonts"), glyph('\uE8D2'), MEDIUM, radioItem("fonts.office", "Office", "fonts", checked = true), radioItem("fonts.meiryo", Messages.get("design.fonts.meiryo"), "fonts")),
+        dropDown("paragraphSpacing", Messages.get("design.paragraph.spacing"), glyph('\uE9E9'), MEDIUM, radioItem("pspacing.default", Messages.get("design.spacing.default"), "pspacing", checked = true), radioItem("pspacing.compact", Messages.get("design.spacing.compact"), "pspacing"), radioItem("pspacing.open", Messages.get("design.spacing.open"), "pspacing")),
+        RibbonCheckBoxModel("setAsDefault", Messages.get("design.set.as.default")),
     ).also { it.icon = glyph('\uE790') },
     group(
         "pageBackground",
-        "Page Background",
-        dropDown("watermark", "Watermark", glyph(''), LARGE, menuItem("watermark.confidential", "Confidential"), menuItem("watermark.draft", "Draft"), RibbonMenuSeparatorModel(), menuItem("watermark.remove", "Remove Watermark")),
-        RibbonColorPickerModel("pageColor", "Page Color", glyph('')).also {
+        Messages.get("design.page.background"),
+        dropDown("watermark", Messages.get("design.watermark"), glyph('\uE8D2'), LARGE, menuItem("watermark.confidential", Messages.get("design.watermark.confidential")), menuItem("watermark.draft", Messages.get("design.draft")), RibbonMenuSeparatorModel(), menuItem("watermark.remove", Messages.get("design.watermark.remove"))),
+        RibbonColorPickerModel("pageColor", Messages.get("design.page.color"), glyph('\uE790')).also {
             it.size = LARGE
             it.selectedColor = RibbonColor.WHITE
             it.showNoColor = true
             it.showAutomatic = false
         },
-        button("pageBorders", "Page Borders", glyph(''), LARGE),
+        button("pageBorders", Messages.get("design.page.borders"), glyph('\uE80A'), LARGE),
     ).also { it.icon = glyph('\uE790') },
 )
 
 /** The [Style Set] gallery on the [Design] tab (a gallery that shows only text samples). */
-private fun styleSetGallery(): RibbonGalleryModel = RibbonGalleryModel("styleSets", "Style Set").also { gallery ->
+private fun styleSetGallery(): RibbonGalleryModel = RibbonGalleryModel("styleSets", Messages.get("design.style.set")).also { gallery ->
     gallery.maxColumns = STYLE_SET_MAX_COLUMNS
     gallery.minColumns = STYLE_SET_MIN_COLUMNS
     gallery.itemWidth = STYLE_SET_ITEM_WIDTH
@@ -137,16 +137,16 @@ private fun styleSetGallery(): RibbonGalleryModel = RibbonGalleryModel("styleSet
     gallery.showLabels = false
     val sets = listOf(
         Triple("Office", null, "#FFFFFF"),
-        Triple("Basic", "#1F3864", "#F2F2F2"),
-        Triple("Lines", "#C55A11", "#FBE5D6"),
-        Triple("Shaded", "#FFFFFF", "#2F5496"),
-        Triple("Casual", "#375623", "#E2EFDA"),
-        Triple("Lines (Stylish)", "#7030A0", "#EDE0F5"),
+        Triple(Messages.get("design.style.set.basic"), "#1F3864", "#F2F2F2"),
+        Triple(Messages.get("design.style.set.lines"), "#C55A11", "#FBE5D6"),
+        Triple(Messages.get("design.style.set.shaded"), "#FFFFFF", "#2F5496"),
+        Triple(Messages.get("design.style.set.casual"), "#375623", "#E2EFDA"),
+        Triple(Messages.get("design.style.set.stylish"), "#7030A0", "#EDE0F5"),
     )
     sets.forEachIndexed { index, (label, foreground, background) ->
         gallery.items.add(
             RibbonGalleryItemModel("styleSet$index", label).also {
-                it.previewText = "Title"
+                it.previewText = Messages.get("style.title")
                 it.previewFontSize = STYLE_SET_FONT_SIZE
                 it.previewForeground = foreground?.let(RibbonColor::parse)
                 it.previewBackground = RibbonColor.parse(background)
@@ -160,57 +160,57 @@ private fun styleSetGallery(): RibbonGalleryModel = RibbonGalleryModel("styleSet
 @Suppress("LongMethod") // Declaratively builds the [Layout] tab's groups from top to bottom
 internal fun createLayoutTab(): RibbonTabModel = tab(
     "layout",
-    "Layout",
+    Messages.get("common.layout"),
     "P",
     group(
         "pageSetup",
-        "Page Setup",
+        Messages.get("layout.page.setup"),
         dropDown(
             "margins",
-            "Margins",
+            Messages.get("layout.margins"),
             glyph('\uE7C3'),
             LARGE,
-            radioItem("margins.normal", "Normal", "margins", checked = true),
-            radioItem("margins.narrow", "Narrow", "margins"),
-            radioItem("margins.moderate", "Moderate", "margins"),
-            radioItem("margins.wide", "Wide", "margins"),
+            radioItem("margins.normal", Messages.get("style.normal"), "margins", checked = true),
+            radioItem("margins.narrow", Messages.get("layout.margins.narrow"), "margins"),
+            radioItem("margins.moderate", Messages.get("layout.margins.moderate"), "margins"),
+            radioItem("margins.wide", Messages.get("layout.margins.wide"), "margins"),
             RibbonMenuSeparatorModel(),
-            menuItem("margins.custom", "Custom Margins..."),
+            menuItem("margins.custom", Messages.get("layout.margins.custom")),
         ),
-        dropDown("orientation", "Orientation", glyph(''), LARGE, radioItem("orientation.portrait", "Portrait", "orientation", checked = true), radioItem("orientation.landscape", "Landscape", "orientation")),
-        dropDown("size", "Size", glyph(''), LARGE, radioItem("size.a4", "A4", "size", checked = true), radioItem("size.b5", "B5", "size"), radioItem("size.letter", "Letter", "size")),
-        dropDown("columns", "Columns", glyph(''), LARGE, radioItem("columns.one", "One", "columns", checked = true), radioItem("columns.two", "Two", "columns"), radioItem("columns.three", "Three", "columns")),
-        dropDown("breaks", "Breaks", glyph(''), MEDIUM, menuItem("breaks.page", "Page"), menuItem("breaks.column", "Column"), menuItem("breaks.section", "Section Break (Next Page)")),
-        dropDown("lineNumbers", "Line Numbers", RibbonIcon.path("M9 5h12v2H9z M9 11h12v2H9z M9 17h12v2H9z M4 3h2v5H5V4.2H4z"), MEDIUM, radioItem("lineNumbers.none", "None", "lineNumbers", checked = true), radioItem("lineNumbers.continuous", "Continuous", "lineNumbers")),
-        dropDown("hyphenation", "Hyphenation", glyph(''), MEDIUM, radioItem("hyphenation.none", "None", "hyphenation", checked = true), radioItem("hyphenation.auto", "Automatic", "hyphenation")),
+        dropDown("orientation", Messages.get("layout.orientation"), glyph('\uE7C3'), LARGE, radioItem("orientation.portrait", Messages.get("layout.portrait"), "orientation", checked = true), radioItem("orientation.landscape", Messages.get("layout.landscape"), "orientation")),
+        dropDown("size", Messages.get("layout.size"), glyph('\uE7C3'), LARGE, radioItem("size.a4", "A4", "size", checked = true), radioItem("size.b5", "B5", "size"), radioItem("size.letter", Messages.get("layout.size.letter"), "size")),
+        dropDown("columns", Messages.get("layout.columns"), glyph('\uE8A9'), LARGE, radioItem("columns.one", Messages.get("layout.columns.one"), "columns", checked = true), radioItem("columns.two", Messages.get("layout.columns.two"), "columns"), radioItem("columns.three", Messages.get("layout.columns.three"), "columns")),
+        dropDown("breaks", Messages.get("layout.breaks"), glyph('\uE7C3'), MEDIUM, menuItem("breaks.page", Messages.get("layout.breaks.page")), menuItem("breaks.column", Messages.get("layout.breaks.column")), menuItem("breaks.section", Messages.get("layout.breaks.section"))),
+        dropDown("lineNumbers", Messages.get("layout.line.numbers"), RibbonIcon.path("M9 5h12v2H9z M9 11h12v2H9z M9 17h12v2H9z M4 3h2v5H5V4.2H4z"), MEDIUM, radioItem("lineNumbers.none", Messages.get("layout.none"), "lineNumbers", checked = true), radioItem("lineNumbers.continuous", Messages.get("layout.line.numbers.continuous"), "lineNumbers")),
+        dropDown("hyphenation", Messages.get("layout.hyphenation"), glyph('\uE8D2'), MEDIUM, radioItem("hyphenation.none", Messages.get("layout.none"), "hyphenation", checked = true), radioItem("hyphenation.auto", Messages.get("layout.hyphenation.auto"), "hyphenation")),
     ).also {
         it.icon = glyph('\uE7C3')
         it.isDialogLauncherVisible = true
     },
     group(
         "layoutParagraph",
-        "Paragraph",
-        RibbonLabelModel("indentLabel", "Indent").also { it.icon = RibbonIcons.INDENT_INCREASE },
-        spinner("indentLeft", "Left:", 0.0, INDENT_MAX, CM_STEP, "cm", "0.0"),
-        spinner("indentRight", "Right:", 0.0, INDENT_MAX, CM_STEP, "cm", "0.0"),
-        RibbonLabelModel("spacingLabel", "Spacing").also { it.icon = glyph('') },
-        spinner("spacingBefore", "Before:", 0.0, SPACING_MAX, PT_STEP, "pt", "0"),
-        spinner("spacingAfter", "After:", SPACING_AFTER, SPACING_MAX, PT_STEP, "pt", "0"),
+        Messages.get("common.paragraph"),
+        RibbonLabelModel("indentLabel", Messages.get("layout.indent")).also { it.icon = RibbonIcons.INDENT_INCREASE },
+        spinner("indentLeft", Messages.get("layout.indent.left"), 0.0, INDENT_MAX, CM_STEP, "cm", "0.0"),
+        spinner("indentRight", Messages.get("layout.indent.right"), 0.0, INDENT_MAX, CM_STEP, "cm", "0.0"),
+        RibbonLabelModel("spacingLabel", Messages.get("layout.spacing")).also { it.icon = glyph('\uE9E9') },
+        spinner("spacingBefore", Messages.get("layout.spacing.before"), 0.0, SPACING_MAX, PT_STEP, "pt", "0"),
+        spinner("spacingAfter", Messages.get("layout.spacing.after"), SPACING_AFTER, SPACING_MAX, PT_STEP, "pt", "0"),
     ).also {
         it.icon = RibbonIcons.BULLETS
         it.isDialogLauncherVisible = true
     },
     group(
         "arrange",
-        "Arrange",
-        dropDown("position", "Position", glyph(''), LARGE, menuItem("position.inline", "In Line with Text"), menuItem("position.topLeft", "Top Left")),
-        dropDown("wrapText", "Wrap Text", glyph(''), LARGE, radioItem("wrap.inline", "In Line with Text", "wrap", checked = true), radioItem("wrap.square", "Square", "wrap"), radioItem("wrap.tight", "Tight", "wrap")),
-        split("bringForward", "Bring Forward", glyph(''), MEDIUM, menuItem("bringForward.front", "Bring to Front")),
-        split("sendBackward", "Send Backward", glyph(''), MEDIUM, menuItem("sendBackward.back", "Send to Back")),
-        button("selectionPane", "Selection Pane", glyph('')),
-        dropDown("align", "Align", RibbonIcons.ALIGN_LEFT, SMALL, menuItem("align.left", "Align Left"), menuItem("align.center", "Align Center")),
-        dropDown("group", "Group", glyph(''), SMALL, menuItem("group.group", "Group"), menuItem("group.ungroup", "Ungroup")),
-        dropDown("rotate", "Rotate", glyph(''), SMALL, menuItem("rotate.right", "Rotate Right 90°"), menuItem("rotate.left", "Rotate Left 90°")),
+        Messages.get("layout.arrange"),
+        dropDown("position", Messages.get("layout.position"), glyph('\uE7C2'), LARGE, menuItem("position.inline", Messages.get("layout.inline")), menuItem("position.topLeft", Messages.get("layout.position.top.left"))),
+        dropDown("wrapText", Messages.get("layout.wrap.text"), glyph('\uE8D2'), LARGE, radioItem("wrap.inline", Messages.get("layout.inline"), "wrap", checked = true), radioItem("wrap.square", Messages.get("layout.wrap.square"), "wrap"), radioItem("wrap.tight", Messages.get("layout.wrap.tight"), "wrap")),
+        split("bringForward", Messages.get("layout.bring.forward"), glyph('\uE746'), MEDIUM, menuItem("bringForward.front", Messages.get("common.bring.to.front"))),
+        split("sendBackward", Messages.get("layout.send.backward"), glyph('\uE747'), MEDIUM, menuItem("sendBackward.back", Messages.get("common.send.to.back"))),
+        button("selectionPane", Messages.get("layout.selection.pane"), glyph('\uE89F')),
+        dropDown("align", Messages.get("layout.align"), RibbonIcons.ALIGN_LEFT, SMALL, menuItem("align.left", Messages.get("common.align.left")), menuItem("align.center", Messages.get("layout.align.center"))),
+        dropDown("group", Messages.get("layout.group"), glyph('\uE8F4'), SMALL, menuItem("group.group", Messages.get("layout.group")), menuItem("group.ungroup", Messages.get("layout.ungroup"))),
+        dropDown("rotate", Messages.get("layout.rotate"), glyph('\uE7AD'), SMALL, menuItem("rotate.right", Messages.get("layout.rotate.right")), menuItem("rotate.left", Messages.get("layout.rotate.left"))),
     ).also { it.icon = glyph('\uE8F4') },
 )
 
@@ -229,93 +229,93 @@ internal fun spinner(id: String, label: String, value: Double, maximum: Double, 
 @Suppress("LongMethod") // Declaratively builds the [Review] tab's groups from top to bottom
 internal fun createReviewTab(): RibbonTabModel = tab(
     "review",
-    "Review",
+    Messages.get("review.tab"),
     "R",
     group(
         "proofing",
-        "Proofing",
-        button("editorReview", "Editor", PROOFING, LARGE).also { it.shortcut = "F7" },
-        button("thesaurus", "Thesaurus", glyph('')).also { it.shortcut = "Shift+F7" },
-        button("wordCount", "Word Count", glyph('')),
+        Messages.get("review.proofing"),
+        button("editorReview", Messages.get("home.editor"), PROOFING, LARGE).also { it.shortcut = "F7" },
+        button("thesaurus", Messages.get("review.thesaurus"), glyph('\uE8F1')).also { it.shortcut = "Shift+F7" },
+        button("wordCount", Messages.get("review.word.count"), glyph('\uE8EF')),
     ).also { it.icon = PROOFING },
     group(
         "language",
-        "Language",
-        dropDown("translate", "Translate", glyph(''), LARGE, menuItem("translate.selection", "Translate Selection"), menuItem("translate.document", "Translate Document")),
-        dropDown("languageSettings", "Language", glyph(''), LARGE, menuItem("language.proofing", "Set Proofing Language..."), menuItem("language.preferences", "Language Preferences...")),
+        Messages.get("review.language"),
+        dropDown("translate", Messages.get("review.translate"), glyph('\uE8C1'), LARGE, menuItem("translate.selection", Messages.get("review.translate.selection")), menuItem("translate.document", Messages.get("review.translate.document"))),
+        dropDown("languageSettings", Messages.get("review.language"), glyph('\uE774'), LARGE, menuItem("language.proofing", Messages.get("review.language.proofing")), menuItem("language.preferences", Messages.get("review.language.preferences"))),
     ).also { it.icon = glyph('\uE8C1') },
     group(
         "reviewComments",
-        "Comments",
-        button("newComment2", "New Comment", glyph(''), LARGE),
-        button("deleteComment", "Delete", glyph('')),
-        button("previousComment", "Previous", glyph('')),
-        button("nextComment", "Next", glyph('')),
+        Messages.get("common.comments"),
+        button("newComment2", Messages.get("review.new.comment"), glyph('\uE90A'), LARGE),
+        button("deleteComment", Messages.get("common.delete"), glyph('\uE74D')),
+        button("previousComment", Messages.get("review.previous"), glyph('\uE892')),
+        button("nextComment", Messages.get("review.next"), glyph('\uE893')),
     ).also { it.icon = glyph('\uE90A') },
     group(
         "tracking",
-        "Tracking",
-        toggle("trackChanges", "Track Changes", glyph(''), LARGE).also { it.shortcut = "Ctrl+Shift+E" },
-        RibbonComboBoxModel("markup", "Display for Review", listOf("Simple Markup", "All Markup", "No Markup", "Original")).also {
+        Messages.get("review.tracking"),
+        toggle("trackChanges", Messages.get("review.track.changes"), glyph('\uE70F'), LARGE).also { it.shortcut = "Ctrl+Shift+E" },
+        RibbonComboBoxModel("markup", Messages.get("review.markup"), listOf(Messages.get("review.markup.simple"), Messages.get("review.markup.all"), Messages.get("review.markup.none"), Messages.get("review.markup.original"))).also {
             it.selectedItem = it.items[0]
             it.text = it.items[0].toString()
             it.inputWidth = MARKUP_WIDTH
             it.showLabel = false
         },
-        dropDown("showMarkup", "Show Markup", glyph(''), MEDIUM, menuItem("markup.comments", "Comments"), menuItem("markup.insertions", "Insertions and Deletions"), menuItem("markup.formatting", "Formatting")),
-        button("reviewingPane", "Reviewing Pane", glyph('')),
+        dropDown("showMarkup", Messages.get("review.show.markup"), glyph('\uE890'), MEDIUM, menuItem("markup.comments", Messages.get("common.comments")), menuItem("markup.insertions", Messages.get("review.markup.insertions")), menuItem("markup.formatting", Messages.get("review.markup.formatting"))),
+        button("reviewingPane", Messages.get("review.reviewing.pane"), glyph('\uE89F')),
     ).also {
         it.icon = glyph('\uE70F')
         it.isDialogLauncherVisible = true
     },
     group(
         "changes",
-        "Changes",
-        split("accept", "Accept", glyph(''), MEDIUM, menuItem("accept.next", "Accept and Move to Next"), menuItem("accept.all", "Accept All Changes")),
-        split("reject", "Reject", glyph(''), MEDIUM, menuItem("reject.next", "Reject and Move to Next"), menuItem("reject.all", "Reject All Changes")),
+        Messages.get("review.changes"),
+        split("accept", Messages.get("review.accept"), glyph('\uE8FB'), MEDIUM, menuItem("accept.next", Messages.get("review.accept.next")), menuItem("accept.all", Messages.get("review.accept.all"))),
+        split("reject", Messages.get("review.reject"), glyph('\uE711'), MEDIUM, menuItem("reject.next", Messages.get("review.reject.next")), menuItem("reject.all", Messages.get("review.reject.all"))),
     ).also { it.icon = glyph('\uE8FB') },
-    group("protect", "Protect", button("restrictEditing", "Restrict Editing", glyph(''), LARGE)).also { it.icon = glyph('') },
+    group("protect", Messages.get("review.protect"), button("restrictEditing", Messages.get("review.restrict.editing"), glyph('\uE72E'), LARGE)).also { it.icon = glyph('\uE72E') },
 )
 
 /** The [View] tab. */
 internal fun createViewTab(): RibbonTabModel = tab(
     "view",
-    "View",
+    Messages.get("common.view"),
     "W",
     group(
         "views",
-        "Views",
-        view("readMode", "Read Mode", glyph(''), LARGE),
-        view("printLayout", "Print Layout", glyph(''), LARGE).also { it.isChecked = true },
-        view("webLayout", "Web Layout", glyph(''), LARGE),
-        view("outline", "Outline", RibbonIcons.BULLETS, MEDIUM),
-        view("draft", "Draft", glyph(''), MEDIUM),
+        Messages.get("view.views"),
+        view("readMode", Messages.get("status.read"), glyph('\uE736'), LARGE),
+        view("printLayout", Messages.get("status.print"), glyph('\uE7C3'), LARGE).also { it.isChecked = true },
+        view("webLayout", Messages.get("status.web"), glyph('\uE774'), LARGE),
+        view("outline", Messages.get("view.outline"), RibbonIcons.BULLETS, MEDIUM),
+        view("draft", Messages.get("design.draft"), glyph('\uE8A5'), MEDIUM),
     ).also { it.icon = glyph('\uE7C3') },
     group(
         "show",
-        "Show",
-        RibbonCheckBoxModel("ruler", "Ruler", isChecked = true),
-        RibbonCheckBoxModel("gridlines", "Gridlines"),
-        RibbonCheckBoxModel("navigationPane", "Navigation Pane", isChecked = true),
+        Messages.get("view.show"),
+        RibbonCheckBoxModel("ruler", Messages.get("common.ruler"), isChecked = true),
+        RibbonCheckBoxModel("gridlines", Messages.get("common.gridlines")),
+        RibbonCheckBoxModel("navigationPane", Messages.get("view.navigation.pane"), isChecked = true),
     ).also { it.icon = glyph('\uE890') },
     group(
         "zoom",
-        "Zoom",
-        button("zoomDialog", "Zoom", glyph(''), LARGE),
+        Messages.get("common.zoom"),
+        button("zoomDialog", Messages.get("common.zoom"), glyph('\uE71E'), LARGE),
         button("zoom100", "100%", glyph('\uE71E'), LARGE),
-        button("onePage", "One Page", glyph('')),
-        button("multiplePages", "Multiple Pages", glyph('')),
-        button("pageWidth", "Page Width", glyph('')),
+        button("onePage", Messages.get("view.one.page"), glyph('\uE7C3')),
+        button("multiplePages", Messages.get("view.multiple.pages"), glyph('\uE8A9')),
+        button("pageWidth", Messages.get("view.page.width"), glyph('\uE740')),
     ).also { it.icon = glyph('\uE71E') },
     group(
         "window",
-        "Window",
-        button("newWindow", "New Window", glyph(''), LARGE),
-        button("arrangeAll", "Arrange All", glyph('')),
-        button("split", "Split", glyph('')),
-        toggle("sideBySide", "View Side by Side", glyph(''), MEDIUM),
+        Messages.get("common.window"),
+        button("newWindow", Messages.get("common.new.window"), glyph('\uE737'), LARGE),
+        button("arrangeAll", Messages.get("view.arrange.all"), glyph('\uE8A9')),
+        button("split", Messages.get("view.split"), glyph('\uE8A0')),
+        toggle("sideBySide", Messages.get("view.side.by.side"), glyph('\uE8A9'), MEDIUM),
     ).also { it.icon = glyph('\uE737') },
-    group("macros", "Macros", split("macrosButton", "Macros", glyph(''), MEDIUM, menuItem("macros.view", "View Macros"), menuItem("macros.record", "Record Macro..."))).also { it.icon = glyph('') },
+    group("macros", Messages.get("view.macros"), split("macrosButton", Messages.get("view.macros"), glyph('\uE943'), MEDIUM, menuItem("macros.view", Messages.get("view.macros.view")), menuItem("macros.record", Messages.get("view.macros.record")))).also { it.icon = glyph('\uE943') },
 )
 
 private fun view(id: String, label: String, icon: RibbonIcon, size: RibbonItemSize) = toggle(id, label, icon, size).also { it.groupName = "view" }
@@ -323,14 +323,14 @@ private fun view(id: String, label: String, icon: RibbonIcon, size: RibbonItemSi
 /** The [Help] tab. */
 internal fun createHelpTab(): RibbonTabModel = tab(
     "help",
-    "Help",
+    Messages.get("common.help"),
     "Y",
     group(
         "helpGroup",
-        "Help",
-        button("helpButton", "Help", glyph(''), LARGE).also { it.shortcut = "F1" },
-        button("feedback", "Feedback", glyph(''), LARGE),
-        button("showTraining", "Show Training", glyph(''), LARGE),
+        Messages.get("common.help"),
+        button("helpButton", Messages.get("common.help"), glyph('\uE897'), LARGE).also { it.shortcut = "F1" },
+        button("feedback", Messages.get("help.feedback"), glyph('\uED15'), LARGE),
+        button("showTraining", Messages.get("help.training"), glyph('\uE7BE'), LARGE),
     ).also { it.icon = glyph('\uE897') },
 )
 

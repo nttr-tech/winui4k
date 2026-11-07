@@ -29,15 +29,15 @@ fun main() {
     WinUiUtilities.invokeLater {
         WRibbonTheme.applyPalette(RibbonThemePalette.WORD)
         var document: WordDocument? = null
-        val model = createWordModel { document?.log("Document saved") }
+        val model = createWordModel { document?.log(Messages.get("log.saved")) }
         val ribbon = WRibbon(model)
-        val window = RibbonDemoWindow("Quarterly Report - Word (WinUI4K Ribbon)", RibbonDemoApp.WORD, ribbon)
+        val window = RibbonDemoWindow(Messages.get("window.title"), RibbonDemoApp.WORD, ribbon)
         val doc = WordDocument(model, window)
         document = doc
         ribbon.addItemInvokedListener(doc::onItemInvoked)
-        ribbon.addTabChangeListener { event -> doc.log("Tab: ${event.newTab?.label}") }
+        ribbon.addTabChangeListener { event -> doc.log(Messages.get("log.tab", event.newTab?.label)) }
         val titleBar = window.titleBar!!
-        titleBar.subtitle = "• Saved to this PC"
+        titleBar.subtitle = Messages.get("title.subtitle")
         titleBar.startContent = autoSaveSwitch()
         titleBar.endContent = RibbonDemoWindow.avatar("WS", WColor(0x18, 0x5A, 0xBD))
         window.setTop(ribbon)
@@ -55,25 +55,25 @@ private fun autoSaveSwitch(): WComponent {
     toggle.offContent = ""
     val panel = WPanel(spacing = 6.0, orientation = Orientation.HORIZONTAL)
     panel.add(toggle.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    panel.add(WRibbonTheme.label("AutoSave", "RibbonTitleBarForegroundBrush", LABEL_SIZE).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
+    panel.add(WRibbonTheme.label(Messages.get("title.autosave"), "RibbonTitleBarForegroundBrush", LABEL_SIZE).also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     return panel
 }
 
 /** The status bar (page, word count, and language, and view switching and zoom). The zoom applies to the document's text size. */
 private fun statusBar(ribbon: WRibbon, document: WordDocument): WComponent {
     val model = RibbonStatusBarModel()
-    model.items.add(RibbonLabelModel("status.page", "Page 1 of 1"))
-    model.items.add(RibbonLabelModel("status.words", "64 words"))
-    model.items.add(RibbonLabelModel("status.language", "English (United States)"))
+    model.items.add(RibbonLabelModel("status.page", Messages.get("status.page")))
+    model.items.add(RibbonLabelModel("status.words", Messages.get("status.words")))
+    model.items.add(RibbonLabelModel("status.language", Messages.get("status.language")))
     fun view(id: String, label: String, icon: RibbonIcon, checked: Boolean = false) =
         toggle(id, label, icon).also {
             it.groupName = "statusView"
             it.isChecked = checked
         }
-    model.endItems.add(button("status.focus", "Focus", glyph('')))
-    model.endItems.add(view("status.read", "Read Mode", glyph('')))
-    model.endItems.add(view("status.print", "Print Layout", glyph(''), checked = true))
-    model.endItems.add(view("status.web", "Web Layout", glyph('')))
+    model.endItems.add(button("status.focus", Messages.get("status.focus"), glyph('\uE740')))
+    model.endItems.add(view("status.read", Messages.get("status.read"), glyph('\uE736')))
+    model.endItems.add(view("status.print", Messages.get("status.print"), glyph('\uE7C3'), checked = true))
+    model.endItems.add(view("status.web", Messages.get("status.web"), glyph('\uE774')))
     val zoom = RibbonZoomModel("status.zoom", ZOOM)
     zoom.addPropertyChangeListener { event -> if (event.propertyName == "value") document.setZoom(zoom.value) }
     model.endItems.add(zoom)

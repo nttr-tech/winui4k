@@ -40,8 +40,8 @@ internal const val PICTURE_TOOLS = "picture"
  * the tab row, the QAT, and the Backstage. [save] runs from [Save] in the Backstage and from "save" in the command catalog.
  */
 internal fun createWordModel(save: () -> Unit): RibbonModel = RibbonModel().apply {
-    applicationButtonLabel = "File"
-    title = "Quarterly Report"
+    applicationButtonLabel = Messages.get("common.file")
+    title = Messages.get("title")
     tabs.add(createHomeTab())
     tabs.add(createInsertTab())
     tabs.add(createDesignTab())
@@ -50,21 +50,21 @@ internal fun createWordModel(save: () -> Unit): RibbonModel = RibbonModel().appl
     tabs.add(createViewTab())
     tabs.add(createHelpTab())
     contextualGroups.add(
-        RibbonContextualGroupModel(TABLE_TOOLS, "Table Tools").also {
+        RibbonContextualGroupModel(TABLE_TOOLS, Messages.get("context.table.tools")).also {
             it.color = RibbonColor.parse("#0F7B6C")
             it.activation = RibbonContextualActivation.SELECT_ON_SHOW
         },
     )
-    contextualGroups.add(RibbonContextualGroupModel(PICTURE_TOOLS, "Picture Tools").also { it.color = RibbonColor.parse("#8764B8") })
+    contextualGroups.add(RibbonContextualGroupModel(PICTURE_TOOLS, Messages.get("context.picture.tools")).also { it.color = RibbonColor.parse("#8764B8") })
     tabs.add(createTableDesignTab())
     tabs.add(createTableLayoutTab())
     tabs.add(createPictureFormatTab())
-    quickAccessItems.add(button("qat.save", "Save", RibbonIcons.SAVE).also { it.shortcut = "Ctrl+S" })
-    quickAccessItems.add(button("qat.undo", "Undo", RibbonIcons.UNDO).also { it.shortcut = "Ctrl+Z" })
-    quickAccessItems.add(button("qat.redo", "Redo", RibbonIcons.REDO).also { it.shortcut = "Ctrl+Y" })
+    quickAccessItems.add(button("qat.save", Messages.get("common.save"), RibbonIcons.SAVE).also { it.shortcut = "Ctrl+S" })
+    quickAccessItems.add(button("qat.undo", Messages.get("common.undo"), RibbonIcons.UNDO).also { it.shortcut = "Ctrl+Z" })
+    quickAccessItems.add(button("qat.redo", Messages.get("common.redo"), RibbonIcons.REDO).also { it.shortcut = "Ctrl+Y" })
     for (id in listOf("cut", "copy", "paste", "bold", "newComment")) quickAccessCandidates.add(findItem(id)!!)
     commandCatalog = RibbonCommandCatalog().also {
-        it.register("save", "Save", RibbonCommand { save() }, RibbonIcons.SAVE, "Ctrl+S", "Save the document", "File")
+        it.register("save", Messages.get("common.save"), RibbonCommand { save() }, RibbonIcons.SAVE, "Ctrl+S", Messages.get("catalog.save.description"), Messages.get("common.file"))
     }
     addTabStripItems(this)
     createBackstage(this, save)
@@ -72,27 +72,27 @@ internal fun createWordModel(save: () -> Unit): RibbonModel = RibbonModel().appl
 
 /** [Comments] [Editing] [Share] at the right end of the tab row. */
 private fun addTabStripItems(model: RibbonModel) {
-    model.tabStripItems.add(button("comments", "Comments", glyph('')).also { it.showLabel = true })
+    model.tabStripItems.add(button("comments", Messages.get("common.comments"), glyph('\uE90A')).also { it.showLabel = true })
     model.tabStripItems.add(
         dropDown(
             "editingMode",
-            "Editing",
+            Messages.get("common.editing"),
             glyph('\uE70F'),
             RibbonItemSize.MEDIUM,
-            radioItem("mode.editing", "Editing", "mode", checked = true),
-            radioItem("mode.reviewing", "Reviewing", "mode"),
-            radioItem("mode.viewing", "Viewing", "mode"),
+            radioItem("mode.editing", Messages.get("common.editing"), "mode", checked = true),
+            radioItem("mode.reviewing", Messages.get("mode.reviewing"), "mode"),
+            radioItem("mode.viewing", Messages.get("mode.viewing"), "mode"),
         ),
     )
     model.tabStripItems.add(
         split(
             "share",
-            "Share",
+            Messages.get("common.share"),
             glyph('\uE72D'),
             RibbonItemSize.SMALL,
-            menuItem("share.share", "Share"),
-            menuItem("share.copyLink", "Copy Link"),
-            menuItem("share.sendCopy", "Send a Copy"),
+            menuItem("share.share", Messages.get("common.share")),
+            menuItem("share.copyLink", Messages.get("common.share.copy.link")),
+            menuItem("share.sendCopy", Messages.get("share.send.copy")),
         ),
     )
 }
@@ -102,31 +102,31 @@ private fun createBackstage(model: RibbonModel, save: () -> Unit) {
     backstage.title = "Word"
     fun page(id: String, label: String, icon: RibbonIcon, keyTip: String?, content: WComponent?) =
         RibbonBackstageItemModel(id, label, icon, content).also { it.keyTip = keyTip }
-    backstage.items.add(page("home", "Home", glyph(''), "H", backstageHome()))
-    backstage.items.add(page("new", "New", glyph(''), "N", WLabel("Choose a template to create a new document.")))
-    backstage.items.add(page("open", "Open", glyph(''), "O", WLabel("Open from recent files, OneDrive, or This PC.")))
-    backstage.items.add(page("info", "Info", glyph(''), "I", backstageInfo()).also { it.hasSeparatorBefore = true })
-    backstage.items.add(page("save", "Save", glyph(''), "S", null).also { it.command = RibbonCommand { save() } })
-    backstage.items.add(page("saveAs", "Save As", glyph(''), "A", WLabel("Save a copy of this document.")))
-    backstage.items.add(page("print", "Print", glyph(''), "P", WLabel("Print preview and printer settings.")))
-    backstage.items.add(page("export", "Export", glyph(''), "E", WLabel("Create a PDF/XPS document or change the file type.")))
-    backstage.items.add(page("close", "Close", glyph(''), "C", null))
-    backstage.items.add(page("account", "Account", glyph(''), null, WLabel("Signed in as a demo user.")).also { it.placement = RibbonBackstagePlacement.BOTTOM })
-    backstage.items.add(page("options", "Options", glyph(''), null, WLabel("Options for the WinUI4K ribbon.")).also { it.placement = RibbonBackstagePlacement.BOTTOM })
+    backstage.items.add(page("home", Messages.get("common.home"), glyph('\uE80F'), "H", backstageHome()))
+    backstage.items.add(page("new", Messages.get("common.backstage.new"), glyph('\uE8A5'), "N", WLabel(Messages.get("backstage.new.text"))))
+    backstage.items.add(page("open", Messages.get("common.backstage.open"), glyph('\uE8E5'), "O", WLabel(Messages.get("backstage.open.text"))))
+    backstage.items.add(page("info", Messages.get("backstage.info"), glyph('\uE946'), "I", backstageInfo()).also { it.hasSeparatorBefore = true })
+    backstage.items.add(page("save", Messages.get("common.save"), glyph('\uE74E'), "S", null).also { it.command = RibbonCommand { save() } })
+    backstage.items.add(page("saveAs", Messages.get("backstage.save.as"), glyph('\uE792'), "A", WLabel(Messages.get("backstage.save.as.text"))))
+    backstage.items.add(page("print", Messages.get("backstage.print"), glyph('\uE749'), "P", WLabel(Messages.get("backstage.print.text"))))
+    backstage.items.add(page("export", Messages.get("common.export"), glyph('\uEDE1'), "E", WLabel(Messages.get("backstage.export.text"))))
+    backstage.items.add(page("close", Messages.get("backstage.close"), glyph('\uE8BB'), "C", null))
+    backstage.items.add(page("account", Messages.get("backstage.account"), glyph('\uE77B'), null, WLabel(Messages.get("backstage.account.text"))).also { it.placement = RibbonBackstagePlacement.BOTTOM })
+    backstage.items.add(page("options", Messages.get("common.options"), glyph('\uE713'), null, WLabel(Messages.get("backstage.options.text"))).also { it.placement = RibbonBackstagePlacement.BOTTOM })
 }
 
 /** The Backstage [Home] page (greeting, template cards, and recent files). */
 private fun backstageHome(): WComponent {
     val panel = WPanel(spacing = 16.0)
-    panel.add(WLabel("Hello").also { it.fontSize = GREETING_SIZE })
+    panel.add(WLabel(Messages.get("backstage.greeting")).also { it.fontSize = GREETING_SIZE })
     val cards = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
-    cards.add(templateCard("Blank document", "RibbonCommandBarBackgroundBrush"))
-    cards.add(templateCard("Report", "RibbonAccentSubtleBrush"))
-    cards.add(templateCard("Resume", "RibbonAccentSubtleStrongBrush"))
+    cards.add(templateCard(Messages.get("backstage.template.blank"), "RibbonCommandBarBackgroundBrush"))
+    cards.add(templateCard(Messages.get("backstage.template.report"), "RibbonAccentSubtleBrush"))
+    cards.add(templateCard(Messages.get("backstage.template.resume"), "RibbonAccentSubtleStrongBrush"))
     panel.add(cards)
-    panel.add(WLabel("Recent").also { it.fontWeight = SEMI_BOLD })
-    panel.add(WLabel("Quarterly Report.docx — Documents").also { it.opacity = SUBTLE })
-    panel.add(WLabel("Product Roadmap.docx — OneDrive").also { it.opacity = SUBTLE })
+    panel.add(WLabel(Messages.get("backstage.recent")).also { it.fontWeight = SEMI_BOLD })
+    panel.add(WLabel(Messages.get("backstage.recent.report")).also { it.opacity = SUBTLE })
+    panel.add(WLabel(Messages.get("backstage.recent.roadmap")).also { it.opacity = SUBTLE })
     return panel
 }
 
@@ -145,10 +145,10 @@ private fun templateCard(label: String, backgroundKey: String): WComponent {
 /** The Backstage [Info] page (document protection and inspection). */
 private fun backstageInfo(): WComponent {
     val panel = WPanel(spacing = 8.0)
-    panel.add(WLabel("Protect Document").also { it.fontWeight = SEMI_BOLD })
-    panel.add(WLabel("Control what types of changes people can make to this document.").also { it.textWrapping = TextWrapping.WRAP })
-    panel.add(WLabel("Inspect Document").also { it.fontWeight = SEMI_BOLD })
-    panel.add(WLabel("Before publishing this file, be aware that it contains: Document properties and author's name.").also { it.textWrapping = TextWrapping.WRAP })
+    panel.add(WLabel(Messages.get("backstage.protect")).also { it.fontWeight = SEMI_BOLD })
+    panel.add(WLabel(Messages.get("backstage.protect.text")).also { it.textWrapping = TextWrapping.WRAP })
+    panel.add(WLabel(Messages.get("backstage.inspect")).also { it.fontWeight = SEMI_BOLD })
+    panel.add(WLabel(Messages.get("backstage.inspect.text")).also { it.textWrapping = TextWrapping.WRAP })
     return panel
 }
 

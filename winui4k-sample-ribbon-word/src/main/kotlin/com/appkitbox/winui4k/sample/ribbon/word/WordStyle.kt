@@ -16,16 +16,16 @@ internal enum class WordStyle(
     /** Text color when applied to the heading (#RRGGBB). */
     val headingColor: String,
 ) {
-    NORMAL("Normal", "Paragraph", "AaBbCcDd", 14.0, null, 30.0, "#1F3864"),
-    NO_SPACING("No Spacing", "Paragraph", "AaBbCcDd", 14.0, null, 30.0, "#1F3864"),
-    HEADING1("Heading 1", "Heading", "AaBbCc", 17.0, "#2F5496", 30.0, "#2F5496"),
-    HEADING2("Heading 2", "Heading", "AaBbCcE", 15.0, "#2F5496", 24.0, "#2F5496"),
-    TITLE("Title", "Heading", "AaB", 22.0, null, 40.0, "#000000"),
-    SUBTITLE("Subtitle", "Heading", "AaBbCcD", 14.0, "#595959", 22.0, "#595959"),
-    EMPHASIS("Emphasis", "Character", "AaBbCcDd", 14.0, null, 30.0, "#1F3864"),
-    STRONG("Strong", "Character", "AaBbCcDd", 14.0, null, 30.0, "#1F3864"),
-    QUOTE("Quote", "Paragraph", "AaBbCcDd", 14.0, "#404040", 26.0, "#404040"),
-    INTENSE_QUOTE("Intense Quote", "Paragraph", "AaBbCcDd", 14.0, "#2F5496", 26.0, "#404040"),
+    NORMAL(Messages.get("style.normal"), Messages.get("common.paragraph"), Messages.get("style.preview"), 14.0, null, 30.0, "#1F3864"),
+    NO_SPACING(Messages.get("style.no.spacing"), Messages.get("common.paragraph"), Messages.get("style.preview"), 14.0, null, 30.0, "#1F3864"),
+    HEADING1(Messages.get("style.heading1"), Messages.get("style.category.heading"), Messages.get("style.preview.heading1"), 17.0, "#2F5496", 30.0, "#2F5496"),
+    HEADING2(Messages.get("style.heading2"), Messages.get("style.category.heading"), Messages.get("style.preview.heading2"), 15.0, "#2F5496", 24.0, "#2F5496"),
+    TITLE(Messages.get("style.title"), Messages.get("style.category.heading"), Messages.get("style.preview.title"), 22.0, null, 40.0, "#000000"),
+    SUBTITLE(Messages.get("style.subtitle"), Messages.get("style.category.heading"), Messages.get("style.preview"), 14.0, "#595959", 22.0, "#595959"),
+    EMPHASIS(Messages.get("style.emphasis"), Messages.get("style.category.character"), Messages.get("style.preview"), 14.0, null, 30.0, "#1F3864"),
+    STRONG(Messages.get("style.strong"), Messages.get("style.category.character"), Messages.get("style.preview"), 14.0, null, 30.0, "#1F3864"),
+    QUOTE(Messages.get("style.quote"), Messages.get("common.paragraph"), Messages.get("style.preview"), 14.0, "#404040", 26.0, "#404040"),
+    INTENSE_QUOTE(Messages.get("style.intense.quote"), Messages.get("common.paragraph"), Messages.get("style.preview"), 14.0, "#2F5496", 26.0, "#404040"),
     ;
 
     /** Whether this is an italic style. */

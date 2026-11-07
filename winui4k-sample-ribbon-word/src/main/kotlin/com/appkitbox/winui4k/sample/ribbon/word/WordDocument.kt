@@ -28,10 +28,10 @@ import com.appkitbox.winui4k.sample.ribbon.common.RibbonDemoWindow
  * OnItemInvoked in WordPage.xaml.cs).
  */
 internal class WordDocument(private val model: RibbonModel, private val window: RibbonDemoWindow) {
-    private val heading = WLabel("Quarterly Report")
-    private val body = WLabel(BODY_TEXT)
+    private val heading = WLabel(Messages.get("title"))
+    private val body = WLabel(Messages.get("document.body"))
     private val bodyBox = WBorder(body)
-    private val lastCommand = WLabel("Last command: —")
+    private val lastCommand = WLabel(Messages.get("document.last.command", "—"))
     private val content = WPanel(spacing = 14.0)
     private val page = WBorder(content)
     private val table = TableSample()
@@ -75,14 +75,14 @@ internal class WordDocument(private val model: RibbonModel, private val window: 
     }
 
     private fun buttons(): WComponent {
-        val tableButton = WButton("Select the table (shows Table Tools)")
+        val tableButton = WButton(Messages.get("document.table.button"))
         tableButton.addActionListener { showTable(!table.view.isVisible) }
-        val pictureButton = WButton("Select the picture (shows Picture Tools)")
+        val pictureButton = WButton(Messages.get("document.picture.button"))
         pictureButton.addActionListener {
             picture.isVisible = !picture.isVisible
             model.setContextualGroupVisible(PICTURE_TOOLS, picture.isVisible)
         }
-        val darkButton = WButton("Toggle dark mode")
+        val darkButton = WButton(Messages.get("document.dark.button"))
         darkButton.addActionListener {
             dark = !dark
             window.setDark(dark)
@@ -96,7 +96,7 @@ internal class WordDocument(private val model: RibbonModel, private val window: 
 
     /** Shows [message] in the last command field. */
     fun log(message: String) {
-        lastCommand.text = "Last command: $message"
+        lastCommand.text = Messages.get("document.last.command", message)
     }
 
     /** Applies the status bar's zoom (%) to the document's text size. */
@@ -264,12 +264,7 @@ private fun RibbonColor.toWColor(): WColor = WColor(r, g, b, a)
 
 private fun formatSize(size: Double): String = if (size % 1.0 == 0.0) size.toInt().toString() else size.toString()
 
-private const val BODY_TEXT =
-    "WinUI4K's ribbon provides an Office-style ribbon in pure Kotlin. Try choosing styles, fonts, colors, and alignment on the ribbon " +
-        "to change the formatting of this paragraph. Point at the style gallery for a live preview, press Alt for KeyTips, " +
-        "Alt+Q to search, Ctrl+F1 to collapse the ribbon, and right-click a command to add it to the QAT."
-
-private val TABLE = listOf(listOf("Region", "Q3", "Q4"), listOf("North", "1.2M", "1.5M"), listOf("South", "0.9M", "1.1M"))
+private val TABLE = listOf(listOf(Messages.get("document.table.region"), Messages.get("document.table.q3"), Messages.get("document.table.q4")), listOf(Messages.get("document.table.north"), "1.2M", "1.5M"), listOf(Messages.get("document.table.south"), "0.9M", "1.1M"))
 private const val ROWS = 3
 private const val COLUMNS = 3
 private val TEXT_COLOR = WColor(0x24, 0x24, 0x24)

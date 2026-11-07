@@ -20,35 +20,35 @@ import com.appkitbox.winui4k.sample.ribbon.common.tab
 
 /** Table styles (gallery items; the value is the color of the header row of the table in the document). */
 internal val TABLE_STYLES: List<Pair<String, String>> = listOf(
-    "Plain Table 1" to "#F2F2F2",
-    "Grid Table 1 Light" to "#DEEBF7",
-    "Grid Table 4 - Accent 1" to "#4472C4",
-    "Grid Table 4 - Accent 2" to "#ED7D31",
-    "Grid Table 4 - Accent 6" to "#70AD47",
-    "List Table 3" to "#A5A5A5",
-    "List Table 7 Colorful" to "#FFC000",
-    "Grid Table 5 Dark" to "#44546A",
+    Messages.get("table.style.plain1") to "#F2F2F2",
+    Messages.get("table.style.grid1.light") to "#DEEBF7",
+    Messages.get("table.style.grid4.accent1") to "#4472C4",
+    Messages.get("table.style.grid4.accent2") to "#ED7D31",
+    Messages.get("table.style.grid4.accent6") to "#70AD47",
+    Messages.get("table.style.list3") to "#A5A5A5",
+    Messages.get("table.style.list7.colorful") to "#FFC000",
+    Messages.get("table.style.grid5.dark") to "#44546A",
 )
 
 /** [Table Design] under [Table Tools]. */
 internal fun createTableDesignTab(): RibbonTabModel = tab(
     "tableDesign",
-    "Table Design",
+    Messages.get("table.design"),
     "JT",
     group(
         "tableStyleOptions",
-        "Table Style Options",
-        RibbonCheckBoxModel("headerRow", "Header Row", isChecked = true),
-        RibbonCheckBoxModel("totalRow", "Total Row"),
-        RibbonCheckBoxModel("bandedRows", "Banded Rows", isChecked = true),
-        RibbonCheckBoxModel("firstColumn", "First Column", isChecked = true),
-        RibbonCheckBoxModel("lastColumn", "Last Column"),
-        RibbonCheckBoxModel("bandedColumns", "Banded Columns"),
+        Messages.get("table.style.options"),
+        RibbonCheckBoxModel("headerRow", Messages.get("table.header.row"), isChecked = true),
+        RibbonCheckBoxModel("totalRow", Messages.get("table.total.row")),
+        RibbonCheckBoxModel("bandedRows", Messages.get("table.banded.rows"), isChecked = true),
+        RibbonCheckBoxModel("firstColumn", Messages.get("table.first.column"), isChecked = true),
+        RibbonCheckBoxModel("lastColumn", Messages.get("table.last.column")),
+        RibbonCheckBoxModel("bandedColumns", Messages.get("table.banded.columns")),
     ),
     group(
         "tableStyles",
-        "Table Styles",
-        RibbonGalleryModel("tableStylesGallery", "Table Styles").also { gallery ->
+        Messages.get("table.styles"),
+        RibbonGalleryModel("tableStylesGallery", Messages.get("table.styles")).also { gallery ->
             gallery.maxColumns = TABLE_STYLE_MAX_COLUMNS
             gallery.minColumns = TABLE_STYLE_MIN_COLUMNS
             gallery.itemWidth = TABLE_STYLE_ITEM_WIDTH
@@ -59,7 +59,7 @@ internal fun createTableDesignTab(): RibbonTabModel = tab(
             }
             gallery.selectedItem = gallery.items[2]
         },
-        RibbonColorPickerModel("tableShading", "Shading", RibbonIcons.SHADING).also {
+        RibbonColorPickerModel("tableShading", Messages.get("home.shading"), RibbonIcons.SHADING).also {
             it.size = RibbonItemSize.LARGE
             it.selectedColor = RibbonColor.parse("#DEEBF7")
             it.showNoColor = true
@@ -67,65 +67,65 @@ internal fun createTableDesignTab(): RibbonTabModel = tab(
     ).also { it.reductionOrder = 1 },
     group(
         "tableBorders",
-        "Borders",
-        button("borderStyles", "Border Styles", RibbonIcons.BORDERS, RibbonItemSize.LARGE),
-        split("tableBordersButton", "Borders", RibbonIcons.BORDERS, RibbonItemSize.LARGE, menuItem("tableBorders.all", "All Borders"), menuItem("tableBorders.outside", "Outside Borders"), menuItem("tableBorders.none", "No Border")),
-        button("borderPainter", "Border Painter", RibbonIcons.FORMAT_PAINTER, RibbonItemSize.LARGE),
+        Messages.get("table.borders.group"),
+        button("borderStyles", Messages.get("table.border.styles"), RibbonIcons.BORDERS, RibbonItemSize.LARGE),
+        split("tableBordersButton", Messages.get("common.borders"), RibbonIcons.BORDERS, RibbonItemSize.LARGE, menuItem("tableBorders.all", Messages.get("common.borders.all")), menuItem("tableBorders.outside", Messages.get("common.borders.outside")), menuItem("tableBorders.none", Messages.get("common.borders.none"))),
+        button("borderPainter", Messages.get("table.border.painter"), RibbonIcons.FORMAT_PAINTER, RibbonItemSize.LARGE),
     ),
 ).also { it.contextualGroupId = TABLE_TOOLS }
 
 /** [Layout] under [Table Tools]. */
 internal fun createTableLayoutTab(): RibbonTabModel = tab(
     "tableLayout",
-    "Layout",
+    Messages.get("common.layout"),
     "JL",
     group(
         "rowsColumns",
-        "Rows & Columns",
-        button("deleteRows", "Delete", glyph(''), RibbonItemSize.LARGE),
-        button("insertAbove", "Insert Above", glyph(''), RibbonItemSize.LARGE),
-        button("insertBelow", "Insert Below", glyph(''), RibbonItemSize.LARGE),
-        button("insertLeft", "Insert Left", glyph('')),
-        button("insertRight", "Insert Right", glyph('')),
+        Messages.get("table.rows.columns"),
+        button("deleteRows", Messages.get("common.delete"), glyph('\uE74D'), RibbonItemSize.LARGE),
+        button("insertAbove", Messages.get("table.insert.above"), glyph('\uE710'), RibbonItemSize.LARGE),
+        button("insertBelow", Messages.get("table.insert.below"), glyph('\uE710'), RibbonItemSize.LARGE),
+        button("insertLeft", Messages.get("table.insert.left"), glyph('\uE710')),
+        button("insertRight", Messages.get("table.insert.right"), glyph('\uE710')),
     ),
     group(
         "cellSize",
-        "Cell Size",
-        spinner("rowHeight", "Height:", ROW_HEIGHT, CELL_MAX, CM_STEP, "cm", "0.00"),
-        spinner("columnWidth", "Width:", COLUMN_WIDTH, CELL_MAX, CM_STEP, "cm", "0.00"),
-        button("autoFit", "AutoFit", glyph('')),
+        Messages.get("table.cell.size"),
+        spinner("rowHeight", Messages.get("size.height"), ROW_HEIGHT, CELL_MAX, CM_STEP, "cm", "0.00"),
+        spinner("columnWidth", Messages.get("size.width"), COLUMN_WIDTH, CELL_MAX, CM_STEP, "cm", "0.00"),
+        button("autoFit", Messages.get("table.auto.fit"), glyph('\uE740')),
     ).also { it.isDialogLauncherVisible = true },
 ).also { it.contextualGroupId = TABLE_TOOLS }
 
 /** [Picture Format] under [Picture Tools]. */
 internal fun createPictureFormatTab(): RibbonTabModel = tab(
     "pictureFormat",
-    "Picture Format",
+    Messages.get("picture.format"),
     "JP",
     group(
         "adjust",
-        "Adjust",
-        button("removeBackground", "Remove Background", glyph(''), RibbonItemSize.LARGE),
-        dropDown("corrections", "Corrections", glyph(''), RibbonItemSize.MEDIUM, menuItem("corrections.sharpen", "Sharpen: 25%"), menuItem("corrections.brightness", "Brightness: +20%")),
-        dropDown("pictureColor", "Color", glyph(''), RibbonItemSize.MEDIUM, menuItem("pictureColor.grayscale", "Grayscale"), menuItem("pictureColor.sepia", "Sepia")),
-        dropDown("artisticEffects", "Artistic Effects", glyph(''), RibbonItemSize.MEDIUM, menuItem("artistic.pencil", "Pencil Sketch"), menuItem("artistic.blur", "Blur")),
+        Messages.get("picture.adjust"),
+        button("removeBackground", Messages.get("picture.remove.background"), glyph('\uE75C'), RibbonItemSize.LARGE),
+        dropDown("corrections", Messages.get("picture.corrections"), glyph('\uE706'), RibbonItemSize.MEDIUM, menuItem("corrections.sharpen", Messages.get("picture.sharpen")), menuItem("corrections.brightness", Messages.get("picture.brightness"))),
+        dropDown("pictureColor", Messages.get("picture.color"), glyph('\uE790'), RibbonItemSize.MEDIUM, menuItem("pictureColor.grayscale", Messages.get("picture.grayscale")), menuItem("pictureColor.sepia", Messages.get("picture.sepia"))),
+        dropDown("artisticEffects", Messages.get("picture.artistic.effects"), glyph('\uE771'), RibbonItemSize.MEDIUM, menuItem("artistic.pencil", Messages.get("picture.pencil.sketch")), menuItem("artistic.blur", Messages.get("picture.blur"))),
     ),
     group(
         "pictureStyles",
-        "Picture Styles",
-        RibbonColorPickerModel("pictureBorder", "Picture Border", RibbonIcons.BORDERS).also {
+        Messages.get("picture.styles"),
+        RibbonColorPickerModel("pictureBorder", Messages.get("picture.border"), RibbonIcons.BORDERS).also {
             it.size = RibbonItemSize.MEDIUM
             it.selectedColor = RibbonColor.parse("#4472C4")
             it.showNoColor = true
         },
-        dropDown("pictureEffects", "Picture Effects", glyph(''), RibbonItemSize.MEDIUM, menuItem("effects.shadow", "Shadow"), menuItem("effects.glow", "Glow"), menuItem("effects.soft", "Soft Edges")),
+        dropDown("pictureEffects", Messages.get("picture.effects"), glyph('\uE9D2'), RibbonItemSize.MEDIUM, menuItem("effects.shadow", Messages.get("picture.shadow")), menuItem("effects.glow", Messages.get("picture.glow")), menuItem("effects.soft", Messages.get("picture.soft.edges"))),
     ),
     group(
         "pictureSize",
-        "Size",
-        button("crop", "Crop", glyph(''), RibbonItemSize.LARGE),
-        spinner("pictureHeight", "Height:", PICTURE_HEIGHT, PICTURE_MAX, CM_STEP, "cm", "0.00"),
-        spinner("pictureWidth", "Width:", PICTURE_WIDTH, PICTURE_MAX, CM_STEP, "cm", "0.00"),
+        Messages.get("layout.size"),
+        button("crop", Messages.get("picture.crop"), glyph('\uE7A8'), RibbonItemSize.LARGE),
+        spinner("pictureHeight", Messages.get("size.height"), PICTURE_HEIGHT, PICTURE_MAX, CM_STEP, "cm", "0.00"),
+        spinner("pictureWidth", Messages.get("size.width"), PICTURE_WIDTH, PICTURE_MAX, CM_STEP, "cm", "0.00"),
     ).also { it.isDialogLauncherVisible = true },
 ).also { it.contextualGroupId = PICTURE_TOOLS }
 
