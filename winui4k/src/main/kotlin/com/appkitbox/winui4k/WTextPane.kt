@@ -778,6 +778,20 @@ class WTextPane() : WControl(
         withSelectionFormat { format -> format.call(XamlInterop.ITextCharacterFormat_put_Italic, XamlInterop.FormatEffect_Toggle) }
     }
 
+    /**
+     * Toggles the underline of the selection (StyledEditorKit.UnderlineAction-like). If the whole selection is underlined, removes it; if it includes parts without an underline,
+     * underlines all of it with a single line (Selection.CharacterFormat.Underline).
+     * If there is a selection, listeners of [addDocumentListener] receive changedUpdate for the selection.
+     */
+    fun toggleSelectionUnderline() {
+        withSelectionFormat { format ->
+            // A selection with an underline on only part of it is Undefined
+            val current = format.getInt(TextInterop.ITextCharacterFormat_get_Underline)
+            val all = current != TextInterop.UnderlineType_None && current != TextInterop.UnderlineType_Undefined
+            format.call(TextInterop.ITextCharacterFormat_put_Underline, if (all) TextInterop.UnderlineType_None else TextInterop.UnderlineType_Single)
+        }
+    }
+
     /** Gets the ITextCharacterFormat of the selection, passes it to the block, and reliably releases it. Then notifies that the formatting changed. */
     private fun withSelectionFormat(block: (ComPtr) -> Unit) {
         val start = selectionStart
