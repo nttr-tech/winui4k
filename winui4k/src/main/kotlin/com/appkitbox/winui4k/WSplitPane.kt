@@ -207,6 +207,7 @@ class WSplitPane @JvmOverloads constructor(
     /**
      * JSplitPane.getLastDividerLocation / setLastDividerLocation-like: the previous divider position. Setting [dividerLocation] makes it
      * the value before setting, and after a drag it is the value before the drag started. Layout corrections of the position (distribution of size changes, etc.) do not change it.
+     * The default is 0. As in Swing, inside the [addChangeListener] listeners called by setting [dividerLocation], it still returns the previous value.
      */
     var lastDividerLocation: Int
         get() = lastLocation
@@ -424,12 +425,15 @@ class WSplitPane @JvmOverloads constructor(
         }
     }
 
-    /** Sets the position to [value] and calls the listeners if it changed ([lastDividerLocation] becomes the value before setting). */
+    /**
+     * Sets the position to [value] and calls the listeners if it changed. [lastDividerLocation] becomes the value before the setting after the listeners are called
+     * (the same order as Swing's JSplitPane.setDividerLocation; inside the listeners it still returns the previous value).
+     */
     private fun updateLocation(value: Int) {
         val old = dividerAt
         dividerAt = value
-        lastLocation = old
         if (old != value) changeListeners.fire()
+        lastLocation = old
     }
 
     /** Swing's resetToPreferredSizes(int): places the preferred sizes and distributes the remainder by [resizeWeight]. */

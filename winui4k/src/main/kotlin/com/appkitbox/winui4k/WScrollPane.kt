@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.ffi.api.ArgKind
 import com.appkitbox.winui4k.internal.ffi.api.CallDescriptor
 import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.ValueKind
+import com.appkitbox.winui4k.internal.ffi.api.allocate
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
@@ -13,6 +14,7 @@ import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.Dispatcher
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
@@ -175,6 +177,44 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     /** The content height (ScrollViewer.ExtentHeight). */
     val extentHeight: Double
         get() = inspectable.getDouble(XamlInterop.IScrollViewer_get_ExtentHeight)
+
+    /**
+     * Before reading the viewport's size ([WScrollPaneBar.visibleAmount], [WViewport.extentSize]), finishes pending layout, as Swing's validate does.
+     * After layout, the layout in the window (relayout of WLayoutPanels and UpdateLayout) is done now.
+     */
+    internal fun layOutForSizes() {
+        if (laidOutRequests.isLaidOut()) generateSequence<WComponent>(this) { it.parent }.last().validate()
+    }
+
+    /**
+     * The content's size [width, height] ([WScrollPaneBar.maximum], [WViewport.viewSize]). After layout, ExtentWidth / ExtentHeight after [layOutForSizes]
+     * (the size after adding even right after adding to the content; the same value as read inside Swing's invokeLater).
+     * Right after showing and before the first layout, the ScrollViewer has not measured the content yet (Extent is 0), so it is the size of the content ([content]) measured
+     * without size constraints (the same as ScrollContentPresenter measuring the content in the scrolling direction; Swing's Window.show validates
+     * while showing, so the content's size can be read even right after showing). Measuring the ScrollViewer itself first would make scroll position requests
+     * fail when it is laid out afterwards, so only the content is measured.
+     */
+    internal fun extentForReading(): DoubleArray {
+        layOutForSizes()
+        val view = content
+        if (view == null || laidOutRequests.isLaidOut() || !laidOutRequests.awaitsFirstLayout()) {
+            return doubleArrayOf(extentWidth, extentHeight)
+        }
+        Ffi.backend.withScope { scope ->
+            val available = scope.allocate(XamlStructs.SIZE_FLOAT)
+            Ffi.backend.memory.putFloat(available.ptr, 0, Float.POSITIVE_INFINITY)
+            Ffi.backend.memory.putFloat(available.ptr, 4, Float.POSITIVE_INFINITY)
+            view.uiElement.call(XamlInterop.IUIElement_Measure, available)
+        }
+        val desired = XamlStructs.getSizeFloat(view.uiElement, XamlInterop.IUIElement_get_DesiredSize)
+        return doubleArrayOf(maxOf(extentWidth, desired[0]), maxOf(extentHeight, desired[1])).also { estimatedExtent = it }
+    }
+
+    /**
+     * The content size [extentForReading] measured and returned before the first layout (it can differ from the value after layout by layout rounding).
+     * Position requests at or beyond it are taken as "to the end" and applied at the end of the scrollable amount after layout (the same as Swing's setValue(getMaximum())).
+     */
+    private var estimatedExtent: DoubleArray? = null
 
     /** JScrollPane.getViewport-like: the viewport (reading and writing the shown position, and a ChangeListener for its changes). */
     val viewport: WViewport by lazy { WViewport(this) }
@@ -383,6 +423,10 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     private var pendingHorizontalOffset: Double? = null
     private var pendingVerticalOffset: Double? = null
 
+    /** Whether the horizontal and vertical positions requested before the first layout are at or beyond the content size returned then ([estimatedExtent]) (to the end). */
+    private var pendingHorizontalToEnd = false
+    private var pendingVerticalToEnd = false
+
     /** The horizontal position ([horizontalOffset]). The requested value if a position was requested before the first layout (as in Swing, the set value can be read right away). */
     internal val requestedHorizontalOffset: Double get() = pendingHorizontalOffset ?: horizontalOffset
 
@@ -399,8 +443,15 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
      */
     internal fun changeViewImmediately(horizontalOffset: Double?, verticalOffset: Double?) {
         if (laidOutRequests.isPending(VIEW_REQUEST) || !laidOutRequests.isLaidOut()) {
-            if (horizontalOffset != null) pendingHorizontalOffset = horizontalOffset
-            if (verticalOffset != null) pendingVerticalOffset = verticalOffset
+            val estimated = estimatedExtent
+            if (horizontalOffset != null) {
+                pendingHorizontalOffset = horizontalOffset
+                pendingHorizontalToEnd = estimated != null && horizontalOffset >= estimated[0]
+            }
+            if (verticalOffset != null) {
+                pendingVerticalOffset = verticalOffset
+                pendingVerticalToEnd = estimated != null && verticalOffset >= estimated[1]
+            }
             laidOutRequests.runOrDefer(VIEW_REQUEST) { applyPendingView() }
             return
         }
@@ -413,8 +464,14 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
         val vertical = pendingVerticalOffset
         pendingHorizontalOffset = null
         pendingVerticalOffset = null
+        estimatedExtent = null
         generateSequence<WComponent>(this) { it.parent }.last().validate()
-        applyChangeView(horizontal, vertical)
+        applyChangeView(
+            if (pendingHorizontalToEnd) scrollableWidth else horizontal,
+            if (pendingVerticalToEnd) scrollableHeight else vertical,
+        )
+        pendingHorizontalToEnd = false
+        pendingVerticalToEnd = false
     }
 
     /**

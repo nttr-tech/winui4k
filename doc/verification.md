@@ -523,6 +523,11 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   同じく表示した直後は、Button の Invoke で開くはずの Flyout (Click は届く) と ToolTip.IsOpen = true (IsOpen は true のまま) が黙って
   開かず、TeachingTip.IsOpen = true はまだ並んでいない Target の位置 (ウィンドウの左上) に吹き出しを出す (起動した直後のプロセスで
   撮って確かめた。暖まったテストのプロセスでは再現しない)。AppBar.IsOpen (CommandBar の「…」) は表示した直後でも開く
+- 表示した直後 (最初のレイアウトの前) の ScrollViewer は ExtentHeight などが 0。UIElement.UpdateLayout は読み込む前の中身も
+  並べるが、ウィンドウの大きさではなく制約なしで並べる (ViewportHeight = ExtentHeight、幅は中身の幅) うえ、XamlRoot が付いて
+  大きさが 0 でなくなるので「並べた後」と見分けられなくなり、その後に頼んだスクロールの位置が本当のレイアウトの前に当たって
+  失われる (E2E で確かめた)。WScrollPane は中身だけを制約なしで Measure して中身の大きさを見積もる。読み込む前の測り方は
+  レイアウトの丸めが画面の拡大率と違う (拡大率 150% で 1 行 18.67 → 19 DIP) ので、並べた後の値と少し違う (AfterShowSizesTest)
 - SizeChanged は UIElement.UpdateLayout の中で同期的に届く (microsoft-ui-xaml の LayoutManager.cpp の RaiseSizeChangedEvents)。
   WLayoutPanel は子の自然な大きさを測るとき、子の Width / Height を外して UpdateLayout するので、その子には中身の大きさで
   SizeChanged が届き、ScrollViewer はその大きさでスクロールの位置を 0 に丸める。表示した直後には 0 を割り当てることもある。

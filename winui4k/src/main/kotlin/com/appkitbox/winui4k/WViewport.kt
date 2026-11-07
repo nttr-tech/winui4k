@@ -26,13 +26,25 @@ class WViewport internal constructor(private val scrollPane: WScrollPane) {
             scrollPane.changeViewImmediately(value.x.toDouble(), value.y.toDouble())
         }
 
-    /** The viewport size (JViewport.getExtentSize; ScrollViewer.ViewportWidth / ViewportHeight). */
+    /**
+     * The viewport's size (JViewport.getExtentSize; ScrollViewer.ViewportWidth / ViewportHeight). Pending layout is finished before reading
+     * (the same as [viewSize], but 0 right after showing and before layout).
+     */
     val extentSize: WSize
-        get() = WSize(scrollPane.viewportWidth, scrollPane.viewportHeight)
+        get() {
+            scrollPane.layOutForSizes()
+            return WSize(scrollPane.viewportWidth, scrollPane.viewportHeight)
+        }
 
-    /** The content size (JViewport.getViewSize; ScrollViewer.ExtentWidth / ExtentHeight). */
+    /**
+     * The content's size (JViewport.getViewSize; ScrollViewer.ExtentWidth / ExtentHeight). As in Swing, pending layout is finished before reading
+     * (the size after adding even right after adding to the content; right after showing and before layout, the measured size of the content).
+     */
     val viewSize: WSize
-        get() = WSize(scrollPane.extentWidth, scrollPane.extentHeight)
+        get() {
+            val extent = scrollPane.extentForReading()
+            return WSize(extent[0], extent[1])
+        }
 
     /** The visible range in content coordinates (JViewport.getViewRect = [viewPosition] and [extentSize]). */
     val viewRect: WRectangle

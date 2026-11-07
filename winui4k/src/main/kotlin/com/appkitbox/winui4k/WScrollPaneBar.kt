@@ -23,8 +23,15 @@ class WScrollPaneBar internal constructor(
 
     override val minimum: Int get() = 0
 
+    /**
+     * The length of the content. As in Swing, pending layout is finished before reading (the length after adding even right after adding to the content; right after showing
+     * and before layout, the measured length of the content).
+     */
     override val maximum: Int
-        get() = Math.round(if (horizontal) scrollPane.extentWidth else scrollPane.extentHeight).toInt()
+        get() {
+            val extent = scrollPane.extentForReading()
+            return Math.round(if (horizontal) extent[0] else extent[1]).toInt()
+        }
 
     override var value: Int
         get() = Math.round(if (horizontal) scrollPane.requestedHorizontalOffset else scrollPane.requestedVerticalOffset).toInt()
@@ -36,8 +43,12 @@ class WScrollPaneBar internal constructor(
             }
         }
 
+    /** The length of the viewport. Pending layout is finished before reading (the same as [maximum], but 0 right after showing and before layout). */
     override val visibleAmount: Int
-        get() = Math.round(if (horizontal) scrollPane.viewportWidth else scrollPane.viewportHeight).toInt()
+        get() {
+            scrollPane.layOutForSizes()
+            return Math.round(if (horizontal) scrollPane.viewportWidth else scrollPane.viewportHeight).toInt()
+        }
 
     override val valueIsAdjusting: Boolean
         get() = scrollPane.viewIsAdjusting
