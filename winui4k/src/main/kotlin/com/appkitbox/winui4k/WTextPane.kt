@@ -686,13 +686,21 @@ class WTextPane() : WControl(
         caret.check()
     }
 
-    /** Whether there's an edit that can be undone (ITextDocument.CanUndo). */
-    val canUndo: Boolean
-        get() = textDocument.getBool(XamlInterop.ITextDocument_CanUndo)
+    /** UndoManager.canUndo-like: whether there is an edit that [undo] can undo (ITextDocument.CanUndo). The same form as [WTextField.canUndo]. */
+    fun canUndo(): Boolean = textDocument.getBool(XamlInterop.ITextDocument_CanUndo)
 
-    /** Whether there's an undone edit that can be redone (ITextDocument.CanRedo). */
+    /** UndoManager.canRedo-like: whether there is an edit that [redo] can redo (ITextDocument.CanRedo). The same form as [WTextField.canRedo]. */
+    fun canRedo(): Boolean = textDocument.getBool(XamlInterop.ITextDocument_CanRedo)
+
+    /** Whether there is an edit that can be undone. Use the method [canUndo], aligned with [WTextField]. */
+    @Deprecated("Use the method canUndo(), the same as WTextField", ReplaceWith("canUndo()"))
+    val canUndo: Boolean
+        get() = canUndo()
+
+    /** Whether there is an edit that can be redone. Use the method [canRedo], aligned with [WTextField]. */
+    @Deprecated("Use the method canRedo(), the same as WTextField", ReplaceWith("canRedo()"))
     val canRedo: Boolean
-        get() = textDocument.getBool(XamlInterop.ITextDocument_CanRedo)
+        get() = canRedo()
 
     /** Undoes the most recent edit (ITextDocument.Undo). */
     fun undo() {

@@ -197,10 +197,10 @@ private fun buildFormattingRichEditBoxExample(): WComponent {
     italicButton.addActionListener { textPane.toggleSelectionItalic() }
 
     val undoButton = WButton("Undo")
-    undoButton.addActionListener { if (textPane.canUndo) textPane.undo() }
+    undoButton.addActionListener { if (textPane.canUndo()) textPane.undo() }
 
     val redoButton = WButton("Redo")
-    redoButton.addActionListener { if (textPane.canRedo) textPane.redo() }
+    redoButton.addActionListener { if (textPane.canRedo()) textPane.redo() }
 
     val toolbar = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     toolbar.add(boldButton)

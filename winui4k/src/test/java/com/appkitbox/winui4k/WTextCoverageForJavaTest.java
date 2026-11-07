@@ -81,10 +81,10 @@ class WTextCoverageForJavaTest {
             assertEquals("Make it bold", copy.getText());
 
             pane.replaceSelection("Replacement");
-            assertTrue(pane.getCanUndo());
+            assertTrue(pane.canUndo());
             pane.undo();
             assertEquals("Make it bold", pane.getText());
-            assertTrue(pane.getCanRedo());
+            assertTrue(pane.canRedo());
             pane.redo();
             assertEquals("Replacement", pane.getText());
         });

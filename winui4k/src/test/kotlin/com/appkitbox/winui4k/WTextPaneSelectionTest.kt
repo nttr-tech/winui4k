@@ -209,13 +209,13 @@ class WTextPaneSelectionTest : FunSpec() {
             }
         }
 
-        test("undo reverts the last replaceSelection and redo reapplies it, with canUndo and canRedo following accordingly") {
+        test("undo undoes the last replaceSelection and redo redoes it. canUndo() and canRedo(), the same methods as WTextField, follow it") {
             withPane("abc") { pane ->
                 pane.caretPosition = 3
                 pane.replaceSelection("d")
-                val edited = listOf(pane.text, pane.canUndo)
+                val edited = listOf(pane.text, pane.canUndo())
                 pane.undo()
-                val undone = listOf(pane.text, pane.canRedo)
+                val undone = listOf(pane.text, pane.canRedo())
                 pane.redo()
                 edited + undone + listOf(pane.text)
             } shouldContainExactly listOf("abcd", true, "abc", true, "abcd")
