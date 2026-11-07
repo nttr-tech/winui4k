@@ -1,6 +1,7 @@
 plugins {
     id("winui4k.kotlin-common")
     `java-library`
+    `java-test-fixtures`
 }
 
 description = "Shared parts of the ribbon demo apps (Word / Excel / PowerPoint / CAD / Tools): the window frame and helpers for writing ribbon models concisely"
@@ -11,4 +12,13 @@ targetJvm25AtRuntime()
 
 dependencies {
     api(project(":winui4k-all"))
+    // Check helpers used by the tests of the strings (messages.properties) of each app module
+    testFixturesImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
