@@ -292,9 +292,6 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     /** JScrollPane.getCorner-like: the component placed with [setCorner]. Always null for unaccepted corners (Swing returns null if it is not a corner name). */
     fun getCorner(key: String): WComponent? = if (key == UPPER_LEADING_CORNER || key == UPPER_LEFT_CORNER) upperLeadingCorner else null
 
-    /** Applies the scroll position requested before the first layout after laying out. */
-    private val laidOutRequests = LaidOutRequests(this)
-
     /** The horizontal and vertical positions requested before the first layout (null for a direction not requested). */
     private var pendingHorizontalOffset: Double? = null
     private var pendingVerticalOffset: Double? = null
@@ -459,7 +456,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     /** The [WScrollPaneConstants] values so that Kotlin can write `WScrollPane.VERTICAL_SCROLLBAR_ALWAYS` (Java sees them as the same fields as the interface values). */
     companion object {
-        /** The kind of scroll position request in [laidOutRequests]. */
+        /** The kind of scroll position request in [WComponent.laidOutRequests]. */
         private const val VIEW_REQUEST = "view"
 
         /** Same as [WScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED]. */

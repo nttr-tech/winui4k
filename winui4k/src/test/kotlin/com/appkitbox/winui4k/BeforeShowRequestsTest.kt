@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.winui.TabularInterop
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import java.util.Collections
 
 /**
  * Tests that check operations requested before being added to the screen (before showing, or right after being added to a window and before the first layout)
@@ -20,6 +21,15 @@ class BeforeShowRequestsTest : FunSpec() {
     private fun awaitUi(condition: () -> Boolean): Boolean {
         repeat(100) {
             if (onUiThreadGet(condition)) return true
+            Thread.sleep(50)
+        }
+        return false
+    }
+
+    /** Waits outside the UI thread until [condition] holds (up to 5 seconds; [condition] may hand work to the UI thread). true if it holds. */
+    private fun awaitOffUi(condition: () -> Boolean): Boolean {
+        repeat(100) {
+            if (condition()) return true
             Thread.sleep(50)
         }
         return false
@@ -273,5 +283,74 @@ class BeforeShowRequestsTest : FunSpec() {
                 }
             }
         }
+
+        context("dialogs right after showing") {
+            /** Shows a 400 x 260 window with one label without activating it (call on the UI thread). */
+            fun shownFrame(): WFrame = WFrame("BeforeShowRequestsTest").also {
+                it.add(WLabel("Main"))
+                it.setSize(400, 260)
+                it.isAutoRequestFocus = false
+                it.isVisible = true
+            }
+
+            test("WOptionPane.showMessageDialog(frame, ...) right after showing opens without an exception and returns when closed with OK (as in Swing)") {
+                val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
+                var frame: WFrame? = null
+                WinUiUtilities.invokeLater {
+                    val shown = shownFrame().also { frame = it }
+                    try {
+                        WOptionPane.showMessageDialog(shown, "Resume from the last session?")
+                        events += "returned"
+                    } catch (e: RuntimeException) {
+                        events += "error:${e.javaClass.simpleName}"
+                    }
+                }
+                try {
+                    awaitOffUi { events.isNotEmpty() || frame?.let { f -> runCatching { OpenContentDialogs.isOpen(f.content) }.getOrDefault(false) } == true } shouldBe true
+                    synchronized(events) { events.toList() } shouldBe emptyList()
+                    Thread.sleep(300)
+                    OpenContentDialogs.press(frame!!.content, "PrimaryButton")
+                    awaitUi { events.isNotEmpty() } shouldBe true
+                    synchronized(events) { events.toList() } shouldBe listOf("returned")
+                } finally {
+                    frame?.let { f -> onUiThread { f.dispose() } }
+                }
+            }
+
+            test("WContentDialog.show(owner) right after showing does not throw and opens after the content loads") {
+                val events: MutableList<String> = Collections.synchronizedList(mutableListOf())
+                val (frame, dialog) = onUiThreadGet {
+                    val frame = shownFrame()
+                    val dialog = WContentDialog("Welcome").also {
+                        it.closeButtonText = "Close"
+                        it.addDialogListener(
+                            object : WContentDialogAdapter() {
+                                override fun dialogOpened(e: WContentDialogEvent) {
+                                    events += "opened"
+                                }
+                            },
+                        )
+                    }
+                    dialog.show(frame.content) { events += "closed:$it" }
+                    frame to dialog
+                }
+                try {
+                    awaitUi { events.isNotEmpty() } shouldBe true
+                    synchronized(events) { events.toList() } shouldBe listOf("opened")
+                    onUiThread { dialog.hide() }
+                    awaitUi { events.size >= 2 } shouldBe true
+                    synchronized(events) { events.toList() } shouldBe listOf("opened", "closed:NONE")
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("an owner not on any window still throws IllegalArgumentException") {
+                onUiThreadGet {
+                    runCatching { WContentDialog("x").show(WLabel("not shown")) }.exceptionOrNull()?.javaClass
+                } shouldBe IllegalArgumentException::class.java
+            }
+        }
+
     }
 }

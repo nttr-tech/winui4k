@@ -42,16 +42,13 @@ internal class ListViewport(
     /** When the estimated height of one row changes (fixedCellHeight): decides the height again if it was decided from the row count. */
     fun rowHeightChanged() = rows.rowHeightChanged()
 
-    /** Performs scrolls requested before the first layout after laying out. */
-    private val requests = LaidOutRequests(owner)
-
     /**
      * JList.ensureIndexIsVisible: does nothing for an [index] out of range. When called before the first layout (before showing or right after being added to a window),
      * it scrolls after laying out so that it takes effect when shown, as in Swing (does nothing if elements were removed and it is out of range by then).
      */
     fun ensureIndexIsVisible(index: Int) {
         if (index !in 0 until itemCount()) return
-        requests.runOrDefer(SCROLL_REQUEST) { if (index in 0 until itemCount()) scrollTo(index) }
+        owner.laidOutRequests.runOrDefer(SCROLL_REQUEST) { if (index in 0 until itemCount()) scrollTo(index) }
     }
 
     /** The bounds of the item containers created now (in index order). Empty if not shown. */
@@ -131,7 +128,7 @@ internal class ListViewport(
     }
 
     companion object {
-        /** The kind of the scroll request in [requests]. */
+        /** The kind of scroll request in [WComponent.laidOutRequests]. */
         private const val SCROLL_REQUEST = "scroll"
 
         /** The default value of JList's visibleRowCount. */

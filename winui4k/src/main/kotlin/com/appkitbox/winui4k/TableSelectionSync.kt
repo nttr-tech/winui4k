@@ -35,7 +35,7 @@ internal class TableSelectionSync(
     private val modelListener = WListSelectionListener { if (!syncing) push() }
 
     /** Copies the selection copied before the first layout again after layout. */
-    private val requests = LaidOutRequests(table)
+    private val requests: LaidOutRequests get() = table.laidOutRequests
 
     /** The selection model. The default is a single selection [WDefaultListSelectionModel] (Swing's JTable defaults to multiple intervals). */
     var model: WListSelectionModel = WDefaultListSelectionModel().also {
@@ -221,7 +221,7 @@ internal class TableSelectionSync(
     }
 
     private companion object {
-        /** The kind of request in [requests] that copies the selection again. */
+        /** The kind of request in [WComponent.laidOutRequests] that copies the selection again. */
         const val PUSH_REQUEST = "push"
     }
 }

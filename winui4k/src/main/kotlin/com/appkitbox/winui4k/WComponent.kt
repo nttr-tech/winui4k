@@ -441,6 +441,9 @@ abstract class WComponent internal constructor(
      */
     internal var naturalSize: WSize? = null
 
+    /** Performs operations requested before the first layout after laying out ([LaidOutRequests]). Each kind of request uses its own key. */
+    internal val laidOutRequests: LaidOutRequests by lazy { LaidOutRequests(this) }
+
     /**
      * Clears the explicit size on whichever dimension the user hasn't explicitly set, in
      * preparation for re-measuring the natural size (in XAML, DesiredSize keeps tracking an

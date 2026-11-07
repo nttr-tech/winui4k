@@ -1125,6 +1125,15 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         }
 
         /**
+         * Whether [component] is in the content of a shown window (whose content may not be loaded yet). The content of a window that was just shown
+         * does not have a XamlRoot yet, but gets one when loaded (opening a dialog can wait for it).
+         */
+        internal fun isInShownFrame(component: WComponent): Boolean {
+            val top = generateSequence(component) { it.parent }.last()
+            return openFrames.any { !it.closed && it.rootContent === top && it.isVisible }
+        }
+
+        /**
          * Called when [WComponent.requestFocusInWindow] fails in UIElement.Focus. If [component] is in a window that was just shown and has not
          * loaded its content yet, remembers the request as in Swing (focus moves when it loads and becomes active) and returns true.
          */

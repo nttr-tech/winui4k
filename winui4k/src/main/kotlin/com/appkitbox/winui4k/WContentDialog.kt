@@ -330,7 +330,8 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
      * (inherits its XamlRoot). When closed, [onClosed] is called with the button that was pressed.
      * Does not block the caller (use [showAndWait] to wait until it closes). When the owner window is closed, [onClosed] is not called and it is released (what the callback refers to can be collected too; the dialog is also closed).
      * [IllegalStateException] if another ContentDialog is open in the same window or this dialog is already open,
-     * and [IllegalArgumentException] if [owner] is not placed in a window.
+     * [IllegalArgumentException] if [owner] is not on a window. If [owner] is in a window that was just shown (whose content is not loaded yet),
+     * no exception is thrown, as in Swing, and the dialog opens after the content loads and is laid out ([showAndWait] waits until then before opening).
      */
     @JvmOverloads
     fun show(owner: WComponent, onClosed: Consumer<ContentDialogResult>? = null) {
@@ -346,7 +347,10 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     fun showAndWait(owner: WDialogParent): ContentDialogResult {
         ModalLoop.checkRunnable()
         var result: ContentDialogResult? = null
-        open(WFrame.componentOf(owner)) { result = it }
+        val component = WFrame.componentOf(owner)
+        // For a window that was just shown, wait until the content loads (has a XamlRoot) before opening (Swing can open right after showing)
+        if (awaitsXamlRoot(component)) ModalLoop.run { !awaitsXamlRoot(component) }
+        open(component) { result = it }
         val state = state
         var waited = false
         try {
@@ -365,8 +369,29 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         checkNotNull(owner) { "there is no owner, so the window to open in is unknown; set owner or use showAndWait(owner)" },
     )
 
+    /** Whether [owner] is in the content of a shown window and not loaded yet (has no XamlRoot). */
+    private fun awaitsXamlRoot(owner: WComponent): Boolean = !hasXamlRoot(owner) && WFrame.isInShownFrame(owner)
+
+    private fun hasXamlRoot(owner: WComponent): Boolean {
+        val root = owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot) ?: return false
+        root.release()
+        return true
+    }
+
+    /** Whether it is waiting for the content to load (when [show] was called on a window that was just shown). */
+    private var openPending = false
+
     private fun open(owner: WComponent, onClosed: Consumer<ContentDialogResult>?) {
-        check(!state.isShowing()) { "this dialog is already open" }
+        check(!state.isShowing() && !openPending) { "this dialog is already open" }
+        if (awaitsXamlRoot(owner)) {
+            // A window that was just shown: open after the content loads and is laid out (if it can no longer be opened, the exception comes from the call at that time)
+            openPending = true
+            owner.laidOutRequests.runOrDefer(this) {
+                openPending = false
+                open(owner, onClosed)
+            }
+            return
+        }
         updateNativeContent() // Show children added directly to contentPane
         // WinUI 3's ContentDialog requires the XamlRoot to show in
         val root = requireNotNull(owner.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)) {
