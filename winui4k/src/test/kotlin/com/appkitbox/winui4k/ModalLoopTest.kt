@@ -220,10 +220,15 @@ class ModalLoopTest : FunSpec() {
 
         test("investigation: closing the owner window while a dialog is open delivers no dialog Closed, and the owner element's IsLoaded becomes false") {
             val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
-            val button = onUiThreadGet { WButton("Open").also { frame.add(it) } }
+            // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
             val loaded = CountDownLatch(1)
+            val button = onUiThreadGet {
+                WButton("Open").also {
+                    it.addLoadedListener { loaded.countDown() }
+                    frame.add(it)
+                }
+            }
             onUiThread {
-                button.addLoadedListener { loaded.countDown() }
                 frame.isVisible = true
             }
             loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()

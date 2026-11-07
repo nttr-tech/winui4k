@@ -334,10 +334,15 @@ class WColorPickerTest : FunSpec() {
 
         test("the content of showDialog opened in a small window (480x320) scrolls vertically down to the fields at the bottom") {
             val frame = onUiThreadGet { WFrame("Small owner").also { it.setSize(SMALL_WIDTH, SMALL_HEIGHT) } }
-            val owner = onUiThreadGet { WButton("Owner").also { frame.add(it) } }
+            // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
             val loaded = CountDownLatch(1)
+            val owner = onUiThreadGet {
+                WButton("Owner").also {
+                    it.addLoadedListener { loaded.countDown() }
+                    frame.add(it)
+                }
+            }
             onUiThread {
-                owner.addLoadedListener { loaded.countDown() }
                 frame.isVisible = true
             }
             try {

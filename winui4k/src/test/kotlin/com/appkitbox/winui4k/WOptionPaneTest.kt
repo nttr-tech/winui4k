@@ -433,10 +433,15 @@ class WOptionPaneTest : FunSpec() {
         test("a null parent and showInputDialog(message) without a parent open on the last shown window (Swing's parentless form)") {
             val frame = onUiThreadGet { WFrame(PARENTLESS_TITLE) }
             try {
-                val button = onUiThreadGet { WButton("This window").also { frame.add(it) } }
+                // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
                 val loaded = CountDownLatch(1)
+                val button = onUiThreadGet {
+                    WButton("This window").also {
+                        it.addLoadedListener { loaded.countDown() }
+                        frame.add(it)
+                    }
+                }
                 onUiThread {
-                    button.addLoadedListener { loaded.countDown() }
                     frame.isVisible = true
                 }
                 loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -468,10 +473,15 @@ class WOptionPaneTest : FunSpec() {
 
         test("closing the owner window while it is open makes showConfirmDialog return CLOSED_OPTION") {
             val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
-            val owner = onUiThreadGet { WButton("Open").also { frame.add(it) } }
+            // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
             val loaded = CountDownLatch(1)
+            val owner = onUiThreadGet {
+                WButton("Open").also {
+                    it.addLoadedListener { loaded.countDown() }
+                    frame.add(it)
+                }
+            }
             onUiThread {
-                owner.addLoadedListener { loaded.countDown() }
                 frame.isVisible = true
             }
             loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -485,10 +495,15 @@ class WOptionPaneTest : FunSpec() {
             test("passing a WFrame as the parent (the JOptionPane.showMessageDialog(frame, …) form) opens on that window, not the active window") {
                 val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
                 try {
-                    val button = onUiThreadGet { WButton("This window").also { frame.add(it) } }
+                    // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
                     val loaded = CountDownLatch(1)
+                    val button = onUiThreadGet {
+                        WButton("This window").also {
+                            it.addLoadedListener { loaded.countDown() }
+                            frame.add(it)
+                        }
+                    }
                     onUiThread {
-                        button.addLoadedListener { loaded.countDown() }
                         frame.isAutoRequestFocus = false // Keep the shared window active
                         frame.isVisible = true
                     }

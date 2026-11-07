@@ -44,10 +44,15 @@ class WrapperReleaseWindowCloseTest : FunSpec() {
     /** Shows another window and waits until the owner button put on it becomes Loaded. */
     private fun openFrame(): Pair<WFrame, WButton> {
         val frame = onUiThreadGet { WFrame(TITLE) }
-        val owner = onUiThreadGet { WButton("Owner").also { frame.add(it) } }
+        // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
         val loaded = CountDownLatch(1)
+        val owner = onUiThreadGet {
+            WButton("Owner").also {
+                it.addLoadedListener { loaded.countDown() }
+                frame.add(it)
+            }
+        }
         onUiThread {
-            owner.addLoadedListener { loaded.countDown() }
             frame.isVisible = true
         }
         loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()

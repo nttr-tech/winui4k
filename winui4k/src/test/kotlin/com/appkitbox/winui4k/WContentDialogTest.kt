@@ -317,10 +317,15 @@ class WContentDialogTest : FunSpec() {
 
         test("closing the owner window while it is open makes showAndWait return NONE and isVisible false") {
             val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
-            val owner = onUiThreadGet { WButton("Open").also { frame.add(it) } }
+            // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
             val loaded = CountDownLatch(1)
+            val owner = onUiThreadGet {
+                WButton("Open").also {
+                    it.addLoadedListener { loaded.countDown() }
+                    frame.add(it)
+                }
+            }
             onUiThread {
-                owner.addLoadedListener { loaded.countDown() }
                 frame.isVisible = true
             }
             loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
@@ -417,10 +422,15 @@ class WContentDialogTest : FunSpec() {
             test("replacing the owner window's content while open does not make showAndWait return, and pressing a button afterwards returns with that button's result") {
                 val frame = onUiThreadGet { WFrame(OWNER_TITLE) }
                 try {
-                    val owner = onUiThreadGet { WButton("Open").also { frame.add(it) } }
+                    // Loaded arrives even before showing (Activate), so subscribe within the same UI thread task as attaching (subscribing later, it may arrive in between and never be received)
                     val loaded = CountDownLatch(1)
+                    val owner = onUiThreadGet {
+                        WButton("Open").also {
+                            it.addLoadedListener { loaded.countDown() }
+                            frame.add(it)
+                        }
+                    }
                     onUiThread {
-                        owner.addLoadedListener { loaded.countDown() }
                         frame.isVisible = true
                     }
                     loaded.await(5, TimeUnit.SECONDS).shouldBeTrue()
