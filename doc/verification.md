@@ -539,3 +539,6 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   48 に縮み、Compact の表示状態の背景の余白 (AppBarButtonInnerBorderCompactMargin = 2,6,2,22) を引いた背景が 6〜26 になって、
   16〜32 のアイコンが背景の下にはみ出す (選んだトグルボタンで見える)。WLayoutPanel は子に割り当てた大きさを Width / Height に
   書くので、WCommandBar は自然な高さ以下の割り当てでは Height を書かない (WAppBarToggleButtonLayoutTest)
+- UIElement.LosingFocus で LosingFocusEventArgs.TryCancel を呼ぶとフォーカスの移動は止まり、元の要素がフォーカスを持ったままになる
+  (Tab キーと同じ FocusManager.TryMoveFocus の移動も止まる)。ただし、移動を始めた UIElement.Focus は取り消されても true を返す。
+  WComponent.requestFocusInWindow は、その間に WInputVerifier が取り消したかを覚えておき、Swing と同じく false を返す (WInputVerifierTest)

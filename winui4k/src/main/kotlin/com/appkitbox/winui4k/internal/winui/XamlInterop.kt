@@ -2519,6 +2519,8 @@ internal object XamlInterop {
     const val IUIElement_remove_GotFocus = 135
     const val IUIElement_add_LostFocus = 136           // add_LostFocus(RoutedEventHandler, out token)
     const val IUIElement_remove_LostFocus = 137
+    const val IUIElement_add_LosingFocus = 200         // add_LosingFocus(TypedEventHandler<UIElement, LosingFocusEventArgs>, out token)
+    const val IUIElement_remove_LosingFocus = 201
     const val IUIElement_add_PointerPressed = 152      // add_PointerPressed(PointerEventHandler, out token)
     const val IUIElement_remove_PointerPressed = 153
     const val IUIElement_add_PointerMoved = 154
@@ -2700,6 +2702,22 @@ internal object XamlInterop {
             "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
                 "rc(Microsoft.UI.Xaml.UIElement;{$IID_IUIElement});" +
                 "rc(Microsoft.UI.Xaml.Input.CharacterReceivedRoutedEventArgs;{$IID_ICharacterReceivedRoutedEventArgs}))",
+        )
+    }
+
+    // ---- Microsoft.UI.Xaml.Input.LosingFocusEventArgs (UIElement.LosingFocus。WInputVerifier) ----
+    const val CLS_LosingFocusEventArgs = "Microsoft.UI.Xaml.Input.LosingFocusEventArgs"
+    const val IID_ILosingFocusEventArgs = "fa0e5ffa-2b1b-52f8-bb66-e35f51e73cf3"
+    const val ILosingFocusEventArgs_get_OldFocusedElement = 6 // get_OldFocusedElement(out DependencyObject)
+    const val ILosingFocusEventArgs_get_NewFocusedElement = 7 // get_NewFocusedElement(out DependencyObject)
+    const val ILosingFocusEventArgs_TryCancel = 17     // TryCancel(out boolean)
+
+    /** The IID of the instantiated TypedEventHandler<UIElement, LosingFocusEventArgs> (UIElement.LosingFocus) (computed at run time). */
+    val IID_LosingFocusHandler: String by lazy {
+        Pinterface.iid(
+            "pinterface({${FoundationInterop.IID_TypedEventHandler_OPEN}};" +
+                "rc(Microsoft.UI.Xaml.UIElement;{$IID_IUIElement});" +
+                "rc($CLS_LosingFocusEventArgs;{$IID_ILosingFocusEventArgs}))",
         )
     }
 

@@ -50,6 +50,30 @@ internal class ComponentInput(private val owner: WComponent) {
 
     fun focusListeners(): Array<WFocusListener> = focusListeners.toTypedArray()
 
+    /** Whether the LosingFocus handler for [WComponent.inputVerifier] has been added. */
+    private var verificationAdded = false
+
+    /**
+     * [WComponent.inputVerifier] was changed ([had] / [has] tell whether there was a verifier before and after). Verifiers are counted like listeners (while one is set,
+     * [ListenerAnchor] holds the wrapper strongly so the native handler can reach it), and the LosingFocus handler is added when the first one is set.
+     */
+    fun inputVerifierChanged(had: Boolean, has: Boolean) {
+        if (had == has) return
+        if (!has) {
+            owner.listenerAnchor.listenerRemoved()
+            return
+        }
+        owner.listenerAnchor.listenerAdded()
+        if (verificationAdded) return
+        verificationAdded = true
+        val anchor = owner.listenerAnchor
+        owner.uiElement.addEventHandler(
+            "WinUI4K.InputVerifierLosingFocus",
+            XamlInterop.IID_LosingFocusHandler,
+            XamlInterop.IUIElement_add_LosingFocus,
+        ) { _, args -> anchor.get()?.let { InputVerification.onLosingFocus(it, ComPtr(args)) } }
+    }
+
     private fun addFocusHandlers() {
         val anchor = owner.listenerAnchor
         owner.uiElement.addEventHandler(

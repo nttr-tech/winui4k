@@ -106,6 +106,7 @@ enum class ElementTheme(internal val native: Int) {
  * A thin Swing-like API layer. Everything underneath is a native WinUI 3 control.
  * (Use only inside the WinUiUtilities.invokeLater callback = on the UI thread)
  */
+@Suppress("LargeClass") // It holds the public APIs of Component and JComponent in one class (input and focus handling is split into ComponentInput etc.)
 abstract class WComponent internal constructor(
     /** The control's default interface pointer (ITextBox, IButton, ...) */
     internal val inspectable: ComPtr,
@@ -705,9 +706,11 @@ abstract class WComponent internal constructor(
      * IsTabStop is false but whose template part receives focus.
      * For an element in a [WFrame] that was just shown and whose content is not loaded yet, the request is remembered and true is returned as in Swing,
      * and focus moves when it loads and becomes active (the initial focus can be chosen right after `frame.isVisible = true`).
+     * Also false when the [inputVerifier] of the component that currently has focus stops the move (as in Swing).
      */
     fun requestFocusInWindow(): Boolean =
-        focusableSetting != false && (focus(XamlInterop.FocusState_Programmatic) || WFrame.deferFocus(this))
+        focusableSetting != false &&
+            (InputVerification.focusUnlessRefused { focus(XamlInterop.FocusState_Programmatic) } || WFrame.deferFocus(this))
 
     /**
      * Whether this element has focus (equivalent to Component.hasFocus). true when FocusState is other than Unfocused, or
@@ -785,6 +788,24 @@ abstract class WComponent internal constructor(
     /** Component.getFocusListeners-style: the focus listeners added (in the order they were added). */
     val focusListeners: Array<WFocusListener>
         get() = inputOrNull?.focusListeners() ?: emptyArray()
+
+    /**
+     * JComponent.getInputVerifier / setInputVerifier-like: what checks the input before focus leaves this component
+     * ([WInputVerifier]). If the check does not pass, focus stays on this component. The default is null (no check).
+     */
+    var inputVerifier: WInputVerifier? = null
+        set(value) {
+            val had = field != null
+            field = value
+            input.inputVerifierChanged(had, value != null)
+        }
+
+    /**
+     * JComponent.getVerifyInputWhenFocusTarget / setVerifyInputWhenFocusTarget-like: whether, when focus moves to this component,
+     * the [inputVerifier] of the component it moves from checks the input. The default is true. If false (a cancel button, etc.), focus moves
+     * to this component even if the input is not valid.
+     */
+    var verifyInputWhenFocusTarget: Boolean = true
 
     /**
      * Component.addMouseListener-style: adds a listener called when a button is pressed, released or clicked over this
