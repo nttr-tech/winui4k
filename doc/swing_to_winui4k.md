@@ -418,7 +418,7 @@ public class HelloWinUI {
 | `BorderLayout` で並べる | `frame.add(c, BorderLayout.NORTH)` | 先に `frame.setLayout(new WBorderLayout())` を呼んでから `frame.add(c, WBorderLayout.NORTH)`。呼ばずに制約を渡すと `IllegalArgumentException` |
 | パネル | `new JPanel()` (`FlowLayout`) | `new WLayoutPanel(new WFlowLayout())`。引数なしの `new WLayoutPanel()` はレイアウト マネージャーが `null` で、子が左上に重なる。`new WLayoutPanel(layout)` は `new JPanel(layout)` に当たる |
 | 縦か横に一列に並べる | `Box` / `BoxLayout` | `WBox` / `WBoxLayout`。WinUI の StackPanel を包んだ `WPanel` (`new WPanel(8.0, Orientation.HORIZONTAL)` など。8 は子の間隔) も使える |
-| 初めのフォーカス | ウィンドウがアクティブになると最初の部品 | 同じ。別の部品にするときは、表示した直後に `requestFocusInWindow()` を呼ぶ |
+| 初めのフォーカス | ウィンドウがアクティブになると最初の部品 (ボタン グループのラジオボタンは選ばれているボタン) | 同じ (木は選んだ行、ツール バーは中の最初のボタン)。キーボードのフォーカスの枠は描かない。別の部品にするときは、表示した直後に `requestFocusInWindow()` を呼ぶ |
 | 時間待ちの実行 | `javax.swing.Timer` | `WinUiUtilities.schedule(ミリ秒, 処理)` (1 回だけ実行。戻り値の `close()` で取り消せる) |
 
 `WPanel` の縦の並びでは、幅を指定した子は**中央寄せ**になります。左に寄せるときは
@@ -581,8 +581,6 @@ top.setVerticalTextPosition(VerticalTextPosition.BOTTOM);
 | Swing | WinUI4K |
 |---|---|
 | ![Icon (Swing)](images/swing_to_winui4k/JButton/IconSwing.png) | ![Icon (WinUI4K)](images/swing_to_winui4k/JButton/IconWinUI4K.png) |
-
-WinUI4K の画面では、3 つ目のボタンの文字が出ず、画像も小さく切れています。文字をアイコンの下に置いた (`HorizontalTextPosition.CENTER` と `VerticalTextPosition.BOTTOM`) 画像のアイコンのボタンを、`WFlowLayout` などで並べるパネルや縦に積む `WPanel` に置いたときに起きる、今の版の WinUI4K の不具合です。`new WPanel(8.0, Orientation.HORIZONTAL)` のような横に並べる `WPanel` に入れると、正しく表示されます。
 
 - `Symbol` は Windows のアイコン フォント (Segoe Fluent Icons) のアイコンで、テーマの文字色に合わせて描かれます。
   画像を用意しなくてよいので、まず `Symbol` に合うものがないか探すのがおすすめです。
@@ -762,8 +760,6 @@ for (int i = 1; i <= 9; i++) {
 | Swing | WinUI4K |
 |---|---|
 | ![ActionCommand (Swing)](images/swing_to_winui4k/JButton/ActionCommandSwing.png) | ![ActionCommand (WinUI4K)](images/swing_to_winui4k/JButton/ActionCommandWinUI4K.png) |
-
-WinUI4K の画面では、数字のボタンが出ていません。`WLayoutPanel` の中に入れた `WLayoutPanel` (`JPanel` の中の `JPanel` に当たる) が、表示した後に中の子の大きさに合わせて広がらない、今の版の WinUI4K の不具合です。
 
 - `actionCommand` を設定しないときは、ボタンの文字が `e.getActionCommand()` になります (Swing と同じ)。
   文字と違うコマンド名にするときは `key.setActionCommand("digit-1")` を指定します。
@@ -1175,7 +1171,7 @@ title.addTextChangedListener(text -> {
 |---|---|
 | ![Change (Swing)](images/swing_to_winui4k/JTextField/ChangeSwing.png) | ![Change (WinUI4K)](images/swing_to_winui4k/JTextField/ChangeWinUI4K.png) |
 
-どちらのサンプルも、表示する前に `title.setText("Today's notes")` を呼んでいます。Swing のリスナーはその変更を受け取りますが、WinUI4K の `addTextChangedListener` のリスナーは、入力欄が画面に表示される前の変更を受け取りません (WinUI の `TextChanged` が届かないため)。そのため WinUI4K の画面は「0 characters」のままです。表示した後の変更 (入力や `setText`) は受け取ります。
+どちらのサンプルも、表示する前に `title.setText("Today's notes")` を呼んでいます。Swing の `DocumentListener` と同じく、WinUI4K の `addTextChangedListener` のリスナーも `setText` の中ですぐ呼ばれるので、表示する前の変更も受け取り、画面は「13 characters」になります。同じ文字列を設定し直したときは呼ばれません。
 
 - `addTextChangedListener` は、文字が変わるたびに今の文字列を受け取ります。3 つのメソッドを書き分ける必要がありません。
 - Swing と同じ `WDocumentListener` (`insertUpdate` / `removeUpdate` / `changedUpdate`) も使えます。
@@ -1965,9 +1961,7 @@ list.clearSelection();
 |---|---|
 | ![Select (Swing)](images/swing_to_winui4k/JList/SelectSwing.png) | ![Select (WinUI4K)](images/swing_to_winui4k/JList/SelectWinUI4K.png) |
 
-WinUI4K の画面は、「Item 43」を選んでいますが、その位置までスクロールしていません。リストが画面に表示される前に呼んだ `ensureIndexIsVisible` は効かないためです。表示した後に呼べば、Swing と同じく「Item 43」が見える位置までスクロールします。
-
-コードは Swing と同じです。`setSelectedIndex(-1)` でも選択を外せます。
+コードは Swing と同じです。表示する前に呼んだ `ensureIndexIsVisible` や `setSelectedValue(..., true)` も、Swing と同じく表示したときに効きます (最初のレイアウトの後でスクロールします)。`setSelectedIndex(-1)` でも選択を外せます。
 
 <a id="list-doubleclick"></a>
 ### 3.8 ダブルクリックで開く
@@ -2258,7 +2252,7 @@ filter.addTextChangedListener(text -> {
 |---|---|
 | ![Filter (Swing)](images/swing_to_winui4k/JList/FilterSwing.png) | ![Filter (WinUI4K)](images/swing_to_winui4k/JList/FilterWinUI4K.png) |
 
-どちらのサンプルも、表示する前に `filter.setText("ka")` を呼んでいます。WinUI4K の画面が絞り込まれていないのは、[2.4](#textfield-change) と同じく、表示する前の変更が `addTextChangedListener` のリスナーに届かないためです。
+どちらのサンプルも、表示する前に `filter.setText("ka")` を呼んでいます。[2.4](#textfield-change) と同じく、表示する前の変更も `addTextChangedListener` のリスナーに届くので、最初から絞り込まれます。
 
 候補を出す入力欄そのものが欲しいときは、WinUI の `AutoSuggestBox` を包んだ `WAutoSuggestBox` も使えます。
 
@@ -2443,7 +2437,7 @@ fun main() {
 | やりたいこと | Swing | WinUI4K | 違い |
 |---|---|---|---|
 | 文字のラベル | `new JLabel("Name")` | `new WLabel("Name")` | 同じ |
-| 文字を読み書きする | `getText()` / `setText("...")` | `getText()` / `setText("...")` | 今の版では、表示した後に長くすると切れる ([4.2](#label-basic)) |
+| 文字を読み書きする | `getText()` / `setText("...")` | `getText()` / `setText("...")` | 同じ (表示した後に替えても並べ直す。[4.2](#label-basic)) |
 | アイコンだけ | `new JLabel(icon)` | `new WLabel(icon)` | アイコンは `Symbol`・`WImageIcon`・`WFontIcon` |
 | 文字とアイコン | `new JLabel("...", icon, SwingConstants.LEADING)` | `new WLabel("...", icon)` | 揃えの引数は無い |
 | 揃えを指定して作る | `new JLabel("...", SwingConstants.CENTER)` | (なし) | 作った後で `setTextAlignment(TextAlignment.CENTER)` |
@@ -2494,9 +2488,8 @@ status.setText("Loaded " + count + " customers");
 
 Swing の既定の Look & Feel (Metal) はラベルを太字で描きますが、WinUI のラベルは標準の太さです。
 
-今の版の WinUI4K では、`WFlowLayout` などで並べたラベルの文字を、ウィンドウを表示した**後で**長くすると、
-ラベルの幅が前の文字の幅のまま広がらず、文字が切れます (空のラベルに文字を入れたときは何も見えません)。
-Swing の `setText` は自動でレイアウトをやり直しますが、WinUI4K では `status.revalidate()` を続けて呼ぶと正しく表示されます。
+ウィンドウを表示した後で `setText` で文字を替えても、Swing の `setText` と同じく `WLabel` が自分で `revalidate()` を呼ぶので、
+`WFlowLayout` などで並べたラベルは新しい文字の幅で並べ直されます。フォントやアイコンを替えたときも同じです。
 
 <a id="label-font"></a>
 ### 4.3 フォントと文字色
@@ -2567,10 +2560,7 @@ profile.setVerticalTextPosition(VerticalTextPosition.BOTTOM); // text below the 
 |---|---|
 | ![Icon (Swing)](images/swing_to_winui4k/JLabel/IconSwing.png) | ![Icon (WinUI4K)](images/swing_to_winui4k/JLabel/IconWinUI4K.png) |
 
-WinUI4K の画面では、1 つ目のラベルの文字の終わりが切れ、2 つ目のアイコンはぼやけた丸になり、3 つ目のラベルが出ていません。
-画像のアイコン (`WImageIcon`) を付けたラベルを `WFlowLayout` などで並べたときに起きる、今の版の WinUI4K の不具合です
-(ボタンの [1.4](#button-icon) と同じ)。`Symbol.CONTACT` のような組み込みのアイコンや、`new WPanel(8.0, Orientation.HORIZONTAL)` のような
-横に並べる `WPanel` に入れたラベルは正しく表示されます。
+画像のアイコン (`WImageIcon`) は、読み込み終えたときにアイコンを表示している部品を並べ直し、`ImageIcon` と同じく画像の元の大きさで表示します。
 
 - `new JLabel(text, icon, SwingConstants.LEADING)` の 3 つ目の引数 (ラベルの中での揃え) を取るコンストラクターはありません。
   揃えは `setTextAlignment` で指定します ([4.5](#label-alignment))。
@@ -2742,7 +2732,6 @@ Kotlin では `font`・`foreground`・`textAlignment`・`labelFor` のように�
 ### 4.9 注意点
 
 - **揃えの名前が違います。** ラベルの中の文字の揃えは `setTextAlignment(TextAlignment.RIGHT)` で、`setHorizontalAlignment` は親の中でのラベルの位置です ([4.5](#label-alignment))。
-- **表示した後で文字を長くすると切れます (今の版)。** `setText` の後に `revalidate()` を呼びます ([4.2](#label-basic))。
 - **背景色と枠はありません。** `setOpaque(true)` + `setBackground(...)` で色を塗ったラベルや、`setBorder(...)` で枠を付けたラベルは、
   `WLabel` だけでは作れません。
 - **`setEnabled(false)` で文字は灰色になりません。** `WLabel` の有効・無効は `setDisabledIcon` のアイコンを切り替えるだけです。
@@ -2851,7 +2840,6 @@ wifi.addItemListener(e -> state.setText(
 - サンプルでは、起動したときに `wifi.setSelected(true)` を呼んでいます。Swing と同じく、プログラムから状態を変えたときも `ItemListener` は呼ばれます。
 - 利用者がクリックしたときだけ反応するなら、`addActionListener` を使います (プログラムからの `setSelected` では呼ばれません。Swing と同じ)。
 - `WItemEvent` の `getStateChange()` は `SELECTED` / `DESELECTED` のほか、不確定になったとき ([5.5](#checkbox-winui)) は `INDETERMINATE` になります。
-- 今の版では、表示した後で、ラベルの文字を最初より長くすると切れます。`state.revalidate()` を続けて呼びます ([4.2](#label-basic))。
 
 <a id="checkbox-selectall"></a>
 ### 5.4 「すべて選択」でまとめてチェックする
@@ -2976,8 +2964,8 @@ Kotlin では `isSelected`・`isChecked` のようにプロパティで書けま
 - 不確定 (`getChecked()` が `null`) のとき `isSelected()` は `false` です。3 つの状態を区別するときは `getChecked()` を使います。
 - 文字を印の左に置く方法はありません。`setHorizontalTextPosition(HorizontalTextPosition.LEADING)` は呼べますが、
   動くのは `setIcon` のアイコンに対する文字の位置だけで、印はいつも文字の左です。
-- WinUI のチェックボックスの文字は折り返す設定です。今の版の WinUI4K では、`WFlowLayout` で並べたときに、
-  ウィンドウの幅に余裕があっても最後の単語が 2 行目に回って見えなくなることがあります (例: 「I agree to the terms of use」が「I agree to the terms of」だけになる)。
+- WinUI のチェックボックスの文字は折り返す設定です。幅を決めずに並べたときは 1 行に収まる幅を取るので、Swing と同じく 1 行で出ます。
+  幅を決めて狭くしたときは、収まらない文字が 2 行目に回ります。
 - HTML の文字 (`<html>...`) は解釈されず、そのまま表示されます。
 
 <a id="radio"></a>
@@ -3045,7 +3033,7 @@ size.add(large);
 | ![Group (Swing)](images/swing_to_winui4k/JRadioButton/GroupSwing.png) | ![Group (WinUI4K)](images/swing_to_winui4k/JRadioButton/GroupWinUI4K.png) |
 
 - WinUI のラジオボタンは最小の幅 (120) を持っているので、文字が短くても右に余白が空きます。
-- 起動した直後のフォーカスは、Swing では選ばれているボタン (「Medium」) に、WinUI4K ではウィンドウの最初のボタン (「Small」) に置かれます。
+- 起動した直後のフォーカスは、Swing と同じく、`WButtonGroup` の中で選ばれているボタン (「Medium」) に置かれます (何も選ばれていなければ最初のボタン)。
 - 選ばれているボタンをもう一度クリックしても、選択は外れません (Swing と同じ)。
 
 <a id="radio-selected"></a>
@@ -3285,7 +3273,6 @@ Kotlin では、グループの選択は `selection` プロパティ (選ばれ�
 - **`getSelection()` はボタンを返します。** `ButtonModel` は無いので、`b.getModel()` を渡していたところはボタンをそのまま渡します ([6.5](#radio-clear))。
 - **アイコンは印を置き換えません。** Swing の `setIcon` は丸い印そのものを絵に替えますが、WinUI4K では印を残して、その右にアイコンを足します。
 - WinUI のラジオボタンは最小の幅が 120 あるので、`FlowLayout` で並べたときの間隔が Swing より広くなります。
-- 起動した直後のフォーカスは、選ばれているボタンではなく、ウィンドウの最初のボタンに置かれます ([6.2](#radio-group))。
 - 枠に題名を付けて囲む `TitledBorder` に当たるものはありません。
 
 <a id="toggle"></a>
@@ -3934,8 +3921,8 @@ Kotlin では `selectedIndex`・`isEditable`・`header` のようにプロパテ
 | 打ちかけの値を確定 | `commitEdit()` | `commitEdit()` | 同じ |
 | 一覧から選ぶ | `new JSpinner(new SpinnerListModel(...))` | (なし) | `WSpinnerListModel` はあるがスピナーに付けられない |
 | 日時を選ぶ | `new JSpinner(new SpinnerDateModel())` | (なし) | `WSpinnerDateModel` はあるがスピナーに付けられない |
-| 表示の書式 | `setEditor(new JSpinner.NumberEditor(s, "0.00"))` | (なし) | 整数の値は小数点なしで表示される |
-| 入力欄の部品 | `getEditor()` | (なし) | |
+| 表示の書式 | `setEditor(new JSpinner.NumberEditor(s, "0.00"))` | `setEditor(new WSpinner.NumberEditor(s, "0.00"))` | 設定しないときは NumberBox の既定の書式 (12.0 は「12」) |
+| 入力欄の部品 | `getEditor()` | `getEditor()` | 入力欄の部品ではなく、書式 (`WSpinner.NumberEditor`) を返す。既定は `null` |
 | PageUp / PageDown の増減 | (なし) | `setLargeChange(10)` | WinUI 独自 |
 | 端で折り返す | (なし) | `setWrapEnabled(true)` | WinUI 独自 |
 | 見出し・案内文・式 | (なし) | `setHeader` / `setPlaceholderText` / `setAcceptsExpression` | WinUI 独自 ([9.6](#spinner-winui)) |
@@ -3970,9 +3957,8 @@ frame.add(quantity);
 |---|---|
 | ![Basic (Swing)](images/swing_to_winui4k/JSpinner/BasicSwing.png) | ![Basic (WinUI4K)](images/swing_to_winui4k/JSpinner/BasicWinUI4K.png) |
 
-WinUI4K の画面では、値の「1」が見えていません。幅を指定しないスピナーは、フォーカスが無いときの中身 (数字と上下のボタン) に合わせた幅になり、
-フォーカスを受けると入力欄に消去のボタン (×) が増えて、数字の場所が無くなるためです。数字を見せるには
-`quantity.setWidth(160)` のように幅を指定します (この章のほかのサンプルは幅を指定しています)。
+幅を指定しなくても、`JSpinner` と同じく値が見える幅で置かれます。`WSpinner` の希望の幅には、フォーカスを受けたときに入力欄に出る
+消去のボタン (×) の分も入っているので、フォーカスの有り無しで幅が変わらず、数字も隠れません。
 
 - **WinUI の `NumberBox` は、既定では上下のボタンを出しません。** `JSpinner` と同じ見た目にするには
   `setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE)` を指定します (`COMPACT` は欄の右に小さな印だけを出し、フォーカスがあるときに上下のボタンを浮かせて出します。[9.6](#spinner-winui) の画面)。
@@ -4000,7 +3986,6 @@ frame.add(result);
 ```java
 WSpinner age = new WSpinner(new WSpinnerNumberModel(20, 0, 120, 1));
 age.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-age.setWidth(160);   // room for the number next to the buttons
 WLabel result = new WLabel("Age: 20");
 age.addChangeListener(e -> {
     int value = (int) age.getValue();
@@ -4041,8 +4026,7 @@ frame.add(price);
 ```java
 WSpinner price = new WSpinner(new WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5));
 price.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-price.setWidth(160);   // room for the number next to the buttons
-// There is no editor with a number format: 12.0 is shown as "12"
+price.setEditor(new WSpinner.NumberEditor(price, "0.00"));
 
 frame.add(new WLabel("Price:"));
 frame.add(price);
@@ -4054,7 +4038,9 @@ frame.add(price);
 |---|---|
 | ![Decimal (Swing)](images/swing_to_winui4k/JSpinner/DecimalSwing.png) | ![Decimal (WinUI4K)](images/swing_to_winui4k/JSpinner/DecimalWinUI4K.png) |
 
-- `JSpinner.NumberEditor` のような表示の書式の指定はありません。12.0 は「12」、12.5 は「12.5」と表示されます。
+- 表示の書式は、Swing と同じく `NumberEditor` (`JSpinner.NumberEditor` に当たる `WSpinner.NumberEditor`) に `DecimalFormat` の書式を渡して決めます。
+  「0.00」なら 12.0 は「12.00」と出ます。入力もその書式で読み、書式の数として読めない文字は受け付けません (値は変わらず、表示が元に戻ります)。
+- `setEditor` を呼ばないときは WinUI の `NumberBox` の既定の書式で、12.0 は「12」、12.5 は「12.5」と表示されます。
 - モデルの値が `Integer` などの整数なら、入力した小数は 0 の方向へ切り捨てて整数にします (Swing の既定の書式と同じ)。
 
 <a id="spinner-range"></a>
@@ -4084,10 +4070,8 @@ fromModel.addChangeListener(e -> toModel.setMinimum((Integer) fromModel.getValue
 
 WSpinner from = new WSpinner(fromModel);
 from.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-from.setWidth(160);   // room for the number next to the buttons
 WSpinner to = new WSpinner(toModel);
 to.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
-to.setWidth(160);   // room for the number next to the buttons
 frame.add(new WLabel("From:"));
 frame.add(from);
 frame.add(new WLabel("To:"));
@@ -4143,13 +4127,12 @@ fun main() {
         // Number spinner with buttons and a listener (9.2, 9.3)
         val age = WSpinner(WSpinnerNumberModel(20, 0, 120, 1))
         age.spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
-        age.width = 160.0
         age.addChangeListener { value: Double -> status.text = "Age: ${value.toInt()}" }
 
         // Decimal steps (9.4)
         val price = WSpinner(WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5))
         price.spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
-        price.width = 160.0
+        price.editor = WSpinner.NumberEditor(price, "0.00")
 
         // Linked range (9.5)
         val fromModel = WSpinnerNumberModel(1, 1, 31, 1)
@@ -4178,7 +4161,6 @@ Kotlin では `addChangeListener { value: Double -> ... }` と書くと、変わ
 ### 9.8 注意点
 
 - **上下のボタンは既定で出ません。** `setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE)` を忘れずに付けます。
-- 幅を指定しないと、フォーカスを受けたときに数字が見えなくなります ([9.2](#spinner-basic))。`setWidth(160)` のように幅を指定します。
 - **`getValue()` は `double` です。** `(Integer) spinner.getValue()` はコンパイルが通らないので、`(int) spinner.getValue()` か
   `(Integer) spinner.getModel().getValue()` に直します。
 - 引数なしの `new WSpinner()` の値は `0` ではなく `NaN` (空欄) です。この既定のモデルのまま入力を消すと、値は `NaN` になります。
@@ -4186,7 +4168,7 @@ Kotlin では `addChangeListener { value: Double -> ... }` と書くと、変わ
 - 範囲の外の値は、モデルに入れても `setValue` で入れても範囲の端に切り詰められます。上下のボタンで端を越えるときも、止まらずに端の値になります。
 - `SpinnerListModel` と `SpinnerDateModel` に当たる `WSpinnerListModel` / `WSpinnerDateModel` はありますが、スピナーに付けると
   `IllegalArgumentException` になります。一覧からの選択や日時の選択は、今の版の `WSpinner` ではできません。
-- `JSpinner.NumberEditor` / `DateEditor` / `ListEditor` と `getEditor()` はありません。
+- `JSpinner.NumberEditor` に当たる `WSpinner.NumberEditor` はありますが、`DateEditor` / `ListEditor` はありません。`getEditor()` は入力欄の部品ではなく書式を返し、`setEditor` しなければ `null` です ([9.4](#spinner-decimal))。
 
 <a id="slider"></a>
 ## 10. JSlider → WSlider
@@ -4207,7 +4189,7 @@ Kotlin では `addChangeListener { value: Double -> ... }` と書くと、変わ
 | 変化の通知 | `addChangeListener(e -> ...)` | `addChangeListener(e -> ...)` | `ChangeListener` → `WChangeListener` |
 | ドラッグ中か | `getValueIsAdjusting()` | `getValueIsAdjusting()` | 同じ |
 | 目盛りの間隔 | `setMajorTickSpacing(25)` / `setMinorTickSpacing(5)` | `setMajorTickSpacing(25)` / `setMinorTickSpacing(5)` | 目盛りは 1 段だけ (大きい方) |
-| 目盛りを描く | `setPaintTicks(true)` | `setPaintTicks(true)` | 既定の位置はトラックの上 ([10.3](#slider-ticks)) |
+| 目盛りを描く | `setPaintTicks(true)` | `setPaintTicks(true)` | 同じ (トラックの下。縦なら右。[10.3](#slider-ticks)) |
 | 目盛りに吸着 | `setSnapToTicks(true)` | `setSnapToTicks(true)` | 同じ |
 | 反転 | `setInverted(true)` | `setInverted(true)` | 同じ |
 | 向きを変える | `setOrientation(JSlider.VERTICAL)` | `setOrientation(Orientation.VERTICAL)` | 定数は `Orientation` |
@@ -4253,9 +4235,7 @@ frame.add(result);
 |---|---|
 | ![Basic (Swing)](images/swing_to_winui4k/JSlider/BasicSwing.png) | ![Basic (WinUI4K)](images/swing_to_winui4k/JSlider/BasicWinUI4K.png) |
 
-WinUI4K の画面では、スライダーがつまみ 1 つ分の幅に縮んでいます。`JSlider` は推奨の幅 (200) を持ちますが、`WSlider` は幅を指定しないと
-`WFlowLayout` の中でほとんど幅を持たない、今の版の WinUI4K の不具合です。`volume.setWidth(200)` のように幅を指定すると、正しく表示されます
-(この章のほかのサンプルは幅を指定しています)。
+幅を指定しなくても、`JSlider` と同じく推奨の幅 (200。縦向きなら高さ 200) で置かれます。幅を変えるときは `volume.setWidth(300)` のように指定します。
 
 - `getValue()` は `double` を返すので、文字にするときは `(int)` を付けます (付けないと「70.0」になります)。
 - `addChangeListener` のリスナーは、ユーザーの操作でもプログラムからの `setValue` でも呼ばれます (Swing と同じ)。
@@ -4280,7 +4260,6 @@ frame.add(level);
 
 ```java
 WSlider level = new WSlider(0, 100, 50);
-level.setWidth(200);   // a slider has no default width
 level.setMajorTickSpacing(25);
 level.setMinorTickSpacing(5);
 level.setPaintTicks(true);
@@ -4298,8 +4277,8 @@ frame.add(level);
 
 - WinUI の目盛りは 1 段なので、大きい目盛り (`setMajorTickSpacing`) の間隔だけで描きます。大きい目盛りが 0 のときは小さい目盛りの間隔で描きます。
 - 目盛りの数字 (`setPaintLabels`・`setLabelTable`) はありません。
-- **目盛りはトラックの上に重ねて描かれます。** `WSlider` の目盛りの位置の既定が WinUI と同じ `TickPlacement.INLINE` なので、
-  `setPaintTicks(true)` は位置を変えません。Swing と同じくトラックの下に描くには、`setTickPlacement(TickPlacement.BOTTOM_RIGHT)` を指定します。
+- `setPaintTicks(true)` は、Swing と同じく目盛りをトラックの下 (`TickPlacement.BOTTOM_RIGHT`) に描きます。目盛りの位置の既定は
+  `TickPlacement.NONE` (描かない) で、WinUI の既定の `INLINE` (トラックの上に重ねる) ではありません。
 
 <a id="slider-vertical"></a>
 ### 10.4 縦向きと反転
@@ -4319,9 +4298,7 @@ frame.add(inverted);
 
 ```java
 WSlider vertical = new WSlider(WSlider.VERTICAL, 0, 100, 60);
-vertical.setHeight(200);   // a slider has no default height
 WSlider inverted = new WSlider(0, 100, 60);
-inverted.setWidth(200);   // a slider has no default width
 inverted.setInverted(true);              // the maximum is on the left
 
 frame.add(vertical);
@@ -4335,7 +4312,7 @@ frame.add(inverted);
 | ![Vertical (Swing)](images/swing_to_winui4k/JSlider/VerticalSwing.png) | ![Vertical (WinUI4K)](images/swing_to_winui4k/JSlider/VerticalWinUI4K.png) |
 
 - `JSlider.VERTICAL` (`int`) の代わりに `WSlider.VERTICAL` (`Orientation`) を渡します。`setOrientation(Orientation.VERTICAL)` で後から変えることもできます。
-- 縦のスライダーは、横の幅と同じく高さを指定します。
+- 縦のスライダーは、`JSlider` と同じく高さ 200 で置かれます。
 
 <a id="slider-adjusting"></a>
 ### 10.5 ドラッグを終えたときだけ値を使う
@@ -4365,7 +4342,6 @@ frame.add(applied);
 
 ```java
 WSlider brightness = new WSlider(0, 100, 50);
-brightness.setWidth(200);   // a slider has no default width
 WLabel live = new WLabel("Live: 50");
 WLabel applied = new WLabel("Applied: 50");
 brightness.addChangeListener(e -> {
@@ -4427,25 +4403,20 @@ fun main() {
 
         // Slider and its value (10.2)
         val volume = WSlider(0.0, 100.0, 30.0)
-        volume.width = 200.0
         volume.addChangeListener { value: Double -> status.text = "Volume: ${value.toInt()}" }
 
         // Ticks and snapping (10.3)
         val level = WSlider(0.0, 100.0, 50.0).apply {
-            width = 200.0
             majorTickSpacing = 25.0
             paintTicks = true
-            tickPlacement = TickPlacement.BOTTOM_RIGHT
             snapToTicks = true
         }
 
         // Vertical (10.4)
         val vertical = WSlider(WSlider.VERTICAL, 0.0, 100.0, 60.0)
-        vertical.height = 200.0
 
         // Apply the value when dragging ends (10.5)
         val brightness = WSlider(0.0, 100.0, 50.0)
-        brightness.width = 200.0
         brightness.addChangeListener(WChangeListener {
             if (!brightness.valueIsAdjusting) status.text = "Applied: ${brightness.value.toInt()}"
         })
@@ -4465,11 +4436,10 @@ Kotlin から作るときは、引数が `Double` なので `WSlider(0.0, 100.0,
 <a id="slider-notes"></a>
 ### 10.8 注意点
 
-- **幅 (縦向きなら高さ) を指定します。** 指定しないと、スライダーがつまみ 1 つ分に縮みます ([10.2](#slider-basic))。
 - **値は `double` です。** `int v = slider.getValue();` はコンパイルが通らないので、`int v = (int) slider.getValue();` と書きます。
 - 引数なしの `new WSlider()` の値は、`JSlider` の 50 ではなく 0 です。
-- `setPaintTicks(true)` だけでは目盛りがトラックの上に重なります。Swing と同じ見た目にするには `setTickPlacement(TickPlacement.BOTTOM_RIGHT)` も指定します。
-  また、何も設定していないスライダーの `getPaintTicks()` は `true` を返します (Swing は `false`)。
+- 目盛りは Swing と同じく、`setPaintTicks(true)` でトラックの下 (縦向きなら右) に描きます。既定の `getPaintTicks()` は `false` です (Swing と同じ)。
+  トラックの両側や上に描くときは `setTickPlacement(...)` を使います ([10.6](#slider-winui))。
 - 目盛りの数字 (`setPaintLabels` / `setLabelTable`) はありません。値を見せるときは、ラベルを横に置くか `setHeader` を使います。
 
 <a id="progress"></a>
@@ -4527,9 +4497,7 @@ frame.add(progress);
 |---|---|
 | ![Basic (Swing)](images/swing_to_winui4k/JProgressBar/BasicSwing.png) | ![Basic (WinUI4K)](images/swing_to_winui4k/JProgressBar/BasicWinUI4K.png) |
 
-WinUI4K の画面では、バーが出ていません。`JProgressBar` は推奨の幅 (146) を持ちますが、`WProgressBar` は幅を指定しないと
-`WFlowLayout` の中で幅が 0 になる、今の版の WinUI4K の不具合です。`progress.setWidth(200)` のように幅を指定すると表示されます
-(この章のほかのサンプルは幅を指定しています)。
+幅を指定しなくても、`JProgressBar` と同じく推奨の幅 (146) で置かれます。幅を変えるときは `progress.setWidth(200)` のように指定します。
 
 - `new WProgressBar(0, 100)` は、`JProgressBar(int, int)` と同じく値を最小 (0) から始めます。
 - WinUI のバーは、Swing のような枠の付いた太い帯ではなく、細い線で進み具合を描きます。
@@ -4553,7 +4521,6 @@ frame.add(progress);
 
 ```java
 WProgressBar progress = new WProgressBar();
-progress.setWidth(200);   // a progress bar has no default width
 progress.setIndeterminate(true);
 
 frame.add(new WLabel("Connecting..."));
@@ -4586,7 +4553,6 @@ frame.add(progress);
 ```java
 WProgressBar progress = new WProgressBar(0, 100);
 progress.setValue(65);
-progress.setWidth(200);   // a progress bar has no default width
 progress.setStringPainted(true);       // only tells screen readers; nothing is drawn
 WLabel percent = new WLabel(progress.getString());
 progress.addChangeListener(e -> percent.setText(progress.getString()));
@@ -4644,7 +4610,6 @@ frame.add(status);
 
 ```java
 WProgressBar progress = new WProgressBar(0, 100);
-progress.setWidth(200);   // a progress bar has no default width
 WLabel status = new WLabel("Working...");
 CompletableFuture.runAsync(() -> {
     for (int i = 1; i <= 100; i++) {
@@ -4690,9 +4655,7 @@ frame.add(progress);
 ```java
 WBoundedRangeModel model = new WDefaultBoundedRangeModel(30, 0, 0, 100);
 WSlider slider = new WSlider(model);
-slider.setWidth(200);   // a slider has no default width
 WProgressBar progress = new WProgressBar(model);
-progress.setWidth(150);   // a progress bar has no default width
 
 frame.add(slider);
 frame.add(progress);
@@ -4713,17 +4676,13 @@ Swing には無いが、WinUI ではよく使う機能です。回り続ける�
 
 ```java
 WProgressRing ring = new WProgressRing();         // spins until setActive(false)
-ring.setWidth(40);                                // the ring has no default size
-ring.setHeight(40);
 
 WProgressBar paused = new WProgressBar(0, 100);
 paused.setValue(60);
-paused.setWidth(150);
 paused.setShowPaused(true);
 
 WProgressBar error = new WProgressBar(0, 100);
 error.setValue(80);
-error.setWidth(150);
 error.setShowError(true);
 
 frame.add(ring);
@@ -4737,7 +4696,7 @@ frame.add(error);
 
 - `new WProgressRing()` は、終わりが分からない処理の「回り続ける」表示で始まります。値を表す円にするときは、`new WProgressRing(0, 100)` のように範囲を渡して作り、
   `setValue` で進めます。
-- `WProgressRing` も、大きさを指定しないと正しく表示されません (ここでは 40×40 を指定しています)。
+- `WProgressRing` は、大きさを指定しないと WinUI の既定のスタイルと同じ 32×32 で置かれます。大きくするときは `setWidth` / `setHeight` で指定します。
 
 <a id="progress-kotlin"></a>
 ### 11.8 Kotlin で書く
@@ -4755,7 +4714,6 @@ fun main() {
 
         // Progress and its percentage (11.2, 11.4)
         val progress = WProgressBar(0, 100)
-        progress.width = 200.0
         val percent = WLabel(progress.string ?: "")
         progress.addChangeListener { percent.text = progress.string ?: "" }
 
@@ -4769,11 +4727,9 @@ fun main() {
 
         // Indeterminate and paused (11.3, 11.7)
         val waiting = WProgressBar().apply {
-            width = 200.0
             isIndeterminate = true
         }
         val paused = WProgressBar(0, 100).apply {
-            width = 200.0
             value = 60.0
             showPaused = true
         }
@@ -4791,7 +4747,6 @@ Kotlin では `value`・`isIndeterminate`・`showPaused` のようにプロパ�
 <a id="progress-notes"></a>
 ### 11.9 注意点
 
-- **幅を指定します。** 指定しないと、バーが見えません ([11.2](#progress-basic))。
 - **`setStringPainted(true)` でも文字は描かれません。** 割合を見せるときは `WLabel` を置きます ([11.4](#progress-string))。
 - **値は `double` です。** `int v = progress.getValue();` は `int v = (int) progress.getValue();` と書きます。
 - 縦向きのバー (`SwingConstants.VERTICAL`) はありません。
@@ -4817,14 +4772,14 @@ Kotlin では `value`・`isIndeterminate`・`showPaused` のようにプロパ�
 | 末尾に足す | `append("...")` | `append("...")` | 同じ |
 | 途中に入れる・置き換える | `insert(s, pos)` / `replaceRange(s, start, end)` | `insert(s, pos)` / `replaceRange(s, start, end)` | 同じ |
 | 折り返す | `setLineWrap(true)` | `setLineWrap(true)` | **既定が逆** (WinUI4K は折り返す) |
-| 単語の切れ目で折り返す | `setWrapStyleWord(true)` | (なし) | `setWrapStyleWord(true)` にすると折り返さなくなる ([12.3](#textarea-wrap))。`setLineWrap(true)` だけで単語の切れ目で折り返す |
+| 単語の切れ目で折り返す | `setWrapStyleWord(true)` | `setWrapStyleWord(true)` | WinUI は `false` でも単語の切れ目で折り返す ([12.3](#textarea-wrap)) |
 | 行数・列数 | `setRows(5)` / `setColumns(30)` | `setRows(5)` / `setColumns(30)` | 同じ (WinUI の文字が大きいので、同じ列数でも幅が広い) |
 | 行の数 | `getLineCount()` | `getLineCount()` | 同じ |
 | 位置から行・行の先頭 | `getLineOfOffset(pos)` / `getLineStartOffset(line)` | `getLineOfOffset(pos)` / `getLineStartOffset(line)` | 範囲外は `IllegalArgumentException` (`BadLocationException` の `try` が要らない) |
 | 文字数 | `getDocument().getLength()` | `getLength()` | 入力欄から直接読める (`getDocument().getLength()` も同じ) |
 | キャレット | `setCaretPosition(n)` / `addCaretListener(...)` | `setCaretPosition(n)` / `addCaretListener(...)` | 同じ |
 | 読み取り専用 | `setEditable(false)` | `setEditable(false)` | 同じ |
-| フォント・文字色 | `setFont(new Font(...))` / `setForeground(...)` | `setFont(new WFont(...))` / `setForeground(...)` | 今の版では文字色が効かない ([12.6](#textarea-appearance)) |
+| フォント・文字色 | `setFont(new Font(...))` / `setForeground(...)` | `setFont(new WFont(...))` / `setForeground(...)` | `Font` → `WFont`、`Color` → `WColor` |
 | 変化の通知 | `getDocument().addDocumentListener(...)` | `addDocumentListener(...)` / `addTextChangedListener(() -> ...)` | `addTextChangedListener` には文字列が渡らない ([12.9](#textarea-notes)) |
 | 元に戻す | `UndoManager` を自分で付ける | 組み込み (Ctrl+Z)。`undo()` / `getCanUndo()` | `WTextField` の `canUndo()` と名前が違う |
 | ファイルの読み書き | `read(reader, null)` / `write(writer)` | `read(reader, null)` / `write(writer)` | 同じ |
@@ -4902,7 +4857,8 @@ WTextPane noWrap = new WTextPane(TEXT, 4, 20);
 noWrap.setLineWrap(false);                          // wraps by default, unlike Swing
 
 WTextPane wrapped = new WTextPane(TEXT, 4, 20);
-wrapped.setLineWrap(true);                          // breaks at word boundaries
+wrapped.setLineWrap(true);
+wrapped.setWrapStyleWord(true);                     // break at word boundaries
 
 frame.add(noWrap);
 frame.add(wrapped);
@@ -4915,9 +4871,8 @@ frame.add(wrapped);
 | ![Wrap (Swing)](images/swing_to_winui4k/JTextArea/WrapSwing.png) | ![Wrap (WinUI4K)](images/swing_to_winui4k/JTextArea/WrapWinUI4K.png) |
 
 - **既定が逆です**。`JTextArea` は折り返しませんが、`WTextPane` は折り返します。折り返さない欄は `setLineWrap(false)` を書きます。
-- WinUI の折り返しは、はじめから単語の切れ目で折り返します。`setLineWrap(true)` だけで Swing の `setWrapStyleWord(true)` と同じ見た目になります。
-- **注意**: 今の版の WinUI4K では、`setWrapStyleWord(true)` を呼ぶと折り返さなくなります (WinUI の `RichEditBox` が受け付けない
-  `TextWrapping.WRAP_WHOLE_WORDS` を設定するため)。Swing のコードから移すときは `setWrapStyleWord(true)` の行を消してください。
+- `setLineWrap(true)` と `setWrapStyleWord(true)` は Swing のまま書けます。WinUI の折り返しははじめから単語の切れ目で折り返すので、
+  `setWrapStyleWord(false)` でも単語の切れ目で折り返します (Swing の `false` のような、文字の切れ目での折り返しはできません)。
 - 折り返さない欄は、Swing では横のスクロールバーが出ますが、WinUI ではスクロールバーは出ません (はみ出した部分は欄の中でスクロールします)。
 
 <a id="textarea-append"></a>
@@ -5055,8 +5010,8 @@ frame.add(license);
 |---|---|
 | ![Appearance (Swing)](images/swing_to_winui4k/JTextArea/AppearanceSwing.png) | ![Appearance (WinUI4K)](images/swing_to_winui4k/JTextArea/AppearanceWinUI4K.png) |
 
-WinUI4K の画面では、文字が青ではなく黒です。今の版の WinUI4K では、`WTextPane` の `setForeground` の色が文字に使われません。
-文字に色を付けるときは、書式の `WStyleConstants.setForeground` を使います ([13.3](#textpane-highlight))。
+`setForeground` の色は、ポインターが乗ったときやフォーカスを持ったときの文字にも使われます (Swing と同じ)。
+一部の文字だけに色を付けるときは、書式の `WStyleConstants.setForeground` を使います ([13.3](#textpane-highlight))。
 
 - 読み取り専用でも、選択とコピーはできます (Swing と同じ)。
 - 書式のある文字を混ぜるときは、同じ `WTextPane` の書式の API を使います ([13 章](#textpane))。
@@ -5139,7 +5094,7 @@ Kotlin では `text`・`lineWrap`・`isEditable`・`caretPosition`・`length` �
 - `new WTextPane("文字列")` の文字列は初めの文字列ではなく案内文になります (`WTextField` と同じ)。`JTextArea(String text)` のつもりで
   書くと、欄は空のまま薄い文字が出ます。初めの文字列は `setText(...)` か `new WTextPane(text, rows, columns)` で入れます。
 - 折り返しの既定が逆です。`JTextArea` は折り返さず、`WTextPane` は折り返します ([12.3](#textarea-wrap))。
-- `setWrapStyleWord(true)` は使わないでください。今の版では折り返さなくなります。WinUI の折り返しは、はじめから単語の切れ目です。
+- `setWrapStyleWord` の値にかかわらず、単語の切れ目で折り返します (WinUI の折り返しは、はじめから単語の切れ目です)。
 - `JScrollPane` で包むのをやめます。`WTextPane` は自分でスクロールします。スクロールバーは既定のスタイルでは出ません。
 - `addTextChangedListener` のリスナーは引数を受け取りません (`() -> ...`)。`WTextField` の `addTextChangedListener` (`text -> ...`) と
   形が違うので、今の文字列は `getText()` で読みます。
@@ -5640,12 +5595,11 @@ frame.add(buttons, WBorderLayout.SOUTH);
 |---|---|
 | ![Nest (Swing)](images/swing_to_winui4k/JPanel/NestSwing.png) | ![Nest (WinUI4K)](images/swing_to_winui4k/JPanel/NestWinUI4K.png) |
 
-WinUI4K の画面では、下の「OK」「Cancel」のボタンがウィンドウの下にはみ出してほとんど見えません。`WLayoutPanel` の中に入れた `WLayoutPanel` が、
-中の子の大きさに合わせた高さにならない、今の版の WinUI4K の不具合です ([1.9](#button-command) と同じ)。
-また、行の高さに引き伸ばされたチェックボックスは、四角が行の中央、文字が行の上に寄って、ずれて見えます。
+`WLayoutPanel` の中に入れた `WLayoutPanel` は、`JPanel` と同じく中の子の大きさから自分の希望の大きさを決め、外のパネルがその大きさで並べます。
+表示した後に中の子の大きさが変わったときも、外のパネルが並べ直します。行の高さに引き伸ばされたチェックボックスは、四角と文字が行の縦の中央にそろいます。
 
 - コードは型の名前に `W` を付けるだけで、組み方は Swing と同じです。
-- 入れ子のパネルが正しく並ばないときは、縦か横に一列に並べる部分を `WPanel` (`new WPanel(8.0, Orientation.HORIZONTAL)` など) にすると避けられます。
+- 縦か横に一列に並べるだけの部分は、WinUI の `StackPanel` を包んだ `WPanel` (`new WPanel(8.0, Orientation.HORIZONTAL)` など) でも書けます。
 
 <a id="panel-border"></a>
 ### 14.3 パネルに枠線を付ける
@@ -5687,9 +5641,7 @@ frame.add(box);
 |---|---|
 | ![Border (Swing)](images/swing_to_winui4k/JPanel/BorderSwing.png) | ![Border (WinUI4K)](images/swing_to_winui4k/JPanel/BorderWinUI4K.png) |
 
-WinUI4K の画面では、枠線がチェックボックスを囲まず、左上に小さな四角として描かれています ([14.2](#panel-nest) と同じ、`WBorder` の中の
-`WLayoutPanel` が中の子の大きさにならない不具合です)。「Bold」の周りの太い角丸の線は、フォーカスを示す枠です。
-中身を `new WPanel()` (縦の `StackPanel`) にすると、枠線は 3 つのチェックボックスを囲んで正しく描かれます。
+`WBorder` の中に入れた `WLayoutPanel` も、中の子の大きさになるので、枠線は 3 つのチェックボックスを囲んで描かれます。
 
 - WinUI4K の `WLayoutPanel` には `setBorder` がありません。枠線は、パネルを `WBorder` に入れて描きます。`WBorder` は子を 1 つだけ持つ
   コンテナで、枠線の色 `setBorderColor`・太さ `setBorderThickness`・角の丸み `setCornerRadius`・背景 `setBackground`・内側の余白 `setPadding` を持ちます。
@@ -5735,8 +5687,7 @@ frame.add(new WLabel("Content"), WBorderLayout.CENTER);
 |---|---|
 | ![Background (Swing)](images/swing_to_winui4k/JPanel/BackgroundSwing.png) | ![Background (WinUI4K)](images/swing_to_winui4k/JPanel/BackgroundWinUI4K.png) |
 
-WinUI4K の画面では、青い帯が細く、「Settings」の文字が帯からはみ出して下の「Content」と重なっています ([14.2](#panel-nest) と同じ不具合です)。
-また、`CENTER` に置いたラベルの文字が、Swing のように縦の中央ではなく上に寄ります。
+`CENTER` に置いて引き伸ばされたラベルの文字は、`JLabel` と同じく縦の中央に出ます。
 
 - パネルの背景は、色を設定しなければ透明です (`JPanel` の既定は不透明で、Look & Feel の色で塗られます)。`setOpaque(false)` に当たるものは無く、
   要りません。`setBackground(null)` で背景を外せます。
@@ -5837,7 +5788,7 @@ frame.add(next, WBorderLayout.SOUTH);
 
 - `removeAll` / `add` / `revalidate` は Swing と同じに書けます。`WLayoutPanel` は子を足し引きすると自分で並べ直しを予約するので、
   `revalidate()` を書かなくても並びます。`repaint()` は何もしません (Swing のコードをそのまま残してかまいません)。
-- 子の文字を変えて大きさが変わったときは、その子の `revalidate()` を呼ぶと並べ直します (Swing と同じ)。
+- `WLabel` やボタンの文字・アイコン・フォントを変えたときは、Swing と同じく部品が自分で `revalidate()` を呼ぶので、書かなくても並べ直します。
 
 <a id="panel-kotlin"></a>
 ### 14.7 Kotlin で書く
@@ -5897,13 +5848,9 @@ Kotlin では `background`・`insets`・`borderThickness` などをプロパテ�
 - **`WFrame` の既定の中身は `BorderLayout` ではありません。** `JFrame` の中身は既定で `BorderLayout` ですが、`WFrame` の既定の中身は縦の `WPanel`
   (`StackPanel`) です。`frame.add(c, WBorderLayout.NORTH)` の形を使う前に `frame.setLayout(new WBorderLayout())` を呼びます。
   呼ばずに制約付きで足すと `IllegalArgumentException` になります ([0.2](#basics-differences) の表の「ウィンドウの中身の既定」とは違うので注意してください)。
-- **パネルの中に入れた `WLayoutPanel` の大きさ。** 今の版では、`WLayoutPanel` の中 (や `WFlowLayout` の行、`WBorder` の中) に入れた `WLayoutPanel` が、
-  中の子の大きさに合わせて広がらないことがあります ([14.2](#panel-nest)〜[14.4](#panel-background))。`WBorderLayout` の `CENTER` のように
-  大きさを割り当てられる場所では正しく並びます ([14.5](#panel-padding))。一列に並べるだけの部分は `WPanel` にすると避けられます。
 - **パネルに `setBorder` が無い。** 枠線は `WBorder` で囲み、余白は `setInsets` (`WLayoutPanel`) か `setPadding` (`WBorder`) で取ります。
   `TitledBorder`・`EtchedBorder`・`BevelBorder`・`MatteBorder` に当たるものはありません。
 - **背景は既定で透明。** `JPanel` は既定で不透明で、親の上に Look & Feel の色を塗ります。`WLayoutPanel` は背景色を設定しない限り何も塗りません。
-- **`WScrollPane` に入れるとき。** スクロールさせる中身に `WLayoutPanel` を使うと、今の版では正しく並ばないことがあります ([15.8](#scroll-notes))。
 - 大きさと位置の単位は DIP で、`WInsets`・`WSize` の値は `double` です。
 
 <a id="scroll"></a>
@@ -5936,7 +5883,7 @@ Kotlin では `background`・`insets`・`borderThickness` などをプロパテ�
 | 見えている範囲 | `getViewport().getViewRect()` | `getViewport().getViewRect()` | `Rectangle` → `WRectangle` |
 | スクロールに反応する | `getViewport().addChangeListener(e -> ...)` | `getViewport().addChangeListener(e -> ...)` | 位置を変えた後、少し遅れて呼ばれる |
 | 部品が見えるまでスクロール | `c.scrollRectToVisible(rect)` | `c.scrollRectToVisible(rect)` | スクロールは次のレイアウトで行われる |
-| 列の見出し | `setColumnHeaderView(header)` | `setColumnHeaderView(header)` | 見出しに背景が無いと、下の中身が透けて見える |
+| 列の見出し | `setColumnHeaderView(header)` | `setColumnHeaderView(header)` | 同じ (見出しはウィンドウの地の色の帯に載る) |
 | 行の見出し | `setRowHeaderView(header)` | `setRowHeaderView(header)` | 同じ |
 | 角の部品 | `setCorner(UPPER_LEFT_CORNER, c)` | `setCorner(UPPER_LEFT_CORNER, c)` | 左上 (`UPPER_LEFT_CORNER` / `UPPER_LEADING_CORNER`) だけ。ほかの角は `UnsupportedOperationException` |
 | ホイールの速さ | `getVerticalScrollBar().setUnitIncrement(16)` | (なし) | WinUI の決まった量で動く |
@@ -5964,7 +5911,7 @@ frame.add(scroll, BorderLayout.CENTER);
 **WinUI4K (Java)**
 
 ```java
-WPanel options = new WPanel();             // a vertical StackPanel
+WLayoutPanel options = new WLayoutPanel(new WGridLayout(0, 1));
 for (int i = 1; i <= 30; i++) {
     options.add(new WCheckBox("Option " + i));
 }
@@ -5981,8 +5928,8 @@ frame.add(scroll, WBorderLayout.CENTER);
 
 - WinUI のスクロールバーは、マウスを重ねるまで細い線になるか隠れているので、撮った画面には写っていません。マウスのホイール・タッチ・
   キーボードでスクロールできます。
-- 中身を `WLayoutPanel` (`new WLayoutPanel(new WGridLayout(0, 1))`) にすると、今の版では行が表示領域の高さに押し込まれて重なります。
-  縦に並べるだけなら `WPanel` を使います ([15.8](#scroll-notes))。
+- 中身の `WLayoutPanel` は、`JViewport` と同じく、希望の大きさ (30 行分の高さ) と表示領域の大きさの大きい方で並び、はみ出した分をスクロールします。
+  縦に並べるだけなら、WinUI の `StackPanel` を包んだ `WPanel` も使えます。
 
 <a id="scroll-policy"></a>
 ### 15.3 スクロールバーの出し方を決める
@@ -6065,12 +6012,9 @@ down.addActionListener(e -> {
 - `WPoint` の座標は `getX()` / `getY()` で読みます (`Point` の `p.x` / `p.y` のようなフィールドではありません)。
 - 位置の設定はアニメーションなしで行われ、`setViewPosition` から戻った時点で `getViewPosition()` は新しい位置を返します (Swing と同じ)。
   中身の範囲の外を指定すると、Swing と違い端で止まります。
-- **表示した直後にはまだスクロールできません。** Swing は `setVisible(true)` の中で並べ終わるので、その直後に `setViewPosition` を呼べますが、
-  WinUI4K は最初のレイアウトが後から行われ、その前の設定は効きません (`addLoadedListener` の中でもまだ早いことがあります)。
-  サンプルでは `WinUiUtilities.schedule(500, down::doClick)` のように少し待ってから動かしています。
+- 表示する前や `setVisible(true)` の直後 (最初のレイアウトの前) に設定した位置は、覚えておいて並べた後に当てます。
+  Swing と同じく、サンプルは `setVisible(true)` の直後に `down.doClick()` を呼んで 1 回スクロールしています。
 - 特定の部品が見えるまでスクロールするときは、その部品の `scrollRectToVisible(new WRectangle(0, 0, w, h))` を呼びます。
-- サンプルでは、ボタンを並べるパネルに `new WPanel(8.0, Orientation.HORIZONTAL)` を使っています。`WLayoutPanel` にすると、
-  今の版ではパネルの高さが 0 になり、ボタンがスクロールする中身に重なります ([14.8](#panel-notes))。
 
 <a id="scroll-listener"></a>
 ### 15.5 スクロールに反応する
@@ -6150,8 +6094,8 @@ scroll.setColumnHeaderView(new WLabel("Text"));
 |---|---|
 | ![Header (Swing)](images/swing_to_winui4k/JScrollPane/HeaderSwing.png) | ![Header (WinUI4K)](images/swing_to_winui4k/JScrollPane/HeaderWinUI4K.png) |
 
-WinUI4K の画面では、列の見出し「Text」が、下へスクロールした中身の「Line 5」の上に重なって見えます。WinUI の `ScrollViewer` の見出しは
-中身の上に重ねて描かれ、ラベルには背景が無いので、下を流れる中身が透けて見えます。
+WinUI の `ScrollViewer` は見出しを中身の上に重ねて描きますが、WinUI4K は見出しをウィンドウの地の色で塗った帯に載せるので、
+Swing と同じく、下へスクロールした中身は見出しの下に隠れて透けません (行と列の両方の見出しがあるときは、左上の角も塗ります)。
 
 - 見出しは WinUI の `ScrollViewer` の `TopHeader` / `LeftHeader` に置きます。見出しがあるあいだ、中身は左上に寄せられます
   (中身の `horizontalAlignment` / `verticalAlignment` が `LEFT` / `TOP` に書き換えられます)。
@@ -6204,14 +6148,12 @@ Kotlin では `scroll.viewport.viewPosition` のようにプロパティとし�
 
 - **横のスクロールが既定で無効。** `new WScrollPane(view)` は横にスクロールせず、中身を表示領域の幅に縮めます。横にもスクロールさせるときは、
   表示方針を渡すコンストラクターか `setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED)` を使います。
-- **中身に `WLayoutPanel` を入れない。** 今の版では、`WScrollPane` の中身にした `WLayoutPanel` が表示領域の大きさに押し込まれて、子が重なったり
-  何も出なかったりします ([15.2](#scroll-basic))。縦に並べるだけなら `WPanel`、表のように並べるなら `WList` や `WTable` を使います。
 - **スクロールバーの見た目。** WinUI のスクロールバーは、マウスを重ねたときだけ太く表示されます。`ALWAYS` でも常に太いバーは出ません。
-- **表示した直後のスクロール。** Swing のように `setVisible(true)` の直後に `setViewPosition` / `setValue` を呼んでも効きません。
-  最初のレイアウトが済んでから (ボタンの処理の中や、少し待ってから) 動かします ([15.4](#scroll-position))。
+- **表示した直後のスクロール。** `setVisible(true)` の直後に `setViewPosition` / `setValue` を呼ぶと、位置を覚えておいて最初のレイアウトの後に当てます
+  (Swing と同じく効きます)。ただし中身の大きさ (`getViewSize()`・スクロールバーの `getMaximum()`) は、最初のレイアウトが済むまで 0 です ([16.2](#scrollbar-bottom))。
 - **リスナーは後から呼ばれる。** `WViewport` の `ChangeListener` は、位置を変えた処理の中ではなく、少し後に呼ばれます。
-- **中身の `revalidate()` で先頭に戻る。** 今の版では、`WScrollPane` の中身の `revalidate()` を呼ぶと、スクロールの位置が先頭に戻ることがあります。
-  `WPanel` は子を足すと自分で測り直すので、`revalidate()` は要りません ([16.5](#scrollbar-loadmore))。
+- **中身の `revalidate()` でリスナーが余分に呼ばれる。** `WScrollPane` の中身の `revalidate()` を呼ぶと、測り直す間だけスクロールの位置が動き (後で元に戻ります)、
+  その位置でスクロールのリスナーが呼ばれます。`WPanel` は子を足すと自分で測り直すので、`revalidate()` は要りません ([16.5](#scrollbar-loadmore))。
 - **`JViewport` はコンポーネントではない。** `WViewport` には `setView` / `getView` と位置の読み書きはありますが、`setBackground` や
   `setScrollMode` などのコンポーネントとしての API はありません。
 - **リストや表は入れなくてよい。** `WList`・`WTable`・`WTree`・`WTextPane` は自分でスクロールします。`new JScrollPane(list)` は `list` だけにします。
@@ -6295,6 +6237,8 @@ add.addActionListener(e -> {
 | ![Bottom (Swing)](images/swing_to_winui4k/JScrollBar/BottomSwing.png) | ![Bottom (WinUI4K)](images/swing_to_winui4k/JScrollBar/BottomWinUI4K.png) |
 
 - 子を足した直後は、まだ中身の長さ (`getMaximum()`) が増えていません。Swing と同じく、`invokeLater` で後から末尾へ動かします。
+- 表示した直後 (最初のレイアウトの前) は、`getMaximum()` が 0 のままです。そのためサンプルは、Swing のように `setVisible(true)` の直後ではなく、
+  `WinUiUtilities.schedule(500, ...)` で最初のレイアウトを待ってから 30 行を足しています ([16.5](#scrollbar-loadmore) の末尾へのスクロールも同じ)。
 - `setValue` には最大値をそのまま渡してかまいません。範囲の外は端 (最大値 - 見えている量) で止まります。
 - ログを文字で出すだけなら、`WTextPane` の `append` を使う方が簡単です ([12 章](#textarea))。
 
@@ -6429,9 +6373,9 @@ bar.addAdjustmentListener(e -> {
 |---|---|
 | ![LoadMore (Swing)](images/swing_to_winui4k/JScrollBar/LoadMoreSwing.png) | ![LoadMore (WinUI4K)](images/swing_to_winui4k/JScrollBar/LoadMoreWinUI4K.png) |
 
-- 今の版では、`WScrollPane` の中身の `revalidate()` を呼ぶと、表示領域が一時的に中身の高さまで広がって、スクロールの位置が先頭に戻ります。
-  そのとき「末尾にいる」と判定されて続けて読み込まれてしまうので、WinUI4K のコードでは `revalidate()` を呼びません。`WPanel` は子を足すと
-  自分で測り直すので、呼ばなくても正しく並びます。
+- `WScrollPane` の中身の `revalidate()` を呼ぶと、表示領域が一時的に中身の高さまで広がり、スクロールの位置が一時的に先頭へ動きます (測り直した後に元へ戻ります)。
+  その途中で「末尾にいる」と判定されて余分に読み込まれてしまう (サンプルに足して試すと 40 件のはずが 60 件になった) ので、WinUI4K のコードでは
+  `revalidate()` を呼びません。`WPanel` は子を足すと自分で測り直すので、呼ばなくても正しく並びます。
 - `getValueIsAdjusting()` が true の間 (ドラッグや慣性スクロールの途中) は読み込まず、止まったときに読み込みます (Swing と同じ考え方)。
 - たくさんの項目を並べるなら、`WList` で仮想化して表示する方が軽くなります。
 
@@ -6484,8 +6428,9 @@ fun main() {
 - **増分が無い。** `setUnitIncrement` / `setBlockIncrement` はありません。ホイールで動く量は WinUI が決めます。Swing でホイールを速くするために
   `setUnitIncrement(16)` を書いていたなら、その行は消します。
 - **リスナーは後から呼ばれる。** `setValue` から戻った時点ではリスナーはまだ呼ばれていません (Swing は `setValue` の中で呼びます)。
-- **表示した直後の `setValue` は効かない。** 最初のレイアウトが済むまでは中身の長さが 0 なので、値は 0 のままです ([15.4](#scroll-position))。
-- **中身の `revalidate()` で先頭に戻る** ことがあります ([16.5](#scrollbar-loadmore))。
+- **表示した直後の `getMaximum()` は 0。** `setVisible(true)` の直後の `setValue(300)` は、覚えておいて最初のレイアウトの後に当てます (Swing と同じく効きます)。
+  ただし中身の長さ (`getMaximum()`) は最初のレイアウトが済むまで 0 なので、`setValue(bar.getMaximum())` で末尾へ動かすときは、レイアウトを待ってから呼びます ([16.2](#scrollbar-bottom))。
+- **中身の `revalidate()` でスクロールのリスナーが余分に呼ばれる** ことがあります ([16.5](#scrollbar-loadmore))。
 
 <a id="split"></a>
 ## 17. JSplitPane → WSplitPane
@@ -6556,7 +6501,7 @@ frame.add(split, WBorderLayout.CENTER);
 
 - `WList` は自分でスクロールするので、`JScrollPane` に当たる `WScrollPane` で包みません。
 - 仕切りは中央に細い線だけが見え、その両側 (合わせて 10 DIP) をつかんでドラッグできます。仕切りの上ではマウス ポインターが左右の矢印になります。
-- 右のラベルの文字は、Swing では縦の中央、WinUI4K では上に寄ります。
+- 右のラベルの文字は、Swing と同じく縦の中央に出ます (引き伸ばした `WLabel` の文字は縦の中央に置かれます)。
 
 <a id="split-vertical"></a>
 ### 17.3 上下に分けて割合で配る
@@ -6598,8 +6543,7 @@ frame.setVisible(true);
 |---|---|
 | ![Vertical (Swing)](images/swing_to_winui4k/JSplitPane/VerticalSwing.png) | ![Vertical (WinUI4K)](images/swing_to_winui4k/JSplitPane/VerticalWinUI4K.png) |
 
-WinUI4K の画面では、仕切りが 7 割より下 (仕切りの太さを除いた高さ 213 DIP のうち 182 の位置、約 85%。7 割なら 149) にあり、下のコンソールが狭くなっています。
-表示前に `setDividerLocation(0.7)` と `setResizeWeight(0.7)` を両方指定したときに、割合どおりの位置にならない今の版の WinUI4K の不具合です。
+表示前に `setDividerLocation(0.7)` と `setResizeWeight(0.7)` を両方指定しても、仕切りは表示したときの高さの 7 割の位置に来ます。
 
 - `setDividerLocation(double)` は、Swing では大きさが決まる前 (表示前) に呼んでも効かないので、表示した後に呼びます。WinUI4K は表示前に呼ぶと割合を覚えておき、
   最初のレイアウトで位置に直します。
@@ -6637,9 +6581,8 @@ split.addChangeListener(
 |---|---|
 | ![Listener (Swing)](images/swing_to_winui4k/JSplitPane/ListenerSwing.png) | ![Listener (WinUI4K)](images/swing_to_winui4k/JSplitPane/ListenerWinUI4K.png) |
 
-サンプルは表示した直後に `split.setDividerLocation(200)` を呼んでいます。Swing は 200 に動きますが、WinUI4K の画面では仕切りが左の
-「Left」の幅 (56) の位置にあります。`setVisible(true)` の直後、最初のレイアウトの前に設定した位置が、最初のレイアウトで希望の大きさからの位置に
-上書きされる、今の版の WinUI4K の不具合です (表示前に設定した位置は効きます。[17.2](#split-basic))。
+サンプルは表示した直後に `split.setDividerLocation(200)` を呼んでいます。Swing と同じく、仕切りは 200 の位置に来ます。
+ラベルの前の位置は、Swing は「(was 0)」、WinUI4K は「(was -1)」と出ます (ここは Swing と違います)。
 
 - WinUI4K は `java.beans` を使わないので、`PropertyChangeListener` の代わりに `ChangeListener` で受けます。イベントにはプロパティ名も
   古い値・新しい値も無いので、`getDividerLocation()` / `getLastDividerLocation()` で読みます。
@@ -6761,10 +6704,8 @@ fun main() {
   プロパティ名の定数はありません。
 - **`setOneTouchExpandable` が無い。** 仕切りの上の畳む矢印は出せません。キーボード (F8) で仕切りを動かす操作もありません。
 - **割合での位置は表示前でも効く。** Swing のように「表示した後に `setDividerLocation(0.7)`」と書く必要はありません (書いても効きます)。
-- **表示した直後に位置を設定しない。** 今の版では、`setVisible(true)` の直後 (最初のレイアウトの前) に `setDividerLocation(int)` を呼ぶと、
-  最初のレイアウトで希望の大きさからの位置に戻ります ([17.4](#split-listener))。表示前に設定します。
-- **割合と配分を両方指定したとき。** 表示前に `setDividerLocation(0.7)` と `setResizeWeight(0.7)` を両方指定すると、今の版では割合どおりの位置になりません
-  ([17.3](#split-vertical))。
+- **表示した直後の位置。** `setVisible(true)` の直後 (最初のレイアウトの前) に `setDividerLocation(int)` を呼んでも、Swing と同じく効きます ([17.4](#split-listener))。
+  最初の `getLastDividerLocation()` は、Swing の 0 ではなく -1 です。
 - **`new WSplitPane()` は空。** Swing の `new JSplitPane()` は仮のボタンを 2 つ入れますが、WinUI4K は何も入れません。
 - **`WSplitView` は別物。** 仕切りで分けるのは `WSplitPane`、ペインを開け閉めするのは `WSplitView` です。
 - 自分でスクロールする部品 (`WList`・`WTextPane` など) は `WScrollPane` に包まずに入れます。
@@ -7058,7 +6999,6 @@ Kotlin では `isAddTabButtonVisible`・`selectedIndex`・`tabCount` をプロ�
 - **タブの見出しに部品を置けない。** `setTabComponentAt` はありません。閉じるボタンは WinUI のタブが持っています。
 - **タブの幅。** 既定ではすべてのタブが同じ幅で、ウィンドウの幅に合わせて伸び縮みします (Swing は文字の幅)。
 - **`remove(int)` が無い。** `tabs.remove(1)` は `tabs.removeTabAt(1)` に書き換えます。
-- **中身の寄せ方。** タブの中身に置いたラベルの文字は、Swing のように縦の中央ではなく上に寄ります。
 
 <a id="table"></a>
 ## 19. JTable → WTable
@@ -7078,9 +7018,9 @@ Kotlin では `isAddTabButtonVisible`・`selectedIndex`・`tabCount` をプロ�
 | モデルから作る | `new JTable(model)` | `new WTable(model)` | 同じ |
 | スクロール | `new JScrollPane(table)` に入れる | 入れなくてよい | 表が自分でスクロールし、列ヘッダーも表の中に出る |
 | 動的なデータ | `DefaultTableModel` | `DefaultTableModel` (`table` パッケージ) | 同じメソッド (`addRow`・`insertRow`・`removeRow`・`setValueAt` など)。`Vector` の代わりに `List` |
-| 列の型 | `getColumnClass` をオーバーライド | 同じ | `Boolean` はチェックボックスになる。**数値は右寄せにならない** ([19.4](#table-columns)) |
-| 列の幅 | `getColumn(0).setPreferredWidth(140)` | 同じ | 型は `double`。列は表の幅いっぱいに広がらない |
-| 列の幅の自動調整 | `setAutoResizeMode(...)` | (なし) | 幅を決めない列は中身に合わせた幅になる |
+| 列の型 | `getColumnClass` をオーバーライド | 同じ | `Boolean` はチェックボックスになり、`Number` の列は右に寄る (Swing と同じ) |
+| 列の幅 | `getColumn(0).setPreferredWidth(140)` | 同じ | 型は `double`。幅を決めない列が残りの幅を分け合う |
+| 列の幅の自動調整 | `setAutoResizeMode(...)` | (なし) | 幅を決めない列が表の幅を等分して広がる (Swing の既定の `AUTO_RESIZE_SUBSEQUENT_COLUMNS` に近い) |
 | セルの表示 | `setCellRenderer(renderer)` | `setCellRenderer(renderer)` | 毎回新しいコンポーネントを返す。`DefaultTableCellRenderer` は `setValue` ではなく `getText` をオーバーライド |
 | 選んだ行 | `getSelectedRow()` | `getSelectedRow()` | 同じ |
 | 選択の通知 | `getSelectionModel().addListSelectionListener(...)` | 同じ | `addRowSelectionListener(() -> ...)` も使える |
@@ -7204,9 +7144,8 @@ remove.addActionListener(e -> {
 |---|---|
 | ![Model (Swing)](images/swing_to_winui4k/JTable/ModelSwing.png) | ![Model (WinUI4K)](images/swing_to_winui4k/JTable/ModelWinUI4K.png) |
 
-サンプルは起動時に「Bread」を足し、`setRowSelectionInterval(1, 1)` で 2 行目 (Eggs) を選んでいます。WinUI4K の画面で Eggs が選ばれて見えないのは、
-ウィンドウを表示する前に選んだ行が表に描かれない、今の版の WinUI4K の不具合です (選択のモデルには入っていて、`getSelectedRow()` は 1 を返します)。
-表示した後に選ぶと、選んだ行は薄い灰色の背景と左端のアクセントの色の印で描かれます。
+サンプルは起動時に「Bread」を足し、`setRowSelectionInterval(1, 1)` で 2 行目 (Eggs) を選んでいます。ウィンドウを表示する前に選んだ行も、
+Swing と同じく表示したときに選ばれた見た目になります (最初のレイアウトの後で表に写します)。選んだ行は薄い灰色の背景と左端のアクセントの色の印で描かれます。
 
 - `DefaultTableModel` は `com.appkitbox.winui4k.table.DefaultTableModel` で、`DefaultTableModel(Object[], int)`・`(Object[][], Object[])`・`(List, List)` の
   コンストラクターと、`addRow`・`insertRow`・`removeRow`・`moveRow`・`setRowCount`・`addColumn`・`setValueAt` などを持ちます。モデルを変えると、その場で表に写ります。
@@ -7288,9 +7227,10 @@ table.getColumnModel().getColumn(2).setCellRenderer(priceRenderer);
 | ![Columns (Swing)](images/swing_to_winui4k/JTable/ColumnsSwing.png) | ![Columns (WinUI4K)](images/swing_to_winui4k/JTable/ColumnsWinUI4K.png) |
 
 - `getColumnClass` が `Boolean` の列は、Swing と同じくチェックボックスで表示し、チェックボックスで編集します。
-- Swing は `Number` の列を右に寄せますが、WinUI4K は寄せません (画面の Stock の列)。右に寄せるときは、価格の列のように
+- `getColumnClass` が `Number` (とそのサブクラス) の列は、Swing と同じく右に寄せます (画面の Stock の列)。ほかの型の列を右に寄せるときは、価格の列のように
   `DefaultTableCellRenderer` の `setHorizontalAlignment(HorizontalAlignment.RIGHT)` を使います。
-- 列の幅は `setPreferredWidth` のとおりになり、Swing のように表の幅に合わせて広がりません。幅を決めない列は中身に合わせた幅になります。
+- 列の幅は `setPreferredWidth` のとおりになり、幅を決めない列が残りの幅を分け合うので、表の右に空きは残りません。
+  横にスクロールする `WScrollPane` の中のように幅の決まらない入れ物では、幅を決めない列は 120 になります。
   `setMinWidth`・`setMaxWidth`・`setResizable` も同じ名前であります (値は `double`)。
 - `DefaultTableCellRenderer` で文字を変えるときは、Swing の `setValue(Object)` の代わりに `getText(Object)` をオーバーライドして文字列を返します。
   文字色などの装飾は `configure(label, value, isSelected, row, column)` をオーバーライドします。
@@ -7369,8 +7309,8 @@ table.addRowInvokedListener(row -> detail.setText("Opening " + table.getValueAt(
 |---|---|
 | ![Selection (Swing)](images/swing_to_winui4k/JTable/SelectionSwing.png) | ![Selection (WinUI4K)](images/swing_to_winui4k/JTable/SelectionWinUI4K.png) |
 
-サンプルは起動時に `setRowSelectionInterval(1, 1)` で Bob の行を選んでいます。リスナーは呼ばれて下の文字は変わっていますが、
-[19.3](#table-model) と同じ不具合で、表示する前に選んだ行は表に描かれません。
+サンプルは起動時に `setRowSelectionInterval(1, 1)` で Bob の行を選んでいます。リスナーが呼ばれて下の文字が変わり、
+[19.3](#table-model) と同じく、表示したときに表でも Bob の行が選ばれています。
 
 - `WTable` は **1 行だけを選べます**。`setSelectionMode` にどの値を渡しても 1 行の選択になり、`getSelectedRows()` の要素は 0 個か 1 個です。
   複数の行を選んだり、列やセルを選んだりする機能はありません (`getSelectedColumn()` はいつも -1)。選べない表にするときは
@@ -7439,15 +7379,14 @@ filter.addTextChangedListener(text ->
 | ![SortFilter (Swing)](images/swing_to_winui4k/JTable/SortFilterSwing.png) | ![SortFilter (WinUI4K)](images/swing_to_winui4k/JTable/SortFilterWinUI4K.png) |
 
 モデルは「Name」「Department」「Age」の 3 列で、`getColumnClass` で Age の列を `Integer` にしています (数値の順に並べるため)。
-WinUI4K の画面では、並べ替えの向きの印が列名「Age」の右端に重なっています。列の幅が中身に合わせて決まるとき、印の場所が空けられないためです。
-`setPreferredWidth` で幅を広げると重なりません。
+並べ替えできる列の見出しは、並べ替えの向きの印の場所を右に空けるので、印は列名に重なりません (列が狭いときは、列名を印の手前で省略します)。
 
 - `TableRowSorter`・`RowSorter.SortKey`・`SortOrder`・`RowFilter` は、どれも `com.appkitbox.winui4k.table` パッケージのクラスです。
   Swing では `RowFilter`・`RowSorter`・`SortOrder` が `javax.swing` にあるので、import を直すときに注意します。
 - 並べ替えるだけなら、Swing と同じく `table.setAutoCreateRowSorter(true)` だけで列ヘッダーのクリックが効きます。
 - `RowFilter` には Swing と同じ `regexFilter`・`numberFilter`・`dateFilter`・`andFilter`・`orFilter`・`notFilter` があります。
 - 入力のたびの処理は、`DocumentListener` の代わりに `addTextChangedListener(text -> ...)` で書けます ([2.4](#textfield-change))。
-  ただし今の版では、ウィンドウを表示する前に `setText` した文字ではこのリスナーが呼ばれません。サンプルは表示した後に文字を入れています。
+  Swing と同じく、サンプルは表示する前に `filter.setText("eng")` で絞り込んでいます (表示する前の `setText` でもリスナーが呼ばれます)。
 - 列ごとの比べ方は `sorter.setComparator(column, comparator)`、並べ替えさせない列は `sorter.setSortable(column, false)` で、Swing と同じです。
   キーを 2 つ以上渡したときは、コンパレーターは使われず値の標準の比べ方になります。
 
@@ -7624,8 +7563,7 @@ Kotlin では `columnModel`・`selectionModel`・`selectedRow`・`rowSorter`・`
   `SortOrder` など) は `com.appkitbox.winui4k.table` パッケージにあり、`W` が付きません。`com.appkitbox.winui4k.*` の import だけでは見つからないので、
   `com.appkitbox.winui4k.table.*` も import します。
 - `WTable` は 1 行だけを選べます。Swing の既定 (複数の区間) に頼って `getSelectedRows()` で複数の行を処理していたコードは、1 行ずつの操作に直します ([19.5](#table-selection))。
-- 数値の列は右に寄りません。右に寄せるには `DefaultTableCellRenderer` に `HorizontalAlignment.RIGHT` を指定します ([19.4](#table-columns))。
-- 列は表の幅いっぱいに広がらず、`setAutoResizeMode` もありません。表の幅に合わせるときは、各列の `setPreferredWidth` を足して表の幅になるように決めます。
+- `setAutoResizeMode` はありません。幅を決めない列が表の幅を等分して広がり、`setPreferredWidth` で決めた列はその幅のままです ([19.4](#table-columns))。
 - 行の高さは `setRowHeight` で決められません。`setDensity(TableDensity.COMPACT / STANDARD / COMFORTABLE)` の 3 段階です。
 - レンダラーは毎回新しいコンポーネントを返します。エディターは XAML で表されるので、Swing のように任意のコンポーネントをエディターにはできません ([19.7](#table-edit))。
 - `getTableHeader()` (`JTableHeader`) はありません。列ヘッダーを隠すのは `setHeaderVisible(false)`、ツールチップは `TableColumn` の `setHeaderToolTip("...")` です。
@@ -7723,7 +7661,7 @@ frame.add(tree);
 - WinUI の木は自分でスクロールするので、`JScrollPane` に入れる必要はありません。枠や背景は描かれません。
 - Swing と違い、既定ではフォルダーやファイルのアイコンが出ず、開閉の印 (シェブロン) だけが出ます。アイコンは [20.6](#tree-renderer) のレンダラーで付けます。
 - 1 行の高さは 32 DIP ほどで、Swing (約 18 ピクセル) より高くなります。
-- 起動した直後は、最初の節にキーボードのフォーカスの枠が出ます。
+- 起動した直後は、最初の節にフォーカスが置かれます (キーボードのフォーカスの枠は出ません)。
 
 <a id="tree-selection"></a>
 ### 20.3 選択の変化に反応する
@@ -7778,7 +7716,7 @@ tree.setSelectionPath(new TreePath(spec.getPath()));   // also expands "Work"
   Swing の既定に頼っていたコードは、`setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION)` を足します。
   複数を選べる木は、WinUI の形で各節にチェックボックスが付き、親にチェックを入れると子孫もまとめて選ばれます。
 - `setSelectionPath` で選ぶと、Swing と同じく親が展開されます (`setExpandsSelectedPaths(false)` で止められる)。
-- 選んだ節は、薄い灰色の背景と左端のアクセントの色の印で描かれます。WinUI4K の画面では、キーボードのフォーカスの枠は最初の節 (Documents) に残っています。
+- 選んだ節は、薄い灰色の背景と左端のアクセントの色の印で描かれます。起動した直後のフォーカスは、最初の節ではなく選んだ節 (Spec.docx) に置かれます。
 - 選んでいる経路は `getSelectionPath()` / `getSelectionPaths()`、行は `getSelectionRows()` / `getLeadSelectionRow()` で読めます (Swing と同じ)。
 
 <a id="tree-expand"></a>
@@ -8220,7 +8158,7 @@ Kotlin では `WTree` の `lastSelectedPathComponent`・`cellRenderer`・`rowCou
 | 有効・無効 | `item.setEnabled(false)` | `item.setEnabled(false)` | 同じ |
 | Action から作る | `menu.add(action)` | `menu.add(action)` | [1.8](#button-action) と同じ `WAction` |
 | 開閉の通知 | `menu.addMenuListener(...)` | `menu.addMenuListener(...)` | `MenuListener` → `WMenuListener` (`WMenuAdapter` もある) |
-| プログラムから開く | `menu.doClick()` / `menu.setPopupMenuVisible(true)` | `menu.doClick()` / `menu.setPopupMenuVisible(true)` | ウィンドウに載った直後はまだ開けない ([注意点](#menu-notes)) |
+| プログラムから開く | `menu.doClick()` / `menu.setPopupMenuVisible(true)` | `menu.doClick()` / `menu.setPopupMenuVisible(true)` | 同じ (表示した直後なら並べた後で開く) |
 | 項目の数・取り出し | `getItemCount()` / `getItem(i)` | `getItemCount()` / `getItem(i)` | 同じ |
 | メニューを右端に寄せる | `menuBar.add(Box.createHorizontalGlue())` | (なし) | メニュー バーには `WMenuBarItem` しか入らない |
 | 項目に任意の部品を入れる | `menu.add(component)` | (なし) | メニューには項目のクラスしか入らない |
@@ -8291,10 +8229,9 @@ frame.add(status);
 |---|---|
 | ![Basic (Swing)](images/swing_to_winui4k/JMenuBar/BasicSwing.png) | ![Basic (WinUI4K)](images/swing_to_winui4k/JMenuBar/BasicWinUI4K.png) |
 
-この章の画面は、サンプルが起動時に 1 回だけメニューを開いた状態を撮っています (Swing は `fileMenu.doClick()`、
-WinUI4K は少し待ってから `fileMenu.setPopupMenuVisible(true)`)。WinUI4K のメニューは別のウィンドウに出るので、
-本体のウィンドウとメニューのウィンドウを撮って重ねています。プログラムから開いたので、WinUI4K では先頭の項目にキーボードのフォーカスの枠が出ています
-(マウスで開いたときは出ません)。
+この章の画面は、サンプルが起動時に 1 回だけ `fileMenu.doClick()` でメニューを開いた状態を撮っています (Swing と同じく `setVisible(true)` の直後に呼んでいます)。
+WinUI4K のメニューは別のウィンドウに出るので、
+本体のウィンドウとメニューのウィンドウを撮って重ねています。
 
 - `JMenuBar` と同じく、メニュー バーはウィンドウの上端 (タイトル バーの下) に付き、中身はその下に並びます。
 - `JMenu` に当たるのは `WMenuBarItem` です。名前に「Item」が付いていますが、項目ではなくバーに並ぶメニューです。
@@ -8344,7 +8281,6 @@ fileMenu.add(saveAs);
 
 - ショートカット キーの表示は WinUI が「Ctrl+S」の形で作ります (Swing は「Ctrl-S」)。表示だけを変えるときは `setKeyboardAcceleratorText("...")` を使います。
 - ニーモニックは [1.6](#button-mnemonic) と同じく WinUI のアクセス キーで、文字に下線は引かれません。Alt を押すとキーのヒントが出ます。
-- WinUI4K の画面の上にある「Ctrl+S」の小さな枠は、フォーカスのある「Save」の項目に WinUI が出したショートカット キーのツールチップです。
 - `KeyStroke.getKeyStroke("ctrl S")` のような文字列の形も、`WKeyStroke.getKeyStroke("ctrl S")` で同じように書けます。
 
 <a id="menu-submenu"></a>
@@ -8586,9 +8522,9 @@ fun main() {
 
 - クラスの名前が Swing と違います。`JMenu` → `WMenuBarItem` (サブメニューは `WMenuFlyoutSubItem`)、`JMenuItem` → `WMenuFlyoutItem`、
   `JCheckBoxMenuItem` → `WToggleMenuFlyoutItem`、`JRadioButtonMenuItem` → `WRadioMenuFlyoutItem` と置き換えます。
-- `menu.setPopupMenuVisible(true)` や `menu.doClick()` でメニューを開けるのは、メニュー バーがウィンドウに載って表示が済んだ後です。
-  `frame.setVisible(true)` のすぐ後に呼んでも開きません (Swing は開きます)。起動時に開くときは
-  `WinUiUtilities.schedule(500, () -> menu.setPopupMenuVisible(true))` のように少し待ちます。
+- `frame.setVisible(true)` のすぐ後 (最初のレイアウトの前) に `menu.setPopupMenuVisible(true)` や `menu.doClick()` を呼ぶと、頼みを覚えておき、
+  並べた後で開きます (Swing と同じく開けます)。開くまでの間も `isPopupMenuVisible()` は `true` を返し、`setPopupMenuVisible(false)` で取りやめられます。
+  ウィンドウに載せていないメニュー バーのメニューは開きません。
 - メニュー バーには `WMenuBarItem` しか入りません。`Box.createHorizontalGlue()` で「Help」を右端に寄せる書き方や、メニューに任意の部品を入れる書き方はできません。
 - WinUI のメニューは Swing より項目の高さと余白が大きく、角の丸い別のウィンドウに出ます。同じ項目でも Swing よりメニューが大きくなります。
 
@@ -8609,7 +8545,7 @@ fun main() {
 | 区切り線 | `popup.addSeparator()` | `popup.addSeparator()` | 同じ |
 | 位置を指定して入れる | `popup.insert(item, 0)` | `popup.insert(item, 0)` | 同じ |
 | 部品の右クリックで開く | `c.setComponentPopupMenu(popup)` | `c.setComponentPopupMenu(popup)` | Shift+F10・アプリケーション キー・タッチの長押しでも開く |
-| 座標を指定して開く | `popup.show(c, x, y)` | `popup.show(c, x, y)` | 座標は `double` (Java からは `int` も渡せる)。ウィンドウに載った直後はまだ開けない |
+| 座標を指定して開く | `popup.show(c, x, y)` | `popup.show(c, x, y)` | 座標は `double` (Java からは `int` も渡せる)。表示した直後なら並べた後で開く |
 | 閉じる | `popup.setVisible(false)` | `popup.setVisible(false)` / `popup.hide()` | 同じ |
 | 開いているか | `popup.isVisible()` | `popup.isVisible()` / `popup.isOpen()` | 同じ |
 | 開いた部品 | `popup.getInvoker()` | `popup.getInvoker()` | 同じ |
@@ -8665,8 +8601,7 @@ target.setComponentPopupMenu(popup);
 | ![Component (Swing)](images/swing_to_winui4k/JPopupMenu/ComponentSwing.png) | ![Component (WinUI4K)](images/swing_to_winui4k/JPopupMenu/ComponentWinUI4K.png) |
 
 この章の画面は、サンプルが起動時に 1 回だけ `popup.show(target, 20, 20)` でメニューを開いた状態を撮っています
-(WinUI4K は少し待ってから開きます)。WinUI4K のメニューは別のウィンドウに出るので、本体のウィンドウとメニューのウィンドウを撮って重ねています。
-プログラムから開いたので、WinUI4K では先頭の項目にキーボードのフォーカスの枠が出ています (右クリックで開いたときは出ません)。
+(Swing と同じく `setVisible(true)` の直後に呼んでいます)。WinUI4K のメニューは別のウィンドウに出るので、本体のウィンドウとメニューのウィンドウを撮って重ねています。
 
 - `setComponentPopupMenu` は WinUI の `ContextFlyout` に設定します。右クリックのほか、Shift+F10、アプリケーション キー、タッチの長押しでも開きます。
 - `WMenuFlyout` 以外のフライアウト (部品を自由に置ける `WFlyout` や [22.6](#popup-winui) の `WCommandBarFlyout`) は `setContextFlyout` で付けます。
@@ -8835,7 +8770,9 @@ export.setFlyout(popup);                     // the button opens the menu by its
 | ![Button (Swing)](images/swing_to_winui4k/JPopupMenu/ButtonSwing.png) | ![Button (WinUI4K)](images/swing_to_winui4k/JPopupMenu/ButtonWinUI4K.png) |
 
 - WinUI のボタンはフライアウトを持てるので、`ActionListener` を書かずに `setFlyout` だけで済みます ([1.14](#button-winui))。
-  画面はサンプルが起動時に `export.doClick()` でボタンを押した状態です。
+  画面はサンプルが起動時に `export.doClick()` でボタンを押した状態です。`setFlyout` で付けたフライアウトは、表示した直後 (最初のレイアウトの前) の
+  `doClick()` では開かないので、サンプルは `WinUiUtilities.schedule(500, ...)` で待ってから押しています。プログラムから押して開いたので、
+  先頭の項目にキーボードのフォーカスの枠が出ています。
 - `setPlacement` で開く向きを決めます。`BOTTOM_EDGE_ALIGNED_LEFT` は、ボタンの下に左端をそろえて開きます (Swing の `show(export, 0, export.getHeight())` に当たります)。
 - 右に下向きの矢印が付いたボタンにするときは `WDropDownButton` を使います。
 
@@ -8932,8 +8869,7 @@ fun main() {
 
 - `JPopupMenu` → `WMenuFlyout`、`JMenuItem` → `WMenuFlyoutItem` です。メニューには項目のクラス (`WMenuFlyoutItem`・`WToggleMenuFlyoutItem`・
   `WRadioMenuFlyoutItem`・`WMenuFlyoutSubItem`・区切り線) しか入りません。スライダーなどの部品を出すときは `WFlyout` を使います。
-- `show(...)` で開けるのは、部品がウィンドウに載って表示が済んだ後です。`frame.setVisible(true)` のすぐ後に呼んでも開きません (Swing は開きます)。
-  起動時に開くときは `WinUiUtilities.schedule(500, () -> popup.show(target, 20, 20))` のように少し待ちます。
+- `frame.setVisible(true)` のすぐ後 (最初のレイアウトの前) に `show(...)` を呼ぶと、並べた後で開きます (Swing と同じく開けます)。
 - 項目を選んだときの `ActionListener` と `popupMenuWillBecomeInvisible` の順番が Swing と逆です ([22.4](#popup-listener))。
 - `show(c, x, y)` で開くメニューはウィンドウの外へはみ出さず、WinUI が収まる位置へずらします。Swing のように座標どおりの位置に出るとは限りません。
 
@@ -9038,8 +8974,8 @@ WinUI4K の画面は Swing とかなり違います。
 - ボタンはバーの**右**に寄って並びます (WinUI の `CommandBar` の決まり)。
 - ラベル (「New」など) は、閉じているバーには出ません。右端の「…」ボタンでバーを開くと、アイコンの下に出ます。
   いつもラベルを出すときは [23.6](#toolbar-winui) の `setDefaultLabelPosition(CommandBarDefaultLabelPosition.RIGHT)` を使います。
-- 起動した直後は「…」ボタンにキーボードのフォーカスの枠が出ています。
-- 中央のラベルは、Swing では上下の中央に出ますが、WinUI4K では上に寄っています。
+- 起動した直後のフォーカスは、右端の「…」ボタンではなく最初のボタンに置かれます (キーボードのフォーカスの枠は出ません)。
+- 中央のラベルは、Swing と同じく上下の中央に出ます。
 
 **`WFrame` の中身は、初めは `WBorderLayout` ではありません。** `frame.add(toolBar, WBorderLayout.NORTH)` の前に
 `frame.setLayout(new WBorderLayout())` を呼ばないと、`IllegalArgumentException` になります。
@@ -9168,8 +9104,7 @@ toolBar.add(underline);
 |---|---|
 | ![Toggle (Swing)](images/swing_to_winui4k/JToolBar/ToggleSwing.png) | ![Toggle (WinUI4K)](images/swing_to_winui4k/JToolBar/ToggleWinUI4K.png) |
 
-WinUI4K の画面では、選んだ「Bold」のボタンが、上の方だけの細いアクセント色の帯と、その下にはみ出した「B」になっています。
-ツールバーで選んだ状態の `WAppBarToggleButton` の表示の、今の版の WinUI4K の不具合と見られます。
+選んだ「Bold」のボタンは、ボタン全体がアクセントの色で塗られます (WinUI の `CommandBar` の選んだ `AppBarToggleButton` の見た目)。
 
 - `WAppBarToggleButton` には `JToggleButton(icon, true)` のように選んだ状態を渡すコンストラクターが無いので、`setSelected(true)` を呼びます。
 - `isSelected()` と `addItemListener` は `JToggleButton` と同じです。
@@ -9221,7 +9156,7 @@ toolBar.add(search);
 
 - `WAppBarButton` などのツールバー用の部品でないものは、WinUI の `AppBarElementContainer` に包んで載せます。`getComponentAtIndex` は包む前の部品を返します。
 - Swing のように `setMaximumSize` で横に伸びるのを止める必要はありません。
-- WinUI4K の画面では「Font:」のラベルがコンボボックスより上に寄っています。ラベルは上下の中央にそろいません。
+- ツールバーに載せた部品は上下の中央にそろうので、「Font:」のラベルとコンボボックスの文字の高さがそろいます。
 
 <a id="toolbar-winui"></a>
 ### 23.6 ラベルの位置と「…」のメニュー
@@ -9593,7 +9528,7 @@ Swing には無いが、WinUI のアプリでよく使う機能です。タイ�
 ```java
 // a title bar with a search box, drawn by the app
 WTitleBar titleBar = new WTitleBar();
-titleBar.setTitle("26.7 Title Bar (WinUI4K)");
+titleBar.setTitle("24.7 Title Bar (WinUI4K)");
 titleBar.setSubtitle("Preview");
 WTextField search = new WTextField();
 search.setPlaceholderText("Search");
@@ -9604,7 +9539,9 @@ WGrid root = new WGrid();
 root.addRow(GridLength.AUTO);
 root.addRow(GridLength.star());
 root.add(titleBar, 0, 0);
-root.add(new WLabel("The content starts right below the title bar"), 1, 0);
+WLabel content = new WLabel("The content starts right below the title bar");
+content.setVerticalAlignment(VerticalAlignment.TOP);   // a stretched label is centered vertically
+root.add(content, 1, 0);
 
 frame.setContentPane(root);
 frame.setExtendsContentIntoTitleBar(true);
@@ -9677,9 +9614,8 @@ Kotlin では `minimumSize`・`jMenuBar`・`layout`・`defaultCloseOperation`・
 ### 24.9 注意点
 
 - **既定の中身は `BorderLayout` ではありません**。`WBorderLayout.NORTH` などの制約を付けて `add` するときは、先に `frame.setLayout(new WBorderLayout())` を呼びます ([24.5](#frame-menubar))。
-- **表示した直後のウィンドウには、まだダイアログを開けません**。`frame.setVisible(true)` の直後や `windowOpened` の中で `WOptionPane` や `WContentDialog` を開くと、
-  ウィンドウの中身がまだ並べ終わっていないため `IllegalArgumentException` になります。起動してすぐ開くときは、
-  `WinUiUtilities.schedule(500, () -> ...)` のように少し後で開きます ([25 章](#dialog) と [26 章](#optionpane) のサンプルもそうしています)。
+- `frame.setVisible(true)` の直後や `windowOpened` の中でも、Swing と同じく `WOptionPane` や `WContentDialog` を開けます。ウィンドウの中身を読み込むまで待ってから
+  開きます ([25 章](#dialog) と [26 章](#optionpane) のサンプルは、`setVisible(true)` の直後に開いています)。
 - `dispose()` したウィンドウは、Swing と違い `setVisible(true)` で再表示できません (`IllegalStateException`)。また表示するときは、隠すだけの `setVisible(false)` を使います。
 - `WFrame` は `WComponent` ではないので、`frame` を部品として扱うコード (`SwingUtilities.getWindowAncestor` や、`Component` を受けるメソッドに渡すなど) はそのままでは書けません。
   ダイアログの親には、`WFrame` もそのまま渡せます (`WDialogParent`)。
@@ -9782,9 +9718,10 @@ if (result == ContentDialogResult.PRIMARY) {
 - `showAndWait()` は Swing のモーダルの `setVisible(true)` と同じく、閉じるまで戻りません。その間も画面の描画・入力・`invokeLater` は動きます。
   戻り値は `PRIMARY` (プライマリ)・`SECONDARY` (セカンダリ)・`NONE` (閉じるボタン・Esc キー・`hide()`) です。`setVisible(true)` でも開けますが、戻り値はありません。
 - 閉じるボタン (`setCloseButtonText`) と Esc キーは、どちらも `NONE` で閉じます。閉じるボタンを押したかどうかを分けたいときは `addButtonClickListener` で受けます。
-- `WContentDialog` の既定の中身は縦に並べるパネルで、幅を指定した部品は**中央寄せ**になります (画面の入力欄)。左に寄せるときは
-  `name.setHorizontalAlignment(HorizontalAlignment.LEFT)` を指定します。
-- サンプルは、ウィンドウを表示してから 500 ミリ秒後にダイアログを開いています。表示した直後はまだダイアログを開けないためです ([25.7](#dialog-notes))。
+- `WContentDialog` の既定の中身は縦に並べるパネルです。列数で幅を決めた入力欄 (`new WTextField(16)` など) は、`JDialog` の `BorderLayout` の中央と同じく
+  ダイアログの幅いっぱいに広がります (画面の入力欄)。`setWidth` で幅を指定した部品は、その幅のまま**中央寄せ**になります。左に寄せるときは
+  `setHorizontalAlignment(HorizontalAlignment.LEFT)` を指定します。
+- サンプルは、Swing と同じく `setVisible(true)` の直後にダイアログを開いています。`showAndWait()` は、ウィンドウの中身を読み込むまで待ってから開きます ([25.7](#dialog-notes))。
 
 <a id="dialog-validate"></a>
 ### 25.3 入力が正しいときだけ閉じる
@@ -9982,27 +9919,24 @@ fun main() {
         frame.setSize(480, 320)
         frame.isVisible = true
 
-        // a dialog opens only after the window has been laid out once
-        WinUiUtilities.schedule(500) {
-            // OK / Cancel and validation (25.2, 25.3)
-            val age = WTextField(8)
-            val error = WLabel(" ")
-            val dialog = WContentDialog(frame, "Age", true)
-            dialog.add(WLabel("Your age:"))
-            dialog.add(age)
-            dialog.add(error)
-            dialog.primaryButtonText = "OK"
-            dialog.closeButtonText = "Cancel"
-            dialog.defaultButton = ContentDialogButton.PRIMARY
-            dialog.addButtonClickListener { e ->
-                if (e.button == ContentDialogButton.PRIMARY && !age.text.matches(Regex("\\d+"))) {
-                    error.text = "Enter a number"
-                    e.isCancel = true
-                }
+        // OK / Cancel and validation (25.2, 25.3)
+        val age = WTextField(8)
+        val error = WLabel(" ")
+        val dialog = WContentDialog(frame, "Age", true)
+        dialog.add(WLabel("Your age:"))
+        dialog.add(age)
+        dialog.add(error)
+        dialog.primaryButtonText = "OK"
+        dialog.closeButtonText = "Cancel"
+        dialog.defaultButton = ContentDialogButton.PRIMARY
+        dialog.addButtonClickListener { e ->
+            if (e.button == ContentDialogButton.PRIMARY && !age.text.matches(Regex("\\d+"))) {
+                error.text = "Enter a number"
+                e.isCancel = true
             }
-            if (dialog.showAndWait() == ContentDialogResult.PRIMARY) {
-                status.text = "Age: ${age.text}"
-            }
+        }
+        if (dialog.showAndWait() == ContentDialogResult.PRIMARY) {
+            status.text = "Age: ${age.text}"
         }
     }
 }
@@ -10014,8 +9948,8 @@ Kotlin では `primaryButtonText`・`closeButtonText`・`defaultButton`・`defau
 <a id="dialog-notes"></a>
 ### 25.7 注意点
 
-- **表示した直後のウィンドウには、まだダイアログを開けません**。`frame.setVisible(true)` の直後や `windowOpened` の中で `showAndWait` / `show` を呼ぶと、
-  持ち主がまだウィンドウに載っていないとみなされ `IllegalArgumentException` になります。起動してすぐ開くときは、`WinUiUtilities.schedule(500, () -> ...)` のように少し後で開きます。
+- **表示した直後のウィンドウにも開けます**。`frame.setVisible(true)` の直後や `windowOpened` の中で `showAndWait` / `show` を呼ぶと、ウィンドウの中身を読み込むまで
+  待ってから開きます (Swing と同じく、起動してすぐ開けます)。どのウィンドウにも載っていない部品を持ち主にすると `IllegalArgumentException` になります。
 - **1 つのウィンドウに開けるダイアログは同時に 1 つ**です。ダイアログの中から別のダイアログ (`WOptionPane` を含む) を開くと、
   Swing のように重ならず `IllegalStateException` になります。開いているダイアログを閉じてから開きます。
 - `showAndWait()` はレイアウトの通知 (`SizeChanged`・`Loaded` のリスナー) の中からは呼べません (`IllegalStateException`)。
@@ -10081,7 +10015,7 @@ status.setText("The message was closed");
 - Swing と同じく、閉じるまで戻りません (次の行の `status.setText` は閉じた後に動きます)。
 - アイコンは `ERROR_MESSAGE` が丸に ×、`INFORMATION_MESSAGE` が丸に i、`WARNING_MESSAGE` が三角に !、`QUESTION_MESSAGE` が丸に ? で、`PLAIN_MESSAGE` は出しません。
 - 第 1 引数の親には `WFrame` も部品 (`WComponent`) も渡せます。`null` なら、アクティブな (無ければ最後にアクティブになった) `WFrame` に開きます。
-- 各章のサンプルと同じく、ウィンドウを表示してから 500 ミリ秒後に開いています ([26.8](#optionpane-notes))。
+- Swing と同じく、ウィンドウを表示した直後に開いています ([26.8](#optionpane-notes))。
 
 <a id="optionpane-confirm"></a>
 ### 26.3 はい・いいえで確かめる
@@ -10143,7 +10077,7 @@ if (name != null) {                        // null when canceled
 |---|---|
 | ![Input (Swing)](images/swing_to_winui4k/JOptionPane/InputSwing.png) | ![Input (WinUI4K)](images/swing_to_winui4k/JOptionPane/InputWinUI4K.png) |
 
-WinUI4K の画面では、入力欄が初めの文字 (「Alice」) の幅しかありません。Swing のように広い入力欄にならない、今の版の WinUI4K の表示の問題です。
+入力欄は、Swing と同じくダイアログの幅いっぱいに広がります (アイコンがあるときは、アイコンの右から右端まで)。
 
 - 初めの文字は選んだ状態で開くので、そのまま打てば置き換わります (Swing と同じ)。
 - キャンセルと Esc キーでは `null` が返ります (Swing と同じ)。
@@ -10238,15 +10172,12 @@ fun main() {
         frame.setSize(480, 320)
         frame.isVisible = true
 
-        // a dialog opens only after the window has been laid out once
-        WinUiUtilities.schedule(500) {
-            // Ask yes or no and wait for the answer (26.3)
-            val answer = WOptionPane.showConfirmDialog(frame, "Delete the selected file?", "Delete", WOptionPane.YES_NO_OPTION)
-            if (answer == WOptionPane.YES_OPTION) {
-                // Ask for a text without blocking (26.4)
-                WOptionPane.showInputDialog(frame, "Your name:", "Input", WOptionPane.QUESTION_MESSAGE) { name ->
-                    if (name != null) status.text = "Hello, $name"
-                }
+        // Ask yes or no and wait for the answer (26.3)
+        val answer = WOptionPane.showConfirmDialog(frame, "Delete the selected file?", "Delete", WOptionPane.YES_NO_OPTION)
+        if (answer == WOptionPane.YES_OPTION) {
+            // Ask for a text without blocking (26.4)
+            WOptionPane.showInputDialog(frame, "Your name:", "Input", WOptionPane.QUESTION_MESSAGE) { name ->
+                if (name != null) status.text = "Hello, $name"
             }
         }
     }
@@ -10258,8 +10189,7 @@ fun main() {
 <a id="optionpane-notes"></a>
 ### 26.8 注意点
 
-- **表示した直後のウィンドウには、まだ開けません**。`frame.setVisible(true)` の直後や `windowOpened` の中で呼ぶと `IllegalArgumentException` になります。
-  起動してすぐ出すときは、`WinUiUtilities.schedule(500, () -> ...)` のように少し後で開きます。
+- **表示した直後のウィンドウにも開けます**。`frame.setVisible(true)` の直後や `windowOpened` の中で呼ぶと、ウィンドウの中身を読み込むまで待ってから開きます (Swing と同じ)。
 - **ダイアログの中から別のダイアログを開けません**。`WOptionPane` のダイアログを開いている間に、ダイアログのボタンのリスナーなどからもう 1 つ開くと
   `IllegalStateException` になります ([25.7](#dialog-notes))。
 - 親を `null` にしたとき、Swing は見えない共有のフレームに開きますが、WinUI4K はアクティブな `WFrame` に開きます。表示中のウィンドウが無ければ `IllegalStateException` です。
@@ -10673,8 +10603,9 @@ choose.addActionListener(e -> {
 | ![Dialog (Swing)](images/swing_to_winui4k/JColorChooser/DialogSwing.png) | ![Dialog (WinUI4K)](images/swing_to_winui4k/JColorChooser/DialogWinUI4K.png) |
 
 - WinUI4K のダイアログは、別のウィンドウではなく、持ち主のウィンドウの中に重ねて出る `ContentDialog` です。
-  そのため**ウィンドウが小さいとカラーピッカーが切れます** (480×320 では色の面の上の方しか見えず、入力欄も出ませんでした)。
-  色を選ばせるウィンドウは、高さを 700 DIP ほど取っておきます。
+  ウィンドウより大きくならないので、ウィンドウが小さいとき (サンプルは Swing と同じ 480×320) は、ダイアログの中身を縦にスクロールして
+  明るさのスライダーや RGB の入力欄まで出します。
+- ダイアログを開くと色の面にフォーカスが入り、つまみの上に色の名前のツールチップ (画面では「青」) が、マウスを置いていないのに出ます。
 - 1 つ目の引数 (持ち主) は `WComponent` で、`WFrame` は渡せません。`WFileChooser` や `WOptionPane` と違うので注意します。
   ボタンのリスナーの中なら、そのボタンを渡すのが簡単です。
 - Swing の「リセット」ボタンに当たるものはありません。ボタンの文字は `WOptionPane.okButtonText` / `cancelButtonText` で変えられます。
@@ -10722,8 +10653,6 @@ frame.add(preview);
 - WinUI4K では `picker.addChangeListener(color -> ...)` とピッカーに直接付けることもできます。こちらはイベントではなく
   変わった後の `WColor` を受け取ります。
 - `WColor.ORANGE` は `Color.ORANGE` (255, 200, 0) と違う色 (255, 127, 39) です。同じ色にするときは `new WColor(255, 200, 0)` と書きます。
-- 起動した直後、色の面のつまみの上に色の名前のツールチップ (この画像では「青」) が、マウスを置いていないのに出ることがあります
-  (画像はウィンドウだけを撮っているので写っていません)。
 
 <a id="colorchooser-alpha"></a>
 ### 28.4 透明度も選ばせる
@@ -10830,7 +10759,7 @@ fun main() {
 ### 28.7 注意点
 
 - **`showDialog` の 1 つ目の引数に `WFrame` を渡せません**。ウィンドウに載っている部品 (押されたボタンなど) を渡します。
-- **ダイアログはウィンドウの中に出ます**。ウィンドウより大きくならないので、小さいウィンドウではカラーピッカーが切れます。
+- **ダイアログはウィンドウの中に出ます**。ウィンドウより大きくならないので、小さいウィンドウでは中身を縦にスクロールして使います。
 - **透明度は既定で選べません** (Swing は RGB などのタブで既定で選べます)。透明度を選ばせるときは `setAlphaEnabled(true)` にします。
   ダイアログ (`showDialog`) では透明度を選べません。
 - タブ (`setChooserPanels`)・プレビュー (`setPreviewPanel`)・見本の色と最近使った色はありません。見本の色から選ばせたいときは、
@@ -11616,11 +11545,10 @@ Swing のコードを WinUI4K に移すときに、順に確かめる点です�
     ([2.13](#textfield-undo))、HTML の文字はコンポーネントの中身へ ([1.16](#button-notes)) 置き換えます。
 11. WinUI の機能で簡単にできるところを探す: 案内文 (`setPlaceholderText`)・見出し (`setHeader`)・文字数の上限 (`setMaxLength`)・
     アクセントのボタン (`setAccent`)・ボタンのフライアウト (`setFlyout`) は、Swing で自前で書いていたコードを置き換えられます。
-12. 表示した後で文字を変える部品を確かめる: 表示した後で `WLabel` の文字を長くすると切れるので、`setText` の後に `revalidate()` を足します ([4.2](#label-basic))。
-13. 表示した直後の操作を確かめる: `setVisible(true)` の直後に、ダイアログ (`WOptionPane`・`WContentDialog`) やメニューを開く・スクロールの位置を決めるといった操作をしていたなら、
-    `WinUiUtilities.schedule(ミリ秒, 処理)` で少し待ってから行います ([25.7](#dialog-notes)・[15.8](#scroll-notes))。
-14. 大きさを確かめる: `WSlider`・`WProgressBar`・`WSpinner` は幅を決めないと縮んだり見えなくなったりするので、`setWidth` を足します ([10.8](#slider-notes)・[11.9](#progress-notes))。
-15. 値の型を確かめる: `WComboBox.getSelectedItem()` は項目そのものではなく表示の文字列を返します。項目は `getModel().getSelectedItem()` で読みます ([8.1](#combo-table))。
+12. 表示した直後の操作を確かめる: `setVisible(true)` の直後のダイアログ・メニューを開く・スクロールの位置を決める操作は、Swing と同じく効きます。
+    ただし、ツールチップやツール バーの「…」のメニューを開く (`setOpen(true)`)・`TeachingTip` を出す (`show()`)・中身の長さ (`getMaximum()`) を読む操作は、
+    `WinUiUtilities.schedule(ミリ秒, 処理)` で最初のレイアウトを待ってから行います ([29.4](#tooltip-show)・[16.2](#scrollbar-bottom))。
+13. 値の型を確かめる: `WComboBox.getSelectedItem()` は項目そのものではなく表示の文字列を返します。項目は `getModel().getSelectedItem()` で読みます ([8.1](#combo-table))。
     スライダー・スピナー・進捗バーの値は `int` ではなく `double` です。
 
 <a id="none"></a>

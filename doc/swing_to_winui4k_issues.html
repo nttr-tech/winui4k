@@ -100,7 +100,7 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <div class="title">Swing から WinUI4K に移すときに気になるところ</div>
 <a class="other" href="swing_to_winui4k.html">→ Swing から WinUI4K への書き換え例</a>
 <input id="filter" type="search" placeholder="目次を絞り込む (例: JTable、注意点)">
-<ul id="toc"><li><details><summary><a href="#display">1. 画面写真でおかしく見えるところ</a></summary><ul><li><details><summary><a href="#display-bug">1.1 WinUI4K の不具合と見られるもの</a></summary><ul><li class="leaf"><a href="#d1">表示 1. 入れ子にした WLayoutPanel が、子の大きさにならない</a></li><li class="leaf"><a href="#d2">表示 2. 表示する前の setText が、入力のリスナーに届かない</a></li><li class="leaf"><a href="#d3">表示 3. 起動した直後から、最初の部品にフォーカスの太い枠が出る</a></li><li class="leaf"><a href="#d4">表示 4. 表示した後に WLabel の文字を長くすると、切れる・出ない</a></li><li class="leaf"><a href="#d5">表示 5. 幅を指定しないと、部品が縮む・消える</a></li><li class="leaf"><a href="#d6">表示 6. 画像のアイコンを付けたボタン・ラベルが切れる・消える</a></li><li class="leaf"><a href="#d7">表示 7. 表示する前・表示した直後の操作が、画面に写らない</a></li><li class="leaf"><a href="#d8">表示 8. 割合で置いた仕切りの位置がずれる</a></li><li class="leaf"><a href="#d9">表示 9. チェックボックスの文字の、最後の単語が消える</a></li><li class="leaf"><a href="#d10">表示 10. 入力欄の setForeground が文字の色にならない</a></li><li class="leaf"><a href="#d11">表示 11. setWrapStyleWord(true) にすると折り返さない</a></li><li class="leaf"><a href="#d12">表示 12. 表の列が細く、並べ替えの印が列名に重なる</a></li><li class="leaf"><a href="#d13">表示 13. 数値の列が右に寄らない</a></li><li class="leaf"><a href="#d14">表示 14. 引き伸ばしたラベルの文字が、縦の中央ではなく上に寄る</a></li><li class="leaf"><a href="#d15">表示 15. ダイアログの入力欄が狭い・中央に寄る</a></li><li class="leaf"><a href="#d16">表示 16. 選んだトグルボタンが、ツールバーで崩れる</a></li><li class="leaf"><a href="#d17">表示 17. スライダーの目盛りがトラックに重なって見えない</a></li><li class="leaf"><a href="#d18">表示 18. 小数の値「12.0」が「12」と出る</a></li><li class="leaf"><a href="#d19">表示 19. スクロールペインの見出しが、中身の上に重なる</a></li><li class="leaf"><a href="#d20">表示 20. 行の高さに引き伸ばしたチェックボックスの、四角と文字がずれる</a></li><li class="leaf"><a href="#d21">表示 21. 小さなウィンドウでは、色を選ぶダイアログが切れる</a></li></ul></details></li><li><details><summary><a href="#display-winui">1.2 WinUI の仕様や既定のスタイルによる、Swing との違い</a></summary><ul><li class="leaf"><a href="#d22">表示 22. 行が高く、見える項目が少ない</a></li><li class="leaf"><a href="#d23">表示 23. スクロールバーが見えない (ALWAYS でも)</a></li><li class="leaf"><a href="#d24">表示 24. チェックボックス・ラジオボタンの間が広く、不ぞろい</a></li><li class="leaf"><a href="#d25">表示 25. 同じ列数でも、入力欄が Swing よりかなり広い</a></li><li class="leaf"><a href="#d26">表示 26. 選んだ項目の色が薄く、見落としやすい</a></li><li class="leaf"><a href="#d27">表示 27. 入力欄の見た目 (下の線・消去ボタン・読み取り専用・選択の色)</a></li><li class="leaf"><a href="#d28">表示 28. ツールバーのボタンが右に寄り、ラベルが出ず、「…」が出る</a></li><li class="leaf"><a href="#d29">表示 29. プログラムから開いたメニューの先頭に、フォーカスの枠が出る</a></li><li class="leaf"><a href="#d30">表示 30. ツールチップが部品の上に出て、タイトル バーを隠す</a></li><li class="leaf"><a href="#d31">表示 31. 進捗バーに割合の文字が出ない・不定のバーが短い線に見える</a></li><li class="leaf"><a href="#d32">表示 32. 範囲の外の値が勝手に書き換わる</a></li><li class="leaf"><a href="#d33">表示 33. 木にアイコンが無い</a></li><li class="leaf"><a href="#d34">表示 34. 書式のある文の、段落の間が空かない</a></li><li class="leaf"><a href="#d35">表示 35. ニーモニックの下線が出ない</a></li><li class="leaf"><a href="#d36">表示 36. WRelativePanel で互いを参照すると、ウィンドウが真っ黒になる</a></li><li class="leaf"><a href="#d37">表示 37. そのほかの WinUI との違い (小さいもの)</a></li></ul></details></li><li><details><summary><a href="#display-sample">1.3 サンプルや撮り方によるもの</a></summary><ul><li class="leaf"><a href="#d38">表示 38. ファイルのダイアログがとても大きく、左の一覧に撮った人のフォルダーが写る (ぼかした)</a></li><li class="leaf"><a href="#d39">表示 39. 起動した直後に撮るので、ツールチップ・メニュー・ヒントが写らない</a></li><li class="leaf"><a href="#d40">表示 40. ポップアップの角に黒い点・縁が残る</a></li><li class="leaf"><a href="#d41">表示 41. Swing と WinUI4K でサンプルがそろっていない・余白が無い</a></li></ul></details></li><li class="leaf"><a href="#display-swing">1.4 Swing 側の画像で気になるもの</a></li></ul></details></li><li><details><summary><a href="#api">2. Swing から移るときに不自然な API</a></summary><ul><li><details><summary><a href="#api-meaning">2.1 Swing と同じ名前で、意味や振る舞いが違う</a></summary><ul><li class="leaf"><a href="#a-placeholder">API 1. ★ new WTextField(&quot;…&quot;) / new WTextPane(&quot;…&quot;) の文字列が案内文になる</a></li><li class="leaf"><a href="#a-alignment">API 2. ★ setHorizontalAlignment / setVerticalAlignment が文字の揃えではない</a></li><li class="leaf"><a href="#a-contentpane">API 3. ★ setLayout の後の getContentPane().add(...) が画面に出ない</a></li><li class="leaf"><a href="#a-margin">API 4. ★ setMargin が外側の余白</a></li><li class="leaf"><a href="#a-combo-remove">API 5. ★ WComboBox.removeItem(1) が 2 番目の項目を消す</a></li><li class="leaf"><a href="#a-combo-selected">API 6. ★ WComboBox.getSelectedItem() が項目ではなく表示の文字列を返す</a></li><li class="leaf"><a href="#a-selected-text">API 7. ★ WTextField.getSelectedText() が、選んでいないときに空の文字列を返す</a></li><li class="leaf"><a href="#a-color">API 8. ★ WColor.RED などの値が AWT の Color と違う</a></li><li class="leaf"><a href="#a-html">API 9. ★ &lt;html&gt; の文字が、そのまま表示される</a></li><li class="leaf"><a href="#a-wrapstyleword">API 10. ★ setWrapStyleWord(true) で折り返さなくなる</a></li><li class="leaf"><a href="#a-foreground">API 11. ★ setForeground が入力欄の文字の色にならない</a></li><li class="leaf"><a href="#a-table-selection">API 12. ★ WTable.setSelectionMode(MULTIPLE_INTERVAL_SELECTION) が黙って単一の選択になる</a></li><li class="leaf"><a href="#a-exception-settings">API 13. ★ Swing では使える設定が、例外になる</a></li><li class="leaf"><a href="#a-radio">API 14. WButtonGroup に入れないラジオボタンも、1 つしか選べない</a></li><li class="leaf"><a href="#a-painted">API 15. setStringPainted(true) / setPaintTicks(true) が Swing のように描かない</a></li><li class="leaf"><a href="#a-inputmap">API 16. list.getInputMap() (WHEN_FOCUSED) に入れたキーが効かない</a></li><li class="leaf"><a href="#a-revalidate-scroll">API 17. スクロールペインの中身の revalidate() で、スクロールが先頭に戻る</a></li><li class="leaf"><a href="#a-meaning-table">API 18. そのほかの、同じ名前で違う振る舞い</a></li></ul></details></li><li><details><summary><a href="#api-default">2.2 既定値が違う</a></summary><ul><li class="leaf"><a href="#a-frame-layout">API 19. ★ WFrame の中身が BorderLayout ではなく、制約付きの add が例外になる</a></li><li class="leaf"><a href="#a-layoutpanel-null">API 20. ★ new WLayoutPanel() のレイアウトが null</a></li><li class="leaf"><a href="#a-nest">API 21. ★ 入れ子の WLayoutPanel や、スクロールペインの中身の WLayoutPanel が、希望の大きさで並ばない</a></li><li class="leaf"><a href="#a-scroll-horizontal">API 22. ★ WScrollPane の横のスクロールが、既定で無効</a></li><li class="leaf"><a href="#a-preferred-size">API 23. ★ スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い</a></li><li class="leaf"><a href="#a-linewrap">API 24. ★ WTextPane の lineWrap の既定が逆</a></li><li class="leaf"><a href="#a-selection-default">API 25. ★ リストと木の選択の既定が、1 つだけ</a></li><li class="leaf"><a href="#a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う</a></li><li class="leaf"><a href="#a-spinner-buttons">API 27. WSpinner の上下のボタンが、既定で出ない</a></li><li class="leaf"><a href="#a-defaults-table">API 28. そのほかの既定値の違い</a></li></ul></details></li><li><details><summary><a href="#api-name">2.3 名前や型・単位・引数の順が違う</a></summary><ul><li class="leaf"><a href="#a-order">API 29. ★ 余白の 4 つの数の順が、API ごとに違う</a></li><li class="leaf"><a href="#a-double">API 30. ★ 値や大きさが double</a></li><li class="leaf"><a href="#a-generic">API 31. ★ WList と WComboBox に型引数が無い</a></li><li class="leaf"><a href="#a-owner">API 32. ★ ダイアログの持ち主に WFrame を渡せない API がある</a></li><li class="leaf"><a href="#a-class-names">API 33. クラスの名前から、Swing の部品が引けない</a></li><li class="leaf"><a href="#a-submenu">API 34. サブメニューが別のクラスで、JMenu を入れ子にする書き方ができない</a></li><li class="leaf"><a href="#a-renderer">API 35. レンダラーの書き方が Swing と違い、部品ごとにもそろっていない</a></li><li class="leaf"><a href="#a-gridbag">API 36. GridBagLayout に当たる WGrid で、行と列の順が逆</a></li><li class="leaf"><a href="#a-names-table">API 37. そのほかの名前・型の違い</a></li></ul></details></li><li><details><summary><a href="#api-timing">2.4 表示した直後に使えないなど、使う時機の制約</a></summary><ul><li class="leaf"><a href="#a-settext-before">API 38. ★ 表示する前の setText が、addTextChangedListener に届かない</a></li><li class="leaf"><a href="#a-label-settext">API 39. ★ 表示した後の WLabel.setText で、並べ直されない</a></li><li class="leaf"><a href="#a-after-show-dialog">API 40. ★ 表示した直後のウィンドウに、ダイアログを開くと例外になる</a></li><li class="leaf"><a href="#a-after-show-menu">API 41. ★ 表示した直後にメニューやポップアップを開いても、黙って開かない</a></li><li class="leaf"><a href="#a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない</a></li><li class="leaf"><a href="#a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない</a></li><li class="leaf"><a href="#a-scroll-listener">API 44. スクロールのリスナーが、後から呼ばれる</a></li></ul></details></li><li><details><summary><a href="#api-missing">2.5 Swing にあって WinUI4K に無い</a></summary><ul><li class="leaf"><a href="#a-inputverifier">API 45. ★ InputVerifier が無い</a></li><li class="leaf"><a href="#a-timer">API 46. ★ 繰り返しの Timer・invokeAndWait・SwingWorker が無い</a></li><li class="leaf"><a href="#a-label-background">API 47. ★ ラベルやパネルに、背景・枠・内側の余白を付けられない</a></li><li class="leaf"><a href="#a-layouts">API 48. ★ CardLayout などのレイアウト マネージャーが無い</a></li><li class="leaf"><a href="#a-relativepanel">API 49. SpringLayout に当たる WRelativePanel に、距離・ベースライン・循環の検出が無い</a></li><li class="leaf"><a href="#a-missing-table">API 50. そのほかの、Swing にあって無いもの</a></li></ul></details></li><li><details><summary><a href="#api-lang">2.6 Kotlin・Java から使うときの不便</a></summary><ul><li class="leaf"><a href="#a-tooltip-ambiguous">API 51. ★ Java の component.setToolTip(null) が曖昧でコンパイルできない</a></li><li class="leaf"><a href="#a-actionlistener-kotlin">API 52. ★ Kotlin から WActionListener を addActionListener に渡せない</a></li><li class="leaf"><a href="#a-lang-table">API 53. そのほかの Kotlin・Java の不便</a></li></ul></details></li></ul></details></li><li class="leaf"><a href="#summary">まとめ: 優先して直したいもの</a></li></ul>
+<ul id="toc"><li><details><summary><a href="#display">1. 画面写真でおかしく見えるところ</a></summary><ul><li class="leaf"><a href="#display-bug">1.1 直した不具合</a></li><li><details><summary><a href="#display-winui">1.2 WinUI の仕様や既定のスタイルによる、Swing との違い</a></summary><ul><li class="leaf"><a href="#d22">表示 22. 行が高く、見える項目が少ない</a></li><li class="leaf"><a href="#d23">表示 23. スクロールバーが見えない (ALWAYS でも)</a></li><li class="leaf"><a href="#d24">表示 24. チェックボックス・ラジオボタンの間が広く、不ぞろい</a></li><li class="leaf"><a href="#d25">表示 25. 同じ列数でも、入力欄が Swing よりかなり広い</a></li><li class="leaf"><a href="#d26">表示 26. 選んだ項目の色が薄く、見落としやすい</a></li><li class="leaf"><a href="#d27">表示 27. 入力欄の見た目 (下の線・消去ボタン・読み取り専用・選択の色)</a></li><li class="leaf"><a href="#d28">表示 28. ツールバーのボタンが右に寄り、ラベルが出ず、「…」が出る</a></li><li class="leaf"><a href="#d29">表示 29. ボタンから開いたフライアウトの先頭に、フォーカスの枠が出る</a></li><li class="leaf"><a href="#d30">表示 30. ツールチップが部品の上に出て、タイトル バーを隠す</a></li><li class="leaf"><a href="#d31">表示 31. 進捗バーに割合の文字が出ない・不定のバーが短い線に見える</a></li><li class="leaf"><a href="#d32">表示 32. 範囲の外の値が勝手に書き換わる</a></li><li class="leaf"><a href="#d33">表示 33. 木にアイコンが無い</a></li><li class="leaf"><a href="#d34">表示 34. 書式のある文の、段落の間が空かない</a></li><li class="leaf"><a href="#d35">表示 35. ニーモニックの下線が出ない</a></li><li class="leaf"><a href="#d36">表示 36. WRelativePanel で互いを参照すると、ウィンドウが真っ黒になる</a></li><li class="leaf"><a href="#d37">表示 37. そのほかの WinUI との違い (小さいもの)</a></li></ul></details></li><li><details><summary><a href="#display-sample">1.3 サンプルや撮り方によるもの</a></summary><ul><li class="leaf"><a href="#d38">表示 38. ファイルのダイアログがとても大きく、左の一覧に撮った人のフォルダーが写る (ぼかした)</a></li><li class="leaf"><a href="#d39">表示 39. 起動した直後に撮るので、ツールチップ・メニュー・ヒントが写らない</a></li><li class="leaf"><a href="#d40">表示 40. ポップアップの角に黒い点・縁が残る</a></li><li class="leaf"><a href="#d41">表示 41. Swing と WinUI4K でサンプルがそろっていない・余白が無い</a></li></ul></details></li><li class="leaf"><a href="#display-swing">1.4 Swing 側の画像で気になるもの</a></li></ul></details></li><li><details><summary><a href="#api">2. Swing から移るときに不自然な API</a></summary><ul><li><details><summary><a href="#api-meaning">2.1 Swing と同じ名前で、意味や振る舞いが違う</a></summary><ul><li class="leaf"><a href="#a-placeholder">API 1. ★ new WTextField(&quot;…&quot;) / new WTextPane(&quot;…&quot;) の文字列が案内文になる</a></li><li class="leaf"><a href="#a-alignment">API 2. ★ setHorizontalAlignment / setVerticalAlignment が文字の揃えではない</a></li><li class="leaf"><a href="#a-contentpane">API 3. ★ setLayout の後の getContentPane().add(...) が画面に出ない</a></li><li class="leaf"><a href="#a-margin">API 4. ★ setMargin が外側の余白</a></li><li class="leaf"><a href="#a-combo-remove">API 5. ★ WComboBox.removeItem(1) が 2 番目の項目を消す</a></li><li class="leaf"><a href="#a-combo-selected">API 6. ★ WComboBox.getSelectedItem() が項目ではなく表示の文字列を返す</a></li><li class="leaf"><a href="#a-selected-text">API 7. ★ WTextField.getSelectedText() が、選んでいないときに空の文字列を返す</a></li><li class="leaf"><a href="#a-color">API 8. ★ WColor.RED などの値が AWT の Color と違う</a></li><li class="leaf"><a href="#a-html">API 9. ★ &lt;html&gt; の文字が、そのまま表示される</a></li><li class="leaf"><a href="#a-wrapstyleword">API 10. setWrapStyleWord(true) で折り返さなくなる (直した: ec8a1ea7)</a></li><li class="leaf"><a href="#a-foreground">API 11. setForeground が入力欄の文字の色にならない (直した: 16accf8e)</a></li><li class="leaf"><a href="#a-table-selection">API 12. ★ WTable.setSelectionMode(MULTIPLE_INTERVAL_SELECTION) が黙って単一の選択になる</a></li><li class="leaf"><a href="#a-exception-settings">API 13. ★ Swing では使える設定が、例外になる</a></li><li class="leaf"><a href="#a-radio">API 14. WButtonGroup に入れないラジオボタンも、1 つしか選べない</a></li><li class="leaf"><a href="#a-painted">API 15. setStringPainted(true) が Swing のように描かない (setPaintTicks(true) は直した: 699193f8)</a></li><li class="leaf"><a href="#a-inputmap">API 16. list.getInputMap() (WHEN_FOCUSED) に入れたキーが効かない</a></li><li class="leaf"><a href="#a-revalidate-scroll">API 17. スクロールペインの中身の revalidate() で、続きの読み込みが余分に起きる</a></li><li class="leaf"><a href="#a-meaning-table">API 18. そのほかの、同じ名前で違う振る舞い</a></li></ul></details></li><li><details><summary><a href="#api-default">2.2 既定値が違う</a></summary><ul><li class="leaf"><a href="#a-frame-layout">API 19. ★ WFrame の中身が BorderLayout ではなく、制約付きの add が例外になる</a></li><li class="leaf"><a href="#a-layoutpanel-null">API 20. ★ new WLayoutPanel() のレイアウトが null</a></li><li class="leaf"><a href="#a-nest">API 21. 入れ子の WLayoutPanel や、スクロールペインの中身の WLayoutPanel が、希望の大きさで並ばない (直した: 804e7a31)</a></li><li class="leaf"><a href="#a-scroll-horizontal">API 22. ★ WScrollPane の横のスクロールが、既定で無効</a></li><li class="leaf"><a href="#a-preferred-size">API 23. スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い (直した: 9ffda622)</a></li><li class="leaf"><a href="#a-linewrap">API 24. ★ WTextPane の lineWrap の既定が逆</a></li><li class="leaf"><a href="#a-selection-default">API 25. ★ リストと木の選択の既定が、1 つだけ</a></li><li class="leaf"><a href="#a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う (直した: 7178e9a3・6814a8be)</a></li><li class="leaf"><a href="#a-spinner-buttons">API 27. WSpinner の上下のボタンが、既定で出ない</a></li><li class="leaf"><a href="#a-defaults-table">API 28. そのほかの既定値の違い</a></li></ul></details></li><li><details><summary><a href="#api-name">2.3 名前や型・単位・引数の順が違う</a></summary><ul><li class="leaf"><a href="#a-order">API 29. ★ 余白の 4 つの数の順が、API ごとに違う</a></li><li class="leaf"><a href="#a-double">API 30. ★ 値や大きさが double</a></li><li class="leaf"><a href="#a-generic">API 31. ★ WList と WComboBox に型引数が無い</a></li><li class="leaf"><a href="#a-owner">API 32. ★ ダイアログの持ち主に WFrame を渡せない API がある</a></li><li class="leaf"><a href="#a-class-names">API 33. クラスの名前から、Swing の部品が引けない</a></li><li class="leaf"><a href="#a-submenu">API 34. サブメニューが別のクラスで、JMenu を入れ子にする書き方ができない</a></li><li class="leaf"><a href="#a-renderer">API 35. レンダラーの書き方が Swing と違い、部品ごとにもそろっていない</a></li><li class="leaf"><a href="#a-gridbag">API 36. GridBagLayout に当たる WGrid で、行と列の順が逆</a></li><li class="leaf"><a href="#a-names-table">API 37. そのほかの名前・型の違い</a></li></ul></details></li><li><details><summary><a href="#api-timing">2.4 表示した直後に使えないなど、使う時機の制約</a></summary><ul><li class="leaf"><a href="#a-settext-before">API 38. 表示する前の setText が、addTextChangedListener に届かない (直した: e354832a)</a></li><li class="leaf"><a href="#a-label-settext">API 39. 表示した後の WLabel.setText で、並べ直されない (直した: 355623db)</a></li><li class="leaf"><a href="#a-after-show-dialog">API 40. 表示した直後のウィンドウに、ダイアログを開くと例外になる (直した: e652273a)</a></li><li class="leaf"><a href="#a-after-show-menu">API 41. 表示した直後にメニューやポップアップを開いても、黙って開かない (メニューは直した: e065f680)</a></li><li class="leaf"><a href="#a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない (直した: 3c075d1f・a343108e)</a></li><li class="leaf"><a href="#a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない (直した: 0c0c992d・9092016b)</a></li><li class="leaf"><a href="#a-scroll-listener">API 44. スクロールのリスナーが、後から呼ばれる</a></li></ul></details></li><li><details><summary><a href="#api-missing">2.5 Swing にあって WinUI4K に無い</a></summary><ul><li class="leaf"><a href="#a-inputverifier">API 45. ★ InputVerifier が無い</a></li><li class="leaf"><a href="#a-timer">API 46. ★ 繰り返しの Timer・invokeAndWait・SwingWorker が無い</a></li><li class="leaf"><a href="#a-label-background">API 47. ★ ラベルやパネルに、背景・枠・内側の余白を付けられない</a></li><li class="leaf"><a href="#a-layouts">API 48. ★ CardLayout などのレイアウト マネージャーが無い</a></li><li class="leaf"><a href="#a-relativepanel">API 49. SpringLayout に当たる WRelativePanel に、距離・ベースライン・循環の検出が無い</a></li><li class="leaf"><a href="#a-missing-table">API 50. そのほかの、Swing にあって無いもの</a></li></ul></details></li><li><details><summary><a href="#api-lang">2.6 Kotlin・Java から使うときの不便</a></summary><ul><li class="leaf"><a href="#a-tooltip-ambiguous">API 51. ★ Java の component.setToolTip(null) が曖昧でコンパイルできない</a></li><li class="leaf"><a href="#a-actionlistener-kotlin">API 52. ★ Kotlin から WActionListener を addActionListener に渡せない</a></li><li class="leaf"><a href="#a-lang-table">API 53. そのほかの Kotlin・Java の不便</a></li></ul></details></li></ul></details></li><li class="leaf"><a href="#summary">まとめ: 優先して直したいもの</a></li></ul>
 </nav>
 <main><article>
 <h1>Swing から WinUI4K に移すときに気になるところ</h1>
@@ -110,559 +110,160 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li><a href="#api">Swing から移るときに不自然な API</a>: Swing のコードを WinUI4K に書き換えるときに引っかかる API です。種類ごとに分け、それぞれ重いもの (コンパイルが通るのに黙って違う動きになるもの、例外になるもの、よく使う API) を先に置いて ★ を付けています。</li>
 </ol>
 <p>最後に、<a href="#summary">まとめ: 優先して直したいもの</a> を表にしています。</p>
+<p>2026-11-07 に、1 の一覧のうち WinUI4K の不具合と見られた表示 21 件を直しました (<a href="#display-bug">1.1</a>)。あわせて、2 の一覧のうち同じ修正で解消した API には「直した」と書き、残る不自然さだけを残しています。直した後に、文書のサンプルから不具合を避けるコードを外し、画像を撮り直しました。そのため、1.2 以降の画像も直した後の姿です。</p>
 <p><strong>どう調べたか</strong></p>
 <ul>
 <li>文書の各章のサンプル (<a href="../winui4k-sample-swing-to-winui4k"><code>winui4k-sample-swing-to-winui4k</code></a> の <code>src/main/java/com/appkitbox/winui4k/swing_to_winui4k/&lt;部品&gt;/&lt;ユースケース&gt;/</code>) を動かして撮った画像 (<code>doc/images/swing_to_winui4k/</code> の全部) を、1 枚ずつ見ました。</li>
 <li>おかしく見えたものは、サンプルを少し変えた試しのコードを動かして、どんなときに起きるかを確かめました。試しのコードとその画像はリポジトリに入れていないので、「今の画像には写っていない」と書いたものがあります。</li>
-<li>API は WinUI4K のソースを読み、多くは試しのコードをコンパイル・実行して確かめました。ソースの行番号は 2026-11-07 の作業ツリーのものです。</li>
+<li>API は WinUI4K のソースを読み、多くは試しのコードをコンパイル・実行して確かめました。ソースの行番号は、不具合を直す前の 2026-11-07 の作業ツリー (コミット <code>41397d06</code>) のものです。直したファイルでは行がずれています。</li>
 </ul>
 <h2 id="display">1. 画面写真でおかしく見えるところ<a class="anchor" href="#display">#</a></h2>
-<h3 id="display-bug">1.1 WinUI4K の不具合と見られるもの<a class="anchor" href="#display-bug">#</a></h3>
-<h4 id="d1">表示 1. 入れ子にした WLayoutPanel が、子の大きさにならない<a class="anchor" href="#d1">#</a></h4>
+<h3 id="display-bug">1.1 直した不具合<a class="anchor" href="#display-bug">#</a></h3>
+<p>前の版でこの節にまとめていた、WinUI4K の不具合と見られる表示 21 件は、2026-11-07 にすべて直しました。どれも WinUI4K の E2E テスト (<code>winui4k/src/test</code>) で、直した後の動きを確かめています。文書のサンプルからは、不具合を避けるために書いていたコード (<code>setWidth</code>・<code>WinUiUtilities.schedule(500, ...)</code>・<code>WLayoutPanel</code> の代わりの <code>WPanel</code> など) を外し、画像も撮り直しました。</p>
 <div class="table"><table>
 <thead>
 <tr>
-<th>Swing</th>
-<th>WinUI4K</th>
+<th>番号</th>
+<th>何が起きていたか</th>
+<th>直したコミット</th>
+<th>文書の節</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><img src="images/swing_to_winui4k/JButton/ActionCommandSwing.png" alt="JButton ActionCommandSwing" /></td>
-<td><img src="images/swing_to_winui4k/JButton/ActionCommandWinUI4K.png" alt="JButton ActionCommandWinUI4K" /></td>
+<td><a id="d1"></a>表示 1</td>
+<td>入れ子にした <code>WLayoutPanel</code> (<code>WBorder</code> の中・<code>WScrollPane</code> の中身も) が子の大きさにならず、ボタンが消えたり重なったりした</td>
+<td><code>804e7a31</code></td>
+<td><a href="swing_to_winui4k.html#button-command">1.9</a>、<a href="swing_to_winui4k.html#panel-nest">14.2</a>、<a href="swing_to_winui4k.html#panel-border">14.3</a>、<a href="swing_to_winui4k.html#panel-background">14.4</a>、<a href="swing_to_winui4k.html#scroll-basic">15.2</a>、<a href="swing_to_winui4k.html#scroll-position">15.4</a></td>
 </tr>
 <tr>
-<td><img src="images/swing_to_winui4k/JPanel/NestSwing.png" alt="JPanel NestSwing" /></td>
-<td><img src="images/swing_to_winui4k/JPanel/NestWinUI4K.png" alt="JPanel NestWinUI4K" /></td>
+<td><a id="d2"></a>表示 2</td>
+<td>表示する前の <code>setText</code> が、<code>addTextChangedListener</code> のリスナーに届かなかった</td>
+<td><code>e354832a</code></td>
+<td><a href="swing_to_winui4k.html#textfield-change">2.4</a>、<a href="swing_to_winui4k.html#list-filter">3.13</a>、<a href="swing_to_winui4k.html#table-sort">19.6</a></td>
 </tr>
 <tr>
-<td><img src="images/swing_to_winui4k/JPanel/BorderSwing.png" alt="JPanel BorderSwing" /></td>
-<td><img src="images/swing_to_winui4k/JPanel/BorderWinUI4K.png" alt="JPanel BorderWinUI4K" /></td>
+<td><a id="d3"></a>表示 3</td>
+<td>起動した直後から最初の部品にキーボードのフォーカスの太い枠が出た。ラジオボタンは選ばれていないボタン、木は最初の行、ツール バーは「…」に付いた</td>
+<td><code>b9a6151b</code></td>
+<td><a href="swing_to_winui4k.html#basics-differences">0.2</a>、<a href="swing_to_winui4k.html#button-click">1.2</a>、<a href="swing_to_winui4k.html#radio-group">6.2</a>、<a href="swing_to_winui4k.html#tree-selection">20.3</a>、<a href="swing_to_winui4k.html#toolbar-basic">23.2</a>、<a href="swing_to_winui4k.html#colorchooser-embed">28.3</a></td>
 </tr>
 <tr>
-<td><img src="images/swing_to_winui4k/JPanel/BackgroundSwing.png" alt="JPanel BackgroundSwing" /></td>
-<td><img src="images/swing_to_winui4k/JPanel/BackgroundWinUI4K.png" alt="JPanel BackgroundWinUI4K" /></td>
+<td><a id="d4"></a>表示 4</td>
+<td>表示した後に <code>WLabel</code> の文字を長くすると、前の幅のまま切れた (空のラベルは何も出なかった)</td>
+<td><code>355623db</code></td>
+<td><a href="swing_to_winui4k.html#label-basic">4.2</a></td>
+</tr>
+<tr>
+<td><a id="d5"></a>表示 5</td>
+<td>幅を指定しないスライダー・進捗バー・進捗リング・スピナーが縮んだり消えたりした</td>
+<td><code>9ffda622</code></td>
+<td><a href="swing_to_winui4k.html#spinner-basic">9.2</a>、<a href="swing_to_winui4k.html#slider-basic">10.2</a>、<a href="swing_to_winui4k.html#progress-basic">11.2</a>、<a href="swing_to_winui4k.html#progress-winui">11.7</a></td>
+</tr>
+<tr>
+<td><a id="d6"></a>表示 6</td>
+<td>画像のアイコン (<code>WImageIcon</code>) を付けたボタン・ラベルの文字が切れ、アイコンが小さく切り抜かれた</td>
+<td><code>c906b813</code>・<code>4c99b6ce</code></td>
+<td><a href="swing_to_winui4k.html#button-icon">1.4</a>、<a href="swing_to_winui4k.html#label-icon">4.4</a></td>
+</tr>
+<tr>
+<td><a id="d7"></a>表示 7</td>
+<td>表示する前・表示した直後の操作 (リストのスクロール・表の選択・仕切りの位置・スクロールの位置・ダイアログ・メニュー) が画面に写らなかった</td>
+<td><code>3c075d1f</code>・<code>a343108e</code>・<code>9092016b</code>・<code>0c0c992d</code>・<code>e652273a</code>・<code>e065f680</code></td>
+<td><a href="swing_to_winui4k.html#list-select">3.7</a>、<a href="swing_to_winui4k.html#table-model">19.3</a>、<a href="swing_to_winui4k.html#table-selection">19.5</a>、<a href="swing_to_winui4k.html#split-listener">17.4</a>、<a href="swing_to_winui4k.html#scroll-position">15.4</a>、<a href="swing_to_winui4k.html#menu-basic">21.2</a>、<a href="swing_to_winui4k.html#dialog-basic">25.2</a></td>
+</tr>
+<tr>
+<td><a id="d8"></a>表示 8</td>
+<td>表示前に <code>setDividerLocation(<wbr>0.<wbr>7)</code> と <code>setResizeWeight(<wbr>0.<wbr>7)</code> を指定した仕切りが、7 割ではなく約 85% の位置に来た</td>
+<td><code>9092016b</code></td>
+<td><a href="swing_to_winui4k.html#split-vertical">17.3</a></td>
+</tr>
+<tr>
+<td><a id="d9"></a>表示 9</td>
+<td>チェックボックスの文字の最後の単語が 2 行目に回って消えた</td>
+<td><code>6698d303</code></td>
+<td><a href="swing_to_winui4k.html#button-enabled">1.3</a></td>
+</tr>
+<tr>
+<td><a id="d10"></a>表示 10</td>
+<td>入力欄の <code>setForeground</code> が、フォーカスを持った欄の文字の色にならなかった</td>
+<td><code>16accf8e</code></td>
+<td><a href="swing_to_winui4k.html#textarea-appearance">12.6</a>、<a href="swing_to_winui4k.html#textfield-appearance">2.14</a></td>
+</tr>
+<tr>
+<td><a id="d11"></a>表示 11</td>
+<td><code>setWrapStyleWord(<wbr>true)</code> にすると折り返さなくなった</td>
+<td><code>ec8a1ea7</code></td>
+<td><a href="swing_to_winui4k.html#textarea-wrap">12.3</a></td>
+</tr>
+<tr>
+<td><a id="d12"></a>表示 12</td>
+<td>幅を決めない表の列が中身の幅で細く、右に空きが残り、並べ替えの印が列名に重なった</td>
+<td><code>7178e9a3</code></td>
+<td><a href="swing_to_winui4k.html#table-basic">19.2</a>、<a href="swing_to_winui4k.html#table-sort">19.6</a></td>
+</tr>
+<tr>
+<td><a id="d13"></a>表示 13</td>
+<td><code>getColumnClass</code> が <code>Number</code> の列が右に寄らなかった</td>
+<td><code>6814a8be</code></td>
+<td><a href="swing_to_winui4k.html#table-columns">19.4</a></td>
+</tr>
+<tr>
+<td><a id="d14"></a>表示 14</td>
+<td>引き伸ばした <code>WLabel</code> の文字が縦の中央ではなく上に寄り、ツール バーに載せた部品も上に寄った</td>
+<td><code>02fbb386</code></td>
+<td><a href="swing_to_winui4k.html#panel-background">14.4</a>、<a href="swing_to_winui4k.html#split-basic">17.2</a>、<a href="swing_to_winui4k.html#tabbed-select">18.3</a>、<a href="swing_to_winui4k.html#toolbar-basic">23.2</a>、<a href="swing_to_winui4k.html#toolbar-component">23.5</a></td>
+</tr>
+<tr>
+<td><a id="d15"></a>表示 15</td>
+<td><code>showInputDialog</code> の入力欄が初めの文字の幅しかなく、<code>WContentDialog</code> の入力欄が中央に寄った</td>
+<td><code>d8a92279</code></td>
+<td><a href="swing_to_winui4k.html#optionpane-input">26.4</a>、<a href="swing_to_winui4k.html#dialog-basic">25.2</a>、<a href="swing_to_winui4k.html#dialog-validate">25.3</a>、<a href="swing_to_winui4k.html#dialog-nonblocking">25.5</a></td>
+</tr>
+<tr>
+<td><a id="d16"></a>表示 16</td>
+<td>ツール バーで選んだトグルボタンが、上の細い帯と下にはみ出したアイコンになった</td>
+<td><code>5dbd50fb</code></td>
+<td><a href="swing_to_winui4k.html#toolbar-toggle">23.4</a></td>
+</tr>
+<tr>
+<td><a id="d17"></a>表示 17</td>
+<td><code>setPaintTicks(<wbr>true)</code> の目盛りがトラックの上に重なって見えなかった</td>
+<td><code>699193f8</code></td>
+<td><a href="swing_to_winui4k.html#slider-ticks">10.3</a></td>
+</tr>
+<tr>
+<td><a id="d18"></a>表示 18</td>
+<td>小数の値「12.0」が「12」と出て、表示の書式を決める API が無かった (<code>WSpinner.<wbr>NumberEditor</code> を足した)</td>
+<td><code>4b70ad55</code></td>
+<td><a href="swing_to_winui4k.html#spinner-decimal">9.4</a></td>
+</tr>
+<tr>
+<td><a id="d19"></a>表示 19</td>
+<td>スクロールペインの見出しに背景が無く、下へスクロールした中身が透けた</td>
+<td><code>fec2f999</code></td>
+<td><a href="swing_to_winui4k.html#scroll-header">15.6</a></td>
+</tr>
+<tr>
+<td><a id="d20"></a>表示 20</td>
+<td>行の高さに引き伸ばしたチェックボックスの、四角と文字の高さがずれた</td>
+<td><code>707be25c</code></td>
+<td><a href="swing_to_winui4k.html#panel-nest">14.2</a></td>
+</tr>
+<tr>
+<td><a id="d21"></a>表示 21</td>
+<td>小さなウィンドウ (480×320) では色を選ぶダイアログが切れ、入力欄まで出せなかった (中身を縦にスクロールできるようにした)</td>
+<td><code>2142540d</code></td>
+<td><a href="swing_to_winui4k.html#colorchooser-dialog">28.2</a></td>
 </tr>
 </tbody>
 </table></div>
+<p>直していないもの・直した後も残る違いは、次のとおりです。</p>
 <ul>
-<li>何が変か:
-<ul>
-<li>ActionCommand: 1〜9 のボタンの盤面が丸ごと無く、入力欄だけが出ています。</li>
-<li>Nest: <code>WBorderLayout.SOUTH</code> に置いた <code>WLayoutPanel(WFlowLayout(RIGHT))</code> の「OK」「Cancel」が、ウィンドウの下端にわずかに見えるだけです。</li>
-<li>Border: <code>new WBorder(new WLayoutPanel(new WGridLayout(0, 1)))</code> の枠線が中身を囲まず、左上の小さな四角になっています。チェックボックスは枠の外です。</li>
-<li>Background: <code>NORTH</code> に置いた青い帯の高さが 10 DIP ほどしかなく、白い「Settings」が帯からはみ出して、下の灰色の上で読めません。</li>
-<li>今の画像には写っていないもの: <code>NORTH</code> の <code>WLayoutPanel(WFlowLayout(LEFT))</code> のボタンの行が、<code>CENTER</code> のスクロールペインの上に重なりました (<a href="swing_to_winui4k.html#scroll-position">15.4</a>)。<code>new WScrollPane(new WLayoutPanel(new WGridLayout(0, 1)))</code> に 30 個のチェックボックスを入れると表示領域の高さに押し込まれて重なり、50 個のラベルでは何も出ませんでした (<a href="swing_to_winui4k.html#scroll-basic">15.2</a>)。どちらもサンプルは中身を <code>WPanel</code> に替えて撮っています。</li>
-</ul>
-</li>
-<li>Swing では: 中のパネルは子の希望の大きさから自分の希望の大きさを決め、外のパネルがそれで並べるので、崩れません。</li>
-<li>原因の見立て: WinUI4K。<code>WLayoutPanel</code> の中 (や <code>WBorder</code> の中) に入れた <code>WLayoutPanel</code> の希望の大きさが、子を測る前の値 (ほぼ 0) のまま親に使われ、子を測った後に親が並べ直されません (今の <code>onLoaded</code> は自分だけを並べ直す。<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLayoutPanel.kt#L90"><code>WLayoutPanel.kt:90</code></a>)。<code>WScrollPane</code> では、ScrollViewer が中身を表示領域の大きさに引き伸ばし、<code>WLayoutPanel</code> がその大きさで並べてしまいます (見出しを付けたときだけ中身を左上に寄せるので正しく並ぶ。<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WScrollPane.kt#L271"><code>WScrollPane.kt:271</code></a>)。中身を <code>WPanel</code> にすると、どれも正しく出ます。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#button-command">1.9</a>、<a href="swing_to_winui4k.html#panel-nest">14.2</a>、<a href="swing_to_winui4k.html#panel-border">14.3</a>、<a href="swing_to_winui4k.html#panel-background">14.4</a>、<a href="swing_to_winui4k.html#scroll-basic">15.2</a>、<a href="swing_to_winui4k.html#scroll-position">15.4</a></li>
-<li>API の一覧: <a href="#a-nest">API 21</a></li>
-</ul>
-<h4 id="d2">表示 2. 表示する前の setText が、入力のリスナーに届かない<a class="anchor" href="#d2">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JTextField/ChangeSwing.png" alt="JTextField ChangeSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTextField/ChangeWinUI4K.png" alt="JTextField ChangeWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JList/FilterSwing.png" alt="JList FilterSwing" /></td>
-<td><img src="images/swing_to_winui4k/JList/FilterWinUI4K.png" alt="JList FilterWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か:
-<ul>
-<li>Change: 入力欄に「Today's notes」(13 文字) が入っているのに、ラベルは「0 characters」のまま、Register ボタンも無効のままです。</li>
-<li>Filter: 入力欄は「ka」なのに、リストが絞り込まれず Tokyo / Osaka / Nagoya / Sapporo が出ています。</li>
-<li>表の絞り込み (<a href="swing_to_winui4k.html#table-sort">19.6</a>) も同じでした。今の <code>JTable/SortFilterWinUI4K.png</code> は、表示した後に文字を入れる形にサンプルを直して撮ったものです。</li>
-</ul>
-</li>
-<li>Swing では: <code>DocumentListener</code> は <code>setText</code> の中ですぐ呼ばれるので、表示の前でも「13 characters」になり、絞り込まれます。</li>
-<li>原因の見立て: WinUI4K (と WinUI の仕様)。WinUI の TextBox.TextChanged は、画面に載る (Loaded) 前の文字の変更では来ません。<code>addTextChangedListener</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextField.kt#L659"><code>WTextField.kt:659</code></a>) はそれを待つだけです。表示した 1 秒後に <code>setText</code> すると、リスナーが呼ばれて絞り込まれました。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#textfield-change">2.4</a>、<a href="swing_to_winui4k.html#list-filter">3.13</a>、<a href="swing_to_winui4k.html#table-sort">19.6</a></li>
-<li>API の一覧: <a href="#a-settext-before">API 38</a></li>
-</ul>
-<h4 id="d3">表示 3. 起動した直後から、最初の部品にフォーカスの太い枠が出る<a class="anchor" href="#d3">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th></th>
-<th></th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JButton/ClickWinUI4K.png" alt="JButton ClickWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JList/BasicWinUI4K.png" alt="JList BasicWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JRadioButton/GroupWinUI4K.png" alt="JRadioButton GroupWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JCheckBox/ListenerWinUI4K.png" alt="JCheckBox ListenerWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JToggleButton/BasicWinUI4K.png" alt="JToggleButton BasicWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JComboBox/BasicWinUI4K.png" alt="JComboBox BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JSlider/AdjustingWinUI4K.png" alt="JSlider AdjustingWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JTree/SelectionWinUI4K.png" alt="JTree SelectionWinUI4K" /></td>
-<td><img src="images/swing_to_winui4k/JToolBar/BasicWinUI4K.png" alt="JToolBar BasicWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: キーを押していないのに、最初の部品に黒くて太い角丸の枠 (キーボード フォーカスの枠) が出ます。ボタンやリストの先頭の項目が「押された」「選ばれた」ように見えます。枠は部品の外にはみ出して描かれるので、隣の部品に接して窮屈に見えます (CheckBox の Listener では右の「Wi-Fi is on」、Slider の Adjusting では「Live: 80」)。ほかにも次のことが起きます。
-<ul>
-<li>ラジオボタン: 選ばれている「Medium」ではなく、選ばれていない最初の「Small」に枠が付きます (Group・Selected・Listener・Clear)。</li>
-<li>木: <a href="swing_to_winui4k.html#tree-selection">20.3</a> で Spec.docx を選んでいるのに、枠は最初の Documents に残ります。</li>
-<li>ツールバー: 左のボタンではなく、右端の「…」ボタンに枠が付きます (Basic・Action・Toggle・Overflow)。</li>
-<li>コンボ ボックス: 枠の内側の左に青緑の縦の棒も出ます。</li>
-<li>カラーピッカー: 色の面にフォーカスが入り、触っていないのに色の名前のツールチップ (「青」) が出たままになりました (今の画像は本体のウィンドウだけを撮るので写っていない)。</li>
-<li>当てはまる画像はほかに、JButton の DoClick・Size・Mnemonic・ToolTip・Background・Appearance・DefaultButton・Icon・AccentFlyout、JList の WinUI4K の全部、JCheckBox の Basic、JToggleButton の Switch、JComboBox の Listener・Model・Renderer・Header、JSlider の Ticks・Vertical、JProgressBar の Model、JTree の Basic・Renderer・Lazy・Expand・Model です。</li>
-<li>試しのコードでは枠が出ないこともあり、出たり出なかったりします。</li>
-</ul>
-</li>
-<li>Swing では: Metal のフォーカスの表示は控えめ (文字の周りの細い枠や、薄い色) で、ほとんど目立ちません。ラジオボタンのグループでは、選ばれているボタンにフォーカスが入ります。</li>
-<li>原因の見立て: WinUI4K と WinUI の組み合わせ。<code>FrameFocus</code> は「Programmatic (キーボードの枠は描かない)」で最初の部品にフォーカスを移すとしています (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/FrameFocus.kt#L128-L144"><code>FrameFocus.kt:128-144</code></a>) が、枠が出ています。直前の入力がキーボードとみなされると、Programmatic でも WinUI が枠を描くのかもしれません (確かめていない)。どの部品に初めのフォーカスを入れるか (ラジオボタンは選ばれているもの、木は選んだ節、CommandBar は「…」より中身を先) は、WinUI4K の側で直せます。<code>FrameFocus.kt</code> は今、別の作業で変更中です (未コミット)。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#basics-differences">0.2</a> (初めのフォーカス)、<a href="swing_to_winui4k.html#button-click">1.2</a>、<a href="swing_to_winui4k.html#radio-group">6.2</a>、<a href="swing_to_winui4k.html#tree-selection">20.3</a>、<a href="swing_to_winui4k.html#toolbar-basic">23.2</a>、<a href="swing_to_winui4k.html#colorchooser-embed">28.3</a></li>
-</ul>
-<h4 id="d4">表示 4. 表示した後に WLabel の文字を長くすると、切れる・出ない<a class="anchor" href="#d4">#</a></h4>
-<ul>
-<li>画像: 文書の画像には写っていません (サンプルはどれも、表示する前か表示した直後に文字を入れているため)。</li>
-<li>何が変か: <code>WFlowLayout</code> に置いた空の <code>WLabel</code> と「Start」の <code>WLabel</code> に、表示した 1 秒後に長い文字を入れると、空だったラベルは何も見えず、「Start」だったラベルは前の幅のまま新しい文字の先頭の 3 文字だけが見えました。続けて <code>revalidate()</code> を呼ぶと正しく出ました。</li>
-<li>Swing では: <code>JLabel.setText</code> が自分で <code>revalidate()</code> を呼ぶので、長くした文字がそのまま出ます。</li>
-<li>原因の見立て: WinUI4K。<code>WLabel.text</code> の setter (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLabel.kt#L160-L167"><code>WLabel.kt:160-167</code></a>) は TextBlock の文字を替えるだけで、希望の大きさを捨てず、親も並べ直しません。「ボタンを押したらラベルに結果を出す」という一番よくある書き方 (<a href="swing_to_winui4k.html#button-click">1.2</a>、<a href="swing_to_winui4k.html#checkbox-listener">5.3</a>、<a href="swing_to_winui4k.html#radio-listener">6.4</a> など) で、実際に操作すると起きるので、影響は大きいです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#label-basic">4.2</a></li>
-<li>API の一覧: <a href="#a-label-settext">API 39</a></li>
-</ul>
-<h4 id="d5">表示 5. 幅を指定しないと、部品が縮む・消える<a class="anchor" href="#d5">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JSpinner/BasicSwing.png" alt="JSpinner BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSpinner/BasicWinUI4K.png" alt="JSpinner BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JSlider/BasicSwing.png" alt="JSlider BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSlider/BasicWinUI4K.png" alt="JSlider BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JProgressBar/BasicSwing.png" alt="JProgressBar BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JProgressBar/BasicWinUI4K.png" alt="JProgressBar BasicWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: この 3 枚は、幅を指定しないとどうなるかを見せるために、わざと幅を指定せずに撮ったものです (ほかの節のサンプルは <code>setWidth</code> を足して撮っています)。
-<ul>
-<li>スピナー: 欄の中に「×」「∧」「∨」のボタンだけが並び、値の「1」が見えません。フォーカスの無い欄 (<a href="swing_to_winui4k.html#spinner-range">9.5</a> の「To」) では「10 ∧ ∨」と数字が出ていました。</li>
-<li>スライダー: トラックが無く、丸いつまみとフォーカスの枠だけで、何の部品か分かりません。</li>
-<li>進捗バー: 「Copying files...」のラベルだけで、バーがどこにもありません。</li>
-<li>進捗リング: 大きさを指定しないと、隣の部品と同じ位置に置かれ、小さく欠けて描かれました (今の <code>JProgressBar/RingWinUI4K.png</code> は 40×40 を指定して撮ったもの)。</li>
-</ul>
-</li>
-<li>Swing では: <code>JSpinner</code> は列数から、<code>JSlider</code> は 200 (縦なら高さ 200)、<code>JProgressBar</code> は 146 の希望の幅を持つので、何も指定しなくても見えます。</li>
-<li>原因の見立て: WinUI4K。<code>WFlowLayout</code> は子に希望の大きさを聞きますが、WinUI の Slider・ProgressBar・ProgressRing は幅を指定しないと最小の大きさ (や 0) しか求めません。スピナー (NumberBox) は、フォーカスを受けて消去ボタンが増えた分を、最初に測った幅に含めていません。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#spinner-basic">9.2</a>、<a href="swing_to_winui4k.html#slider-basic">10.2</a>、<a href="swing_to_winui4k.html#progress-basic">11.2</a>、<a href="swing_to_winui4k.html#progress-winui">11.7</a></li>
-<li>API の一覧: <a href="#a-preferred-size">API 23</a></li>
-</ul>
-<h4 id="d6">表示 6. 画像のアイコンを付けたボタン・ラベルが切れる・消える<a class="anchor" href="#d6">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JButton/IconSwing.png" alt="JButton IconSwing" /></td>
-<td><img src="images/swing_to_winui4k/JButton/IconWinUI4K.png" alt="JButton IconWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JLabel/IconSwing.png" alt="JLabel IconSwing" /></td>
-<td><img src="images/swing_to_winui4k/JLabel/IconWinUI4K.png" alt="JLabel IconWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か:
-<ul>
-<li>ボタン: 3 つ目 (画像のアイコンに、文字を下に置いた Download) で文字が出ず、緑のアイコンも小さく切れてぼやけています。</li>
-<li>ラベル: 1 つ目は文字の終わりが切れて「Signed in as al」、2 つ目 (アイコンだけ) は人の絵の中央だけが切り抜かれたぼやけた丸、3 つ目 (文字をアイコンの下) は何も出ません。</li>
-</ul>
-</li>
-<li>Swing では: 3 つともアイコンと文字が正しく出ます。</li>
-<li>原因の見立て: WinUI4K。<code>WImageIcon</code> の画像を読み込む前の大きさ (幅が 0 か小さい) で希望の大きさを決め、読み込んだ後に並べ直していないと見られます。同じ並べ方でも <code>Symbol.CONTACT</code> なら 3 つとも正しく、<code>WImageIcon</code> でも横に並べる <code>WPanel</code> に入れると正しく出ました。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#button-icon">1.4</a>、<a href="swing_to_winui4k.html#label-icon">4.4</a></li>
-</ul>
-<h4 id="d7">表示 7. 表示する前・表示した直後の操作が、画面に写らない<a class="anchor" href="#d7">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JList/SelectSwing.png" alt="JList SelectSwing" /></td>
-<td><img src="images/swing_to_winui4k/JList/SelectWinUI4K.png" alt="JList SelectWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JTable/SelectionSwing.png" alt="JTable SelectionSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTable/SelectionWinUI4K.png" alt="JTable SelectionWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JTable/ModelSwing.png" alt="JTable ModelSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTable/ModelWinUI4K.png" alt="JTable ModelWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JSplitPane/ListenerSwing.png" alt="JSplitPane ListenerSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSplitPane/ListenerWinUI4K.png" alt="JSplitPane ListenerWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か:
-<ul>
-<li>List の Select: 「Selected: Item 43」と出ているのに、リストは Item 1〜4 のままで、選んだ項目が見えません (表示する前の <code>ensureIndexIsVisible</code>)。</li>
-<li>Table の Selection・Model: 表示する前に <code>setRowSelectionInterval(1, 1)</code> で 2 行目を選んだのに、選んだ見た目になっていません。選択のリスナーは呼ばれ (「Bob in Engineering」)、<code>getSelectedRow()</code> も 1 です。表示した 1 秒後に同じことをすると、選んだ見た目になりました。</li>
-<li>SplitPane の Listener: <code>setVisible(true)</code> の直後に <code>setDividerLocation(200)</code> を呼んだのに、仕切りは 56 (左のラベルの希望の幅) にあり、ラベルは「Divider at 56 (was -1)」です。</li>
-<li>今の画像には写っていないもの: 表示した直後にメニューやポップアップを開く、ダイアログを開く、スクロールの位置を決める、も効きません (<a href="#a-after-show-dialog">API 40</a>・<a href="#a-after-show-menu">API 41</a>・<a href="#a-after-show-position">API 43</a>)。サンプルは <code>WinUiUtilities.schedule(500, ...)</code> で待ってから操作しています。</li>
-</ul>
-</li>
-<li>Swing では: 表示する前・表示した直後でも、そのまま効きます (「Divider at 200 (was 0)」)。</li>
-<li>原因の見立て: WinUI4K。画面に載る (Loaded・最初のレイアウト) 前の設定を、後から WinUI に写していない、または最初のレイアウトで上書きしています。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#list-select">3.7</a>、<a href="swing_to_winui4k.html#table-model">19.3</a>、<a href="swing_to_winui4k.html#table-selection">19.5</a>、<a href="swing_to_winui4k.html#split-listener">17.4</a></li>
-<li>API の一覧: <a href="#a-before-show-selection">API 42</a>、<a href="#a-after-show-position">API 43</a></li>
-</ul>
-<h4 id="d8">表示 8. 割合で置いた仕切りの位置がずれる<a class="anchor" href="#d8">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JSplitPane/VerticalSwing.png" alt="JSplitPane VerticalSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSplitPane/VerticalWinUI4K.png" alt="JSplitPane VerticalWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: 表示する前に <code>setResizeWeight(0.7)</code> と <code>setDividerLocation(0.7)</code> を指定した上下の分割で、仕切りが 7 割ではなく約 85% (182 / 213 DIP) の位置にあり、下のコンソールの入力欄が下端で切れています。</li>
-<li>Swing では: 7 割の位置に仕切りが来ます。</li>
-<li>原因の見立て: WinUI4K。表示する前に覚えた割合を、最初のレイアウトの小さな大きさで位置に直し、その後ウィンドウの大きさまで広がった分を resizeWeight (0.7) で上に配っているように見えます (実測: <code>getDividerLocation()</code> が 182、高さ 222.67、仕切り 10)。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#split-vertical">17.3</a></li>
-</ul>
-<h4 id="d9">表示 9. チェックボックスの文字の、最後の単語が消える<a class="anchor" href="#d9">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JButton/EnabledSwing.png" alt="JButton EnabledSwing" /></td>
-<td><img src="images/swing_to_winui4k/JButton/EnabledWinUI4K.png" alt="JButton EnabledWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: 「I agree to the terms of use」が「I agree to the terms of」で途切れ、フォーカスの枠も文字の途中までです。試しのコードでは「Disabled check」も「Disabled」だけになりました。2 行目に回った単語の上の端が少し見えています。ウィンドウの幅には余裕があり、「Subscribe to the newsletter」は切れなかったので、文字によって起きたり起きなかったりします。</li>
-<li>Swing では: 1 行で全部出ます。</li>
-<li>原因の見立て: WinUI4K (と WinUI の既定のスタイル)。CheckBox のテンプレートの ContentPresenter は <code>TextWrapping=&quot;Wrap&quot;</code> です (microsoft-ui-xaml の <code>CheckBox_themeresources.xaml:611</code>)。WinUI4K のレイアウトが割り当てる幅が、希望の幅よりわずかに狭い (丸め) ため折り返し、高さは 1 行分なので 2 行目が切れると見られます。日本語の文字のときは収まっていて、英語にして表に出ました。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#button-enabled">1.3</a></li>
-</ul>
-<h4 id="d10">表示 10. 入力欄の setForeground が文字の色にならない<a class="anchor" href="#d10">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JTextArea/AppearanceSwing.png" alt="JTextArea AppearanceSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTextArea/AppearanceWinUI4K.png" alt="JTextArea AppearanceWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JTextField/AppearanceSwing.png" alt="JTextField AppearanceSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTextField/AppearanceWinUI4K.png" alt="JTextField AppearanceWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: <code>WTextPane</code> に <code>setForeground(new WColor(0, 90, 158))</code> を指定したのに、文字は黒 (テーマの色) のままです。フォント (Consolas 14) は効いています。<code>WTextField</code> の文字も指定の青に見えません。撮ったときは欄にフォーカスがあります (下の線がアクセントの色)。フォーカスが無いときに効くかは確かめていません。</li>
-<li>Swing では: 指定した青い文字になります。</li>
-<li>原因の見立て: WinUI4K。<code>WControl.foreground</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WControl.kt#L103-L123"><code>WControl.kt:103-123</code></a>) は Control.Foreground を設定するだけですが、入力欄の文字の色はテンプレートの TextControlForeground* (フォーカス中は TextControlForegroundFocused) で決まります。<code>background</code> はこれに当たるリソースまで入れているのに、<code>foreground</code> はしていません。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#textarea-appearance">12.6</a>、<a href="swing_to_winui4k.html#textfield-appearance">2.14</a></li>
-<li>API の一覧: <a href="#a-foreground">API 11</a></li>
-</ul>
-<h4 id="d11">表示 11. setWrapStyleWord(true) にすると折り返さない<a class="anchor" href="#d11">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JTextArea/WrapSwing.png" alt="JTextArea WrapSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTextArea/WrapWinUI4K.png" alt="JTextArea WrapWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>画像: 今の <code>WrapWinUI4K.png</code> は、<code>setWrapStyleWord(true)</code> の行を消して撮ったものです。行を残すと、下の欄は折り返さずに「...from Java an」で切れ、上の <code>setLineWrap(false)</code> の欄と同じ見た目になりました。</li>
-<li>Swing では: 単語の切れ目で 4 行に折り返します (<code>WrapSwing.png</code> の右の欄)。</li>
-<li>原因の見立て: WinUI4K。<code>wrapStyleWord = true</code> で <code>TextWrapping.WRAP_WHOLE_WORDS</code> を RichEditBox に入れます (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextPane.kt#L306-L317"><code>WTextPane.kt:306-317</code></a>) が、RichEditBox と TextBox は WrapWholeWords に対応していません (TextBlock だけ)。WinUI の Wrap ははじめから単語の切れ目で折り返すので、<code>WRAP</code> のままでよいはずです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#textarea-wrap">12.3</a></li>
-<li>API の一覧: <a href="#a-wrapstyleword">API 10</a></li>
-</ul>
-<h4 id="d12">表示 12. 表の列が細く、並べ替えの印が列名に重なる<a class="anchor" href="#d12">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JTable/BasicSwing.png" alt="JTable BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTable/BasicWinUI4K.png" alt="JTable BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JTable/SortFilterSwing.png" alt="JTable SortFilterSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTable/SortFilterWinUI4K.png" alt="JTable SortFilterWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: 360 DIP の表に 3 列を出すと、Name 約 54・Department 約 93・Age 約 41 DIP の幅になり、右に 170 DIP ほどの空きが残ります。Age の列で降順に並べると、並べ替えの印 (シェブロン。チェックの印のようにも見える) が「Age」の「e」に重なります。</li>
-<li>Swing では: 列が表の幅を分け合って空きが出ず、印は「Age ▼」と文字から離れて出ます。</li>
-<li>原因の見立て: WinUI4K と WinUI の仕様。<code>TableColumn.preferredWidth</code> の説明は「NaN なら既定の幅 (120)」(<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/table/TableColumn.kt#L116"><code>table/TableColumn.kt:116</code></a>) ですが、実際は TableView の Auto (中身に合わせる) になっています。列の幅が中身の文字だけで決まり、印の場所を含みません。表の幅に合わせる設定 (Swing の autoResizeMode、WinUI の Star 幅) も無いです。<code>setPreferredWidth</code> で幅を決めた列 (<a href="swing_to_winui4k.html#table-columns">19.4</a>) は、そのとおりになります。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#table-basic">19.2</a>、<a href="swing_to_winui4k.html#table-sort">19.6</a></li>
-<li>API の一覧: <a href="#a-table-column">API 26</a></li>
-</ul>
-<h4 id="d13">表示 13. 数値の列が右に寄らない<a class="anchor" href="#d13">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JTable/ColumnsSwing.png" alt="JTable ColumnsSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTable/ColumnsWinUI4K.png" alt="JTable ColumnsWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: <code>getColumnClass</code> で <code>Integer</code> を返す Stock の列 (12 / 30 / 0) が左に寄っています。</li>
-<li>Swing では: <code>Number</code> の列は右に寄ります。</li>
-<li>原因の見立て: WinUI4K。<code>TableModel</code> の説明 (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/table/TableModel.kt#L22"><code>table/TableModel.kt:22</code></a>) には「Number は右寄せ」とありますが、列を作るところ (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/TableViewColumnPeer.kt#L68-L72"><code>TableViewColumnPeer.kt:68-72</code></a>) は Boolean だけを特別に扱い、数値は揃えを指定しない文字の列です。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#table-columns">19.4</a></li>
-<li>API の一覧: <a href="#a-table-column">API 26</a></li>
-</ul>
-<h4 id="d14">表示 14. 引き伸ばしたラベルの文字が、縦の中央ではなく上に寄る<a class="anchor" href="#d14">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JSplitPane/BasicSwing.png" alt="JSplitPane BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSplitPane/BasicWinUI4K.png" alt="JSplitPane BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JTabbedPane/SelectSwing.png" alt="JTabbedPane SelectSwing" /></td>
-<td><img src="images/swing_to_winui4k/JTabbedPane/SelectWinUI4K.png" alt="JTabbedPane SelectWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JToolBar/ComponentSwing.png" alt="JToolBar ComponentSwing" /></td>
-<td><img src="images/swing_to_winui4k/JToolBar/ComponentWinUI4K.png" alt="JToolBar ComponentWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: <code>WBorderLayout.CENTER</code>・<code>WSplitPane</code> の片側・タブの中身に置いた <code>WLabel</code> の文字が、領域の左上に出ます (JPanel の Background の「Content」、JSplitPane の Basic の「Select a file」と Listener の「Left」「Right」、ツールバーの章の状態の行も同じ)。ツールバーに載せた「Font: 」のラベルは、隣のコンボ ボックスより上に寄って、文字の高さがそろいません。</li>
-<li>Swing では: <code>JLabel</code> の縦の寄せ方の既定は中央なので、領域の縦の中央に出ます。ツールバーのラベルも上下の中央です。</li>
-<li>原因の見立て: WinUI4K。<code>WLabel</code> は TextBlock を引き伸ばすだけで、縦の中央に寄せていません。<code>WCommandBar.add</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WCommandBar.kt#L206"><code>WCommandBar.kt:206</code></a>) は部品を AppBarElementContainer に包みますが、上下の揃えを中央にしていません。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#panel-background">14.4</a>、<a href="swing_to_winui4k.html#split-basic">17.2</a>、<a href="swing_to_winui4k.html#tabbed-select">18.3</a>、<a href="swing_to_winui4k.html#toolbar-basic">23.2</a>、<a href="swing_to_winui4k.html#toolbar-component">23.5</a></li>
-<li>API の一覧: <a href="#a-defaults-table">API 28</a> (WLabel の縦の寄せ方)</li>
-</ul>
-<h4 id="d15">表示 15. ダイアログの入力欄が狭い・中央に寄る<a class="anchor" href="#d15">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JOptionPane/InputSwing.png" alt="JOptionPane InputSwing" /></td>
-<td><img src="images/swing_to_winui4k/JOptionPane/InputWinUI4K.png" alt="JOptionPane InputWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JDialog/BasicSwing.png" alt="JDialog BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JDialog/BasicWinUI4K.png" alt="JDialog BasicWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か:
-<ul>
-<li><code>WOptionPane.showInputDialog(frame, &quot;Your name:&quot;, &quot;Alice&quot;)</code> の入力欄が「Alice」がちょうど入る幅 (約 100 DIP) しかなく、名前を入れる欄として狭すぎます。ダイアログには横の余白が十分あります。</li>
-<li><code>WContentDialog</code> の中で、ラベル (「New name:」「Your age:」) は左に揃っているのに、その下の入力欄だけが中央にあります (JDialog の Validate・NonBlocking も同じ)。</li>
-</ul>
-</li>
-<li>Swing では: どちらも入力欄がダイアログの幅いっぱいに広がります。</li>
-<li>原因の見立て: WinUI4K。入力のダイアログ (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WOptionPane.kt#L443-L448"><code>WOptionPane.kt:443-448</code></a>) は、アイコンと本文を横の StackPanel に並べ、その中の縦の <code>WPanel</code> に入力欄を入れるので、幅が中身の文字に縮みます。<code>WContentDialog</code> の既定の中身は縦の <code>WPanel</code> で、列数で幅の決まった <code>WTextField</code> は中央に寄ります (<a href="swing_to_winui4k.html#basics-differences">0.2</a> の最後に書いてある動き)。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#optionpane-input">26.4</a>、<a href="swing_to_winui4k.html#dialog-basic">25.2</a>、<a href="swing_to_winui4k.html#dialog-validate">25.3</a>、<a href="swing_to_winui4k.html#dialog-nonblocking">25.5</a></li>
-</ul>
-<h4 id="d16">表示 16. 選んだトグルボタンが、ツールバーで崩れる<a class="anchor" href="#d16">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JToolBar/ToggleSwing.png" alt="JToolBar ToggleSwing" /></td>
-<td><img src="images/swing_to_winui4k/JToolBar/ToggleWinUI4K.png" alt="JToolBar ToggleWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: <code>setSelected(true)</code> にした「Bold」のボタンが、ボタンの上の方だけの細いアクセントの色の帯になり、その下に白い「B」のアイコンがはみ出しています。</li>
-<li>Swing では: 選んだボタンは全体が押し込まれた色になります。</li>
-<li>原因の見立て: WinUI4K と見られます (WinUI の CommandBar でチェックした AppBarToggleButton は、ボタン全体がアクセントの色になるのが普通)。<code>WAppBarToggleButton</code> は <code>WToggleButton</code> を継いでいる (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WAppBarToggleButton.kt#L14"><code>WAppBarToggleButton.kt:14</code></a>) ので、そこから受け継いだ大きさや色の設定がテンプレートに合っていないのではないか (確かめていない)。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#toolbar-toggle">23.4</a></li>
-</ul>
-<h4 id="d17">表示 17. スライダーの目盛りがトラックに重なって見えない<a class="anchor" href="#d17">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JSlider/TicksSwing.png" alt="JSlider TicksSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSlider/TicksWinUI4K.png" alt="JSlider TicksWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: 目盛りがトラックの線の上に白い短い切れ目として重なり、目盛りと分かりにくいです。</li>
-<li>Swing では: トラックの下に大小 2 段の目盛りと、0〜100 の数字が出ます。</li>
-<li>原因の見立て: WinUI4K。目盛りの位置の既定が WinUI の INLINE のまま (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSlider.kt#L202"><code>WSlider.kt:202</code></a>) で、<code>paintTicks = true</code> は位置が NONE のときだけ BOTTOM_RIGHT にします (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSlider.kt#L251-L259"><code>WSlider.kt:251-259</code></a>)。<code>setTickPlacement(TickPlacement.BOTTOM_RIGHT)</code> を足すと、トラックの下に出ました。目盛りが 1 段で数字が無いのは WinUI の Slider の仕様です。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#slider-ticks">10.3</a></li>
-<li>API の一覧: <a href="#a-painted">API 15</a></li>
-</ul>
-<h4 id="d18">表示 18. 小数の値「12.0」が「12」と出る<a class="anchor" href="#d18">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JSpinner/DecimalSwing.png" alt="JSpinner DecimalSwing" /></td>
-<td><img src="images/swing_to_winui4k/JSpinner/DecimalWinUI4K.png" alt="JSpinner DecimalWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: 0.5 刻みの値段の欄が「12」で、小数点以下がありません。</li>
-<li>Swing では: <code>JSpinner.NumberEditor(price, &quot;0.00&quot;)</code> で「12.00」です。</li>
-<li>原因の見立て: WinUI4K。表示の書式を決める API がありません。WinUI の NumberBox には NumberFormatter があるので、包めば「0.00」の表示ができるはずです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#spinner-decimal">9.4</a></li>
-</ul>
-<h4 id="d19">表示 19. スクロールペインの見出しが、中身の上に重なる<a class="anchor" href="#d19">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JScrollPane/HeaderSwing.png" alt="JScrollPane HeaderSwing" /></td>
-<td><img src="images/swing_to_winui4k/JScrollPane/HeaderWinUI4K.png" alt="JScrollPane HeaderWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>何が変か: <code>setColumnHeaderView(new WLabel(&quot;Text&quot;))</code> の「Text」が、下へスクロールした中身の「Line 5」の文字の上に重なり、中身が透けて見えます。</li>
-<li>Swing では: 見出しは中身の上の別の帯に出て、中身は見出しの下から始まります。</li>
-<li>原因の見立て: WinUI の ScrollViewer の TopHeader は中身の上に重ねて描かれ、WinUI4K が見出しに背景を付けていないため透けます。WinUI4K が見出しに既定の背景を置くとよいです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#scroll-header">15.6</a></li>
-</ul>
-<h4 id="d20">表示 20. 行の高さに引き伸ばしたチェックボックスの、四角と文字がずれる<a class="anchor" href="#d20">#</a></h4>
-<p><img src="images/swing_to_winui4k/JPanel/NestWinUI4K.png" alt="JPanel NestWinUI4K" /></p>
-<ul>
-<li>何が変か: <code>WGridLayout(0, 1)</code> で行の高さに引き伸ばされた <code>WCheckBox</code> の四角は行の中央に、文字は行の上にあり、高さがそろっていません。</li>
-<li>Swing では: 四角と文字が同じ高さに並びます。</li>
-<li>原因の見立て: WinUI の CheckBox のテンプレートと、WinUI4K が引き伸ばしたときの縦の寄せ方の組み合わせ (WinUI4K が VerticalContentAlignment を中央にしていないのかもしれない)。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#panel-nest">14.2</a></li>
-</ul>
-<h4 id="d21">表示 21. 小さなウィンドウでは、色を選ぶダイアログが切れる<a class="anchor" href="#d21">#</a></h4>
-<div class="table"><table>
-<thead>
-<tr>
-<th>Swing</th>
-<th>WinUI4K</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img src="images/swing_to_winui4k/JColorChooser/DialogSwing.png" alt="JColorChooser DialogSwing" /></td>
-<td><img src="images/swing_to_winui4k/JColorChooser/DialogWinUI4K.png" alt="JColorChooser DialogWinUI4K" /></td>
-</tr>
-</tbody>
-</table></div>
-<ul>
-<li>画像: 今の <code>DialogWinUI4K.png</code> は、ウィンドウを 720×780 にして撮り直したものです。Swing と同じ 480×320 で撮ったときは、ダイアログの中に色の面の上の 4 割ほどしか見えず、明るさのスライダーや RGB の入力欄が出ませんでした (スクロールもできない)。</li>
-<li>Swing では: <code>JColorChooser</code> のダイアログは別のウィンドウなので、親の大きさに関係なく全部出ます。</li>
-<li>原因の見立て: WinUI の ContentDialog がウィンドウの中に出る仕様と、<code>WColorPicker.showDialog</code> が中身をスクロールできる形にしていないこと (WinUI4K)。中身を ScrollViewer に入れるか、高さに合わせて入力欄をたたむとよさそうです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#colorchooser-dialog">28.2</a></li>
+<li>表示 3 の一部だった、コンボ ボックスの枠の内側の青緑の縦の棒は出なくなりました。カラーピッカーの色の名前のツールチップ (「青」) は、ウィンドウに置いたピッカーでは出なくなりましたが、<code>WColorPicker.showDialog</code> のダイアログでは、開いたときに色の面にフォーカスが入って出ます (<a href="swing_to_winui4k.html#colorchooser-dialog">28.2</a>)。</li>
+<li>表示 7 のうち、ツールチップ・ツール バーの「…」のメニュー (<code>setOpen(true)</code>)・<code>TeachingTip</code> (<code>show()</code>)・ボタンの <code>setFlyout</code> で付けたフライアウト (<code>doClick()</code>) は、表示した直後に呼んでも出ないままです。サンプルは <code>WinUiUtilities.schedule(500, ...)</code> で待っています (<a href="#a-after-show-menu">API 41</a>)。</li>
+<li>表示した直後のスクロールバーの <code>getMaximum()</code> と <code>getViewSize()</code> は、最初のレイアウトが済むまで 0 です。末尾へスクロールするサンプル (<a href="swing_to_winui4k.html#scrollbar-bottom">16.2</a>・<a href="swing_to_winui4k.html#scrollbar-loadmore">16.5</a>) は待ってから動かしています (<a href="#a-after-show-position">API 43</a>)。</li>
+<li><a href="swing_to_winui4k.html#split-listener">17.4</a> のラベルの前の位置は、Swing の「(was 0)」に対して「(was -1)」です。</li>
 </ul>
 <h3 id="display-winui">1.2 WinUI の仕様や既定のスタイルによる、Swing との違い<a class="anchor" href="#display-winui">#</a></h3>
 <h4 id="d22">表示 22. 行が高く、見える項目が少ない<a class="anchor" href="#d22">#</a></h4>
@@ -860,7 +461,7 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>文書の節: <a href="swing_to_winui4k.html#toolbar-basic">23.2</a>、<a href="swing_to_winui4k.html#toolbar-winui">23.6</a></li>
 <li>API の一覧: <a href="#a-missing-table">API 50</a> (左に寄せる方法)</li>
 </ul>
-<h4 id="d29">表示 29. プログラムから開いたメニューの先頭に、フォーカスの枠が出る<a class="anchor" href="#d29">#</a></h4>
+<h4 id="d29">表示 29. ボタンから開いたフライアウトの先頭に、フォーカスの枠が出る<a class="anchor" href="#d29">#</a></h4>
 <div class="table"><table>
 <thead>
 <tr>
@@ -870,24 +471,16 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 </thead>
 <tbody>
 <tr>
-<td><img src="images/swing_to_winui4k/JMenuBar/BasicSwing.png" alt="JMenuBar BasicSwing" /></td>
-<td><img src="images/swing_to_winui4k/JMenuBar/BasicWinUI4K.png" alt="JMenuBar BasicWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JMenuBar/KeysSwing.png" alt="JMenuBar KeysSwing" /></td>
-<td><img src="images/swing_to_winui4k/JMenuBar/KeysWinUI4K.png" alt="JMenuBar KeysWinUI4K" /></td>
-</tr>
-<tr>
-<td><img src="images/swing_to_winui4k/JPopupMenu/ComponentWinUI4K.png" alt="JPopupMenu ComponentWinUI4K" /></td>
-<td></td>
+<td><img src="images/swing_to_winui4k/JPopupMenu/ButtonSwing.png" alt="JPopupMenu ButtonSwing" /></td>
+<td><img src="images/swing_to_winui4k/JPopupMenu/ButtonWinUI4K.png" alt="JPopupMenu ButtonWinUI4K" /></td>
 </tr>
 </tbody>
 </table></div>
 <ul>
-<li>何が変か: 開いたメニューの先頭の項目 (New / Save / Status Bar / Cut / Rename / Undo Typing / Export as PDF) に、黒い太い角丸の枠が付いています (JMenuBar の Submenu・Check・Listener、JPopupMenu の Mouse・Listener・Button・CommandBarFlyout も同じ。Listener は先頭の 2 つが無効なので 3 つ目)。Keys では、メニュー バーの「File」の右上に「Ctrl+S」と書いた小さなツールチップが、メニューとつながらない位置に浮いています。</li>
-<li>Swing では: Metal のメニューは、開いただけでは項目が選ばれた見た目になりません。ショートカット キーは項目の右に出るだけです。</li>
-<li>原因の見立て: WinUI の仕様。プログラムから開くと、キーボードで開いたのと同じ扱いになり、最初の項目にフォーカスが入って枠が出ます。キーボード アクセラレーターを持つ項目にキーボードのフォーカスが入ると、WinUI はそのキーのツールチップを出します。マウスで開いたときは出ないはずです。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#menu-basic">21.2</a>、<a href="swing_to_winui4k.html#menu-keys">21.3</a>、<a href="swing_to_winui4k.html#popup-component">22.2</a></li>
+<li>何が変か: <code>export.doClick()</code> で開いたフライアウトの先頭の項目 (Export as PDF) に、黒い太い角丸の枠が付いています。</li>
+<li>Swing では: Metal のメニューは、開いただけでは項目が選ばれた見た目になりません。</li>
+<li>原因の見立て: WinUI の仕様。ボタンをプログラムから押して開くと、キーボードで開いたのと同じ扱いになり、最初の項目にフォーカスが入って枠が出ます。前の版の画像では、メニュー バーのメニューや <code>popup.show</code> で開いたメニューにも枠が付き、Keys では「Ctrl+S」のツールチップも浮いていましたが、表示した直後の操作を並べた後で行うように直した後 (<code>e065f680</code>) の画像では、どちらも出ていません。</li>
+<li>文書の節: <a href="swing_to_winui4k.html#popup-button">22.5</a></li>
 </ul>
 <h4 id="d30">表示 30. ツールチップが部品の上に出て、タイトル バーを隠す<a class="anchor" href="#d30">#</a></h4>
 <div class="table"><table>
@@ -1351,20 +944,15 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: <code>&lt;html&gt;</code> で始まる文字を受けたら、タグを取り除いて <code>&lt;br&gt;</code> を改行にする程度の救済をするか、WinUI の Run・Bold に変える簡単な対応をする。少なくとも警告を出す。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#button-notes">1.16</a>、<a href="swing_to_winui4k.html#label-wrap">4.7</a>、<a href="swing_to_winui4k.html#tooltip-content">29.3</a></li>
 </ul>
-<h4 id="a-wrapstyleword">API 10. ★ <code>setWrapStyleWord(true)</code> で折り返さなくなる<a class="anchor" href="#a-wrapstyleword">#</a></h4>
+<h4 id="a-wrapstyleword">API 10. <code>setWrapStyleWord(true)</code> で折り返さなくなる (直した: <code>ec8a1ea7</code>)<a class="anchor" href="#a-wrapstyleword">#</a></h4>
 <ul>
-<li>Swing: <code>setLineWrap(true); setWrapStyleWord(true);</code> で単語の切れ目で折り返す (最もよく書く 2 行)。</li>
-<li>WinUI4K: <code>wrapStyleWord</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextPane.kt#L306-L317"><code>WTextPane.kt:306-317</code></a>) が <code>TextWrapping.WRAP_WHOLE_WORDS</code> を設定する。</li>
-<li>何が不自然か: RichEditBox は WrapWholeWords に対応しておらず、折り返さなくなります (<a href="#d11">表示 11</a>。実行で確かめた)。</li>
-<li>直す案: <code>wrapStyleWord</code> は値を覚えるだけにして、<code>lineWrap</code> が true なら常に <code>WRAP</code> にする (WinUI の Wrap ははじめから単語の切れ目で折り返す)。</li>
+<li>直した後: <code>wrapStyleWord</code> は値を覚え、RichEditBox には <code>WRAP</code> を入れるので、Swing と同じく <code>setLineWrap(true); setWrapStyleWord(true);</code> で単語の切れ目で折り返します (<a href="#d11">表示 11</a>)。</li>
+<li>残る違い: WinUI の折り返しははじめから単語の切れ目なので、<code>setWrapStyleWord(false)</code> でも単語の切れ目で折り返します (Swing の文字の切れ目での折り返しはできない)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#textarea-wrap">12.3</a></li>
 </ul>
-<h4 id="a-foreground">API 11. ★ <code>setForeground</code> が入力欄の文字の色にならない<a class="anchor" href="#a-foreground">#</a></h4>
+<h4 id="a-foreground">API 11. <code>setForeground</code> が入力欄の文字の色にならない (直した: <code>16accf8e</code>)<a class="anchor" href="#a-foreground">#</a></h4>
 <ul>
-<li>Swing: <code>JTextArea.setForeground(Color)</code>・<code>JTextField.setForeground(Color)</code>。</li>
-<li>WinUI4K: <code>WControl.foreground</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WControl.kt#L103-L123"><code>WControl.kt:103-123</code></a>) は Control.Foreground を設定するだけ。</li>
-<li>何が不自然か: 入力欄の文字が黒のままです (<a href="#d10">表示 10</a>)。<code>background</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WControl.kt#L138"><code>WControl.kt:138</code></a>) は入力欄の表示の状態ごとの色まで合わせているのに、<code>foreground</code> は合わせていません。</li>
-<li>直す案: 入力欄では TextControlForeground / ...PointerOver / ...Focused もリソースに入れる (background と同じやり方)。RichEditBox は文書の既定の文字の書式の色も合わせる。</li>
+<li>直した後: 入力欄 (<code>WTextField</code>・<code>WPasswordField</code>・<code>WTextPane</code>・<code>WAutoSuggestBox</code>・<code>WSpinner</code>) では、<code>background</code> と同じく TextControlForeground / ...PointerOver / ...Focused もリソースに入れるので、フォーカスを持った欄の文字もその色になります (<a href="#d10">表示 10</a>)。無効の見た目はテーマの既定のままです。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#textarea-appearance">12.6</a>、<a href="swing_to_winui4k.html#textfield-appearance">2.14</a></li>
 </ul>
 <h4 id="a-table-selection">API 12. ★ <code>WTable.setSelectionMode(MULTIPLE_INTERVAL_SELECTION)</code> が黙って単一の選択になる<a class="anchor" href="#a-table-selection">#</a></h4>
@@ -1418,12 +1006,13 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: 作るときに一意の <code>groupName</code> を付けて独立させ、<code>WButtonGroup</code> に入れたときだけまとめる (Swing と同じ)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#radio-group">6.2</a></li>
 </ul>
-<h4 id="a-painted">API 15. <code>setStringPainted(true)</code> / <code>setPaintTicks(true)</code> が Swing のように描かない<a class="anchor" href="#a-painted">#</a></h4>
+<h4 id="a-painted">API 15. <code>setStringPainted(true)</code> が Swing のように描かない (<code>setPaintTicks(true)</code> は直した: <code>699193f8</code>)<a class="anchor" href="#a-painted">#</a></h4>
 <ul>
-<li>Swing: <code>JProgressBar.setStringPainted(true)</code> でバーの上に「65%」。<code>JSlider.setPaintTicks(true)</code> でトラックの下に目盛り (既定は false)。</li>
-<li>WinUI4K: <code>isStringPainted</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WProgressBar.kt#L99"><code>WProgressBar.kt:99</code></a>) は UI オートメーションに文字を入れるだけ (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/ProgressRange.kt#L76-L78"><code>ProgressRange.kt:76-78</code></a>)。<code>paintTicks</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSlider.kt#L251-L259"><code>WSlider.kt:251-259</code></a>) は「tickPlacement が NONE でないか」で、既定の INLINE (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSlider.kt#L202"><code>WSlider.kt:202</code></a>) のために何もしなくても true を返し、true を入れても位置を変えない。</li>
-<li>何が不自然か: 同じ名前の設定でコンパイルが通り、画面に何も出ない、またはトラックに重なって見えません (<a href="#d17">表示 17</a>・<a href="#d31">表示 31</a>)。</li>
-<li>直す案: 進捗バーは、バーの上か横に TextBlock を重ねて描く (描かないなら名前を変える)。スライダーは、tickPlacement の既定を NONE にし、<code>paintTicks = true</code> で BOTTOM_RIGHT にする (Swing と同じ)。</li>
+<li>Swing: <code>JProgressBar.setStringPainted(true)</code> でバーの上に「65%」。</li>
+<li>WinUI4K: <code>isStringPainted</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WProgressBar.kt#L99"><code>WProgressBar.kt:99</code></a>) は UI オートメーションに文字を入れるだけ (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/ProgressRange.kt#L76-L78"><code>ProgressRange.kt:76-78</code></a>)。</li>
+<li>何が不自然か: 同じ名前の設定でコンパイルが通り、画面に何も出ません (<a href="#d31">表示 31</a>)。</li>
+<li>直す案: バーの上か横に TextBlock を重ねて描く (描かないなら名前を変える)。</li>
+<li>直したもの: <code>WSlider</code> の目盛りの位置の既定を NONE にし、<code>paintTicks</code> の既定を false、<code>setPaintTicks(true)</code> でトラックの下 (BOTTOM_RIGHT) に描くようにしました (Swing と同じ。<a href="#d17">表示 17</a>)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#progress-string">11.4</a>、<a href="swing_to_winui4k.html#slider-ticks">10.3</a></li>
 </ul>
 <h4 id="a-inputmap">API 16. <code>list.getInputMap()</code> (WHEN_FOCUSED) に入れたキーが効かない<a class="anchor" href="#a-inputmap">#</a></h4>
@@ -1434,12 +1023,12 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: <code>WList</code> の WHEN_FOCUSED の登録も、項目にフォーカスがあるときに効かせる。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#list-delete">3.11</a></li>
 </ul>
-<h4 id="a-revalidate-scroll">API 17. スクロールペインの中身の <code>revalidate()</code> で、スクロールが先頭に戻る<a class="anchor" href="#a-revalidate-scroll">#</a></h4>
+<h4 id="a-revalidate-scroll">API 17. スクロールペインの中身の <code>revalidate()</code> で、続きの読み込みが余分に起きる<a class="anchor" href="#a-revalidate-scroll">#</a></h4>
 <ul>
-<li>Swing: <code>panel.add(...); panel.revalidate();</code> はスクロールの位置を保つ。</li>
-<li>WinUI4K: 中身の <code>revalidate()</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L983"><code>WComponent.kt:983</code></a>) が祖先の <code>WLayoutPanel</code> の並べ直しを予約し、その間に ScrollViewer の表示領域が中身の高さまで広がって、位置が 0 になる (実測)。</li>
-<li>何が不自然か: Swing の定番の <code>revalidate()</code> を残すと、続きを読み込むたびに先頭に戻り、さらに「末尾にいる」と判定されて読み込みが続きます。</li>
-<li>直す案: <code>WScrollPane</code> を並べ直すときは、子の希望の大きさではなく割り当てた大きさで測らせる。</li>
+<li>Swing: <code>panel.add(...); panel.revalidate();</code> はスクロールの位置を保ち、<code>AdjustmentListener</code> も位置が変わったときだけ呼ばれる。</li>
+<li>WinUI4K: 中身の <code>revalidate()</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L983"><code>WComponent.kt:983</code></a>) が祖先の <code>WLayoutPanel</code> の並べ直しを予約し、その間に ScrollViewer の表示領域が中身の高さまで広がる。位置は <code>0c0c992d</code> で、測り直した後に元へ戻すようにした。</li>
+<li>何が不自然か: 位置は戻りますが、途中の一時的な位置でリスナーが呼ばれ、「末尾にいる」と判定されます。<a href="swing_to_winui4k.html#scrollbar-loadmore">16.5</a> のサンプルに <code>items.revalidate()</code> を足して撮り直すと、足さないときの 40 件に対して、読み込みがもう 1 回起きて 60 件になりました。</li>
+<li>直す案: 測り直しで位置を外して戻す間は、スクロールのリスナーに知らせない。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#scrollbar-loadmore">16.5</a></li>
 </ul>
 <h4 id="a-meaning-table">API 18. そのほかの、同じ名前で違う振る舞い<a class="anchor" href="#a-meaning-table">#</a></h4>
@@ -1613,12 +1202,9 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: 引数なしの既定を <code>WFlowLayout()</code> にする (null のレイアウトは <code>new WLayoutPanel(null)</code> で明示する。Swing の <code>new JPanel(null)</code> と同じ)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#basics-differences">0.2</a>、<a href="swing_to_winui4k.html#panel-table">14.1</a>、<a href="swing_to_winui4k.html#checklist">付録 A</a></li>
 </ul>
-<h4 id="a-nest">API 21. ★ 入れ子の <code>WLayoutPanel</code> や、スクロールペインの中身の <code>WLayoutPanel</code> が、希望の大きさで並ばない<a class="anchor" href="#a-nest">#</a></h4>
+<h4 id="a-nest">API 21. 入れ子の <code>WLayoutPanel</code> や、スクロールペインの中身の <code>WLayoutPanel</code> が、希望の大きさで並ばない (直した: <code>804e7a31</code>)<a class="anchor" href="#a-nest">#</a></h4>
 <ul>
-<li>Swing: <code>JPanel</code> の中の <code>JPanel</code> は子の希望の大きさから自分の希望の大きさを決める。<code>new JScrollPane(panel)</code> のパネルは希望の大きさのまま並び、はみ出した分をスクロールする。</li>
-<li>WinUI4K: <code>WLayoutPanel</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLayoutPanel.kt#L22"><code>WLayoutPanel.kt:22</code></a>) の自分の大きさの決め方 (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLayoutPanel.kt#L228"><code>WLayoutPanel.kt:228</code></a>) と親の並べ直しの順の問題で、入れ子の <code>WLayoutPanel</code> の高さ (や幅) がほぼ 0 のまま並ぶ。<code>WScrollPane.content</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WScrollPane.kt#L369"><code>WScrollPane.kt:369</code></a>) は中身の寄せ方を変えないので、中身の <code>WLayoutPanel</code> が表示領域に押し込まれる。</li>
-<li>何が不自然か: <code>new JPanel(layout)</code> → <code>new WLayoutPanel(layout)</code> の素直な書き換えで画面が崩れます (<a href="#d1">表示 1</a>)。Swing でいちばんよく書く「パネルをスクロールペインに入れる」も、そのままでは動きません。</li>
-<li>直す案: 子の <code>WLayoutPanel</code> が希望の大きさを決めたら、親の並べ直しを予約する。親が <code>WLayoutPanel</code> でないとき (<code>WBorder</code> の中など) は、希望の大きさを返せるようにする。スクロールペインの中身が <code>WLayoutPanel</code> のときは、見出しのときと同じく左上に寄せる。</li>
+<li>直した後: 入れ子の <code>WLayoutPanel</code> (<code>WBorder</code> の中も) は子を測った後の希望の大きさで外に並べられ、表示した後に中の大きさが変わっても外が並べ直します。<code>WScrollPane</code> の中身の <code>WLayoutPanel</code> は、<code>JViewport</code> と同じく希望の大きさと表示領域の大きい方で並び、はみ出した分をスクロールします (<a href="#d1">表示 1</a>)。<code>new JPanel(layout)</code> → <code>new WLayoutPanel(layout)</code> の素直な書き換えで並びます。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#panel-nest">14.2</a>、<a href="swing_to_winui4k.html#panel-border">14.3</a>、<a href="swing_to_winui4k.html#scroll-basic">15.2</a></li>
 </ul>
 <h4 id="a-scroll-horizontal">API 22. ★ <code>WScrollPane</code> の横のスクロールが、既定で無効<a class="anchor" href="#a-scroll-horizontal">#</a></h4>
@@ -1629,12 +1215,9 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: 横も AUTO を既定にする (少なくとも Swing の形のコンストラクターでは <code>AS_NEEDED</code> にする)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#scroll-policy">15.3</a></li>
 </ul>
-<h4 id="a-preferred-size">API 23. ★ スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い<a class="anchor" href="#a-preferred-size">#</a></h4>
+<h4 id="a-preferred-size">API 23. スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い (直した: <code>9ffda622</code>)<a class="anchor" href="#a-preferred-size">#</a></h4>
 <ul>
-<li>Swing: <code>JSlider</code> は横 200 (縦なら高さ 200)、<code>JProgressBar</code> は幅 146、<code>JSpinner</code> は列数から決まる幅を持つ。</li>
-<li>WinUI4K: <code>WSlider</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSlider.kt#L78"><code>WSlider.kt:78</code></a>)・<code>WProgressBar</code>・<code>WProgressRing</code>・<code>WSpinner</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSpinner.kt#L59"><code>WSpinner.kt:59</code></a>) は、幅を指定しないと <code>WFlowLayout</code> の中でつまみ 1 つ分か 0 になる。</li>
-<li>何が不自然か: 書き換えただけでは部品が見えません (<a href="#d5">表示 5</a>)。文書のサンプルには全部 <code>setWidth</code> / <code>setHeight</code> が要りました。</li>
-<li>直す案: Swing と同じ希望の大きさを既定にする (スライダーは 200、進捗バーは 146、スピナーは消去ボタンの分を含めた幅)。</li>
+<li>直した後: <code>WSlider</code> は長さの向きが 200 (<code>JSlider</code> と同じ)、<code>WProgressBar</code> は幅 146 (<code>JProgressBar</code> と同じ)、<code>WProgressRing</code> は 32 × 32 (WinUI の既定のスタイル)、<code>WSpinner</code> はフォーカスで出る消去ボタンの分を含めた幅を、希望の大きさに持ちます (<a href="#d5">表示 5</a>)。文書のサンプルから <code>setWidth</code> / <code>setHeight</code> を外しました。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#spinner-basic">9.2</a>、<a href="swing_to_winui4k.html#slider-basic">10.2</a>、<a href="swing_to_winui4k.html#progress-basic">11.2</a>、<a href="swing_to_winui4k.html#progress-winui">11.7</a></li>
 </ul>
 <h4 id="a-linewrap">API 24. ★ <code>WTextPane</code> の <code>lineWrap</code> の既定が逆<a class="anchor" href="#a-linewrap">#</a></h4>
@@ -1653,12 +1236,10 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <li>直す案: 既定は WinUI に合わせたままでもよいが、文書と Javadoc で強調する。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#list-multiple">3.6</a>、<a href="swing_to_winui4k.html#tree-selection">20.3</a></li>
 </ul>
-<h4 id="a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う<a class="anchor" href="#a-table-column">#</a></h4>
+<h4 id="a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う (直した: <code>7178e9a3</code>・<code>6814a8be</code>)<a class="anchor" href="#a-table-column">#</a></h4>
 <ul>
-<li>Swing: <code>TableColumn</code> の既定の幅は 75 で、<code>setAutoResizeMode</code> (既定は <code>AUTO_RESIZE_SUBSEQUENT_COLUMNS</code>) で表の幅を列で分け合う。<code>Number</code> の列は右寄せ。</li>
-<li>WinUI4K: <code>preferredWidth</code> の説明は「NaN なら既定の幅 (120)」(<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/table/TableColumn.kt#L116"><code>table/TableColumn.kt:116</code></a>) だが、実際は中身に合わせた幅。表の幅に合わせる設定は無い。<code>TableModel</code> の説明 (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/table/TableModel.kt#L22"><code>table/TableModel.kt:22</code></a>) は「Number は右寄せ」だが、右に寄らない (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/TableViewColumnPeer.kt#L68-L72"><code>TableViewColumnPeer.kt:68-72</code></a>)。</li>
-<li>何が不自然か: 列が細く、右に大きな空きができます。数値の桁がそろいません (<a href="#d12">表示 12</a>・<a href="#d13">表示 13</a>)。説明を信じるとさらに迷います。</li>
-<li>直す案: 説明を実際に合わせる。<code>setAutoResizeMode</code> に当たるもの (最後の列や全部の列を Star の幅にする) を足す。数値の型の列は右に寄せる。</li>
+<li>直した後: 幅を決めない列 (<code>preferredWidth</code> が NaN) は、<code>JTable</code> の既定 (<code>AUTO_RESIZE_SUBSEQUENT_COLUMNS</code>) のように表の幅を分け合い、右に空きを残しません。幅の決まらない入れ物の中では 120 です。並べ替えの印の場所は列ヘッダーに空けます (<a href="#d12">表示 12</a>)。<code>getColumnClass</code> が <code>Number</code> の列は右に寄せます (<a href="#d13">表示 13</a>)。</li>
+<li>残る違い: <code>setAutoResizeMode</code> に当たる設定はありません (いつも幅を決めない列で分け合う)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#table-basic">19.2</a>、<a href="swing_to_winui4k.html#table-columns">19.4</a></li>
 </ul>
 <h4 id="a-spinner-buttons">API 27. <code>WSpinner</code> の上下のボタンが、既定で出ない<a class="anchor" href="#a-spinner-buttons">#</a></h4>
@@ -1733,12 +1314,6 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <td><code>WLabel.<wbr>textTrimming</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLabel.kt#L403"><code>WLabel.<wbr>kt:403</code></a>) は NONE で、切るだけ</td>
 <td><code>CHARACTER_ELLIPSIS</code> にする</td>
 <td><a href="swing_to_winui4k.html#label-notes">4.9</a></td>
-</tr>
-<tr>
-<td><code>JLabel</code> の縦の寄せ方は CENTER</td>
-<td>引き伸ばした <code>WLabel</code> の文字は上に寄る (<a href="#d14">表示 14</a>)</td>
-<td>ラベルの中の文字を縦の中央に寄せる</td>
-<td><a href="swing_to_winui4k.html#panel-background">14.4</a>、<a href="swing_to_winui4k.html#split-basic">17.2</a></td>
 </tr>
 <tr>
 <td><code>JColorChooser</code> は既定で透明度のスライダーがある</td>
@@ -2025,53 +1600,40 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 </tbody>
 </table></div>
 <h3 id="api-timing">2.4 表示した直後に使えないなど、使う時機の制約<a class="anchor" href="#api-timing">#</a></h3>
-<h4 id="a-settext-before">API 38. ★ 表示する前の <code>setText</code> が、<code>addTextChangedListener</code> に届かない<a class="anchor" href="#a-settext-before">#</a></h4>
+<h4 id="a-settext-before">API 38. 表示する前の <code>setText</code> が、<code>addTextChangedListener</code> に届かない (直した: <code>e354832a</code>)<a class="anchor" href="#a-settext-before">#</a></h4>
 <ul>
-<li>Swing: <code>getDocument().addDocumentListener(...)</code> は <code>setText</code> の中ですぐ呼ばれる。</li>
-<li>WinUI4K: <code>WTextField.addTextChangedListener</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextField.kt#L659"><code>WTextField.kt:659</code></a>) は WinUI の TextChanged を待つので、画面に載る前の <code>setText</code> では呼ばれない。<code>addDocumentListener</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextField.kt#L596"><code>WTextField.kt:596</code></a>) で同じことが起きるかは確かめていない。</li>
-<li>何が不自然か: 初めの文字を入れる順で結果が変わり、絞り込みなどの初めの値が効きません (<a href="#d2">表示 2</a>)。</li>
-<li>直す案: <code>WTextField.setText</code> で、まだ載っていないとき (または値が変わったときはいつも) WinUI4K がリスナーを呼ぶ。</li>
+<li>直した後: <code>WTextField.addTextChangedListener</code>・<code>WPasswordField.addPasswordChangedListener</code>・<code>WTextPane.addTextChangedListener</code> のリスナーは、Swing の <code>DocumentListener</code> と同じく、表示する前でも <code>setText</code> の中ですぐ呼ばれます。後から届く WinUI の通知は、同じ文字列なら知らせません (<a href="#d2">表示 2</a>)。</li>
+<li>残る違い: <code>WAutoSuggestBox</code> は、表示する前の文字を表示した後に 1 回だけ (<code>PROGRAMMATIC_CHANGE</code> で) 知らせます (その場では呼ばない)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#textfield-change">2.4</a>、<a href="swing_to_winui4k.html#list-filter">3.13</a>、<a href="swing_to_winui4k.html#table-sort">19.6</a></li>
 </ul>
-<h4 id="a-label-settext">API 39. ★ 表示した後の <code>WLabel.setText</code> で、並べ直されない<a class="anchor" href="#a-label-settext">#</a></h4>
+<h4 id="a-label-settext">API 39. 表示した後の <code>WLabel.setText</code> で、並べ直されない (直した: <code>355623db</code>)<a class="anchor" href="#a-label-settext">#</a></h4>
 <ul>
-<li>Swing: <code>JLabel.setText</code> は自分で <code>revalidate()</code> と <code>repaint()</code> を呼ぶ。</li>
-<li>WinUI4K: <code>WLabel.text</code> の setter (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLabel.kt#L160-L167"><code>WLabel.kt:160-167</code></a>) は TextBlock の文字を替えるだけ。</li>
-<li>何が不自然か: 表示した後で文字を長くすると前の幅のまま切れ、空のラベルは見えないままです (<a href="#d4">表示 4</a>)。「ボタンを押したらラベルに結果を出す」コードがそのまま壊れます。<code>revalidate()</code> を呼べば直ります。</li>
-<li>直す案: <code>text</code>・<code>font</code>・<code>icon</code> など大きさの変わる setter で、希望の大きさを捨てて親を並べ直す。<code>WCheckBox</code>・<code>WButton</code> の <code>text</code> も同じか確かめる。</li>
+<li>直した後: <code>WLabel</code> の文字・アイコン・フォント・折り返し、ボタン (<code>WButtonBase</code>・<code>WSplitButton</code>) の文字・アイコン、<code>WControl</code> の <code>font</code>・<code>padding</code>・<code>border</code> を替えると、Swing と同じく自分で <code>revalidate()</code> を呼びます (<a href="#d4">表示 4</a>)。<code>WImageIcon</code> の画像を読み込み終えたときも、アイコンを表示している部品を並べ直します (<code>c906b813</code>)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#label-basic">4.2</a></li>
 </ul>
-<h4 id="a-after-show-dialog">API 40. ★ 表示した直後のウィンドウに、ダイアログを開くと例外になる<a class="anchor" href="#a-after-show-dialog">#</a></h4>
+<h4 id="a-after-show-dialog">API 40. 表示した直後のウィンドウに、ダイアログを開くと例外になる (直した: <code>e652273a</code>)<a class="anchor" href="#a-after-show-dialog">#</a></h4>
 <ul>
-<li>Swing: <code>frame.setVisible(true); JOptionPane.showMessageDialog(frame, ...)</code> は普通に動く。</li>
-<li>WinUI4K: <code>WContentDialog.open</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WContentDialog.kt#L366-L372"><code>WContentDialog.kt:366-372</code></a>) が持ち主の XamlRoot を求め、無ければ <code>IllegalArgumentException</code> (「持ち主 (owner) がウィンドウに載っていないので、ダイアログを開けない」)。<code>WOptionPane</code> も同じ (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WFrame.kt#L1155"><code>WFrame.kt:1155</code></a>)。</li>
-<li>何が不自然か: <code>setVisible(true)</code> の直後・<code>WinUiUtilities.invokeLater</code> の中・<code>windowOpened</code> の中のどれでも例外になり、<code>WinUiUtilities.schedule(300, ...)</code> でようやく開けました (実行で確かめた)。起動したときに「前回の続きから開きますか?」を出す、よくある書き方が動きません。メッセージからは原因 (まだ並べ終わっていない) が分かりません。</li>
-<li>直す案: XamlRoot がまだ無ければ、中身が読み込まれる (Loaded) まで待ってから開く (<code>showAndWait</code> ならその間も待つ)。少なくとも <code>windowOpened</code> を、中身が読み込まれた後に出す。</li>
+<li>直した後: 持ち主が表示したウィンドウの中身に入っていれば、<code>setVisible(true)</code> の直後・<code>invokeLater</code> の中・<code>windowOpened</code> の中でも例外にならず、<code>show</code> は並べた後で開き、<code>showAndWait</code> (<code>WOptionPane</code> を含む) は中身を読み込むまで待ってから開きます。どのウィンドウにも載っていない持ち主は、これまでどおり <code>IllegalArgumentException</code> です。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#dialog-basic">25.2</a>、<a href="swing_to_winui4k.html#optionpane-message">26.2</a></li>
 </ul>
-<h4 id="a-after-show-menu">API 41. ★ 表示した直後にメニューやポップアップを開いても、黙って開かない<a class="anchor" href="#a-after-show-menu">#</a></h4>
+<h4 id="a-after-show-menu">API 41. 表示した直後にメニューやポップアップを開いても、黙って開かない (メニューは直した: <code>e065f680</code>)<a class="anchor" href="#a-after-show-menu">#</a></h4>
 <ul>
-<li>Swing: <code>frame.setVisible(true); menu.doClick();</code>・<code>popup.show(c, x, y);</code> はそのまま開く。</li>
-<li>WinUI4K: <code>WMenuBarItem.isPopupMenuVisible</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WMenuBar.kt#L172"><code>WMenuBar.kt:172</code></a>)・<code>WFlyoutBase.show</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WFlyout.kt#L89"><code>WFlyout.kt:89</code></a>)。</li>
-<li>何が不自然か: <code>setVisible(true)</code> のすぐ後に <code>setPopupMenuVisible(true)</code> を呼んでも開かず、<code>isPopupMenuVisible()</code> も false のままです。<code>show(...)</code> も開きません。どちらも何も言わずに無視されます (実行で確かめた)。Javadoc には「ウィンドウに載る前は開かない」とありますが、<code>setVisible(true)</code> の後でもまだ開けません。</li>
-<li>直す案: 開く頼みを覚えておき、Loaded の後に開く (<code>show</code> には閉じる途中の再表示を待つ仕組みが既にある)。難しければ、開けなかったときに警告を出す。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#menu-basic">21.2</a>、<a href="swing_to_winui4k.html#popup-mouse">22.3</a></li>
+<li>直した後: 表示した直後の <code>WMenuBarItem.setPopupMenuVisible(true)</code>・<code>doClick()</code> と、<code>WMenuFlyout</code> などのフライアウトの <code>show</code> / <code>showAt</code> は、頼みを覚えて並べた後で開きます。開くまでの間も <code>isPopupMenuVisible()</code> は true です。</li>
+<li>残る不自然さ: <code>WToolTip.setOpen(true)</code>・<code>WCommandBar.setOpen(true)</code> (「…」のメニュー)・<code>WTeachingTip.show()</code> は、表示した直後に呼ぶと黙って開きません。文書のサンプルはまだ <code>WinUiUtilities.schedule(500, ...)</code> で待っています。ボタンの <code>setFlyout</code> で付けたフライアウトも、表示した直後の <code>doClick()</code> では開きません (撮り直しで確かめた。<a href="swing_to_winui4k.html#popup-button">22.5</a> のサンプルも待っている)。</li>
+<li>直す案: ほかの操作と同じく、最初のレイアウトの前の頼みを覚えて、並べた後で開く。</li>
+<li>文書の節: <a href="swing_to_winui4k.html#menu-basic">21.2</a>、<a href="swing_to_winui4k.html#popup-mouse">22.3</a>、<a href="swing_to_winui4k.html#tooltip-show">29.4</a>、<a href="swing_to_winui4k.html#toolbar-winui">23.6</a></li>
 </ul>
-<h4 id="a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない<a class="anchor" href="#a-before-show-selection">#</a></h4>
+<h4 id="a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない (直した: <code>3c075d1f</code>・<code>a343108e</code>)<a class="anchor" href="#a-before-show-selection">#</a></h4>
 <ul>
-<li>Swing: <code>table.setRowSelectionInterval(1, 1)</code>・<code>list.ensureIndexIsVisible(42)</code> は、<code>setVisible</code> の前に呼んでも表示したときに効いている。</li>
-<li>WinUI4K: <code>WTable.setRowSelectionInterval</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTable.kt#L414"><code>WTable.kt:414</code></a>) は選択のモデルには入るが、表の見た目に写らない。<code>WList.ensureIndexIsVisible</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WList.kt#L321"><code>WList.kt:321</code></a>) は表示する前は効かない。</li>
-<li>何が不自然か: 起動したときに既定の行を選ぶ、よくあるコードが見た目だけ効きません。リスナーは呼ばれるので気づきにくいです (<a href="#d7">表示 7</a>)。</li>
-<li>直す案: 画面に載った後 (Loaded の後) に、選択のモデルの中身や見せたい位置を WinUI に写し直す (<code>requestFocusInWindow</code> の <code>WFrame.deferFocus</code> と同じ考え方。<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L645"><code>WComponent.kt:645</code></a>)。</li>
+<li>直した後: 表示する前・ウィンドウに入れた直後の <code>WList</code> / <code>WListBox</code> の <code>ensureIndexIsVisible</code>・<code>setSelectedValue(..., true)</code>・<code>scrollIntoView</code> は、覚えておいて並べた後でスクロールします。表示する前の <code>WTable.setRowSelectionInterval</code> は、並べた後で表の選択に写し直します。表示する前の <code>clearSelection</code> は、選択のモデルからも外します (<a href="#d7">表示 7</a>)。</li>
 <li>文書の節: <a href="swing_to_winui4k.html#list-select">3.7</a>、<a href="swing_to_winui4k.html#table-model">19.3</a>、<a href="swing_to_winui4k.html#table-selection">19.5</a></li>
 </ul>
-<h4 id="a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない<a class="anchor" href="#a-after-show-position">#</a></h4>
+<h4 id="a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない (直した: <code>0c0c992d</code>・<code>9092016b</code>)<a class="anchor" href="#a-after-show-position">#</a></h4>
 <ul>
-<li>Swing: <code>frame.setVisible(true)</code> の後すぐに <code>scroll.getViewport().setViewPosition(...)</code>・<code>bar.setValue(...)</code>・<code>split.setDividerLocation(200)</code> が効く。</li>
-<li>WinUI4K: <code>WViewport.viewPosition</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WViewport.kt#L23"><code>WViewport.kt:23</code></a>) と <code>WScrollPaneBar.value</code> は <code>changeViewImmediately</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WScrollPane.kt#L298"><code>WScrollPane.kt:298</code></a>) で動かすが、最初のレイアウトの前は動かせる高さが 0 なので 0 に丸められる (Loaded の中でも 0、<code>invokeLater</code> でも効かず、<code>schedule(500, ...)</code> で効いた)。<code>WSplitPane.dividerLocation</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSplitPane.kt#L178"><code>WSplitPane.kt:178</code></a>) は、設定してリスナーも 200 で呼ばれるが、最初のレイアウトで希望の大きさからの位置 (56) に戻る。表示する前の <code>setDividerLocation(double)</code> (<a href="../winui4k/src/main/kotlin/com/appkitbox/winui4k/WSplitPane.kt#L197"><code>WSplitPane.kt:197</code></a>) は <code>setResizeWeight</code> と組み合わせるとずれる (<a href="#d8">表示 8</a>)。</li>
-<li>何が不自然か: 「開いたら前回の位置までスクロールしておく」「仕切りを前回の位置にする」が Swing のように書けず、確実に効く時点を知る手段もありません。</li>
-<li>直す案: 最初のレイアウトの前に設定された位置を覚えておき、中身の大きさが決まった後に当て直す。仕切りは、利用者が設定した位置があれば最初のレイアウトでも決め直さない。割合は、パネルの大きさが最後に決まった後に位置へ直す。</li>
-<li>文書の節: <a href="swing_to_winui4k.html#scroll-position">15.4</a>、<a href="swing_to_winui4k.html#split-listener">17.4</a>、<a href="swing_to_winui4k.html#split-vertical">17.3</a></li>
+<li>直した後: 表示した直後の <code>WViewport.viewPosition</code>・<code>WScrollPaneBar.value</code> は、頼まれた位置を覚えて並べた後で当て、その間も頼んだ値を返します。<code>WLayoutPanel</code> の中の <code>WSplitPane</code> は割り当てられた大きさで仕切りを決めるので、表示した直後の <code>setDividerLocation(200)</code> も、表示する前の割合 (<code>setResizeWeight</code> と組み合わせても) も効きます (<a href="#d7">表示 7</a>・<a href="#d8">表示 8</a>)。</li>
+<li>残る不自然さ: 表示した直後 (最初のレイアウトの前) は中身の大きさが決まっていないので、スクロールバーの <code>getMaximum()</code> と <code>WViewport.getViewSize()</code> は 0 を返します。「開いたら末尾までスクロールする」(<code>setValue(getMaximum())</code>) は、まだ待たないと書けません (<a href="swing_to_winui4k.html#scrollbar-bottom">16.2</a>)。最初の <code>getLastDividerLocation()</code> は、Swing の 0 ではなく -1 です。</li>
+<li>直す案: 末尾へのスクロールを頼む API (<code>scrollToBottom</code> など) を足すか、最初のレイアウトの前の <code>getMaximum()</code> を中身の希望の大きさから求める。</li>
+<li>文書の節: <a href="swing_to_winui4k.html#scroll-position">15.4</a>、<a href="swing_to_winui4k.html#scrollbar-bottom">16.2</a>、<a href="swing_to_winui4k.html#split-listener">17.4</a>、<a href="swing_to_winui4k.html#split-vertical">17.3</a></li>
 </ul>
 <h4 id="a-scroll-listener">API 44. スクロールのリスナーが、後から呼ばれる<a class="anchor" href="#a-scroll-listener">#</a></h4>
 <ul>
@@ -2321,6 +1883,7 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 </tbody>
 </table></div>
 <h2 id="summary">まとめ: 優先して直したいもの<a class="anchor" href="#summary">#</a></h2>
+<p>2026-11-07 に直したもの (入れ子の <code>WLayoutPanel</code>・表示した後の <code>WLabel.setText</code>・表示する前の <code>setText</code>・起動した直後のフォーカスの枠・表示した直後のダイアログとメニュー・幅を指定しない部品・<code>setWrapStyleWord(true)</code>) は、表から外しました (<a href="#display-bug">1.1</a>)。</p>
 <div class="table"><table>
 <thead>
 <tr>
@@ -2339,75 +1902,33 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 </tr>
 <tr>
 <td>2</td>
-<td><a href="#a-nest">入れ子の <code>WLayoutPanel</code>・スクロールペインの中身の <code>WLayoutPanel</code></a></td>
-<td>不具合</td>
-<td><code>JPanel</code> を素直に書き換えると画面が崩れ、ボタンが消える。画像でも 4 つの節に出ている</td>
-</tr>
-<tr>
-<td>3</td>
-<td><a href="#a-label-settext">表示した後の <code>WLabel.<wbr>setText</code> で並べ直されない</a></td>
-<td>時機</td>
-<td>「押したらラベルに結果を出す」というどのアプリにもある書き方で、文字が切れる・出ない</td>
-</tr>
-<tr>
-<td>4</td>
-<td><a href="#a-settext-before">表示する前の <code>setText</code> がリスナーに届かない</a></td>
-<td>時機</td>
-<td>初めの値の絞り込みや文字数の表示が黙って効かない。画像にも出ている</td>
-</tr>
-<tr>
-<td>5</td>
 <td><a href="#a-placeholder"><code>new WTextField(&quot;…&quot;)</code> が案内文</a></td>
 <td>意味の違い</td>
 <td>同じ形のコンストラクターで意味が違い、コンパイルが通る。<code>(<wbr>String, int)</code> も無い</td>
 </tr>
 <tr>
-<td>6</td>
+<td>3</td>
 <td><a href="#a-alignment"><code>setHorizontalAlignment</code> が文字の揃えでない</a></td>
 <td>意味の違い</td>
 <td>機械的な書き換えでコンパイルが通り、黙って違う動きになる</td>
 </tr>
 <tr>
-<td>7</td>
-<td><a href="#d3">起動した直後のフォーカスの枠</a></td>
-<td>不具合</td>
-<td>ほとんどの画像に出て、押された・選ばれたように見える。ラジオボタンや木では違う部品に付く</td>
-</tr>
-<tr>
-<td>8</td>
-<td><a href="#a-after-show-dialog">表示した直後のダイアログが例外・メニューが黙って開かない</a></td>
-<td>時機</td>
-<td>起動したときの確認のダイアログなど、よくある書き方が例外になる・無視される</td>
-</tr>
-<tr>
-<td>9</td>
+<td>4</td>
 <td><a href="#a-layoutpanel-null"><code>new WLayoutPanel()</code> のレイアウトが null</a></td>
 <td>既定値</td>
 <td><code>new JPanel()</code> から移すと子が重なる・高さが 0 になる</td>
 </tr>
 <tr>
-<td>10</td>
-<td><a href="#a-preferred-size">幅を指定しないと部品が縮む・消える</a></td>
-<td>既定値</td>
-<td>スライダー・進捗バー・スピナーが書き換えただけでは見えない</td>
-</tr>
-<tr>
-<td>11</td>
+<td>5</td>
 <td><a href="#a-combo-remove"><code>WComboBox.<wbr>removeItem(<wbr>1)</code>・<code>getSelectedItem()</code></a></td>
 <td>意味の違い</td>
 <td>黙って違う項目が消える。選んだ項目の型が違う</td>
 </tr>
 <tr>
-<td>12</td>
+<td>6</td>
 <td><a href="#a-color"><code>WColor.<wbr>RED</code> などの値が違う</a></td>
 <td>意味の違い</td>
 <td>置き換えるだけで色が変わり、色を比べるコードやテストも変わる</td>
-</tr>
-<tr>
-<td>13</td>
-<td><a href="#a-wrapstyleword"><code>setWrapStyleWord(<wbr>true)</code> で折り返さない</a></td>
-<td>意味の違い</td>
-<td><code>JTextArea</code> でいちばんよく書く 2 行が、そのままでは壊れる</td>
 </tr>
 </tbody>
 </table></div>
