@@ -15,6 +15,7 @@ import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.longs.shouldNotBeExactly
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
@@ -48,13 +49,23 @@ class WFrameStateTest : FunSpec() {
         eventually(5.seconds) { onUiThreadGet { frame.contentPane.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)?.release() != null } shouldBe true }
     }
 
-    private fun scaleOf(component: WComponent): Double = onUiThreadGet {
-        val root = component.uiElement.getPtr(XamlInterop.IUIElement_get_XamlRoot)
-        try {
-            root.getDouble(XamlInterop.IXamlRoot_get_RasterizationScale)
-        } finally {
-            root.release()
+    /**
+     * The display scale of [component]. [show] waits only until the content (contentPane) is on a XamlRoot, so components placed outside the content,
+     * such as menus, may not have a XamlRoot yet (it became a null COM pointer on the slow GitHub Actions Arm64 runners). Waits until it is attached.
+     */
+    private suspend fun scaleOf(component: WComponent): Double {
+        var scale = 0.0
+        eventually(5.seconds) {
+            scale = onUiThreadGet {
+                val root = component.uiElement.getPtrOrNull(XamlInterop.IUIElement_get_XamlRoot)
+                try {
+                    root?.getDouble(XamlInterop.IXamlRoot_get_RasterizationScale)
+                } finally {
+                    root?.release()
+                }
+            }.shouldNotBeNull()
         }
+        return scale
     }
 
     private fun pngFile(name: String): File = File(workDir, name).also { it.writeBytes(WindowNatives.solidPng(32, 0xFF2080E0.toInt())) }
