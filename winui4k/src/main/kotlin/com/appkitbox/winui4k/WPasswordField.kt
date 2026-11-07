@@ -45,17 +45,31 @@ enum class PasswordRevealMode(internal val native: Int) {
  * (immutable strings cannot be overwritten, and PasswordBox exposes no way to zero out its string). It shortens the time
  * the password stays in memory, but cannot guarantee that the password is unreadable from a memory dump or the like.
  *
- * **Difference from Swing**: unlike JPasswordField(String text), the `(String)` constructor takes not the password but the placeholder text
- * ([placeholderText]) (the same as [WTextField]). To initialize it with a password, call [setText].
- * No constructor corresponding to JPasswordField(String text, int columns) is provided.
+ * The constructors have the same forms as JPasswordField, and the string of `(String)` and `(String, int)` becomes the password ([password]).
+ * The placeholder text is set with [placeholderText].
  *
- * @param placeholder the placeholder text ([placeholderText]). Not the password (unlike JPasswordField(String))
+ * **Change from earlier versions**: the constructor `(String)` used to take the placeholder text. It now becomes the password, as with JPasswordField(String).
+ * Code that passed placeholder text should set [placeholderText] instead.
  */
-class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WControl(
+class WPasswordField() : WControl(
     Activation.activate(XamlInterop.CLS_PasswordBox, XamlInterop.IID_IPasswordBox),
 ) {
+    /** JPasswordField(String text)-like: creates a field holding the password [text]. null is an empty string. */
+    constructor(text: String?) : this() {
+        if (!text.isNullOrEmpty()) setText(text)
+    }
+
     /** JPasswordField(int columns)-like: creates an input field [columns] columns wide. */
-    constructor(columns: Int) : this("") {
+    constructor(columns: Int) : this() {
+        this.columns = columns
+    }
+
+    /**
+     * JPasswordField(String text, int columns)-like: creates a field holding the password [text], [columns] columns wide. null is an empty string.
+     *
+     * @throws IllegalArgumentException if [columns] is negative (as in Swing)
+     */
+    constructor(text: String?, columns: Int) : this(text) {
         this.columns = columns
     }
 
@@ -186,7 +200,6 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
         set(value) = inspectable.call(XamlInterop.IPasswordBox_put_PasswordRevealMode, value.native)
 
     init {
-        if (placeholder.isNotEmpty()) placeholderText = placeholder
         passwordRevealMode = PasswordRevealMode.HIDDEN
         actions.install()
     }

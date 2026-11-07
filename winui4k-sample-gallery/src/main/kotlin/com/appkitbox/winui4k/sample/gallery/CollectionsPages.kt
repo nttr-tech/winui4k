@@ -242,7 +242,7 @@ private fun buildListItemOperationsExample(): WComponent {
     list.horizontalAlignment = HorizontalAlignment.LEFT
 
     val count = WLabel("Item count: ${list.itemCount}")
-    val input = WTextField("Item name to add").also { it.width = 200.0 }
+    val input = WTextField().apply { placeholderText = "Item name to add" }.also { it.width = 200.0 }
 
     val addButton = WButton("Add")
     addButton.addActionListener {
@@ -450,7 +450,7 @@ private fun buildTableSortFilterExample(): WComponent {
         status.text = "Sorted: ${table.getColumnName(event.column)} (${event.sortOrder}) / showing ${table.rowCount} rows"
     }
 
-    val filterText = WTextField("Filter by product (regular expression)")
+    val filterText = WTextField().apply { placeholderText = "Filter by product (regular expression)" }
     filterText.width = 240.0
     filterText.addTextChangedListener { text ->
         sorter.setRowFilter(if (text.isBlank()) null else RowFilter.regexFilter(text, 0))

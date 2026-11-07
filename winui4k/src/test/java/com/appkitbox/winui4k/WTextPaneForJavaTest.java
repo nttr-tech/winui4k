@@ -119,11 +119,12 @@ class WTextPaneForJavaTest {
     }
 
     @Test
-    void thePlaceholderConstructorCanStillBeCalledWithASingleString() {
+    void singleStringConstructorSetsTheBodyTextLikeJTextArea() {
         onUiThread(() -> {
-            WTextPane pane = new WTextPane("Type here");
-            assertEquals("Type here", pane.getPlaceholderText());
-            assertEquals("", pane.getText());
+            WTextPane pane = new WTextPane("Editor");
+            assertEquals("Editor", pane.getText());
+            assertEquals("", pane.getPlaceholderText());
+            assertEquals("", new WTextPane((String) null).getText());
         });
     }
 }

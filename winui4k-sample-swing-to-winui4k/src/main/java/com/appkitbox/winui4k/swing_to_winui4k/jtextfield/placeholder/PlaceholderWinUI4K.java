@@ -12,7 +12,8 @@ public class PlaceholderWinUI4K {
             WFrame frame = new WFrame("2.8 Placeholder and Header (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WTextField name = new WTextField("e.g. John Smith");   // the constructor string is the placeholder
+            WTextField name = new WTextField(20);
+            name.setPlaceholderText("e.g. John Smith");      // shown while the field is empty
             name.setHeader("Name");                             // header shown above the field
             frame.add(name);
 

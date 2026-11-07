@@ -131,7 +131,7 @@ internal fun buildPasswordBoxPage(): WComponent {
 private fun buildSimplePasswordBoxExample(): WComponent {
     val result = WLabel("Enter a password of at least 8 characters").also { it.foreground = TEXT_SECONDARY }
 
-    val passwordField = WPasswordField(placeholder = "Enter password")
+    val passwordField = WPasswordField().apply { placeholderText = "Enter password" }
     passwordField.width = 300.0
     passwordField.header = "Password"
     passwordField.passwordRevealMode = PasswordRevealMode.PEEK // Show the reveal button (the default is HIDDEN with no reveal button, as in Swing)
@@ -151,14 +151,14 @@ private fun buildSimplePasswordBoxExample(): WComponent {
 
 /** Reveal mode and mask character: PasswordRevealMode and PasswordChar. */
 private fun buildRevealModePasswordBoxExample(): WComponent {
-    val hiddenField = WPasswordField(placeholder = "Default: no reveal button (HIDDEN)")
+    val hiddenField = WPasswordField().apply { placeholderText = "Default: no reveal button (HIDDEN)" }
     hiddenField.width = 300.0
 
-    val visibleField = WPasswordField(placeholder = "echoChar = 0: always plain text (VISIBLE)")
+    val visibleField = WPasswordField().apply { placeholderText = "echoChar = 0: always plain text (VISIBLE)" }
     visibleField.width = 300.0
     visibleField.echoChar = 0.toChar()
 
-    val customCharField = WPasswordField(placeholder = "Use # as the mask character")
+    val customCharField = WPasswordField().apply { placeholderText = "Use # as the mask character" }
     customCharField.width = 300.0
     customCharField.passwordChar = "#"
 
@@ -186,7 +186,7 @@ internal fun buildRichEditBoxPage(): WComponent {
 
 /** Editing formatted text: toggling bold/italic on the selection, plus Undo/Redo. */
 private fun buildFormattingRichEditBoxExample(): WComponent {
-    val textPane = WTextPane(placeholder = "Enter text, select it, then press a formatting button")
+    val textPane = WTextPane().apply { placeholderText = "Enter text, select it, then press a formatting button" }
     textPane.width = 400.0
     textPane.height = 150.0
 
@@ -353,14 +353,14 @@ internal fun buildTextBoxPage(): WComponent {
 
 /** Basic text box: with a placeholder. */
 private fun buildSimpleTextBoxExample(): WComponent {
-    val textField = WTextField(placeholder = "Enter your name")
+    val textField = WTextField().apply { placeholderText = "Enter your name" }
     textField.width = 300.0
     return buildExample("Simple text box (PlaceholderText)", textField)
 }
 
 /** Header and max length: Header and MaxLength. */
 private fun buildHeaderTextBoxExample(): WComponent {
-    val textField = WTextField(placeholder = "You can enter up to 10 characters")
+    val textField = WTextField().apply { placeholderText = "You can enter up to 10 characters" }
     textField.width = 300.0
     textField.header = "Username"
     textField.maxLength = 10
@@ -369,7 +369,7 @@ private fun buildHeaderTextBoxExample(): WComponent {
 
 /** Multi-line input: AcceptsReturn and TextWrapping. */
 private fun buildMultiLineTextBoxExample(): WComponent {
-    val textArea = WTextField(placeholder = "Press Enter to add a new line")
+    val textArea = WTextField().apply { placeholderText = "Press Enter to add a new line" }
     textArea.width = 400.0
     textArea.height = 120.0
     textArea.acceptsReturn = true
@@ -400,7 +400,7 @@ private fun buildReadOnlyTextBoxExample(): WComponent {
 private fun buildTextChangedTextBoxExample(): WComponent {
     val mirror = WLabel("The text you type appears here").also { it.foreground = TEXT_SECONDARY }
 
-    val textField = WTextField(placeholder = "Reflected below as you type")
+    val textField = WTextField().apply { placeholderText = "Reflected below as you type" }
     textField.width = 300.0
     textField.addTextChangedListener { text ->
         mirror.text = if (text.isEmpty()) "The text you type appears here" else text

@@ -86,7 +86,7 @@ internal class FilerWindow {
     private val pathBox = WAutoSuggestBox("Type a path and press Enter")
     private val pathEditButton = compactButton("Edit path (Ctrl+L)", Symbol.EDIT)
     private val viewSelector = WSelectorBar()
-    private val filterBox = WTextField("Filter")
+    private val filterBox = WTextField().apply { placeholderText = "Filter" }
 
     /** The File corresponding to each level of BreadcrumbBar (looks up the destination from ItemClicked's index). */
     private var breadcrumbParts: List<File> = emptyList()

@@ -724,9 +724,9 @@ private fun buildTitleBarInlineExample(): WComponent {
     titleBar.addBackRequestedListener { log.text = "Event: BackRequested" }
     titleBar.addPaneToggleRequestedListener { log.text = "Event: PaneToggleRequested" }
 
-    val titleField = WTextField("Title").also { it.width = 200.0 }
+    val titleField = WTextField().apply { placeholderText = "Title" }.also { it.width = 200.0 }
     titleField.text = titleBar.title
-    val subtitleField = WTextField("Subtitle").also { it.width = 200.0 }
+    val subtitleField = WTextField().apply { placeholderText = "Subtitle" }.also { it.width = 200.0 }
     subtitleField.text = titleBar.subtitle
     val applyButton = WButton("Apply Title/Subtitle")
     applyButton.addActionListener {

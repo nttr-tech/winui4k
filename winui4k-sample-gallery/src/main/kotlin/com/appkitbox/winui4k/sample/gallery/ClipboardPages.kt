@@ -65,7 +65,7 @@ private fun buildClipboardGuideExample(): WComponent {
 
 /** Copying text: DataPackage.setText -> Clipboard.setContent. */
 private fun buildCopyTextExample(): WComponent {
-    val input = WTextField("Text to copy")
+    val input = WTextField().apply { placeholderText = "Text to copy" }
     input.text = "This text gets copied to the clipboard."
     input.width = 400.0
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
@@ -173,7 +173,7 @@ private fun buildCopyPasteFilesExample(): WComponent {
 
 /** History and roaming: setContent with ClipboardContentOptions, and checking the OS settings. */
 private fun buildHistoryRoamingExample(): WComponent {
-    val input = WTextField("Text to copy")
+    val input = WTextField().apply { placeholderText = "Text to copy" }
     input.text = "Text whose addition to history can be controlled"
     input.width = 400.0
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }

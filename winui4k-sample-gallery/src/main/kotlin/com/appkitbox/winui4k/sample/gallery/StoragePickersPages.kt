@@ -90,7 +90,7 @@ private fun buildPickSingleFileExample(): WComponent {
 
     val fileType = WComboBox(fileTypeFilters.keys.toList())
     fileType.selectedIndex = 0
-    val commitText = WTextField("The default is \"Open\"")
+    val commitText = WTextField().apply { placeholderText = "The default is \"Open\"" }
     commitText.text = "Open this file"
     val location = buildLocationComboBox()
     val viewMode = buildViewModeComboBox()
@@ -177,7 +177,7 @@ private fun buildPickMultipleFilesExample(): WComponent {
 /** Saving a file: FileTypeChoices / DefaultFileExtension / SuggestedFileName / SuggestedFolder. */
 @Suppress("LongMethod") // Declarative UI-building for the sample
 private fun buildSaveFileExample(): WComponent {
-    val content = WTextField("Content to save")
+    val content = WTextField().apply { placeholderText = "Content to save" }
     content.text = "Hello, WinUI4K!"
     content.width = 320.0
     val result = WLabel("Not saved").also { it.textWrapping = TextWrapping.WRAP }
@@ -187,10 +187,10 @@ private fun buildSaveFileExample(): WComponent {
     txtCheckBox.isChecked = true
     val jsonCheckBox = WCheckBox("JSON (.json)")
     val xmlCheckBox = WCheckBox("XML (.xml)")
-    val fileName = WTextField("Initial file name")
+    val fileName = WTextField().apply { placeholderText = "Initial file name" }
     fileName.text = "NewDocument"
     val location = buildLocationComboBox()
-    val folder = WTextField("Initial destination folder (optional)")
+    val folder = WTextField().apply { placeholderText = "Initial destination folder (optional)" }
     val folderButton = WButton("Browse...")
     folderButton.addActionListener {
         folderButton.isEnabled = false
@@ -262,7 +262,7 @@ private fun buildPickFolderExample(): WComponent {
     val result = WLabel("Nothing picked").also { it.textWrapping = TextWrapping.WRAP }
     val button = WButton("Pick a folder")
 
-    val commitText = WTextField("The default is \"Select Folder\"")
+    val commitText = WTextField().apply { placeholderText = "The default is \"Select Folder\"" }
     commitText.text = "Use this folder"
     val location = buildLocationComboBox()
     val viewMode = buildViewModeComboBox()

@@ -69,9 +69,9 @@ private fun buildNotificationStatusExample(): WComponent {
 
 /** A basic notification: a 2-line body + attribution text + display duration. */
 private fun buildSimpleNotificationExample(): WComponent {
-    val titleField = WTextField("Line 1 (title)").also { it.width = 320.0 }
+    val titleField = WTextField().apply { placeholderText = "Line 1 (title)" }.also { it.width = 320.0 }
     titleField.text = "A notification from winui4k"
-    val bodyField = WTextField("Line 2 (body)").also { it.width = 320.0 }
+    val bodyField = WTextField().apply { placeholderText = "Line 2 (body)" }.also { it.width = 320.0 }
     bodyField.text = "A toast notification was sent from Kotlin."
     val longDuration = WCheckBox("Use a longer display duration (Duration.LONG)")
     val result = WLabel("")
@@ -253,9 +253,9 @@ internal fun buildJumpListPage(): WComponent {
 
 /** Adding an item, removing all, saving, and the current item list. */
 private fun buildJumpListEditExample(): WComponent {
-    val nameField = WTextField("DisplayName").also { it.width = 320.0 }
+    val nameField = WTextField().apply { placeholderText = "DisplayName" }.also { it.width = 320.0 }
     nameField.text = "New document"
-    val argumentsField = WTextField("Arguments (launch arguments)").also { it.width = 320.0 }
+    val argumentsField = WTextField().apply { placeholderText = "Arguments (launch arguments)" }.also { it.width = 320.0 }
     argumentsField.text = "/new"
 
     val itemsLabel = WLabel("")

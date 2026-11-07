@@ -21,7 +21,8 @@ public class FilterWinUI4K {
             all.forEach(model::addElement);
             WList list = new WList(model);
 
-            WTextField filter = new WTextField("Filter");
+            WTextField filter = new WTextField();
+            filter.setPlaceholderText("Filter");
             filter.addTextChangedListener(text -> {
                 model.clear();
                 all.stream().filter(s -> s.contains(text)).forEach(model::addElement);

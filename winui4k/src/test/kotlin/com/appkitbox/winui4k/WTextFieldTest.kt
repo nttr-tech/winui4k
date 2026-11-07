@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -22,8 +23,23 @@ class WTextFieldTest : FunSpec() {
             } shouldBe "Hello, WinUI"
         }
 
-        test("the placeholder text passed to the constructor can be retrieved via placeholderText") {
-            onUiThreadGet { WTextField("Enter your name").placeholderText } shouldBe "Enter your name"
+        test("the constructor's string becomes the field's text as with JTextField(String), and the placeholder text stays empty") {
+            onUiThreadGet { WTextField("Tokyo").let { it.text to it.placeholderText } } shouldBe ("Tokyo" to "")
+        }
+
+        test("if the constructor's string is null or empty, the field is empty") {
+            onUiThreadGet { listOf(WTextField(null as String?).text, WTextField("").text) } shouldContainExactly listOf("", "")
+        }
+
+        test("WTextField(string, columns) sets the text and columns as with JTextField(String, int), and negative columns throw IllegalArgumentException") {
+            onUiThreadGet { WTextField("12-345", 10).let { it.text to it.columns } } shouldBe ("12-345" to 10)
+            onUiThreadGet { WTextField(null, 0).let { it.text to it.columns } } shouldBe ("" to 0)
+            shouldThrow<IllegalArgumentException> { onUiThreadGet { WTextField("x", -1) } }
+        }
+
+        test("the placeholder text is set with placeholderText") {
+            onUiThreadGet { WTextField().also { it.placeholderText = "Enter a name" }.let { it.text to it.placeholderText } } shouldBe
+                ("" to "Enter a name")
         }
 
         test("the TextChanged listener fires with the new text on every change to text") {

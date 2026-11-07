@@ -34,11 +34,28 @@ class WTextFieldColumnsForJavaTest {
     }
 
     @Test
-    void thePlaceholderConstructorCanStillBeCalledWithASingleString() {
+    void stringAndColumnsConstructorSetsTheTextAndColumnsLikeJTextField() {
         onUiThread(() -> {
-            WTextField field = new WTextField("Enter a name");
-            assertEquals("Enter a name", field.getPlaceholderText());
-            assertEquals(0, field.getColumns());
+            WTextField field = new WTextField("12-345", 10);
+            assertEquals("12-345", field.getText());
+            assertEquals(10, field.getColumns());
+            assertEquals("", field.getPlaceholderText());
         });
+    }
+
+    @Test
+    void singleStringConstructorSetsTheFieldTextLikeJTextFieldAndColumnsIsZero() {
+        onUiThread(() -> {
+            WTextField field = new WTextField("Tokyo");
+            assertEquals("Tokyo", field.getText());
+            assertEquals(0, field.getColumns());
+            assertEquals("", field.getPlaceholderText());
+            assertEquals("", new WTextField((String) null).getText());
+        });
+    }
+
+    @Test
+    void stringAndColumnsConstructorThrowsForNegativeColumns() {
+        onUiThread(() -> assertThrows(IllegalArgumentException.class, () -> new WTextField("x", -1)));
     }
 }

@@ -135,9 +135,22 @@ class WPasswordFieldForJavaTest {
     }
 
     @Test
+    void stringConstructorSetsThePasswordLikeJPasswordField() {
+        onUiThread(() -> {
+            WPasswordField field = new WPasswordField("secret");
+            assertEquals("secret", new String(field.getPassword()));
+            assertEquals("", field.getPlaceholderText());
+            WPasswordField sized = new WPasswordField("pw", 12);
+            assertEquals("pw", new String(sized.getPassword()));
+            assertEquals(12, sized.getColumns());
+        });
+    }
+
+    @Test
     void placeholderRevealModeAndMaxLengthCanBeUsed() {
         onUiThread(() -> {
-            WPasswordField field = new WPasswordField("Hint");
+            WPasswordField field = new WPasswordField();
+            field.setPlaceholderText("Hint");
             assertEquals("Hint", field.getPlaceholderText());
             field.setPasswordRevealMode(PasswordRevealMode.PEEK);
             assertEquals(PasswordRevealMode.PEEK, field.getPasswordRevealMode());

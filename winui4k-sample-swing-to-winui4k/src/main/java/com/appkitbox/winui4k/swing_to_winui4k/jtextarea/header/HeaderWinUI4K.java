@@ -12,7 +12,8 @@ public class HeaderWinUI4K {
             WFrame frame = new WFrame("12.7 Header and placeholder (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WTextPane comment = new WTextPane("Write your feedback here");   // placeholder, not the text
+            WTextPane comment = new WTextPane();
+            comment.setPlaceholderText("Write your feedback here");   // shown while the pane is empty
             comment.setHeader("Feedback");
             comment.setRows(4);
             comment.setColumns(30);

@@ -262,7 +262,8 @@ final class CollectionsPages {
         list.setHorizontalAlignment(HorizontalAlignment.LEFT);
 
         WLabel count = new WLabel("Item count: " + list.getItemCount());
-        WTextField input = new WTextField("Item name to add");
+        WTextField input = new WTextField();
+        input.setPlaceholderText("Item name to add");
         input.setWidth(200.0);
 
         WButton addButton = new WButton("Add");
@@ -478,7 +479,8 @@ final class CollectionsPages {
         table.addSortedListener((event) -> status.setText("Sorted: " + table.getColumnName(event.getColumn())
                 + " (" + event.getSortOrder() + ") / showing " + table.getRowCount() + " rows"));
 
-        WTextField filterText = new WTextField("Filter by product (regular expression)");
+        WTextField filterText = new WTextField();
+        filterText.setPlaceholderText("Filter by product (regular expression)");
         filterText.setWidth(240.0);
         filterText.addTextChangedListener((text) -> {
             sorter.setRowFilter(text.trim().isEmpty() ? null : RowFilter.regexFilter(text, 0));

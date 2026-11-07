@@ -51,7 +51,7 @@ Java の Swing のような使い心地で WinUI アプリを実装できます�
 ```kotlin
 WinUiUtilities.invokeLater {
     val frame = WFrame(title = "WinUI4K")
-    val nameField = WTextField(placeholder = "Name")
+    val nameField = WTextField().apply { placeholderText = "Name" }
     val greetButton = WButton("Greet")
 
     greetButton.addActionListener {

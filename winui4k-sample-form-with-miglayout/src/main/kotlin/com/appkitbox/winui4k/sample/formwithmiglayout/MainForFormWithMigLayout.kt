@@ -45,11 +45,11 @@ fun main() {
         title.fontWeight = 600
         form.add(title, "gapbottom 8")
 
-        val nameField = WTextField("John Doe")
+        val nameField = WTextField().apply { placeholderText = "John Doe" }
         nameField.header = "Name"
         form.add(nameField, "growx")
 
-        val mailField = WTextField("john@example.com")
+        val mailField = WTextField().apply { placeholderText = "john@example.com" }
         mailField.header = "Email"
         form.add(mailField, "growx")
 

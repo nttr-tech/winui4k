@@ -28,19 +28,32 @@ import kotlin.jvm.JvmSynthetic
  * [addActionListener]; if there are no listeners, the default button of the same window ([WFrame.defaultButton]) is
  * pressed (same as JTextField).
  *
- * **Difference from Swing**: unlike JTextField(String text), the `(String)` constructor takes not the field's text but the placeholder text
- * ([placeholderText]; the faint text shown while nothing is entered) (to keep the form from earlier versions). To initialize it with text,
- * set [text] (`WTextField().apply { text = "..." }`, or `field.setText("...")` in Java). For the same reason, no constructor corresponding to Swing's
- * JTextField(String text, int columns) is provided (so that the meaning of String does not change between constructors).
- * `(Int)`, which takes only the number of columns, is the same as JTextField(int columns).
+ * The constructors have the same forms as JTextField, and the string of `(String)` and `(String, int)` becomes the field's text ([text]).
+ * The placeholder text shown faintly while empty is set with [placeholderText] (`WTextField().apply { placeholderText = "..." }`,
+ * or `field.setPlaceholderText("...")` in Java).
  *
- * @param placeholder the placeholder text ([placeholderText]). Not the field's text (unlike JTextField(String))
+ * **Change from earlier versions**: the constructor `(String)` used to take the placeholder text. It now becomes the field's text, as with JTextField(String).
+ * Code that passed placeholder text should set [placeholderText] instead.
  */
-class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
+class WTextField() : WControl(
     Activation.composeDefault(XamlInterop.CLS_TextBox, XamlInterop.IID_ITextBoxFactory), // default interface = ITextBox
 ) {
+    /** JTextField(String text)-like: creates a field holding the text [text]. null is an empty string. */
+    constructor(text: String?) : this() {
+        if (!text.isNullOrEmpty()) this.text = text
+    }
+
     /** JTextField(int columns)-style: creates a field [columns] columns wide. */
-    constructor(columns: Int) : this("") {
+    constructor(columns: Int) : this() {
+        this.columns = columns
+    }
+
+    /**
+     * JTextField(String text, int columns)-like: creates a field holding the text [text], [columns] columns wide. null is an empty string.
+     *
+     * @throws IllegalArgumentException if [columns] is negative (as in Swing)
+     */
+    constructor(text: String?, columns: Int) : this(text) {
         this.columns = columns
     }
 
@@ -422,7 +435,6 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     }
 
     init {
-        if (placeholder.isNotEmpty()) placeholderText = placeholder
         actions.install()
         document.filterChanged = ::documentFilterChanged
     }

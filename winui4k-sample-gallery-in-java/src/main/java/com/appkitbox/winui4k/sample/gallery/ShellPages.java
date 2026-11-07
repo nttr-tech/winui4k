@@ -81,10 +81,12 @@ final class ShellPages {
 
     /** A basic notification: a 2-line body + attribution text + display duration. */
     private static WComponent buildSimpleNotificationExample() {
-        WTextField titleField = new WTextField("Line 1 (title)");
+        WTextField titleField = new WTextField();
+        titleField.setPlaceholderText("Line 1 (title)");
         titleField.setWidth(320.0);
         titleField.setText("A notification from winui4k");
-        WTextField bodyField = new WTextField("Line 2 (body)");
+        WTextField bodyField = new WTextField();
+        bodyField.setPlaceholderText("Line 2 (body)");
         bodyField.setWidth(320.0);
         bodyField.setText("A toast notification was sent from Kotlin.");
         WCheckBox longDuration = new WCheckBox("Use a longer display duration (Duration.LONG)");
@@ -297,10 +299,12 @@ final class ShellPages {
 
     /** Adding an item, removing all, saving, and the current item list. */
     private static WComponent buildJumpListEditExample() {
-        WTextField nameField = new WTextField("DisplayName");
+        WTextField nameField = new WTextField();
+        nameField.setPlaceholderText("DisplayName");
         nameField.setWidth(320.0);
         nameField.setText("New document");
-        WTextField argumentsField = new WTextField("Arguments (launch arguments)");
+        WTextField argumentsField = new WTextField();
+        argumentsField.setPlaceholderText("Arguments (launch arguments)");
         argumentsField.setWidth(320.0);
         argumentsField.setText("/new");
 

@@ -149,7 +149,8 @@ final class TextPages {
         WLabel result = new WLabel("Enter a password of at least 8 characters");
         result.setForeground(GalleryTheme.TEXT_SECONDARY());
 
-        WPasswordField passwordField = new WPasswordField("Enter password");
+        WPasswordField passwordField = new WPasswordField();
+        passwordField.setPlaceholderText("Enter password");
         passwordField.setWidth(300.0);
         passwordField.setHeader("Password");
         passwordField.setPasswordRevealMode(PasswordRevealMode.PEEK); // show the reveal button (the default is HIDDEN, no reveal button, as in Swing)
@@ -171,14 +172,17 @@ final class TextPages {
 
     /** Reveal mode and mask character: PasswordRevealMode and PasswordChar. */
     private static WComponent buildRevealModePasswordBoxExample() {
-        WPasswordField hiddenField = new WPasswordField("Default: no reveal button (HIDDEN)");
+        WPasswordField hiddenField = new WPasswordField();
+        hiddenField.setPlaceholderText("Default: no reveal button (HIDDEN)");
         hiddenField.setWidth(300.0);
 
-        WPasswordField visibleField = new WPasswordField("echoChar = 0: always plain text (VISIBLE)");
+        WPasswordField visibleField = new WPasswordField();
+        visibleField.setPlaceholderText("echoChar = 0: always plain text (VISIBLE)");
         visibleField.setWidth(300.0);
         visibleField.setEchoChar((char) 0);
 
-        WPasswordField customCharField = new WPasswordField("Use # as the mask character");
+        WPasswordField customCharField = new WPasswordField();
+        customCharField.setPlaceholderText("Use # as the mask character");
         customCharField.setWidth(300.0);
         customCharField.setPasswordChar("#");
 
@@ -205,7 +209,8 @@ final class TextPages {
 
     /** Editing formatted text: toggling bold/italic on the selection, plus Undo/Redo. */
     private static WComponent buildFormattingRichEditBoxExample() {
-        WTextPane textPane = new WTextPane("Enter text, select it, then press a formatting button");
+        WTextPane textPane = new WTextPane();
+        textPane.setPlaceholderText("Enter text, select it, then press a formatting button");
         textPane.setWidth(400.0);
         textPane.setHeight(150.0);
 
@@ -399,14 +404,16 @@ final class TextPages {
 
     /** Basic text box: with a placeholder. */
     private static WComponent buildSimpleTextBoxExample() {
-        WTextField textField = new WTextField("Enter your name");
+        WTextField textField = new WTextField();
+        textField.setPlaceholderText("Enter your name");
         textField.setWidth(300.0);
         return GalleryScaffold.buildExample("Simple text box (PlaceholderText)", textField);
     }
 
     /** Header and max length: Header and MaxLength. */
     private static WComponent buildHeaderTextBoxExample() {
-        WTextField textField = new WTextField("You can enter up to 10 characters");
+        WTextField textField = new WTextField();
+        textField.setPlaceholderText("You can enter up to 10 characters");
         textField.setWidth(300.0);
         textField.setHeader("Username");
         textField.setMaxLength(10);
@@ -415,7 +422,8 @@ final class TextPages {
 
     /** Multi-line input: AcceptsReturn and TextWrapping. */
     private static WComponent buildMultiLineTextBoxExample() {
-        WTextField textArea = new WTextField("Press Enter to add a new line");
+        WTextField textArea = new WTextField();
+        textArea.setPlaceholderText("Press Enter to add a new line");
         textArea.setWidth(400.0);
         textArea.setHeight(120.0);
         textArea.setAcceptsReturn(true);
@@ -425,7 +433,7 @@ final class TextPages {
 
     /** Read-only: toggling IsReadOnly. */
     private static WComponent buildReadOnlyTextBoxExample() {
-        WTextField textField = new WTextField("");
+        WTextField textField = new WTextField();
         textField.setWidth(300.0);
         textField.setText("This text is read-only");
         textField.setReadOnly(true);
@@ -447,7 +455,8 @@ final class TextPages {
         WLabel mirror = new WLabel("The text you type appears here");
         mirror.setForeground(GalleryTheme.TEXT_SECONDARY());
 
-        WTextField textField = new WTextField("Reflected below as you type");
+        WTextField textField = new WTextField();
+        textField.setPlaceholderText("Reflected below as you type");
         textField.setWidth(300.0);
         textField.addTextChangedListener(text -> {
             mirror.setText(text.isEmpty() ? "The text you type appears here" : text);

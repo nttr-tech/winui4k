@@ -818,10 +818,12 @@ final class WindowingPages {
             log.setText("Event: PaneToggleRequested");
         });
 
-        WTextField titleField = new WTextField("Title");
+        WTextField titleField = new WTextField();
+        titleField.setPlaceholderText("Title");
         titleField.setWidth(200.0);
         titleField.setText(titleBar.getTitle());
-        WTextField subtitleField = new WTextField("Subtitle");
+        WTextField subtitleField = new WTextField();
+        subtitleField.setPlaceholderText("Subtitle");
         subtitleField.setWidth(200.0);
         subtitleField.setText(titleBar.getSubtitle());
         WButton applyButton = new WButton("Apply Title/Subtitle");

@@ -39,21 +39,31 @@ import kotlin.jvm.JvmSynthetic
  * The formatting attributes are only the six of [WStyleConstants] (bold, italic, underline, color, size, font family). Swing's Style (addStyle / getStyle /
  * setLogicalStyle) and paragraph attributes (setParagraphAttributes) are not provided.
  *
- * Unlike JTextArea(String text), the `(String)` constructor takes the placeholder text ([placeholderText]) (to keep
- * the form from earlier versions). To initialize with text, use `(text, rows, columns)` or set [text].
+ * The constructors have the same forms as JTextArea, and the string of `(String)` and `(String, int, int)` becomes the body text ([text]).
+ * The placeholder text is set with [placeholderText].
+ *
+ * **Change from earlier versions**: the constructor `(String)` used to take the placeholder text. It now becomes the body text, as with JTextArea(String).
+ * Code that passed placeholder text should set [placeholderText] instead.
  */
-class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
+class WTextPane() : WControl(
     Activation.composeDefault(XamlInterop.CLS_RichEditBox, XamlInterop.IID_IRichEditBoxFactory), // default interface = IRichEditBox
 ) {
+    /** JTextArea(String text)-like: creates a text pane holding the text [text]. null is an empty string. */
+    constructor(text: String?) : this() {
+        if (!text.isNullOrEmpty()) this.text = text
+    }
+
     /** JTextArea(int rows, int columns)-style: creates an empty text pane sized [rows] rows by [columns] columns. */
-    constructor(rows: Int, columns: Int) : this("") {
+    constructor(rows: Int, columns: Int) : this() {
         this.rows = rows
         this.columns = columns
     }
 
-    /** JTextArea(String text, int rows, int columns)-style: creates a text pane containing [text], sized [rows] rows by [columns] columns. */
-    constructor(text: String, rows: Int, columns: Int) : this("") {
-        this.text = text
+    /**
+     * JTextArea(String text, int rows, int columns)-like: creates a text pane holding the text [text], [rows] rows by [columns] columns in size.
+     * null is an empty string.
+     */
+    constructor(text: String?, rows: Int, columns: Int) : this(text) {
         this.rows = rows
         this.columns = columns
     }
@@ -356,10 +366,6 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     override fun fontChanged() = extent.fontChanged()
 
     override fun preferredSize(): WSize = extent.preferredSize(super.preferredSize())
-
-    init {
-        if (placeholder.isNotEmpty()) placeholderText = placeholder
-    }
 
     /** The number of lines separated by line breaks (equivalent to JTextArea.getLineCount). 1 if empty. Visual lines added by wrapping are not counted. */
     val lineCount: Int get() = nativeText().count { it == '\n' } + 1

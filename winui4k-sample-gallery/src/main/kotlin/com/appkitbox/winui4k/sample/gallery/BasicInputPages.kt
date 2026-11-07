@@ -203,7 +203,7 @@ private fun buildAppearanceButtonExample(): WComponent {
 /** Default button: pressing Enter in a text field presses the default button (like JRootPane.setDefaultButton). */
 private fun buildDefaultButtonExample(): WComponent {
     val result = WLabel("Not submitted yet")
-    val nameField = WTextField("Type a name and press Enter")
+    val nameField = WTextField().apply { placeholderText = "Type a name and press Enter" }
     val submitButton = WButton("Submit")
     submitButton.addActionListener { result.text = "Submitted: ${nameField.text}" }
 

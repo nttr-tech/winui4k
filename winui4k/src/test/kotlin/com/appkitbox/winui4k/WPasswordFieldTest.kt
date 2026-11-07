@@ -2,6 +2,7 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.UiTestHarness.onUiThread
 import com.appkitbox.winui4k.UiTestHarness.onUiThreadGet
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -165,8 +166,17 @@ class WPasswordFieldTest : FunSpec() {
             }
         }
 
-        test("the placeholder text passed to the constructor can be retrieved via placeholderText") {
-            onUiThreadGet { WPasswordField("Enter your password").placeholderText } shouldBe "Enter your password"
+        test("the constructor's string becomes the password as with JPasswordField(String), and the placeholder text stays empty") {
+            onUiThreadGet { WPasswordField("secret").let { it.password to it.placeholderText } } shouldBe ("secret" to "")
+        }
+
+        test("if the constructor's string is null, the password is empty") {
+            onUiThreadGet { WPasswordField(null as String?).password } shouldBe ""
+        }
+
+        test("WPasswordField(string, columns) sets the password and columns as with JPasswordField(String, int), and negative columns throw IllegalArgumentException") {
+            onUiThreadGet { WPasswordField("secret", 12).let { it.password to it.columns } } shouldBe ("secret" to 12)
+            shouldThrow<IllegalArgumentException> { onUiThreadGet { WPasswordField("x", -1) } }
         }
     }
 }

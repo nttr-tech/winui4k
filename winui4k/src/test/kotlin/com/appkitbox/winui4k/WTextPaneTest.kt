@@ -221,10 +221,18 @@ class WTextPaneTest : FunSpec() {
             } shouldContainExactly listOf("true", "Hello World")
         }
 
-        test("the constructors' placeholder, rows and columns, and text with rows and columns are applied") {
+        test("a single constructor string becomes the body text as with JTextArea(String), and the placeholder text stays empty") {
+            onUiThreadGet { WTextPane("Editor").let { it.text to it.placeholderText } } shouldBe ("Editor" to "")
+        }
+
+        test("if the constructor's string is null, the body text is empty") {
+            onUiThreadGet { listOf(WTextPane(null as String?).text, WTextPane(null, 2, 10).text) } shouldContainExactly listOf("", "")
+        }
+
+        test("the constructor's rows and columns, and string, rows and columns, are applied, and the placeholder text is set with placeholderText") {
             val (placeholder, sized, withText) = onUiThreadGet {
                 Triple(
-                    WTextPane("Enter text").placeholderText,
+                    WTextPane().also { it.placeholderText = "Enter text" }.placeholderText,
                     WTextPane(5, 40).let { it.rows to it.columns },
                     WTextPane("Initial", 3, 20).let { Triple(it.text, it.rows, it.columns) },
                 )

@@ -73,7 +73,7 @@ final class MediaPages {
         WLabel status = new WLabel("Loading...");
         status.setForeground(GalleryTheme.TEXT_SECONDARY());
 
-        WTextField addressBar = new WTextField("");
+        WTextField addressBar = new WTextField();
         addressBar.setText(homeUrl);
         addressBar.setWidth(460.0);
         WButton backButton = new WButton("←");
@@ -153,7 +153,7 @@ final class MediaPages {
         body.add(purpose);
         body.add(framedWebView(webView));
 
-        WTextField scriptField = new WTextField("");
+        WTextField scriptField = new WTextField();
         scriptField.setText("document.getElementById('price').textContent");
         WLabel result = purposeLabel("The result (JSON) will show up here after running");
 
@@ -247,7 +247,7 @@ final class MediaPages {
         body.add(purpose);
         body.add(framedWebView(webView));
 
-        WTextField messageField = new WTextField("");
+        WTextField messageField = new WTextField();
         messageField.setText("An update notice from Kotlin");
         WButton sendButton = new WButton("Send to page");
         sendButton.addActionListener(() -> {

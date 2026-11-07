@@ -215,7 +215,8 @@ final class BasicInputPages {
     /** Default button: pressing Enter in a text field presses the default button (like JRootPane.setDefaultButton). */
     private static WComponent buildDefaultButtonExample() {
         WLabel result = new WLabel("Not submitted yet");
-        WTextField nameField = new WTextField("Type a name and press Enter");
+        WTextField nameField = new WTextField();
+        nameField.setPlaceholderText("Type a name and press Enter");
         WButton submitButton = new WButton("Submit");
         submitButton.addActionListener(() -> result.setText("Submitted: " + nameField.getText()));
 
