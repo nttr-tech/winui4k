@@ -89,6 +89,7 @@ enum class TextTrimming(internal val native: Int) {
  * the icon and the TextBlock goes into that Grid (arranged by [horizontalTextPosition] / [verticalTextPosition] / [iconTextGap]).
  * Text properties ([text] / [font] / [foreground] / [textWrapping], etc.) apply to the inner TextBlock, while placement and size
  * ([horizontalAlignmentInParent] / [margin] / [width], etc., those of [WComponent]) apply to the root Grid.
+ * The alignment of the text and icon group inside the label is [horizontalAlignment] / [verticalAlignment], as with JLabel.
  * The Grid is the same size as the TextBlock, and when it is given a width the TextBlock gets the same width, so [textAlignment] and
  * [textTrimming] work the same as when the root was the TextBlock. UI Automation names such as [accessibleName] go into the
  * TextBlock (the Grid does not appear as an element to screen readers).
@@ -236,8 +237,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
 
     /**
      * JLabel.getIcon / setIcon-like: the icon shown alongside the text ([Symbol] / [WImageIcon] / [WFontIcon]). null (the default) means no icon.
-     * If [text] is empty, only the icon is shown. The icon and text group is aligned within the label's width according to [textAlignment]
-     * (instead of Swing's JLabel.setHorizontalAlignment; [horizontalAlignmentInParent] is the placement of the label itself in its parent).
+     * If [text] is empty, only the icon is shown. The icon and text group is aligned within the label's width according to [horizontalAlignment],
+     * and within its height according to [verticalAlignment] (the same as Swing; [horizontalAlignmentInParent] is the placement of the label itself in its parent).
      * When arranged side by side and the width is not enough, the text side shrinks and is trimmed by [textTrimming].
      *
      * @throws IllegalArgumentException when a WIcon implemented on your own in Java is passed
@@ -324,12 +325,10 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         }
 
     /**
-     * Rebuilds the content of the root Grid. Without an icon, only the TextBlock is placed. With one, the icon
-     * (IconElement) and the TextBlock are arranged in a Grid: horizontally (LEADING / TRAILING) the text column takes the
-     * remaining width (Star) and the icon column is Auto; vertically (CENTER + TOP / BOTTOM) there are 2 rows; when
-     * overlapping (CENTER + CENTER) both go in the same cell. The arranged Grid is aligned within the root in the
-     * direction of [textAlignment] (an aligned Grid only grows up to its allotted width, so if the width is insufficient
-     * the text column shrinks and is trimmed).
+     * Rebuilds the content of the root Grid. Without an icon, only the TextBlock is placed. With one, the icon (IconElement) and the TextBlock are arranged in a
+     * Grid: horizontally (LEADING / TRAILING) the text column takes the remaining width (Star) and the icon column is Auto, vertically (CENTER + TOP / BOTTOM) there are
+     * two rows, and when overlapping (CENTER + CENTER) both are put in the same cell. The arranged Grid is aligned in the root in the directions of [horizontalAlignment] and [verticalAlignment]
+     * (an aligned Grid grows only up to the assigned width, so when the width is not enough the text column shrinks and is trimmed).
      */
     private fun arrange() {
         iconGroup?.removeAll()
@@ -340,8 +339,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         textElement.verticalAlignmentInParent = VerticalAlignment.STRETCH
         val icon = shownIcon
         if (icon == null) {
-            // As with JLabel's default vertical alignment (CENTER), the text is centered vertically even when stretched
-            textElement.verticalAlignmentInParent = VerticalAlignment.CENTER
+            // As with JLabel, even when stretched, the text is placed at the verticalAlignment position (center by default)
+            textElement.verticalAlignmentInParent = verticalAlignment
             children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
             revalidate()
             return
@@ -351,8 +350,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         iconElement.verticalAlignmentInParent = VerticalAlignment.CENTER
         val group = WGrid()
         group.horizontalAlignmentInParent = groupAlignment(textAlignment)
-        // The group of the icon and text is also centered vertically in a stretched label (the same as JLabel's default)
-        group.verticalAlignmentInParent = VerticalAlignment.CENTER
+        // The icon and text group is also placed at the verticalAlignment position in a stretched label (the same as JLabel)
+        group.verticalAlignmentInParent = verticalAlignment
         when {
             text.isEmpty() -> group.add(iconElement, 0, 0)
             horizontalTextPosition != HorizontalTextPosition.CENTER -> {
@@ -504,13 +503,61 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     /**
      * Text alignment (TextBlock.TextAlignment). When there is an [icon], the icon and text group is also aligned in this direction within the label's width
      * (LEFT, JUSTIFY and DETECT_FROM_CONTENT to the left, CENTER to the center, RIGHT to the right).
-     * It corresponds to Swing's JLabel.setHorizontalAlignment, but that name is used by the label's placement in its parent ([horizontalAlignmentInParent]).
+     * What corresponds to Swing's JLabel.setHorizontalAlignment is [horizontalAlignment], which reads and writes the same state with Swing's values.
+     * This one can also use WinUI TextBlock values such as justifying wrapped text (JUSTIFY).
      */
     var textAlignment: TextAlignment
         get() = TextAlignment.of(textBlock.getInt(XamlInterop.ITextBlock_get_TextAlignment))
         set(value) {
             textBlock.call(XamlInterop.ITextBlock_put_TextAlignment, value.native)
             iconGroup?.horizontalAlignmentInParent = groupAlignment(value)
+        }
+
+    /**
+     * JLabel.getHorizontalAlignment / setHorizontalAlignment-like: the horizontal alignment of the text (the icon and text group if there is an icon)
+     * within the label's width. The default is [HorizontalAlignment.LEFT] (corresponding to JLabel's default LEADING; when [flowDirection] is right to left,
+     * left and right are swapped as in WinUI, so LEFT corresponds to LEADING). If the label's width stays the text's width, the look does not change
+     * (the same as Swing; it takes effect in a widened label).
+     *
+     * A view of the same state as [textAlignment] with Swing's names and values: setting it makes [textAlignment] the same direction (LEFT / CENTER / RIGHT), and
+     * reading it gives CENTER if [textAlignment] is CENTER, RIGHT if RIGHT, and LEFT otherwise (LEFT, JUSTIFY, DETECT_FROM_CONTENT).
+     * The position of the label itself in its parent is [horizontalAlignmentInParent], and they do not affect each other.
+     *
+     * Change from earlier versions: the former `horizontalAlignment` was the position in the parent (now [horizontalAlignmentInParent]).
+     *
+     * @throws IllegalArgumentException if [HorizontalAlignment.STRETCH] is passed (a value not available for content alignment; the value does not change)
+     */
+    var horizontalAlignment: HorizontalAlignment
+        get() = when (textAlignment) {
+            TextAlignment.CENTER -> HorizontalAlignment.CENTER
+            TextAlignment.RIGHT -> HorizontalAlignment.RIGHT
+            else -> HorizontalAlignment.LEFT
+        }
+        set(value) {
+            textAlignment = when (value) {
+                HorizontalAlignment.LEFT -> TextAlignment.LEFT
+                HorizontalAlignment.CENTER -> TextAlignment.CENTER
+                HorizontalAlignment.RIGHT -> TextAlignment.RIGHT
+                HorizontalAlignment.STRETCH -> throw IllegalArgumentException("STRETCH cannot be used for the horizontalAlignment of a label")
+            }
+        }
+
+    /**
+     * JLabel.getVerticalAlignment / setVerticalAlignment-like: the vertical alignment of the text (the icon and text group if there is an icon)
+     * within the label's height. The default is [VerticalAlignment.CENTER], the same as JLabel. If the label stays at its preferred height, the look does not change
+     * (it takes effect in a vertically stretched label). The position of the label itself in its parent is [verticalAlignmentInParent], and they do not affect each other.
+     *
+     * Change from earlier versions: the former `verticalAlignment` was the position in the parent (now [verticalAlignmentInParent]), and the vertical alignment inside the label
+     * was fixed to the center.
+     *
+     * @throws IllegalArgumentException if [VerticalAlignment.STRETCH] is passed (a value not available for content alignment; the value does not change)
+     */
+    var verticalAlignment: VerticalAlignment = VerticalAlignment.CENTER
+        set(value) {
+            require(value != VerticalAlignment.STRETCH) { "STRETCH cannot be used for the verticalAlignment of a label" }
+            if (value == field) return
+            field = value
+            arrange()
         }
 
     /** Whether text can be selected with the mouse (TextBlock.IsTextSelectionEnabled). */
