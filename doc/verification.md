@@ -504,3 +504,14 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   VerticalContentAlignment (既定 Top) と Padding (既定 8,5,0,0) で置く (CheckBox_themeresources.xaml。RadioButton は四角も上)。
   そのため WLayoutPanel が高さを広げると文字だけが上に残る。WCheckBox は文字も縦の中央に置き、余白を 8,0,0,2 にして、既定の
   高さ (32) ではテンプレートの既定と同じ見た目 (文字の中心が四角の中心より約 1 DIP 上) にしている (WCheckBoxStretchTest)
+- TextBox.TextChanged・PasswordBox.PasswordChanged・RichEditBox.TextChanged は、画面に載る (Loaded) 前の文字の変更では来ず、
+  載った後にも届かない (AutoSuggestBox.TextChanged は載った後に PROGRAMMATIC_CHANGE で届く)。Swing の DocumentListener と同じく
+  setText の中で知らせるため、プログラムからの変更は WinUI4K がその場で知らせ、後から届くネイティブのイベントは最後に知らせた
+  文字列と同じなら知らせない (TextChangeNotices、TextChangedBeforeShowTest)
+- 最初のレイアウトの前 (表示する前・ウィンドウに入れた直後) は、ListView / ListBox の ScrollIntoView、TableView の Select
+  (読み込むと SelectedIndex が -1 に戻る)、MenuBarItem の Invoke が黙って効かず、表示した直後のウィンドウの中身は XamlRoot を
+  まだ持たないので FlyoutBase.ShowAt は E_INVALIDARG (This element does not have a XamlRoot)、ContentDialog も開けない。WinUI4K は頼みを覚えて、Loaded の後の周回で行う (LaidOutRequests、BeforeShowRequestsTest)
+- SizeChanged は UIElement.UpdateLayout の中で同期的に届く (microsoft-ui-xaml の LayoutManager.cpp の RaiseSizeChangedEvents)。
+  WLayoutPanel は子の自然な大きさを測るとき、子の Width / Height を外して UpdateLayout するので、その子には中身の大きさで
+  SizeChanged が届き、ScrollViewer はその大きさでスクロールの位置を 0 に丸める。表示した直後には 0 を割り当てることもある。
+  WSplitPane は割り当てられた大きさ (Swing の setBounds の大きさ) で仕切りを決め、WScrollPane は測る前の位置を測った後に戻す
