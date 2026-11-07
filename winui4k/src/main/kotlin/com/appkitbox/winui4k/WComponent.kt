@@ -412,6 +412,11 @@ abstract class WComponent internal constructor(
      */
     internal fun setLayoutSize(width: Double, height: Double) {
         applyWidth(width)
+        applyLayoutHeight(height)
+    }
+
+    /** Writes the height the layout manager assigned in [setLayoutSize]. The default is put_Height. */
+    internal open fun applyLayoutHeight(height: Double) {
         applyHeight(height)
     }
 

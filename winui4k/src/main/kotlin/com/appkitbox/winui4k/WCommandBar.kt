@@ -286,6 +286,17 @@ class WCommandBar() : WControl(
         items.remove(child)
     }
 
+    /**
+     * A closed CommandBar shows AppBar buttons taller than its own height (48) (64, for the label row) by clipping them at the bottom.
+     * Setting the assigned height as Height makes the buttons be measured at that height, so they shrink to 48, and the background of a selected toggle button
+     * (what remains after subtracting the bottom padding of 22) is cut above the icon, and the icon sticks out. For assignments up to the natural height, Height is
+     * not set (WLayoutPanel's Canvas places it at its natural height), and it is set to Height only when taller than that.
+     */
+    override fun applyLayoutHeight(height: Double) {
+        val natural = naturalSize?.height
+        applyHeight(if (this.height.isNaN() && natural != null && height <= natural) Double.NaN else height)
+    }
+
     companion object {
         /** Horizontal (the same value as SwingConstants.HORIZONTAL). */
         const val HORIZONTAL = 0
