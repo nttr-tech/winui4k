@@ -24,7 +24,27 @@ class WToolTipTest : FunSpec() {
                 val set = listOf(button.toolTipText, button.toolTip)
                 button.toolTipText = null
                 listOf(initial) + set + listOf(button.toolTipText, button.toolTip)
-            } shouldContainExactly listOf(null, "Save to a file", "Save to a file", null, null)
+            } shouldContainExactly listOf(null, "Save to a file", null, null, null)
+        }
+
+        test("toolTip returns the attached WToolTip, and setting null removes both the WToolTip hint and the text hint") {
+            onUiThread {
+                val button = WButton("Save")
+                val tip = WToolTip()
+                tip.text = "Save now"
+                button.toolTip.shouldBeNull()
+                button.toolTip = tip
+                button.toolTip shouldBeSameInstanceAs tip
+                button.toolTipText shouldBe "Save now"
+                button.toolTip = null
+                button.toolTip.shouldBeNull()
+                button.toolTipText.shouldBeNull()
+                tip.component.shouldBeNull()
+                button.toolTipText = "Text tip"
+                button.toolTip.shouldBeNull()
+                button.toolTip = null
+                button.toolTipText.shouldBeNull()
+            }
         }
 
         test("an empty string can also be read back as a string hint") {
@@ -40,7 +60,7 @@ class WToolTipTest : FunSpec() {
                 val button = WButton("Open")
                 val tip = WToolTip()
                 tip.text = "First"
-                button.setToolTip(tip)
+                button.toolTip = tip
                 val first = button.toolTipText
                 tip.text = "Afterwards"
                 listOf(first, button.toolTipText)
@@ -52,7 +72,7 @@ class WToolTipTest : FunSpec() {
                 val button = WButton("Open")
                 val tip = WToolTip()
                 tip.content = WLabel("Label tooltip")
-                button.setToolTip(tip)
+                button.toolTip = tip
                 button.toolTipText
             }.shouldBeNull()
         }
@@ -62,7 +82,7 @@ class WToolTipTest : FunSpec() {
                 val button = WButton("Open")
                 val tip = WToolTip()
                 tip.component.shouldBeNull()
-                button.setToolTip(tip)
+                button.toolTip = tip
                 tip.component shouldBeSameInstanceAs button
                 button.toolTipText = "String tooltip"
                 tip.component.shouldBeNull()
@@ -76,13 +96,13 @@ class WToolTipTest : FunSpec() {
                 val second = WButton("2")
                 val tip = WToolTip()
                 tip.text = "Shared"
-                first.setToolTip(tip)
-                second.setToolTip(tip)
+                first.toolTip = tip
+                second.toolTip = tip
                 tip.component shouldBeSameInstanceAs second
                 first.toolTipText.shouldBeNull()
                 second.toolTipText shouldBe "Shared"
                 // Attaching it again to the same component does not detach it
-                second.setToolTip(tip)
+                second.toolTip = tip
                 tip.component shouldBeSameInstanceAs second
                 second.toolTipText shouldBe "Shared"
             }
@@ -109,7 +129,7 @@ class WToolTipTest : FunSpec() {
             UiTestHarness.attachAndAwaitLoaded(button)
             try {
                 onUiThreadGet {
-                    button.setToolTip(tip)
+                    button.toolTip = tip
                     val initial = tip.isOpen
                     tip.isOpen = true
                     val opened = tip.isOpen

@@ -729,13 +729,13 @@ private fun buildInkToolbarCustomExample(): WComponent {
     calligraphy.palette = INK_COLORS.map { it.second }
     calligraphy.configurationContent = WInkToolbarPenConfigurationControl()
     calligraphy.content = glyph(GLYPH_EDIT)
-    calligraphy.toolTip = "Calligraphy pen"
+    calligraphy.toolTipText = "Calligraphy pen"
     toolbar.add(calligraphy)
 
     // The lasso tool: selecting it sets the processing mode to NONE, and input arrives at UnprocessedInput
     val lassoTool = WInkToolbarCustomToolButton()
     lassoTool.content = glyph(GLYPH_SELECT_ALL)
-    lassoTool.toolTip = "Lasso select"
+    lassoTool.toolTipText = "Lasso select"
     lassoTool.configurationContent = WLabel("Selects the strokes you enclose. Selected strokes can be moved with the \"Move\" button.")
     toolbar.add(lassoTool)
     installLasso(canvas, { info.text = "Selection: ${canvas.getSelectedStrokeIndices().size} strokes" }) {
@@ -745,7 +745,7 @@ private fun buildInkToolbarCustomExample(): WComponent {
     // A toggle that switches whether touch draws (used the same way as in the original UWP sample)
     val touchToggle = WInkToolbarCustomToggleButton()
     touchToggle.content = glyph(GLYPH_TOUCH_POINTER)
-    touchToggle.toolTip = "Touch writing"
+    touchToggle.toolTipText = "Touch writing"
     touchToggle.isSelected = true
     touchToggle.addItemListener { checked ->
         canvas.inkPresenter.inputDeviceTypes = if (checked == true) ALL_DEVICES else ALL_DEVICES - CoreInputDeviceType.TOUCH

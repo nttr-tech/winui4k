@@ -116,17 +116,17 @@ class WComponentTest : FunSpec() {
             }
         }
 
-        test("toolTipText and toolTip refer to the same value and can be cleared with null") {
+        test("toolTipText reads back the set text and can be cleared with null") {
             val values = onUiThreadGet {
                 val button = WButton("Hint")
                 button.toolTipText = "Saves the file"
-                val viaText = button.toolTip
-                button.toolTip = "Different wording"
-                val viaToolTip = button.toolTipText
+                val first = button.toolTipText
+                button.toolTipText = "Different wording"
+                val second = button.toolTipText
                 button.toolTipText = null
-                listOf(viaText, viaToolTip, button.toolTip, button.toolTipText)
+                listOf(first, second, button.toolTipText)
             }
-            values shouldBe listOf("Saves the file", "Different wording", null, null)
+            values shouldBe listOf("Saves the file", "Different wording", null)
         }
 
         test("name is an empty string when unset, and the value set can be read back from the native object") {

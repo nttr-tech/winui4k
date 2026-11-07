@@ -31,7 +31,7 @@ internal object ComponentSupport {
     }
 
     /**
-     * Reading [WComponent.toolTip]. The string if the ToolTipService.ToolTip of [dependencyObject] (borrowed) is a string,
+     * Reads [WComponent.toolTipText]. If the ToolTipService.ToolTip of [dependencyObject] (borrowed) is a string, that string;
      * the string if it is a ToolTip ([WToolTip]) whose content is a string, otherwise or if there is none, null.
      */
     fun toolTipText(dependencyObject: ComPtr): String? {

@@ -1304,12 +1304,12 @@ abstract class WComponent internal constructor(
     }
 
     /**
-     * The string hint shown on hover (ToolTipService.ToolTip). Equivalent to JComponent.setToolTipText.
-     * null removes it. Use [setToolTip] if you need to specify placement or a non-string hint.
-     * Reading returns the current hint string: if the content of the [WToolTip] attached with [setToolTip] is a string, that string
+     * The text hint shown on hover (ToolTipService.ToolTip). Equivalent to JComponent.get/setToolTipText. null removes it.
+     * If you need placement or a non-text hint, set a [WToolTip] to [toolTip].
+     * Reading it returns the current hint's string: if the content of the [WToolTip] attached with [toolTip] is a string, that string
      * ([WToolTip.tipText]); null for non-string content ([WToolTip.content]) or when there is no hint.
      */
-    var toolTip: String?
+    var toolTipText: String?
         get() = ComponentSupport.toolTipText(dependencyObject)
         set(value) {
             detachToolTip()
@@ -1327,36 +1327,34 @@ abstract class WComponent internal constructor(
         }
 
     /**
-     * Attaches a hint with a specific placement or non-string content to this target
-     * (sets [WToolTip] as ToolTipService.ToolTip). Use [toolTip] for a plain string.
-     * If [toolTip] is attached to another component, it is removed from there (that component loses its hint).
+     * The attached [WToolTip] (sets a [WToolTip] to ToolTipService.ToolTip). Used for hints with placement or non-text content.
+     * For a simple string, [toolTipText] is enough.
+     * Reading it returns the attached [WToolTip], and null if a text hint was set with [toolTipText] or there is no hint.
+     * Setting null removes the hint (including a text hint).
+     * If the set [WToolTip] is attached to another component, it is detached from there (that component loses its hint).
      */
-    fun setToolTip(toolTip: WToolTip) {
-        this.toolTip = null
-        toolTip.component?.takeIf { it !== this }?.toolTip = null
-        toolTipServiceStatics.call(
-            XamlInterop.IToolTipServiceStatics_SetToolTip,
-            dependencyObject,
-            toolTip.inspectable.ptr,
-        )
-        attachedToolTip = toolTip
-        toolTip.attachedTo(this)
-    }
+    var toolTip: WToolTip?
+        get() = attachedToolTip
+        set(value) {
+            toolTipText = null
+            if (value == null) return
+            value.component?.takeIf { it !== this }?.toolTipText = null
+            toolTipServiceStatics.call(
+                XamlInterop.IToolTipServiceStatics_SetToolTip,
+                dependencyObject,
+                value.inspectable.ptr,
+            )
+            attachedToolTip = value
+            value.attachedTo(this)
+        }
 
-    /** The hint attached with [setToolTip] (until another hint is set). */
+    /** The hint attached with [toolTip] (until another hint is set). */
     private var attachedToolTip: WToolTip? = null
 
     private fun detachToolTip() {
         attachedToolTip?.attachedTo(null)
         attachedToolTip = null
     }
-
-    /** An alias for [toolTip] (equivalent to JComponent.get/setToolTipText). Reads and writes the same value. */
-    var toolTipText: String?
-        get() = toolTip
-        set(value) {
-            toolTip = value
-        }
 
     /** The context menu opened by right-click / long-press (UIElement.ContextFlyout). */
     var contextFlyout: WFlyoutBase? = null

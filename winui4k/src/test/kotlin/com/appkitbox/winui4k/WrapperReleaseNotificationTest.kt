@@ -58,7 +58,7 @@ class WrapperReleaseNotificationTest : FunSpec() {
             val (button, tip) = onUiThreadGet {
                 val button = WButton("Tooltip target")
                 val tip = WToolTip().also { it.text = "Description" }
-                button.setToolTip(tip)
+                button.toolTip = tip
                 WeakReference(button) to WeakReference(tip)
             }
             Reclamation.awaitCollected(button).shouldBeTrue()

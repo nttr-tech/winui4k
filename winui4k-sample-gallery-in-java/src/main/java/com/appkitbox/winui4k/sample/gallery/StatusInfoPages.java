@@ -338,7 +338,7 @@ final class StatusInfoPages {
 
     // region ToolTip
 
-    /** The ToolTip page: lines up demos for trying out WComponent.toolTip / WToolTip's various features. */
+    /** The ToolTip page: lines up demos for trying out WComponent.toolTipText / WComponent.toolTip (WToolTip)'s various features. */
     static WComponent buildToolTipPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "ToolTip",
@@ -353,8 +353,8 @@ final class StatusInfoPages {
     /** A string hint: hover over the toolTip property to see the explanation. */
     private static WComponent buildSimpleToolTipExample() {
         WButton button = new WButton("Hover over me");
-        button.setToolTip("This is a plain string tooltip.");
-        return GalleryScaffold.buildExample("A string hint (WComponent.toolTip)", button);
+        button.setToolTipText("This is a plain string tooltip.");
+        return GalleryScaffold.buildExample("String hint (WComponent.toolTipText)", button);
     }
 
     /** Specifying placement: choose WToolTip's placement from top / bottom / left / right. */

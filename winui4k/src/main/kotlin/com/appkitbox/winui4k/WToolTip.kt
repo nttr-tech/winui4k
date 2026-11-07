@@ -36,7 +36,7 @@ enum class ToolTipPlacement(internal val native: Int) {
 /**
  * JToolTip-like: WinUI 3's ToolTip (a small hint that pops up on hover). A plain string hint is covered by
  * [WComponent.toolTipText]; use this class when you need to specify placement or show content other
- * than a string, and attach it to a target via [WComponent.setToolTip].
+ * Use this class when you want to show one, and attach it to the target with [WComponent.toolTip].
  * One hint can be attached to only one component (attaching it to another component removes it from the previous one).
  */
 class WToolTip : WControl(
@@ -98,7 +98,7 @@ class WToolTip : WControl(
         set(value) = inspectable.call(XamlInterop.IToolTip_put_Placement, value.native)
 
     /**
-     * JToolTip.getComponent-like: the component attached with [WComponent.setToolTip]. null if not attached or detached
+     * JToolTip.getComponent-like: the component attached with [WComponent.toolTip]. If not attached or detached,
      * (another hint or [WComponent.toolTipText] was set on the component).
      */
     val component: WComponent?
@@ -112,10 +112,17 @@ class WToolTip : WControl(
         get() = inspectable.getBool(XamlInterop.IToolTip_get_IsOpen)
         set(value) = inspectable.putBool(XamlInterop.IToolTip_put_IsOpen, value)
 
-    /** From [WComponent.setToolTip]: attached to [component] (detached if null). */
+    /** From setting [WComponent.toolTip]: attached to [component] (detached if null). */
     internal fun attachedTo(component: WComponent?) {
         owner = component?.let(::WeakReference)
     }
+}
+
+/** The old form called as a function from Kotlin (Java's `setToolTip(WToolTip)` is unchanged). Sets [WComponent.toolTip]. */
+@Deprecated("Set the toolTip property", ReplaceWith("this.toolTip = toolTip"))
+@JvmSynthetic
+fun WComponent.setToolTip(toolTip: WToolTip) {
+    this.toolTip = toolTip
 }
 
 /** The ToolTipService statics (SetToolTip / SetPlacement). It's agile, so it's reused. */

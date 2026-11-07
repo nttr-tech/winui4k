@@ -313,7 +313,7 @@ private fun buildDeterminateProgressRingExample(): WComponent {
 
 // region ToolTip
 
-/** The ToolTip page: lines up demos for trying out WComponent.toolTip / WToolTip's various features. */
+/** The ToolTip page: lines up demos for trying out WComponent.toolTipText / WComponent.toolTip (WToolTip)'s various features. */
 internal fun buildToolTipPage(): WComponent {
     val page = buildPage(
         "ToolTip",
@@ -329,8 +329,8 @@ internal fun buildToolTipPage(): WComponent {
 /** A string hint: hover over the toolTip property to see the explanation. */
 private fun buildSimpleToolTipExample(): WComponent {
     val button = WButton("Hover over me")
-    button.toolTip = "This is a plain string tooltip."
-    return buildExample("A string hint (WComponent.toolTip)", button)
+    button.toolTipText = "This is a plain string tooltip."
+    return buildExample("String hint (WComponent.toolTipText)", button)
 }
 
 /** Specifying placement: choose WToolTip's placement from top / bottom / left / right. */
@@ -347,7 +347,7 @@ private fun buildPlacementToolTipExample(): WComponent {
         val toolTip = WToolTip()
         toolTip.text = "Shown to the $label"
         toolTip.placement = placement
-        button.setToolTip(toolTip)
+        button.toolTip = toolTip
         row.add(button)
     }
     return buildExample("Specifying placement (WToolTip.placement)", row)
@@ -363,7 +363,7 @@ private fun buildRichToolTipExample(): WComponent {
 
     val toolTip = WToolTip()
     toolTip.content = content
-    button.setToolTip(toolTip)
+    button.toolTip = toolTip
     return buildExample("A non-string hint (WToolTip.content)", button)
 }
 

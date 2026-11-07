@@ -46,6 +46,36 @@ class WToolTipForJavaTest {
     }
 
     @Test
+    void passingNullToSetToolTipRemovesTheHint() {
+        onUiThread(() -> {
+            WButton button = new WButton("Save");
+            WToolTip tip = new WToolTip();
+            tip.setTipText("Save to a file");
+            button.setToolTip(tip);
+            assertSame(tip, button.getToolTip());
+            button.setToolTip(null);
+            assertNull(button.getToolTip());
+            assertNull(button.getToolTipText());
+            assertNull(tip.getComponent());
+
+            button.setToolTipText("Text tip");
+            button.setToolTip(null);
+            assertNull(button.getToolTipText());
+        });
+    }
+
+    @Test
+    void getToolTipIsNullWithOnlyATextHint() {
+        onUiThread(() -> {
+            WButton button = new WButton("Save");
+            assertNull(button.getToolTip());
+            button.setToolTipText("Text tip");
+            assertNull(button.getToolTip());
+            assertEquals("Text tip", button.getToolTipText());
+        });
+    }
+
+    @Test
     void placementAndComponentContentCanBeSetWithGettersAndSetters() {
         onUiThread(() -> {
             WToolTip tip = new WToolTip();

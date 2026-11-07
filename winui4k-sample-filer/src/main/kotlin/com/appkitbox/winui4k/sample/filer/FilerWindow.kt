@@ -669,7 +669,7 @@ internal class FilerWindow {
         // isCompact shrinks the button while still reserving the label area, which pushes the icon
         // up. LabelPosition=Collapsed collapses the label area too, centering the icon in the box
         button.labelPosition = CommandBarLabelPosition.COLLAPSED
-        button.toolTip = toolTip
+        button.toolTipText = toolTip
         return button
     }
 
