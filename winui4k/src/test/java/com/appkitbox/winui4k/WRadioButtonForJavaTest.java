@@ -13,6 +13,21 @@ import org.junit.jupiter.api.Test;
 /** Tests that use WRadioButton the way a developer used to Swing's JRadioButton would write it in Java (ButtonGroup is in WButtonGroupForJavaTest). */
 class WRadioButtonForJavaTest {
     @Test
+    void radioButtonsNotInAButtonGroupCanBeSelectedIndependentlyEvenInTheSameParent() {
+        onUiThread(() -> {
+            WPanel panel = new WPanel();
+            WRadioButton bold = new WRadioButton("Bold");
+            WRadioButton italic = new WRadioButton("Italic");
+            panel.add(bold);
+            panel.add(italic);
+            bold.setSelected(true);
+            italic.setSelected(true);
+            assertTrue(bold.isSelected());
+            assertTrue(italic.isSelected());
+        });
+    }
+
+    @Test
     void canBeCreatedWithOrWithoutText() {
         onUiThread(() -> {
             assertEquals("", new WRadioButton().getText());
@@ -21,13 +36,16 @@ class WRadioButtonForJavaTest {
     }
 
     @Test
-    void doClickSelectsAndDeselectsOtherRadioButtonsInTheSameParent() {
+    void doClickSelectsItAndDeselectsTheOtherRadioButtonsInTheSameButtonGroup() {
         onUiThread(() -> {
             WPanel panel = new WPanel();
             WRadioButton small = new WRadioButton("Small");
             WRadioButton large = new WRadioButton("Large");
             panel.add(small);
             panel.add(large);
+            WButtonGroup group = new WButtonGroup();
+            group.add(small);
+            group.add(large);
             small.doClick();
             assertTrue(small.isSelected());
             assertFalse(large.isSelected());
@@ -61,6 +79,9 @@ class WRadioButtonForJavaTest {
             WRadioButton second = new WRadioButton("B");
             panel.add(first);
             panel.add(second);
+            WButtonGroup group = new WButtonGroup();
+            group.add(first);
+            group.add(second);
             List<String> log = new ArrayList<>();
             first.addItemListener(e -> log.add("A:" + e.getStateChange()));
             second.addItemListener(e -> log.add("B:" + e.getStateChange()));

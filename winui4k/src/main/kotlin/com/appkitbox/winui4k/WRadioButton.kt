@@ -5,17 +5,22 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * JRadioButton-like: WinUI 3's RadioButton.
- * Instead of a ButtonGroup, [groupName] forms the exclusive group
- * (RadioButtons in the same parent are already in the same group even without a groupName).
+ *
+ * As in Swing, radio buttons not in a [WButtonGroup] can be selected independently (they do not deselect each other even in the same parent).
+ * WinUI's RadioButton is automatically exclusive within the same parent when GroupName is empty, so a button whose [groupName] is empty gets a unique
+ * GroupName per button on the native side to make it independent. To make them exclusive, put them into a [WButtonGroup] (as in Swing). As in WinUI,
+ * giving the same name to [groupName] also makes them exclusive.
  */
 open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButton(inspectable) {
     @JvmOverloads
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_RadioButton, XamlInterop.IID_IRadioButtonFactory), // Default interface = IRadioButton
     ) {
+        groupName = ""
         if (text.isNotEmpty()) this.text = text
     }
 
@@ -47,10 +52,22 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
     /** The IRadioButton view that has GroupName (QI'd because derived classes have a different default interface). */
     private val radioButton: ComPtr by lazy { own(inspectable.queryInterface(XamlInterop.IID_IRadioButton)) }
 
-    /** The name of the exclusive group (RadioButton.GroupName). */
+    /**
+     * The GroupName of this button only. Used so that a button without a name ([groupName] is empty) is not exclusive with other buttons
+     * (because WinUI makes radio buttons with an empty GroupName exclusive within the same parent).
+     */
+    private val standaloneGroupName by lazy { "WinUI4K.RadioButton#" + standaloneGroupCounter.incrementAndGet() }
+
+    /**
+     * The name of the exclusive group (RadioButton.GroupName). Radio buttons with the same name are exclusive within the same root of the visual tree.
+     * The default is empty, and buttons with an empty name are not exclusive with other buttons (the same as buttons not in a Swing ButtonGroup; WinUI's default
+     * "exclusive within the same parent" is not used). Putting it into a [WButtonGroup] changes it to that group's name, and removing it restores the original name.
+     */
     var groupName: String
-        get() = radioButton.getString(XamlInterop.IRadioButton_get_GroupName)
-        set(value) = Hstring.use(value) { h -> radioButton.call(XamlInterop.IRadioButton_put_GroupName, h) }
+        get() = radioButton.getString(XamlInterop.IRadioButton_get_GroupName).takeUnless { it == standaloneGroupName } ?: ""
+        set(value) = Hstring.use(value.ifEmpty { standaloneGroupName }) { h ->
+            radioButton.call(XamlInterop.IRadioButton_put_GroupName, h)
+        }
 
     override val stateColors: ToggleStateColors
         get() = RADIO_BUTTON_COLORS
@@ -67,6 +84,9 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
         return selected !== this && selected.focusInitially()
     }
 }
+
+/** The counter for the unique GroupName that makes a [WRadioButton] independent. */
+private val standaloneGroupCounter = AtomicLong()
 
 /**
  * RadioButton keys (controls/dev/CommonStyles/RadioButton_themeresources.xaml). The background is

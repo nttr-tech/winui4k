@@ -19,6 +19,74 @@ class WRadioButtonTest : FunSpec() {
             } shouldBe "settings"
         }
 
+        test("radio buttons not in a WButtonGroup can be selected independently even in the same parent, as in Swing") {
+            onUiThreadGet {
+                val panel = WPanel()
+                val first = WRadioButton("A", true)
+                val second = WRadioButton("B", true)
+                panel.add(first)
+                panel.add(second)
+                val bothCreatedSelected = first.isSelected to second.isSelected
+                first.isSelected = false
+                second.isSelected = false
+                first.isSelected = true
+                second.doClick()
+                listOf(bothCreatedSelected, first.isSelected to second.isSelected)
+            } shouldContainExactly listOf(true to true, true to true)
+        }
+
+        test("radio buttons in the same parent on a window do not deselect each other on click unless they are in a WButtonGroup") {
+            val (panel, radios) = onUiThreadGet {
+                val panel = WPanel()
+                val radios = listOf(WRadioButton("A"), WRadioButton("B"))
+                radios.forEach(panel::add)
+                panel to radios
+            }
+            UiTestHarness.attachAndAwaitLoaded(panel)
+            try {
+                onUiThreadGet {
+                    radios[0].doClick()
+                    radios[1].doClick()
+                    radios.map { it.isSelected }
+                } shouldContainExactly listOf(true, true)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
+        test("a radio button removed from a WButtonGroup can be selected independently as before") {
+            onUiThreadGet {
+                val panel = WPanel()
+                val first = WRadioButton("A")
+                val second = WRadioButton("B")
+                panel.add(first)
+                panel.add(second)
+                val group = WButtonGroup()
+                group.add(first)
+                group.add(second)
+                first.isSelected = true
+                second.isSelected = true
+                val grouped = first.isSelected to second.isSelected
+                group.remove(first)
+                group.remove(second)
+                first.isSelected = true
+                listOf(grouped, first.isSelected to second.isSelected)
+            } shouldContainExactly listOf(false to true, true to true)
+        }
+
+        test("radio buttons with the same groupName form a WinUI exclusive group even without a WButtonGroup") {
+            onUiThreadGet {
+                val panel = WPanel()
+                val first = WRadioButton("A").apply { groupName = "size" }
+                val second = WRadioButton("B").apply { groupName = "size" }
+                panel.add(first)
+                panel.add(second)
+                first.isSelected = true
+                second.isSelected = true
+                first.isSelected to second.isSelected
+            } shouldBe (false to true)
+        }
+
         test("setting isChecked = true reaches the ItemListener") {
             val received = mutableListOf<Boolean?>()
             onUiThread {
@@ -44,7 +112,7 @@ class WRadioButtonTest : FunSpec() {
             secondChecked shouldBe true
         }
 
-        test("doClick selects the radio button, deselects the other radio buttons with the same parent, and calls the ActionListener") {
+        test("doClick selects the radio button, deselects the other radio buttons in the same WButtonGroup, and calls the ActionListener") {
             val actions = mutableListOf<String>()
             val states = onUiThreadGet {
                 val panel = WPanel()
@@ -52,6 +120,10 @@ class WRadioButtonTest : FunSpec() {
                 val second = WRadioButton("B")
                 panel.add(first)
                 panel.add(second)
+                WButtonGroup().apply {
+                    add(first)
+                    add(second)
+                }
                 second.addActionListener { actions.add(it.actionCommand ?: "") }
                 first.doClick()
                 val afterFirst = first.isSelected to second.isSelected
@@ -95,13 +167,13 @@ class WRadioButtonTest : FunSpec() {
             actionCount shouldBe 0
         }
 
-        test("selecting a radio button with the same parent delivers an ItemEvent of SELECTED to the selected one and DESELECTED to the deselected one") {
+        test("selecting a radio button with the same groupName delivers a SELECTED ItemEvent to the selected one and DESELECTED to the deselected one") {
             val firstStates = mutableListOf<Int>()
             val secondStates = mutableListOf<Int>()
             onUiThread {
                 val panel = WPanel()
-                val first = WRadioButton("A")
-                val second = WRadioButton("B")
+                val first = WRadioButton("A").apply { groupName = "same" }
+                val second = WRadioButton("B").apply { groupName = "same" }
                 panel.add(first)
                 panel.add(second)
                 first.addItemListener(WItemListener { firstStates.add(it.stateChange) })
@@ -113,13 +185,14 @@ class WRadioButtonTest : FunSpec() {
             secondStates shouldContainExactly listOf(WItemEvent.SELECTED)
         }
 
-        test("for radio buttons with the same parent placed in a window, WinUI sends Unchecked of the deselected one before Checked of the selected one") {
+        test("for radio buttons with the same groupName on a window, WinUI sends Unchecked of the deselected one before Checked of the selected one") {
             // RadioButton::OnChecked fires Checked after UpdateRadioButtonGroup (IsChecked = false on the other buttons)
             val events = mutableListOf<String>()
             val (panel, radios) = onUiThreadGet {
                 val panel = WPanel()
                 val radios = listOf("A", "B").map { text ->
                     WRadioButton(text).also {
+                        it.groupName = "same"
                         panel.add(it)
                         it.addItemListener(WItemListener { e -> events.add(text + ":" + e.stateChange + ":" + it.isSelected) })
                     }
