@@ -51,6 +51,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
     fun setPadding(left: Double, top: Double, right: Double, bottom: Double) {
         XamlStructs.putThickness(control, XamlInterop.IControl_put_Padding, left, top, right, bottom)
         paddingValue = uniformThickness(left, top, right, bottom)
+        revalidate() // As with AbstractButton.setMargin, the size changes, so lay out again
     }
 
     /** Clears the Control.Padding setting and returns to the theme default ([padding] returns to 0). */
@@ -88,6 +89,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
         set(value) {
             FontProperties.write(control, dependencyObject, FontProperties.CONTROL, value)
             fontChanged()
+            revalidate() // As with JComponent.setFont, the text size changes, so lay out again
         }
 
     /** Called after [font] is set (so that [WTextField.columns], which derives the width from the font, remeasures). */
@@ -188,6 +190,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
                 clearControlProperty(XamlInterop.IControlStatics_get_BorderBrushProperty)
                 clearControlProperty(XamlInterop.IControlStatics_get_BorderThicknessProperty)
                 clearPadding()
+                revalidate() // As with JComponent.setBorder, the size changes, so lay out again
                 return
             }
             applyLine(flat.line)
@@ -197,6 +200,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
             } else {
                 setPadding(padding.left, padding.top, padding.right, padding.bottom)
             }
+            revalidate()
         }
 
     private fun applyLine(line: WLineBorder?) {

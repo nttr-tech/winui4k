@@ -12,6 +12,9 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
  *
  * [host] is the button that owns this object (where the accessibility name is put), and [contentControl] is host's
  * IContentControl view (owned by host).
+ *
+ * Revalidates host when the content changes (as Swing's AbstractButton.setText / setIcon do). Even if it changes after being shown, the parent
+ * [WLayoutPanel] lays it out again with the new size.
  */
 internal class ButtonLabel(private val host: WControl, private val contentControl: ComPtr) {
     private var contentComponent: WComponent? = null
@@ -85,12 +88,14 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
                 XamlInterop.IContentControl_put_Content,
                 value?.uiElement?.ptr,
             )
+            host.revalidate()
         }
 
     private fun putContentText(value: String) {
         val boxed = PropertyValues.boxString(value)
         contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
         boxed.release()
+        host.revalidate()
     }
 
     /**
@@ -129,6 +134,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
         if (label.isEmpty()) {
             releaseLabelAutomationName()
             contentControl.call(XamlInterop.IContentControl_put_Content, iconElement.uiElement.ptr)
+            host.revalidate()
             return
         }
         // CENTER + TOP / BOTTOM stacks them vertically; LEADING / TRAILING places them side by side (the vertical position
@@ -160,6 +166,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             host.accessibleName = label
             labelAutomationName = label
         }
+        host.revalidate()
     }
 
     /**

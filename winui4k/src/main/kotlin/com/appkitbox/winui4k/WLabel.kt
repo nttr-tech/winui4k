@@ -102,6 +102,9 @@ enum class TextTrimming(internal val native: Int) {
  * Of JLabel's features, HTML strings, the mnemonic display that underlines a character (setDisplayedMnemonicIndex), and the grayed display from the label's own
  * setEnabled are not available ([isEnabled] only switches to [disabledIcon]).
  *
+ * As with JLabel, settings that change the size ([text] / [icon] / font, etc.) call [revalidate] themselves, so even if they change after being shown,
+ * the parent [WLayoutPanel] lays it out again with the new size.
+ *
  * Changes from earlier versions: since a constructor taking an icon was added, Java's `new WLabel(null)` is ambiguous
  * between `WLabel(String)` and `WLabel(WIcon)` and does not compile (write `(String) null` or `(WIcon) null`).
  * [foreground] returns the default color (the native effective value) even before being set (previously it was null
@@ -163,10 +166,13 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     var text: String
         get() = textBlock.getString(XamlInterop.ITextBlock_get_Text)
         set(value) {
-            val wasEmpty = text.isEmpty()
+            val old = text
+            if (value == old) return
             Hstring.use(value) { h -> textBlock.call(XamlInterop.ITextBlock_put_Text, h) }
             // With empty text only the icon is placed (no gap), so rearrange when emptiness changes
-            if (shownIcon != null && wasEmpty != value.isEmpty()) arrange()
+            if (shownIcon != null && old.isEmpty() != value.isEmpty()) arrange()
+            // As with JLabel.setText, the size changes, so let the parent WLayoutPanel lay it out again
+            revalidate()
         }
 
     /** The icon shown alongside (null for no icon). */
@@ -284,6 +290,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         val icon = shownIcon
         if (icon == null) {
             children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
+            revalidate()
             return
         }
         val iconElement = XamlElement.adopt(icon.createIconElement())
@@ -320,6 +327,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         }
         children.call(FoundationInterop.IVector_Append, group.uiElement.ptr)
         iconGroup = group
+        revalidate()
     }
 
     /**
@@ -332,30 +340,45 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
      */
     var font: WFont?
         get() = FontProperties.read(textBlock, FontProperties.TEXT_BLOCK)
-        set(value) = FontProperties.write(textBlock, textBlockObject, FontProperties.TEXT_BLOCK, value)
+        set(value) {
+            FontProperties.write(textBlock, textBlockObject, FontProperties.TEXT_BLOCK, value)
+            revalidate()
+        }
 
     /** Font size (TextBlock.FontSize). Used to emphasize headings and the like. */
     var fontSize: Double
         get() = textBlock.getDouble(XamlInterop.ITextBlock_get_FontSize)
-        set(value) = textBlock.call(XamlInterop.ITextBlock_put_FontSize, value)
+        set(value) {
+            textBlock.call(XamlInterop.ITextBlock_put_FontSize, value)
+            revalidate()
+        }
 
     /** Font family name (TextBlock.FontFamily). Sets a family name such as "Yu Gothic UI". */
     var fontFamily: String
         get() = FontProperties.readFamily(textBlock, FontProperties.TEXT_BLOCK)
-        set(value) = FontProperties.writeFamily(textBlock, FontProperties.TEXT_BLOCK, value)
+        set(value) {
+            FontProperties.writeFamily(textBlock, FontProperties.TEXT_BLOCK, value)
+            revalidate()
+        }
 
     /** The font weight (TextBlock.FontWeight). 400=Normal, 600=SemiBold, 700=Bold. Reads return the native effective value. */
     var fontWeight: Int
         get() = XamlStructs.getFontWeight(textBlock, XamlInterop.ITextBlock_get_FontWeight)
-        set(value) = XamlStructs.putFontWeight(textBlock, XamlInterop.ITextBlock_put_FontWeight, value)
+        set(value) {
+            XamlStructs.putFontWeight(textBlock, XamlInterop.ITextBlock_put_FontWeight, value)
+            revalidate()
+        }
 
     /** Whether the text is italic (TextBlock.FontStyle is Italic). */
     var isItalic: Boolean
         get() = textBlock.getInt(XamlInterop.ITextBlock_get_FontStyle) == FontProperties.FONT_STYLE_ITALIC
-        set(value) = textBlock.call(
-            XamlInterop.ITextBlock_put_FontStyle,
-            if (value) FontProperties.FONT_STYLE_ITALIC else FontProperties.FONT_STYLE_NORMAL,
-        )
+        set(value) {
+            textBlock.call(
+                XamlInterop.ITextBlock_put_FontStyle,
+                if (value) FontProperties.FONT_STYLE_ITALIC else FontProperties.FONT_STYLE_NORMAL,
+            )
+            revalidate()
+        }
 
     /** Whether the text is underlined (Underline in TextBlock.TextDecorations). */
     var isUnderline: Boolean
@@ -410,7 +433,10 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     /** How text wraps (TextBlock.TextWrapping). */
     var textWrapping: TextWrapping
         get() = TextWrapping.of(textBlock.getInt(XamlInterop.ITextBlock_get_TextWrapping))
-        set(value) = textBlock.call(XamlInterop.ITextBlock_put_TextWrapping, value.native)
+        set(value) {
+            textBlock.call(XamlInterop.ITextBlock_put_TextWrapping, value.native)
+            revalidate()
+        }
 
     /** How text that doesn't fit is trimmed (TextBlock.TextTrimming). */
     var textTrimming: TextTrimming
