@@ -128,5 +128,97 @@ class BeforeShowRequestsTest : FunSpec() {
                 }
             }
         }
+
+        context("WSplitPane divider position") {
+            /**
+             * Puts [split] in CENTER of a 400 x 260 window with WBorderLayout and shows it without activating it (the same form as the JSplitPane sample).
+             * [afterShow] is called right after showing (within the same UI thread task). Returns after the content is laid out.
+             */
+            fun showInFrame(split: WSplitPane, afterShow: () -> Unit = {}): WFrame {
+                val frame = onUiThreadGet {
+                    WFrame("BeforeShowRequestsTest").also {
+                        it.layout = WBorderLayout()
+                        it.add(split, WBorderLayout.CENTER)
+                        it.add(WLabel(" "), WBorderLayout.SOUTH)
+                        it.setSize(400, 260)
+                        it.isAutoRequestFocus = false
+                        it.isVisible = true
+                        afterShow()
+                    }
+                }
+                awaitUi { split.actualWidth > 0.0 && split.actualHeight > 0.0 } shouldBe true
+                Thread.sleep(500) // Wait for the layout after showing (until it grows to the window's size)
+                return frame
+            }
+
+            test("calling setDividerLocation(200) right after showing puts the divider at 200, and the last position the listener saw is also 200 (as in Swing)") {
+                val seen = mutableListOf<Int>()
+                val split = onUiThreadGet {
+                    WSplitPane(WSplitPane.HORIZONTAL_SPLIT, WLabel("Left"), WLabel("Right")).also { pane ->
+                        pane.addChangeListener { seen += pane.dividerLocation }
+                    }
+                }
+                val frame = showInFrame(split) { split.dividerLocation = 200 }
+                try {
+                    onUiThreadGet { listOf(split.dividerLocation, seen.last(), split.divider.x) } shouldBe listOf(200, 200, 200)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("calling setDividerLocation(150) before showing keeps the divider at 150 after showing") {
+                val split = onUiThreadGet {
+                    WSplitPane(WSplitPane.HORIZONTAL_SPLIT, WLabel("Left"), WLabel("Right")).also { it.dividerLocation = 150 }
+                }
+                val frame = showInFrame(split)
+                try {
+                    onUiThreadGet { split.dividerLocation to split.divider.x } shouldBe (150 to 150)
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("in a vertical split with resizeWeight 0.7 and setDividerLocation(0.7) given before showing, the divider is at 70% of the shown height") {
+                val split = onUiThreadGet {
+                    WSplitPane(WSplitPane.VERTICAL_SPLIT, WTextPane().also { it.text = "Editor" }, WTextPane().also { it.text = "Console" })
+                        .also {
+                            it.resizeWeight = 0.7
+                            it.setDividerLocation(0.7)
+                        }
+                }
+                val frame = showInFrame(split)
+                try {
+                    onUiThreadGet {
+                        // The same formula as Swing: (int) ((height - divider size) * 0.7)
+                        val expected = ((Math.floor(split.actualHeight).toInt() - split.dividerSize) * 0.7).toInt()
+                        listOf(split.dividerLocation, split.divider.y) to listOf(expected, expected)
+                    }.let { (actual, expected) -> actual shouldBe expected }
+                } finally {
+                    onUiThread { frame.dispose() }
+                }
+            }
+
+            test("setDividerLocation(0.0) and (1.0) given before showing put the divider at the ends (0 and height - divider)") {
+                val top = onUiThreadGet {
+                    WSplitPane(WSplitPane.VERTICAL_SPLIT, WLabel("Top"), WLabel("Bottom")).also { it.setDividerLocation(0.0) }
+                }
+                val topFrame = showInFrame(top)
+                try {
+                    onUiThreadGet { top.dividerLocation } shouldBe 0
+                } finally {
+                    onUiThread { topFrame.dispose() }
+                }
+                val bottom = onUiThreadGet {
+                    WSplitPane(WSplitPane.VERTICAL_SPLIT, WLabel("Top"), WLabel("Bottom")).also { it.setDividerLocation(1.0) }
+                }
+                val bottomFrame = showInFrame(bottom)
+                try {
+                    onUiThreadGet { bottom.dividerLocation to Math.floor(bottom.actualHeight).toInt() - bottom.dividerSize }
+                        .let { (actual, expected) -> actual shouldBe expected }
+                } finally {
+                    onUiThread { bottomFrame.dispose() }
+                }
+            }
+        }
     }
 }

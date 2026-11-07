@@ -317,8 +317,31 @@ class WSplitPane @JvmOverloads constructor(
 
     // ---- Layout (a port of Swing's BasicSplitPaneUI.BasicHorizontalLayoutManager) ----
 
-    /** The panel size along the main axis (an integer in DIP; 0 before being shown). */
-    private fun availableSize(): Int = floor(if (horizontal) actualWidth else actualHeight).toInt()
+    /**
+     * The panel's size along the main axis (an integer in DIP; 0 before showing). If the parent is a [WLayoutPanel], it is the size the layout manager assigned
+     * (the size of Swing's setBounds; ActualWidth / Height keep the previous value until the next layout), and 0 before it is assigned ([sizeIsProvisional]).
+     */
+    private fun availableSize(): Int {
+        val size = if (parent is WLayoutPanel) {
+            assignedSize().takeUnless { it.isNaN() } ?: 0.0
+        } else if (horizontal) {
+            actualWidth
+        } else {
+            actualHeight
+        }
+        return floor(size).toInt()
+    }
+
+    /** The size along the main axis assigned by the parent [WLayoutPanel] (NaN if not assigned). */
+    private fun assignedSize(): Double = if (horizontal) appliedWidth else appliedHeight
+
+    /**
+     * Whether the current size is provisional: while the parent [WLayoutPanel] measures the children's natural sizes (the first pass right after showing and when measuring again),
+     * no size is assigned (Width / Height is NaN), so the panel is laid out with the content's preferred size and SizeChanged arrives with that size too.
+     * Swing's getPreferredSize does not change the size, so the size during that time is not used to decide the divider position or to distribute size changes
+     * (so that setDividerLocation(200) right after showing is not rounded to the content's preferred width, and a ratio is not turned into a position with a small size).
+     */
+    private fun sizeIsProvisional(): Boolean = parent is WLayoutPanel && assignedSize().isNaN()
 
     private fun isValid(component: WComponent?): Boolean = component != null && component.isVisible
 
@@ -356,6 +379,7 @@ class WSplitPane @JvmOverloads constructor(
     }
 
     private fun layoutOnce() {
+        if (sizeIsProvisional()) return // Lay out when the assigned size arrives (lastSplitPaneSize is not set to the provisional size either)
         val available = availableSize()
         if (available <= 0) {
             lastSplitPaneSize = 0
