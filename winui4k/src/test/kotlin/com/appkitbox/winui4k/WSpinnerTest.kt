@@ -92,6 +92,16 @@ class WSpinnerTest : FunSpec() {
             } shouldBe Triple(0.0, 10.0, 0.5)
         }
 
+        test("stepSize, with the same name as SpinnerNumberModel.setStepSize, reads and writes smallChange and the model's stepSize") {
+            onUiThreadGet {
+                val spinner = WSpinner()
+                spinner.stepSize = 2.5
+                val written = listOf(spinner.stepSize, spinner.smallChange, (spinner.model as WSpinnerNumberModel).stepSize.toDouble())
+                spinner.smallChange = 0.25
+                written + spinner.stepSize
+            } shouldBe listOf(2.5, 2.5, 2.5, 0.25)
+        }
+
         test("the ChangeListener fires with the new value on every change to value") {
             val received = mutableListOf<Double>()
             onUiThread {

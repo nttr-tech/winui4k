@@ -216,6 +216,16 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
             numberModel.stepSize = value
         }
 
+    /**
+     * SpinnerNumberModel.getStepSize / setStepSize-like: the amount of change per spin button press. The same value as [smallChange], so
+     * code that called `setStepSize` on a JSpinner's model can be written directly on the spinner.
+     */
+    var stepSize: Double
+        get() = smallChange
+        set(value) {
+            smallChange = value
+        }
+
     /** The amount PageUp / PageDown change the value by (NumberBox.LargeChange; not in the model). */
     var largeChange: Double
         get() = inspectable.getDouble(XamlInterop.INumberBox_get_LargeChange)
