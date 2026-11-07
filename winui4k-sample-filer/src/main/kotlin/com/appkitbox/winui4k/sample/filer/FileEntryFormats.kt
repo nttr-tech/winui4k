@@ -1,28 +1,67 @@
 package com.appkitbox.winui4k.sample.filer
 
 import java.io.File
+import java.text.DateFormat
+import java.text.NumberFormat
+import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
-/** The display format for the "Modified" column. Chosen so that a plain string sort still comes out chronological. */
-private val dateFormat = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.JAPAN)
+/** The OS locale used to format dates and numbers. */
+private val formatLocale: Locale = Locale.getDefault(Locale.Category.FORMAT)
+
+/**
+ * The format of the date modified column: the short date and time of [locale]. The year has 4 digits, as in Explorer, and the hour has 2 digits in the 24-hour clock
+ * (e.g. Japanese "2025/04/02 09:27", English (United States) "4/2/2025 3:27 PM").
+ */
+internal fun dateTimeFormat(locale: Locale): DateFormat {
+    val format = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale)
+    if (format is SimpleDateFormat) {
+        format.applyPattern(
+            format.toPattern().replace(Regex("y+"), "yyyy").replace(Regex("(?<!H)H(?!H)"), "HH"),
+        )
+    }
+    return format
+}
+
+/** The display format of the date modified column (used only on the UI thread). */
+private val dateFormat = dateTimeFormat(formatLocale)
 
 /** The display string for the "Modified" column. */
-internal fun formatDate(file: File): String = dateFormat.format(Date(file.lastModified()))
+internal fun formatDate(file: File): String = dateFormat.format(file.lastModified())
+
+/**
+ * The sort order of the date modified column. Locale formats are not chronological in string order (English month/day/year etc.), so
+ * times read back with [format] are compared. Unreadable strings come first.
+ */
+internal fun dateComparator(format: DateFormat): Comparator<String> {
+    fun parse(text: String): Long = try {
+        format.parse(text).time
+    } catch (_: ParseException) {
+        Long.MIN_VALUE
+    }
+    return Comparator { a, b -> parse(a).compareTo(parse(b)) }
+}
+
+/** The sort order of the date modified column. */
+internal val DATE_COMPARATOR: Comparator<String> = dateComparator(dateFormat)
 
 /** The display string for the "Size" column. Rounds up to KB just like Explorer. Empty for folders. */
 internal fun formatSize(file: File): String {
     if (file.isDirectory) return ""
     val kiloBytes = (file.length() + 1023) / 1024
-    return String.format(Locale.JAPAN, "%,d KB", kiloBytes)
+    return "${NumberFormat.getIntegerInstance(formatLocale).format(kiloBytes)} KB"
 }
 
 /** The display string for the "Type" column. A simplified stand-in for Explorer's "Type" column. */
 internal fun formatKind(file: File): String {
-    if (file.isDirectory) return "File folder"
+    if (file.isDirectory) return Messages.get("kind.folder")
     val extension = file.extension
-    return if (extension.isEmpty()) "File" else "${extension.uppercase(Locale.ROOT)} File"
+    return if (extension.isEmpty()) {
+        Messages.get("kind.file")
+    } else {
+        Messages.get("kind.file.extension", extension.uppercase(Locale.ROOT))
+    }
 }
 
 /** The sort order for the "Name" column (case-insensitive). */
@@ -38,9 +77,9 @@ private fun parseSizeKb(text: String): Long {
     return if (digits.isEmpty()) -1L else digits.toLong()
 }
 
-/** An approximate size display for the status bar (a one-decimal number + unit, like "12.4 MB"). */
+/** The approximate size display for the status bar (one decimal place plus a unit, such as "12.4 MB"; the number of bytes below 1 KB). */
 internal fun formatSizeApprox(bytes: Long): String {
-    val units = listOf("bytes", "KB", "MB", "GB", "TB")
+    val units = listOf("", "KB", "MB", "GB", "TB")
     var value = bytes.toDouble()
     var unitIndex = 0
     while (value >= 1024.0 && unitIndex < units.size - 1) {
@@ -48,9 +87,9 @@ internal fun formatSizeApprox(bytes: Long): String {
         unitIndex++
     }
     return if (unitIndex == 0) {
-        "$bytes ${units[0]}"
+        Messages.get("size.bytes", bytes)
     } else {
-        String.format(Locale.JAPAN, "%.1f %s", value, units[unitIndex])
+        String.format(formatLocale, "%.1f %s", value, units[unitIndex])
     }
 }
 

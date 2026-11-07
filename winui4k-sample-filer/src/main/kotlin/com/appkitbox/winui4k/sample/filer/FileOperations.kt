@@ -94,8 +94,8 @@ internal object FileOperations {
     @Throws(IOException::class)
     fun rename(file: File, newName: String): File {
         val destination = File(file.parentFile, newName)
-        if (destination.exists()) throw IOException("A file with that name already exists: $newName")
-        if (!file.renameTo(destination)) throw IOException("Couldn't rename: ${file.name}")
+        if (destination.exists()) throw IOException(Messages.get("error.name.exists", newName))
+        if (!file.renameTo(destination)) throw IOException(Messages.get("error.rename", file.name))
         return destination
     }
 
@@ -103,7 +103,7 @@ internal object FileOperations {
     @Throws(IOException::class)
     fun createFolder(directory: File, name: String): File {
         val folder = uniqueDestination(File(directory, name))
-        if (!folder.mkdirs()) throw IOException("Couldn't create the folder: ${folder.name}")
+        if (!folder.mkdirs()) throw IOException(Messages.get("error.create.folder", folder.name))
         return folder
     }
 
@@ -129,7 +129,7 @@ internal object FileOperations {
 
     private fun copyFile(source: File, destination: File) {
         if (!source.copyRecursively(destination)) {
-            throw IOException("Couldn't copy: ${source.name}")
+            throw IOException(Messages.get("error.copy", source.name))
         }
     }
 
@@ -138,7 +138,7 @@ internal object FileOperations {
         // If renameTo fails, such as when moving across drives, fall back to copy + delete
         copyFile(source, destination)
         if (!source.deleteRecursively()) {
-            throw IOException("Couldn't delete the source after moving: ${source.name}")
+            throw IOException(Messages.get("error.move.delete.source", source.name))
         }
     }
 
@@ -149,8 +149,13 @@ internal object FileOperations {
         val extension = if (candidate.extension.isEmpty()) "" else ".${candidate.extension}"
         var index = 1
         while (true) {
-            val suffix = if (index == 1) " - Copy" else " - Copy ($index)"
-            val next = File(candidate.parentFile, "$baseName$suffix$extension")
+            // As in Explorer, use "name - Copy" in the language (e.g. "名前 - コピー" in Japanese)
+            val copyName = if (index == 1) {
+                Messages.get("file.copy.name", baseName)
+            } else {
+                Messages.get("file.copy.name.numbered", baseName, index.toString())
+            }
+            val next = File(candidate.parentFile, "$copyName$extension")
             if (!next.exists()) return next
             index++
         }

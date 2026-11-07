@@ -48,6 +48,11 @@ internal class FileTableModel : AbstractTableModel() {
         const val KIND_COLUMN = 2
         const val SIZE_COLUMN = 3
 
-        private val COLUMN_NAMES = listOf("Name", "Date modified", "Type", "Size")
+        private val COLUMN_NAMES = listOf(
+            Messages.get("column.name"),
+            Messages.get("column.date"),
+            Messages.get("column.kind"),
+            Messages.get("column.size"),
+        )
     }
 }

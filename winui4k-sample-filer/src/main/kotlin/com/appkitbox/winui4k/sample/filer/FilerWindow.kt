@@ -64,8 +64,8 @@ internal class FilerTab(var directory: File) {
  */
 @Suppress("TooManyFunctions") // Acts as the controller for the whole window, so it naturally has one method per feature
 internal class FilerWindow {
-    // The window title matches titleBar.title ("Filer") since the latter syncs to AppWindow
-    private val frame = WFrame(title = "Filer")
+    // The window title uses the same name because titleBar.title (app.title) is synchronized to the AppWindow
+    private val frame = WFrame(title = Messages.get("app.title"))
     private val titleBar = WTitleBar()
     private val tabView = WTabView()
 
@@ -78,15 +78,15 @@ internal class FilerWindow {
     private var isSyncingTabs = false
 
     // The toolbar (back / forward / up / refresh + BreadcrumbBar / path entry + view switch + filter)
-    private val backButton = compactButton("Back (Alt+←)", Symbol.BACK)
-    private val forwardButton = compactButton("Forward (Alt+→)", Symbol.FORWARD)
-    private val upButton = compactButton("Up (Alt+↑)", Symbol.UP)
-    private val refreshButton = compactButton("Refresh (F5)", Symbol.REFRESH)
+    private val backButton = compactButton(Messages.get("toolbar.back"), Symbol.BACK)
+    private val forwardButton = compactButton(Messages.get("toolbar.forward"), Symbol.FORWARD)
+    private val upButton = compactButton(Messages.get("toolbar.up"), Symbol.UP)
+    private val refreshButton = compactButton(Messages.get("toolbar.refresh"), Symbol.REFRESH)
     private val breadcrumbBar = WBreadcrumbBar()
-    private val pathBox = WAutoSuggestBox("Type a path and press Enter")
-    private val pathEditButton = compactButton("Edit path (Ctrl+L)", Symbol.EDIT)
+    private val pathBox = WAutoSuggestBox(Messages.get("toolbar.path.placeholder"))
+    private val pathEditButton = compactButton(Messages.get("toolbar.path.edit"), Symbol.EDIT)
     private val viewSelector = WSelectorBar()
-    private val filterBox = WTextField().apply { placeholderText = "Filter" }
+    private val filterBox = WTextField().apply { placeholderText = Messages.get("toolbar.filter") }
 
     /** The File corresponding to each level of BreadcrumbBar (looks up the destination from ItemClicked's index). */
     private var breadcrumbParts: List<File> = emptyList()
@@ -150,7 +150,7 @@ internal class FilerWindow {
     private fun buildTitleBar(): WComponent {
         titleBar.iconGlyph = "" // The Folder glyph in Segoe Fluent Icons
 
-        titleBar.title = "Filer"
+        titleBar.title = Messages.get("app.title")
 
         tabView.tabWidthMode = TabViewWidthMode.SIZE_TO_CONTENT
         tabView.canReorderTabs = false // Tabs are managed by index, so reordering is disabled
@@ -190,8 +190,8 @@ internal class FilerWindow {
         addressHost.add(breadcrumbBar, row = 0, column = 0)
         addressHost.add(pathBox, row = 0, column = 0)
 
-        viewSelector.addItem(WSelectorBarItem("Details"))
-        viewSelector.addItem(WSelectorBarItem("Icons"))
+        viewSelector.addItem(WSelectorBarItem(Messages.get("view.details")))
+        viewSelector.addItem(WSelectorBarItem(Messages.get("view.icons")))
         viewSelector.selectedIndex = 0
         viewSelector.addSelectionListener { index -> setIconView(index == 1) }
 
@@ -216,24 +216,24 @@ internal class FilerWindow {
     private fun buildCommandBar(): WComponent {
         val commandBar = WCommandBar()
         commandBar.addPrimaryCommand(
-            commandButton("New folder", Symbol.NEW_FOLDER, VirtualKey.N, VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT) {
+            commandButton(Messages.get("command.new.folder"), Symbol.NEW_FOLDER, VirtualKey.N, VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT) {
                 createNewFolder()
             },
         )
         commandBar.addPrimaryCommand(
-            commandButton("Cut", Symbol.CUT, VirtualKey.X, VirtualKeyModifier.CONTROL) { cutSelection() },
+            commandButton(Messages.get("command.cut"), Symbol.CUT, VirtualKey.X, VirtualKeyModifier.CONTROL) { cutSelection() },
         )
         commandBar.addPrimaryCommand(
-            commandButton("Copy", Symbol.COPY, VirtualKey.C, VirtualKeyModifier.CONTROL) { copySelection() },
+            commandButton(Messages.get("command.copy"), Symbol.COPY, VirtualKey.C, VirtualKeyModifier.CONTROL) { copySelection() },
         )
         commandBar.addPrimaryCommand(
-            commandButton("Paste", Symbol.PASTE, VirtualKey.V, VirtualKeyModifier.CONTROL) { pasteClipboard() },
+            commandButton(Messages.get("command.paste"), Symbol.PASTE, VirtualKey.V, VirtualKeyModifier.CONTROL) { pasteClipboard() },
         )
         commandBar.addPrimaryCommand(
-            commandButton("Rename", Symbol.RENAME, VirtualKey.F2) { renameSelection() },
+            commandButton(Messages.get("command.rename"), Symbol.RENAME, VirtualKey.F2) { renameSelection() },
         )
         commandBar.addPrimaryCommand(
-            commandButton("Delete", Symbol.DELETE, VirtualKey.DELETE) { deleteSelection() },
+            commandButton(Messages.get("command.delete"), Symbol.DELETE, VirtualKey.DELETE) { deleteSelection() },
         )
         return commandBar
     }
@@ -263,11 +263,11 @@ internal class FilerWindow {
 
     private fun buildSidebar() {
         val home = System.getProperty("user.home")
-        addSidebarItem("Home", Symbol.HOME, File(home))
-        addSidebarItem("Desktop", Symbol.FOLDER, File(home, "Desktop"))
-        addSidebarItem("Documents", Symbol.DOCUMENT, File(home, "Documents"))
-        addSidebarItem("Downloads", Symbol.DOWNLOAD, File(home, "Downloads"))
-        addSidebarItem("Pictures", Symbol.PICTURES, File(home, "Pictures"))
+        addSidebarItem(Messages.get("sidebar.home"), Symbol.HOME, File(home))
+        addSidebarItem(Messages.get("sidebar.desktop"), Symbol.FOLDER, File(home, "Desktop"))
+        addSidebarItem(Messages.get("sidebar.documents"), Symbol.DOCUMENT, File(home, "Documents"))
+        addSidebarItem(Messages.get("sidebar.downloads"), Symbol.DOWNLOAD, File(home, "Downloads"))
+        addSidebarItem(Messages.get("sidebar.pictures"), Symbol.PICTURES, File(home, "Pictures"))
         File.listRoots()?.forEach { root ->
             addSidebarItem(root.path, Symbol.MAP_DRIVE, root)
         }
@@ -289,6 +289,7 @@ internal class FilerWindow {
         table.isReadOnly = true
         val sorter = TableRowSorter(tableModel)
         sorter.setComparator(FileTableModel.NAME_COLUMN, NAME_COMPARATOR)
+        sorter.setComparator(FileTableModel.DATE_COLUMN, DATE_COMPARATOR)
         sorter.setComparator(FileTableModel.SIZE_COLUMN, SIZE_COMPARATOR)
         table.rowSorter = sorter
         TABLE_COLUMN_WIDTHS.forEachIndexed { index, width -> table.columnModel.getColumn(index).preferredWidth = width }
@@ -308,17 +309,17 @@ internal class FilerWindow {
 
     private fun buildContextMenu(): WMenuFlyout {
         val menu = WMenuFlyout()
-        menu.add(menuItem("Open", Symbol.OPEN_FILE) { selectedFiles().firstOrNull()?.let(::open) })
+        menu.add(menuItem(Messages.get("command.open"), Symbol.OPEN_FILE) { selectedFiles().firstOrNull()?.let(::open) })
         menu.add(WMenuFlyoutSeparator())
-        menu.add(menuItem("Cut", Symbol.CUT) { cutSelection() })
-        menu.add(menuItem("Copy", Symbol.COPY) { copySelection() })
-        menu.add(menuItem("Paste", Symbol.PASTE) { pasteClipboard() })
-        menu.add(menuItem("Delete", Symbol.DELETE) { deleteSelection() })
-        menu.add(menuItem("Delete permanently", Symbol.DELETE) { deleteSelectionPermanently() })
-        menu.add(menuItem("Rename", Symbol.RENAME) { renameSelection() })
+        menu.add(menuItem(Messages.get("command.cut"), Symbol.CUT) { cutSelection() })
+        menu.add(menuItem(Messages.get("command.copy"), Symbol.COPY) { copySelection() })
+        menu.add(menuItem(Messages.get("command.paste"), Symbol.PASTE) { pasteClipboard() })
+        menu.add(menuItem(Messages.get("command.delete"), Symbol.DELETE) { deleteSelection() })
+        menu.add(menuItem(Messages.get("command.delete.permanently"), Symbol.DELETE) { deleteSelectionPermanently() })
+        menu.add(menuItem(Messages.get("command.rename"), Symbol.RENAME) { renameSelection() })
         menu.add(WMenuFlyoutSeparator())
-        menu.add(menuItem("Copy path", Symbol.LINK) { copySelectedPaths() })
-        menu.add(menuItem("New folder", Symbol.NEW_FOLDER) { createNewFolder() })
+        menu.add(menuItem(Messages.get("command.copy.path"), Symbol.LINK) { copySelectedPaths() })
+        menu.add(menuItem(Messages.get("command.new.folder"), Symbol.NEW_FOLDER) { createNewFolder() })
         return menu
     }
 
@@ -394,7 +395,7 @@ internal class FilerWindow {
         updateBreadcrumb()
         updateNavButtons()
         selectionLabel.text = ""
-        itemCountLabel.text = "Loading..."
+        itemCountLabel.text = Messages.get("status.loading")
 
         val directory = activeTab.directory
         val generation = ++enumerationGeneration
@@ -428,7 +429,7 @@ internal class FilerWindow {
             tableModel.setEntries(displayedEntries)
             contentHost.add(table, row = 0, column = 0)
         }
-        itemCountLabel.text = "${displayedEntries.size} items"
+        itemCountLabel.text = Messages.get("status.items", displayedEntries.size)
         updateSelectionLabel()
     }
 
@@ -472,7 +473,7 @@ internal class FilerWindow {
             ""
         } else {
             val bytes = files.filter { it.isFile }.sumOf { it.length() }
-            "${files.size} items selected ${formatSizeApprox(bytes)}"
+            Messages.get("status.selected", files.size, formatSizeApprox(bytes))
         }
     }
 
@@ -570,7 +571,7 @@ internal class FilerWindow {
         runInBackground(
             action = {
                 if (!FileOperations.moveToRecycleBin(files)) {
-                    throw IOException("Couldn't move to the Recycle Bin. Use \"Delete permanently\" instead.")
+                    throw IOException(Messages.get("error.recycle.bin"))
                 }
             },
             onDone = { error ->
@@ -582,10 +583,10 @@ internal class FilerWindow {
     private fun deleteSelectionPermanently() {
         val files = selectedFiles()
         if (files.isEmpty()) return
-        val message = WLabel("This will permanently delete ${files.size} item(s). This action cannot be undone.")
-        val dialog = WContentDialog("Delete permanently", message)
-        dialog.primaryButtonText = "Delete"
-        dialog.closeButtonText = "Cancel"
+        val message = WLabel(Messages.get("dialog.delete.message", files.size))
+        val dialog = WContentDialog(Messages.get("dialog.delete.title"), message)
+        dialog.primaryButtonText = Messages.get("dialog.delete.button")
+        dialog.closeButtonText = Messages.get("dialog.cancel")
         dialog.defaultButton = ContentDialogButton.CLOSE
         dialog.show(navigationView) { result ->
             if (result == ContentDialogResult.PRIMARY) {
@@ -599,9 +600,9 @@ internal class FilerWindow {
         val file = selectedFiles().firstOrNull() ?: return
         val field = WTextField()
         field.text = file.name
-        val dialog = WContentDialog("Rename", field)
-        dialog.primaryButtonText = "Rename"
-        dialog.closeButtonText = "Cancel"
+        val dialog = WContentDialog(Messages.get("dialog.rename.title"), field)
+        dialog.primaryButtonText = Messages.get("dialog.rename.button")
+        dialog.closeButtonText = Messages.get("dialog.cancel")
         dialog.defaultButton = ContentDialogButton.PRIMARY
         dialog.show(navigationView) { result ->
             if (result != ContentDialogResult.PRIMARY) return@show
@@ -611,17 +612,17 @@ internal class FilerWindow {
                 FileOperations.rename(file, newName)
                 refresh()
             } catch (e: IOException) {
-                showError(e.message ?: "Couldn't rename")
+                showError(e.message ?: Messages.get("error.rename.failed"))
             }
         }
     }
 
     private fun createNewFolder() {
         val field = WTextField()
-        field.text = "New folder"
-        val dialog = WContentDialog("New folder", field)
-        dialog.primaryButtonText = "Create"
-        dialog.closeButtonText = "Cancel"
+        field.text = Messages.get("dialog.new.folder.default.name")
+        val dialog = WContentDialog(Messages.get("dialog.new.folder.title"), field)
+        dialog.primaryButtonText = Messages.get("dialog.new.folder.button")
+        dialog.closeButtonText = Messages.get("dialog.cancel")
         dialog.defaultButton = ContentDialogButton.PRIMARY
         dialog.show(navigationView) { result ->
             if (result != ContentDialogResult.PRIMARY) return@show
@@ -631,7 +632,7 @@ internal class FilerWindow {
                 FileOperations.createFolder(activeTab.directory, name)
                 refresh()
             } catch (e: IOException) {
-                showError(e.message ?: "Couldn't create the folder")
+                showError(e.message ?: Messages.get("error.create.folder.failed"))
             }
         }
     }
@@ -652,15 +653,15 @@ internal class FilerWindow {
                 action()
                 null
             } catch (e: IOException) {
-                e.message ?: "The operation failed"
+                e.message ?: Messages.get("error.operation.failed")
             }
             WinUiUtilities.invokeLater { onDone(error) }
         }.start()
     }
 
     private fun showError(message: String) {
-        val dialog = WContentDialog("Error", WLabel(message))
-        dialog.closeButtonText = "OK"
+        val dialog = WContentDialog(Messages.get("dialog.error.title"), WLabel(message))
+        dialog.closeButtonText = Messages.get("dialog.ok")
         dialog.show(navigationView)
     }
 
@@ -704,8 +705,8 @@ internal class FilerWindow {
         const val ICON_GLYPH_SIZE = 40.0
         const val STATUS_FONT_SIZE = 12.0
 
-        /** Column widths of the details view (Name / Date modified / Type / Size). */
-        val TABLE_COLUMN_WIDTHS = listOf(320.0, 150.0, 150.0, 110.0)
+        /** The column widths of the details view (name / date modified / type / size). The date modified width fits the English "12/31/2025, 12:59 PM". */
+        val TABLE_COLUMN_WIDTHS = listOf(320.0, 170.0, 150.0, 110.0)
 
         fun defaultDirectory(): File = File(System.getProperty("user.home"))
     }
