@@ -338,28 +338,30 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
     }
 
     /**
-     * Opens the dialog (ContentDialog.ShowAsync). Shown in the same window as [owner]
-     * (inherits its XamlRoot). When closed, [onClosed] is called with the button that was pressed.
+     * Opens the dialog (ContentDialog.ShowAsync). It is shown on the same window as [owner] (for a component, the window it is on;
+     * for a [WFrame], that window; for null, the shown window, as with [WOptionPane]. The XamlRoot is carried over).
+     * When it closes, [onClosed] is called with the button pressed.
      * Does not block the caller (use [showAndWait] to wait until it closes). When the owner window is closed, [onClosed] is not called and it is released (what the callback refers to can be collected too; the dialog is also closed).
      * [IllegalStateException] if another ContentDialog is open in the same window or this dialog is already open,
      * [IllegalArgumentException] if [owner] is not on a window. If [owner] is in a window that was just shown (whose content is not loaded yet),
      * no exception is thrown, as in Swing, and the dialog opens after the content loads and is laid out ([showAndWait] waits until then before opening).
      */
     @JvmOverloads
-    fun show(owner: WComponent, onClosed: Consumer<ContentDialogResult>? = null) {
-        open(owner, onClosed)
+    fun show(owner: WDialogParent?, onClosed: Consumer<ContentDialogResult>? = null) {
+        open(WFrame.dialogOwnerOf(owner), onClosed)
     }
 
     /**
-     * Like JDialog.setVisible(true): opens it in [owner]'s window, blocks the caller until it is closed, and returns the button pressed.
+     * JDialog.setVisible(true)-like: opens on the window of [owner] (for null, the shown window, as with [show]), blocks the caller until it closes,
+     * and returns the button pressed.
      * [ContentDialogResult.NONE] when the owner window is closed and when the app exits (WM_QUIT).
      * Call on the UI thread, outside layout notifications (otherwise [IllegalStateException], and the dialog does not open).
      * Other exceptions are the same as [show]. If the message loop exits with an exception while waiting, the dialog is closed before that exception is thrown.
      */
-    fun showAndWait(owner: WDialogParent): ContentDialogResult {
+    fun showAndWait(owner: WDialogParent?): ContentDialogResult {
         ModalLoop.checkRunnable()
         var result: ContentDialogResult? = null
-        val component = WFrame.componentOf(owner)
+        val component = WFrame.dialogOwnerOf(owner)
         // For a window that was just shown, wait until the content loads (has a XamlRoot) before opening (Swing can open right after showing)
         if (awaitsXamlRoot(component)) ModalLoop.run { !awaitsXamlRoot(component) }
         open(component) { result = it }

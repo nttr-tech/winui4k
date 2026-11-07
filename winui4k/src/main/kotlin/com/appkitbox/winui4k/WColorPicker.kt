@@ -235,16 +235,19 @@ class WColorPicker() : WControl(
          *
          * As in Swing (Java 9 or later), transparency (alpha) can also be chosen (the same as `showDialog(owner, title, initial, true)`
          * with [colorTransparencySelectionEnabled] set to true).
+         *
+         * The owner [owner] can be, as with the Component of JColorChooser.showDialog, a component (the window it is on), a [WFrame]
+         * (that window) or null (the shown window, as with [WOptionPane]).
          */
         @JvmStatic
-        fun showDialog(owner: WComponent, title: String, initial: WColor?): WColor? = showDialog(owner, title, initial, true)
+        fun showDialog(owner: WDialogParent?, title: String, initial: WColor?): WColor? = showDialog(owner, title, initial, true)
 
         /**
          * JColorChooser.showDialog(Component, String, Color, boolean)-like: if [colorTransparencySelectionEnabled] is true,
          * transparency (alpha) can also be chosen ([isAlphaEnabled]). Otherwise the same as [showDialog] with three arguments.
          */
         @JvmStatic
-        fun showDialog(owner: WComponent, title: String, initial: WColor?, colorTransparencySelectionEnabled: Boolean): WColor? {
+        fun showDialog(owner: WDialogParent?, title: String, initial: WColor?, colorTransparencySelectionEnabled: Boolean): WColor? {
             val (dialog, picker) = chooserDialog(title, initial, colorTransparencySelectionEnabled)
             return pickedColor(dialog.showAndWait(owner), picker)
         }
@@ -254,14 +257,14 @@ class WColorPicker() : WControl(
          * (not called when the owner window is closed). Transparency can also be chosen.
          */
         @JvmStatic
-        fun showDialog(owner: WComponent, title: String, initial: WColor?, onClosed: Consumer<WColor?>) {
+        fun showDialog(owner: WDialogParent?, title: String, initial: WColor?, onClosed: Consumer<WColor?>) {
             showDialog(owner, title, initial, true, onClosed)
         }
 
         /** The form of the non-blocking [showDialog] that specifies whether transparency can be chosen ([colorTransparencySelectionEnabled]). */
         @JvmStatic
         fun showDialog(
-            owner: WComponent,
+            owner: WDialogParent?,
             title: String,
             initial: WColor?,
             colorTransparencySelectionEnabled: Boolean,

@@ -265,12 +265,39 @@ class WColorPickerTest : FunSpec() {
             }
         }
 
+        test("passing a WFrame as the owner of showDialog (the same as JColorChooser.showDialog(frame, ...)) opens it on that window") {
+            withOwner { owner ->
+                val frame = UiTestHarness.sharedFrame()
+                WinUiUtilities.invokeLater { events += "r:${WColorPicker.showDialog(frame, "Color", navy)}" }
+                awaitOpen(owner).title shouldBe "Color"
+                OpenContentDialogs.press(owner, "PrimaryButton")
+                awaitEvents("r:$navy")
+                awaitClosed(owner)
+
+                onUiThread { WColorPicker.showDialog(frame, "Color", orange) { events += "cb:$it" } }
+                awaitOpen(owner)
+                OpenContentDialogs.press(owner, "CloseButton")
+                awaitEvents("r:$navy", "cb:null")
+                awaitClosed(owner)
+            }
+        }
+
         test("the callback form that specifies whether transparency can be chosen also passes the color when closed") {
             withOwner { owner ->
                 onUiThread { WColorPicker.showDialog(owner, "Color", orange, false) { events += "cb:$it" } }
                 awaitOpen(owner)
                 OpenContentDialogs.press(owner, "PrimaryButton")
                 awaitEvents("cb:$orange")
+                awaitClosed(owner)
+            }
+        }
+
+        test("if the owner of showDialog is null (the same as JColorChooser.showDialog(null, ...)), it opens on the shown window") {
+            withOwner { owner ->
+                WinUiUtilities.invokeLater { events += "r:${WColorPicker.showDialog(null, "Color", navy)}" }
+                awaitOpen(owner)
+                OpenContentDialogs.press(owner, "PrimaryButton")
+                awaitEvents("r:$navy")
                 awaitClosed(owner)
             }
         }

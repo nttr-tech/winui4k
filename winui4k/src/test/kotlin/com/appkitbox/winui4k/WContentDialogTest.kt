@@ -152,6 +152,34 @@ class WContentDialogTest : FunSpec() {
             onUiThreadGet { dialog.isVisible } shouldBe false
         }
 
+        test("passing a WFrame as the owner of show opens it on that window (as with showAndWait) and passes the result when closed") {
+            withOwner { _ ->
+                val dialog = onUiThreadGet { dialog() }
+                onUiThread { dialog.show(UiTestHarness.sharedFrame()) { events += "closed:$it" } }
+                awaitOpen(dialog)
+                pressEscape()
+                awaitEvents("closed:NONE")
+                awaitClosed(dialog)
+            }
+        }
+
+        test("if the owner of show and showAndWait is null, it opens on the shown window (as with WOptionPane)") {
+            withOwner { _ ->
+                val dialog = onUiThreadGet { dialog() }
+                onUiThread { dialog.show(null) { events += "closed:$it" } }
+                awaitOpen(dialog)
+                pressEscape()
+                awaitEvents("closed:NONE")
+                awaitClosed(dialog)
+
+                WinUiUtilities.invokeLater { events += "returned:${dialog.showAndWait(null)}" }
+                awaitOpen(dialog)
+                pressEscape()
+                awaitEvents("closed:NONE", "returned:NONE")
+                awaitClosed(dialog)
+            }
+        }
+
         test("showAndWait does not return until closed, and Esc presses the close button and returns NONE; the listeners are in the order open, button, before close, after close") {
             withOwner { owner ->
                 val dialog = onUiThreadGet { dialog().also { recordListeners(it) } }
