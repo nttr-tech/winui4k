@@ -28,8 +28,7 @@ import java.io.File
 internal fun buildStoragePickersPage(): WComponent {
     val page = buildPage(
         "Storage pickers",
-        "WinAppSDK pickers that open the OS file/folder selection dialogs. " +
-            "Try WFileOpenPicker (Open), WFileSavePicker (Save As), and WFolderPicker (Select Folder).",
+        Messages.get("storagepickers.description"),
     )
     page.add(buildPickerGuideExample())
     page.add(buildPickSingleFileExample())
@@ -42,31 +41,26 @@ internal fun buildStoragePickersPage(): WComponent {
 /** Guide: when to use each picker, their shared usage, and the first-showing-only settings caveat. */
 private fun buildPickerGuideExample(): WComponent {
     val body = WPanel(spacing = 8.0)
-    body.add(WLabel("• WFileOpenPicker — opens files. pickSingleFile (single) / pickMultipleFiles (multiple)"))
-    body.add(WLabel("• WFileSavePicker — Save As. pickSaveFile (only returns the destination path; doesn't create the file)"))
-    body.add(WLabel("• WFolderPicker — selects a folder. pickSingleFolder"))
+    body.add(WLabel(Messages.get("storagepickers.guide.open")))
+    body.add(WLabel(Messages.get("storagepickers.guide.save")))
+    body.add(WLabel(Messages.get("storagepickers.guide.folder")))
     body.add(
-        WLabel(
-            "Usage: create the picker with its owner WFrame, configure file types and other options, then open it. " +
-                "The dialog stays open until the user closes it, so results arrive via a callback on the UI thread " +
-                "(null on cancel; an empty list for multiple selection).",
-        ).also { it.textWrapping = TextWrapping.WRAP },
+        WLabel(Messages.get("storagepickers.guide.usage")).also { it.textWrapping = TextWrapping.WRAP },
     )
 
     val note = WInfoBar()
     note.isOpen = true
     note.isClosable = false
-    note.message = "Pickers remember and restore the last-selected location and view mode. " +
-        "SuggestedStartLocation and ViewMode only take effect on the first showing (before any memory exists)."
+    note.message = Messages.get("storagepickers.guide.note")
     body.add(note)
-    return buildExample("Guide: choosing a picker and shared usage", body)
+    return buildExample(Messages.get("storagepickers.guide.title"), body)
 }
 
 /** The file type choices (combo box display name -> extensions passed to addFileTypeFilter). */
 private val fileTypeFilters = linkedMapOf(
-    "All files (*)" to arrayOf("*"),
-    "Text (.txt)" to arrayOf(".txt"),
-    "Images (.jpg / .png)" to arrayOf(".jpg", ".png"),
+    Messages.get("storagepickers.filetype.all") to arrayOf("*"),
+    Messages.get("storagepickers.filetype.text") to arrayOf(".txt"),
+    Messages.get("storagepickers.filetype.image") to arrayOf(".jpg", ".png"),
 )
 
 /** The "folder shown first" selection combo box. */
@@ -85,13 +79,13 @@ private fun buildViewModeComboBox(): WComboBox {
 
 /** Picking a single file: FileTypeFilter / CommitButtonText / SuggestedStartLocation / ViewMode. */
 private fun buildPickSingleFileExample(): WComponent {
-    val result = WLabel("Nothing picked").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Pick a file")
+    val result = WLabel(Messages.get("storagepickers.result.none")).also { it.textWrapping = TextWrapping.WRAP }
+    val button = WButton(Messages.get("storagepickers.single.button"))
 
     val fileType = WComboBox(fileTypeFilters.keys.toList())
     fileType.selectedIndex = 0
-    val commitText = WTextField().apply { placeholderText = "The default is \"Open\"" }
-    commitText.text = "Open this file"
+    val commitText = WTextField().apply { placeholderText = Messages.get("storagepickers.single.commit.placeholder") }
+    commitText.text = Messages.get("storagepickers.single.commit.default")
     val location = buildLocationComboBox()
     val viewMode = buildViewModeComboBox()
 
@@ -104,11 +98,15 @@ private fun buildPickSingleFileExample(): WComponent {
             picker.suggestedStartLocation = PickerLocationId.entries[location.selectedIndex]
             picker.viewMode = PickerViewMode.entries[viewMode.selectedIndex]
             picker.pickSingleFile { path ->
-                result.text = if (path != null) "Picked: $path" else "Canceled"
+                result.text = if (path != null) {
+                    Messages.get("storagepickers.result.selected", path)
+                } else {
+                    Messages.get("storagepickers.result.cancelled")
+                }
                 button.isEnabled = true
             }
         }.onFailure {
-            result.text = "Couldn't open the dialog: ${it.message}"
+            result.text = Messages.get("storagepickers.result.error", it.message.toString())
             button.isEnabled = true
         }
     }
@@ -118,21 +116,21 @@ private fun buildPickSingleFileExample(): WComponent {
     body.add(result)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("File types (FileTypeFilter)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.filetype")))
     options.add(fileType)
-    options.add(optionsLabel("Commit button caption (CommitButtonText)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.commit")))
     options.add(commitText)
-    options.add(optionsLabel("Folder shown first (SuggestedStartLocation)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.location")))
     options.add(location)
-    options.add(optionsLabel("View mode (ViewMode)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.viewmode")))
     options.add(viewMode)
-    return buildExample("Picking a single file (WFileOpenPicker.pickSingleFile)", body, options)
+    return buildExample(Messages.get("storagepickers.single.title"), body, options)
 }
 
 /** Picking multiple files: receiving PickMultipleFilesAsync's list. */
 private fun buildPickMultipleFilesExample(): WComponent {
-    val result = WLabel("Nothing picked").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Pick multiple files")
+    val result = WLabel(Messages.get("storagepickers.result.none")).also { it.textWrapping = TextWrapping.WRAP }
+    val button = WButton(Messages.get("storagepickers.multiple.button"))
 
     val fileType = WComboBox(fileTypeFilters.keys.toList())
     fileType.selectedIndex = 0
@@ -148,14 +146,14 @@ private fun buildPickMultipleFilesExample(): WComponent {
             picker.viewMode = PickerViewMode.entries[viewMode.selectedIndex]
             picker.pickMultipleFiles { paths ->
                 result.text = if (paths.isNotEmpty()) {
-                    paths.joinToString("\n") { "Picked: $it" }
+                    paths.joinToString("\n") { Messages.get("storagepickers.result.selected", it) }
                 } else {
-                    "Canceled"
+                    Messages.get("storagepickers.result.cancelled")
                 }
                 button.isEnabled = true
             }
         }.onFailure {
-            result.text = "Couldn't open the dialog: ${it.message}"
+            result.text = Messages.get("storagepickers.result.error", it.message.toString())
             button.isEnabled = true
         }
     }
@@ -165,33 +163,33 @@ private fun buildPickMultipleFilesExample(): WComponent {
     body.add(result)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("File types (FileTypeFilter)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.filetype")))
     options.add(fileType)
-    options.add(optionsLabel("Folder shown first (SuggestedStartLocation)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.location")))
     options.add(location)
-    options.add(optionsLabel("View mode (ViewMode)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.viewmode")))
     options.add(viewMode)
-    return buildExample("Picking multiple files (WFileOpenPicker.pickMultipleFiles)", body, options)
+    return buildExample(Messages.get("storagepickers.multiple.title"), body, options)
 }
 
 /** Saving a file: FileTypeChoices / DefaultFileExtension / SuggestedFileName / SuggestedFolder. */
 @Suppress("LongMethod") // Declarative UI-building for the sample
 private fun buildSaveFileExample(): WComponent {
-    val content = WTextField().apply { placeholderText = "Content to save" }
+    val content = WTextField().apply { placeholderText = Messages.get("storagepickers.save.content.placeholder") }
     content.text = "Hello, WinUI4K!"
     content.width = 320.0
-    val result = WLabel("Not saved").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Save As")
+    val result = WLabel(Messages.get("storagepickers.save.result.none")).also { it.textWrapping = TextWrapping.WRAP }
+    val button = WButton(Messages.get("storagepickers.save.button"))
 
-    val txtCheckBox = WCheckBox("Text (.txt)")
+    val txtCheckBox = WCheckBox(Messages.get("storagepickers.filetype.text"))
     txtCheckBox.isChecked = true
     val jsonCheckBox = WCheckBox("JSON (.json)")
     val xmlCheckBox = WCheckBox("XML (.xml)")
-    val fileName = WTextField().apply { placeholderText = "Initial file name" }
+    val fileName = WTextField().apply { placeholderText = Messages.get("storagepickers.save.filename.placeholder") }
     fileName.text = "NewDocument"
     val location = buildLocationComboBox()
-    val folder = WTextField().apply { placeholderText = "Initial destination folder (optional)" }
-    val folderButton = WButton("Browse...")
+    val folder = WTextField().apply { placeholderText = Messages.get("storagepickers.save.folder.placeholder") }
+    val folderButton = WButton(Messages.get("storagepickers.save.folder.browse"))
     folderButton.addActionListener {
         folderButton.isEnabled = false
         WFolderPicker(galleryFrame).pickSingleFolder { path ->
@@ -204,7 +202,7 @@ private fun buildSaveFileExample(): WComponent {
         button.isEnabled = false
         runCatching {
             val picker = WFileSavePicker(galleryFrame)
-            if (txtCheckBox.isChecked == true) picker.addFileTypeChoice("Text", ".txt")
+            if (txtCheckBox.isChecked == true) picker.addFileTypeChoice(Messages.get("storagepickers.save.choice.text"), ".txt")
             if (jsonCheckBox.isChecked == true) picker.addFileTypeChoice("JSON", ".json")
             if (xmlCheckBox.isChecked == true) picker.addFileTypeChoice("XML", ".xml")
             picker.suggestedFileName = fileName.text
@@ -214,20 +212,20 @@ private fun buildSaveFileExample(): WComponent {
                 result.text = if (path != null) {
                     // The picker only returns a path, so the app does the writing
                     File(path).writeText(content.text)
-                    "Saved: $path"
+                    Messages.get("storagepickers.save.saved", path)
                 } else {
-                    "Canceled"
+                    Messages.get("storagepickers.result.cancelled")
                 }
                 button.isEnabled = true
             }
         }.onFailure {
-            result.text = "Couldn't open the dialog: ${it.message}"
+            result.text = Messages.get("storagepickers.result.error", it.message.toString())
             button.isEnabled = true
         }
     }
 
     val body = WPanel(spacing = 8.0)
-    body.add(optionsLabel("Content to write to the file"))
+    body.add(optionsLabel(Messages.get("storagepickers.save.content.label")))
     body.add(content)
     body.add(button)
     body.add(result)
@@ -244,26 +242,26 @@ private fun buildSaveFileExample(): WComponent {
     folderRow.add(folderButton, row = 0, column = 1)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("File types (FileTypeChoices)"))
+    options.add(optionsLabel(Messages.get("storagepickers.save.option.filetype")))
     options.add(txtCheckBox)
     options.add(jsonCheckBox)
     options.add(xmlCheckBox)
-    options.add(optionsLabel("Initial file name (SuggestedFileName)"))
+    options.add(optionsLabel(Messages.get("storagepickers.save.option.filename")))
     options.add(fileName)
-    options.add(optionsLabel("Folder shown first (SuggestedStartLocation)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.location")))
     options.add(location)
-    options.add(optionsLabel("Initial destination folder (SuggestedFolder)"))
+    options.add(optionsLabel(Messages.get("storagepickers.save.option.folder")))
     options.add(folderRow)
-    return buildExample("Saving a file (WFileSavePicker.pickSaveFile)", body, options)
+    return buildExample(Messages.get("storagepickers.save.title"), body, options)
 }
 
 /** Selecting a folder: PickSingleFolderAsync. */
 private fun buildPickFolderExample(): WComponent {
-    val result = WLabel("Nothing picked").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Pick a folder")
+    val result = WLabel(Messages.get("storagepickers.result.none")).also { it.textWrapping = TextWrapping.WRAP }
+    val button = WButton(Messages.get("storagepickers.folder.button"))
 
-    val commitText = WTextField().apply { placeholderText = "The default is \"Select Folder\"" }
-    commitText.text = "Use this folder"
+    val commitText = WTextField().apply { placeholderText = Messages.get("storagepickers.folder.commit.placeholder") }
+    commitText.text = Messages.get("storagepickers.folder.commit.default")
     val location = buildLocationComboBox()
     val viewMode = buildViewModeComboBox()
 
@@ -275,11 +273,15 @@ private fun buildPickFolderExample(): WComponent {
             picker.suggestedStartLocation = PickerLocationId.entries[location.selectedIndex]
             picker.viewMode = PickerViewMode.entries[viewMode.selectedIndex]
             picker.pickSingleFolder { path ->
-                result.text = if (path != null) "Picked: $path" else "Canceled"
+                result.text = if (path != null) {
+                    Messages.get("storagepickers.result.selected", path)
+                } else {
+                    Messages.get("storagepickers.result.cancelled")
+                }
                 button.isEnabled = true
             }
         }.onFailure {
-            result.text = "Couldn't open the dialog: ${it.message}"
+            result.text = Messages.get("storagepickers.result.error", it.message.toString())
             button.isEnabled = true
         }
     }
@@ -289,13 +291,13 @@ private fun buildPickFolderExample(): WComponent {
     body.add(result)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Commit button caption (CommitButtonText)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.commit")))
     options.add(commitText)
-    options.add(optionsLabel("Folder shown first (SuggestedStartLocation)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.location")))
     options.add(location)
-    options.add(optionsLabel("View mode (ViewMode)"))
+    options.add(optionsLabel(Messages.get("storagepickers.option.viewmode")))
     options.add(viewMode)
-    return buildExample("Selecting a folder (WFolderPicker.pickSingleFolder)", body, options)
+    return buildExample(Messages.get("storagepickers.folder.title"), body, options)
 }
 
 // endregion

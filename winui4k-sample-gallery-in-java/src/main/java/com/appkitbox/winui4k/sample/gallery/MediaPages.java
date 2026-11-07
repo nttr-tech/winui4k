@@ -24,8 +24,7 @@ final class MediaPages {
     static WComponent buildWebView2Page() {
         WPanel page = GalleryScaffold.buildPage(
             "WebView2",
-            "A Microsoft Edge-based web browser control. Try out WWebView's various features."
-                + " (Displaying content requires the WebView2 Runtime.)");
+            Messages.get("webview2.description"));
 
         page.add(buildBrowserWebViewExample());
         page.add(buildExecuteScriptExample());
@@ -65,12 +64,12 @@ final class MediaPages {
 
     /** A mini browser: Source / GoBack / GoForward / Reload / NavigationStarting / NavigationCompleted. */
     private static WComponent buildBrowserWebViewExample() {
-        String homeUrl = "https://learn.microsoft.com/ja-jp/windows/apps/winui/";
+        String homeUrl = Messages.get("webview2.browser.homeurl");
         WWebView webView = new WWebView(homeUrl);
         webView.setWidth(720.0);
         webView.setHeight(400.0);
 
-        WLabel status = new WLabel("Loading...");
+        WLabel status = new WLabel(Messages.get("webview2.browser.loading"));
         status.setForeground(GalleryTheme.TEXT_SECONDARY());
 
         WTextField addressBar = new WTextField();
@@ -80,8 +79,8 @@ final class MediaPages {
         backButton.setEnabled(false);
         WButton forwardButton = new WButton("→");
         forwardButton.setEnabled(false);
-        WButton reloadButton = new WButton("Reload");
-        WButton goButton = new WButton("Go");
+        WButton reloadButton = new WButton(Messages.get("webview2.browser.reload"));
+        WButton goButton = new WButton(Messages.get("webview2.browser.go"));
 
         backButton.addActionListener(() -> {
             webView.goBack();
@@ -97,24 +96,26 @@ final class MediaPages {
             try {
                 webView.setSource(addressBar.getText());
             } catch (Exception e) {
-                status.setText("Invalid URL: " + addressBar.getText());
+                status.setText(Messages.get("webview2.browser.invalidurl", addressBar.getText()));
             }
         });
 
         webView.addCoreWebView2InitializedListener(exceptionHresult -> {
             if (exceptionHresult != 0) {
-                status.setText(String.format("CoreWebView2 initialization failed: HRESULT=0x%08x", exceptionHresult));
+                status.setText(Messages.get("webview2.browser.initfailed", String.format("0x%08x", exceptionHresult)));
             }
         });
         webView.addNavigationStartingListener(uri -> {
-            status.setText("Navigating: " + uri);
+            status.setText(Messages.get("webview2.browser.navigating", uri));
             return true; // returning false cancels the navigation
         });
         webView.addNavigationCompletedListener((isSuccess, errorStatus) -> {
             backButton.setEnabled(webView.getCanGoBack());
             forwardButton.setEnabled(webView.getCanGoForward());
             addressBar.setText(webView.getSource());
-            status.setText(isSuccess ? "Done: " + webView.getDocumentTitle() : "Failed: " + errorStatus);
+            status.setText(isSuccess
+                ? Messages.get("webview2.browser.completed", webView.getDocumentTitle())
+                : Messages.get("webview2.browser.failed", String.valueOf(errorStatus)));
         });
 
         WPanel toolBar = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -128,7 +129,7 @@ final class MediaPages {
         body.add(toolBar);
         body.add(framedWebView(webView));
         body.add(status);
-        return GalleryScaffold.buildExample("A mini browser (Source / GoBack / GoForward / Reload)", body);
+        return GalleryScaffold.buildExample(Messages.get("webview2.browser.title"), body);
     }
 
     /** ExecuteScript: run the page's JavaScript from Kotlin and receive the result as JSON. */
@@ -139,47 +140,48 @@ final class MediaPages {
         webView.navigateToString(
             "<!doctype html>\n"
                 + "<html><body style=\"font-family: sans-serif; margin: 16px\">\n"
-                + "<h3 style=\"margin: 0 0 8px\">Laptop (mock page)</h3>\n"
-                + "<p style=\"margin: 4px 0\">Price: <span id=\"price\">$899</span></p>\n"
-                + "<p style=\"margin: 4px 0\" id=\"stock\">Stock: In stock</p>\n"
+                + "<h3 style=\"margin: 0 0 8px\">" + Messages.get("webview2.executescript.html.heading") + "</h3>\n"
+                + "<p style=\"margin: 4px 0\">" + Messages.get("webview2.executescript.html.price")
+                + " <span id=\"price\">" + Messages.get("webview2.executescript.html.pricevalue") + "</span></p>\n"
+                + "<p style=\"margin: 4px 0\" id=\"stock\">" + Messages.get("webview2.executescript.html.instock") + "</p>\n"
                 + "</body></html>");
 
         WPanel body = new WPanel(8.0);
         WLabel purpose = purposeLabel(
-            "ExecuteScript runs a page's JavaScript from Kotlin and receives the value of the "
-                + "last expression as JSON. It's useful for reading values from a page (a price, input "
-                + "contents) and for rewriting what it shows through DOM manipulation.");
+            Messages.get("webview2.executescript.purpose"));
         purpose.setWidth(560.0);
         body.add(purpose);
         body.add(framedWebView(webView));
 
         WTextField scriptField = new WTextField();
         scriptField.setText("document.getElementById('price').textContent");
-        WLabel result = purposeLabel("The result (JSON) will show up here after running");
+        WLabel result = purposeLabel(Messages.get("webview2.executescript.result.placeholder"));
 
-        WButton runButton = new WButton("Run");
+        WButton runButton = new WButton(Messages.get("webview2.executescript.run"));
         Runnable runScript = () -> webView.executeScript(scriptField.getText(), json -> {
-            result.setText("Result (JSON): " + json);
+            result.setText(Messages.get("webview2.executescript.result", json));
         });
         runButton.addActionListener(() -> {
             runScript.run();
         });
 
         // Presets: swap in a script and run it right away
-        WButton readPresetButton = new WButton("Read a value (price)");
+        WButton readPresetButton = new WButton(Messages.get("webview2.executescript.readprice"));
         readPresetButton.addActionListener(() -> {
             scriptField.setText("document.getElementById('price').textContent");
             runScript.run();
         });
         // Let the stock display toggle between "In stock" / "Out of stock" via separate buttons
-        WButton inStockButton = new WButton("In stock");
+        WButton inStockButton = new WButton(Messages.get("webview2.executescript.instock"));
         inStockButton.addActionListener(() -> {
-            scriptField.setText("document.getElementById('stock').textContent = 'Stock: In stock'");
+            scriptField.setText("document.getElementById('stock').textContent = '"
+                + Messages.get("webview2.executescript.html.instock") + "'");
             runScript.run();
         });
-        WButton outOfStockButton = new WButton("Out of stock");
+        WButton outOfStockButton = new WButton(Messages.get("webview2.executescript.outofstock"));
         outOfStockButton.addActionListener(() -> {
-            scriptField.setText("document.getElementById('stock').textContent = 'Stock: Out of stock'");
+            scriptField.setText("document.getElementById('stock').textContent = '"
+                + Messages.get("webview2.executescript.html.outofstock") + "'");
             runScript.run();
         });
         WPanel stockButtons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -189,19 +191,19 @@ final class MediaPages {
         WPanel options = new WPanel(16.0);
         options.add(
             optionsSection(
-                "Run a script directly",
-                GalleryScaffold.optionsLabel("The script to run (editable)"),
+                Messages.get("webview2.executescript.direct"),
+                GalleryScaffold.optionsLabel(Messages.get("webview2.executescript.direct.label")),
                 scriptField,
                 runButton));
         options.add(
             optionsSection(
-                "Presets",
-                GalleryScaffold.optionsLabel("Try common use cases with one click"),
+                Messages.get("webview2.executescript.presets"),
+                GalleryScaffold.optionsLabel(Messages.get("webview2.executescript.presets.label")),
                 readPresetButton,
-                GalleryScaffold.optionsLabel("Rewrite the display (stock)"),
+                GalleryScaffold.optionsLabel(Messages.get("webview2.executescript.presets.stock")),
                 stockButtons));
-        options.add(optionsSection("Result", result));
-        return GalleryScaffold.buildExample("ExecuteScript (run the page's JavaScript from Kotlin)", body, options);
+        options.add(optionsSection(Messages.get("webview2.executescript.output"), result));
+        return GalleryScaffold.buildExample(Messages.get("webview2.executescript.title"), body, options);
     }
 
     /** WebMessage: two-way messaging between Kotlin and the page's JavaScript. */
@@ -213,11 +215,11 @@ final class MediaPages {
         webView.navigateToString(
             "<!doctype html>\n"
                 + "<html><body style=\"font-family: sans-serif; margin: 12px\">\n"
-                + "<div style=\"font-weight: bold; margin-bottom: 4px\">The page side (JavaScript)</div>\n"
+                + "<div style=\"font-weight: bold; margin-bottom: 4px\">" + Messages.get("webview2.webmessage.html.heading") + "</div>\n"
                 + "<ul id=\"log\" style=\"height: 140px; overflow-y: auto; margin: 4px 0; padding-left: 20px;\n"
                 + "                    border: 1px solid #ccc; list-style: none\"></ul>\n"
-                + "<input id=\"input\" value=\"A message from the page\" style=\"width: 220px\">\n"
-                + "<button onclick=\"send()\">Send to Kotlin</button>\n"
+                + "<input id=\"input\" value=\"" + Messages.get("webview2.webmessage.html.input") + "\" style=\"width: 220px\">\n"
+                + "<button onclick=\"send()\">" + Messages.get("webview2.webmessage.html.send") + "</button>\n"
                 + "<script>\n"
                 + "function log(text) {\n"
                 + "    const item = document.createElement(\"li\");\n"
@@ -229,48 +231,45 @@ final class MediaPages {
                 + "function send() {\n"
                 + "    const text = document.getElementById(\"input\").value;\n"
                 + "    window.chrome.webview.postMessage(text);\n"
-                + "    log(\"Sent to Kotlin: \" + text);\n"
+                + "    log(\"" + Messages.get("webview2.webmessage.html.sent") + " \" + text);\n"
                 + "}\n"
                 + "window.chrome.webview.addEventListener(\"message\", (e) => {\n"
-                + "    log(\"Received from Kotlin: \" + e.data);\n"
+                + "    log(\"" + Messages.get("webview2.webmessage.html.received") + " \" + e.data);\n"
                 + "});\n"
                 + "</script>\n"
                 + "</body></html>");
 
         WPanel body = new WPanel(8.0);
         WLabel purpose = purposeLabel(
-            "WebMessage is a mechanism for Kotlin and the page's JavaScript to send messages to "
-                + "each other. In a layout that embeds a web page as part of the screen, it's useful "
-                + "for calling Kotlin-side processing (showing a notification, saving a file, etc.) "
-                + "from an action on the page, or updating the page's display from Kotlin-side processing.");
+            Messages.get("webview2.webmessage.purpose"));
         purpose.setWidth(560.0);
         body.add(purpose);
         body.add(framedWebView(webView));
 
         WTextField messageField = new WTextField();
-        messageField.setText("An update notice from Kotlin");
-        WButton sendButton = new WButton("Send to page");
+        messageField.setText(Messages.get("webview2.webmessage.message.default"));
+        WButton sendButton = new WButton(Messages.get("webview2.webmessage.send"));
         sendButton.addActionListener(() -> {
             webView.postWebMessageAsString(messageField.getText());
         });
 
-        WLabel received = purposeLabel("Pressing \"Send to Kotlin\" on the page will show it here");
+        WLabel received = purposeLabel(Messages.get("webview2.webmessage.received.placeholder"));
         webView.addWebMessageReceivedListener(messageAsJson -> {
-            received.setText("Received from page: " + unquoteJsonString(messageAsJson));
+            received.setText(Messages.get("webview2.webmessage.received", unquoteJsonString(messageAsJson)));
         });
 
         WPanel options = new WPanel(16.0);
         options.add(
             optionsSection(
-                "Send from Kotlin processing to the page",
-                GalleryScaffold.optionsLabel("The message to send (editable)"),
+                Messages.get("webview2.webmessage.tosection"),
+                GalleryScaffold.optionsLabel(Messages.get("webview2.webmessage.tosection.label")),
                 messageField,
                 sendButton));
         options.add(
             optionsSection(
-                "Receive from the page in Kotlin processing",
+                Messages.get("webview2.webmessage.fromsection"),
                 received));
-        return GalleryScaffold.buildExample("WebMessage (two-way messaging with the page)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("webview2.webmessage.title"), body, options);
     }
 
     /**
