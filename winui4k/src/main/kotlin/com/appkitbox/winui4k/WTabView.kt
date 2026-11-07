@@ -319,6 +319,12 @@ class WTabView : WControl(
     fun removeTabAt(index: Int) = removeTab(index)
 
     /**
+     * JTabbedPane.remove(int)-like: removes the tab at [index] (the same as [removeTab]). Java's `tabs.remove(1)` calls this.
+     * IndexOutOfBoundsException if out of range.
+     */
+    fun remove(index: Int) = removeTab(index)
+
+    /**
      * Like JTabbedPane.remove(Component): removes the tab whose content is [component] (or the tab that is [component] itself).
      * Does nothing if it is neither.
      */

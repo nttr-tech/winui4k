@@ -183,4 +183,19 @@ class WTabViewForJavaTest {
             assertThrows(IllegalArgumentException.class, () -> tabs.setMnemonicAt(0, '-'));
         });
     }
+
+    @Test
+    void removeWithAnIntRemovesTheTabAtThatPositionLikeJTabbedPaneAndOutOfRangeThrowsIndexOutOfBoundsException() {
+        onUiThread(() -> {
+            WTabView tabs = new WTabView();
+            tabs.addTab("One", new WPanel());
+            tabs.addTab("Two", new WPanel());
+            tabs.addTab("Three", new WPanel());
+            tabs.remove(1);
+            assertEquals(2, tabs.getTabCount());
+            assertEquals("Three", tabs.getTitleAt(1));
+            assertThrows(IndexOutOfBoundsException.class, () -> tabs.remove(5));
+            assertEquals(2, tabs.getTabCount());
+        });
+    }
 }
