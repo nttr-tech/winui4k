@@ -27,7 +27,7 @@ import com.appkitbox.winui4k.WTeachingTip
 
 /** The ContentDialog page: lines up demos for trying out WContentDialog's various features. */
 internal fun buildContentDialogPage(): WComponent {
-    val page = buildPage("ContentDialog", "A modal dialog shown layered inside the window. Try out WContentDialog's various features.")
+    val page = buildPage("ContentDialog", Messages.get("contentdialog.description"))
 
     page.add(buildSimpleContentDialogExample())
     page.add(buildPrimaryButtonEnabledDialogExample())
@@ -36,21 +36,21 @@ internal fun buildContentDialogPage(): WComponent {
 
 /** A basic dialog: 3 buttons plus a default button, and receiving the closed result (ContentDialogResult). */
 private fun buildSimpleContentDialogExample(): WComponent {
-    val result = WLabel("Result: not shown yet")
+    val result = WLabel(Messages.get("contentdialog.result.notshown"))
 
-    val dialog = WContentDialog("Save your work?", WLabel("Saving lets you resume from the same state next time."))
-    dialog.primaryButtonText = "Save"
-    dialog.secondaryButtonText = "Don't save"
-    dialog.closeButtonText = "Cancel"
+    val dialog = WContentDialog(Messages.get("contentdialog.simple.title"), WLabel(Messages.get("contentdialog.simple.content")))
+    dialog.primaryButtonText = Messages.get("contentdialog.simple.save")
+    dialog.secondaryButtonText = Messages.get("contentdialog.simple.dontsave")
+    dialog.closeButtonText = Messages.get("contentdialog.cancel")
     dialog.defaultButton = ContentDialogButton.PRIMARY
 
-    val showButton = WButton("Show dialog")
+    val showButton = WButton(Messages.get("contentdialog.simple.show"))
     showButton.addActionListener {
         dialog.show(showButton) { dialogResult ->
             result.text = when (dialogResult) {
-                ContentDialogResult.PRIMARY -> "Result: Save"
-                ContentDialogResult.SECONDARY -> "Result: Don't save"
-                ContentDialogResult.NONE -> "Result: Cancel"
+                ContentDialogResult.PRIMARY -> Messages.get("contentdialog.result.save")
+                ContentDialogResult.SECONDARY -> Messages.get("contentdialog.result.dontsave")
+                ContentDialogResult.NONE -> Messages.get("contentdialog.result.cancel")
             }
         }
     }
@@ -58,38 +58,38 @@ private fun buildSimpleContentDialogExample(): WComponent {
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A basic dialog (PrimaryButton / SecondaryButton / CloseButton / DefaultButton)", row)
+    return buildExample(Messages.get("contentdialog.example.simple.title"), row)
 }
 
 /** A dialog with a consent checkbox: toggling IsPrimaryButtonEnabled from inside the dialog. */
 private fun buildPrimaryButtonEnabledDialogExample(): WComponent {
-    val result = WLabel("Result: not shown yet")
+    val result = WLabel(Messages.get("contentdialog.result.notshown"))
 
-    val agreeCheckBox = WCheckBox("I agree to the terms of use")
+    val agreeCheckBox = WCheckBox(Messages.get("contentdialog.terms.agree"))
     val dialogContent = WPanel(spacing = 8.0)
-    dialogContent.add(WLabel("Agreeing enables the primary button."))
+    dialogContent.add(WLabel(Messages.get("contentdialog.terms.content")))
     dialogContent.add(agreeCheckBox)
 
-    val dialog = WContentDialog("Terms of use", dialogContent)
-    dialog.primaryButtonText = "Continue"
-    dialog.closeButtonText = "Cancel"
+    val dialog = WContentDialog(Messages.get("contentdialog.terms.title"), dialogContent)
+    dialog.primaryButtonText = Messages.get("contentdialog.terms.continue")
+    dialog.closeButtonText = Messages.get("contentdialog.cancel")
     dialog.defaultButton = ContentDialogButton.PRIMARY
     dialog.isPrimaryButtonEnabled = false
     agreeCheckBox.addItemListener { checked ->
         dialog.isPrimaryButtonEnabled = checked == true
     }
 
-    val showButton = WButton("Show dialog with consent checkbox")
+    val showButton = WButton(Messages.get("contentdialog.terms.show"))
     showButton.addActionListener {
         dialog.show(showButton) { dialogResult ->
-            result.text = if (dialogResult == ContentDialogResult.PRIMARY) "Result: Continue" else "Result: Cancel"
+            result.text = if (dialogResult == ContentDialogResult.PRIMARY) Messages.get("contentdialog.result.continue") else Messages.get("contentdialog.result.cancel")
         }
     }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("Enabling/disabling a button (IsPrimaryButtonEnabled)", row)
+    return buildExample(Messages.get("contentdialog.example.terms.title"), row)
 }
 
 // endregion
@@ -98,7 +98,7 @@ private fun buildPrimaryButtonEnabledDialogExample(): WComponent {
 
 /** The Flyout page: lines up demos for trying out WFlyout's various features. */
 internal fun buildFlyoutPage(): WComponent {
-    val page = buildPage("Flyout", "A lightweight popup for confirmations or supplementary information. Try out WFlyout's various features.")
+    val page = buildPage("Flyout", Messages.get("flyout.description"))
 
     page.add(buildSimpleFlyoutExample())
     page.add(buildFlyoutPlacementExample())
@@ -107,32 +107,32 @@ internal fun buildFlyoutPage(): WComponent {
 
 /** A basic flyout: setting Button.Flyout and a confirmation UI via hide. */
 private fun buildSimpleFlyoutExample(): WComponent {
-    val result = WLabel("Not run yet")
+    val result = WLabel(Messages.get("flyout.simple.status.none"))
 
     val flyoutContent = WPanel(spacing = 8.0)
     val flyout = WFlyout(flyoutContent)
-    flyoutContent.add(WLabel("Permanently delete all items?"))
+    flyoutContent.add(WLabel(Messages.get("flyout.simple.question")))
     flyoutContent.add(
-        WButton("Yes, delete everything").also { button ->
+        WButton(Messages.get("flyout.simple.confirm")).also { button ->
             button.addActionListener {
-                result.text = "Deleted"
+                result.text = Messages.get("flyout.simple.status.deleted")
                 flyout.hide()
             }
         },
     )
 
-    val flyoutButton = WButton("Empty the file")
+    val flyoutButton = WButton(Messages.get("flyout.simple.button"))
     flyoutButton.flyout = flyout
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(flyoutButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A confirmation flyout attached to a button (Button.Flyout / Hide)", row)
+    return buildExample(Messages.get("flyout.example.simple.title"), row)
 }
 
 /** Display position: pick a Placement and open with ShowAt. */
 private fun buildFlyoutPlacementExample(): WComponent {
-    val flyout = WFlyout(WLabel("A flyout for trying out Placement."))
+    val flyout = WFlyout(WLabel(Messages.get("flyout.placement.content")))
 
     val placementComboBox = WComboBox(FlyoutPlacement.entries.map { it.name })
     placementComboBox.width = 240.0
@@ -142,14 +142,14 @@ private fun buildFlyoutPlacementExample(): WComponent {
         flyout.placement = FlyoutPlacement.entries[placementComboBox.selectedIndex]
     }
 
-    val showButton = WButton("Show flyout")
+    val showButton = WButton(Messages.get("flyout.placement.show"))
     showButton.addActionListener { flyout.showAt(showButton) }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(placementComboBox)
     // The ComboBox is taller because of its header, so nudge this down to align with the input box
     row.add(showButton.also { it.verticalAlignmentInParent = VerticalAlignment.BOTTOM })
-    return buildExample("Display position (Placement / ShowAt)", row)
+    return buildExample(Messages.get("flyout.example.placement.title"), row)
 }
 
 // endregion
@@ -158,7 +158,7 @@ private fun buildFlyoutPlacementExample(): WComponent {
 
 /** The Popup page: lines up demos for trying out WPopup's various features. */
 internal fun buildPopupPage(): WComponent {
-    val page = buildPage("Popup", "A lightweight container for showing arbitrary content layered on the window. Try out WPopup's various features.")
+    val page = buildPage("Popup", Messages.get("popup.description"))
 
     page.add(buildSimplePopupExample())
     return page
@@ -166,17 +166,17 @@ internal fun buildPopupPage(): WComponent {
 
 /** A basic popup: open/close, offset, light dismiss, and the Closed event. */
 private fun buildSimplePopupExample(): WComponent {
-    val result = WLabel("State: closed")
+    val result = WLabel(Messages.get("popup.status.closed"))
 
     val popup = WPopup()
     popup.horizontalOffset = 200.0
     popup.verticalOffset = 200.0
-    popup.addCloseListener { result.text = "State: closed" }
+    popup.addCloseListener { result.text = Messages.get("popup.status.closed") }
 
     val popupContent = WPanel(spacing = 8.0)
-    popupContent.add(WLabel("This is a popup.").also { it.fontSize = 18.0 })
+    popupContent.add(WLabel(Messages.get("popup.content.text")).also { it.fontSize = 18.0 })
     popupContent.add(
-        WButton("Close").also { button ->
+        WButton(Messages.get("popup.content.close")).also { button ->
             button.addActionListener { popup.hide() }
         },
     )
@@ -190,16 +190,16 @@ private fun buildSimplePopupExample(): WComponent {
     popupCard.padding = 16.0
     popup.child = popupCard
 
-    val lightDismissCheckBox = WCheckBox("Close on an outside click (IsLightDismissEnabled)")
+    val lightDismissCheckBox = WCheckBox(Messages.get("popup.lightdismiss"))
     lightDismissCheckBox.addItemListener { checked ->
         popup.isLightDismissEnabled = checked == true
     }
 
-    val showButton = WButton("Show popup")
+    val showButton = WButton(Messages.get("popup.show"))
     showButton.addActionListener {
         if (!popup.isOpen) {
             popup.show(showButton)
-            result.text = "State: open"
+            result.text = Messages.get("popup.status.open")
         }
     }
 
@@ -210,7 +210,7 @@ private fun buildSimplePopupExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(lightDismissCheckBox)
     body.add(row)
-    return buildExample("A basic popup (IsOpen / Offset / IsLightDismissEnabled / Closed)", body)
+    return buildExample(Messages.get("popup.example.simple.title"), body)
 }
 
 // endregion
@@ -219,7 +219,7 @@ private fun buildSimplePopupExample(): WComponent {
 
 /** The TeachingTip page: lines up demos for trying out WTeachingTip's various features. */
 internal fun buildTeachingTipPage(): WComponent {
-    val page = buildPage("TeachingTip", "A control that shows a callout pointing at an element, for things like feature announcements. Try out WTeachingTip's various features.")
+    val page = buildPage("TeachingTip", Messages.get("teachingtip.description"))
 
     page.add(buildTargetedTeachingTipExample())
     page.add(buildUntargetedTeachingTipExample())
@@ -228,21 +228,21 @@ internal fun buildTeachingTipPage(): WComponent {
 
 /** A callout with a target: Target / PreferredPlacement / ActionButtonClick / Closed. */
 private fun buildTargetedTeachingTipExample(): WComponent {
-    val result = WLabel("Not shown yet")
+    val result = WLabel(Messages.get("teachingtip.targeted.status.none"))
 
-    val showButton = WButton("Save (introduces this feature)")
+    val showButton = WButton(Messages.get("teachingtip.targeted.button"))
 
-    val tip = WTeachingTip("Autosave is available", "Turn on the setting and your edits will be saved automatically.")
+    val tip = WTeachingTip(Messages.get("teachingtip.targeted.title"), Messages.get("teachingtip.targeted.subtitle"))
     tip.target = showButton
     tip.preferredPlacement = TeachingTipPlacement.BOTTOM
-    tip.actionButtonText = "Turn on"
-    tip.closeButtonText = "Later"
+    tip.actionButtonText = Messages.get("teachingtip.targeted.action")
+    tip.closeButtonText = Messages.get("teachingtip.targeted.close")
     tip.addActionListener {
-        result.text = "Action: turned on autosave"
+        result.text = Messages.get("teachingtip.targeted.status.action")
         tip.hide()
     }
     tip.addCloseListener { reason ->
-        if (reason != TeachingTipCloseReason.PROGRAMMATIC) result.text = "Close reason: $reason"
+        if (reason != TeachingTipCloseReason.PROGRAMMATIC) result.text = Messages.get("teachingtip.result.closereason", reason.toString())
     }
 
     showButton.addActionListener { tip.show() }
@@ -251,21 +251,21 @@ private fun buildTargetedTeachingTipExample(): WComponent {
     row.add(showButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     row.add(tip) // placed in the XAML tree, matching the real Gallery (renders nothing while closed)
-    return buildExample("A callout pointing at an element (Target / ActionButtonClick / Closed)", row)
+    return buildExample(Messages.get("teachingtip.example.targeted.title"), row)
 }
 
 /** A callout without a target: shown in a screen corner, with light dismiss. */
 private fun buildUntargetedTeachingTipExample(): WComponent {
-    val tip = WTeachingTip("New feature announcement", "A callout without a target is shown in a screen corner. Closes on an outside click.")
+    val tip = WTeachingTip(Messages.get("teachingtip.untargeted.title"), Messages.get("teachingtip.untargeted.subtitle"))
     tip.isLightDismissEnabled = true
 
-    val showButton = WButton("Show announcement")
+    val showButton = WButton(Messages.get("teachingtip.untargeted.show"))
     showButton.addActionListener { tip.show() }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(showButton)
     row.add(tip) // placed in the XAML tree, matching the real Gallery (renders nothing while closed)
-    return buildExample("A callout without a target (IsLightDismissEnabled)", row)
+    return buildExample(Messages.get("teachingtip.example.untargeted.title"), row)
 }
 
 // endregion

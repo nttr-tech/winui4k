@@ -31,7 +31,7 @@ final class StatusInfoPages {
     static WComponent buildInfoBadgePage() {
         WPanel page = GalleryScaffold.buildPage(
                 "InfoBadge",
-                "A small badge that unobtrusively shows an unread count or draws attention. Try out WInfoBadge's various features.");
+                Messages.get("infobadge.description"));
 
         page.add(buildInfoBadgeKindsExample());
         page.add(buildInfoBadgeDynamicExample());
@@ -49,10 +49,10 @@ final class StatusInfoPages {
         icon.setSymbolIcon(Symbol.MESSAGE);
 
         WPanel row = new WPanel(24.0, Orientation.HORIZONTAL);
-        row.add(labeledColumn("Dot badge", dot));
-        row.add(labeledColumn("Numeric badge", number));
-        row.add(labeledColumn("Icon badge", icon));
-        return GalleryScaffold.buildExample("Kinds of badge (Value = -1 / a number / IconSource)", row);
+        row.add(labeledColumn(Messages.get("infobadge.kinds.dot"), dot));
+        row.add(labeledColumn(Messages.get("infobadge.kinds.number"), number));
+        row.add(labeledColumn(Messages.get("infobadge.kinds.icon"), icon));
+        return GalleryScaffold.buildExample(Messages.get("infobadge.example.kinds.title"), row);
     }
 
     /** A dynamic badge: increment/reset the number with buttons. */
@@ -65,18 +65,18 @@ final class StatusInfoPages {
             badge.setValue(badge.getValue() + 1);
         });
 
-        WButton clearButton = new WButton("Reset to 0");
+        WButton clearButton = new WButton(Messages.get("infobadge.dynamic.reset"));
         clearButton.addActionListener(() -> {
             badge.setValue(0);
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
-        row.add(labeledColumn("Unread", badge));
+        row.add(labeledColumn(Messages.get("infobadge.dynamic.unread"), badge));
         addButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(addButton);
         clearButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(clearButton);
-        return GalleryScaffold.buildExample("Updating the number (Value)", row);
+        return GalleryScaffold.buildExample(Messages.get("infobadge.example.dynamic.title"), row);
     }
 
     /** A small column that stacks a control under a label (used by the badge demos). */
@@ -99,7 +99,7 @@ final class StatusInfoPages {
     static WComponent buildInfoBarPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "InfoBar",
-                "An inline notification bar that reports an in-app state change. Try out WInfoBar's various features.");
+                Messages.get("infobar.description"));
 
         page.add(buildInfoBarSeverityExample());
         page.add(buildInfoBarInteractiveExample());
@@ -117,10 +117,10 @@ final class StatusInfoPages {
                 InfoBarSeverity.ERROR,
         };
         String[][] texts = {
-                {"Informational", "This is an informational message."},
-                {"Success", "Your changes have been saved."},
-                {"Warning", "The connection is unstable."},
-                {"Error", "The save failed."},
+                {Messages.get("infobar.severity.informational.title"), Messages.get("infobar.severity.informational.message")},
+                {Messages.get("infobar.severity.success.title"), Messages.get("infobar.severity.success.message")},
+                {Messages.get("infobar.severity.warning.title"), Messages.get("infobar.severity.warning.message")},
+                {Messages.get("infobar.severity.error.title"), Messages.get("infobar.severity.error.message")},
         };
         for (int i = 0; i < severities.length; i++) {
             WInfoBar infoBar = new WInfoBar();
@@ -132,27 +132,27 @@ final class StatusInfoPages {
             infoBar.setWidth(500.0);
             column.add(infoBar);
         }
-        return GalleryScaffold.buildExample("Severity (Severity: Informational / Success / Warning / Error)", column);
+        return GalleryScaffold.buildExample(Messages.get("infobar.example.severity.title"), column);
     }
 
     /** Opening and closing: toggle isOpen with a button and receive close (x) button clicks. */
     private static WComponent buildInfoBarInteractiveExample() {
-        WLabel result = new WLabel("The bar is closed");
+        WLabel result = new WLabel(Messages.get("infobar.interactive.status.closed"));
 
         WInfoBar infoBar = new WInfoBar();
         infoBar.setSeverity(InfoBarSeverity.SUCCESS);
-        infoBar.setTitle("Download complete");
-        infoBar.setMessage("The file has finished downloading.");
+        infoBar.setTitle(Messages.get("infobar.interactive.title"));
+        infoBar.setMessage(Messages.get("infobar.interactive.message"));
         infoBar.setWidth(500.0);
         infoBar.addCloseButtonListener(() -> {
-            result.setText("Closed via the close (x) button");
+            result.setText(Messages.get("infobar.interactive.status.closebutton"));
         });
 
-        WButton toggleButton = new WButton("Open the bar");
+        WButton toggleButton = new WButton(Messages.get("infobar.interactive.open"));
         toggleButton.addActionListener(() -> {
             infoBar.setOpen(!infoBar.isOpen());
-            toggleButton.setText(infoBar.isOpen() ? "Close the bar" : "Open the bar");
-            result.setText(infoBar.isOpen() ? "The bar is open" : "The bar is closed");
+            toggleButton.setText(infoBar.isOpen() ? Messages.get("infobar.interactive.close") : Messages.get("infobar.interactive.open"));
+            result.setText(infoBar.isOpen() ? Messages.get("infobar.interactive.status.open") : Messages.get("infobar.interactive.status.closed"));
         });
 
         WPanel column = new WPanel(12.0);
@@ -162,22 +162,22 @@ final class StatusInfoPages {
         row.add(result);
         column.add(row);
         column.add(infoBar);
-        return GalleryScaffold.buildExample("Opening/closing and the close button (IsOpen / CloseButtonClick)", column);
+        return GalleryScaffold.buildExample(Messages.get("infobar.example.interactive.title"), column);
     }
 
     /** An action button: places an action button next to the body text. */
     private static WComponent buildInfoBarActionExample() {
         WLabel result = new WLabel("");
 
-        WButton actionButton = new WButton("Restart");
+        WButton actionButton = new WButton(Messages.get("infobar.action.restart"));
         actionButton.addActionListener(() -> {
-            result.setText("A restart was requested");
+            result.setText(Messages.get("infobar.action.status"));
         });
 
         WInfoBar infoBar = new WInfoBar();
         infoBar.setSeverity(InfoBarSeverity.WARNING);
-        infoBar.setTitle("An update is pending");
-        infoBar.setMessage("Restart the app to apply the changes.");
+        infoBar.setTitle(Messages.get("infobar.action.title"));
+        infoBar.setMessage(Messages.get("infobar.action.message"));
         infoBar.setActionButton(actionButton);
         infoBar.setClosable(false);
         infoBar.setOpen(true);
@@ -186,7 +186,7 @@ final class StatusInfoPages {
         WPanel column = new WPanel(12.0);
         column.add(infoBar);
         column.add(result);
-        return GalleryScaffold.buildExample("Action button (ActionButton)", column);
+        return GalleryScaffold.buildExample(Messages.get("infobar.example.action.title"), column);
     }
 
     // endregion
@@ -197,7 +197,7 @@ final class StatusInfoPages {
     static WComponent buildProgressBarPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "ProgressBar",
-                "A control that shows a task's progress as a bar. Try out WProgressBar's various features.");
+                Messages.get("progressbar.description"));
 
         page.add(buildDeterminateProgressBarExample());
         page.add(buildIndeterminateProgressBarExample());
@@ -223,7 +223,7 @@ final class StatusInfoPages {
         column.add(progressBar);
         column.add(slider);
         column.add(label);
-        return GalleryScaffold.buildExample("Determinate progress (Value / Minimum / Maximum)", column);
+        return GalleryScaffold.buildExample(Messages.get("progressbar.example.determinate.title"), column);
     }
 
     /** Indeterminate progress: indicates a task whose completion time is unknown. */
@@ -232,17 +232,17 @@ final class StatusInfoPages {
         progressBar.setWidth(300.0);
         progressBar.setIndeterminate(true);
 
-        WButton toggleButton = new WButton("Stop");
+        WButton toggleButton = new WButton(Messages.get("progressbar.stop"));
         toggleButton.addActionListener(() -> {
             progressBar.setIndeterminate(!progressBar.isIndeterminate());
-            toggleButton.setText(progressBar.isIndeterminate() ? "Stop" : "Start");
+            toggleButton.setText(progressBar.isIndeterminate() ? Messages.get("progressbar.stop") : Messages.get("progressbar.start"));
         });
 
         WPanel column = new WPanel(12.0);
         column.add(progressBar);
         toggleButton.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
         column.add(toggleButton);
-        return GalleryScaffold.buildExample("Indeterminate progress (IsIndeterminate)", column);
+        return GalleryScaffold.buildExample(Messages.get("progressbar.example.indeterminate.title"), column);
     }
 
     /** Visual states: toggle the showError / showPaused visual states. */
@@ -250,16 +250,16 @@ final class StatusInfoPages {
         WProgressBar progressBar = new WProgressBar(0.0, 100.0, 60.0);
         progressBar.setWidth(300.0);
 
-        WButton pauseButton = new WButton("Pause");
+        WButton pauseButton = new WButton(Messages.get("progressbar.pause"));
         pauseButton.addActionListener(() -> {
             progressBar.setShowPaused(!progressBar.getShowPaused());
-            pauseButton.setText(progressBar.getShowPaused() ? "Resume" : "Pause");
+            pauseButton.setText(progressBar.getShowPaused() ? Messages.get("progressbar.resume") : Messages.get("progressbar.pause"));
         });
 
-        WButton errorButton = new WButton("Error");
+        WButton errorButton = new WButton(Messages.get("progressbar.error"));
         errorButton.addActionListener(() -> {
             progressBar.setShowError(!progressBar.getShowError());
-            errorButton.setText(progressBar.getShowError() ? "Clear error" : "Error");
+            errorButton.setText(progressBar.getShowError() ? Messages.get("progressbar.clearerror") : Messages.get("progressbar.error"));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -269,7 +269,7 @@ final class StatusInfoPages {
         WPanel column = new WPanel(12.0);
         column.add(progressBar);
         column.add(buttons);
-        return GalleryScaffold.buildExample("Visual states (ShowPaused / ShowError)", column);
+        return GalleryScaffold.buildExample(Messages.get("progressbar.example.state.title"), column);
     }
 
     // endregion
@@ -280,7 +280,7 @@ final class StatusInfoPages {
     static WComponent buildProgressRingPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "ProgressRing",
-                "A control that shows an ongoing operation or progress as a circular ring. Try out WProgressRing's various features.");
+                Messages.get("progressring.description"));
 
         page.add(buildIndeterminateProgressRingExample());
         page.add(buildDeterminateProgressRingExample());
@@ -294,17 +294,17 @@ final class StatusInfoPages {
         progressRing.setHeight(60.0);
         progressRing.setActive(true);
 
-        WButton toggleButton = new WButton("Stop");
+        WButton toggleButton = new WButton(Messages.get("progressring.stop"));
         toggleButton.addActionListener(() -> {
             progressRing.setActive(!progressRing.isActive());
-            toggleButton.setText(progressRing.isActive() ? "Stop" : "Start");
+            toggleButton.setText(progressRing.isActive() ? Messages.get("progressring.stop") : Messages.get("progressring.start"));
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(progressRing);
         toggleButton.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(toggleButton);
-        return GalleryScaffold.buildExample("Indeterminate progress (IsActive / IsIndeterminate)", row);
+        return GalleryScaffold.buildExample(Messages.get("progressring.example.indeterminate.title"), row);
     }
 
     /** Determinate progress: drag a slider to move value and reflect it on the ring. */
@@ -331,7 +331,7 @@ final class StatusInfoPages {
         column.add(label);
         column.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(column);
-        return GalleryScaffold.buildExample("Determinate progress (IsIndeterminate = false / Value)", row);
+        return GalleryScaffold.buildExample(Messages.get("progressring.example.determinate.title"), row);
     }
 
     // endregion
@@ -342,7 +342,7 @@ final class StatusInfoPages {
     static WComponent buildToolTipPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "ToolTip",
-                "Shows a floating explanation of an element on hover. Try out the toolTip property and WToolTip.");
+                Messages.get("tooltip.description"));
 
         page.add(buildSimpleToolTipExample());
         page.add(buildPlacementToolTipExample());
@@ -352,15 +352,26 @@ final class StatusInfoPages {
 
     /** A string hint: hover over the toolTip property to see the explanation. */
     private static WComponent buildSimpleToolTipExample() {
-        WButton button = new WButton("Hover over me");
-        button.setToolTipText("This is a plain string tooltip.");
-        return GalleryScaffold.buildExample("String hint (WComponent.toolTipText)", button);
+        WButton button = new WButton(Messages.get("tooltip.simple.button"));
+        button.setToolTipText(Messages.get("tooltip.simple.tip"));
+        return GalleryScaffold.buildExample(Messages.get("tooltip.example.simple.title"), button);
     }
 
     /** Specifying placement: choose WToolTip's placement from top / bottom / left / right. */
     private static WComponent buildPlacementToolTipExample() {
         WPanel row = new WPanel(12.0, Orientation.HORIZONTAL);
-        String[] labels = {"Top", "Bottom", "Left", "Right"};
+        String[] labels = {
+                Messages.get("tooltip.placement.top"),
+                Messages.get("tooltip.placement.bottom"),
+                Messages.get("tooltip.placement.left"),
+                Messages.get("tooltip.placement.right"),
+        };
+        String[] tipTexts = {
+                Messages.get("tooltip.placement.top.tip"),
+                Messages.get("tooltip.placement.bottom.tip"),
+                Messages.get("tooltip.placement.left.tip"),
+                Messages.get("tooltip.placement.right.tip"),
+        };
         ToolTipPlacement[] placements = {
                 ToolTipPlacement.TOP,
                 ToolTipPlacement.BOTTOM,
@@ -370,30 +381,30 @@ final class StatusInfoPages {
         for (int i = 0; i < labels.length; i++) {
             WButton button = new WButton(labels[i]);
             WToolTip toolTip = new WToolTip();
-            toolTip.setText("Shown to the " + labels[i]);
+            toolTip.setText(tipTexts[i]);
             toolTip.setPlacement(placements[i]);
             button.setToolTip(toolTip);
             row.add(button);
         }
-        return GalleryScaffold.buildExample("Specifying placement (WToolTip.placement)", row);
+        return GalleryScaffold.buildExample(Messages.get("tooltip.example.placement.title"), row);
     }
 
     /** A non-string hint: put an arbitrary component in WToolTip. */
     private static WComponent buildRichToolTipExample() {
-        WButton button = new WButton("Rich hint");
+        WButton button = new WButton(Messages.get("tooltip.rich.button"));
 
         WPanel content = new WPanel(4.0);
-        WLabel heading = new WLabel("Heading");
+        WLabel heading = new WLabel(Messages.get("tooltip.rich.heading"));
         heading.setFontWeight(600);
         content.add(heading);
-        WLabel description = new WLabel("The explanation can span multiple lines.");
+        WLabel description = new WLabel(Messages.get("tooltip.rich.body"));
         description.setForeground(GalleryTheme.TEXT_SECONDARY());
         content.add(description);
 
         WToolTip toolTip = new WToolTip();
         toolTip.setContent(content);
         button.setToolTip(toolTip);
-        return GalleryScaffold.buildExample("A non-string hint (WToolTip.content)", button);
+        return GalleryScaffold.buildExample(Messages.get("tooltip.example.rich.title"), button);
     }
 
     // endregion

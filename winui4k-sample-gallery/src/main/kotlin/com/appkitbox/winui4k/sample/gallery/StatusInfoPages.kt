@@ -27,7 +27,7 @@ import com.appkitbox.winui4k.WToolTip
 internal fun buildInfoBadgePage(): WComponent {
     val page = buildPage(
         "InfoBadge",
-        "A small badge that unobtrusively shows an unread count or draws attention. Try out WInfoBadge's various features.",
+        Messages.get("infobadge.description"),
     )
 
     page.add(buildInfoBadgeKindsExample())
@@ -46,10 +46,10 @@ private fun buildInfoBadgeKindsExample(): WComponent {
     icon.setSymbolIcon(Symbol.MESSAGE)
 
     val row = WPanel(spacing = 24.0, orientation = Orientation.HORIZONTAL)
-    row.add(labeledColumn("Dot badge", dot))
-    row.add(labeledColumn("Numeric badge", number))
-    row.add(labeledColumn("Icon badge", icon))
-    return buildExample("Kinds of badge (Value = -1 / a number / IconSource)", row)
+    row.add(labeledColumn(Messages.get("infobadge.kinds.dot"), dot))
+    row.add(labeledColumn(Messages.get("infobadge.kinds.number"), number))
+    row.add(labeledColumn(Messages.get("infobadge.kinds.icon"), icon))
+    return buildExample(Messages.get("infobadge.example.kinds.title"), row)
 }
 
 /** A dynamic badge: increment/reset the number with buttons. */
@@ -60,14 +60,14 @@ private fun buildInfoBadgeDynamicExample(): WComponent {
     val addButton = WButton("+1")
     addButton.addActionListener { badge.value += 1 }
 
-    val clearButton = WButton("Reset to 0")
+    val clearButton = WButton(Messages.get("infobadge.dynamic.reset"))
     clearButton.addActionListener { badge.value = 0 }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
-    row.add(labeledColumn("Unread", badge))
+    row.add(labeledColumn(Messages.get("infobadge.dynamic.unread"), badge))
     row.add(addButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     row.add(clearButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("Updating the number (Value)", row)
+    return buildExample(Messages.get("infobadge.example.dynamic.title"), row)
 }
 
 /** A small column that stacks a control under a label (used by the badge demos). */
@@ -87,7 +87,7 @@ private fun labeledColumn(label: String, control: WComponent): WComponent {
 internal fun buildInfoBarPage(): WComponent {
     val page = buildPage(
         "InfoBar",
-        "An inline notification bar that reports an in-app state change. Try out WInfoBar's various features.",
+        Messages.get("infobar.description"),
     )
 
     page.add(buildInfoBarSeverityExample())
@@ -100,10 +100,10 @@ internal fun buildInfoBarPage(): WComponent {
 private fun buildInfoBarSeverityExample(): WComponent {
     val column = WPanel(spacing = 12.0)
     val severities = listOf(
-        InfoBarSeverity.INFORMATIONAL to ("Informational" to "This is an informational message."),
-        InfoBarSeverity.SUCCESS to ("Success" to "Your changes have been saved."),
-        InfoBarSeverity.WARNING to ("Warning" to "The connection is unstable."),
-        InfoBarSeverity.ERROR to ("Error" to "The save failed."),
+        InfoBarSeverity.INFORMATIONAL to (Messages.get("infobar.severity.informational.title") to Messages.get("infobar.severity.informational.message")),
+        InfoBarSeverity.SUCCESS to (Messages.get("infobar.severity.success.title") to Messages.get("infobar.severity.success.message")),
+        InfoBarSeverity.WARNING to (Messages.get("infobar.severity.warning.title") to Messages.get("infobar.severity.warning.message")),
+        InfoBarSeverity.ERROR to (Messages.get("infobar.severity.error.title") to Messages.get("infobar.severity.error.message")),
     )
     for ((severity, text) in severities) {
         val infoBar = WInfoBar()
@@ -115,25 +115,25 @@ private fun buildInfoBarSeverityExample(): WComponent {
         infoBar.width = 500.0
         column.add(infoBar)
     }
-    return buildExample("Severity (Severity: Informational / Success / Warning / Error)", column)
+    return buildExample(Messages.get("infobar.example.severity.title"), column)
 }
 
 /** Opening and closing: toggle isOpen with a button and receive close (x) button clicks. */
 private fun buildInfoBarInteractiveExample(): WComponent {
-    val result = WLabel("The bar is closed")
+    val result = WLabel(Messages.get("infobar.interactive.status.closed"))
 
     val infoBar = WInfoBar()
     infoBar.severity = InfoBarSeverity.SUCCESS
-    infoBar.title = "Download complete"
-    infoBar.message = "The file has finished downloading."
+    infoBar.title = Messages.get("infobar.interactive.title")
+    infoBar.message = Messages.get("infobar.interactive.message")
     infoBar.width = 500.0
-    infoBar.addCloseButtonListener { result.text = "Closed via the close (x) button" }
+    infoBar.addCloseButtonListener { result.text = Messages.get("infobar.interactive.status.closebutton") }
 
-    val toggleButton = WButton("Open the bar")
+    val toggleButton = WButton(Messages.get("infobar.interactive.open"))
     toggleButton.addActionListener {
         infoBar.isOpen = !infoBar.isOpen
-        toggleButton.text = if (infoBar.isOpen) "Close the bar" else "Open the bar"
-        result.text = if (infoBar.isOpen) "The bar is open" else "The bar is closed"
+        toggleButton.text = if (infoBar.isOpen) Messages.get("infobar.interactive.close") else Messages.get("infobar.interactive.open")
+        result.text = if (infoBar.isOpen) Messages.get("infobar.interactive.status.open") else Messages.get("infobar.interactive.status.closed")
     }
 
     val column = WPanel(spacing = 12.0)
@@ -142,20 +142,20 @@ private fun buildInfoBarInteractiveExample(): WComponent {
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
     column.add(row)
     column.add(infoBar)
-    return buildExample("Opening/closing and the close button (IsOpen / CloseButtonClick)", column)
+    return buildExample(Messages.get("infobar.example.interactive.title"), column)
 }
 
 /** An action button: places an action button next to the body text. */
 private fun buildInfoBarActionExample(): WComponent {
     val result = WLabel("")
 
-    val actionButton = WButton("Restart")
-    actionButton.addActionListener { result.text = "A restart was requested" }
+    val actionButton = WButton(Messages.get("infobar.action.restart"))
+    actionButton.addActionListener { result.text = Messages.get("infobar.action.status") }
 
     val infoBar = WInfoBar()
     infoBar.severity = InfoBarSeverity.WARNING
-    infoBar.title = "An update is pending"
-    infoBar.message = "Restart the app to apply the changes."
+    infoBar.title = Messages.get("infobar.action.title")
+    infoBar.message = Messages.get("infobar.action.message")
     infoBar.actionButton = actionButton
     infoBar.isClosable = false
     infoBar.isOpen = true
@@ -164,7 +164,7 @@ private fun buildInfoBarActionExample(): WComponent {
     val column = WPanel(spacing = 12.0)
     column.add(infoBar)
     column.add(result)
-    return buildExample("Action button (ActionButton)", column)
+    return buildExample(Messages.get("infobar.example.action.title"), column)
 }
 
 // endregion
@@ -175,7 +175,7 @@ private fun buildInfoBarActionExample(): WComponent {
 internal fun buildProgressBarPage(): WComponent {
     val page = buildPage(
         "ProgressBar",
-        "A control that shows a task's progress as a bar. Try out WProgressBar's various features.",
+        Messages.get("progressbar.description"),
     )
 
     page.add(buildDeterminateProgressBarExample())
@@ -201,7 +201,7 @@ private fun buildDeterminateProgressBarExample(): WComponent {
     column.add(progressBar)
     column.add(slider)
     column.add(label)
-    return buildExample("Determinate progress (Value / Minimum / Maximum)", column)
+    return buildExample(Messages.get("progressbar.example.determinate.title"), column)
 }
 
 /** Indeterminate progress: indicates a task whose completion time is unknown. */
@@ -210,16 +210,16 @@ private fun buildIndeterminateProgressBarExample(): WComponent {
     progressBar.width = 300.0
     progressBar.isIndeterminate = true
 
-    val toggleButton = WButton("Stop")
+    val toggleButton = WButton(Messages.get("progressbar.stop"))
     toggleButton.addActionListener {
         progressBar.isIndeterminate = !progressBar.isIndeterminate
-        toggleButton.text = if (progressBar.isIndeterminate) "Stop" else "Start"
+        toggleButton.text = if (progressBar.isIndeterminate) Messages.get("progressbar.stop") else Messages.get("progressbar.start")
     }
 
     val column = WPanel(spacing = 12.0)
     column.add(progressBar)
     column.add(toggleButton.also { it.horizontalAlignmentInParent = HorizontalAlignment.LEFT })
-    return buildExample("Indeterminate progress (IsIndeterminate)", column)
+    return buildExample(Messages.get("progressbar.example.indeterminate.title"), column)
 }
 
 /** Visual states: toggle the showError / showPaused visual states. */
@@ -227,16 +227,16 @@ private fun buildProgressBarStateExample(): WComponent {
     val progressBar = WProgressBar(value = 60.0)
     progressBar.width = 300.0
 
-    val pauseButton = WButton("Pause")
+    val pauseButton = WButton(Messages.get("progressbar.pause"))
     pauseButton.addActionListener {
         progressBar.showPaused = !progressBar.showPaused
-        pauseButton.text = if (progressBar.showPaused) "Resume" else "Pause"
+        pauseButton.text = if (progressBar.showPaused) Messages.get("progressbar.resume") else Messages.get("progressbar.pause")
     }
 
-    val errorButton = WButton("Error")
+    val errorButton = WButton(Messages.get("progressbar.error"))
     errorButton.addActionListener {
         progressBar.showError = !progressBar.showError
-        errorButton.text = if (progressBar.showError) "Clear error" else "Error"
+        errorButton.text = if (progressBar.showError) Messages.get("progressbar.clearerror") else Messages.get("progressbar.error")
     }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -246,7 +246,7 @@ private fun buildProgressBarStateExample(): WComponent {
     val column = WPanel(spacing = 12.0)
     column.add(progressBar)
     column.add(buttons)
-    return buildExample("Visual states (ShowPaused / ShowError)", column)
+    return buildExample(Messages.get("progressbar.example.state.title"), column)
 }
 
 // endregion
@@ -257,7 +257,7 @@ private fun buildProgressBarStateExample(): WComponent {
 internal fun buildProgressRingPage(): WComponent {
     val page = buildPage(
         "ProgressRing",
-        "A control that shows an ongoing operation or progress as a circular ring. Try out WProgressRing's various features.",
+        Messages.get("progressring.description"),
     )
 
     page.add(buildIndeterminateProgressRingExample())
@@ -272,16 +272,16 @@ private fun buildIndeterminateProgressRingExample(): WComponent {
     progressRing.height = 60.0
     progressRing.isActive = true
 
-    val toggleButton = WButton("Stop")
+    val toggleButton = WButton(Messages.get("progressring.stop"))
     toggleButton.addActionListener {
         progressRing.isActive = !progressRing.isActive
-        toggleButton.text = if (progressRing.isActive) "Stop" else "Start"
+        toggleButton.text = if (progressRing.isActive) Messages.get("progressring.stop") else Messages.get("progressring.start")
     }
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(progressRing)
     row.add(toggleButton.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("Indeterminate progress (IsActive / IsIndeterminate)", row)
+    return buildExample(Messages.get("progressring.example.indeterminate.title"), row)
 }
 
 /** Determinate progress: drag a slider to move value and reflect it on the ring. */
@@ -306,7 +306,7 @@ private fun buildDeterminateProgressRingExample(): WComponent {
     column.add(slider)
     column.add(label)
     row.add(column.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("Determinate progress (IsIndeterminate = false / Value)", row)
+    return buildExample(Messages.get("progressring.example.determinate.title"), row)
 }
 
 // endregion
@@ -317,7 +317,7 @@ private fun buildDeterminateProgressRingExample(): WComponent {
 internal fun buildToolTipPage(): WComponent {
     val page = buildPage(
         "ToolTip",
-        "Shows a floating explanation of an element on hover. Try out the toolTip property and WToolTip.",
+        Messages.get("tooltip.description"),
     )
 
     page.add(buildSimpleToolTipExample())
@@ -328,43 +328,43 @@ internal fun buildToolTipPage(): WComponent {
 
 /** A string hint: hover over the toolTip property to see the explanation. */
 private fun buildSimpleToolTipExample(): WComponent {
-    val button = WButton("Hover over me")
-    button.toolTipText = "This is a plain string tooltip."
-    return buildExample("String hint (WComponent.toolTipText)", button)
+    val button = WButton(Messages.get("tooltip.simple.button"))
+    button.toolTipText = Messages.get("tooltip.simple.tip")
+    return buildExample(Messages.get("tooltip.example.simple.title"), button)
 }
 
 /** Specifying placement: choose WToolTip's placement from top / bottom / left / right. */
 private fun buildPlacementToolTipExample(): WComponent {
     val row = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
     val placements = listOf(
-        "Top" to ToolTipPlacement.TOP,
-        "Bottom" to ToolTipPlacement.BOTTOM,
-        "Left" to ToolTipPlacement.LEFT,
-        "Right" to ToolTipPlacement.RIGHT,
+        Triple(Messages.get("tooltip.placement.top"), Messages.get("tooltip.placement.top.tip"), ToolTipPlacement.TOP),
+        Triple(Messages.get("tooltip.placement.bottom"), Messages.get("tooltip.placement.bottom.tip"), ToolTipPlacement.BOTTOM),
+        Triple(Messages.get("tooltip.placement.left"), Messages.get("tooltip.placement.left.tip"), ToolTipPlacement.LEFT),
+        Triple(Messages.get("tooltip.placement.right"), Messages.get("tooltip.placement.right.tip"), ToolTipPlacement.RIGHT),
     )
-    for ((label, placement) in placements) {
+    for ((label, tipText, placement) in placements) {
         val button = WButton(label)
         val toolTip = WToolTip()
-        toolTip.text = "Shown to the $label"
+        toolTip.text = tipText
         toolTip.placement = placement
         button.toolTip = toolTip
         row.add(button)
     }
-    return buildExample("Specifying placement (WToolTip.placement)", row)
+    return buildExample(Messages.get("tooltip.example.placement.title"), row)
 }
 
 /** A non-string hint: put an arbitrary component in WToolTip. */
 private fun buildRichToolTipExample(): WComponent {
-    val button = WButton("Rich hint")
+    val button = WButton(Messages.get("tooltip.rich.button"))
 
     val content = WPanel(spacing = 4.0)
-    content.add(WLabel("Heading").also { it.fontWeight = 600 })
-    content.add(WLabel("The explanation can span multiple lines.").also { it.foreground = TEXT_SECONDARY })
+    content.add(WLabel(Messages.get("tooltip.rich.heading")).also { it.fontWeight = 600 })
+    content.add(WLabel(Messages.get("tooltip.rich.body")).also { it.foreground = TEXT_SECONDARY })
 
     val toolTip = WToolTip()
     toolTip.content = content
     button.toolTip = toolTip
-    return buildExample("A non-string hint (WToolTip.content)", button)
+    return buildExample(Messages.get("tooltip.example.rich.title"), button)
 }
 
 // endregion
