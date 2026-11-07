@@ -226,14 +226,14 @@ final class TextPages {
 
         WButton undoButton = new WButton("Undo");
         undoButton.addActionListener(() -> {
-            if (textPane.getCanUndo()) {
+            if (textPane.canUndo()) {
                 textPane.undo();
             }
         });
 
         WButton redoButton = new WButton("Redo");
         redoButton.addActionListener(() -> {
-            if (textPane.getCanRedo()) {
+            if (textPane.canRedo()) {
                 textPane.redo();
             }
         });
