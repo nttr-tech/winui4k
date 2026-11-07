@@ -1,9 +1,10 @@
 # Swing から WinUI4K に移すときに気になるところ
 
-[swing_to_winui4k.md](swing_to_winui4k.md) (Swing のコードを WinUI4K でどう書くかを並べた文書) を作る中で気づいたことを、2 つの一覧にまとめます。
+[swing_to_winui4k.md](swing_to_winui4k.md) (Swing のコードを WinUI4K でどう書くかを並べた文書) を作る中で気づいたことを、2 つの一覧にまとめ、部品ごとに評価します。
 
 1. [画面写真でおかしく見えるところ](#display): 文書に載せた画面写真を見て、Swing と比べて「おかしい」と感じる表示です。原因ごとに分け、それぞれ影響の大きい順に並べています。
 2. [Swing から移るときに不自然な API](#api): Swing のコードを WinUI4K に書き換えるときに引っかかる API です。種類ごとに分け、それぞれ重いもの (コンパイルが通るのに黙って違う動きになるもの、例外になるもの、よく使う API) を先に置いて ★ を付けています。
+3. [部品ごとの評価 (100 点満点)](#score): Swing の部品ごとに、主な使い方のうち WinUI4K で書ける割合の見立てを点数にしたものです。
 
 最後に、[まとめ: 優先して直したいもの](#summary) を表にしています。
 
@@ -814,6 +815,129 @@
 |---|---|---|---|---|
 | `new JButton(null)` は `JButton(String)` か `JButton(Icon)` かで曖昧 (Swing も同じ) | `2ac5bbe8` で `WAppBarButton(icon)` を足したので、Java の `new WAppBarButton(null)` が `(String)` と `(WIcon)` のどちらか決まらずコンパイルできなくなった | 今まで書けた形が書けなくなった (Swing の `JButton` も同じ曖昧さを持つ) | 今のままでよいか決める (**判断が要る**)。`(String) null` で書ける | [23.1](swing_to_winui4k.md#toolbar-table) |
 | `KeyStroke.getKeyStroke("control Z")` | `WKeyStroke.getKeyStroke(s: String?): WKeyStroke?` | 書式が違うと null (Swing と同じ) なので、Kotlin では `!!` が要る | 今のままでよい | [2.12](swing_to_winui4k.md#textfield-keybinding) |
+
+<a id="score"></a>
+## 3. 部品ごとの評価 (100 点満点)
+
+Swing の部品ごとに、開発者の主な使い方のうち、WinUI4K でそのまま (または小さな書き換えで) 書ける割合の見立てを、100 点満点で付けました。
+
+- 90 点以上なら、その部品を使う画面の 9 割はそのまま移せる見込みです。
+- 材料は、この文書の 1 と 2 で今も残っている項目と、[swing_to_winui4k.md](swing_to_winui4k.md) の各章のユースケースです。「主な使い方」は、一般的な Swing のアプリでの使われ方からの見立てで、実際に使われ方を測ったものではありません。
+- 2026-11-07 の 2 回目の修正の後の状態で付けています。[API 2](#a-alignment) (`setHorizontalAlignment` を Swing と同じ意味にする) は、直した前提です。
+- 「主な減点」の括弧の中は、引いた点です。
+
+<a id="score-button"></a>
+### 3.1 ボタン・選択
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JButton](swing_to_winui4k.md#button) | `WButton` | **95** | ニーモニックの下線が出ない (-3)、`<html>` は基本のタグだけ (-2) |
+| [JCheckBox](swing_to_winui4k.md#checkbox) | `WCheckBox` | **93** | `setIcon` で印そのものを替えられない (-3)、文字を印の左に置けない (-2)、`setBorderPainted` が効かない (-2) |
+| [JRadioButton・ButtonGroup](swing_to_winui4k.md#radio) | `WRadioButton`・`WButtonGroup` | **92** | `getModel()` / `ButtonModel` が無い (-5)、文字を印の左に置けない (-3) |
+| [JToggleButton](swing_to_winui4k.md#toggle) | `WToggleButton` | **93** | `ButtonModel` が無い (-4)、ツールバーでは違う見た目になる (-3) |
+| [JComboBox](swing_to_winui4k.md#combo) | `WComboBox` | **88** | レンダラーが文字列だけで、アイコン付きの項目が作れない (-6)、型引数が無い (-3)、`getEditor`・`setPrototypeDisplayValue` が無い (-3) |
+
+<a id="score-text"></a>
+### 3.2 文字
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JLabel](swing_to_winui4k.md#label) | `WLabel` | **93** | 無効のときに灰色にならない (-4)、`setLabelFor` の相手がボタンだと押される (-3) |
+| [JTextField](swing_to_winui4k.md#textfield) | `WTextField` | **94** | キャレットの色・無効のときの文字の色が無い (-3)、入力欄の見た目 (下の線・消去ボタン) が違う (-3) |
+| [JPasswordField](swing_to_winui4k.md#textfield-password) | `WPasswordField` | **95** | 0 で埋めても文字列の複製が消えない (-3)、見た目の違い (-2) |
+| [JTextArea](swing_to_winui4k.md#textarea) | `WTextPane` | **90** | `setTabSize` が無い (-4)、`WTextArea` という名前で見つからない (-4)、キャレットの色が無い (-2) |
+| [JTextPane](swing_to_winui4k.md#textpane) | `WTextPane` | **65** | 書式が 6 種だけで、背景色・打ち消し線・段落の揃えが無い (-15)、スタイル (`addStyle`)・段落の属性が無い (-10)、`insertIcon`・書式の Action が無い (-6)、キャレットの位置の書式が後ろの文字になる (-4) |
+| [JEditorPane](swing_to_winui4k.md#textpane-html) | (`WRichTextBlock`・`WWebView`) | **15** | 主な使い方の HTML の表示・`setPage`・ハイパーリンクのリスナーが無く、`WWebView` への作り直しが要る |
+| [JFormattedTextField](swing_to_winui4k.md#none) | なし | **10** | 部品が無い。数なら `WSpinner`、日付なら `WDatePicker` で代わりになる分だけ |
+
+<a id="score-range"></a>
+### 3.3 範囲
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JSpinner](swing_to_winui4k.md#spinner) | `WSpinner` | **70** | 一覧と日時のモデルが例外になる (-25)、値が double (-5) |
+| [JSlider](swing_to_winui4k.md#slider) | `WSlider` | **78** | 目盛りの数字 (`setPaintLabels`・`setLabelTable`) が無い (-17)、値が double (-5) |
+| [JProgressBar](swing_to_winui4k.md#progress) | `WProgressBar` | **75** | `setStringPainted` の「65%」が描かれない (-17)、縦が無い (-5)、値が double (-3) |
+
+<a id="score-container"></a>
+### 3.4 入れ物
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JPanel](swing_to_winui4k.md#panel) | `WLayoutPanel` | **85** | TitledBorder が無い (-12)、名前の近い `WPanel` と取り違えやすい (-3) |
+| [JScrollPane](swing_to_winui4k.md#scroll) | `WScrollPane` | **92** | スクロールバーがマウスを重ねるまで隠れる (-4)、`setUnitIncrement` が無い (-2)、中身の大きさだけ変わったときにリスナーが呼ばれない (-2) |
+| [JScrollBar](swing_to_winui4k.md#scrollbar) | (`WScrollPaneBar`) | **50** | 単独で置けない (-45)、`setUnitIncrement`・`setModel` が無い (-5) |
+| [JSplitPane](swing_to_winui4k.md#split) | `WSplitPane` | **93** | `setOneTouchExpandable` が無い (-5)、`addPropertyChangeListener` が無い (-2) |
+| [JTabbedPane](swing_to_winui4k.md#tabbed) | `WTabView` | **88** | タブの位置 (左・下) を変えられない (-6)、`setTabComponentAt` が無い (-4)、閉じるボタンの見た目が WinUI 風 (-2) |
+| [JLayeredPane・JLayer・ガラス ペイン](swing_to_winui4k.md#none) | なし | **10** | 部品が無い。`WCanvas.setZIndex` と `WPopup` で一部だけ代わりになる |
+| [JInternalFrame・JDesktopPane](swing_to_winui4k.md#none) | なし | **0** | MDI (ウィンドウの中の子ウィンドウ) が作れない |
+
+<a id="score-data"></a>
+### 3.5 データ
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JTable](swing_to_winui4k.md#table) | `WTable` | **60** | 複数の行を選べない (-20)、`editCellAt`・行の高さ・`setAutoResizeMode` が無い (-10)、セル単位・列単位の選択が無い (-5)、行が Swing の 2 倍の高さ (-3)、`DefaultCellEditor` が作った時点の写しになる (-2) |
+| [JTree](swing_to_winui4k.md#tree) | `WTree` | **72** | 複数選択ができない (-12)、節の編集が無い (-8)、既定のフォルダーと葉のアイコンが無い (-5)、`convertValueToText` を上書きできない (-3) |
+| [JList](swing_to_winui4k.md#list) | `WList` | **90** | ドラッグでの並べ替えが無い (-5)、型引数が無い (-3)、横に流す並べ方が無い (-2) |
+
+<a id="score-menu"></a>
+### 3.6 メニュー・ツールバー
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JMenuBar・JMenu・JMenuItem](swing_to_winui4k.md#menu) | `WMenuBar` ほか | **92** | サブメニューが別のクラスで、`JMenu` を入れ子にする書き方ができない (-5)、サブメニューをプログラムから開けない (-3) |
+| [JPopupMenu](swing_to_winui4k.md#popup) | `WMenuFlyout` | **95** | ボタンから開いたとき先頭にフォーカスの枠が出る (-3)、名前が違う (-2) |
+| [JToolBar](swing_to_winui4k.md#toolbar) | `WCommandBar` | **70** | ボタンが右に寄り、ラベルが隠れ、「…」が出る (-18)、縦にできない (-7)、`setFloatable`・`setRollover` が黙って無視される (-5) |
+| [JSeparator](swing_to_winui4k.md#none) | なし | **40** | メニューとツールバーの区切りは使えるが、フォームに置く単独の線が無い (-60) |
+
+<a id="score-window"></a>
+### 3.7 ウィンドウ・ダイアログ
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [JFrame](swing_to_winui4k.md#frame) | `WFrame` | **93** | `setIconImage(Image)` (jar の中の画像) が無い (-3)、`getRootPane()`・`setOpacity` が無い (-2)、閉じたときの既定が `DISPOSE_ON_CLOSE` (-2) |
+| [JDialog](swing_to_winui4k.md#dialog) | `WContentDialog` | **65** | モードレスが作れない (-20)、ウィンドウの中に重なって出て動かせない (-10)、`setSize` が効かない (-5) |
+| [JOptionPane](swing_to_winui4k.md#optionpane) | `WOptionPane` | **92** | ウィンドウの中に重なって出る (-5)、`createDialog` などの細かい形が無い (-3) |
+| [JWindow](swing_to_winui4k.md#none) | なし | **15** | 部品が無い。`setUndecorated` の `WFrame` で一部だけ代わりになる |
+| [JFileChooser](swing_to_winui4k.md#filechooser) | `WFileChooser` | **88** | 独自の `FileFilter` が使えない (-5)、`setAccessory` が無い (-4)、ファイルとフォルダーの両方は選べない (-3) (どれも OS のダイアログの制約) |
+| [JColorChooser](swing_to_winui4k.md#colorchooser) | `WColorPicker` | **92** | 選ぶパネルやプレビューを入れ替えられない (-5)、見た目が大きく違う (-3) |
+| [JToolTip](swing_to_winui4k.md#tooltip) | `WToolTip` | **88** | `ToolTipManager` (出るまでの時間・全体の有効と無効) が無い (-7)、既定の位置が部品の上 (-3)、`getToolTipText(MouseEvent)` を上書きできない (-2) |
+
+<a id="score-layout"></a>
+### 3.8 レイアウト マネージャー
+
+| Swing | WinUI4K | 点 | 主な減点 |
+|---|---|---|---|
+| [BorderLayout](swing_to_winui4k.md#layout-border) | `WBorderLayout` | **97** | 制約が文字列でなく `Constraint` (-3) |
+| [GridLayout](swing_to_winui4k.md#layout-grid) | `WGridLayout` | **97** | 間隔などが double (-3) |
+| [FlowLayout](swing_to_winui4k.md#layout-flow) | `WFlowLayout` | **95** | 間隔などが double (-3)、`setAlignOnBaseline` が無い (-2) |
+| [CardLayout](swing_to_winui4k.md#layout-table) | `WCardLayout` | **95** | 細かい違い (-5) |
+| [BoxLayout・Box](swing_to_winui4k.md#layout-box) | `WBoxLayout`・`WBox` | **92** | `Box.createHorizontalBox()` が `WLayoutPanel` を返し、`Box` 型で受けられない (-5)、揃えの値 (`alignmentX`) の扱いが違う (-3) |
+| [null レイアウト](swing_to_winui4k.md#layout-absolute) | `WLayoutPanel(null)` | **92** | 座標と大きさが double (-5)、`new WLayoutPanel(null)` と明示が要る (-3) |
+| [GridBagLayout](swing_to_winui4k.md#layout-gridbag) | `WGrid` (・MigLayout の拡張) | **55** | Swing と同じ計算の `WGridBagLayout` が無い (-30)、行と列の順が逆 (-8)、`weightx`・`fill`・`anchor` の書き方が違う (-7) |
+| [SpringLayout](swing_to_winui4k.md#layout-spring) | `WRelativePanel` | **60** | 距離の指定が無い (-25)、ベースラインが無い (-10)、`Spring` の式が無い (-5) |
+| [GroupLayout](swing_to_winui4k.md#layout-table) | なし | **0** | NetBeans の GUI ビルダーが出力するレイアウトで、画面の作り直しになる |
+| [OverlayLayout](swing_to_winui4k.md#layout-table) | なし | **0** | ― |
+
+<a id="score-total"></a>
+### 3.9 全体
+
+| 区分 | 部品の数 | 平均 |
+|---|---|---|
+| 90 点以上 (9 割をまかなえる) | 24 | 93 |
+| 60〜89 点 | 14 | 75 |
+| 60 点未満 (対応が無い・大きく欠ける) | 10 | 20 |
+
+- 90 点以上の部品だけで書ける画面 (フォーム・リスト・メニュー・標準のダイアログ) は、ほぼそのまま移せます。
+- 点を上げると効果が大きいもの:
+  - `JTable` の複数行の選択 (60 点): WinUI の `TableView` の対応を待つか、選択を自前で描く。
+  - `GridBagLayout` (55 点): Swing と同じ計算の `WGridBagLayout` を足す。
+  - `JDialog` (65 点): モードレスの `WDialog` を足す。
+  - `JToolBar` (70 点): Swing 風に左から並べる表示を足す。
+  - `JPanel` (85 点): TitledBorder を足す。
+- `JSeparator` (40 点) と `JFormattedTextField` (10 点) は、部品を 1 つ足すだけで大きく上がります。
+- 部品をまたいで欠けているもの: ドラッグ アンド ドロップ (`TransferHandler`)。値が double であること ([API 30](#a-double)) と型引数が無いこと ([API 31](#a-generic)) も、移すときの書き換えを増やします。
 
 <a id="summary"></a>
 ## まとめ: 優先して直したいもの

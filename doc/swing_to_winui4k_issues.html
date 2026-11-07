@@ -100,14 +100,15 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 <div class="title">Swing から WinUI4K に移すときに気になるところ</div>
 <a class="other" href="swing_to_winui4k.html">→ Swing から WinUI4K への書き換え例</a>
 <input id="filter" type="search" placeholder="目次を絞り込む (例: JTable、注意点)">
-<ul id="toc"><li><details><summary><a href="#display">1. 画面写真でおかしく見えるところ</a></summary><ul><li class="leaf"><a href="#display-bug">1.1 直した不具合</a></li><li><details><summary><a href="#display-winui">1.2 WinUI の仕様や既定のスタイルによる、Swing との違い</a></summary><ul><li class="leaf"><a href="#d22">表示 22. 行が高く、見える項目が少ない</a></li><li class="leaf"><a href="#d23">表示 23. スクロールバーが見えない (ALWAYS でも)</a></li><li class="leaf"><a href="#d24">表示 24. チェックボックス・ラジオボタンの間が広く、不ぞろい</a></li><li class="leaf"><a href="#d25">表示 25. 同じ列数でも、入力欄が Swing よりかなり広い</a></li><li class="leaf"><a href="#d26">表示 26. 選んだ項目の色が薄く、見落としやすい</a></li><li class="leaf"><a href="#d27">表示 27. 入力欄の見た目 (下の線・消去ボタン・読み取り専用・選択の色)</a></li><li class="leaf"><a href="#d28">表示 28. ツールバーのボタンが右に寄り、ラベルが出ず、「…」が出る</a></li><li class="leaf"><a href="#d29">表示 29. ボタンから開いたフライアウトの先頭に、フォーカスの枠が出る</a></li><li class="leaf"><a href="#d30">表示 30. ツールチップが部品の上に出て、タイトル バーを隠す</a></li><li class="leaf"><a href="#d31">表示 31. 進捗バーに割合の文字が出ない・不定のバーが短い線に見える</a></li><li class="leaf"><a href="#d32">表示 32. 範囲の外の値が勝手に書き換わる</a></li><li class="leaf"><a href="#d33">表示 33. 木にアイコンが無い</a></li><li class="leaf"><a href="#d34">表示 34. 書式のある文の、段落の間が空かない</a></li><li class="leaf"><a href="#d35">表示 35. ニーモニックの下線が出ない</a></li><li class="leaf"><a href="#d36">表示 36. WRelativePanel で互いを参照すると、ウィンドウが真っ黒になる</a></li><li class="leaf"><a href="#d37">表示 37. そのほかの WinUI との違い (小さいもの)</a></li></ul></details></li><li><details><summary><a href="#display-sample">1.3 サンプルや撮り方によるもの</a></summary><ul><li class="leaf"><a href="#d38">表示 38. ファイルのダイアログがとても大きく、左の一覧に撮った人のフォルダーが写る (ぼかした)</a></li><li class="leaf"><a href="#d39">表示 39. 起動した直後に撮るので、ツールチップ・メニュー・ヒントが写らない</a></li><li class="leaf"><a href="#d40">表示 40. ポップアップの角に黒い点・縁が残る</a></li><li class="leaf"><a href="#d41">表示 41. Swing と WinUI4K でサンプルがそろっていない・余白が無い</a></li></ul></details></li><li class="leaf"><a href="#display-swing">1.4 Swing 側の画像で気になるもの</a></li></ul></details></li><li><details><summary><a href="#api">2. Swing から移るときに不自然な API</a></summary><ul><li><details><summary><a href="#api-meaning">2.1 Swing と同じ名前で、意味や振る舞いが違う</a></summary><ul><li class="leaf"><a href="#a-placeholder">API 1. new WTextField(&quot;…&quot;) / new WTextPane(&quot;…&quot;) の文字列が案内文になる (直した: afd2f27b)</a></li><li class="leaf"><a href="#a-alignment">API 2. ★ setHorizontalAlignment / setVerticalAlignment が文字の揃えではない (残した。判断が要る)</a></li><li class="leaf"><a href="#a-contentpane">API 3. setLayout の後の getContentPane().add(...) が画面に出ない (直した: 5966d9cd)</a></li><li class="leaf"><a href="#a-margin">API 4. setMargin が外側の余白 (直した: fea98ebe)</a></li><li class="leaf"><a href="#a-combo-remove">API 5. WComboBox.removeItem(1) が 2 番目の項目を消す (直した: 9f8eb388)</a></li><li class="leaf"><a href="#a-combo-selected">API 6. WComboBox.getSelectedItem() が項目ではなく表示の文字列を返す (直した: 974f35cc)</a></li><li class="leaf"><a href="#a-selected-text">API 7. WTextField.getSelectedText() が、選んでいないときに空の文字列を返す (直した: c6d334a7)</a></li><li class="leaf"><a href="#a-color">API 8. WColor.RED などの値が AWT の Color と違う (直した: 05a28e00)</a></li><li class="leaf"><a href="#a-html">API 9. &lt;html&gt; の文字が、そのまま表示される (直した: eba504be)</a></li><li class="leaf"><a href="#a-wrapstyleword">API 10. setWrapStyleWord(true) で折り返さなくなる (直した: ec8a1ea7)</a></li><li class="leaf"><a href="#a-foreground">API 11. setForeground が入力欄の文字の色にならない (直した: 16accf8e)</a></li><li class="leaf"><a href="#a-table-selection">API 12. ★ WTable.setSelectionMode(MULTIPLE_INTERVAL_SELECTION) が黙って単一の選択になる (残した。判断が要る)</a></li><li class="leaf"><a href="#a-exception-settings">API 13. ★ Swing では使える設定が、例外になる (残した)</a></li><li class="leaf"><a href="#a-radio">API 14. WButtonGroup に入れないラジオボタンも、1 つしか選べない (直した: 2b7844cf)</a></li><li class="leaf"><a href="#a-painted">API 15. setStringPainted(true) が Swing のように描かない (残した。setPaintTicks(true) は直した: 699193f8)</a></li><li class="leaf"><a href="#a-inputmap">API 16. list.getInputMap() (WHEN_FOCUSED) に入れたキーが効かない (効くことを確かめた: b73ade73)</a></li><li class="leaf"><a href="#a-revalidate-scroll">API 17. スクロールペインの中身の revalidate() で、続きの読み込みが余分に起きる (直した: e3e050a1)</a></li><li class="leaf"><a href="#a-meaning-table">API 18. そのほかの、同じ名前で違う振る舞い</a></li></ul></details></li><li><details><summary><a href="#api-default">2.2 既定値が違う</a></summary><ul><li class="leaf"><a href="#a-frame-layout">API 19. WFrame の中身が BorderLayout ではなく、制約付きの add が例外になる (直した: 5966d9cd)</a></li><li class="leaf"><a href="#a-layoutpanel-null">API 20. new WLayoutPanel() のレイアウトが null (直した: e150f862)</a></li><li class="leaf"><a href="#a-nest">API 21. 入れ子の WLayoutPanel や、スクロールペインの中身の WLayoutPanel が、希望の大きさで並ばない (直した: 804e7a31)</a></li><li class="leaf"><a href="#a-scroll-horizontal">API 22. WScrollPane の横のスクロールが、既定で無効 (直した: bafddd77)</a></li><li class="leaf"><a href="#a-preferred-size">API 23. スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い (直した: 9ffda622)</a></li><li class="leaf"><a href="#a-linewrap">API 24. WTextPane の lineWrap の既定が逆 (直した: a9ce21c5)</a></li><li class="leaf"><a href="#a-selection-default">API 25. リストと木の選択の既定が、1 つだけ (リストは直した: d81547cc)</a></li><li class="leaf"><a href="#a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う (直した: 7178e9a3・6814a8be)</a></li><li class="leaf"><a href="#a-spinner-buttons">API 27. WSpinner の上下のボタンが、既定で出ない (直した: 83d82fa0)</a></li><li class="leaf"><a href="#a-defaults-table">API 28. そのほかの既定値の違い</a></li></ul></details></li><li><details><summary><a href="#api-name">2.3 名前や型・単位・引数の順が違う</a></summary><ul><li class="leaf"><a href="#a-order">API 29. ★ 余白の 4 つの数の順が、API ごとに違う (一部直した: 20b46dee)</a></li><li class="leaf"><a href="#a-double">API 30. ★ 値や大きさが double (一部直した: d58be607。残した。判断が要る)</a></li><li class="leaf"><a href="#a-generic">API 31. ★ WList と WComboBox に型引数が無い (残した。判断が要る)</a></li><li class="leaf"><a href="#a-owner">API 32. ダイアログの持ち主に WFrame を渡せない API がある (直した: 70211dde)</a></li><li class="leaf"><a href="#a-class-names">API 33. クラスの名前から、Swing の部品が引けない (残した。判断が要る)</a></li><li class="leaf"><a href="#a-submenu">API 34. サブメニューが別のクラスで、JMenu を入れ子にする書き方ができない (残した)</a></li><li class="leaf"><a href="#a-renderer">API 35. レンダラーの書き方が Swing と違い、部品ごとにもそろっていない (一部直した: eac8dc95)</a></li><li class="leaf"><a href="#a-gridbag">API 36. GridBagLayout に当たる WGrid で、行と列の順が逆 (一部直した: 2a475a09)</a></li><li class="leaf"><a href="#a-names-table">API 37. そのほかの名前・型の違い</a></li></ul></details></li><li><details><summary><a href="#api-timing">2.4 表示した直後に使えないなど、使う時機の制約</a></summary><ul><li class="leaf"><a href="#a-settext-before">API 38. 表示する前の setText が、addTextChangedListener に届かない (直した: e354832a)</a></li><li class="leaf"><a href="#a-label-settext">API 39. 表示した後の WLabel.setText で、並べ直されない (直した: 355623db)</a></li><li class="leaf"><a href="#a-after-show-dialog">API 40. 表示した直後のウィンドウに、ダイアログを開くと例外になる (直した: e652273a)</a></li><li class="leaf"><a href="#a-after-show-menu">API 41. 表示した直後にメニューやポップアップを開いても、黙って開かない (直した: e065f680・962a14a9)</a></li><li class="leaf"><a href="#a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない (直した: 3c075d1f・a343108e)</a></li><li class="leaf"><a href="#a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない (直した: 0c0c992d・9092016b・47bcaf17)</a></li><li class="leaf"><a href="#a-scroll-listener">API 44. スクロールのリスナーが、後から呼ばれる (直した: e9bc62bd)</a></li></ul></details></li><li><details><summary><a href="#api-missing">2.5 Swing にあって WinUI4K に無い</a></summary><ul><li class="leaf"><a href="#a-inputverifier">API 45. InputVerifier が無い (直した: b3e223e3)</a></li><li class="leaf"><a href="#a-timer">API 46. 繰り返しの Timer・invokeAndWait・SwingWorker が無い (直した: 87813da3)</a></li><li class="leaf"><a href="#a-label-background">API 47. ラベルやパネルに、背景・枠・内側の余白を付けられない (直した: c1470bb1)</a></li><li class="leaf"><a href="#a-layouts">API 48. CardLayout などのレイアウト マネージャーが無い (CardLayout は直した: c911d5dc)</a></li><li class="leaf"><a href="#a-relativepanel">API 49. SpringLayout に当たる WRelativePanel に、距離・ベースライン・循環の検出が無い (循環の検出は直した: fceea5a9)</a></li><li class="leaf"><a href="#a-missing-table">API 50. そのほかの、Swing にあって無いもの</a></li></ul></details></li><li><details><summary><a href="#api-lang">2.6 Kotlin・Java から使うときの不便</a></summary><ul><li class="leaf"><a href="#a-tooltip-ambiguous">API 51. Java の component.setToolTip(null) が曖昧でコンパイルできない (直した: 2be7f335)</a></li><li class="leaf"><a href="#a-actionlistener-kotlin">API 52. Kotlin から WActionListener を addActionListener に渡せない (直した: 5c3d0997)</a></li><li class="leaf"><a href="#a-lang-table">API 53. そのほかの Kotlin・Java の不便</a></li></ul></details></li></ul></details></li><li class="leaf"><a href="#summary">まとめ: 優先して直したいもの</a></li></ul>
+<ul id="toc"><li><details><summary><a href="#display">1. 画面写真でおかしく見えるところ</a></summary><ul><li class="leaf"><a href="#display-bug">1.1 直した不具合</a></li><li><details><summary><a href="#display-winui">1.2 WinUI の仕様や既定のスタイルによる、Swing との違い</a></summary><ul><li class="leaf"><a href="#d22">表示 22. 行が高く、見える項目が少ない</a></li><li class="leaf"><a href="#d23">表示 23. スクロールバーが見えない (ALWAYS でも)</a></li><li class="leaf"><a href="#d24">表示 24. チェックボックス・ラジオボタンの間が広く、不ぞろい</a></li><li class="leaf"><a href="#d25">表示 25. 同じ列数でも、入力欄が Swing よりかなり広い</a></li><li class="leaf"><a href="#d26">表示 26. 選んだ項目の色が薄く、見落としやすい</a></li><li class="leaf"><a href="#d27">表示 27. 入力欄の見た目 (下の線・消去ボタン・読み取り専用・選択の色)</a></li><li class="leaf"><a href="#d28">表示 28. ツールバーのボタンが右に寄り、ラベルが出ず、「…」が出る</a></li><li class="leaf"><a href="#d29">表示 29. ボタンから開いたフライアウトの先頭に、フォーカスの枠が出る</a></li><li class="leaf"><a href="#d30">表示 30. ツールチップが部品の上に出て、タイトル バーを隠す</a></li><li class="leaf"><a href="#d31">表示 31. 進捗バーに割合の文字が出ない・不定のバーが短い線に見える</a></li><li class="leaf"><a href="#d32">表示 32. 範囲の外の値が勝手に書き換わる</a></li><li class="leaf"><a href="#d33">表示 33. 木にアイコンが無い</a></li><li class="leaf"><a href="#d34">表示 34. 書式のある文の、段落の間が空かない</a></li><li class="leaf"><a href="#d35">表示 35. ニーモニックの下線が出ない</a></li><li class="leaf"><a href="#d36">表示 36. WRelativePanel で互いを参照すると、ウィンドウが真っ黒になる</a></li><li class="leaf"><a href="#d37">表示 37. そのほかの WinUI との違い (小さいもの)</a></li></ul></details></li><li><details><summary><a href="#display-sample">1.3 サンプルや撮り方によるもの</a></summary><ul><li class="leaf"><a href="#d38">表示 38. ファイルのダイアログがとても大きく、左の一覧に撮った人のフォルダーが写る (ぼかした)</a></li><li class="leaf"><a href="#d39">表示 39. 起動した直後に撮るので、ツールチップ・メニュー・ヒントが写らない</a></li><li class="leaf"><a href="#d40">表示 40. ポップアップの角に黒い点・縁が残る</a></li><li class="leaf"><a href="#d41">表示 41. Swing と WinUI4K でサンプルがそろっていない・余白が無い</a></li></ul></details></li><li class="leaf"><a href="#display-swing">1.4 Swing 側の画像で気になるもの</a></li></ul></details></li><li><details><summary><a href="#api">2. Swing から移るときに不自然な API</a></summary><ul><li><details><summary><a href="#api-meaning">2.1 Swing と同じ名前で、意味や振る舞いが違う</a></summary><ul><li class="leaf"><a href="#a-placeholder">API 1. new WTextField(&quot;…&quot;) / new WTextPane(&quot;…&quot;) の文字列が案内文になる (直した: afd2f27b)</a></li><li class="leaf"><a href="#a-alignment">API 2. ★ setHorizontalAlignment / setVerticalAlignment が文字の揃えではない (残した。判断が要る)</a></li><li class="leaf"><a href="#a-contentpane">API 3. setLayout の後の getContentPane().add(...) が画面に出ない (直した: 5966d9cd)</a></li><li class="leaf"><a href="#a-margin">API 4. setMargin が外側の余白 (直した: fea98ebe)</a></li><li class="leaf"><a href="#a-combo-remove">API 5. WComboBox.removeItem(1) が 2 番目の項目を消す (直した: 9f8eb388)</a></li><li class="leaf"><a href="#a-combo-selected">API 6. WComboBox.getSelectedItem() が項目ではなく表示の文字列を返す (直した: 974f35cc)</a></li><li class="leaf"><a href="#a-selected-text">API 7. WTextField.getSelectedText() が、選んでいないときに空の文字列を返す (直した: c6d334a7)</a></li><li class="leaf"><a href="#a-color">API 8. WColor.RED などの値が AWT の Color と違う (直した: 05a28e00)</a></li><li class="leaf"><a href="#a-html">API 9. &lt;html&gt; の文字が、そのまま表示される (直した: eba504be)</a></li><li class="leaf"><a href="#a-wrapstyleword">API 10. setWrapStyleWord(true) で折り返さなくなる (直した: ec8a1ea7)</a></li><li class="leaf"><a href="#a-foreground">API 11. setForeground が入力欄の文字の色にならない (直した: 16accf8e)</a></li><li class="leaf"><a href="#a-table-selection">API 12. ★ WTable.setSelectionMode(MULTIPLE_INTERVAL_SELECTION) が黙って単一の選択になる (残した。判断が要る)</a></li><li class="leaf"><a href="#a-exception-settings">API 13. ★ Swing では使える設定が、例外になる (残した)</a></li><li class="leaf"><a href="#a-radio">API 14. WButtonGroup に入れないラジオボタンも、1 つしか選べない (直した: 2b7844cf)</a></li><li class="leaf"><a href="#a-painted">API 15. setStringPainted(true) が Swing のように描かない (残した。setPaintTicks(true) は直した: 699193f8)</a></li><li class="leaf"><a href="#a-inputmap">API 16. list.getInputMap() (WHEN_FOCUSED) に入れたキーが効かない (効くことを確かめた: b73ade73)</a></li><li class="leaf"><a href="#a-revalidate-scroll">API 17. スクロールペインの中身の revalidate() で、続きの読み込みが余分に起きる (直した: e3e050a1)</a></li><li class="leaf"><a href="#a-meaning-table">API 18. そのほかの、同じ名前で違う振る舞い</a></li></ul></details></li><li><details><summary><a href="#api-default">2.2 既定値が違う</a></summary><ul><li class="leaf"><a href="#a-frame-layout">API 19. WFrame の中身が BorderLayout ではなく、制約付きの add が例外になる (直した: 5966d9cd)</a></li><li class="leaf"><a href="#a-layoutpanel-null">API 20. new WLayoutPanel() のレイアウトが null (直した: e150f862)</a></li><li class="leaf"><a href="#a-nest">API 21. 入れ子の WLayoutPanel や、スクロールペインの中身の WLayoutPanel が、希望の大きさで並ばない (直した: 804e7a31)</a></li><li class="leaf"><a href="#a-scroll-horizontal">API 22. WScrollPane の横のスクロールが、既定で無効 (直した: bafddd77)</a></li><li class="leaf"><a href="#a-preferred-size">API 23. スライダー・進捗バー・進捗リング・スピナーに、希望の大きさが無い (直した: 9ffda622)</a></li><li class="leaf"><a href="#a-linewrap">API 24. WTextPane の lineWrap の既定が逆 (直した: a9ce21c5)</a></li><li class="leaf"><a href="#a-selection-default">API 25. リストと木の選択の既定が、1 つだけ (リストは直した: d81547cc)</a></li><li class="leaf"><a href="#a-table-column">API 26. 表の列の既定の幅と、数値の列の揃えが、説明と違う (直した: 7178e9a3・6814a8be)</a></li><li class="leaf"><a href="#a-spinner-buttons">API 27. WSpinner の上下のボタンが、既定で出ない (直した: 83d82fa0)</a></li><li class="leaf"><a href="#a-defaults-table">API 28. そのほかの既定値の違い</a></li></ul></details></li><li><details><summary><a href="#api-name">2.3 名前や型・単位・引数の順が違う</a></summary><ul><li class="leaf"><a href="#a-order">API 29. ★ 余白の 4 つの数の順が、API ごとに違う (一部直した: 20b46dee)</a></li><li class="leaf"><a href="#a-double">API 30. ★ 値や大きさが double (一部直した: d58be607。残した。判断が要る)</a></li><li class="leaf"><a href="#a-generic">API 31. ★ WList と WComboBox に型引数が無い (残した。判断が要る)</a></li><li class="leaf"><a href="#a-owner">API 32. ダイアログの持ち主に WFrame を渡せない API がある (直した: 70211dde)</a></li><li class="leaf"><a href="#a-class-names">API 33. クラスの名前から、Swing の部品が引けない (残した。判断が要る)</a></li><li class="leaf"><a href="#a-submenu">API 34. サブメニューが別のクラスで、JMenu を入れ子にする書き方ができない (残した)</a></li><li class="leaf"><a href="#a-renderer">API 35. レンダラーの書き方が Swing と違い、部品ごとにもそろっていない (一部直した: eac8dc95)</a></li><li class="leaf"><a href="#a-gridbag">API 36. GridBagLayout に当たる WGrid で、行と列の順が逆 (一部直した: 2a475a09)</a></li><li class="leaf"><a href="#a-names-table">API 37. そのほかの名前・型の違い</a></li></ul></details></li><li><details><summary><a href="#api-timing">2.4 表示した直後に使えないなど、使う時機の制約</a></summary><ul><li class="leaf"><a href="#a-settext-before">API 38. 表示する前の setText が、addTextChangedListener に届かない (直した: e354832a)</a></li><li class="leaf"><a href="#a-label-settext">API 39. 表示した後の WLabel.setText で、並べ直されない (直した: 355623db)</a></li><li class="leaf"><a href="#a-after-show-dialog">API 40. 表示した直後のウィンドウに、ダイアログを開くと例外になる (直した: e652273a)</a></li><li class="leaf"><a href="#a-after-show-menu">API 41. 表示した直後にメニューやポップアップを開いても、黙って開かない (直した: e065f680・962a14a9)</a></li><li class="leaf"><a href="#a-before-show-selection">API 42. 表示する前の選択やスクロールが、画面に写らない (直した: 3c075d1f・a343108e)</a></li><li class="leaf"><a href="#a-after-show-position">API 43. 表示した直後のスクロールの位置・仕切りの位置が効かない (直した: 0c0c992d・9092016b・47bcaf17)</a></li><li class="leaf"><a href="#a-scroll-listener">API 44. スクロールのリスナーが、後から呼ばれる (直した: e9bc62bd)</a></li></ul></details></li><li><details><summary><a href="#api-missing">2.5 Swing にあって WinUI4K に無い</a></summary><ul><li class="leaf"><a href="#a-inputverifier">API 45. InputVerifier が無い (直した: b3e223e3)</a></li><li class="leaf"><a href="#a-timer">API 46. 繰り返しの Timer・invokeAndWait・SwingWorker が無い (直した: 87813da3)</a></li><li class="leaf"><a href="#a-label-background">API 47. ラベルやパネルに、背景・枠・内側の余白を付けられない (直した: c1470bb1)</a></li><li class="leaf"><a href="#a-layouts">API 48. CardLayout などのレイアウト マネージャーが無い (CardLayout は直した: c911d5dc)</a></li><li class="leaf"><a href="#a-relativepanel">API 49. SpringLayout に当たる WRelativePanel に、距離・ベースライン・循環の検出が無い (循環の検出は直した: fceea5a9)</a></li><li class="leaf"><a href="#a-missing-table">API 50. そのほかの、Swing にあって無いもの</a></li></ul></details></li><li><details><summary><a href="#api-lang">2.6 Kotlin・Java から使うときの不便</a></summary><ul><li class="leaf"><a href="#a-tooltip-ambiguous">API 51. Java の component.setToolTip(null) が曖昧でコンパイルできない (直した: 2be7f335)</a></li><li class="leaf"><a href="#a-actionlistener-kotlin">API 52. Kotlin から WActionListener を addActionListener に渡せない (直した: 5c3d0997)</a></li><li class="leaf"><a href="#a-lang-table">API 53. そのほかの Kotlin・Java の不便</a></li></ul></details></li></ul></details></li><li><details><summary><a href="#score">3. 部品ごとの評価 (100 点満点)</a></summary><ul><li class="leaf"><a href="#score-button">3.1 ボタン・選択</a></li><li class="leaf"><a href="#score-text">3.2 文字</a></li><li class="leaf"><a href="#score-range">3.3 範囲</a></li><li class="leaf"><a href="#score-container">3.4 入れ物</a></li><li class="leaf"><a href="#score-data">3.5 データ</a></li><li class="leaf"><a href="#score-menu">3.6 メニュー・ツールバー</a></li><li class="leaf"><a href="#score-window">3.7 ウィンドウ・ダイアログ</a></li><li class="leaf"><a href="#score-layout">3.8 レイアウト マネージャー</a></li><li class="leaf"><a href="#score-total">3.9 全体</a></li></ul></details></li><li class="leaf"><a href="#summary">まとめ: 優先して直したいもの</a></li></ul>
 </nav>
 <main><article>
 <h1>Swing から WinUI4K に移すときに気になるところ</h1>
-<p><a href="swing_to_winui4k.html">swing_to_winui4k.md</a> (Swing のコードを WinUI4K でどう書くかを並べた文書) を作る中で気づいたことを、2 つの一覧にまとめます。</p>
+<p><a href="swing_to_winui4k.html">swing_to_winui4k.md</a> (Swing のコードを WinUI4K でどう書くかを並べた文書) を作る中で気づいたことを、2 つの一覧にまとめ、部品ごとに評価します。</p>
 <ol>
 <li><a href="#display">画面写真でおかしく見えるところ</a>: 文書に載せた画面写真を見て、Swing と比べて「おかしい」と感じる表示です。原因ごとに分け、それぞれ影響の大きい順に並べています。</li>
 <li><a href="#api">Swing から移るときに不自然な API</a>: Swing のコードを WinUI4K に書き換えるときに引っかかる API です。種類ごとに分け、それぞれ重いもの (コンパイルが通るのに黙って違う動きになるもの、例外になるもの、よく使う API) を先に置いて ★ を付けています。</li>
+<li><a href="#score">部品ごとの評価 (100 点満点)</a>: Swing の部品ごとに、主な使い方のうち WinUI4K で書ける割合の見立てを点数にしたものです。</li>
 </ol>
 <p>最後に、<a href="#summary">まとめ: 優先して直したいもの</a> を表にしています。</p>
 <p>2026-11-07 に、1 の一覧のうち WinUI4K の不具合と見られた表示 21 件を直しました (<a href="#display-bug">1.1</a>)。あわせて、2 の一覧のうち同じ修正で解消した API には「直した」と書き、残る不自然さだけを残しています。直した後に、文書のサンプルから不具合を避けるコードを外し、画像を撮り直しました。そのため、1.2 以降の画像も直した後の姿です。</p>
@@ -1759,6 +1760,435 @@ blockquote { margin: 0; padding: 0 16px; color: var(--muted); border-left: 4px s
 </tr>
 </tbody>
 </table></div>
+<h2 id="score">3. 部品ごとの評価 (100 点満点)<a class="anchor" href="#score">#</a></h2>
+<p>Swing の部品ごとに、開発者の主な使い方のうち、WinUI4K でそのまま (または小さな書き換えで) 書ける割合の見立てを、100 点満点で付けました。</p>
+<ul>
+<li>90 点以上なら、その部品を使う画面の 9 割はそのまま移せる見込みです。</li>
+<li>材料は、この文書の 1 と 2 で今も残っている項目と、<a href="swing_to_winui4k.html">swing_to_winui4k.md</a> の各章のユースケースです。「主な使い方」は、一般的な Swing のアプリでの使われ方からの見立てで、実際に使われ方を測ったものではありません。</li>
+<li>2026-11-07 の 2 回目の修正の後の状態で付けています。<a href="#a-alignment">API 2</a> (<code>setHorizontalAlignment</code> を Swing と同じ意味にする) は、直した前提です。</li>
+<li>「主な減点」の括弧の中は、引いた点です。</li>
+</ul>
+<h3 id="score-button">3.1 ボタン・選択<a class="anchor" href="#score-button">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#button">JButton</a></td>
+<td><code>WButton</code></td>
+<td><strong>95</strong></td>
+<td>ニーモニックの下線が出ない (-3)、<code>&lt;html&gt;</code> は基本のタグだけ (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#checkbox">JCheckBox</a></td>
+<td><code>WCheckBox</code></td>
+<td><strong>93</strong></td>
+<td><code>setIcon</code> で印そのものを替えられない (-3)、文字を印の左に置けない (-2)、<code>setBorderPainted</code> が効かない (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#radio">JRadioButton・ButtonGroup</a></td>
+<td><code>WRadioButton</code>・<code>WButtonGroup</code></td>
+<td><strong>92</strong></td>
+<td><code>getModel()</code> / <code>ButtonModel</code> が無い (-5)、文字を印の左に置けない (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#toggle">JToggleButton</a></td>
+<td><code>WToggleButton</code></td>
+<td><strong>93</strong></td>
+<td><code>ButtonModel</code> が無い (-4)、ツールバーでは違う見た目になる (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#combo">JComboBox</a></td>
+<td><code>WComboBox</code></td>
+<td><strong>88</strong></td>
+<td>レンダラーが文字列だけで、アイコン付きの項目が作れない (-6)、型引数が無い (-3)、<code>getEditor</code>・<code>setPrototypeDisplayValue</code> が無い (-3)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-text">3.2 文字<a class="anchor" href="#score-text">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#label">JLabel</a></td>
+<td><code>WLabel</code></td>
+<td><strong>93</strong></td>
+<td>無効のときに灰色にならない (-4)、<code>setLabelFor</code> の相手がボタンだと押される (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#textfield">JTextField</a></td>
+<td><code>WTextField</code></td>
+<td><strong>94</strong></td>
+<td>キャレットの色・無効のときの文字の色が無い (-3)、入力欄の見た目 (下の線・消去ボタン) が違う (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#textfield-password">JPasswordField</a></td>
+<td><code>WPasswordField</code></td>
+<td><strong>95</strong></td>
+<td>0 で埋めても文字列の複製が消えない (-3)、見た目の違い (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#textarea">JTextArea</a></td>
+<td><code>WTextPane</code></td>
+<td><strong>90</strong></td>
+<td><code>setTabSize</code> が無い (-4)、<code>WTextArea</code> という名前で見つからない (-4)、キャレットの色が無い (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#textpane">JTextPane</a></td>
+<td><code>WTextPane</code></td>
+<td><strong>65</strong></td>
+<td>書式が 6 種だけで、背景色・打ち消し線・段落の揃えが無い (-15)、スタイル (<code>addStyle</code>)・段落の属性が無い (-10)、<code>insertIcon</code>・書式の Action が無い (-6)、キャレットの位置の書式が後ろの文字になる (-4)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#textpane-html">JEditorPane</a></td>
+<td>(<code>WRichTextBlock</code>・<code>WWebView</code>)</td>
+<td><strong>15</strong></td>
+<td>主な使い方の HTML の表示・<code>setPage</code>・ハイパーリンクのリスナーが無く、<code>WWebView</code> への作り直しが要る</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#none">JFormattedTextField</a></td>
+<td>なし</td>
+<td><strong>10</strong></td>
+<td>部品が無い。数なら <code>WSpinner</code>、日付なら <code>WDatePicker</code> で代わりになる分だけ</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-range">3.3 範囲<a class="anchor" href="#score-range">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#spinner">JSpinner</a></td>
+<td><code>WSpinner</code></td>
+<td><strong>70</strong></td>
+<td>一覧と日時のモデルが例外になる (-25)、値が double (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#slider">JSlider</a></td>
+<td><code>WSlider</code></td>
+<td><strong>78</strong></td>
+<td>目盛りの数字 (<code>setPaintLabels</code>・<code>setLabelTable</code>) が無い (-17)、値が double (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#progress">JProgressBar</a></td>
+<td><code>WProgressBar</code></td>
+<td><strong>75</strong></td>
+<td><code>setStringPainted</code> の「65%」が描かれない (-17)、縦が無い (-5)、値が double (-3)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-container">3.4 入れ物<a class="anchor" href="#score-container">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#panel">JPanel</a></td>
+<td><code>WLayoutPanel</code></td>
+<td><strong>85</strong></td>
+<td>TitledBorder が無い (-12)、名前の近い <code>WPanel</code> と取り違えやすい (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#scroll">JScrollPane</a></td>
+<td><code>WScrollPane</code></td>
+<td><strong>92</strong></td>
+<td>スクロールバーがマウスを重ねるまで隠れる (-4)、<code>setUnitIncrement</code> が無い (-2)、中身の大きさだけ変わったときにリスナーが呼ばれない (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#scrollbar">JScrollBar</a></td>
+<td>(<code>WScrollPaneBar</code>)</td>
+<td><strong>50</strong></td>
+<td>単独で置けない (-45)、<code>setUnitIncrement</code>・<code>setModel</code> が無い (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#split">JSplitPane</a></td>
+<td><code>WSplitPane</code></td>
+<td><strong>93</strong></td>
+<td><code>setOneTouchExpandable</code> が無い (-5)、<code>addPropertyChangeListener</code> が無い (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#tabbed">JTabbedPane</a></td>
+<td><code>WTabView</code></td>
+<td><strong>88</strong></td>
+<td>タブの位置 (左・下) を変えられない (-6)、<code>setTabComponentAt</code> が無い (-4)、閉じるボタンの見た目が WinUI 風 (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#none">JLayeredPane・JLayer・ガラス ペイン</a></td>
+<td>なし</td>
+<td><strong>10</strong></td>
+<td>部品が無い。<code>WCanvas.<wbr>setZIndex</code> と <code>WPopup</code> で一部だけ代わりになる</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#none">JInternalFrame・JDesktopPane</a></td>
+<td>なし</td>
+<td><strong>0</strong></td>
+<td>MDI (ウィンドウの中の子ウィンドウ) が作れない</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-data">3.5 データ<a class="anchor" href="#score-data">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#table">JTable</a></td>
+<td><code>WTable</code></td>
+<td><strong>60</strong></td>
+<td>複数の行を選べない (-20)、<code>editCellAt</code>・行の高さ・<code>setAutoResizeMode</code> が無い (-10)、セル単位・列単位の選択が無い (-5)、行が Swing の 2 倍の高さ (-3)、<code>DefaultCellEditor</code> が作った時点の写しになる (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#tree">JTree</a></td>
+<td><code>WTree</code></td>
+<td><strong>72</strong></td>
+<td>複数選択ができない (-12)、節の編集が無い (-8)、既定のフォルダーと葉のアイコンが無い (-5)、<code>convertValueToText</code> を上書きできない (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#list">JList</a></td>
+<td><code>WList</code></td>
+<td><strong>90</strong></td>
+<td>ドラッグでの並べ替えが無い (-5)、型引数が無い (-3)、横に流す並べ方が無い (-2)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-menu">3.6 メニュー・ツールバー<a class="anchor" href="#score-menu">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#menu">JMenuBar・JMenu・JMenuItem</a></td>
+<td><code>WMenuBar</code> ほか</td>
+<td><strong>92</strong></td>
+<td>サブメニューが別のクラスで、<code>JMenu</code> を入れ子にする書き方ができない (-5)、サブメニューをプログラムから開けない (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#popup">JPopupMenu</a></td>
+<td><code>WMenuFlyout</code></td>
+<td><strong>95</strong></td>
+<td>ボタンから開いたとき先頭にフォーカスの枠が出る (-3)、名前が違う (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#toolbar">JToolBar</a></td>
+<td><code>WCommandBar</code></td>
+<td><strong>70</strong></td>
+<td>ボタンが右に寄り、ラベルが隠れ、「…」が出る (-18)、縦にできない (-7)、<code>setFloatable</code>・<code>setRollover</code> が黙って無視される (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#none">JSeparator</a></td>
+<td>なし</td>
+<td><strong>40</strong></td>
+<td>メニューとツールバーの区切りは使えるが、フォームに置く単独の線が無い (-60)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-window">3.7 ウィンドウ・ダイアログ<a class="anchor" href="#score-window">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#frame">JFrame</a></td>
+<td><code>WFrame</code></td>
+<td><strong>93</strong></td>
+<td><code>setIconImage(<wbr>Image)</code> (jar の中の画像) が無い (-3)、<code>getRootPane()</code>・<code>setOpacity</code> が無い (-2)、閉じたときの既定が <code>DISPOSE_ON_CLOSE</code> (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#dialog">JDialog</a></td>
+<td><code>WContentDialog</code></td>
+<td><strong>65</strong></td>
+<td>モードレスが作れない (-20)、ウィンドウの中に重なって出て動かせない (-10)、<code>setSize</code> が効かない (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#optionpane">JOptionPane</a></td>
+<td><code>WOptionPane</code></td>
+<td><strong>92</strong></td>
+<td>ウィンドウの中に重なって出る (-5)、<code>createDialog</code> などの細かい形が無い (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#none">JWindow</a></td>
+<td>なし</td>
+<td><strong>15</strong></td>
+<td>部品が無い。<code>setUndecorated</code> の <code>WFrame</code> で一部だけ代わりになる</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#filechooser">JFileChooser</a></td>
+<td><code>WFileChooser</code></td>
+<td><strong>88</strong></td>
+<td>独自の <code>FileFilter</code> が使えない (-5)、<code>setAccessory</code> が無い (-4)、ファイルとフォルダーの両方は選べない (-3) (どれも OS のダイアログの制約)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#colorchooser">JColorChooser</a></td>
+<td><code>WColorPicker</code></td>
+<td><strong>92</strong></td>
+<td>選ぶパネルやプレビューを入れ替えられない (-5)、見た目が大きく違う (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#tooltip">JToolTip</a></td>
+<td><code>WToolTip</code></td>
+<td><strong>88</strong></td>
+<td><code>ToolTipManager</code> (出るまでの時間・全体の有効と無効) が無い (-7)、既定の位置が部品の上 (-3)、<code>getToolTipText(<wbr>MouseEvent)</code> を上書きできない (-2)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-layout">3.8 レイアウト マネージャー<a class="anchor" href="#score-layout">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Swing</th>
+<th>WinUI4K</th>
+<th>点</th>
+<th>主な減点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-border">BorderLayout</a></td>
+<td><code>WBorderLayout</code></td>
+<td><strong>97</strong></td>
+<td>制約が文字列でなく <code>Constraint</code> (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-grid">GridLayout</a></td>
+<td><code>WGridLayout</code></td>
+<td><strong>97</strong></td>
+<td>間隔などが double (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-flow">FlowLayout</a></td>
+<td><code>WFlowLayout</code></td>
+<td><strong>95</strong></td>
+<td>間隔などが double (-3)、<code>setAlignOnBaseline</code> が無い (-2)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-table">CardLayout</a></td>
+<td><code>WCardLayout</code></td>
+<td><strong>95</strong></td>
+<td>細かい違い (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-box">BoxLayout・Box</a></td>
+<td><code>WBoxLayout</code>・<code>WBox</code></td>
+<td><strong>92</strong></td>
+<td><code>Box.<wbr>createHorizontalBox()</code> が <code>WLayoutPanel</code> を返し、<code>Box</code> 型で受けられない (-5)、揃えの値 (<code>alignmentX</code>) の扱いが違う (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-absolute">null レイアウト</a></td>
+<td><code>WLayoutPanel(<wbr>null)</code></td>
+<td><strong>92</strong></td>
+<td>座標と大きさが double (-5)、<code>new WLayoutPanel(<wbr>null)</code> と明示が要る (-3)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-gridbag">GridBagLayout</a></td>
+<td><code>WGrid</code> (・MigLayout の拡張)</td>
+<td><strong>55</strong></td>
+<td>Swing と同じ計算の <code>WGridBagLayout</code> が無い (-30)、行と列の順が逆 (-8)、<code>weightx</code>・<code>fill</code>・<code>anchor</code> の書き方が違う (-7)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-spring">SpringLayout</a></td>
+<td><code>WRelativePanel</code></td>
+<td><strong>60</strong></td>
+<td>距離の指定が無い (-25)、ベースラインが無い (-10)、<code>Spring</code> の式が無い (-5)</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-table">GroupLayout</a></td>
+<td>なし</td>
+<td><strong>0</strong></td>
+<td>NetBeans の GUI ビルダーが出力するレイアウトで、画面の作り直しになる</td>
+</tr>
+<tr>
+<td><a href="swing_to_winui4k.html#layout-table">OverlayLayout</a></td>
+<td>なし</td>
+<td><strong>0</strong></td>
+<td>―</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="score-total">3.9 全体<a class="anchor" href="#score-total">#</a></h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>区分</th>
+<th>部品の数</th>
+<th>平均</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>90 点以上 (9 割をまかなえる)</td>
+<td>24</td>
+<td>93</td>
+</tr>
+<tr>
+<td>60〜89 点</td>
+<td>14</td>
+<td>75</td>
+</tr>
+<tr>
+<td>60 点未満 (対応が無い・大きく欠ける)</td>
+<td>10</td>
+<td>20</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>90 点以上の部品だけで書ける画面 (フォーム・リスト・メニュー・標準のダイアログ) は、ほぼそのまま移せます。</li>
+<li>点を上げると効果が大きいもの:
+<ul>
+<li><code>JTable</code> の複数行の選択 (60 点): WinUI の <code>TableView</code> の対応を待つか、選択を自前で描く。</li>
+<li><code>GridBagLayout</code> (55 点): Swing と同じ計算の <code>WGridBagLayout</code> を足す。</li>
+<li><code>JDialog</code> (65 点): モードレスの <code>WDialog</code> を足す。</li>
+<li><code>JToolBar</code> (70 点): Swing 風に左から並べる表示を足す。</li>
+<li><code>JPanel</code> (85 点): TitledBorder を足す。</li>
+</ul>
+</li>
+<li><code>JSeparator</code> (40 点) と <code>JFormattedTextField</code> (10 点) は、部品を 1 つ足すだけで大きく上がります。</li>
+<li>部品をまたいで欠けているもの: ドラッグ アンド ドロップ (<code>TransferHandler</code>)。値が double であること (<a href="#a-double">API 30</a>) と型引数が無いこと (<a href="#a-generic">API 31</a>) も、移すときの書き換えを増やします。</li>
+</ul>
 <h2 id="summary">まとめ: 優先して直したいもの<a class="anchor" href="#summary">#</a></h2>
 <p>1 回目 (表示の不具合) と 2 回目 (API) の修正で直したものは、表から外しました (<a href="#display-bug">1.1</a>・<a href="#api">2.</a>)。残っているものを、移すときに引っかかる重さの順に並べます。<strong>判断が要る</strong> と付けたものは、API の形を決めてから直します。</p>
 <div class="table"><table>
