@@ -33,6 +33,15 @@ class GridLength private constructor(
 /**
  * GridBagLayout-like JPanel: WinUI 3's Grid.
  * Define rows/columns with [addRow] / [addColumn], and place children at a cell (row, column) with [add].
+ *
+ * Differences when moving from GridBagLayout:
+ * - The position in [add] is in the order row, column, the reverse of GridBagConstraints' `gridx` (column) and `gridy` (row). Copying them in the order `gridx, gridy`
+ *   swaps rows and columns (in Kotlin you can write them with names, `add(c, row = gridy, column = gridx)`). `gridwidth` / `gridheight` are
+ *   columnSpan / rowSpan.
+ * - `weightx` / `weighty` are given to columns and rows, not to children (pass [GridLength.star] to [addColumn] / [addRow]). Create the rows and columns first.
+ * - `insets` is expressed with the child's [WComponent.setMargin] (in the order left, top, right, bottom), and `fill` / `anchor` with the child's [WComponent.horizontalAlignment] /
+ *   [WComponent.verticalAlignment]. There is no `ipadx` / `ipady`.
+ * - It is not a layout manager, so it cannot be passed to `setLayout` (it is the panel itself).
  */
 class WGrid @JvmOverloads constructor(
     rowSpacing: Double = 0.0,
@@ -80,7 +89,10 @@ class WGrid @JvmOverloads constructor(
         definition.release()
     }
 
-    /** Adds a child placed at cell ([row], [column]) (the Grid.SetRow / SetColumn attached properties). */
+    /**
+     * Adds a child placed in the cell ([row], [column]) (the Grid.SetRow / SetColumn attached properties).
+     * The row comes first, the reverse of the order of GridBagConstraints' `gridx` (column) and `gridy` (row) ([rowSpan] is `gridheight`, and [columnSpan] is `gridwidth`).
+     */
     @JvmOverloads
     fun add(component: WComponent, row: Int, column: Int, rowSpan: Int = 1, columnSpan: Int = 1) {
         statics.call(XamlInterop.IGridStatics_SetRow, component.frameworkElement.ptr, row)
