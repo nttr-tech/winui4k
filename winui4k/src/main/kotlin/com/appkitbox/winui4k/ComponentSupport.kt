@@ -31,6 +31,25 @@ internal object ComponentSupport {
     }
 
     /**
+     * Writes [WComponent.toolTipText]. Removes the ToolTipService.ToolTip of [dependencyObject] (borrowed) if null, sets a TextBlock with the formatting copied ([HtmlText])
+     * for a string starting with `<html>`, and a string otherwise.
+     */
+    fun setToolTipText(dependencyObject: ComPtr, value: String?) {
+        when {
+            value == null -> toolTipServiceStatics.call(XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, null)
+            HtmlText.isHtml(value) -> HtmlText.setToolTip(dependencyObject, value)
+            else -> {
+                val boxed = PropertyValues.boxString(value)
+                try {
+                    toolTipServiceStatics.call(XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, boxed.ptr)
+                } finally {
+                    boxed.release()
+                }
+            }
+        }
+    }
+
+    /**
      * Reads [WComponent.toolTipText]. If the ToolTipService.ToolTip of [dependencyObject] (borrowed) is a string, that string;
      * the string if it is a ToolTip ([WToolTip]) whose content is a string, otherwise or if there is none, null.
      */

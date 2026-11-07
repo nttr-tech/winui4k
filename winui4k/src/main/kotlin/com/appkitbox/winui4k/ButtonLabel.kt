@@ -57,9 +57,13 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             if (currentIcon != null) showIconLabel()
         }
 
+    /** The string starting with `<html>` put in [text] (when there is no icon; Content is a formatted TextBlock). null if not HTML. */
+    private var htmlText: String? = null
+
     var text: String
         get() {
             iconLabelText?.let { return it }
+            htmlText?.let { return it }
             val boxed = contentControl.getPtrOrNull(XamlInterop.IContentControl_get_Content) ?: return ""
             return try {
                 PropertyValues.unboxString(boxed) ?: ""
@@ -83,6 +87,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             contentComponent = value
             currentIcon = null
             iconLabelText = null
+            htmlText = null
             releaseLabelAutomationName()
             contentControl.call(
                 XamlInterop.IContentControl_put_Content,
@@ -91,10 +96,24 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             host.revalidate()
         }
 
+    /**
+     * Makes the Content text only. As with Swing's JButton, a string starting with `<html>` makes a TextBlock with the formatting copied the Content
+     * ([HtmlText]). With composite Content, the button's UI Automation name is not decided from the string, so the text without tags is set as the name.
+     */
     private fun putContentText(value: String) {
-        val boxed = PropertyValues.boxString(value)
-        contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
-        boxed.release()
+        if (HtmlText.isHtml(value)) {
+            val textBlock = XamlElement.adopt(Activation.activate(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlock))
+            HtmlText.putText(textBlock.view(XamlInterop.IID_ITextBlock), value)
+            contentControl.call(XamlInterop.IContentControl_put_Content, textBlock.uiElement.ptr)
+            htmlText = value
+            setLabelAutomationName(HtmlText.toPlainText(value))
+        } else {
+            htmlText = null
+            releaseLabelAutomationName()
+            val boxed = PropertyValues.boxString(value)
+            contentControl.call(XamlInterop.IContentControl_put_Content, boxed.ptr)
+            boxed.release()
+        }
         host.revalidate()
     }
 
@@ -108,6 +127,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
         val label = text
         contentComponent = null
         currentIcon = newIcon
+        htmlText = null
         if (newIcon == null) {
             iconLabelText = null
             releaseLabelAutomationName()
@@ -150,7 +170,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
         val panel = WPanel(iconTextGap, if (vertical) Orientation.VERTICAL else Orientation.HORIZONTAL)
         // WLabel's root is a Grid, so the text inside a button uses a TextBlock directly (without a Grid in between)
         val textBlock = XamlElement.adopt(Activation.activate(XamlInterop.CLS_TextBlock, XamlInterop.IID_ITextBlock))
-        textBlock.setText(label)
+        HtmlText.putText(textBlock.view(XamlInterop.IID_ITextBlock), label)
         val children = if (textFirst) listOf(textBlock, iconElement) else listOf(iconElement, textBlock)
         for (child in children) {
             if (vertical) {
@@ -161,12 +181,17 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
             panel.add(child)
         }
         contentControl.call(XamlInterop.IContentControl_put_Content, panel.uiElement.ptr)
+        setLabelAutomationName(if (HtmlText.isHtml(label)) HtmlText.toPlainText(label) else label)
+        host.revalidate()
+    }
+
+    /** Sets the button's AutomationProperties.Name to [name] (kept as is if the user set another name). */
+    private fun setLabelAutomationName(name: String) {
         val current = host.accessibleName
         if (current.isEmpty() || current == labelAutomationName) {
-            host.accessibleName = label
-            labelAutomationName = label
+            host.accessibleName = name
+            labelAutomationName = name
         }
-        host.revalidate()
     }
 
     /**

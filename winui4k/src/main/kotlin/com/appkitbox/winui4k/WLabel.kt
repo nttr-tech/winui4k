@@ -2,7 +2,6 @@ package com.appkitbox.winui4k
 
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
-import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
@@ -209,12 +208,21 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     /** As with JLabel, [WBoxLayout] does not make it larger than its preferred size unless a maximum size is set. */
     override val maximumFollowsPreferred: Boolean get() = true
 
+    /** The string starting with `<html>` set in [text] (returned when read). null if not HTML (then reading returns TextBlock.Text). */
+    private var htmlText: String? = null
+
+    /**
+     * JLabel.getText / setText-like: the text to show. As in Swing, for a string starting with `<html>`, the basic tags (`<b>`, `<i>`, `<u>`, `<br>`,
+     * `<p>`, `<font color>`) are copied to TextBlock formatting (Bold, Italic, Underline, LineBreak, Foreground) for display, and reading it returns the string
+     * as set. The range of tags that can be copied is narrower than Swing's HTML (tables, images, font sizes, etc. cannot be used, and only the text without tags appears).
+     */
     var text: String
-        get() = textBlock.getString(XamlInterop.ITextBlock_get_Text)
+        get() = htmlText ?: textBlock.getString(XamlInterop.ITextBlock_get_Text)
         set(value) {
             val old = text
             if (value == old) return
-            Hstring.use(value) { h -> textBlock.call(XamlInterop.ITextBlock_put_Text, h) }
+            htmlText = value.takeIf(HtmlText::isHtml)
+            HtmlText.putText(textBlock, value)
             // With empty text only the icon is placed (no gap), so rearrange when emptiness changes
             if (shownIcon != null && old.isEmpty() != value.isEmpty()) arrange()
             // As with JLabel.setText, the size changes, so let the parent WLayoutPanel lay it out again

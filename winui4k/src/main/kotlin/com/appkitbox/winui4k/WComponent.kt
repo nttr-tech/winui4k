@@ -6,7 +6,6 @@ import com.appkitbox.winui4k.internal.ffi.api.Ffi
 import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
-import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
@@ -1327,22 +1326,15 @@ abstract class WComponent internal constructor(
      * If you need placement or a non-text hint, set a [WToolTip] to [toolTip].
      * Reading it returns the current hint's string: if the content of the [WToolTip] attached with [toolTip] is a string, that string
      * ([WToolTip.tipText]); null for non-string content ([WToolTip.content]) or when there is no hint.
+     * As in Swing, for a string starting with `<html>`, the basic tags (`<b>`, `<i>`, `<u>`, `<br>`, `<p>`, `<font color>`) are copied to a formatted
+     * TextBlock used as the hint, and reading it returns the string as set.
      */
     var toolTipText: String?
-        get() = ComponentSupport.toolTipText(dependencyObject)
+        get() = toolTipHtml ?: ComponentSupport.toolTipText(dependencyObject)
         set(value) {
             detachToolTip()
-            if (value == null) {
-                toolTipServiceStatics.call(XamlInterop.IToolTipServiceStatics_SetToolTip, dependencyObject, null)
-            } else {
-                val boxed = PropertyValues.boxString(value)
-                toolTipServiceStatics.call(
-                    XamlInterop.IToolTipServiceStatics_SetToolTip,
-                    dependencyObject,
-                    boxed.ptr,
-                )
-                boxed.release()
-            }
+            toolTipHtml = value?.takeIf(HtmlText::isHtml)
+            ComponentSupport.setToolTipText(dependencyObject, value)
         }
 
     /**
@@ -1369,6 +1361,9 @@ abstract class WComponent internal constructor(
 
     /** The hint attached with [toolTip] (until another hint is set). */
     private var attachedToolTip: WToolTip? = null
+
+    /** The hint string starting with `<html>` set in [toolTip] (returned when read). null for other hints. */
+    private var toolTipHtml: String? = null
 
     private fun detachToolTip() {
         attachedToolTip?.attachedTo(null)
