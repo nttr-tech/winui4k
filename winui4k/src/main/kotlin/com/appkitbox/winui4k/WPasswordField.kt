@@ -114,6 +114,8 @@ class WPasswordField() : WControl(
      * From Java, `getPassword()` returns a `char[]` as in JPasswordField, so this getter returning a string is not visible
      * from Java (it is kept on the JVM as a synthetic method, so calls compiled against earlier versions still work). When
      * you need a string in Java, write `new String(field.getPassword())`.
+     * If Kotlin also needs a `char[]` as with JPasswordField, call [getPassword]. However, filling the received array with 0 does not erase
+     * the WinRT string held by PasswordBox or the copies of the JVM string made on each read (see the class description).
      */
     @get:JvmSynthetic
     var password: String
