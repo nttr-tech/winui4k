@@ -59,6 +59,12 @@
   (`ContentScrollViewer`、ContentDialog_themeresources.xaml) は `VerticalScrollBarVisibility="Disabled"` なので、収まらない中身は
   下が切れるだけでスクロールできない。WColorPicker.showDialog は中身を縦にスクロールする WScrollPane に入れる
   (WColorPickerTest で、480×320 のウィンドウに開いたときの ScrollableHeight が 0 より大きいことを確認)
+- **NumberBox: NumberFormatter に書式だけのオブジェクトや null を入れると失敗する**
+  NumberBox は NumberFormatter (INumberFormatter2) が INumberParser も実装していることを求め、そうでなければ E_INVALIDARG
+  (NumberBox.cpp の ValidateNumberFormatter。null も問い合わせに失敗する)。入力の確定では ParseDouble だけを呼び、
+  式の入力 (AcceptsExpression) では演算子と空白の前までを 1 つの数として ParseDouble に渡す。null を返すと「読めない」で、
+  値を変えずに表示を戻す。WSpinner.NumberEditor は両方を Kotlin の COM オブジェクトで実装し、既定に戻すときは最初に
+  get_NumberFormatter で取っておいた既定の DecimalFormatter を入れ直す (WSpinnerNumberEditorTest)
 - **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
   どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
   DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、

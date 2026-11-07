@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,24 @@ class WSpinnerForJavaTest {
             assertEquals(5, (int) spinner.getValue());
             assertEquals(6, spinner.getNextValue());
             assertEquals(4, spinner.getPreviousValue());
+        });
+    }
+
+    @Test
+    void canBeFormattedTheSameWayAsJSpinnerNumberEditor() {
+        onUiThread(() -> {
+            WSpinner price = new WSpinner(new WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5));
+            WSpinner.NumberEditor editor = new WSpinner.NumberEditor(price, "0.00");
+            price.setEditor(editor);
+            assertSame(editor, price.getEditor());
+            assertSame(price, editor.getSpinner());
+            DecimalFormat format = editor.getFormat();
+            assertEquals("12.00", format.format(12.0));
+            // A NumberEditor without a pattern uses #,##0.###, the same as NumberFormat.getNumberInstance
+            assertEquals("1,234.568", new WSpinner.NumberEditor(price).getFormat().format(1234.5678));
+            price.setEditor(null);
+            assertNull(price.getEditor());
+            assertThrows(IllegalArgumentException.class, () -> new WSpinner.NumberEditor(price, "0.00.0"));
         });
     }
 

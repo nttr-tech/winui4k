@@ -288,6 +288,13 @@ internal object FoundationInterop {
         Pinterface.iid("pinterface({$IID_IReference_OPEN};i4)")
     }
 
+    // ---- Windows.Foundation.IReference<Int64> (boxed with PropertyValue.CreateInt64) ----
+
+    /** Used for the return value of INumberParser.ParseInt of NumberBox.NumberFormatter ([com.appkitbox.winui4k.WSpinner.NumberEditor]). */
+    val IID_IReference_Int64: String by lazy {
+        Pinterface.iid("pinterface({$IID_IReference_OPEN};i8)")
+    }
+
     // ---- Windows.Foundation.IReference<Double> (box via PropertyValue.CreateDouble) ----
 
     /** Used by ScrollViewer.ChangeView's offset argument (null = no change). */

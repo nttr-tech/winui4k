@@ -9,6 +9,7 @@ import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
+import java.text.DecimalFormat
 import java.text.ParseException
 import java.util.function.DoubleConsumer
 import kotlin.jvm.JvmName
@@ -54,7 +55,9 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
  *   gives the edge value instead of stopping as in Swing
  * - The value is committed when focus leaves the input field or Enter is pressed (not on every character)
  * - With integer models such as Integer, a typed decimal is truncated toward 0 to an integer, as Swing's NumberFormatter does, and the display goes back to that integer
- *   (NumberBox's display format NumberFormatter stays the default; integer values are shown without a decimal point)
+ *   (unless [editor] is set, the display format stays NumberBox's default, and integer values are shown without a decimal point)
+ * - The display format is decided, as in Swing, by setting [editor] to a [NumberEditor] (a DecimalFormat pattern), which corresponds to `JSpinner.NumberEditor`.
+ *   Without it, NumberBox's default format is used and the decimal value 12.0 is shown as "12" (Swing's default NumberEditor shows "12", and "12.00" with "0.00")
  */
 class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NumberBox, XamlInterop.IID_INumberBoxFactory), // default interface = INumberBox
@@ -206,6 +209,61 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     var acceptsExpression: Boolean
         get() = inspectable.getBool(XamlInterop.INumberBox_get_AcceptsExpression)
         set(value) = inspectable.putBool(XamlInterop.INumberBox_put_AcceptsExpression, value)
+
+    /**
+     * JSpinner.getEditor / setEditor-like: the format of the value's display and input (the DecimalFormat of a [NumberEditor]). Setting it replaces NumberBox's
+     * NumberFormatter with one that displays and parses with that format, and redisplays the current value in that format right away.
+     * null (default) is NumberBox's default format (follows the regional settings; integer values without a decimal point, so 12.0 is "12").
+     *
+     * Difference from Swing: Swing's editor is the input field itself (a JComponent) and has a NumberEditor even by default, but here it holds only the format,
+     * and the default is null. Changing [NumberEditor.format] after setting it does not redisplay until the value changes next (setting it again redisplays).
+     */
+    var editor: NumberEditor? = null
+        set(value) {
+            field = value
+            applyNumberFormat(value?.format)
+        }
+
+    /** The formatter NumberBox has from the start (a DecimalFormatter following the regional settings). Put back when [editor] returns to null. */
+    private var defaultNumberFormatter: ComPtr? = null
+
+    private fun applyNumberFormat(format: DecimalFormat?) {
+        val original = defaultNumberFormatter
+            ?: own(inspectable.getPtr(XamlInterop.INumberBox_get_NumberFormatter)).also { defaultNumberFormatter = it }
+        if (format == null) {
+            inspectable.call(XamlInterop.INumberBox_put_NumberFormatter, original.ptr)
+            return
+        }
+        val formatter = DecimalFormatNumberFormatter.create(format)
+        try {
+            inspectable.call(XamlInterop.INumberBox_put_NumberFormatter, formatter.pointerFor(XamlInterop.IID_INumberFormatter2))
+        } finally {
+            formatter.release() // NumberBox holds a reference
+        }
+    }
+
+    /**
+     * JSpinner.NumberEditor-like: shows the value of [spinner] with the DecimalFormat pattern [decimalFormatPattern] ("0.00", "#,##0.00", etc.)
+     * and reads input with that format too. Use it by setting it to [WSpinner.editor] (the same as Swing's `spinner.setEditor(editor)`).
+     * The display uses DecimalFormat's rounding (HALF_EVEN), and an entered value becomes the value without rounding ("7.256" is the value 7.256, shown as "7.26").
+     * Input is accepted only when the whole text reads as a number of the format (otherwise the value does not change and the display is restored).
+     *
+     * @throws IllegalArgumentException if [decimalFormatPattern] is not a valid DecimalFormat pattern (as in Swing)
+     */
+    class NumberEditor(spinner: WSpinner, decimalFormatPattern: String) {
+        /** JSpinner.NumberEditor(JSpinner)-like: creates it with the default pattern "#,##0.###" (the same as NumberFormat.getNumberInstance). */
+        constructor(spinner: WSpinner) : this(spinner, DEFAULT_PATTERN)
+
+        /** JSpinner.DefaultEditor.getSpinner-like: the spinner given when it was created. */
+        val spinner: WSpinner = spinner
+
+        /** JSpinner.NumberEditor.getFormat-like: the format of display and input. */
+        val format: DecimalFormat = DecimalFormat(decimalFormatPattern)
+
+        private companion object {
+            const val DEFAULT_PATTERN = "#,##0.###"
+        }
+    }
 
     init {
         numberModel.addChangeListener(modelListener)

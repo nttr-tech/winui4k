@@ -426,6 +426,19 @@ internal object XamlInterop {
     const val INumberBox_put_IsWrapEnabled = 39        // put_IsWrapEnabled(boolean)
     const val INumberBox_get_AcceptsExpression = 40    // get_AcceptsExpression(out boolean)
     const val INumberBox_put_AcceptsExpression = 41    // put_AcceptsExpression(boolean)
+    const val INumberBox_get_NumberFormatter = 42      // get_NumberFormatter(out Windows.Globalization.NumberFormatting.INumberFormatter2)
+    const val INumberBox_put_NumberFormatter = 43      // put_NumberFormatter(INumberFormatter2; it must also implement INumberParser)
+
+    // ---- Windows.Globalization.NumberFormatting (Windows.Foundation.UniversalApiContract.winmd) ----
+    // The number formatting and parsing interfaces passed to NumberBox.NumberFormatter (implemented on the Kotlin side)
+    const val IID_INumberFormatter2 = "d4a8c1f0-80d0-4b0d-a89e-882c1e8f8310"
+    const val INumberFormatter2_FormatInt = 6          // FormatInt(i8, out HSTRING)
+    const val INumberFormatter2_FormatUInt = 7         // FormatUInt(u8, out HSTRING)
+    const val INumberFormatter2_FormatDouble = 8       // FormatDouble(r8, out HSTRING)
+    const val IID_INumberParser = "e6659412-4a13-4a53-83a1-392fbe4cff9f"
+    const val INumberParser_ParseInt = 6               // ParseInt(HSTRING, out IReference<i8>)
+    const val INumberParser_ParseUInt = 7              // ParseUInt(HSTRING, out IReference<u8>)
+    const val INumberParser_ParseDouble = 8            // ParseDouble(HSTRING, out IReference<r8>)
     const val INumberBox_add_ValueChanged = 44         // add_ValueChanged(TypedEventHandler, out token)
     const val INumberBox_remove_ValueChanged = 45      // remove_ValueChanged(token)
     const val IID_INumberBoxValueChangedEventArgs = "c66cf16e-7c8a-532e-9d23-058c1c98dd50"
