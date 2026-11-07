@@ -43,6 +43,28 @@ class WSliderTest : FunSpec() {
                 Triple(10.0, 20.0, 15.0)
         }
 
+        test("without a value it is the middle of the range, as with JSlider: 50 in 0 to 100 without arguments or with only the orientation, and (minimum + maximum) / 2 with only the range") {
+            onUiThreadGet {
+                listOf(
+                    WSlider().let { Triple(it.minimum, it.maximum, it.value) },
+                    WSlider(Orientation.VERTICAL).let { Triple(it.minimum, it.maximum, it.value) },
+                    WSlider(10.0, 20.0).let { Triple(it.minimum, it.maximum, it.value) },
+                    WSlider(minimum = -10.0, maximum = 30.0).let { Triple(it.minimum, it.maximum, it.value) },
+                )
+            } shouldContainExactly listOf(
+                Triple(0.0, 100.0, 50.0),
+                Triple(0.0, 100.0, 50.0),
+                Triple(10.0, 20.0, 15.0),
+                Triple(-10.0, 30.0, 10.0),
+            )
+        }
+
+        test("the middle of an integer range uses integer division truncating toward 0, as with JSlider, and a fractional range uses the exact middle") {
+            onUiThreadGet {
+                listOf(WSlider(0.0, 5.0).value, WSlider(-5.0, 0.0).value, WSlider(0.0, 1.5).value)
+            } shouldContainExactly listOf(2.0, -2.0, 0.75)
+        }
+
         test("value returns exactly the value that was set") {
             onUiThreadGet {
                 val slider = WSlider()
@@ -177,7 +199,7 @@ class WSliderTest : FunSpec() {
                 slider.valueIsAdjusting = false
                 events to modelAdjusting
             }
-            events shouldContainExactly listOf("0.0:true", "10.0:true", "10.0:false")
+            events shouldContainExactly listOf("50.0:true", "10.0:true", "10.0:false")
             modelAdjusting.shouldBeTrue()
         }
 
@@ -254,7 +276,7 @@ class WSliderTest : FunSpec() {
                     listOf("${withModel.model === shared}", withModel.orientation.name) + nativeRange(withModel).map { "$it" },
                 )
             }
-            vertical shouldContainExactly listOf("VERTICAL", "0.0", "100.0", "0.0")
+            vertical shouldContainExactly listOf("VERTICAL", "0.0", "100.0", "50.0")
             ranged shouldContainExactly listOf("VERTICAL", "10.0", "20.0", "15.0")
             withModel shouldContainExactly listOf("true", "HORIZONTAL", "2.0", "8.0", "3.0")
         }

@@ -12,6 +12,8 @@ import java.util.function.DoubleConsumer
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
+import kotlin.math.floor
+import kotlin.math.truncate
 
 /**
  * Microsoft.UI.Xaml.Controls.Primitives.SliderSnapsTo (where the thumb snaps to).
@@ -67,18 +69,26 @@ enum class TickPlacement(internal val native: Int) {
  * called once for any change (not only the value but also the minimum, maximum, extent and whether it is being dragged; the source is this slider).
  *
  * Differences from Swing:
- * - The value is `Double`, not `int` (write Java's `int v = slider.getValue()` as `(int) slider.getValue()`). The default value is 0, not JSlider's 50
+ * - The value is `Double`, not `int` (write Java's `int v = slider.getValue()` as `(int) slider.getValue()`)
  * - WinUI's Slider has no extent (thumb length), so [extent] is represented only by setting the native Maximum to `maximum - extent` so that the value
  *   does not exceed `maximum - extent` (the thumb looks the same)
  * - [orientation] is an [Orientation] (WinUI's values are the reverse of JSlider's ints, so no int form is provided; in Java use [HORIZONTAL] / [VERTICAL])
  * - There is one level of ticks (see [majorTickSpacing] / [minorTickSpacing]). There are no tick labels (paintLabels / setLabelTable)
  *
  * Also provides [stepFrequency] / [snapsTo] / [tickFrequency] / [tickPlacement] / [isDirectionReversed] / [header] (Slider).
+ *
+ * Constructors without a value use the middle of the range, as with JSlider (`WSlider()` and `WSlider(orientation)` give 50 in 0 to 100, and
+ * `WSlider(min, max)` gives `(min + max) / 2`; if the minimum and maximum are both integers, it uses integer division truncating toward 0, as with JSlider).
+ * **Change from earlier versions**: the default value was 0 (the minimum if 0 was out of range).
  */
-class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double = 100.0, value: Double = 0.0) : WControl(
+class WSlider @JvmOverloads constructor(
+    minimum: Double = 0.0,
+    maximum: Double = 100.0,
+    value: Double = middleOf(minimum, maximum),
+) : WControl(
     Activation.composeDefault(XamlInterop.CLS_Slider, XamlInterop.IID_ISliderFactory), // default interface = ISlider
 ) {
-    /** JSlider(int orientation)-style: creates a slider with the given orientation (range 0..100, value 0). */
+    /** JSlider(int orientation)-like: creates it with the given orientation (range 0..100, value 50, the same as JSlider). */
     constructor(orientation: Orientation) : this() {
         this.orientation = orientation
     }
@@ -488,3 +498,13 @@ class WSlider @JvmOverloads constructor(minimum: Double = 0.0, maximum: Double =
 
 /** The default preferred length of JSlider (the longer of PREFERRED_HORIZONTAL_SIZE / PREFERRED_VERTICAL_SIZE in BasicSliderUI; DIP). */
 private const val SLIDER_PREFERRED_LENGTH = 200.0
+
+/**
+ * The value of JSlider(min, max): the middle of the range. If [minimum] and [maximum] are both integers, it uses integer division (truncating toward 0),
+ * the same as JSlider's `(min + max) / 2`.
+ */
+private fun middleOf(minimum: Double, maximum: Double): Double {
+    val middle = (minimum + maximum) / 2
+    val integral = minimum == floor(minimum) && maximum == floor(maximum)
+    return if (integral) truncate(middle) else middle
+}

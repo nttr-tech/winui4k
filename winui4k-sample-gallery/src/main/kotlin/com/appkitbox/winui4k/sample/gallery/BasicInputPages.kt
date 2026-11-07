@@ -745,7 +745,7 @@ internal fun buildSliderPage(): WComponent {
 private fun buildSimpleSliderExample(): WComponent {
     val result = WLabel("Value: 0")
 
-    val slider = WSlider()
+    val slider = WSlider(value = 0.0) // Start from 0, as in the original Gallery (WSlider() is the middle 50, as with JSlider)
     slider.width = 300.0
     slider.addChangeListener { value ->
         result.text = "Value: ${value.toInt()}"
@@ -768,7 +768,7 @@ private fun buildRangeSliderExample(): WComponent {
 
 /** Tick marks: tickFrequency / tickPlacement and snapsTo. */
 private fun buildTickSliderExample(): WComponent {
-    val slider = WSlider(maximum = 50.0)
+    val slider = WSlider(maximum = 50.0, value = 0.0)
     slider.width = 300.0
     slider.tickFrequency = 10.0
     slider.tickPlacement = TickPlacement.OUTSIDE

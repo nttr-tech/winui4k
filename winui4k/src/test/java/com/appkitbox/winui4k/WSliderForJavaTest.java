@@ -25,7 +25,9 @@ class WSliderForJavaTest {
             assertEquals(10, slider.getMaximum());
             assertEquals(5, (int) slider.getValue());
             WSlider ranged = new WSlider(10, 20);
-            assertEquals(10, ranged.getValue());
+            assertEquals(15, ranged.getValue());   // The middle, the same as JSlider(10, 20)
+            assertEquals(50, new WSlider().getValue());
+            assertEquals(50, new WSlider(WSlider.VERTICAL).getValue());
         });
     }
 
