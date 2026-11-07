@@ -414,6 +414,12 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   届かないことがあった (FocusManager.GetFocusedElement はその入力欄を返す。テスト プロセスのウィンドウが前面に無いときと見られるが、
   条件は確かめきれていない)。WFrame.mostRecentFocusOwner は GotFocus に加えて、Window.Activated (非アクティブ) の時点で
   GetFocusedElement の要素も覚える (WFrameFocusOwnerTest)
+- WinUI はウィンドウを開いても (Window.Activate でアクティブになっても) 中の要素にフォーカスを置かない。入力欄とボタンを置いた
+  ウィンドウを表示して 2 秒待っても FocusManager.GetFocusedElement は null で、ウィンドウに送った文字はどこにも入らなかった。
+  また Window.Activate の直後 (同じ UI スレッドの処理の中と、次の周回) と最初の Window.Activated の時点では中身がまだ読み込まれて
+  おらず (ActualWidth が 0)、UIElement.Focus は false を返す。そのため WFrame は、アクティブになった時にフォーカスの無いウィンドウで
+  最後にフォーカスを得た要素か最初にフォーカスを受けられる要素へ Focus(Programmatic) し、読み込む前なら中身の Loaded で試し直す。
+  読み込む前の requestFocusInWindow は Swing と同じく頼みを覚えて true を返す (WFrameFocusOwnerTest)
 - WLayoutPanel (リスナーを持つ ListenerAnchor のある要素) を Window.Content に置いたウィンドウを閉じて参照を手放すと、その子のラッパーが
   回収されなかった (WFrame.setLayout・setContentPane(WLayoutPanel) のどちらでも。既定の WPanel やメニュー バーの Grid の根なら回収される)。
   Window.Closed で Window.Content を null にしても変わらない。根の Unloaded が届かず ListenerAnchor が強く持ったままになっていると

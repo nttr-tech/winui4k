@@ -85,8 +85,73 @@ internal class FrameFocusTracker {
         }
     }
 
-    /** Releases the remembered element (when the window is closed). */
-    fun forget() = memory.forget()
+    /** The component requested with [WComponent.requestFocusInWindow] between being shown and loading the content ([WFrame.deferFocus]). */
+    var pendingFocus: WComponent? = null
+
+    /** Whether [focusAfterLoad] is waiting for the content's Loaded. */
+    private var waitingForLoad = false
+
+    /**
+     * As when a Swing Window gains focus, if no element has focus in the window that became active,
+     * moves focus to [pendingFocus], the component that last gained focus, or the first component in [content] that can take focus,
+     * in that order ([focusIfNone]). Right after being shown the content ([root]) is not loaded yet and UIElement.Focus fails,
+     * so [retry] is called when it loads (Loaded) (WFrame calls this again).
+     */
+    fun focusOnActivation(content: WComponent, root: WComponent, retry: () -> Unit) {
+        if (!root.isDisplayable) {
+            focusAfterLoad(root, retry)
+            return
+        }
+        val requested = pendingFocus
+        pendingFocus = null
+        if (requested != null && requested.requestFocusInWindow()) return
+        focusIfNone(content, root)
+    }
+
+    /** Calls [retry] once when [root] loads (the handler stays on the native side, so [retry] must reference the WFrame weakly). */
+    private fun focusAfterLoad(root: WComponent, retry: () -> Unit) {
+        if (waitingForLoad) return
+        waitingForLoad = true
+        val listener = object : Runnable {
+            override fun run() {
+                root.removeLoadedListenerForJava(this)
+                waitingForLoad = false
+                retry()
+            }
+        }
+        root.addLoadedListenerForJava(listener)
+    }
+
+    /**
+     * If no element has focus in the window of [root] (the element set as Window.Content), moves focus to the element that last gained focus,
+     * or, if it is gone, to the first element in [content] that can take focus (FocusManager.FindFirstFocusableElement).
+     * The focus state is Programmatic (no keyboard focus rectangle is drawn).
+     */
+    private fun focusIfNone(content: WComponent, root: WComponent) {
+        focusedElement(root)?.let {
+            it.release()
+            return
+        }
+        memory.lastElement()?.let { last ->
+            try {
+                if (Xaml.focus(last, XamlInterop.FocusState_Programmatic)) return
+            } finally {
+                last.release()
+            }
+        }
+        val first = Xaml.firstFocusable(content.uiElement) ?: return
+        try {
+            Xaml.focus(first, XamlInterop.FocusState_Programmatic)
+        } finally {
+            first.release()
+        }
+    }
+
+    /** Releases the remembered element and the requested component (when the window closes). */
+    fun forget() {
+        memory.forget()
+        pendingFocus = null
+    }
 
     /** The element with the focus in the window (XamlRoot) of [content] (the caller releases it). */
     private fun focusedElement(content: WComponent): ComPtr? {

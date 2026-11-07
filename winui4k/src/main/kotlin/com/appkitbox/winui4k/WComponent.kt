@@ -653,8 +653,11 @@ abstract class WComponent internal constructor(
      * UIElement.Focus). false for elements not placed in a window, disabled or unable to receive focus, and for elements
      * whose [isFocusable] is set to false. IsTabStop is not checked, so it is true for [WSpinner] and the like, whose own
      * IsTabStop is false but whose template part receives focus.
+     * For an element in a [WFrame] that was just shown and whose content is not loaded yet, the request is remembered and true is returned as in Swing,
+     * and focus moves when it loads and becomes active (the initial focus can be chosen right after `frame.isVisible = true`).
      */
-    fun requestFocusInWindow(): Boolean = focusableSetting != false && focus(XamlInterop.FocusState_Programmatic)
+    fun requestFocusInWindow(): Boolean =
+        focusableSetting != false && (focus(XamlInterop.FocusState_Programmatic) || WFrame.deferFocus(this))
 
     /**
      * Whether this element has focus (equivalent to Component.hasFocus). true when FocusState is other than Unfocused, or

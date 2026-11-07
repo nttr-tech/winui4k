@@ -227,6 +227,20 @@ internal object Xaml {
         }
     }
 
+    /** Moves focus to [element] (a UIElement or an element derived from it) (UIElement.Focus). true if accepted. */
+    fun focus(element: ComPtr, state: Int): Boolean {
+        val ui = element.queryInterfaceOrNull(XamlInterop.IID_IUIElement) ?: return false
+        return try {
+            Ffi.backend.withScope { scope ->
+                val out = scope.allocate(1, 1)
+                ui.call(XamlInterop.IUIElement_Focus, state, out)
+                Ffi.backend.memory.getByte(out, 0) != 0.toByte()
+            }
+        } finally {
+            ui.release()
+        }
+    }
+
     /** Moves focus to the next (true) / previous (false) element (FocusManager.TryMoveFocus). */
     fun moveFocus(next: Boolean): Boolean = Ffi.backend.withScope { scope ->
         val out = scope.allocate(1, 1)

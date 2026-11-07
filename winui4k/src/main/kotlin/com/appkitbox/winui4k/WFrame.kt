@@ -234,12 +234,20 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         if (active == isActive) return
         isActive = active
         if (active) {
+            focusOnActivation()
             fireWindow(WWindowEvent.WINDOW_ACTIVATED) { l, e -> l.windowActivated(e) }
             fireFocus(WWindowEvent.WINDOW_GAINED_FOCUS) { l, e -> l.windowGainedFocus(e) }
         } else {
             fireFocus(WWindowEvent.WINDOW_LOST_FOCUS) { l, e -> l.windowLostFocus(e) }
             fireWindow(WWindowEvent.WINDOW_DEACTIVATED) { l, e -> l.windowDeactivated(e) }
         }
+    }
+
+    /** The initial focus when the window becomes active ([FrameFocusTracker.focusOnActivation]). Called again when the content loads. */
+    private fun focusOnActivation() {
+        if (closed || !isActive) return
+        val self = WeakReference(this)
+        focus.focusOnActivation(content, rootContent) { self.get()?.focusOnActivation() }
     }
 
     private fun fireOpenedOnce() {
@@ -1114,6 +1122,18 @@ class WFrame @JvmOverloads constructor(title: String = "") :
         /** Removes a hook added with [addWindowClosedHook]. */
         internal fun removeWindowClosedHook(hook: WindowClosedHook) {
             windowClosedHooks.remove(hook)
+        }
+
+        /**
+         * Called when [WComponent.requestFocusInWindow] fails in UIElement.Focus. If [component] is in a window that was just shown and has not
+         * loaded its content yet, remembers the request as in Swing (focus moves when it loads and becomes active) and returns true.
+         */
+        internal fun deferFocus(component: WComponent): Boolean {
+            val top = generateSequence(component) { it.parent }.last()
+            val frame = openFrames.firstOrNull { !it.closed && it.rootContent === top } ?: return false
+            if (top.isDisplayable) return false
+            frame.focus.pendingFocus = component
+            return true
         }
 
         /**
