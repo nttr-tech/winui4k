@@ -51,13 +51,14 @@ XAML は書かず、画面はコードで組み立てます。
 ```kotlin
 WinUiUtilities.invokeLater {
     val frame = WFrame(title = "WinUI4K")
-    val nameField = WTextField(placeholder = "Name")
+    val nameField = WTextField().apply { placeholderText = "Name" }
     val greetButton = WButton("Greet")
 
     greetButton.addActionListener {
         greetButton.text = "Hello, ${nameField.text.ifBlank { "world" }}!"
     }
 
+    frame.layout = WFlowLayout()
     frame.add(nameField)
     frame.add(greetButton)
     frame.isVisible = true
@@ -214,6 +215,7 @@ java --enable-native-access=ALL-UNNAMED -jar app.jar
 
 ```kotlin
 import com.appkitbox.winui4k.WButton
+import com.appkitbox.winui4k.WFlowLayout
 import com.appkitbox.winui4k.WFrame
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WinUiUtilities
@@ -221,13 +223,14 @@ import com.appkitbox.winui4k.WinUiUtilities
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K")
-        val nameField = WTextField(placeholder = "Name")
+        val nameField = WTextField().apply { placeholderText = "Name" }
         val greetButton = WButton("Greet")
 
         greetButton.addActionListener {
             greetButton.text = "Hello, ${nameField.text.ifBlank { "world" }}!"
         }
 
+        frame.layout = WFlowLayout()
         frame.add(nameField)
         frame.add(greetButton)
         frame.isVisible = true
@@ -237,7 +240,8 @@ fun main() {
 
 構成要素は Swing と同じ考え方です。
 
-- コントロールはコンストラクタで生成し、`frame.add` で追加します。追加した順に縦に並びます (レイアウトの制御は第9章)。
+- コントロールはコンストラクタで生成し、`frame.add` で追加します。`JFrame` と同じく、フレームのコンテンツ領域の既定は `WBorderLayout` で、制約なしの `add` は中央に入る (後から足したものが中央を占める) ため、例では先に `frame.layout` で `WFlowLayout` に替えて左から右へ並べています (レイアウトの制御は第9章)。
+- `WTextField("...")` に渡す文字列は `JTextField(String)` と同じく入力欄の初めの文字列で、未入力のときに薄く表示する案内文は `placeholderText` で設定します。
 - イベントは `addActionListener` のようなリスナー登録で受け取ります。リスナーは UI スレッド上で呼び出されるため、そのまま UI を更新できます。
 - リスナー内で時間のかかる処理を行うと UI がフリーズします。重い処理はワーカースレッドに逃がし、結果の反映だけを `invokeLater` で UI スレッドに戻します (第5章、第10章)。
 
@@ -462,14 +466,15 @@ Swing の EDT や JavaFX の Application Thread と同じ発想ですが、違�
 
 ### 5.2 invokeLater と Dispatcher
 
-UI スレッドへ処理を届ける基本 API は 2 つです。
+UI スレッドへ処理を届ける API は Swing を踏襲しています。
 
 - **`WinUiUtilities.invokeLater(block)`**：ブロックを UI スレッドのメッセージループへ投函します。どのスレッドからでも呼べ、実行順は投函順です。Swing の `SwingUtilities.invokeLater` に相当します。
-- **`WinUiUtilities.schedule(delayMillis, block)`**：指定ミリ秒後にブロックを UI スレッドで一度だけ実行します。戻り値の `AutoCloseable` を `close()` すると、発火前ならキャンセルできます。`javax.swing.Timer` のワンショット相当で、実体はネイティブの `DispatcherQueueTimer` です。
+- **`WinUiUtilities.invokeAndWait(block)`**：ブロックを UI スレッドで実行し、終わるまで待ちます。Swing の `SwingUtilities.invokeAndWait` に相当します。ブロックから出た例外は `InvocationTargetException` に包んで、呼んだスレッドへ投げます。
+- **`WTimer(delay, listener)`**：`javax.swing.Timer` に相当します。`start()` の後、`stop()` するまで `delay` ミリ秒ごとに UI スレッドで `WActionListener` を呼びます (`isRepeats = false` なら 1 回だけ)。実体はネイティブの `DispatcherQueueTimer` です。
+- **`WinUiUtilities.schedule(delayMillis, block)`**：指定ミリ秒後にブロックを UI スレッドで一度だけ実行します。戻り値の `AutoCloseable` を `close()` すると、発火前ならキャンセルできます。`WTimer` を作るまでもない 1 回きりの処理向けの軽い形です。
 
-Swing の `invokeAndWait` に相当する同期版はありません。
-結果が必要な場合は、コルーチン統合 (5.4 節) を使うか、`CountDownLatch` などで自前で待ち合わせます。
-ただし UI スレッド上から待ち合わせるとデッドロックするため、待つ側は必ずワーカースレッドであることを確認してください。
+`invokeAndWait` は UI スレッド以外のスレッドから呼びます。Swing と同じく、UI スレッドから呼ぶと (自分を待って止まるため) `Error` になります。
+スレッドを止めずに結果を受け取りたい場合は、コルーチン統合 (5.4 節) のほうが簡潔です。
 
 ### 5.3 ワーカースレッドからの安全な UI 更新
 
@@ -495,6 +500,32 @@ loadButton.addActionListener {
 結果が届く前に画面の状態が変わる場合 (検索条件の変更、ページ遷移) は、古い結果の反映を抑止する仕組みが必要です。
 同梱の Filer サンプルは、フォルダ移動のたびに世代カウンタを進め、`invokeLater` で戻ってきた結果が古い世代なら捨てる方式で対処しています。
 実装の参考にしてください。
+
+同じ定石は、`javax.swing.SwingWorker` に相当する `WSwingWorker` でも書けます。
+
+```kotlin
+loadButton.addActionListener {
+    statusLabel.text = "Loading..."
+    object : WSwingWorker<String, Int>() {
+        override fun doInBackground(): String {   // ワーカースレッドで動く
+            publish(50)                           // UI スレッドの process へ届く
+            return fetchFromServer()
+        }
+
+        override fun process(chunks: List<Int>) {
+            statusLabel.text = "Loading... ${chunks.last()}%"
+        }
+
+        override fun done() {                     // UI スレッドで呼ばれる
+            statusLabel.text = get()
+        }
+    }.execute()
+}
+```
+
+Swing と同じく、`execute()` で裏のスレッド (最大 10 本のデーモンスレッド) が `doInBackground` を呼び、`publish` した値はまとめて UI スレッドの `process` へ届き、最後に UI スレッドで `done` が呼ばれます。`done` の中では `get()` で結果を受け取れます (`doInBackground` が例外を投げたなら `ExecutionException`)。
+`progress` と `state` の変化は、`addPropertyChangeListener` のリスナーへ UI スレッドで届きます。
+1 つのワーカーは 1 回だけ動かせます。
 
 ### 5.4 コルーチン統合
 
@@ -657,10 +688,10 @@ Java 8 のクラスパスに Panama モジュールが混ざっていても、Ja
 
 イベント API の形は Swing を踏襲しています。
 `addXxxListener` で登録し、`removeXxxListener` で解除します。
-リスナーの型は Kotlin の関数型で、専用のリスナーインターフェースは定義されていません。
+Kotlin からはラムダ (イベントを受け取る Kotlin の関数型) を渡せるほか、Java と同じリスナーインターフェース (`WActionListener` など) も同じメソッド名で渡せるため、1 つのリスナーを複数のコンポーネントで共有できます。
 
 ```kotlin
-val onClick: () -> Unit = { println("clicked") }
+val onClick: (WActionEvent) -> Unit = { println("clicked") }
 button.addActionListener(onClick)
 // ...
 button.removeActionListener(onClick)
@@ -702,6 +733,21 @@ button.removeActionListener(onClick)
 - **寿命の異なるオブジェクトをまたぐリスナーは必ず解除します。**アプリ全体で 1 つのモデルに画面側のリスナーを登録する、長寿命のコントロールに短寿命のダイアログを捕捉するリスナーを登録する、といった形が危険です。remove 系メソッドで明示的に解除してください。
 - **後始末を 1 箇所に集めます。**ページやダイアログの破棄時に呼ぶ `dispose` 相当の処理を設け、登録したリスナーをそこでまとめて解除するのが定石です。登録と解除をペアで書くことで、解除漏れをレビューで見つけやすくなります。
 
+### 8.4 フォーカスが離れる前の入力の検証
+
+入力が正しくなるまでフォーカスを入力欄に留めたいときは、`javax.swing.InputVerifier` に相当する `WInputVerifier` を `inputVerifier` に設定します。
+
+```kotlin
+ageField.inputVerifier = object : WInputVerifier() {
+    override fun verify(input: WComponent): Boolean = (input as WTextField).text.toIntOrNull() != null
+}
+cancelButton.verifyInputWhenFocusTarget = false   // 取り消しボタンへ移るときは確かめない
+```
+
+- フォーカスがそのコンポーネントから別のコンポーネントへ移ろうとすると (クリック、Tab キー、`requestFocus` など)、UI スレッドで `shouldYieldFocus` (既定は `verify` の結果) が呼ばれ、false なら移動を取り消します (WinUI の `LosingFocus` の `TryCancel`)。
+- 呼ばれている間は WinUI がフォーカスを動かしている途中なので、その中でフォーカスを動かしたりダイアログを出したりはできません (`verify` の中で `JOptionPane` を出す Swing の例のようには書けません)。知らせは `invokeLater` で後に回します。
+- コンポーネントの中の部品の間の移動 (`WSpinner` の入力欄とボタンなど)、ダイアログ・メニュー・フライアウトへの移動、ウィンドウが非アクティブになるときは確かめません。
+
 ## 第9章 レイアウト
 
 [WinUI4K](https://github.com/nttr-tech/winui4k) の画面配置には 3 つの手段があります。
@@ -715,7 +761,7 @@ WinUI のレイアウトは「親パネルが子を配置する」方式で、�
 
 **WPanel (StackPanel)。**
 子を縦または横に一列に並べます。
-`WFrame` の既定のコンテンツ領域 (`contentPane`) はこの `WPanel` で、`frame.add` した順に縦に並ぶのはそのためです。
+`BoxLayout` を設定した `JPanel` (`Box.createVerticalBox()` など) に当たります。レイアウトマネージャを設定する `JPanel` に当たるのは `WLayoutPanel` です (9.2 節)。
 
 ```kotlin
 val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -761,17 +807,31 @@ interface WLayoutManager {
 2. レイアウト対象の領域を決める (ユーザーの明示サイズ > 親からの割り当て > 実測サイズ > `preferredLayoutSize` の優先順)
 3. `layoutContainer` がその領域内で各子の位置とサイズを計算し、`setBounds` で適用する
 
-標準実装として `WBorderLayout` (NORTH / SOUTH / EAST / WEST / CENTER の 5 領域) が付属します。
+標準実装は Swing に合わせて、`WBorderLayout` (NORTH / SOUTH / EAST / WEST / CENTER の 5 領域)、`WFlowLayout`、`WGridLayout`、`WBoxLayout`、`WCardLayout` が付属します。
+`new JPanel()` と同じく、引数なしの `WLayoutPanel()` は `WFlowLayout` になり、`WLayoutPanel(null)` はマネージャなし (子は `setBounds` で自分で置く) になります。
 
 ```kotlin
 val panel = WLayoutPanel(WBorderLayout())
-panel.add(toolbar, WBorderLayout.Constraint.NORTH)
-panel.add(content, WBorderLayout.Constraint.CENTER)
-panel.add(statusBar, WBorderLayout.Constraint.SOUTH)
+panel.add(toolbar, WBorderLayout.NORTH)
+panel.add(content, WBorderLayout.CENTER)
+panel.add(statusBar, WBorderLayout.SOUTH)
+```
+
+`WFrame` のコンテンツ領域 (`contentPane`。型は `WContainer`) も、`JFrame` と同じく `WBorderLayout` の `WLayoutPanel` です。
+`frame.add(component, constraints)` は制約をそこへ渡し、`frame.layout = WFlowLayout()` はそのマネージャを替えます (コンテンツ領域そのものは替わりません)。
+
+`WCardLayout` は `java.awt.CardLayout` と同じく、子をカードのように重ねて 1 枚だけを見せます。子は名前を付けて追加し、名前で切り替えます。
+
+```kotlin
+val cards = WCardLayout()
+val pages = WLayoutPanel(cards)
+pages.add(step1Page, "step1")
+pages.add(step2Page, "step2")
+cards.show(pages, "step2")   // next / previous / first / last は追加した順に切り替える
 ```
 
 子の増減やサイズ変化を自分で起こした後は `revalidate()` で再レイアウトを要求します (同一 UI ターン内の複数回要求は 1 回にまとめられます)。
-独自のレイアウトが必要なら、`WBorderLayout` の実装 (100 行程度) を雛形に `WLayoutManager` を実装してください。
+独自のレイアウトが必要なら、`WGridLayout` の実装 (100 行程度) を雛形に `WLayoutManager` を実装してください。
 
 ### 9.3 MigLayout 拡張による配置
 
@@ -803,7 +863,7 @@ WinUI には「最小サイズ」の計測がないため、このアダプタ�
 座標の単位は 2 種類だけ覚えてください。
 
 - **レイアウト系はすべて DIP (論理ピクセル、Double)**：`W*` コンポーネントの幅・高さ・マージン、`WSize` / `WInsets`、レイアウトマネージャの計算はすべてこの単位です。150% スケールのモニタでは 1 DIP = 1.5 物理ピクセルに描画されますが、コード上は意識しません。
-- **`WAppWindow` の位置とサイズは物理ピクセル (整数)**:ウィンドウ自体の画面上の位置 (`position: WPoint`) とサイズ (`size: WDimension`) は OS のウィンドウ管理の単位、つまり物理ピクセルです。
+- **`WAppWindow` の位置とサイズは物理ピクセル (整数)**:ウィンドウ自体の画面上の位置 (`position: WPoint`) とサイズ (`size: WDimension`) は OS のウィンドウ管理の単位、つまり物理ピクセルです。なお、Swing の `Window` に当たる `WFrame` の `size` / `setSize` / `minimumSize` / `maximumSize` は DIP (整数) で、`maximumSize` は枠のドラッグによる拡大も止めます。
 
 「ウィンドウを 800×600 にしたのにコントロールの見かけが合わない」と感じたら、この 2 つの単位の混在を疑ってください。
 
@@ -825,7 +885,7 @@ searchButton.addActionListener {
     scope.launch(Dispatchers.WinUi) {
         try {
             val results = withContext(Dispatchers.IO) { search(queryField.text) }
-            resultList.setItems(results)
+            resultList.setListData(results)
         } finally {
             progressRing.isActive = false
             searchButton.isEnabled = true
@@ -863,6 +923,7 @@ WinRT の API には `IAsyncOperation<T>` / `IAsyncAction` を返す非同期メ
 - **アクセントカラー**:`WButton` の `isAccent = true` で、OS のアクセントカラーを使う強調ボタン (`AccentButtonStyle`) になります。ダイアログの既定アクションなどに使います。
 - **背景素材 (backdrop)**:`WFrame.systemBackdrop` で、ウィンドウ背景に Windows 11 の素材を適用できます。`MICA` (デスクトップ壁紙を淡く透過。既定)、`MICA_ALT`、`ACRYLIC` (すりガラス)、`NONE` (テーマの単色の背景) の 4 択です。
 - **タイトルバーへの拡張**:`WFrame.extendsContentIntoTitleBar = true` でコンテンツ領域をタイトルバーまで広げ、`setTitleBar(component)` でドラッグ領域を指定します。Gallery のように検索ボックスをタイトルバーに埋め込む構成が作れます。
+- **枠と背景**:`JComponent.setBorder` と同じく、`WLabel` / `WPanel` / `WLayoutPanel` の `border` に `WBorderFactory` で作った枠 (線・空・組み合わせ) を設定できます。`WLayoutPanel` では `JPanel` と同じく枠の幅が `insets` になります。`WLabel` は `JLabel` と同じく既定で透明で、`isOpaque = true` の間だけ `background` で塗ります。
 
 ### 11.2 ダークモード対応
 
@@ -902,17 +963,18 @@ Windows のシェル (タスクバー、通知センター) と連携する API 
 通知の内容は `WAppNotification` のビルダー API で組み立て、`WAppNotificationManager` で表示します。
 
 ```kotlin
-WAppNotificationManager.register()
 WAppNotificationManager.addNotificationInvokedListener { args ->
     // 通知クリック時。args は addArgument で埋め込んだ値
 }
+WAppNotificationManager.register()
 val notification = WAppNotification("ビルドが完了しました")
     .addText("winui4k: BUILD SUCCESSFUL")
-    .addButton("ログを開く", "action=openLog")
+    .addButton("ログを開く", "action" to "openLog")
 WAppNotificationManager.show(notification)
 ```
 
 通知のクリックはアプリの再起動を伴うことがあるため、`register()` と Invoked リスナーの登録は起動時に済ませておきます。
+最初の Invoked リスナーは `register()` より前に登録します (後から最初の購読をすると、Windows App SDK が E_ILLEGAL_METHOD_CALL を返します)。
 対応可否は `WAppNotificationManager.isSupported` で、ユーザーが通知を無効化しているかは `setting` で確認できます。
 
 **バッジ (WBadgeNotification)。**

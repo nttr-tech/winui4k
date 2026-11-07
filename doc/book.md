@@ -51,13 +51,14 @@ No XAML is written; screens are assembled in code.
 ```kotlin
 WinUiUtilities.invokeLater {
     val frame = WFrame(title = "WinUI4K")
-    val nameField = WTextField(placeholder = "Name")
+    val nameField = WTextField().apply { placeholderText = "Name" }
     val greetButton = WButton("Greet")
 
     greetButton.addActionListener {
         greetButton.text = "Hello, ${nameField.text.ifBlank { "world" }}!"
     }
 
+    frame.layout = WFlowLayout()
     frame.add(nameField)
     frame.add(greetButton)
     frame.isVisible = true
@@ -214,6 +215,7 @@ Next, place a text input and a button and respond to clicks.
 
 ```kotlin
 import com.appkitbox.winui4k.WButton
+import com.appkitbox.winui4k.WFlowLayout
 import com.appkitbox.winui4k.WFrame
 import com.appkitbox.winui4k.WTextField
 import com.appkitbox.winui4k.WinUiUtilities
@@ -221,13 +223,14 @@ import com.appkitbox.winui4k.WinUiUtilities
 fun main() {
     WinUiUtilities.invokeLater {
         val frame = WFrame(title = "WinUI4K")
-        val nameField = WTextField(placeholder = "Name")
+        val nameField = WTextField().apply { placeholderText = "Name" }
         val greetButton = WButton("Greet")
 
         greetButton.addActionListener {
             greetButton.text = "Hello, ${nameField.text.ifBlank { "world" }}!"
         }
 
+        frame.layout = WFlowLayout()
         frame.add(nameField)
         frame.add(greetButton)
         frame.isVisible = true
@@ -237,7 +240,8 @@ fun main() {
 
 The building blocks follow the same thinking as Swing.
 
-- Controls are created with constructors and added with `frame.add`. They stack vertically in the order added (layout control is in Chapter 9).
+- Controls are created with constructors and added with `frame.add`. As with `JFrame`, the frame's content area defaults to `WBorderLayout`, where an `add` without constraints goes to the center (a later one takes the center's place), so the example first switches to `WFlowLayout` with `frame.layout` to line them up left to right (layout control is in Chapter 9).
+- The string passed to `WTextField("...")` is the initial text of the field, as with `JTextField(String)`; the faint hint shown while the field is empty is set with `placeholderText`.
 - Events are received via listener registration such as `addActionListener`. Listeners are invoked on the UI thread, so they can update the UI directly.
 - Long-running work inside a listener freezes the UI. Offload heavy work to a worker thread and bring only the result back to the UI thread via `invokeLater` (Chapters 5 and 10).
 
@@ -462,14 +466,15 @@ After calling `invokeLater`, `main` is free to do as it likes (the process will 
 
 ### 5.2 invokeLater and the Dispatcher
 
-There are two basic APIs for delivering work to the UI thread.
+The APIs for delivering work to the UI thread follow Swing's.
 
 - **`WinUiUtilities.invokeLater(block)`**: Posts the block to the UI thread's message loop. Callable from any thread; execution order matches posting order. Corresponds to Swing's `SwingUtilities.invokeLater`.
-- **`WinUiUtilities.schedule(delayMillis, block)`**: Runs the block once on the UI thread after the given number of milliseconds. Calling `close()` on the returned `AutoCloseable` cancels it if it has not fired yet. The one-shot equivalent of `javax.swing.Timer`; the underlying implementation is a native `DispatcherQueueTimer`.
+- **`WinUiUtilities.invokeAndWait(block)`**: Runs the block on the UI thread and waits until it finishes. Corresponds to Swing's `SwingUtilities.invokeAndWait`. An exception thrown by the block is wrapped in `InvocationTargetException` and thrown to the calling thread.
+- **`WTimer(delay, listener)`**: Corresponds to `javax.swing.Timer`. After `start()`, it calls the `WActionListener` on the UI thread every `delay` milliseconds (only once with `isRepeats = false`), until `stop()`. The underlying implementation is a native `DispatcherQueueTimer`.
+- **`WinUiUtilities.schedule(delayMillis, block)`**: Runs the block once on the UI thread after the given number of milliseconds. Calling `close()` on the returned `AutoCloseable` cancels it if it has not fired yet. A lightweight form for one-off work that does not need a `WTimer`.
 
-There is no synchronous counterpart to Swing's `invokeAndWait`.
-If you need a result, use the coroutine integration (Section 5.4) or roll your own rendezvous with a `CountDownLatch` or similar.
-However, waiting from on top of the UI thread deadlocks, so make sure the waiting side is always a worker thread.
+`invokeAndWait` is called from threads other than the UI thread; as in Swing, calling it on the UI thread throws `Error` (it would wait for itself).
+If you want a result without blocking a thread, the coroutine integration (Section 5.4) is more concise.
 
 ### 5.3 Safe UI Updates from Worker Threads
 
@@ -495,6 +500,32 @@ There are only two rules to keep.
 When the screen state can change before results arrive (changed search criteria, page navigation), you need a mechanism to suppress applying stale results.
 The bundled Filer sample handles this by advancing a generation counter on every folder navigation and discarding results that come back via `invokeLater` with an old generation.
 Use it as an implementation reference.
+
+The same recipe is also available as `WSwingWorker`, the counterpart of `javax.swing.SwingWorker`.
+
+```kotlin
+loadButton.addActionListener {
+    statusLabel.text = "Loading..."
+    object : WSwingWorker<String, Int>() {
+        override fun doInBackground(): String {   // on a worker thread
+            publish(50)                           // delivered to process on the UI thread
+            return fetchFromServer()
+        }
+
+        override fun process(chunks: List<Int>) {
+            statusLabel.text = "Loading... ${chunks.last()}%"
+        }
+
+        override fun done() {                     // on the UI thread
+            statusLabel.text = get()
+        }
+    }.execute()
+}
+```
+
+As in Swing, `execute()` runs `doInBackground` on a background thread (up to 10 daemon threads), values passed to `publish` arrive in batches at `process` on the UI thread, and `done` is called on the UI thread at the end, where `get()` returns the result (an `ExecutionException` if `doInBackground` threw).
+Changes to `progress` and `state` are delivered to `addPropertyChangeListener` listeners on the UI thread.
+A worker runs only once.
 
 ### 5.4 Coroutine Integration
 
@@ -657,10 +688,10 @@ Note that the lifetime-management underpinnings also switch by Java version (Jav
 
 The shape of the event API follows Swing.
 Register with `addXxxListener`, remove with `removeXxxListener`.
-Listener types are Kotlin function types; no dedicated listener interfaces are defined.
+From Kotlin you can pass a lambda (a Kotlin function type that receives the event), and you can also pass the same listener interfaces Java uses (`WActionListener` and so on) under the same method names, so one listener instance can be shared among several components.
 
 ```kotlin
-val onClick: () -> Unit = { println("clicked") }
+val onClick: (WActionEvent) -> Unit = { println("clicked") }
 button.addActionListener(onClick)
 // ...
 button.removeActionListener(onClick)
@@ -702,6 +733,21 @@ The practical guidelines are as follows.
 - **Listeners that span objects of different lifetimes must be removed.** Registering screen-side listeners on a single app-wide model, or registering a listener that captures a short-lived dialog on a long-lived control — these shapes are dangerous. Remove them explicitly with the remove-style methods.
 - **Gather cleanup in one place.** The standard practice is a `dispose`-like routine called when a page or dialog is destroyed, removing all registered listeners there in one sweep. Writing registration and removal as a pair makes missed removals easier to spot in review.
 
+### 8.4 Validating Input before Focus Leaves
+
+To keep focus in a field until its input is valid, set a `WInputVerifier`, the counterpart of `javax.swing.InputVerifier`, on `inputVerifier`.
+
+```kotlin
+ageField.inputVerifier = object : WInputVerifier() {
+    override fun verify(input: WComponent): Boolean = (input as WTextField).text.toIntOrNull() != null
+}
+cancelButton.verifyInputWhenFocusTarget = false   // moving to Cancel skips the check
+```
+
+- When focus tries to move from the component to another one (click, Tab key, `requestFocus`, and so on), `shouldYieldFocus` (by default the result of `verify`) is called on the UI thread, and if it returns false the move is canceled (WinUI's `LosingFocus` with `TryCancel`).
+- While it runs, WinUI is in the middle of moving focus, so you cannot move focus or open a dialog there, unlike the Swing example that shows a `JOptionPane` inside `verify`. Defer a notice with `invokeLater`.
+- Moves within a component (such as between a `WSpinner`'s field and buttons), moves into dialogs, menus, or flyouts, and the window becoming inactive are not checked.
+
 ## Chapter 9: Layout
 
 There are three means of arranging screens in [WinUI4K](https://github.com/nttr-tech/winui4k):
@@ -715,7 +761,7 @@ WinUI layout follows the model of "the parent panel places its children," and th
 
 **WPanel (StackPanel).**
 Lines children up in a single column or row.
-`WFrame`'s default content area (`contentPane`) is this `WPanel`, which is why things added with `frame.add` stack vertically in order.
+The counterpart of a `JPanel` with a `BoxLayout` (`Box.createVerticalBox()` and the like); for a `JPanel` with a layout manager, use `WLayoutPanel` (Section 9.2).
 
 ```kotlin
 val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -761,17 +807,31 @@ The layout flow is as follows.
 2. The layout target area is determined (priority: the user's explicit size > the parent's allocation > the measured size > `preferredLayoutSize`)
 3. `layoutContainer` computes each child's position and size within that area and applies them via `setBounds`
 
-`WBorderLayout` (five regions: NORTH / SOUTH / EAST / WEST / CENTER) ships as the standard implementation.
+The standard implementations correspond to Swing's: `WBorderLayout` (five regions: NORTH / SOUTH / EAST / WEST / CENTER), `WFlowLayout`, `WGridLayout`, `WBoxLayout`, and `WCardLayout`.
+As with `new JPanel()`, `WLayoutPanel()` with no arguments uses `WFlowLayout`, and `WLayoutPanel(null)` has no manager (you place children yourself with `setBounds`).
 
 ```kotlin
 val panel = WLayoutPanel(WBorderLayout())
-panel.add(toolbar, WBorderLayout.Constraint.NORTH)
-panel.add(content, WBorderLayout.Constraint.CENTER)
-panel.add(statusBar, WBorderLayout.Constraint.SOUTH)
+panel.add(toolbar, WBorderLayout.NORTH)
+panel.add(content, WBorderLayout.CENTER)
+panel.add(statusBar, WBorderLayout.SOUTH)
+```
+
+`WFrame`'s content area (`contentPane`, of type `WContainer`) is also, as with `JFrame`, a `WLayoutPanel` with `WBorderLayout`.
+`frame.add(component, constraints)` passes the constraints to it, and `frame.layout = WFlowLayout()` swaps its manager (the content area itself stays the same).
+
+`WCardLayout` stacks children like cards and shows only one of them, as with `java.awt.CardLayout`. Add each child with a name, and switch by name.
+
+```kotlin
+val cards = WCardLayout()
+val pages = WLayoutPanel(cards)
+pages.add(step1Page, "step1")
+pages.add(step2Page, "step2")
+cards.show(pages, "step2")   // next / previous / first / last switch in the order added
 ```
 
 After you yourself cause children to be added/removed or sizes to change, request a re-layout with `revalidate()` (multiple requests within the same UI turn are coalesced into one).
-If you need a custom layout, implement `WLayoutManager` using the `WBorderLayout` implementation (about 100 lines) as a template.
+If you need a custom layout, implement `WLayoutManager` using the `WGridLayout` implementation (about 100 lines) as a template.
 
 ### 9.3 Placement with the MigLayout Extension
 
@@ -803,7 +863,7 @@ Tracking per-monitor scaling (100% / 150% / 200%, etc.) is handled by WinUI; no 
 There are only two coordinate units to remember.
 
 - **Everything layout-related is in DIPs (logical pixels, Double)**: The width, height, and margins of `W*` components, `WSize` / `WInsets`, and layout-manager computations all use this unit. On a 150%-scaled monitor, 1 DIP is rendered as 1.5 physical pixels, but you never think about it in code.
-- **`WAppWindow`'s position and size are in physical pixels (integers)**: The window's own on-screen position (`position: WPoint`) and size (`size: WDimension`) use the OS window-management unit, i.e., physical pixels.
+- **`WAppWindow`'s position and size are in physical pixels (integers)**: The window's own on-screen position (`position: WPoint`) and size (`size: WDimension`) use the OS window-management unit, i.e., physical pixels. `WFrame`'s `size` / `setSize` / `minimumSize` / `maximumSize`, which correspond to Swing's `Window`, are in DIPs (integers) instead, and `maximumSize` also stops the user from enlarging the window by dragging its border.
 
 If you ever feel "I set the window to 800×600 but the controls don't look right," suspect a mix-up between these two units.
 
@@ -825,7 +885,7 @@ searchButton.addActionListener {
     scope.launch(Dispatchers.WinUi) {
         try {
             val results = withContext(Dispatchers.IO) { search(queryField.text) }
-            resultList.setItems(results)
+            resultList.setListData(results)
         } finally {
             progressRing.isActive = false
             searchButton.isEnabled = true
@@ -863,6 +923,7 @@ On top of that, the main appearance-related APIs are the following.
 - **Accent color**: Setting `isAccent = true` on a `WButton` turns it into an emphasized button using the OS accent color (`AccentButtonStyle`). Use it for things like a dialog's default action.
 - **Backdrop material**: `WFrame.systemBackdrop` applies a Windows 11 material to the window background. Four choices: `MICA` (a faint translucency of the desktop wallpaper; the default), `MICA_ALT`, `ACRYLIC` (frosted glass), and `NONE` (a solid theme background).
 - **Extending into the title bar**: `WFrame.extendsContentIntoTitleBar = true` extends the content area into the title bar, and `setTitleBar(component)` designates the drag region. You can build layouts like Gallery's, which embeds a search box in the title bar.
+- **Borders and backgrounds**: As with `JComponent.setBorder`, `border` on `WLabel` / `WPanel` / `WLayoutPanel` takes a border made with `WBorderFactory` (line, empty, or compound); on a `WLayoutPanel`, the border's width becomes its `insets`, as with `JPanel`. `WLabel` is transparent by default, like `JLabel`, and fills with `background` only while `isOpaque = true`.
 
 ### 11.2 Dark Mode Support
 
@@ -902,17 +963,18 @@ There are three families of APIs for integrating with the Windows shell (taskbar
 Notification content is assembled with the `WAppNotification` builder API and shown with `WAppNotificationManager`.
 
 ```kotlin
-WAppNotificationManager.register()
 WAppNotificationManager.addNotificationInvokedListener { args ->
     // on notification click; args holds the values embedded via addArgument
 }
+WAppNotificationManager.register()
 val notification = WAppNotification("Build finished")
     .addText("winui4k: BUILD SUCCESSFUL")
-    .addButton("Open log", "action=openLog")
+    .addButton("Open log", "action" to "openLog")
 WAppNotificationManager.show(notification)
 ```
 
 Clicking a notification can involve relaunching the app, so complete `register()` and the Invoked-listener registration at startup.
+Register the first Invoked listener before `register()` (subscribing for the first time after it makes the Windows App SDK return E_ILLEGAL_METHOD_CALL).
 Availability can be checked with `WAppNotificationManager.isSupported`, and whether the user has disabled notifications with `setting`.
 
 **Badges (WBadgeNotification).**
