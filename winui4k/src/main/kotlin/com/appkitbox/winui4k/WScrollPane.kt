@@ -16,6 +16,8 @@ import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
+import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Microsoft.UI.Xaml.Controls.ScrollBarVisibility (how a scrollbar is shown).
@@ -214,6 +216,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     }
 
     private fun onViewChanged(intermediate: Boolean) {
+        if (isQuietWhileRemeasuring()) return
         lastViewChangeIntermediate = intermediate
         viewportChangeListeners.fire(WChangeEvent(viewport))
         createdVerticalScrollBar?.onViewChanged(intermediate)
@@ -424,6 +427,7 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
             val vertical = verticalOffset
             if (horizontal > 0.0 || vertical > 0.0) {
                 savedOffsets = doubleArrayOf(horizontal, vertical)
+                quietUntilOffsets = savedOffsets
                 // WLayoutPanel assigns the size within the same task after measuring. Restore it in a later turn after the layout is done
                 Dispatcher.invokeLater { restoreSavedOffsets() }
             }
@@ -438,11 +442,35 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
     /** The [horizontal, vertical] position before measuring again, remembered in [clearLayoutSizeForMeasure]. */
     private var savedOffsets: DoubleArray? = null
 
+    /**
+     * The [horizontal, vertical] position to return to, used so that ViewChanged during measuring again (from when the position becomes 0 temporarily until it reaches the position restored by [restoreSavedOffsets])
+     * is not notified to the viewport's ChangeListeners and the scroll bars' AdjustmentListeners. null when not in that quiet period.
+     * Swing's revalidate does not change the position, so notifying the intermediate positions makes code such as "load more when the end is reached" run extra times.
+     */
+    private var quietUntilOffsets: DoubleArray? = null
+
+    /** true (not notified) for ViewChanged during measuring again. When the position to return to is reached, the quiet period ends (that notification is not notified either, since the position is unchanged). */
+    private fun isQuietWhileRemeasuring(): Boolean {
+        val target = quietUntilOffsets ?: return false
+        if (savedOffsets == null && isAt(target)) quietUntilOffsets = null
+        return true
+    }
+
+    private fun isAt(offsets: DoubleArray): Boolean =
+        abs(horizontalOffset - offsets[0]) < OFFSET_TOLERANCE && abs(verticalOffset - offsets[1]) < OFFSET_TOLERANCE
+
     private fun restoreSavedOffsets() {
         val saved = savedOffsets ?: return
         savedOffsets = null
         updateLayout()
-        if (horizontalOffset != saved[0] || verticalOffset != saved[1]) applyChangeView(saved[0], saved[1])
+        // If the content shrank, the ScrollViewer rounds to the scrollable amount, so the rounded position becomes the one to return to
+        val target = doubleArrayOf(min(saved[0], scrollableWidth), min(saved[1], scrollableHeight))
+        if (isAt(target)) {
+            quietUntilOffsets = null
+        } else {
+            quietUntilOffsets = target
+            applyChangeView(target[0], target[1])
+        }
     }
 
     private fun applyChangeView(horizontalOffset: Double?, verticalOffset: Double?) {
@@ -539,6 +567,9 @@ class WScrollPane @JvmOverloads constructor(content: WComponent? = null) :
 
     /** The [WScrollPaneConstants] values so that Kotlin can write `WScrollPane.VERTICAL_SCROLLBAR_ALWAYS` (Java sees them as the same fields as the interface values). */
     companion object {
+        /** The difference (DIP) at which [isQuietWhileRemeasuring] considers the position to return to reached. */
+        private const val OFFSET_TOLERANCE = 0.5
+
         /** The kind of scroll position request in [WComponent.laidOutRequests]. */
         private const val VIEW_REQUEST = "view"
 
