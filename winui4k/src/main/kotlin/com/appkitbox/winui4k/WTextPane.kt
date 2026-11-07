@@ -130,9 +130,6 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     /** A shared part ([TextExtent]) that determines the width and height from the number of columns and rows. */
     private val extent = TextExtent(this)
 
-    /** The value of [wrapStyleWord]. Remembered even while not wrapping, and used when wrapping is enabled. */
-    private var wrapByWord = false
-
     /**
      * The plain text of the whole content (ITextDocument.GetText / SetText). Positions and line breaks are the same as
      * in Swing (see the class description).
@@ -286,13 +283,25 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         }
 
     /**
-     * Text wrapping (RichEditBox.TextWrapping). The default after being placed in a window is [TextWrapping.WRAP] (from
-     * the default style; it reads as NoWrap before placing). [lineWrap] and [wrapStyleWord] read and write this in
-     * Swing's form.
+     * Text wrapping (RichEditBox.TextWrapping). After being added to a window, the default is [TextWrapping.WRAP] (from the default style;
+     * before that it reads as NoWrap). [lineWrap] reads and writes this in Swing's form.
+     *
+     * RichEditBox does not support [TextWrapping.WRAP_WHOLE_WORDS], and setting it stops wrapping (the value is only for TextBlock).
+     * RichEditBox's [TextWrapping.WRAP] already wraps at word boundaries (it breaks inside a word only when one word does not fit the width), so
+     * setting [TextWrapping.WRAP_WHOLE_WORDS] puts [TextWrapping.WRAP] into the native control and sets [wrapStyleWord] to true
+     * (it reads back as [TextWrapping.WRAP]).
      */
     var textWrapping: TextWrapping
         get() = TextWrapping.of(inspectable.getInt(XamlInterop.IRichEditBox_get_TextWrapping))
-        set(value) = inspectable.call(XamlInterop.IRichEditBox_put_TextWrapping, value.native)
+        set(value) {
+            val native = if (value == TextWrapping.WRAP_WHOLE_WORDS) {
+                wrapStyleWord = true
+                TextWrapping.WRAP
+            } else {
+                value
+            }
+            inspectable.call(XamlInterop.IRichEditBox_put_TextWrapping, native.native)
+        }
 
     /**
      * JTextArea.getLineWrap / setLineWrap-style: whether lines wrap when they exceed the width. True if [textWrapping]
@@ -303,26 +312,15 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
     var lineWrap: Boolean
         get() = textWrapping != TextWrapping.NO_WRAP
         set(value) {
-            textWrapping = wrappingOf(value, wrapByWord)
+            textWrapping = if (value) TextWrapping.WRAP else TextWrapping.NO_WRAP
         }
 
     /**
-     * JTextArea.getWrapStyleWord / setWrapStyleWord-style: whether wrapping happens at word boundaries (character
-     * boundaries if false). True if [textWrapping] is [TextWrapping.WRAP_WHOLE_WORDS]. A value set while [lineWrap] is
-     * false is used when wrapping is enabled.
+     * JTextArea.getWrapStyleWord / setWrapStyleWord-like: whether to wrap at word boundaries when wrapping (default false). Returns the set value.
+     * RichEditBox wraps at word boundaries whether this is true or false (it breaks inside a word only when one word does not fit the width), and cannot
+     * wrap at character boundaries like Swing's false (see [textWrapping]).
      */
-    var wrapStyleWord: Boolean
-        get() = if (lineWrap) textWrapping == TextWrapping.WRAP_WHOLE_WORDS else wrapByWord
-        set(value) {
-            wrapByWord = value
-            if (lineWrap) textWrapping = wrappingOf(true, value)
-        }
-
-    private fun wrappingOf(wrap: Boolean, byWord: Boolean): TextWrapping = when {
-        !wrap -> TextWrapping.NO_WRAP
-        byWord -> TextWrapping.WRAP_WHOLE_WORDS
-        else -> TextWrapping.WRAP
-    }
+    var wrapStyleWord: Boolean = false
 
     /**
      * JTextArea.getColumns / setColumns-style: the number of columns that determines the width (default 0, where the

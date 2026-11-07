@@ -80,7 +80,8 @@ class WTextPaneForJavaTest {
             pane.setWrapStyleWord(true);
             assertTrue(pane.getLineWrap());
             assertTrue(pane.getWrapStyleWord());
-            assertEquals(TextWrapping.WRAP_WHOLE_WORDS, pane.getTextWrapping());
+            // RichEditBox does not support WRAP_WHOLE_WORDS, so keep WRAP, which wraps at word boundaries
+            assertEquals(TextWrapping.WRAP, pane.getTextWrapping());
         });
     }
 

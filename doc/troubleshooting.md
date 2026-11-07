@@ -49,6 +49,11 @@
   そのためローカル値だけでは、フォーカスのある入力欄の文字が黒 (明るいテーマで不透明度 0.89) のままになる。
   背景の `TextControlBackground*` と同じく、コントロール自身の Resources にこのキーを入れると、Loaded の後でも状態を移るときに
   拾われる (WControlForegroundTest。AutoSuggestBox と NumberBox は中の TextBox の状態で確認)
+- **RichEditBox: TextWrapping を WrapWholeWords にすると折り返さなくなる**
+  `TextWrapping.WrapWholeWords` は TextBlock / RichTextBlock だけの値で、RichEditBox (と TextBox) に入れると例外にはならず、
+  折り返さない (NoWrap と同じ 1 行の高さ) 表示になる (WTextPaneWrapTest で、同じ幅・同じ文字列の欄の高さを比べて確認)。
+  RichEditBox の `Wrap` は初めから単語の切れ目で折り返す (1 語が幅に収まらないときだけ語の途中で折る) ので、
+  WTextPane は WrapWholeWords を受けたら Wrap を入れる。Swing の setWrapStyleWord(false) の文字の切れ目での折り返しはできない
 - **DropDownButton: AccentButtonStyle / SubtleButtonStyle を設定するとシェブロンが消える**
   どちらの Style も `TargetType="Button"` で Button のテンプレート (ContentPresenter だけ) を持つため、Button 派生の
   DropDownButton に設定するとテンプレートごと置き換わり、`RootGrid` も `ChevronIcon` も無くなる (WDropDownButtonTest で、

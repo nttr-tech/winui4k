@@ -168,7 +168,7 @@ class WTextPaneTest : FunSpec() {
             }
         }
 
-        test("with wrapStyleWord true, wrapping does not break in the middle of a word, and a value set while not wrapping is used when wrapping is enabled") {
+        test("wrapStyleWord returns the set value and is kept when lineWrap changes. RichEditBox does not support WRAP_WHOLE_WORDS, so textWrapping stays WRAP") {
             withPane { pane ->
                 pane.lineWrap = false // the default lineWrap is determined after placing (see the lineWrap default test below), so start from the non-wrapping state
                 val initial = pane.wrapStyleWord
@@ -181,16 +181,16 @@ class WTextPaneTest : FunSpec() {
             } shouldContainExactly listOf(
                 false to TextWrapping.NO_WRAP,
                 true to TextWrapping.NO_WRAP,
-                true to TextWrapping.WRAP_WHOLE_WORDS,
+                true to TextWrapping.WRAP,
                 false to TextWrapping.WRAP,
             )
         }
 
-        test("setting textWrapping directly to WRAP_WHOLE_WORDS makes lineWrap and wrapStyleWord true") {
+        test("setting textWrapping directly to WRAP_WHOLE_WORDS puts WRAP into the native control and makes lineWrap and wrapStyleWord true") {
             withPane { pane ->
                 pane.textWrapping = TextWrapping.WRAP_WHOLE_WORDS
-                pane.lineWrap to pane.wrapStyleWord
-            } shouldBe (true to true)
+                Triple(pane.textWrapping, pane.lineWrap, pane.wrapStyleWord)
+            } shouldBe Triple(TextWrapping.WRAP, true, true)
         }
 
         test("isEditable is true by default and the inverse of isReadOnly. Even when false, text, append, insert and replaceRange can change the text (as in JTextArea)") {
