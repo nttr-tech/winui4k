@@ -138,9 +138,8 @@ sealed interface WInkToolbarItem
 // ======================================================================
 
 /**
- * The WinUI 3 InkToolbarToolButton (experimental in Windows App SDK 2.5): the base of buttons for tools of which only
- * one can be selected in an InkToolbar (pens, eraser, and so on). Derived from [WRadioButton]; the selected tool
- * becomes [WInkToolbar.activeTool].
+ * The WinUI 3 InkToolbarToolButton (experimental in Windows App SDK 2.6): the base of buttons for tools of which only
+ * one can be selected in an InkToolbar (pens, eraser, and so on). Derived from [WRadioButton]; the selected tool becomes [WInkToolbar.activeTool].
  */
 abstract class WInkToolbarToolButton internal constructor(inspectable: ComPtr) : WRadioButton(inspectable), WInkToolbarItem {
     private val toolButton: ComPtr by lazy { own(inspectable.queryInterface(InkInterop.IID_IInkToolbarToolButton)) }
@@ -158,7 +157,7 @@ abstract class WInkToolbarToolButton internal constructor(inspectable: ComPtr) :
 }
 
 /**
- * The WinUI 3 InkToolbarPenButton (experimental in Windows App SDK 2.5): the base of pen tool buttons.
+ * The WinUI 3 InkToolbarPenButton (experimental in Windows App SDK 2.6): the base of pen tool buttons.
  * It has color candidates ([palette]) and a range of sizes, and the color and size can be chosen in the button's flyout.
  */
 abstract class WInkToolbarPenButton internal constructor(inspectable: ComPtr) : WInkToolbarToolButton(inspectable) {
@@ -337,7 +336,7 @@ class WInkToolbarCustomToolButton internal constructor(inspectable: ComPtr) : WI
 // ======================================================================
 
 /**
- * The WinUI 3 InkToolbarToggleButton (experimental in Windows App SDK 2.5): the base of buttons that are turned on and
+ * The WinUI 3 InkToolbarToggleButton (experimental in Windows App SDK 2.6): the base of buttons that are turned on and
  * off independently of the tool (such as the ruler). Derived from [WCheckBox].
  */
 abstract class WInkToolbarToggleButton internal constructor(inspectable: ComPtr) : WCheckBox(inspectable), WInkToolbarItem {
@@ -370,7 +369,7 @@ class WInkToolbarCustomToggleButton internal constructor(inspectable: ComPtr) : 
 // ======================================================================
 
 /**
- * The WinUI 3 InkToolbarMenuButton (experimental in Windows App SDK 2.5): the base of buttons that open a menu
+ * The WinUI 3 InkToolbarMenuButton (experimental in Windows App SDK 2.6): the base of buttons that open a menu
  * (flyout) when pressed. Derived from [WToggleButton]; the menu items (such as stencils) are active while it is on.
  */
 abstract class WInkToolbarMenuButton internal constructor(inspectable: ComPtr) : WToggleButton(inspectable), WInkToolbarItem {
@@ -561,10 +560,9 @@ class WInkPresenterProtractor internal constructor(native: ComPtr) : WInkPresent
 // ======================================================================
 
 /**
- * The WinUI 3 InkToolbarCustomPen (experimental in Windows App SDK 2.5): a pen that creates drawing attributes from the
+ * The WinUI 3 InkToolbarCustomPen (experimental in Windows App SDK 2.6): a pen that creates drawing attributes from the
  * color and size selected with a [WInkToolbarCustomPenButton]. Override [createInkDrawingAttributesCore] to decide how
- * they are created (equivalent to inheriting from InkToolbarCustomPen in C# and overriding
- * CreateInkDrawingAttributesCore; implemented with COM aggregation).
+ * they are created (equivalent to inheriting from InkToolbarCustomPen in C# and overriding CreateInkDrawingAttributesCore; implemented with COM aggregation).
  *
  * InkToolbar in the experimental Windows App SDK 2.5.4 does not call custom pens (a WinUI bug), so
  * [WInkToolbar] compensates by recreating the drawing attributes with this pen when a custom pen button is selected.
@@ -644,7 +642,7 @@ abstract class WInkToolbarCustomPen protected constructor() {
 }
 
 /**
- * The WinUI 3 InkToolbarFlyoutItem (experimental in Windows App SDK 2.5): an item placed in the flyout of an InkToolbar
+ * The WinUI 3 InkToolbarFlyoutItem (experimental in Windows App SDK 2.6): an item placed in the flyout of an InkToolbar
  * button (laid out in [WInkToolbarCustomToolButton.configurationContent] and the like). Derived from [WButtonBase];
  * if [kind] is a check or mutually exclusive item, [isChecked] toggles with each press.
  */
@@ -716,7 +714,7 @@ class WInkToolbarFlyoutItem internal constructor(inspectable: ComPtr) : WButtonB
 }
 
 /**
- * The WinUI 3 InkToolbarPenConfigurationControl (experimental in Windows App SDK 2.5): the content of a pen button's
+ * The WinUI 3 InkToolbarPenConfigurationControl (experimental in Windows App SDK 2.6): the content of a pen button's
  * flyout (color candidates and a size slider). Placing it in [WInkToolbarCustomPenButton.configurationContent] gives
  * the same settings UI as the built-in pens.
  */

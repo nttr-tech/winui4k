@@ -72,7 +72,7 @@ enum class InkHighContrastAdjustment(internal val native: Int) {
 }
 
 /**
- * The WinUI 3 InkPresenter (experimental in Windows App SDK 2.5; Swing has no equivalent):
+ * The WinUI 3 InkPresenter (experimental in Windows App SDK 2.6; Swing has no equivalent):
  * manages the ink input and drawing of a canvas. Obtained with [WInkCanvas.inkPresenter].
  *
  * - Input: [inputDeviceTypes] (pen only by default) / [isInputEnabled] / [inputProcessingMode] / [rightDragAction] /

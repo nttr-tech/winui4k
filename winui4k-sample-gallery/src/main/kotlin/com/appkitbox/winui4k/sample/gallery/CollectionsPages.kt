@@ -349,7 +349,7 @@ private fun buildListItemClickExample(): WComponent {
 
 // region Table page
 
-/** The Table page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.5 experimental) various features. */
+/** The Table page: lines up demos for trying out WTable's (WinUI 3's TableView, Windows App SDK 2.6 experimental) various features. */
 internal fun buildTablePage(): WComponent {
     val page = buildPage(
         "Table",

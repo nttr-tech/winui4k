@@ -35,7 +35,7 @@ import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
 /**
- * JTable-like: WinUI 3's TableView (Microsoft.UI.Xaml.Controls.Tabular.TableView; Windows App SDK 2.5 experimental).
+ * JTable-like: WinUI 3's TableView (Microsoft.UI.Xaml.Controls.Tabular.TableView; Windows App SDK 2.6 experimental).
  *
  * It follows the same MVC structure as Swing's JTable: data is handled by [TableModel] (the com.appkitbox.winui4k.table
  * package), column order and display attributes by [TableColumnModel] / [TableColumn], and sorting and filtering by

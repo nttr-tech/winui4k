@@ -79,10 +79,9 @@ class InkToolbarStencilCheckedEvent internal constructor(
 }
 
 /**
- * Like JToolBar: the WinUI 3 InkToolbar (experimental in Windows App SDK 2.5). A toolbar for choosing the pen, pencil,
+ * Like JToolBar: the WinUI 3 InkToolbar (experimental in Windows App SDK 2.6). A toolbar for choosing the pen, pencil,
  * highlighter, eraser, ruler, and protractor used to draw on a [WInkCanvas]. When attached to [targetInkCanvas], the
- * selected tool, color, and size are reflected in the canvas's input processing mode and default drawing attributes
- * ([WInkPresenter.defaultDrawingAttributes]).
+ * selected tool, color, and size are reflected in the canvas's input processing mode and default drawing attributes ([WInkPresenter.defaultDrawingAttributes]).
  *
  * - Built-in buttons: [initialControls]. Obtained after loading (Loaded) with [getToolButton] / [getToggleButton] /
  *   [getMenuButton]

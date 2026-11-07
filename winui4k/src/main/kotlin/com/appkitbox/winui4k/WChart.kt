@@ -14,8 +14,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 
 /**
- * A chart with the same MVC structure as JTable: the WinUI 3 Chart (Microsoft.UI.Xaml.Controls.Charts.Chart,
- * experimental in Windows App SDK 2.5).
+ * A chart with the same MVC structure as JTable: the WinUI 3 Chart (Microsoft.UI.Xaml.Controls.Charts.Chart, experimental in Windows App SDK 2.6).
  *
  * Division of roles (the com.appkitbox.winui4k.chart package):
  * - Data: [com.appkitbox.winui4k.chart.SampleModel] (a ListModel-like one-dimensional sequence of data.

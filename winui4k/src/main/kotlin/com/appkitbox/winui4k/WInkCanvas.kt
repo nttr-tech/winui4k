@@ -37,8 +37,7 @@ enum class InkPersistenceFormat(internal val native: Int) {
 }
 
 /**
- * The WinUI 3 InkCanvas (experimental in Windows App SDK 2.5; Swing has no equivalent): a canvas for drawing lines
- * with a pen, mouse, or touch.
+ * The WinUI 3 InkCanvas (experimental in Windows App SDK 2.6; Swing has no equivalent): a canvas for drawing lines with a pen, mouse, or touch.
  *
  * Like Swing's JTable and TableModel, the data of the drawn lines is held by an [InkStrokeModel] (the
  * com.appkitbox.winui4k.ink package), and this canvas is a view that draws the model's lines and writes the results of

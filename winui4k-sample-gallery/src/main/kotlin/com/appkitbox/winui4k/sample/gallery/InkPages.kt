@@ -52,7 +52,7 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /*
- * Ink category: demo pages for InkCanvas / InkToolbar (Windows App SDK 2.5 experimental).
+ * Ink category: demo pages for InkCanvas / InkToolbar (Windows App SDK 2.6 experimental).
  */
 
 /** Allows drawing with mouse, pen, and touch alike (InkCanvas defaults to pen only). */
