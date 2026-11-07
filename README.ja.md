@@ -142,6 +142,15 @@ Gallery に加えて、実用に近いサンプルアプリを複数同梱して
 | [リボン: CAD](winui4k-sample-ribbon-cad) | 画層・展開パネル・アプリケーション メニュー・コマンド ラインを持つ AutoCAD 風のダークなリボン | `.\gradlew :winui4k-sample-ribbon-cad:run` |
 | [リボン: ツール](winui4k-sample-ribbon-tools) | リボンを使わないバー (メニュー バー・オプション バー・ツール パレット・ステータス バー) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
+サンプル アプリは日本語と英語に対応しています。表示言語は Windows の表示言語に合わせて自動で決まります (日本語の Windows なら日本語、それ以外は英語)。言語を指定して起動するときは、JVM のロケールを設定します。
+
+```powershell
+$env:JAVA_TOOL_OPTIONS = "-Duser.language=en -Duser.country=US"   # 日本語にするなら "-Duser.language=ja -Duser.country=JP"
+.\gradlew run
+```
+
+トグル スイッチのオン・オフや日付の選択の見出しなど、WinUI のコントロールが自分で出す文字は、JVM のロケールではなく Windows の表示言語に従います。
+
 ## モジュール構成
 
 | モジュール | 内容 |

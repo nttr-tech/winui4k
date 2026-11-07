@@ -142,6 +142,15 @@ They all exist to demonstrate that real applications can be built with WinUI4K.
 | [Ribbon: CAD](winui4k-sample-ribbon-cad) | AutoCAD-style dark ribbon with layers, slide-out panels, application menu, and command line | `.\gradlew :winui4k-sample-ribbon-cad:run` |
 | [Ribbon: Tools](winui4k-sample-ribbon-tools) | Bars without a ribbon (menu bar, option bars, tool palette, status bar) | `.\gradlew :winui4k-sample-ribbon-tools:run` |
 
+The sample apps are available in English and Japanese. The display language follows the Windows display language automatically (Japanese on a Japanese Windows, English otherwise). To choose a language explicitly, set the JVM's locale, for example:
+
+```powershell
+$env:JAVA_TOOL_OPTIONS = "-Duser.language=en -Duser.country=US"   # or "-Duser.language=ja -Duser.country=JP"
+.\gradlew run
+```
+
+Text drawn by WinUI's own controls (such as the On / Off of a toggle switch or the date picker's labels) follows the Windows display language, not the JVM's locale.
+
 ## Modules
 
 | Module | Description |
