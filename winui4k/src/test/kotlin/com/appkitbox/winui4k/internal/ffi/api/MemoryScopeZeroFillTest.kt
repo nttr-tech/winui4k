@@ -4,6 +4,7 @@ import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
+import java.util.ServiceConfigurationError
 import java.util.ServiceLoader
 
 /**
@@ -14,11 +15,13 @@ import java.util.ServiceLoader
  */
 @Tags("Pure")
 class MemoryScopeZeroFillTest : FunSpec() {
-    private val providers = ServiceLoader.load(FfiBackendProvider::class.java).filter { it.isAvailable() }
+    private val providers = loadProviders().filter { it.isAvailable() }
 
     init {
-        test("the Panama, JNA and JNR backends are all on the test classpath") {
-            providers.map { it.name } shouldContainAll listOf("panama", "jna", "jnr")
+        // Panama is available only on JDK 22 or later (it is excluded in testOnJava8 / 9). JNA and JNR are checked on every JDK
+        test("the JNA and JNR backends (and Panama on JDK 22 or later) can be loaded and are among the targets checked") {
+            val expected = listOf("jna", "jnr") + if (isPanamaJdk()) listOf("panama") else emptyList()
+            providers.map { it.name } shouldContainAll expected
         }
 
         for (provider in providers) {
@@ -45,7 +48,30 @@ class MemoryScopeZeroFillTest : FunSpec() {
         }
     }
 
+    /**
+     * Loads the FFI backends on the classpath in the same way as [Ffi]. Before JDK 22, the Panama provider (Java 22 bytecode)
+     * cannot be loaded and throws UnsupportedClassVersionError, so it is skipped (Java 8's ServiceLoader does not wrap LinkageError).
+     */
+    private fun loadProviders(): List<FfiBackendProvider> {
+        val iterator = ServiceLoader.load(FfiBackendProvider::class.java, FfiBackendProvider::class.java.classLoader).iterator()
+        val providers = ArrayList<FfiBackendProvider>()
+        while (true) {
+            try {
+                if (!iterator.hasNext()) break
+                providers.add(iterator.next())
+            } catch (_: ServiceConfigurationError) {
+            } catch (_: LinkageError) {
+            }
+        }
+        return providers
+    }
+
+    private fun isPanamaJdk(): Boolean =
+        System.getProperty("java.specification.version").substringAfter("1.").toInt() >= PANAMA_JDK
+
     private companion object {
+        const val PANAMA_JDK = 22
+
         /** The sizes (multiples of 8) of a COM out argument (one pointer), a small struct, a GUID and a larger struct. */
         val BLOCK_SIZES = listOf(8L, 16L, 24L, 64L)
         const val BLOCK_COUNT = 256
