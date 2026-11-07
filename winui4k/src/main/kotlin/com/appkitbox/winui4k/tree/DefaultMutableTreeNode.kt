@@ -15,8 +15,8 @@ import java.util.NoSuchElementException
  * - Inserting at an out-of-range position throws after the node has been modified in Swing, but here it throws [ArrayIndexOutOfBoundsException] without changing the node.
  *
  * Swing's protected fields (parent / children / userObject / allowsChildren), clone and serialization are not ported.
- * Kotlin also reads and writes with `getUserObject()` / `setUserObject()` rather than a property like `userObject`
- * (because [MutableTreeNode.setUserObject] has the same shape as in Swing).
+ * It is read and written with the same getters / setters as Swing (`getUserObject()` / `setUserObject()` etc.), and from Kotlin it can also be written, as when using Swing,
+ * in property form such as `node.userObject` and `node.childCount` (the extension properties in TreeNodeProperties.kt).
  */
 open class DefaultMutableTreeNode @JvmOverloads constructor(
     userObject: Any? = null,
