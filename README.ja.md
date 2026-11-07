@@ -58,6 +58,7 @@ WinUiUtilities.invokeLater {
         greetButton.text = "Hello, ${nameField.text.ifBlank { "world" }}!"
     }
 
+    frame.layout = WFlowLayout()
     frame.add(nameField)
     frame.add(greetButton)
     frame.isVisible = true
