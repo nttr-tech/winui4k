@@ -104,7 +104,7 @@ internal class FrameFocusTracker {
         }
         val requested = pendingFocus
         pendingFocus = null
-        if (requested != null && requested.requestFocusInWindow()) return
+        if (requested != null && requested.focusInitially()) return
         focusIfNone(content, root)
     }
 
@@ -125,7 +125,8 @@ internal class FrameFocusTracker {
     /**
      * If no element has focus in the window of [root] (the element set as Window.Content), moves focus to the element that last gained focus,
      * or, if it is gone, to the first element in [content] that can take focus (FocusManager.FindFirstFocusableElement).
-     * The focus state is Programmatic (no keyboard focus rectangle is drawn).
+     * moves focus. If the component containing the first element has the same focus place as in Swing ([WComponent.focusAsInitial]; the selected button
+     * of a radio button group, etc.), focus goes there. No keyboard focus rectangle is shown ([focusWithoutKeyboardCue]).
      */
     private fun focusIfNone(content: WComponent, root: WComponent) {
         focusedElement(root)?.let {
@@ -134,14 +135,15 @@ internal class FrameFocusTracker {
         }
         memory.lastElement()?.let { last ->
             try {
-                if (Xaml.focus(last, XamlInterop.FocusState_Programmatic)) return
+                if (focusWithoutKeyboardCue(last)) return
             } finally {
                 last.release()
             }
         }
         val first = Xaml.firstFocusable(content.uiElement) ?: return
         try {
-            Xaml.focus(first, XamlInterop.FocusState_Programmatic)
+            if (WrapperLookup.nearestWrapper(listOf(content), first)?.focusAsInitial() == true) return
+            focusWithoutKeyboardCue(first)
         } finally {
             first.release()
         }
@@ -161,6 +163,31 @@ internal class FrameFocusTracker {
         } finally {
             xamlRoot.release()
         }
+    }
+}
+
+/**
+ * Puts focus on [element] (borrowed) without showing the keyboard focus rectangle (for the window's initial focus). true if it succeeds.
+ *
+ * The state is Pointer. With Programmatic, when the window's last input was the keyboard (right after launching with a key, etc.; when the window
+ * is created, it depends on whether the system shows keyboard cues (InputFocusController.ShouldShowKeyboardCues)), WinUI coerces it to
+ * Keyboard and draws a thick focus rectangle (CoerceFocusState in microsoft-ui-xaml's focusmgr.cpp). Swing's initial
+ * focus is unobtrusive (moving it with the Tab key makes it Keyboard and shows the rectangle).
+ * However, elements with AllowFocusOnInteraction false (AppBarButton etc.) do not accept Pointer focus
+ * (ShouldUpdateFocus in FocusSelection.h), so it is set to true only while focus is put and then back to false.
+ */
+internal fun focusWithoutKeyboardCue(element: ComPtr): Boolean {
+    val framework = element.queryInterfaceOrNull(XamlInterop.IID_IFrameworkElement) ?: return Xaml.focus(element, XamlInterop.FocusState_Pointer)
+    try {
+        val blocked = !framework.getBool(XamlInterop.IFrameworkElement_get_AllowFocusOnInteraction)
+        if (blocked) framework.putBool(XamlInterop.IFrameworkElement_put_AllowFocusOnInteraction, true)
+        try {
+            return Xaml.focus(element, XamlInterop.FocusState_Pointer)
+        } finally {
+            if (blocked) framework.putBool(XamlInterop.IFrameworkElement_put_AllowFocusOnInteraction, false)
+        }
+    } finally {
+        framework.release()
     }
 }
 

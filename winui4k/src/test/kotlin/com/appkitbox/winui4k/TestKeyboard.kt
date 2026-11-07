@@ -92,17 +92,28 @@ internal object TestKeyboard {
     /** Presses and releases the Enter key (VK_RETURN = 0x0D, scan code 0x1C). */
     fun pressEnter() = press(0x0D, 0x1C)
 
-    /** The InputSiteWindowClass in this process's shared window. [TestWindow] also uses it to measure on-screen positions. */
-    internal fun inputSite(): Ptr {
+    /**
+     * Sends messages that press and release [virtualKey] to the InputSiteWindowClass of this process's window titled [windowTitle] (other than the shared window).
+     * Used to make that window's XAML remember "the last input was the keyboard".
+     */
+    fun pressIn(windowTitle: String, virtualKey: Int, scanCode: Int) {
+        val site = inputSite(windowTitle)
+        check(postMessageW(site, WM_KEYDOWN, virtualKey.toLong(), keyData(scanCode, false)) as Int != 0) { "cannot send WM_KEYDOWN" }
+        val up = keyData(scanCode, false) or (1L shl 30) or (1L shl 31)
+        check(postMessageW(site, WM_KEYUP, virtualKey.toLong(), up) as Int != 0) { "cannot send WM_KEYUP" }
+    }
+
+    /** The InputSiteWindowClass in this process's shared window (or the window titled [frameTitle]). [TestWindow] also uses it to measure on-screen positions. */
+    internal fun inputSite(frameTitle: String = FRAME_TITLE): Ptr {
         val pid = getCurrentProcessId() as Int
         var top: Ptr? = null
         while (true) {
             val next = Ffi.backend.withScope { scope ->
-                val title = scope.allocate((FRAME_TITLE.length + 1).toLong() * 2, 2)
-                Ffi.backend.memory.putUtf16z(title, 0, FRAME_TITLE)
+                val title = scope.allocate((frameTitle.length + 1).toLong() * 2, 2)
+                Ffi.backend.memory.putUtf16z(title, 0, frameTitle)
                 findWindowExW(null, top, null, title) as Ptr
             }
-            check(!next.isNull) { "could not find the shared window ($FRAME_TITLE)" }
+            check(!next.isNull) { "window ($frameTitle) not found" }
             top = next
             if (processOf(next) == pid) break
         }

@@ -672,6 +672,19 @@ abstract class WComponent internal constructor(
         Ffi.backend.memory.getByte(out, 0) != 0.toByte()
     }
 
+    /**
+     * Puts the window's initial focus (put when the [WFrame] becomes active) on this component without showing the keyboard focus rectangle
+     * ([focusWithoutKeyboardCue]). Not put on a component with [isFocusable] false. true if it succeeds.
+     */
+    internal fun focusInitially(): Boolean = focusableSetting != false && focusWithoutKeyboardCue(uiElement)
+
+    /**
+     * When the window's initial focus is decided to be this component, puts it, as in Swing, on the right place in the component (the selected button
+     * for a radio button group, the selected row for a tree) without showing the keyboard focus rectangle. true if it succeeds. If false,
+     * it goes to the element WinUI considers the first that can take focus.
+     */
+    internal open fun focusAsInitial(): Boolean = false
+
     /** Requests focus (equivalent to Component.requestFocus). Use when the result is not needed. */
     fun requestFocus() {
         requestFocusInWindow()

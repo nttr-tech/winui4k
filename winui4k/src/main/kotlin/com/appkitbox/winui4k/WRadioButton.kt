@@ -54,6 +54,15 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
 
     override val stateColors: ToggleStateColors
         get() = RADIO_BUTTON_COLORS
+
+    /**
+     * As in Swing, if this button is in a [WButtonGroup] and another button is selected, the initial focus goes to that button
+     * (if the selected button cannot take focus, it stays on this button).
+     */
+    override fun focusAsInitial(): Boolean {
+        val selected = buttonGroup?.selection as? WComponent ?: return false
+        return selected !== this && selected.focusInitially()
+    }
 }
 
 /**

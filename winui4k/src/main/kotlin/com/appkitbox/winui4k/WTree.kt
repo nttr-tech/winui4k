@@ -595,6 +595,21 @@ class WTree() : WControl(
     }
 
     /**
+     * As in Swing, if there is a selected row (the lead path of the selection), the initial focus goes to that row. If the row is not created yet
+     * (off screen, etc.) or nothing is selected, it is not put (it goes to the row WinUI considers the first that can take focus).
+     */
+    override fun focusAsInitial(): Boolean {
+        val path = selectionModel.getLeadSelectionPath() ?: selectionPath ?: return false
+        val node = binding.nodeOf(path, false) ?: return false
+        val container = treeView2.getPtrOrNull(XamlInterop.ITreeView2_ContainerFromNode, node.inspectable.ptr) ?: return false
+        return try {
+            focusWithoutKeyboardCue(container)
+        } finally {
+            container.release()
+        }
+    }
+
+    /**
      * Expands the parents so that [path] is visible and scrolls to that row (Swing's `scrollPathToVisible`).
      * Does not scroll before it is shown (only expands the parents).
      */

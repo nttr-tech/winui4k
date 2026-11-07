@@ -188,6 +188,12 @@ class WCommandBar() : WControl(
     private val items = CommandBarItems(this) { primaryCommands }
 
     /**
+     * The initial focus goes to the bar's content (the first focusable component from the start), as with Swing's JToolBar.
+     * Left to WinUI, it can go to the "..." (MoreButton) at the right end instead of the content. If none of the content can take it, no focus is put.
+     */
+    override fun focusAsInitial(): Boolean = items.components().any { it.focusInitially() }
+
+    /**
      * JToolBar.add(Action)-like: creates a [WAppBarButton] bound to [action] at the end and returns it. The label, icon and enabled state
      * follow the action by the same rules as [WButtonBase.action], and pressing it calls [WAction.actionPerformed].
      */

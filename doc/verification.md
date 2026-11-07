@@ -487,3 +487,12 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   この TextBox なので、フォーカスの無いときに測った幅で置くと、フォーカスを受けた途端に消去ボタンが文字の領域を取り、値が見えなくなる
   (スピン ボタンを INLINE にすると入力欄の最小幅 120 の中に ボタンの 72 も入るので、文字の領域が負になる)。WSpinner の希望の幅は、
   消去ボタンの分を含めて、フォーカスの有り無しで変わらないようにしている (WRangeControlPreferredSizeTest)
+- Programmatic のフォーカス (UIElement.Focus(FocusState.Programmatic)) は、XAML の中身 (ContentRoot) の最後の入力がキーボードだと
+  Keyboard に読み替えられ、キーボードのフォーカスの太い枠が描かれる (microsoft-ui-xaml の focusmgr.cpp の CoerceFocusState)。
+  ウィンドウを作った時の「最後の入力」は、システムがキーボードの手がかりを出すか (InputFocusController.ShouldShowKeyboardCues) で
+  決まる (XamlIslandRoot.cpp) ので、キーで起動したアプリでは、表示した直後の初めのフォーカスに枠が出たり出なかったりした。
+  WFrame の初めのフォーカスは Pointer で置く (FrameFocus.kt の focusWithoutKeyboardCue)。ただし AllowFocusOnInteraction が false の
+  要素 (AppBarButton など) は Pointer のフォーカスを受け付けない (FocusSelection.h の ShouldUpdateFocus) ので、置く間だけ true にする
+  (WFrameInitialFocusTest)
+- FocusManager.FindFirstFocusableElement はビジュアル ツリーの順の最初の要素を返し、ラジオボタンのグループの選ばれているボタンや
+  TreeView の選んだ行は見ない。WFrame の初めのフォーカスは、Swing と同じくそれらに置き直す (WComponent.focusAsInitial)
