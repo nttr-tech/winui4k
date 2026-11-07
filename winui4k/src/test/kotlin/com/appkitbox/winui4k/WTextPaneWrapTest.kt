@@ -39,6 +39,20 @@ class WTextPaneWrapTest : FunSpec() {
     }
 
     init {
+        test("a pane with nothing set does not wrap, as with JTextArea, has the same height as a pane with lineWrap = false, and is lower than a pane with lineWrap = true") {
+            val (panel, panes) = shownPanes({}, { lineWrap = false }, { lineWrap = true })
+            try {
+                eventually(3.seconds) {
+                    val (byDefault, noWrap, wrap) = heightsOf(panel, panes)
+                    byDefault shouldBe (noWrap plusOrMinus TOLERANCE)
+                    wrap shouldBeGreaterThan byDefault * 2
+                }
+                onUiThreadGet { panes[0].lineWrap to panes[0].textWrapping } shouldBe (false to TextWrapping.NO_WRAP)
+            } finally {
+                UiTestHarness.detach(panel)
+            }
+        }
+
         test("a pane with lineWrap and wrapStyleWord true wraps into as many lines as a wrapping pane without wrapStyleWord, and is taller than a non-wrapping pane") {
             val (panel, panes) = shownPanes(
                 { lineWrap = false },

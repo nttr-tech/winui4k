@@ -213,6 +213,7 @@ final class TextPages {
         textPane.setPlaceholderText("Enter text, select it, then press a formatting button");
         textPane.setWidth(400.0);
         textPane.setHeight(150.0);
+        textPane.setLineWrap(true); // Wrap at the width, as with the RichEditBox of the original Gallery (WTextPane does not wrap by default, as with JTextArea)
 
         WButton boldButton = new WButton("Bold");
         boldButton.addActionListener(() -> {

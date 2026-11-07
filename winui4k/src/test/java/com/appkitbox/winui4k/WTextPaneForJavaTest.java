@@ -72,8 +72,7 @@ class WTextPaneForJavaTest {
     void setLineWrapAndSetWrapStyleWordCanBeUsedWithTheSameNamesAsJTextArea() {
         onUiThread(() -> {
             WTextPane pane = new WTextPane();
-            // The default lineWrap is decided by WinUI's default style after placement (unlike JTextArea's false), so set it explicitly and check
-            pane.setLineWrap(false);
+            // As with JTextArea, it does not wrap by default
             assertFalse(pane.getLineWrap());
             assertFalse(pane.getWrapStyleWord());
             pane.setLineWrap(true);

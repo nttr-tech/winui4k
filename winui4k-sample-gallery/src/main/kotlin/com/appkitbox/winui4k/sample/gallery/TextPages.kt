@@ -189,6 +189,7 @@ private fun buildFormattingRichEditBoxExample(): WComponent {
     val textPane = WTextPane().apply { placeholderText = "Enter text, select it, then press a formatting button" }
     textPane.width = 400.0
     textPane.height = 150.0
+    textPane.lineWrap = true // Wrap at the width, as with the RichEditBox of the original Gallery (WTextPane does not wrap by default, as with JTextArea)
 
     val boldButton = WButton("Bold")
     boldButton.addActionListener { textPane.toggleSelectionBold() }

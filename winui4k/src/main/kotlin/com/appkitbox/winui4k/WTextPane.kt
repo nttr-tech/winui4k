@@ -31,10 +31,10 @@ import kotlin.jvm.JvmSynthetic
  * appended at the end. Now lines are separated by `"\n"` as in JTextArea, and no trailing `"\r"` is appended. Code that
  * split the text on `"\r"` should be changed to use `"\n"`.
  *
- * Unlike JTextArea (false), line wrapping ([lineWrap]) defaults to true, WinUI's default as is. RichEditBox's default
- * style sets TextWrapping = Wrap, which takes effect when placed in a window (reading the native value before placing
- * shows NoWrap).
- * To disable wrapping, set `lineWrap = false`.
+ * The default of line wrapping ([lineWrap]) is false, the same as JTextArea (long lines scroll horizontally). TextWrapping = Wrap of RichEditBox's default style
+ * is not used. To wrap at the width as JTextPane does, set `lineWrap = true`.
+ *
+ * **Change from earlier versions**: the default of [lineWrap] after being added to a window was true (wrapping) from RichEditBox's default style.
  *
  * The formatting attributes are only the six of [WStyleConstants] (bold, italic, underline, color, size, font family). Swing's Style (addStyle / getStyle /
  * setLogicalStyle) and paragraph attributes (setParagraphAttributes) are not provided.
@@ -301,8 +301,8 @@ class WTextPane() : WControl(
         }
 
     /**
-     * Text wrapping (RichEditBox.TextWrapping). After being added to a window, the default is [TextWrapping.WRAP] (from the default style;
-     * before that it reads as NoWrap). [lineWrap] reads and writes this in Swing's form.
+     * Text wrapping (RichEditBox.TextWrapping). The default is [TextWrapping.NO_WRAP], not wrapping, the same as JTextArea
+     * (not Wrap of RichEditBox's default style). [lineWrap] reads and writes this in Swing's form.
      *
      * RichEditBox does not support [TextWrapping.WRAP_WHOLE_WORDS], and setting it stops wrapping (the value is only for TextBlock).
      * RichEditBox's [TextWrapping.WRAP] already wraps at word boundaries (it breaks inside a word only when one word does not fit the width), so
@@ -322,10 +322,8 @@ class WTextPane() : WControl(
         }
 
     /**
-     * JTextArea.getLineWrap / setLineWrap-style: whether lines wrap when they exceed the width. True if [textWrapping]
-     * is not [TextWrapping.NO_WRAP].
-     * The default after being placed in a window is true (WinUI's default style; this differs from JTextArea, whose
-     * default is false). When not wrapping, long lines scroll horizontally.
+     * JTextArea.getLineWrap / setLineWrap-like: whether to wrap lines that exceed the width. true if [textWrapping] is not [TextWrapping.NO_WRAP].
+     * The default is false, the same as JTextArea. When not wrapping, long lines scroll horizontally.
      */
     var lineWrap: Boolean
         get() = textWrapping != TextWrapping.NO_WRAP
@@ -375,6 +373,11 @@ class WTextPane() : WControl(
     override fun fontChanged() = extent.fontChanged()
 
     override fun preferredSize(): WSize = extent.preferredSize(super.preferredSize())
+
+    init {
+        // As with JTextArea, it does not wrap by default. Put the value into the native control so it takes priority over Wrap of the default style
+        textWrapping = TextWrapping.NO_WRAP
+    }
 
     /** The number of lines separated by line breaks (equivalent to JTextArea.getLineCount). 1 if empty. Visual lines added by wrapping are not counted. */
     val lineCount: Int get() = nativeText().count { it == '\n' } + 1

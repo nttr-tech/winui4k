@@ -17,6 +17,7 @@ public class StyledWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WTextPane pane = new WTextPane();
+            pane.setLineWrap(true);  // wraps long lines like JTextPane
             pane.setWidth(400);
             pane.setHeight(120);
 

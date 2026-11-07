@@ -19,6 +19,7 @@ public class HighlightWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WTextPane pane = new WTextPane();
+            pane.setLineWrap(true);  // wraps long lines like JTextPane
             pane.setText("INFO start\nERROR disk full\nINFO retry\nERROR network down");
             pane.setWidth(400);
             pane.setHeight(120);

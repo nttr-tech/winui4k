@@ -17,6 +17,7 @@ public class RtfWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WTextPane source = new WTextPane();
+            source.setLineWrap(true);  // wraps long lines like JTextPane
             source.setText("Saved with bold and blue text.");
             WSimpleAttributeSet bold = new WSimpleAttributeSet();
             WStyleConstants.setBold(bold, true);
@@ -28,6 +29,7 @@ public class RtfWinUI4K {
             source.setHeight(60);
 
             WTextPane copy = new WTextPane();
+            copy.setLineWrap(true);  // wraps long lines like JTextPane
             copy.setWidth(400);
             copy.setHeight(60);
 

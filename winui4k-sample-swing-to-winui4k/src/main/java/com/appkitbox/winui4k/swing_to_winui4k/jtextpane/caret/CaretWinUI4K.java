@@ -17,6 +17,7 @@ public class CaretWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WTextPane pane = new WTextPane();
+            pane.setLineWrap(true);  // wraps long lines like JTextPane
             pane.setText("Normal text, bold text, italic text.");
             WSimpleAttributeSet bold = new WSimpleAttributeSet();
             WStyleConstants.setBold(bold, true);

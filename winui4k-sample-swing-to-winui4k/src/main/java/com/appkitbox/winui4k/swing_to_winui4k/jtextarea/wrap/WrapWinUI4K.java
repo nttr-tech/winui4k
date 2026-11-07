@@ -15,8 +15,7 @@ public class WrapWinUI4K {
             WFrame frame = new WFrame("12.3 Wrap long lines (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WTextPane noWrap = new WTextPane(TEXT, 4, 20);
-            noWrap.setLineWrap(false);                          // wraps by default, unlike Swing
+            WTextPane noWrap = new WTextPane(TEXT, 4, 20);      // does not wrap by default
 
             WTextPane wrapped = new WTextPane(TEXT, 4, 20);
             wrapped.setLineWrap(true);
