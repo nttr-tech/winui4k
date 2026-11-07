@@ -19,13 +19,13 @@ enum class ListViewSelectionMode(internal val native: Int) {
     /** Nothing can be selected. */
     NONE(0),
 
-    /** Only one item can be selected (default). */
+    /** Only one item can be selected (ListView's default; the default of [WList] is [EXTENDED]). */
     SINGLE(1),
 
     /** Clicking toggles multiple selection. */
     MULTIPLE(2),
 
-    /** Multiple selection using Ctrl / Shift. */
+    /** Multiple items can be selected using Ctrl / Shift (Swing's MULTIPLE_INTERVAL_SELECTION; the default of [WList]). */
     EXTENDED(3),
     ;
 
@@ -68,11 +68,15 @@ enum class ListViewSelectionMode(internal val native: Int) {
  *
  * The display can also be handled with the same names as JList: [ensureIndexIsVisible], [visibleRowCount], [firstVisibleIndex] / [lastVisibleIndex],
  * [locationToIndex] / [indexToLocation] / [getCellBounds] (DIP with the list's top-left as the origin).
- * The default selection mode is single selection, as in WinUI (Swing's JList defaults to multiple interval selection). WinUI's MULTIPLE (check boxes
+ * The default selection mode is MULTIPLE_INTERVAL_SELECTION, the same as Swing's JList (WinUI's [ListViewSelectionMode.EXTENDED]:
+ * click selects one, and Ctrl / Shift select several; not ListView's default SINGLE). To allow only one selection,
+ * use `setSelectionMode(WListSelectionModel.SINGLE_SELECTION)`. WinUI's MULTIPLE (check boxes
  * toggled by clicking) is not Swing's MULTIPLE_INTERVAL_SELECTION; Swing's MULTIPLE_INTERVAL_SELECTION corresponds to
  * WinUI's EXTENDED (Ctrl / Shift). [selectionMode] stays the WinUI enumeration, and MULTIPLE can also be chosen with [selectionMode]
  * (the selectionModel's selection mode is then MULTIPLE_INTERVAL_SELECTION).
  * While NONE (no selection), the selectionModel's selection mode is SINGLE_SELECTION, and changing the selectionModel is not reflected in the display.
+ *
+ * **Change from earlier versions**: the default selection mode was single selection (SINGLE), the same as WinUI's ListView.
  */
 class WList(model: WListModel<*>) : WControl(
     Activation.composeDefault(XamlInterop.CLS_ListView, XamlInterop.IID_IListViewFactory), // default interface = IListView
@@ -89,6 +93,11 @@ class WList(model: WListModel<*>) : WControl(
     }
     private val listViewBase: ComPtr by lazy {
         own(inspectable.queryInterface(XamlInterop.IID_IListViewBase))
+    }
+
+    init {
+        // As with JList, the default is multiple interval selection (EXTENDED with Ctrl / Shift). ListView's default Single is not used. Set it before adding items
+        writeSelectionMode(ListViewSelectionMode.EXTENDED)
     }
 
     /** The IVector<Object> view of ItemsControl.Items (ItemCollection). */
@@ -405,7 +414,7 @@ class WList(model: WListModel<*>) : WControl(
     val selectedItem: String?
         get() = selectedValue?.toString()
 
-    /** The selection mode (ListViewBase.SelectionMode). */
+    /** The selection mode (ListViewBase.SelectionMode). The default is [ListViewSelectionMode.EXTENDED], which corresponds to multiple interval selection, as in JList. */
     var selectionMode: ListViewSelectionMode
         get() = ListViewSelectionMode.of(listViewBase.getInt(XamlInterop.IListViewBase_get_SelectionMode))
         set(value) {

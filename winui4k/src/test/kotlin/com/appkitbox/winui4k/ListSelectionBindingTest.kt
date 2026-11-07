@@ -167,12 +167,21 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
     }
 
     init {
-        test("the default is single selection, the selectionModel's selectionMode is SINGLE_SELECTION, and nothing is selected") {
+        test("the default is multiple interval selection, the same as JList: the selectionMode of selectionModel is MULTIPLE_INTERVAL_SELECTION, the display is multiple selection with Ctrl / Shift, and nothing is selected") {
             onUiThreadGet {
                 val list = listOf5()
                 listOf(list.selectionModel.getSelectionMode(), list.minSelectionIndex, list.maxSelectionIndex, list.selectedIndices.size) to
-                    list.isSelectionEmpty
-            } shouldBe (listOf(WListSelectionModel.SINGLE_SELECTION, -1, -1, 0) to true)
+                    (list.isSelectionEmpty to list.isNativeSingle)
+            } shouldBe (listOf(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION, -1, -1, 0) to (true to false))
+        }
+
+        test("adding intervals with the default allows disjoint selections, which are also reflected in the display (the same as JList's default)") {
+            onUiThreadGet {
+                val list = listOf5()
+                list.setSelectionInterval(0, 1)
+                list.addSelectionInterval(3, 3)
+                Triple(list.selectedIndices.toList(), list.nativeSelection, list.selectedValuesList)
+            } shouldBe Triple(listOf(0, 1, 3), listOf(0, 1, 3), listOf("a", "b", "d"))
         }
 
         test("selecting on the display side is copied to selectionModel, and an event with the list as source is delivered") {
@@ -192,6 +201,7 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
         test("in single selection, setSelectionInterval(1, 3) selects only the lead 3 (as in Swing)") {
             onUiThreadGet {
                 val list = listOf5()
+                list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
                 list.setSelectionInterval(1, 3)
                 Triple(list.selectedIndices.toList(), list.selectedIndex, list.nativeSelection)
             } shouldBe Triple(listOf(3), 3, listOf(3))
@@ -333,10 +343,21 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
             onUiThreadGet {
                 val model = WDefaultListModel<Any?>().also { m -> "abc".forEach { m.addElement(it.toString()) } }
                 val list = wrap(create(model))
+                list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION)
                 list.setSelectionInterval(1, 1)
                 model.add(1, "x")
                 list.nativeSelection to list.selectedIndices.toList()
             } shouldBe (listOf(2) to listOf(2))
+        }
+
+        test("inserting at a selected position with the default multiple interval selection also selects the inserted element (the same as Swing's DefaultListSelectionModel)") {
+            onUiThreadGet {
+                val model = WDefaultListModel<Any?>().also { m -> "abc".forEach { m.addElement(it.toString()) } }
+                val list = wrap(create(model))
+                list.setSelectionInterval(1, 1)
+                model.add(1, "x")
+                list.nativeSelection to list.selectedValuesList
+            } shouldBe (listOf(1, 2) to listOf("x", "b"))
         }
 
         test("replacing model also clears the selectionModel's selection (same as JList.setModel)") {
@@ -375,8 +396,8 @@ abstract class ListSelectionBindingSpec(private val create: (WListModel<*>) -> A
                 val list = listOf5()
                 shouldThrow<IllegalArgumentException> { list.setSelectionMode(3) }
                 shouldThrow<IllegalArgumentException> { list.setSelectionMode(-1) }
-                list.isNativeSingle
-            } shouldBe true
+                list.isNativeSingle to list.selectionModel.getSelectionMode()
+            } shouldBe (false to WListSelectionModel.MULTIPLE_INTERVAL_SELECTION)
         }
     }
 }

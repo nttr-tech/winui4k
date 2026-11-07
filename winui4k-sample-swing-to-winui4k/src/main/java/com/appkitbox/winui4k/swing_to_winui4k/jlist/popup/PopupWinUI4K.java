@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.Symbol;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WMenuFlyout;
 import com.appkitbox.winui4k.WMenuFlyoutItem;
 import com.appkitbox.winui4k.WinUiUtilities;
@@ -25,6 +26,7 @@ public class PopupWinUI4K {
 
             String[] fruits = {"Apple", "Orange", "Grape", "Peach", "Cherry"};
             WList list = new WList(fruits);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
 
             WMenuFlyout popup = new WMenuFlyout();
             popup.add("Rename").addActionListener(() -> renameSelected());

@@ -190,6 +190,11 @@ class WTreeNode @JvmOverloads constructor(text: String = "") {
  * counted from the top (counting only the children of expanded nodes).
  * Also [selectionMode] / [selectAll], [expand] / [collapse], [canDragItems] / [canReorderItems] (reordering by dragging),
  * [addItemInvokedListener] (ItemInvoked), [addExpandingListener] / [addCollapsedListener] (Expanding / Collapsed).
+ *
+ * **The default selection differs from JTree**: the default is SINGLE_TREE_SELECTION, which allows only one selection, not JTree's default DISCONTIGUOUS_TREE_SELECTION
+ * (selecting several with Ctrl / Shift). WinUI's TreeView has no way to add to the selection with Ctrl / Shift, and multiple selection
+ * (CONTIGUOUS / DISCONTIGUOUS of [selectionModel], or [TreeViewSelectionMode.MULTIPLE]) is done with check boxes on each node,
+ * where checking a parent also selects its descendants. The look and operation change a lot, so the default stays WinUI's TreeView default.
  */
 class WTree() : WControl(
     Activation.composeDefault(XamlInterop.CLS_TreeView, XamlInterop.IID_ITreeViewFactory), // default interface = ITreeView

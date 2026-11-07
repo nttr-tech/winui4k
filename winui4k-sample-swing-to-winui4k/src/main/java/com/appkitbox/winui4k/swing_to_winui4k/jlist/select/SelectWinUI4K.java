@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
 /** 3.7 Select and scroll programmatically (WinUI4K). */
@@ -18,6 +19,7 @@ public class SelectWinUI4K {
                 items[i] = "Item " + (i + 1);
             }
             WList list = new WList(items);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
             list.setWidth(200);
             list.setHeight(150);
             WLabel result = new WLabel("Selected: none");

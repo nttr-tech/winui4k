@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.WDefaultListModel;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
 /** 3.12 Move items up and down (WinUI4K). */
@@ -21,6 +22,7 @@ public class MoveWinUI4K {
                 model.addElement(fruit);
             }
             WList list = new WList(model);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
 
             WButton up = new WButton("Up", Symbol.UP);
             up.addActionListener(e -> {

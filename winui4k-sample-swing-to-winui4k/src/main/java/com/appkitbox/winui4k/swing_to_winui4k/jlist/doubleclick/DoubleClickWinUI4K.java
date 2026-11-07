@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WMouseAdapter;
 import com.appkitbox.winui4k.WMouseEvent;
 import com.appkitbox.winui4k.WinUiUtilities;
@@ -21,6 +22,7 @@ public class DoubleClickWinUI4K {
 
             String[] fruits = {"Apple", "Orange", "Grape", "Peach", "Cherry"};
             WList list = new WList(fruits);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
             list.addMouseListener(new WMouseAdapter() {
                 @Override
                 public void mouseClicked(WMouseEvent e) {

@@ -4,7 +4,6 @@ import com.appkitbox.winui4k.WButton;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WList;
-import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
 /** 3.6 Allow multiple selection (WinUI4K). */
@@ -20,7 +19,6 @@ public class MultipleWinUI4K {
 
             String[] names = {"report.docx", "budget.xlsx", "slides.pptx", "photo.png", "notes.txt", "minutes.md"};
             WList files = new WList(names);
-            files.setSelectionMode(WListSelectionModel.MULTIPLE_INTERVAL_SELECTION);   // the default is single selection, so set it explicitly
             WButton open = new WButton("Open");
             open.addActionListener(e -> {
                 for (Object name : files.getSelectedValuesList()) openFile((String) name);

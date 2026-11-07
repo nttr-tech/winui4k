@@ -4,6 +4,7 @@ import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
 /** 3.4 Read the selected item (WinUI4K). */
@@ -15,6 +16,7 @@ public class SelectedWinUI4K {
 
             String[] fruits = {"Apple", "Orange", "Grape", "Peach", "Cherry"};
             WList list = new WList(fruits);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
             list.setWidth(200);
             list.setHeight(150);
             WLabel result = new WLabel("");
