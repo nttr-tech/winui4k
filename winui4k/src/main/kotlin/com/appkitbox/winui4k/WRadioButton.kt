@@ -55,6 +55,9 @@ open class WRadioButton internal constructor(inspectable: ComPtr) : WToggleButto
     override val stateColors: ToggleStateColors
         get() = RADIO_BUTTON_COLORS
 
+    /** The preferred size measured from the content. Slack is added to the width so the text does not wrap and get cut ([withWrapSlack]; the template is built the same way as CheckBox). */
+    override fun readDesiredSize(): WSize = withWrapSlack(super.readDesiredSize())
+
     /**
      * As in Swing, if this button is in a [WButtonGroup] and another button is selected, the initial focus goes to that button
      * (if the selected button cannot take focus, it stays on this button).

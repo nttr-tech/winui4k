@@ -44,7 +44,22 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
 
     override val stateColors: ToggleStateColors
         get() = CHECK_BOX_COLORS
+
+    /** The preferred size measured from the content. Slack is added to the width so the text does not wrap and get cut ([withWrapSlack]). */
+    override fun readDesiredSize(): WSize = withWrapSlack(super.readDesiredSize())
 }
+
+/**
+ * Adds the slack [WRAP_SLACK] to the width of [size], the measured preferred size of a CheckBox / RadioButton (unchanged if the width is 0 and not measured yet).
+ *
+ * The template's text (ContentPresenter) has TextWrapping = Wrap, and the measured width (DesiredSize) is rounded to physical pixel
+ * boundaries by layout rounding and can be slightly narrower than the real width of the text (less than 1/3 DIP at 150% scale). Assigning that width as is makes the last
+ * word go to a second line, which is invisible because the height is one line. The assigned width (Width) is rounded the same way, so at least one physical pixel is added.
+ */
+internal fun withWrapSlack(size: WSize): WSize = if (size.width > 0.0) WSize(size.width + WRAP_SLACK, size.height) else size
+
+/** The width [withWrapSlack] adds (DIP). At least one physical pixel at 100% scale or more. */
+private const val WRAP_SLACK = 1.0
 
 /**
  * CheckBox keys (controls/dev/CommonStyles/CheckBox_themeresources.xaml). The background is

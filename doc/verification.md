@@ -496,3 +496,7 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   (WFrameInitialFocusTest)
 - FocusManager.FindFirstFocusableElement はビジュアル ツリーの順の最初の要素を返し、ラジオボタンのグループの選ばれているボタンや
   TreeView の選んだ行は見ない。WFrame の初めのフォーカスは、Swing と同じくそれらに置き直す (WComponent.focusAsInitial)
+- 要素の DesiredSize はレイアウトの丸め (UseLayoutRounding) で物理ピクセルの境目に丸められ、文字の本当の幅より少し狭くなることがある
+  (拡大率 150% で「I agree to the terms of use」の CheckBox が 191.333 DIP)。CheckBox / RadioButton のテンプレートの文字は
+  TextWrapping = Wrap なので、その幅を Width にすると最後の単語が 2 行目に回り、1 行分の高さで切れて見えなくなる。Width も同じく
+  丸められるので、WCheckBox / WRadioButton は測った幅に 1 DIP (100% 以上で 1 物理ピクセル以上) を足す (WCheckBoxLayoutTest)
