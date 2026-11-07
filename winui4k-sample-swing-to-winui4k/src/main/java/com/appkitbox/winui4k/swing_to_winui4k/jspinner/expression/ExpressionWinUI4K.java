@@ -13,7 +13,7 @@ public class ExpressionWinUI4K {
             WFrame frame = new WFrame("9.6 Expressions (WinUI4K)");
             frame.setLayout(new WFlowLayout());
 
-            WSpinner amount = new WSpinner();                 // empty (NaN) until the user types
+            WSpinner amount = new WSpinner(Double.NaN);       // empty (NaN) until the user types
             amount.setHeader("Amount");
             amount.setPlaceholderText("Type 12 * 3");
             amount.setAcceptsExpression(true);                // "12 * 3" becomes 36

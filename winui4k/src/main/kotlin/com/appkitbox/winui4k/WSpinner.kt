@@ -49,8 +49,8 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
  * Differences from Swing:
  * - Only numeric models ([WSpinnerNumberModel]) can be displayed (see [model]). [value] is a `Double`, not an `Object`
  *   (Java's `(Integer) spinner.getValue()` does not compile, so write `(Integer) spinner.getModel().getValue()` or `(int) spinner.getValue()`)
- * - The value of the default model is not Swing's Integer 0 but a Double NaN representing no input (as before). Clearing the input with the default model makes [value] NaN.
- *   A spinner given a model through the constructor or [model] reverts to the previous value when the input is cleared, like Swing's COMMIT_OR_REVERT
+ * - Empty input is allowed only for spinners created with a Double value, such as `WSpinner(Double.NaN)` (they start at NaN, and clearing the input makes [value] NaN).
+ *   Spinners created without arguments or with a model return to the previous value when the input is cleared, as with Swing's COMMIT_OR_REVERT
  * - WinUI's NumberBox clamps values outside the range to the edge of the range (validation stays the default InvalidInputOverwritten). Putting a value outside the range into the model or [value]
  *   rewrites both the display and the model to the edge value (Swing's SpinnerNumberModel does not clamp). Going past the edge with the spin buttons also
  *   gives the edge value instead of stopping as in Swing
@@ -62,9 +62,21 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
  * - The display format is decided, as in Swing, by setting [editor] to a [NumberEditor] (a DecimalFormat pattern), which corresponds to `JSpinner.NumberEditor`.
  *   Without it, NumberBox's default format is used and the decimal value 12.0 is shown as "12" (Swing's default NumberEditor shows "12", and "12.00" with "0.00")
  */
-class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
+class WSpinner private constructor(initialValue: Number, initialStep: Number) : WControl(
     Activation.composeDefault(XamlInterop.CLS_NumberBox, XamlInterop.IID_INumberBoxFactory), // default interface = INumberBox
 ) {
+    /**
+     * JSpinner()-like: creates a spinner with a model of value Integer 0, no range and step Integer 1, as with JSpinner. Clearing the input returns to the previous value.
+     * **Change from earlier versions**: the value was Double NaN (empty). To start empty, write `WSpinner(Double.NaN)`.
+     */
+    constructor() : this(0, 1)
+
+    /**
+     * Creates a spinner with a model of value [value] (Double), no range and step 1.0. Passing NaN as [value] starts with an empty field
+     * ([placeholderText] is shown), and clearing the input and committing makes [value] NaN (empty input is allowed).
+     */
+    constructor(value: Double) : this(value, 1.0)
+
     /**
      * Like JSpinner(SpinnerModel): creates a spinner that steps through the values of [model]. Clearing the input reverts to the previous value.
      * @throws IllegalArgumentException when a model other than [WSpinnerNumberModel] is passed (see [model])
@@ -139,7 +151,7 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     /** The ChangeListeners. The native ValueChanged is subscribed from creation, so nothing is registered here. */
     private val changeListeners = ChangeListeners(this) {}
 
-    private var numberModel = WSpinnerNumberModel(value, null, null, 1.0)
+    private var numberModel = WSpinnerNumberModel(initialValue, null, null, initialStep)
 
     /**
      * A listener that copies model changes to the native side and passes them on to this spinner's listeners. Through it the model strongly references
@@ -153,11 +165,12 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     /** Whether [model] has been read or written (the first time, the spinner is pinned with ListenerAnchor; [pinForModel]). */
     private var modelExposed = false
 
-    /** Whether clearing the input reverts to the previous value (only for spinners given a model; the default model puts NaN). */
+    /** Whether to return to the previous value when the input is cleared (spinners given a model; integer models always return regardless; models made from a Double value set NaN). */
     private var revertsEmpty = false
 
     /**
-     * Like JSpinner.getModel / setModel: the model of the sequence of values. The default is a [WSpinnerNumberModel] with value NaN (the constructor's value), no range and step 1.0.
+     * JSpinner.getModel / setModel-like: the model of the sequence of values. The default is, as with JSpinner, a [WSpinnerNumberModel] with value Integer 0, no range and step Integer 1
+     * (with the constructor given a Double value, that value, no range and step 1.0).
      * Sharing one model between several spinners makes all of them move whichever one is changed. When replaced, the native side is updated to the new model, but
      * as with JSpinner the [addChangeListener] listeners are not called. A spinner with a model set reverts to the previous value when the input is cleared.
      * The model references the spinner through a listener, so keeping the model keeps the spinner from being collected too (same as Swing).

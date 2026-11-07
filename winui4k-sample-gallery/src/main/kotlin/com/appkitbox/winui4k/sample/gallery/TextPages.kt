@@ -85,7 +85,7 @@ internal fun buildNumberBoxPage(): WComponent {
 private fun buildExpressionNumberBoxExample(): WComponent {
     val result = WLabel("The confirmed value appears here").also { it.foreground = TEXT_SECONDARY }
 
-    val spinner = WSpinner()
+    val spinner = WSpinner(Double.NaN) // Start empty to show the placeholder text (WSpinner() starts at 0, as with JSpinner)
     spinner.width = 300.0
     spinner.header = "You can also enter an expression (e.g. (5 + 3) * 2)"
     spinner.placeholderText = "1 + 2 * 3"

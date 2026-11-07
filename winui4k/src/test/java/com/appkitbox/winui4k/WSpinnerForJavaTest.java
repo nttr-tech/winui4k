@@ -67,7 +67,7 @@ class WSpinnerForJavaTest {
     @Test
     void lambdaChangeListenerIsRemovedByRemoveChangeListener() {
         onUiThread(() -> {
-            WSpinner spinner = new WSpinner();
+            WSpinner spinner = new WSpinner(0.0);   // Created with a Double value because decimals are entered (without arguments it is Integer 0)
             List<Double> values = new ArrayList<>();
             WChangeListener listener = e -> values.add(spinner.getValue());
             spinner.addChangeListener(listener);

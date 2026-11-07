@@ -105,8 +105,11 @@ class WSpinnerTest : FunSpec() {
             }
         }
 
-        test("the initial value with nothing entered is NaN") {
-            onUiThreadGet { WSpinner().value.isNaN() }.shouldBeTrue()
+        test("the initial value without arguments is Integer 0, the same as JSpinner(), and starting empty (NaN) requires WSpinner(Double.NaN) explicitly") {
+            onUiThreadGet {
+                val spinner = WSpinner()
+                listOf<Any?>(spinner.value, spinner.model.value, WSpinner(Double.NaN).value.isNaN())
+            } shouldContainExactly listOf(0.0, 0, true)
         }
 
         test("the value passed to the constructor can be retrieved via value") {
@@ -155,12 +158,12 @@ class WSpinnerTest : FunSpec() {
             expression.shouldBeTrue()
         }
 
-        test("the default model is a WSpinnerNumberModel with value NaN, no range and step 1.0, and the range is the same as NumberBox's default (+/-Double.MAX_VALUE)") {
+        test("the default model is a WSpinnerNumberModel with value Integer 0, no range and step Integer 1, the same as JSpinner(), and the range is the same as NumberBox's default (+/-Double.MAX_VALUE)") {
             onUiThread {
                 val spinner = WSpinner()
                 val model = spinner.model
                 model.shouldBeInstanceOf<WSpinnerNumberModel>()
-                (model.value as Double).isNaN().shouldBeTrue()
+                listOf<Any?>(model.value, model.stepSize, spinner.nextValue) shouldContainExactly listOf(0, 1, 1)
                 model.minimum.shouldBeNull()
                 model.maximum.shouldBeNull()
                 listOf(spinner.minimum, spinner.maximum, spinner.smallChange) shouldContainExactly
@@ -302,7 +305,18 @@ class WSpinnerTest : FunSpec() {
             }
         }
 
-        test("a spinner with the default model becomes NaN as before when the input is cleared and committed") {
+        test("a spinner without arguments returns to the previous value when the input is cleared and committed, as with JSpinner (COMMIT_OR_REVERT)") {
+            val spinner = onUiThreadGet { WSpinner().also { it.value = 4.0 } }
+            withAttached(spinner) {
+                typeAndCommit(spinner, "")
+                Thread.sleep(SETTLE_MILLIS)
+                eventually(3.seconds) {
+                    onUiThreadGet { listOf<Any?>(spinner.model.value, spinner.inputText()) } shouldContainExactly listOf(4, "4")
+                }
+            }
+        }
+
+        test("a spinner given a Double value still becomes NaN when the input is cleared and committed") {
             val spinner = onUiThreadGet { WSpinner(5.0) }
             withAttached(spinner) {
                 typeAndCommit(spinner, "")
