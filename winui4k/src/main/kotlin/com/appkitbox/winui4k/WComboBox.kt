@@ -340,17 +340,15 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /** JComboBox.getItemAt-like: the display string of the item at [index]. null if out of range (the item itself is getElementAt of [model]). */
     fun getItemAt(index: Int): String? = if (index in 0 until itemCount) getItem(index) else null
 
-    /** Removes the item at [index]. Same as JComboBox's removeItemAt ([removeItemAt] is the Swing way to write it). */
-    fun removeItem(index: Int) {
+    /** JComboBox.removeItemAt-like: removes the item at [index] ([WMutableComboBoxModel.removeElementAt]). */
+    fun removeItemAt(index: Int) {
         mutableModel().removeElementAt(index)
     }
 
-    /** JComboBox.removeItemAt-like: removes the item at [index] ([WMutableComboBoxModel.removeElementAt]). */
-    fun removeItemAt(index: Int) {
-        removeItem(index)
-    }
-
-    /** JComboBox.removeItem(Object)-like: removes the first item equal to [item] ([WMutableComboBoxModel.removeElement]). Does nothing if there is none. */
+    /**
+     * JComboBox.removeItem(Object)-like: removes the first item equal to [item] ([WMutableComboBoxModel.removeElement]). Does nothing if there is none.
+     * Even when given a number, it removes the equal item, not a position (`removeItem(1)` removes the item equal to 1; use [removeItemAt] to remove by position).
+     */
     fun removeItem(item: Any?) {
         mutableModel().removeElement(item)
     }

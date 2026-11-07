@@ -238,15 +238,24 @@ class WComboBoxEventTest : FunSpec() {
             } shouldContainExactly listOf("Red", "Green", "Blue", null, null)
         }
 
-        test("removeItemAt removes by index, removeItem(String) removes the first matching item, and removeItem(Int) still removes by index") {
+        test("removeItemAt removes by index, and removeItem removes the first equal item (does nothing if there is none)") {
             onUiThreadGet {
                 val comboBox = WComboBox(listOf("Red", "Green", "Blue", "Green", "White"))
                 comboBox.removeItemAt(0)
                 comboBox.removeItem("Green")
                 comboBox.removeItem("Missing")
-                comboBox.removeItem(2)
+                comboBox.removeItemAt(2)
                 (0 until comboBox.itemCount).map { comboBox.getItem(it) }
             } shouldContainExactly listOf("Blue", "Green")
+        }
+
+        test("removeItem(1) with numeric items removes the item equal to 1, as with JComboBox.removeItem(Object), and does not remove the second item") {
+            onUiThreadGet {
+                val comboBox = WComboBox(WDefaultComboBoxModel(arrayOf(3, 2, 1, 0)))
+                comboBox.removeItem(1)
+                comboBox.removeItem(7)
+                (0 until comboBox.itemCount).map { comboBox.model.getElementAt(it) }
+            } shouldContainExactly listOf(3, 2, 0)
         }
 
         test("removeAllItems fires DESELECTED for the selected item and an ActionEvent, as in JComboBox") {

@@ -115,10 +115,10 @@ class WComboBoxTest : FunSpec() {
             count shouldBe 2
         }
 
-        test("removeItem shrinks the item count and shifts later items down") {
+        test("removing with removeItemAt decreases the item count and moves the following items up") {
             val (count, item) = onUiThreadGet {
                 val comboBox = WComboBox(listOf("Red", "Green", "Blue"))
-                comboBox.removeItem(1)
+                comboBox.removeItemAt(1)
                 comboBox.itemCount to comboBox.getItem(1)
             }
             count shouldBe 2

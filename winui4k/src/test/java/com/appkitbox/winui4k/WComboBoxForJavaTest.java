@@ -91,6 +91,20 @@ class WComboBoxForJavaTest {
     }
 
     @Test
+    void removeItemOfNumericItemsRemovesTheEqualItemAsInSwingAndRemoveItemAtRemovesByPosition() {
+        onUiThread(() -> {
+            WComboBox comboBox = new WComboBox(new WDefaultComboBoxModel<>(new Integer[] {3, 2, 1, 0}));
+            comboBox.removeItem(1);
+            assertEquals(Arrays.asList(3, 2, 0), elements(comboBox));
+            comboBox.removeItem(7);
+            assertEquals(Arrays.asList(3, 2, 0), elements(comboBox));
+            comboBox.removeItemAt(1);
+            assertEquals(Arrays.asList(3, 0), elements(comboBox));
+            assertThrows(IndexOutOfBoundsException.class, () -> comboBox.removeItemAt(2));
+        });
+    }
+
+    @Test
     void popupMenuListenerCanBeWrittenWithWPopupMenuAdapterAndReadWithGetPopupMenuListeners() {
         onUiThread(() -> {
             WComboBox comboBox = new WComboBox();
@@ -182,6 +196,16 @@ class WComboBoxForJavaTest {
         } finally {
             UiTestHarness.detach(comboBox);
         }
+    }
+
+    /** Reads the items of the combo box's model in order. */
+    private static List<Object> elements(WComboBox comboBox) {
+        List<Object> elements = new ArrayList<>();
+        WComboBoxModel<?> model = comboBox.getModel();
+        for (int i = 0; i < model.getSize(); i++) {
+            elements.add(model.getElementAt(i));
+        }
+        return elements;
     }
 
     /** Waits until [events] read on the UI thread becomes [expected], and checks that it does not change after waiting a little longer. */
