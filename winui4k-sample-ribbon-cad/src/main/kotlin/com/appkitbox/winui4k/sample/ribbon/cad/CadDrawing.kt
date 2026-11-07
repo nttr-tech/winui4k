@@ -341,15 +341,15 @@ internal class CadDrawing(private val canvas: WCanvas) {
         dimY(0.0, 4800.0, -700.0, -300.0)
         dimY(4800.0, 8000.0, -700.0, -300.0)
         // Room names and areas
-        text("Living Room", 3250.0, 3150.0, 230.0)
+        text(Messages.get("drawing.living"), 3250.0, 3150.0, 230.0)
         text("30.1 m²", 3250.0, 2830.0, 170.0)
-        text("Kitchen / Dining", 9300.0, 3700.0, 230.0)
+        text(Messages.get("drawing.kitchen"), 9300.0, 3700.0, 230.0)
         text("24.3 m²", 9300.0, 3380.0, 170.0)
-        text("Bedroom", 2500.0, 6200.0, 230.0)
+        text(Messages.get("drawing.bedroom"), 2500.0, 6200.0, 230.0)
         text("14.9 m²", 2500.0, 5880.0, 170.0)
-        text("Bathroom", 6250.0, 6550.0, 200.0)
-        text("Bedroom 2", 9800.0, 5950.0, 200.0)
-        text("Floor Plan  1:100", 6000.0, -2000.0, 280.0)
+        text(Messages.get("drawing.bath"), 6250.0, 6550.0, 200.0)
+        text(Messages.get("drawing.bedroom2"), 9800.0, 5950.0, 200.0)
+        text(Messages.get("drawing.title"), 6000.0, -2000.0, 280.0)
     }
 
     private companion object {

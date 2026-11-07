@@ -80,13 +80,13 @@ private class CadApp(private val model: RibbonModel) {
         ribbon.applicationMenu = applicationMenu().createFlyout()
         ribbon.addItemInvokedListener { onItemInvoked(it) }
         (model.quickAccessItems.first { it.id == "qat.workspace" } as RibbonComboBoxModel).addCommitListener { e -> (e.item as? CadWorkspace)?.let { applyWorkspace(it) } }
-        (model.findItem("layerCombo") as RibbonComboBoxModel).addCommitListener { e -> echo("Command: Current layer: \"${e.text}\"") }
+        (model.findItem("layerCombo") as RibbonComboBoxModel).addCommitListener { e -> echo(Messages.get("log.current.layer", e.text)) }
         val titleBar = window.titleBar!!
         titleBar.appIcon = ic(CadIcons.APP_LOGO)
         titleBar.isAppIconMenuEnabled = true
         titleBar.subtitle = "WinUI4K CAD"
         titleBar.endContent = WPanel(spacing = 2.0, orientation = Orientation.HORIZONTAL).also {
-            it.add(WButton("Sign In"))
+            it.add(WButton(Messages.get("title.sign.in")))
             it.add(WButton().also { help -> help.content = WRibbonIcon(ic(CadIcons.HELP), HELP_ICON) })
         }
         val area = WGrid()
@@ -136,10 +136,10 @@ private class CadApp(private val model: RibbonModel) {
         val isText = id == "text" || id == "annotateMText"
         val isHatch = id == "hatch" || id == "gradient"
         when {
-            isText && (choice == null || choice == "Multiline Text") -> showTextEditor()
-            isHatch && (choice == null || choice == "Hatch" || id == "gradient") -> showHatchCreation()
-            id == "closeTextEditor" -> closeContextual("Text Editor")
-            id == "closeHatchCreation" -> closeContextual("Hatch Creation")
+            isText && (choice == null || choice == Messages.get("ribbon.text.0")) -> showTextEditor()
+            isHatch && (choice == null || choice == Messages.get("ribbon.hatch.0") || id == "gradient") -> showHatchCreation()
+            id == "closeTextEditor" -> closeContextual(Messages.get("context.text.editor"))
+            id == "closeHatchCreation" -> closeContextual(Messages.get("context.hatch.creation"))
             id == "nav.zoomExtents" || id == "zoomExtents" -> viewport.drawing.zoomExtents()
         }
     }
@@ -178,7 +178,7 @@ private class CadApp(private val model: RibbonModel) {
         when (id) {
             "status.grid" -> viewport.drawing.isGridVisible = checked
             "status.lwt" -> viewport.drawing.showLineweights = checked
-            "status.model" -> (model.findItem(id) ?: statusItem(id))?.label = if (checked) "MODEL" else "PAPER"
+            "status.model" -> (model.findItem(id) ?: statusItem(id))?.label = if (checked) Messages.get("status.model.toggle") else Messages.get("status.paper")
             "status.cleanScreen" -> setCleanScreen(checked)
             else -> return false
         }
@@ -199,20 +199,20 @@ private class CadApp(private val model: RibbonModel) {
         }
         val result = ribbon.search(typed, 1).firstOrNull()
         if (result != null && result.score > 0) {
-            echo("Command: ${typed.uppercase()}")
+            echo(Messages.get("log.command", typed.uppercase()))
             ribbon.executeSearchEntry(result.entry)
             return
         }
-        echo("Unknown command \"${typed.uppercase()}\".  Press F1 for help.")
+        echo(Messages.get("log.unknown.command", typed.uppercase()))
     }
 
     private fun echoCommand(id: String, label: String?, choice: String?) {
         val command = CAD_COMMANDS[id]
         if (command != null) {
-            echo("Command: _" + if (choice != null) "${command.first} ($choice)" else command.first)
+            echo(Messages.get("log.command", "_" + if (choice != null) "${command.first} ($choice)" else command.first))
             echo(command.second)
         } else if (!label.isNullOrEmpty()) {
-            echo("Command: " + label.replace('\n', ' '))
+            echo(Messages.get("log.command", label.replace('\n', ' ')))
         }
     }
 
@@ -223,26 +223,26 @@ private class CadApp(private val model: RibbonModel) {
     private fun applyWorkspace(workspace: CadWorkspace) {
         applyWorkspace(model, workspace)
         model.selectedTabId = "home"
-        echo("Command: Workspace: ${workspace.label}")
+        echo(Messages.get("log.workspace", workspace.label))
     }
 
     private fun showTextEditor() {
         model.setActiveContextualGroups("textEditor")
         viewport.showTextEditor(true)
-        echo("Command: _MTEXT  Current text style:  \"Standard\"  Text height: 2.5  Annotative: No")
+        echo(Messages.get("log.mtext"))
     }
 
     private fun showHatchCreation() {
         model.setActiveContextualGroups("hatchCreation")
-        echo("Command: _HATCH")
-        echo("Pick internal point or [Select objects/Undo/seTtings]:")
+        echo(Messages.get("log.hatch"))
+        echo(Messages.get("prompt.hatch"))
     }
 
     private fun closeContextual(name: String) {
         viewport.showTextEditor(false)
         model.setActiveContextualGroups()
         model.selectedTabId = "home"
-        echo("$name closed.")
+        echo(Messages.get("log.closed", name))
     }
 
     private fun setCommandLineVisible(visible: Boolean) {
@@ -283,7 +283,7 @@ private class CadApp(private val model: RibbonModel) {
     private fun fileTabs(): WComponent {
         val tabs = RibbonToolBarModel("documents")
         tabs.showLabels = true
-        for ((id, label) in listOf("start" to "Start", "drawing1" to "Drawing1*", "floorPlan" to "Floor Plan")) {
+        for ((id, label) in listOf("start" to Messages.get("file.start"), "drawing1" to "Drawing1*", "floorPlan" to "Floor Plan")) {
             tabs.items.add(
                 tgl("file.$id", label, ic(if (id == "start") CadIcons.APP_LOGO else CadIcons.FILE_TABS), RibbonItemSize.MEDIUM).also {
                     it.groupName = "documents"
@@ -292,14 +292,14 @@ private class CadApp(private val model: RibbonModel) {
                 },
             )
         }
-        tabs.items.add(cmd("file.new", "New Drawing", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+        tabs.items.add(cmd("file.new", Messages.get("file.new"), RibbonIcon.glyph(""), RibbonItemSize.SMALL))
         return WRibbonToolBar(tabs).also { it.ribbon = ribbon }
     }
 
     /** The AutoCAD menu browser (search, commands and subcommands, recent documents, options and exit). */
     private fun applicationMenu(): WRibbonApplicationMenu {
         val menu = RibbonApplicationMenuModel()
-        menu.recentHeader = "Recent Documents"
+        menu.recentHeader = Messages.get("app.recent")
         for (entry in APP_MENU) {
             menu.items.add(
                 RibbonApplicationMenuItemModel(entry.id, entry.label, ic(entry.icon)).also { item ->
@@ -310,15 +310,15 @@ private class CadApp(private val model: RibbonModel) {
                 },
             )
         }
-        menu.recentItems.add(RibbonRecentItemModel("r1", "Floor Plan.dwg", "Projects › Riverside House").also { it.isPinned = true })
-        menu.recentItems.add(RibbonRecentItemModel("r2", "Gearbox Housing.dwg", "Projects › Mechanical").also { it.isPinned = true })
-        menu.recentItems.add(RibbonRecentItemModel("r3", "Site Layout.dwg", "Projects › Riverside House"))
-        menu.recentItems.add(RibbonRecentItemModel("r4", "Bracket Detail.dwg", "Projects › Mechanical"))
-        menu.recentItems.add(RibbonRecentItemModel("r5", "Electrical Plan.dwg", "Documents"))
-        menu.footerItems.add(cmd("appmenu.options", "Options", ic(CadIcons.OPTIONS), RibbonItemSize.MEDIUM))
-        menu.footerItems.add(cmd("appmenu.exit", "Exit WinUI4K CAD", ic(CadIcons.EXIT), RibbonItemSize.MEDIUM))
+        menu.recentItems.add(RibbonRecentItemModel("r1", "Floor Plan.dwg", Messages.get("app.recent.riverside")).also { it.isPinned = true })
+        menu.recentItems.add(RibbonRecentItemModel("r2", "Gearbox Housing.dwg", Messages.get("app.recent.mechanical")).also { it.isPinned = true })
+        menu.recentItems.add(RibbonRecentItemModel("r3", "Site Layout.dwg", Messages.get("app.recent.riverside")))
+        menu.recentItems.add(RibbonRecentItemModel("r4", "Bracket Detail.dwg", Messages.get("app.recent.mechanical")))
+        menu.recentItems.add(RibbonRecentItemModel("r5", "Electrical Plan.dwg", Messages.get("app.recent.documents")))
+        menu.footerItems.add(cmd("appmenu.options", Messages.get("common.options"), ic(CadIcons.OPTIONS), RibbonItemSize.MEDIUM))
+        menu.footerItems.add(cmd("appmenu.exit", Messages.get("app.exit"), ic(CadIcons.EXIT), RibbonItemSize.MEDIUM))
         return WRibbonApplicationMenu(menu, ribbon).also { app ->
-            app.addItemInvokedListener { e -> echo("Command: Application Menu: ${e.item.label}") }
+            app.addItemInvokedListener { e -> echo(Messages.get("log.app.menu", e.item.label)) }
         }
     }
 
@@ -326,24 +326,24 @@ private class CadApp(private val model: RibbonModel) {
     private fun statusBarModel(): RibbonStatusBarModel {
         val bar = RibbonStatusBarModel()
         bar.items.add(
-            RibbonSegmentedModel("status.layout", "Layout").also { segmented ->
-                listOf("Model", "Layout1", "Layout2").forEach { segmented.segments.add(RibbonSegmentModel(it, it)) }
+            RibbonSegmentedModel("status.layout", Messages.get("common.layout")).also { segmented ->
+                listOf(Messages.get("status.model"), Messages.get("status.layout1"), Messages.get("status.layout2")).forEach { segmented.segments.add(RibbonSegmentModel(it, it)) }
                 segmented.selectedSegment = segmented.segments[0]
             },
         )
         bar.endItems.add(RibbonLabelModel("status.coords", "6215.7290, 3820.4106, 0.0000"))
-        bar.endItems.add(tgl("status.model", "MODEL", null, RibbonItemSize.SMALL).also { it.isChecked = true })
-        bar.endItems.add(statusToggle("status.grid", "Grid Display", CadIcons.GRID, checked = true, shortcut = "F7"))
-        bar.endItems.add(statusToggle("status.snap", "Snap Mode", CadIcons.SNAP, shortcut = "F9"))
+        bar.endItems.add(tgl("status.model", Messages.get("status.model.toggle"), null, RibbonItemSize.SMALL).also { it.isChecked = true })
+        bar.endItems.add(statusToggle("status.grid", Messages.get("status.grid"), CadIcons.GRID, checked = true, shortcut = "F7"))
+        bar.endItems.add(statusToggle("status.snap", Messages.get("status.snap"), CadIcons.SNAP, shortcut = "F9"))
         bar.endItems.add(RibbonSeparatorModel())
-        bar.endItems.add(statusToggle("status.ortho", "Ortho Mode", CadIcons.ORTHO, shortcut = "F8"))
-        bar.endItems.add(statusToggle("status.polar", "Polar Tracking", CadIcons.POLAR, checked = true, shortcut = "F10"))
-        bar.endItems.add(statusToggle("status.otrack", "Object Snap Tracking", CadIcons.OBJECT_SNAP_TRACKING, checked = true, shortcut = "F11"))
+        bar.endItems.add(statusToggle("status.ortho", Messages.get("status.ortho"), CadIcons.ORTHO, shortcut = "F8"))
+        bar.endItems.add(statusToggle("status.polar", Messages.get("status.polar"), CadIcons.POLAR, checked = true, shortcut = "F10"))
+        bar.endItems.add(statusToggle("status.otrack", Messages.get("status.otrack"), CadIcons.OBJECT_SNAP_TRACKING, checked = true, shortcut = "F11"))
         bar.endItems.add(objectSnap())
         bar.endItems.add(RibbonSeparatorModel())
-        bar.endItems.add(statusToggle("status.lwt", "Show/Hide Lineweight", CadIcons.SHOW_LINEWEIGHT))
-        bar.endItems.add(statusToggle("status.transparency", "Show/Hide Transparency", CadIcons.SHOW_TRANSPARENCY))
-        bar.endItems.add(statusToggle("status.selectionCycling", "Selection Cycling", CadIcons.SELECTION_CYCLING))
+        bar.endItems.add(statusToggle("status.lwt", Messages.get("status.lineweight"), CadIcons.SHOW_LINEWEIGHT))
+        bar.endItems.add(statusToggle("status.transparency", Messages.get("status.transparency"), CadIcons.SHOW_TRANSPARENCY))
+        bar.endItems.add(statusToggle("status.selectionCycling", Messages.get("status.selection.cycling"), CadIcons.SELECTION_CYCLING))
         bar.endItems.add(RibbonSeparatorModel())
         bar.endItems.add(
             ddn(
@@ -353,23 +353,23 @@ private class CadApp(private val model: RibbonModel) {
                 RibbonItemSize.SMALL,
                 *listOf("1:1", "1:2", "1:5", "1:10", "1:50", "1:100").mapIndexed { i, s -> radioItem("status.annoScale.$i", s, "annoScale", i == 0) }.toTypedArray(),
                 sep(),
-                mi("status.annoScale.custom", "Custom...", null),
-            ).also { it.screenTip = tip("Annotation scale of the current view") },
+                mi("status.annoScale.custom", Messages.get("status.anno.custom"), null),
+            ).also { it.screenTip = tip(Messages.get("status.anno.tip")) },
         )
         bar.endItems.add(
             ddn(
                 "status.workspace",
-                "Workspace Switching",
+                Messages.get("status.workspace"),
                 ic(CadIcons.WORKSPACE),
                 RibbonItemSize.SMALL,
                 *CadWorkspace.entries.map { radioItem("workspace.${it.name}", it.label, "workspace", it == CadWorkspace.DRAFTING) }.toTypedArray(),
                 sep(),
-                mi("status.workspace.save", "Save Current As...", null),
-                mi("status.workspace.settings", "Workspace Settings...", null),
+                mi("status.workspace.save", Messages.get("status.workspace.save"), null),
+                mi("status.workspace.settings", Messages.get("status.workspace.settings"), null),
             ).also { it.showLabel = false },
         )
-        bar.endItems.add(statusToggle("status.cleanScreen", "Clean Screen", CadIcons.CLEAN_SCREEN, shortcut = "Ctrl+0"))
-        bar.endItems.add(cmd("status.customize", "Customization", RibbonIcon.glyph(""), RibbonItemSize.SMALL).also { it.showLabel = false })
+        bar.endItems.add(statusToggle("status.cleanScreen", Messages.get("status.clean.screen"), CadIcons.CLEAN_SCREEN, shortcut = "Ctrl+0"))
+        bar.endItems.add(cmd("status.customize", Messages.get("status.customization"), RibbonIcon.glyph(""), RibbonItemSize.SMALL).also { it.showLabel = false })
         return bar
     }
 
@@ -382,10 +382,10 @@ private class CadApp(private val model: RibbonModel) {
 
     /** Object snap (on / off, and check items for the snap types). */
     private fun objectSnap(): RibbonSplitButtonModel {
-        val snaps = listOf("Endpoint" to true, "Midpoint" to true, "Center" to true, "Geometric Center" to false, "Node" to false, "Quadrant" to false, "Intersection" to true, "Extension" to true, "Perpendicular" to false, "Tangent" to false, "Nearest" to false)
+        val snaps = listOf(Messages.get("osnap.endpoint") to true, Messages.get("osnap.midpoint") to true, Messages.get("osnap.center") to true, Messages.get("osnap.geometric.center") to false, Messages.get("osnap.node") to false, Messages.get("osnap.quadrant") to false, Messages.get("osnap.intersection") to true, Messages.get("osnap.extension") to true, Messages.get("osnap.perpendicular") to false, Messages.get("osnap.tangent") to false, Messages.get("osnap.nearest") to false)
         return spl(
             "status.osnap",
-            "Object Snap",
+            Messages.get("status.osnap"),
             ic(CadIcons.OBJECT_SNAP),
             RibbonItemSize.SMALL,
             false,
@@ -396,7 +396,7 @@ private class CadApp(private val model: RibbonModel) {
                 }
             }.toTypedArray(),
             sep(),
-            mi("status.osnap.settings", "Object Snap Settings...", null),
+            mi("status.osnap.settings", Messages.get("status.osnap.settings"), null),
         ).also {
             it.showLabel = false
             it.isCheckable = true
@@ -411,70 +411,70 @@ private class CadApp(private val model: RibbonModel) {
         const val HELP_ICON = 18.0
 
         val MINIMIZE_LABELS = mapOf(
-            RibbonMinimizeBehavior.TABS to "Minimize to Tabs",
-            RibbonMinimizeBehavior.PANEL_TITLES to "Minimize to Panel Titles",
-            RibbonMinimizeBehavior.PANEL_BUTTONS to "Minimize to Panel Buttons",
-            RibbonMinimizeBehavior.CYCLE_ALL to "Cycle Through All",
+            RibbonMinimizeBehavior.TABS to Messages.get("minimize.tabs"),
+            RibbonMinimizeBehavior.PANEL_TITLES to Messages.get("minimize.panel.titles"),
+            RibbonMinimizeBehavior.PANEL_BUTTONS to Messages.get("minimize.panel.buttons"),
+            RibbonMinimizeBehavior.CYCLE_ALL to Messages.get("minimize.cycle.all"),
         )
 
         val APP_MENU = listOf(
-            AppMenuEntry("new", "New", CadIcons.NEW, false, listOf("Drawing" to "Creates a new drawing from a template.", "Sheet Set" to "Creates a new sheet set to organize layouts.")),
+            AppMenuEntry("new", Messages.get("qat.new"), CadIcons.NEW, false, listOf(Messages.get("app.drawing") to Messages.get("app.new.drawing"), Messages.get("app.sheet.set") to Messages.get("app.new.sheet.set"))),
             AppMenuEntry(
                 "open",
-                "Open",
+                Messages.get("common.backstage.open"),
                 CadIcons.OPEN,
                 false,
-                listOf("Drawing" to "Opens an existing drawing file.", "From Web & Mobile" to "Opens a drawing saved in the cloud.", "Sheet Set" to "Opens a sheet set data file.", "DGN" to "Imports the data from a DGN file into a new drawing."),
+                listOf(Messages.get("app.drawing") to Messages.get("app.open.drawing"), Messages.get("app.open.web") to Messages.get("app.open.web.text"), Messages.get("app.sheet.set") to Messages.get("app.open.sheet.set"), "DGN" to Messages.get("app.open.dgn")),
             ),
-            AppMenuEntry("save", "Save", CadIcons.SAVE, false, emptyList()),
+            AppMenuEntry("save", Messages.get("common.save"), CadIcons.SAVE, false, emptyList()),
             AppMenuEntry(
                 "saveAs",
-                "Save As",
+                Messages.get("qat.save.as"),
                 CadIcons.SAVE_AS,
                 false,
                 listOf(
-                    "Drawing" to "Saves the current drawing as a DWG file.",
-                    "Drawing Template" to "Creates a drawing template (DWT) file from which new drawings can be created.",
-                    "Drawing Standards" to "Creates a drawing standards (DWS) file for checking drawings.",
-                    "Other Formats" to "Saves the current drawing in DWG, DWT, DWS, or DXF format.",
+                    Messages.get("app.drawing") to Messages.get("app.save.as.drawing"),
+                    Messages.get("app.save.as.template") to Messages.get("app.save.as.template.text"),
+                    Messages.get("app.save.as.standards") to Messages.get("app.save.as.standards.text"),
+                    Messages.get("app.other.formats") to Messages.get("app.save.as.other.text"),
                 ),
             ),
             AppMenuEntry(
                 "import",
-                "Import",
+                Messages.get("app.import"),
                 CadIcons.IMPORT_PDF,
                 true,
-                listOf("PDF" to "Imports geometry, fills, raster images, and text from a PDF file.", "DGN" to "Imports the data from a DGN file into the current drawing.", "Other Formats" to "Imports files of various formats into the current drawing."),
+                listOf("PDF" to Messages.get("app.import.pdf"), "DGN" to Messages.get("app.import.dgn"), Messages.get("app.other.formats") to Messages.get("app.import.other")),
             ),
             AppMenuEntry(
                 "export",
-                "Export",
+                Messages.get("app.export"),
                 CadIcons.EXPORT_PDF,
                 false,
-                listOf("PDF" to "Exports the current drawing or layout to a PDF file.", "DWF" to "Creates a DWF file and lets you set individual page setup overrides.", "DGN" to "Exports the current drawing to a DGN file.", "FBX" to "Exports 3D objects, cameras, and lights to an FBX file."),
+                listOf("PDF" to Messages.get("app.export.pdf"), "DWF" to Messages.get("app.export.dwf"), "DGN" to Messages.get("app.export.dgn"), "FBX" to Messages.get("app.export.fbx")),
             ),
             AppMenuEntry(
                 "publish",
-                "Publish",
+                Messages.get("app.publish"),
                 CadIcons.PUBLISH,
                 false,
-                listOf("Shared Views" to "Publishes design views of the drawing to a web browser.", "Send to 3D Print Service" to "Sends a 3D model to a 3D print service.", "Archive" to "Packages the files of the current sheet set for archiving.", "eTransmit" to "Creates a package of a drawing and its dependent files."),
+                listOf(Messages.get("app.publish.share") to Messages.get("app.publish.share.text"), Messages.get("app.publish.print3d") to Messages.get("app.publish.print3d.text"), Messages.get("app.publish.archive") to Messages.get("app.publish.archive.text"), Messages.get("app.publish.etransmit") to Messages.get("app.publish.etransmit.text")),
             ),
             AppMenuEntry(
                 "print",
-                "Print",
+                Messages.get("app.print"),
                 CadIcons.PLOT,
                 false,
-                listOf("Plot" to "Plots a drawing to a plotter, printer or file.", "Batch Plot" to "Publishes drawings to DWF, DWFx, and PDF files, or to printers and plotters.", "Page Setup Manager" to "Manages the page layout, plotting device, paper size, and other settings for each new layout.", "Plot Preview" to "Displays the drawing as it will be plotted."),
+                listOf(Messages.get("qat.plot") to Messages.get("app.print.plot.text"), Messages.get("app.print.batch") to Messages.get("app.print.batch.text"), Messages.get("app.print.page.setup") to Messages.get("app.print.page.setup.text"), Messages.get("app.print.preview") to Messages.get("app.print.preview.text")),
             ),
             AppMenuEntry(
                 "utilities",
-                "Drawing Utilities",
+                Messages.get("app.utilities"),
                 CadIcons.UNITS,
                 true,
-                listOf("Units" to "Controls the display format and precision of coordinates and angles.", "Audit" to "Evaluates the integrity of a drawing and corrects some errors.", "Drawing Status" to "Displays drawing statistics, modes, and extents.", "Purge" to "Removes unused items, such as block definitions and layers, from the drawing.", "Recover" to "Repairs a damaged drawing file and then opens it."),
+                listOf(Messages.get("app.utilities.units") to Messages.get("app.utilities.units.text"), Messages.get("app.utilities.audit") to Messages.get("app.utilities.audit.text"), Messages.get("app.utilities.status") to Messages.get("app.utilities.status.text"), Messages.get("app.utilities.purge") to Messages.get("app.utilities.purge.text"), Messages.get("app.utilities.recover") to Messages.get("app.utilities.recover.text")),
             ),
-            AppMenuEntry("close", "Close", CadIcons.CLOSE, false, listOf("Current Drawing" to "Closes the current drawing.", "All Drawings" to "Closes all open drawings.")),
+            AppMenuEntry("close", Messages.get("app.close"), CadIcons.CLOSE, false, listOf(Messages.get("app.close.current") to Messages.get("app.close.current.text"), Messages.get("app.close.all") to Messages.get("app.close.all.text"))),
         )
     }
 }

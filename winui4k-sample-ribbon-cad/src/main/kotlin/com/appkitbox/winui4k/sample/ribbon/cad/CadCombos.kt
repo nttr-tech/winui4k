@@ -42,14 +42,14 @@ data class CadColorOption(val name: String, val color: WColor?, val isSpecial: B
 val CAD_COLORS: List<CadColorOption> = listOf(
     CadColorOption("ByLayer", WColor(0xF2, 0xF2, 0xF2), isSpecial = true),
     CadColorOption("ByBlock", WColor(0xF2, 0xF2, 0xF2), isSpecial = true),
-    CadColorOption("Red", WColor(0xFF, 0x00, 0x00)),
-    CadColorOption("Yellow", WColor(0xFF, 0xFF, 0x00)),
-    CadColorOption("Green", WColor(0x00, 0xFF, 0x00)),
-    CadColorOption("Cyan", WColor(0x00, 0xFF, 0xFF)),
-    CadColorOption("Blue", WColor(0x00, 0x00, 0xFF)),
-    CadColorOption("Magenta", WColor(0xFF, 0x00, 0xFF)),
-    CadColorOption("White", WColor(0xFF, 0xFF, 0xFF)),
-    CadColorOption("Select Color...", null),
+    CadColorOption(Messages.get("color.red"), WColor(0xFF, 0x00, 0x00)),
+    CadColorOption(Messages.get("color.yellow"), WColor(0xFF, 0xFF, 0x00)),
+    CadColorOption(Messages.get("color.green"), WColor(0x00, 0xFF, 0x00)),
+    CadColorOption(Messages.get("color.cyan"), WColor(0x00, 0xFF, 0xFF)),
+    CadColorOption(Messages.get("color.blue"), WColor(0x00, 0x00, 0xFF)),
+    CadColorOption(Messages.get("color.magenta"), WColor(0xFF, 0x00, 0xFF)),
+    CadColorOption(Messages.get("color.white"), WColor(0xFF, 0xFF, 0xFF)),
+    CadColorOption(Messages.get("color.select"), null),
 )
 
 /** A linetype ([dashes] repeats dash and gap lengths; null means a continuous line). */
@@ -78,7 +78,7 @@ data class CadLineweight(val name: String, val thickness: Double) {
 val CAD_LINEWEIGHTS: List<CadLineweight> = listOf(
     CadLineweight("ByLayer", 1.0),
     CadLineweight("ByBlock", 1.0),
-    CadLineweight("Default", 1.0),
+    CadLineweight(Messages.get("lineweight.default"), 1.0),
     CadLineweight("0.00 mm", 1.0),
     CadLineweight("0.13 mm", 1.0),
     CadLineweight("0.25 mm", 1.5),
@@ -89,46 +89,46 @@ val CAD_LINEWEIGHTS: List<CadLineweight> = listOf(
 )
 
 /** The layer drop-down (as in AutoCAD, shows on/freeze/lock icons, a color swatch, and the name). */
-internal fun layerCombo(): RibbonComboBoxModel = RibbonComboBoxModel("layerCombo", "Layer", CAD_LAYERS).also { combo ->
+internal fun layerCombo(): RibbonComboBoxModel = RibbonComboBoxModel("layerCombo", Messages.get("combo.layer"), CAD_LAYERS).also { combo ->
     combo.showLabel = false
     combo.selectedItem = CAD_LAYERS[1]
     combo.inputWidth = LAYER_WIDTH
     combo.itemTextProvider = RibbonItemTextProvider { (it as? CadLayer)?.name.orEmpty() }
     combo.itemRenderer = RibbonItemRenderer { item -> layerRow(item as CadLayer) }
-    combo.screenTip = tip("Current layer: pick a layer to make it current, or toggle its on / freeze / lock state.")
+    combo.screenTip = tip(Messages.get("combo.layer.tip"))
 }
 
 /** The color combo box (ByLayer by default). */
-internal fun colorCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, "Color", CAD_COLORS).also { combo ->
+internal fun colorCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, Messages.get("combo.color"), CAD_COLORS).also { combo ->
     combo.showLabel = false
     combo.icon = ic(CadIcons.COLOR)
     combo.selectedItem = CAD_COLORS[0]
     combo.inputWidth = PROPERTY_WIDTH
     combo.itemTextProvider = RibbonItemTextProvider { (it as? CadColorOption)?.name.orEmpty() }
     combo.itemRenderer = RibbonItemRenderer { item -> colorRow(item as CadColorOption) }
-    combo.screenTip = tip("Object Color: sets the color of selected objects (ByLayer by default).")
+    combo.screenTip = tip(Messages.get("combo.color.tip"))
 }
 
 /** The linetype combo box (with linetype samples). */
-internal fun linetypeCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, "Linetype", CAD_LINETYPES).also { combo ->
+internal fun linetypeCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, Messages.get("combo.linetype"), CAD_LINETYPES).also { combo ->
     combo.showLabel = false
     combo.icon = ic(CadIcons.LINETYPE)
     combo.selectedItem = CAD_LINETYPES[0]
     combo.inputWidth = PROPERTY_WIDTH
     combo.itemTextProvider = RibbonItemTextProvider { (it as? CadLinetype)?.name.orEmpty() }
     combo.itemRenderer = RibbonItemRenderer { item -> sampleRow(linetypeIcon((item as CadLinetype).dashes), item.name) }
-    combo.screenTip = tip("Linetype: sets the linetype of selected objects.")
+    combo.screenTip = tip(Messages.get("combo.linetype.tip"))
 }
 
 /** The lineweight combo box (with lineweight samples). */
-internal fun lineweightCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, "Lineweight", CAD_LINEWEIGHTS).also { combo ->
+internal fun lineweightCombo(id: String): RibbonComboBoxModel = RibbonComboBoxModel(id, Messages.get("combo.lineweight"), CAD_LINEWEIGHTS).also { combo ->
     combo.showLabel = false
     combo.icon = ic(CadIcons.LINEWEIGHT)
     combo.selectedItem = CAD_LINEWEIGHTS[0]
     combo.inputWidth = PROPERTY_WIDTH
     combo.itemTextProvider = RibbonItemTextProvider { (it as? CadLineweight)?.name.orEmpty() }
     combo.itemRenderer = RibbonItemRenderer { item -> sampleRow(lineweightIcon((item as CadLineweight).thickness), item.name) }
-    combo.screenTip = tip("Lineweight: sets the lineweight of selected objects.")
+    combo.screenTip = tip(Messages.get("combo.lineweight.tip"))
 }
 
 private fun layerRow(layer: CadLayer): WComponent {

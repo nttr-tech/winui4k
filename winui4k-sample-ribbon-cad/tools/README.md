@@ -11,4 +11,8 @@ RibbonSpace (MIT License) の CAD デモ `samples/RibbonSpace.Demo` から、こ
 | `CadArt.kt` | `dotnet run --project cadart_dump -p:RibbonSpaceDemo=<demo> -- art.json` で CadArt の文字列を JSON に書き出し、`python -I gen_cad_art.py art.json <cad>/CadArt.kt` |
 | `CadRibbonTabs.kt` | `python -I gen_cad_ribbon.py <demo>/Pages/CadPage.xaml <cad>/CadIcons.kt <cad>/CadArt.kt <cad>/CadRibbonTabs.kt` (上の 2 つを先に生成する) |
 
+- `cad_ja.py` / `cad_tips_ja.py` は、ラベルとスクリーン ヒントの英語から日本語への対応表。
+- `gen_cad_ribbon.py` は、画面の文字を `Messages.get("ribbon.…")` にし、英語 (XAML のまま) と日本語を
+  `src/main/resources/.../cad/messages.properties` と `messages_ja.properties` の `# --- generated` の行から後ろに書く
+  (その行より前の手書きの文字列は残す)。
 - 生成後は `.\gradlew spotlessApply` で整形する。

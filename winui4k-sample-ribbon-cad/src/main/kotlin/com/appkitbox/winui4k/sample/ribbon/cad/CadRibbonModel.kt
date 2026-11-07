@@ -14,13 +14,13 @@ import com.appkitbox.winui4k.extension.ribbon.model.RibbonModel
 /** Workspaces (the same three as the RibbonSpace CAD demo) and the tabs shown in each. */
 enum class CadWorkspace(val label: String, val tabIds: Set<String>) {
     /** Drafting & Annotation (the default). */
-    DRAFTING("Drafting & Annotation", setOf("home", "insert", "annotate", "parametric", "view", "manage", "output", "collaborate")),
+    DRAFTING(Messages.get("workspace.drafting"), setOf("home", "insert", "annotate", "parametric", "view", "manage", "output", "collaborate")),
 
     /** 3D Basics. */
-    BASICS_3D("3D Basics", setOf("home", "visualize", "insert", "view", "manage", "output", "collaborate")),
+    BASICS_3D(Messages.get("workspace.basics3d"), setOf("home", "visualize", "insert", "view", "manage", "output", "collaborate")),
 
     /** 3D Modeling. */
-    MODELING_3D("3D Modeling", setOf("home", "solid", "surface", "mesh", "visualize", "parametric", "insert", "annotate", "view", "manage", "output", "collaborate")),
+    MODELING_3D(Messages.get("workspace.modeling3d"), setOf("home", "solid", "surface", "mesh", "visualize", "parametric", "insert", "annotate", "view", "manage", "output", "collaborate")),
     ;
 
     override fun toString(): String = label
@@ -36,18 +36,18 @@ fun createCadModel(): RibbonModel = RibbonModel().apply {
     isApplicationButtonVisible = false
     minimizeBehavior = RibbonMinimizeBehavior.CYCLE_ALL
     density = RibbonDensity.COMPACT
-    contextualGroups.add(contextual("textEditor", "Text Editor", "#4CAF50"))
-    contextualGroups.add(contextual("hatchCreation", "Hatch Creation", "#3DA9F5"))
+    contextualGroups.add(contextual("textEditor", Messages.get("context.text.editor"), "#4CAF50"))
+    contextualGroups.add(contextual("hatchCreation", Messages.get("context.hatch.creation"), "#3DA9F5"))
     tabs.addAll(cadTabs())
-    quickAccessItems.add(cmd("qat.new", "New", ic(CadIcons.NEW), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+N" })
-    quickAccessItems.add(cmd("qat.open", "Open", ic(CadIcons.OPEN), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+O" })
-    quickAccessItems.add(cmd("qat.save", "Save", ic(CadIcons.SAVE), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+S" })
-    quickAccessItems.add(cmd("qat.saveAs", "Save As", ic(CadIcons.SAVE_AS), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Shift+S" })
-    quickAccessItems.add(cmd("qat.undo", "Undo", ic(CadIcons.UNDO), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Z" })
-    quickAccessItems.add(cmd("qat.redo", "Redo", ic(CadIcons.REDO), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Y" })
-    quickAccessItems.add(cmd("qat.plot", "Plot", ic(CadIcons.PLOT), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+P" })
+    quickAccessItems.add(cmd("qat.new", Messages.get("qat.new"), ic(CadIcons.NEW), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+N" })
+    quickAccessItems.add(cmd("qat.open", Messages.get("common.backstage.open"), ic(CadIcons.OPEN), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+O" })
+    quickAccessItems.add(cmd("qat.save", Messages.get("common.save"), ic(CadIcons.SAVE), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+S" })
+    quickAccessItems.add(cmd("qat.saveAs", Messages.get("qat.save.as"), ic(CadIcons.SAVE_AS), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Shift+S" })
+    quickAccessItems.add(cmd("qat.undo", Messages.get("common.undo"), ic(CadIcons.UNDO), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Z" })
+    quickAccessItems.add(cmd("qat.redo", Messages.get("common.redo"), ic(CadIcons.REDO), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+Y" })
+    quickAccessItems.add(cmd("qat.plot", Messages.get("qat.plot"), ic(CadIcons.PLOT), RibbonItemSize.SMALL).also { it.shortcut = "Ctrl+P" })
     quickAccessItems.add(
-        RibbonComboBoxModel("qat.workspace", "Workspace", CadWorkspace.entries).also {
+        RibbonComboBoxModel("qat.workspace", Messages.get("qat.workspace"), CadWorkspace.entries).also {
             it.showLabel = false
             it.selectedItem = CadWorkspace.DRAFTING
             it.inputWidth = WORKSPACE_WIDTH

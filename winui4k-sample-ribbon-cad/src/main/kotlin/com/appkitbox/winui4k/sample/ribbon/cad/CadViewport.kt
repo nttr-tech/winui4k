@@ -32,16 +32,16 @@ internal class CadViewport(ribbon: WRibbon) {
     /** The floor plan. */
     val drawing = CadDrawing(canvas)
     private val surface = WBorder(canvas)
-    private val viewportLabel = WLabel("[-][Top][2D Wireframe]")
+    private val viewportLabel = WLabel(Messages.get("viewport.label"))
     private val ucsIcon = ucsIcon()
     private val cubeRing = WBorder()
-    private val cubeFace = WBorder(label("TOP", BOLD))
-    private val cubeLabels = listOf("N" to (0.0 to -44.0), "S" to (0.0 to 44.0), "W" to (-44.0 to 0.0), "E" to (44.0 to 0.0))
+    private val cubeFace = WBorder(label(Messages.get("viewport.cube.top"), BOLD))
+    private val cubeLabels = listOf(Messages.get("viewport.cube.north") to (0.0 to -44.0), Messages.get("viewport.cube.south") to (0.0 to 44.0), Messages.get("viewport.cube.west") to (-44.0 to 0.0), Messages.get("viewport.cube.east") to (44.0 to 0.0))
         .map { (text, offset) -> label(text, BOLD) to offset }
     private val wcsBadge = WBorder(label("WCS ⌄", 0))
     private val viewCube = viewCube()
     private val navBar = navBar(ribbon)
-    private val mtextEditor = WBorder(WLabel("Open-plan living, oak floors").also { it.fontSize = MTEXT_FONT })
+    private val mtextEditor = WBorder(WLabel(Messages.get("viewport.mtext")).also { it.fontSize = MTEXT_FONT })
 
     /** The command line. */
     val commandLine = CadCommandLine(ribbon)
@@ -166,22 +166,22 @@ internal class CadViewport(ribbon: WRibbon) {
     private fun navBar(ribbon: WRibbon): WComponent {
         val model = RibbonToolBarModel("nav")
         model.orientation = RibbonToolBarOrientation.VERTICAL
-        model.items.add(cmd("nav.wheel", "Full Navigation Wheel", ic(CadIcons.ORBIT), RibbonItemSize.SMALL))
-        model.items.add(tgl("nav.pan", "Pan", ic(CadIcons.PAN), RibbonItemSize.SMALL))
+        model.items.add(cmd("nav.wheel", Messages.get("nav.wheel"), ic(CadIcons.ORBIT), RibbonItemSize.SMALL))
+        model.items.add(tgl("nav.pan", Messages.get("nav.pan"), ic(CadIcons.PAN), RibbonItemSize.SMALL))
         model.items.add(
             spl(
                 "nav.zoomExtents",
-                "Zoom Extents",
+                Messages.get("nav.zoom.extents"),
                 ic(CadIcons.ZOOM_EXTENTS),
                 RibbonItemSize.SMALL,
                 true,
-                mi("nav.zoom.extents", "Zoom Extents", ic(CadIcons.ZOOM_EXTENTS)),
-                mi("nav.zoom.window", "Zoom Window", ic(CadIcons.ZOOM_WINDOW)),
-                mi("nav.zoom.in", "Zoom In", ic(CadIcons.ZOOM_WINDOW)),
-                mi("nav.zoom.out", "Zoom Out", ic(CadIcons.ZOOM_WINDOW)),
+                mi("nav.zoom.extents", Messages.get("nav.zoom.extents"), ic(CadIcons.ZOOM_EXTENTS)),
+                mi("nav.zoom.window", Messages.get("nav.zoom.window"), ic(CadIcons.ZOOM_WINDOW)),
+                mi("nav.zoom.in", Messages.get("nav.zoom.in"), ic(CadIcons.ZOOM_WINDOW)),
+                mi("nav.zoom.out", Messages.get("nav.zoom.out"), ic(CadIcons.ZOOM_WINDOW)),
             ),
         )
-        model.items.add(cmd("nav.orbit", "Orbit", ic(CadIcons.ORBIT), RibbonItemSize.SMALL))
+        model.items.add(cmd("nav.orbit", Messages.get("nav.orbit"), ic(CadIcons.ORBIT), RibbonItemSize.SMALL))
         val bar = WRibbonToolBar(model)
         bar.ribbon = ribbon
         val frame = WRibbonTheme.surface(bar, "RibbonCommandBarBackgroundBrush")
@@ -222,13 +222,13 @@ internal class CadViewport(ribbon: WRibbon) {
 
 /** The command line (history of the last 3 lines and the field for typing commands). */
 internal class CadCommandLine(ribbon: WRibbon) {
-    private val history = mutableListOf("Command: _.OPEN \"Drawing1.dwg\"", "Regenerating model.", "Command:")
+    private val history = mutableListOf(Messages.get("log.open"), Messages.get("log.regenerating"), Messages.get("log.command.empty"))
     private val historyLabel = WLabel()
     private val historyBox = WBorder(historyLabel)
 
     /** The field for typing commands (pressing Enter invokes "command.input" with the typed string as its argument). */
     val input = RibbonTextBoxModel("command.input").also {
-        it.placeholder = "Type a command"
+        it.placeholder = Messages.get("command.placeholder")
         it.inputWidth = INPUT_WIDTH
     }
     private val bar: WRibbonToolBar
@@ -243,10 +243,10 @@ internal class CadCommandLine(ribbon: WRibbon) {
         val model = RibbonToolBarModel("commandLine")
         model.showLabels = true
         model.isOverflowEnabled = false
-        model.items.add(cmd("command.close", "Close Command Line", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
-        model.items.add(cmd("command.customize", "Customize", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+        model.items.add(cmd("command.close", Messages.get("command.close"), RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+        model.items.add(cmd("command.customize", Messages.get("command.customize"), RibbonIcon.glyph(""), RibbonItemSize.SMALL))
         model.items.add(input)
-        model.items.add(cmd("command.recent", "Recent Commands", RibbonIcon.glyph(""), RibbonItemSize.SMALL))
+        model.items.add(cmd("command.recent", Messages.get("command.recent"), RibbonIcon.glyph(""), RibbonItemSize.SMALL))
         bar = WRibbonToolBar(model)
         bar.ribbon = ribbon
         val panel = WPanel(spacing = 0.0, orientation = Orientation.VERTICAL)
@@ -261,7 +261,7 @@ internal class CadCommandLine(ribbon: WRibbon) {
 
     /** Appends a line to the history (replacing the previous line if it is an empty "Command:", as AutoCAD does). */
     fun echo(line: String) {
-        if (history.lastOrNull() == "Command:") history.removeAt(history.size - 1)
+        if (history.lastOrNull() == Messages.get("log.command.empty")) history.removeAt(history.size - 1)
         history += line
         while (history.size > MAX_HISTORY) history.removeAt(0)
         update()
