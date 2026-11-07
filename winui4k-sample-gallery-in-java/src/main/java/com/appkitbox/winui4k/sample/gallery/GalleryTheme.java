@@ -9,6 +9,24 @@ final class GalleryTheme {
     private GalleryTheme() {
     }
 
+    // Muted WinUI 3 Gallery-like colors used for demo tiles and color choices. WColor.RED etc. are the same primary colors as java.awt.Color,
+    // so they are not used for on-screen examples.
+
+    /** The demo red. */
+    static final WColor DEMO_RED = new WColor(237, 28, 36);
+
+    /** The demo green. */
+    static final WColor DEMO_GREEN = new WColor(34, 177, 76);
+
+    /** The demo blue (Windows's default accent color). */
+    static final WColor DEMO_BLUE = new WColor(0, 120, 215);
+
+    /** The demo yellow. */
+    static final WColor DEMO_YELLOW = new WColor(255, 201, 14);
+
+    /** The demo orange. */
+    static final WColor DEMO_ORANGE = new WColor(255, 127, 39);
+
     /** Whether the current app theme is dark. Updated by the root element's ActualThemeChanged. */
     static boolean isDarkTheme = false;
 

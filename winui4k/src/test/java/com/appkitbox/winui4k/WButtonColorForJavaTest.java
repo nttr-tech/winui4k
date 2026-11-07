@@ -88,7 +88,7 @@ class WButtonColorForJavaTest {
             onUiThread(() -> {
                 button.setForeground(WColor.RED);
                 assertEquals(WColor.RED, button.getForeground());
-                assertEquals(237, button.getForeground().getRed());
+                assertEquals(255, button.getForeground().getRed());
             });
         } finally {
             UiTestHarness.detach(button);

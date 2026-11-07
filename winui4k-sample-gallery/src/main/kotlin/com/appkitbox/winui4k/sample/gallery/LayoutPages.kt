@@ -48,7 +48,7 @@ internal fun buildBorderPage(): WComponent {
 /** Switching the border thickness and corner rounding with buttons. */
 private fun buildBorderStyleExample(): WComponent {
     val border = WBorder(WLabel("Content with a border"))
-    border.borderColor = WColor.BLUE
+    border.borderColor = DEMO_BLUE
     border.borderThickness = 2.0
     border.padding = 16.0
 
@@ -64,7 +64,7 @@ private fun buildBorderStyleExample(): WComponent {
 
     val colorButton = WButton("Change border color")
     var colorIndex = 0
-    val colors = listOf(WColor.BLUE, WColor.RED, WColor.GREEN, WColor.ORANGE)
+    val colors = listOf(DEMO_BLUE, DEMO_RED, DEMO_GREEN, DEMO_ORANGE)
     colorButton.addActionListener {
         colorIndex = (colorIndex + 1) % colors.size
         border.borderColor = colors[colorIndex]
@@ -101,7 +101,7 @@ private fun buildBorderBackgroundExample(): WComponent {
 
 /** Switching between a gradient background and its angle. */
 private fun buildBorderGradientExample(): WComponent {
-    val stops = listOf(0.0 to WColor.BLUE, 1.0 to WColor.PURPLE)
+    val stops = listOf(0.0 to DEMO_BLUE, 1.0 to WColor.PURPLE)
 
     val border = WBorder(WLabel("Content with a gradient background").also { it.foreground = WColor.WHITE })
     border.backgroundGradient = WLinearGradientPaint(stops)
@@ -145,7 +145,7 @@ private fun buildCanvasPositionExample(): WComponent {
     canvas.height = 160.0
 
     canvas.add(buildTile(WColor.LIGHT_GRAY, 320.0, 160.0), 0.0, 0.0) // background (visualizes the canvas bounds)
-    val movingTile = buildTile(WColor.BLUE, 48.0, 48.0)
+    val movingTile = buildTile(DEMO_BLUE, 48.0, 48.0)
     var x = 16.0
     var y = 16.0
     canvas.add(movingTile, x, y)
@@ -169,8 +169,8 @@ private fun buildCanvasZIndexExample(): WComponent {
     canvas.width = 320.0
     canvas.height = 120.0
 
-    val redTile = buildTile(WColor.RED, 64.0, 64.0)
-    val greenTile = buildTile(WColor.GREEN, 64.0, 64.0)
+    val redTile = buildTile(DEMO_RED, 64.0, 64.0)
+    val greenTile = buildTile(DEMO_GREEN, 64.0, 64.0)
     canvas.add(redTile, 16.0, 16.0)
     canvas.add(greenTile, 48.0, 40.0)
 
@@ -217,9 +217,9 @@ private fun buildBorderLayoutPanel(hgap: Double = 4.0, vgap: Double = 4.0): WLay
 /** Basic placement across the 5 regions. */
 private fun buildBorderLayoutBasicExample(): WComponent {
     val panel = buildBorderLayoutPanel()
-    panel.add(buildTile(WColor.BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
-    panel.add(buildTile(WColor.GREEN, label = "South"), WBorderLayout.Constraint.SOUTH)
-    panel.add(buildTile(WColor.ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
+    panel.add(buildTile(DEMO_BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
+    panel.add(buildTile(DEMO_GREEN, label = "South"), WBorderLayout.Constraint.SOUTH)
+    panel.add(buildTile(DEMO_ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
     panel.add(buildTile(WColor.PURPLE, label = "East"), WBorderLayout.Constraint.EAST)
     panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
     return buildExample("Placement across 5 regions (BorderLayout)", panel)
@@ -228,8 +228,8 @@ private fun buildBorderLayoutBasicExample(): WComponent {
 /** Re-layout in response to visibility toggling, detaching, and content changes. */
 private fun buildBorderLayoutDynamicExample(): WComponent {
     val panel = buildBorderLayoutPanel()
-    val northTile = buildTile(WColor.BLUE, label = "North")
-    val westTile = buildTile(WColor.ORANGE, label = "West")
+    val northTile = buildTile(DEMO_BLUE, label = "North")
+    val westTile = buildTile(DEMO_ORANGE, label = "West")
     panel.add(northTile, WBorderLayout.Constraint.NORTH)
     panel.add(westTile, WBorderLayout.Constraint.WEST)
     panel.add(buildTile(WColor.LIGHT_GRAY, label = "Center"), WBorderLayout.Constraint.CENTER)
@@ -274,12 +274,12 @@ private fun buildBorderLayoutDynamicExample(): WComponent {
 /** Nesting another WLayoutPanel in CENTER (preferredSize is computed recursively in Kotlin). */
 private fun buildBorderLayoutNestedExample(): WComponent {
     val innerPanel = WLayoutPanel(WBorderLayout(hgap = 4.0, vgap = 4.0))
-    innerPanel.add(buildTile(WColor.YELLOW, label = "Inner North"), WBorderLayout.Constraint.NORTH)
+    innerPanel.add(buildTile(DEMO_YELLOW, label = "Inner North"), WBorderLayout.Constraint.NORTH)
     innerPanel.add(buildTile(WColor.LIGHT_GRAY, label = "Inner Center"), WBorderLayout.Constraint.CENTER)
 
     val panel = buildBorderLayoutPanel()
-    panel.add(buildTile(WColor.BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
-    panel.add(buildTile(WColor.ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
+    panel.add(buildTile(DEMO_BLUE, label = "North"), WBorderLayout.Constraint.NORTH)
+    panel.add(buildTile(DEMO_ORANGE, label = "West"), WBorderLayout.Constraint.WEST)
     panel.add(innerPanel, WBorderLayout.Constraint.CENTER)
     return buildExample("Nested LayoutPanel (another BorderLayout in CENTER)", panel)
 }
@@ -363,10 +363,10 @@ private fun buildGridCellExample(): WComponent {
     grid.addColumn(GridLength.star())
     grid.addColumn(GridLength.star(2.0))
 
-    grid.add(buildTile(WColor.RED, label = "80px"), row = 0, column = 0)
-    grid.add(buildTile(WColor.GREEN, label = "1*"), row = 0, column = 1)
-    grid.add(buildTile(WColor.BLUE, label = "2*"), row = 0, column = 2)
-    grid.add(buildTile(WColor.ORANGE, label = "Row 2"), row = 1, column = 0)
+    grid.add(buildTile(DEMO_RED, label = "80px"), row = 0, column = 0)
+    grid.add(buildTile(DEMO_GREEN, label = "1*"), row = 0, column = 1)
+    grid.add(buildTile(DEMO_BLUE, label = "2*"), row = 0, column = 2)
+    grid.add(buildTile(DEMO_ORANGE, label = "Row 2"), row = 1, column = 0)
     grid.add(buildTile(WColor.PURPLE, label = "Row 2"), row = 1, column = 2)
 
     return buildExample("Row/column definitions and cell placement (RowDefinitions / ColumnDefinitions)", grid)
@@ -379,10 +379,10 @@ private fun buildGridSpanExample(): WComponent {
     repeat(2) { grid.addRow(GridLength.pixel(48.0)) }
     repeat(3) { grid.addColumn(GridLength.star()) }
 
-    grid.add(buildTile(WColor.BLUE, label = "2 columns"), row = 0, column = 0, columnSpan = 2)
-    grid.add(buildTile(WColor.GREEN, label = "2 rows"), row = 0, column = 2, rowSpan = 2)
-    grid.add(buildTile(WColor.RED, label = "1 cell"), row = 1, column = 0)
-    grid.add(buildTile(WColor.ORANGE, label = "1 cell"), row = 1, column = 1)
+    grid.add(buildTile(DEMO_BLUE, label = "2 columns"), row = 0, column = 0, columnSpan = 2)
+    grid.add(buildTile(DEMO_GREEN, label = "2 rows"), row = 0, column = 2, rowSpan = 2)
+    grid.add(buildTile(DEMO_RED, label = "1 cell"), row = 1, column = 0)
+    grid.add(buildTile(DEMO_ORANGE, label = "1 cell"), row = 1, column = 1)
 
     val spacingButton = WButton("Toggle cell spacing")
     spacingButton.addActionListener {
@@ -416,10 +416,10 @@ private fun buildRelativePanelSiblingExample(): WComponent {
     panel.width = 320.0
     panel.height = 160.0
 
-    val anchor = buildTile(WColor.BLUE, label = "Anchor")
-    val right = buildTile(WColor.GREEN, label = "Right")
-    val below = buildTile(WColor.RED, label = "Below")
-    val rightBelow = buildTile(WColor.ORANGE, label = "Right+Below")
+    val anchor = buildTile(DEMO_BLUE, label = "Anchor")
+    val right = buildTile(DEMO_GREEN, label = "Right")
+    val below = buildTile(DEMO_RED, label = "Below")
+    val rightBelow = buildTile(DEMO_ORANGE, label = "Right+Below")
 
     panel.add(anchor)
     panel.add(right)
@@ -442,12 +442,12 @@ private fun buildRelativePanelAlignExample(): WComponent {
 
     panel.add(buildTile(WColor.LIGHT_GRAY, 320.0, 160.0)) // background (visualizes the panel bounds)
 
-    val topRight = buildTile(WColor.GREEN, 48.0, 48.0)
+    val topRight = buildTile(DEMO_GREEN, 48.0, 48.0)
     panel.add(topRight)
     panel.alignRightWithPanel(topRight)
     panel.alignTopWithPanel(topRight)
 
-    val bottomRight = buildTile(WColor.RED, 48.0, 48.0)
+    val bottomRight = buildTile(DEMO_RED, 48.0, 48.0)
     panel.add(bottomRight)
     panel.alignRightWithPanel(bottomRight)
     panel.alignBottomWithPanel(bottomRight)
@@ -536,9 +536,9 @@ internal fun buildStackPanelPage(): WComponent {
 /** The direction children line up in, and the spacing between them. */
 private fun buildStackPanelExample(): WComponent {
     val panel = WPanel(spacing = 8.0)
-    panel.add(buildTile(WColor.RED, 48.0, 48.0))
-    panel.add(buildTile(WColor.GREEN, 48.0, 48.0))
-    panel.add(buildTile(WColor.BLUE, 48.0, 48.0))
+    panel.add(buildTile(DEMO_RED, 48.0, 48.0))
+    panel.add(buildTile(DEMO_GREEN, 48.0, 48.0))
+    panel.add(buildTile(DEMO_BLUE, 48.0, 48.0))
 
     val orientationButton = WButton("Toggle direction")
     orientationButton.addActionListener {
@@ -581,10 +581,10 @@ private fun buildWrapGridSpanExample(): WComponent {
     grid.orientation = Orientation.HORIZONTAL
     grid.maximumRowsOrColumns = 4
 
-    grid.add(buildTile(WColor.BLUE, label = "2×2"), rowSpan = 2, columnSpan = 2)
-    grid.add(buildTile(WColor.RED, label = "1×1"), rowSpan = 1, columnSpan = 1)
-    grid.add(buildTile(WColor.GREEN, label = "1×2"), rowSpan = 1, columnSpan = 2)
-    grid.add(buildTile(WColor.ORANGE, label = "1×1"), rowSpan = 1, columnSpan = 1)
+    grid.add(buildTile(DEMO_BLUE, label = "2×2"), rowSpan = 2, columnSpan = 2)
+    grid.add(buildTile(DEMO_RED, label = "1×1"), rowSpan = 1, columnSpan = 1)
+    grid.add(buildTile(DEMO_GREEN, label = "1×2"), rowSpan = 1, columnSpan = 2)
+    grid.add(buildTile(DEMO_ORANGE, label = "1×1"), rowSpan = 1, columnSpan = 1)
     grid.add(buildTile(WColor.PURPLE, label = "2×1"), rowSpan = 2, columnSpan = 1)
     grid.add(buildTile(WColor.GRAY, label = "1×1"), rowSpan = 1, columnSpan = 1)
 

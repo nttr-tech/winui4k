@@ -369,10 +369,10 @@ internal fun buildColorPickerPage(): WComponent {
 
 /** A basic color picker: reflecting color changes (ColorChanged) onto a tile. */
 private fun buildSimpleColorPickerExample(): WComponent {
-    val tile = buildTile(WColor.BLUE, width = 64.0, height = 64.0)
+    val tile = buildTile(DEMO_BLUE, width = 64.0, height = 64.0)
 
     val colorPicker = WColorPicker()
-    colorPicker.color = WColor.BLUE
+    colorPicker.color = DEMO_BLUE
     colorPicker.addChangeListener { color ->
         tile.background = color
     }
@@ -800,12 +800,12 @@ internal fun buildSplitButtonPage(): WComponent {
 /** A basic split button: clicking the body applies the current color, the arrow picks a color. */
 private fun buildSimpleSplitButtonExample(): WComponent {
     val tile = buildTile(WColor.LIGHT_GRAY, width = 48.0, height = 48.0)
-    var currentColor = WColor.RED
+    var currentColor = DEMO_RED
 
     val menu = WPanel(spacing = 4.0)
     val flyout = WFlyout(menu)
     val splitButton = WSplitButton("Apply color")
-    for ((name, color) in listOf("Red" to WColor.RED, "Green" to WColor.GREEN, "Blue" to WColor.BLUE)) {
+    for ((name, color) in listOf("Red" to DEMO_RED, "Green" to DEMO_GREEN, "Blue" to DEMO_BLUE)) {
         menu.add(
             WButton(name).also { button ->
                 button.width = 100.0

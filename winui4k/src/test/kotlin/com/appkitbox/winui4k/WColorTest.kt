@@ -4,6 +4,7 @@ import io.kotest.core.annotation.Tags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.awt.Color
 
 /** Tests WColor's value equality (equals / hashCode) (no UI needed). */
 @Tags("Pure")
@@ -28,6 +29,26 @@ class WColorTest : FunSpec() {
 
         test("is not equal to objects other than WColor") {
             WColor.BLACK.equals("WColor(red=0, green=0, blue=0, alpha=255)") shouldBe false
+        }
+
+        test("the named colors have the same values as the java.awt.Color colors of the same names (replacing Color.RED with WColor.RED does not change the color)") {
+            val pairs = listOf(
+                "BLACK" to (WColor.BLACK to Color.BLACK),
+                "WHITE" to (WColor.WHITE to Color.WHITE),
+                "GRAY" to (WColor.GRAY to Color.GRAY),
+                "LIGHT_GRAY" to (WColor.LIGHT_GRAY to Color.LIGHT_GRAY),
+                "RED" to (WColor.RED to Color.RED),
+                "GREEN" to (WColor.GREEN to Color.GREEN),
+                "BLUE" to (WColor.BLUE to Color.BLUE),
+                "YELLOW" to (WColor.YELLOW to Color.YELLOW),
+                "ORANGE" to (WColor.ORANGE to Color.ORANGE),
+                "DARK_GRAY" to (WColor.DARK_GRAY to Color.DARK_GRAY),
+                "PINK" to (WColor.PINK to Color.PINK),
+                "MAGENTA" to (WColor.MAGENTA to Color.MAGENTA),
+                "CYAN" to (WColor.CYAN to Color.CYAN),
+            )
+            pairs.map { (name, colors) -> name to colors.first } shouldBe
+                pairs.map { (name, colors) -> name to colors.second.let { WColor(it.red, it.green, it.blue, it.alpha) } }
         }
 
         test("toString shows the four components") {

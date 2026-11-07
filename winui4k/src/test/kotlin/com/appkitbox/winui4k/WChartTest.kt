@@ -299,7 +299,7 @@ class WChartTest : FunSpec() {
                 val series = LineSeries()
                 series.stroke = WColor(0, 120, 212)
                 series.dataLabelColor = WColor(1, 2, 3, 128)
-                series.dataMarkerColor = WColor.RED
+                series.dataMarkerColor = WColor(237, 28, 36)
                 val set = listOf(
                     series.series.brushColor(ChartsInterop.ICartesianSeries_get_Stroke),
                     series.series.brushColor(ChartsInterop.ICartesianSeries_get_DataLabelBrush),
@@ -320,7 +320,7 @@ class WChartTest : FunSpec() {
                 val bar = BarSeries()
                 val defaultOrientation = bar.orientation
                 bar.orientation = BarOrientation.VERTICAL
-                bar.fill = WColor.GREEN
+                bar.fill = WColor(34, 177, 76)
                 listOf(
                     area.inspectable.brushColor(ChartsInterop.IAreaSeries_get_Fill),
                     defaultOrientation,
@@ -488,7 +488,7 @@ class WChartTest : FunSpec() {
                 axis.gridLineMajorColor = WColor(128, 128, 128, 102)
                 axis.gridLineMinorColor = WColor(128, 128, 128, 51)
                 axis.tickColor = WColor.BLACK
-                axis.tickLabelColor = WColor.BLUE
+                axis.tickLabelColor = WColor(0, 120, 215)
                 axis.axisLineColor = WColor.GRAY
                 val native = axis.cartesianAxis
                 listOf(

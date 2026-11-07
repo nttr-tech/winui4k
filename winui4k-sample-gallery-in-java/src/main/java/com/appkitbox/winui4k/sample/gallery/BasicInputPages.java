@@ -356,10 +356,10 @@ final class BasicInputPages {
 
     /** A basic color picker: reflecting color changes (ColorChanged) onto a tile. */
     private static WComponent buildSimpleColorPickerExample() {
-        WBorder tile = GalleryScaffold.buildTile(WColor.BLUE, 64.0, 64.0);
+        WBorder tile = GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, 64.0, 64.0);
 
         WColorPicker colorPicker = new WColorPicker();
-        colorPicker.setColor(WColor.BLUE);
+        colorPicker.setColor(GalleryTheme.DEMO_BLUE);
         colorPicker.addChangeListener((color) -> {
             tile.setBackground(color);
         });
@@ -798,13 +798,13 @@ final class BasicInputPages {
     /** A basic split button: clicking the body applies the current color, the arrow picks a color. */
     private static WComponent buildSimpleSplitButtonExample() {
         WBorder tile = GalleryScaffold.buildTile(WColor.LIGHT_GRAY, 48.0, 48.0);
-        WColor[] currentColor = {WColor.RED};
+        WColor[] currentColor = {GalleryTheme.DEMO_RED};
 
         WPanel menu = new WPanel(4.0);
         WFlyout flyout = new WFlyout(menu);
         WSplitButton splitButton = new WSplitButton("Apply color");
         String[] names = {"Red", "Green", "Blue"};
-        WColor[] colors = {WColor.RED, WColor.GREEN, WColor.BLUE};
+        WColor[] colors = {GalleryTheme.DEMO_RED, GalleryTheme.DEMO_GREEN, GalleryTheme.DEMO_BLUE};
         for (int i = 0; i < names.length; i++) {
             String name = names[i];
             WColor color = colors[i];

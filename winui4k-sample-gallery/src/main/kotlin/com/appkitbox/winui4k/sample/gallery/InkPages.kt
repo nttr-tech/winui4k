@@ -61,10 +61,10 @@ private val ALL_DEVICES = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOU
 /** Color choices (name and color). */
 private val INK_COLORS = listOf(
     "Black" to WColor.BLACK,
-    "Red" to WColor.RED,
-    "Green" to WColor.GREEN,
-    "Blue" to WColor.BLUE,
-    "Orange" to WColor.ORANGE,
+    "Red" to DEMO_RED,
+    "Green" to DEMO_GREEN,
+    "Blue" to DEMO_BLUE,
+    "Orange" to DEMO_ORANGE,
     "Purple" to WColor.PURPLE,
 )
 
@@ -321,7 +321,7 @@ private fun buildInkModelExample(): WComponent {
     val addWave = WButton("Add a wavy line from code")
     addWave.addActionListener {
         val top = 40.0 + (model.getStrokeCount() % 5) * 40.0
-        model.addStroke(waveStroke(top, InkDrawingAttributes.builder().color(WColor.BLUE).size(4.0).build()))
+        model.addStroke(waveStroke(top, InkDrawingAttributes.builder().color(DEMO_BLUE).size(4.0).build()))
     }
     val undo = WButton("Undo the last stroke")
     undo.addActionListener {
@@ -337,7 +337,7 @@ private fun buildInkModelExample(): WComponent {
     recolor.addActionListener {
         for (i in 0 until model.getStrokeCount()) {
             val stroke = model.getStroke(i)
-            model.setStroke(i, stroke.withDrawingAttributes(stroke.drawingAttributes.toBuilder().color(WColor.RED).build()))
+            model.setStroke(i, stroke.withDrawingAttributes(stroke.drawingAttributes.toBuilder().color(DEMO_RED).build()))
         }
     }
     val shift = WButton("Shift all strokes right by 20")
@@ -390,8 +390,8 @@ private fun installLasso(canvas: WInkCanvas, onSelected: (InkRect) -> Unit, onUn
 
 /** Two wavy lines, blue and green (the initial content of the selection demo). */
 private fun twoWaves(): List<InkStroke> = listOf(
-    waveStroke(60.0, InkDrawingAttributes.builder().color(WColor.BLUE).size(4.0).build()),
-    waveStroke(140.0, InkDrawingAttributes.builder().color(WColor.GREEN).size(6.0).build()),
+    waveStroke(60.0, InkDrawingAttributes.builder().color(DEMO_BLUE).size(4.0).build()),
+    waveStroke(140.0, InkDrawingAttributes.builder().color(DEMO_GREEN).size(6.0).build()),
 )
 
 /** Selection: select with a lasso, then move, delete, copy, and paste. */
@@ -572,7 +572,7 @@ private fun buildInkCustomDryingExample(): WComponent {
     val synchronizer = wetCanvas.inkPresenter.activateCustomDrying()
     wetCanvas.inkPresenter.addStrokesCollectedListener {
         val strokes = synchronizer.beginDry()
-        dried.addStrokes(strokes.map { it.withDrawingAttributes(it.drawingAttributes.toBuilder().color(WColor.BLUE).build()) })
+        dried.addStrokes(strokes.map { it.withDrawingAttributes(it.drawingAttributes.toBuilder().color(DEMO_BLUE).build()) })
         synchronizer.endDry()
     }
     val clear = WButton("Clear")
@@ -668,7 +668,7 @@ private fun buildInkToolbarAppearanceExample(): WComponent {
         toolbar.addLoadedListener {
             val pen = toolbar.getToolButton(InkToolbarTool.BALLPOINT_PEN) as? WInkToolbarPenButton
             if (pen != null && customPalette.isOn) {
-                pen.palette = listOf(WColor.BLACK, WColor.RED, WColor.BLUE, WColor(0, 160, 120))
+                pen.palette = listOf(WColor.BLACK, DEMO_RED, DEMO_BLUE, WColor(0, 160, 120))
                 pen.minStrokeWidth = 2.0
                 pen.maxStrokeWidth = 12.0
                 pen.selectedBrushIndex = 1

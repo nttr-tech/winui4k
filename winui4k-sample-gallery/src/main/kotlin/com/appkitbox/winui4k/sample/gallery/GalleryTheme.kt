@@ -7,6 +7,24 @@ import com.appkitbox.winui4k.WColor
 // effect when built. Repainting on a theme change is handled by main()'s ActualThemeChanged (which
 // rebuilds the visible page).
 
+// Muted WinUI 3 Gallery-like colors used for demo tiles, ink and color choices. WColor.RED etc. are the same primary colors as java.awt.Color,
+// so they are not used for on-screen examples.
+
+/** The demo red. */
+internal val DEMO_RED = WColor(237, 28, 36)
+
+/** The demo green. */
+internal val DEMO_GREEN = WColor(34, 177, 76)
+
+/** The demo blue (Windows's default accent color). */
+internal val DEMO_BLUE = WColor(0, 120, 215)
+
+/** The demo yellow. */
+internal val DEMO_YELLOW = WColor(255, 201, 14)
+
+/** The demo orange. */
+internal val DEMO_ORANGE = WColor(255, 127, 39)
+
 /** Whether the current app theme is dark. Updated by the root element's ActualThemeChanged. */
 internal var isDarkTheme = false
 

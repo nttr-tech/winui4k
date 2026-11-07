@@ -558,7 +558,7 @@ final class WindowingPages {
         targetCombo.setSelectedIndex(0);
 
         WColorPicker picker = new WColorPicker();
-        picker.setColor(WColor.BLUE);
+        picker.setColor(GalleryTheme.DEMO_BLUE);
 
         WButton applyButton = new WButton("Apply this color");
         applyButton.addActionListener(() -> {

@@ -55,7 +55,7 @@ final class LayoutPages {
     /** Switching the border thickness and corner rounding with buttons. */
     private static WComponent buildBorderStyleExample() {
         WBorder border = new WBorder(new WLabel("Content with a border"));
-        border.setBorderColor(WColor.BLUE);
+        border.setBorderColor(GalleryTheme.DEMO_BLUE);
         border.setBorderThickness(2.0);
         border.setPadding(16.0);
 
@@ -72,10 +72,10 @@ final class LayoutPages {
         WButton colorButton = new WButton("Change border color");
         int[] colorIndex = {0};
         List<WColor> colors = Arrays.asList(
-                WColor.BLUE,
-                WColor.RED,
-                WColor.GREEN,
-                WColor.ORANGE);
+                GalleryTheme.DEMO_BLUE,
+                GalleryTheme.DEMO_RED,
+                GalleryTheme.DEMO_GREEN,
+                GalleryTheme.DEMO_ORANGE);
         colorButton.addActionListener(() -> {
             colorIndex[0] = (colorIndex[0] + 1) % colors.size();
             border.setBorderColor(colors.get(colorIndex[0]));
@@ -113,7 +113,7 @@ final class LayoutPages {
     /** Switching between a gradient background and its angle. */
     private static WComponent buildBorderGradientExample() {
         WGradientStop[] stops = {
-            new WGradientStop(0.0, WColor.BLUE),
+            new WGradientStop(0.0, GalleryTheme.DEMO_BLUE),
             new WGradientStop(1.0, WColor.PURPLE)
         };
 
@@ -161,7 +161,7 @@ final class LayoutPages {
         canvas.setHeight(160.0);
 
         canvas.add(GalleryScaffold.buildTile(WColor.LIGHT_GRAY, 320.0, 160.0), 0.0, 0.0); // the background (visualizes the extent of the canvas)
-        WBorder movingTile = GalleryScaffold.buildTile(WColor.BLUE, 48.0, 48.0);
+        WBorder movingTile = GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, 48.0, 48.0);
         double[] x = {16.0};
         double[] y = {16.0};
         canvas.add(movingTile, x[0], y[0]);
@@ -185,8 +185,8 @@ final class LayoutPages {
         canvas.setWidth(320.0);
         canvas.setHeight(120.0);
 
-        WBorder redTile = GalleryScaffold.buildTile(WColor.RED, 64.0, 64.0);
-        WBorder greenTile = GalleryScaffold.buildTile(WColor.GREEN, 64.0, 64.0);
+        WBorder redTile = GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, 64.0, 64.0);
+        WBorder greenTile = GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, 64.0, 64.0);
         canvas.add(redTile, 16.0, 16.0);
         canvas.add(greenTile, 48.0, 40.0);
 
@@ -232,9 +232,9 @@ final class LayoutPages {
     /** Basic placement across the 5 regions. */
     private static WComponent buildBorderLayoutBasicExample() {
         WLayoutPanel panel = buildBorderLayoutPanel(4.0, 4.0);
-        panel.add(GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "North"), WBorderLayout.Constraint.NORTH);
-        panel.add(GalleryScaffold.buildTile(WColor.GREEN, Double.NaN, Double.NaN, "South"), WBorderLayout.Constraint.SOUTH);
-        panel.add(GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "West"), WBorderLayout.Constraint.WEST);
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "North"), WBorderLayout.Constraint.NORTH);
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, Double.NaN, Double.NaN, "South"), WBorderLayout.Constraint.SOUTH);
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "West"), WBorderLayout.Constraint.WEST);
         panel.add(GalleryScaffold.buildTile(WColor.PURPLE, Double.NaN, Double.NaN, "East"), WBorderLayout.Constraint.EAST);
         panel.add(GalleryScaffold.buildTile(WColor.LIGHT_GRAY, Double.NaN, Double.NaN, "Center"), WBorderLayout.Constraint.CENTER);
         return GalleryScaffold.buildExample("Placement across 5 regions (BorderLayout)", panel);
@@ -243,8 +243,8 @@ final class LayoutPages {
     /** Re-layout in response to visibility toggling, detaching, and content changes. */
     private static WComponent buildBorderLayoutDynamicExample() {
         WLayoutPanel panel = buildBorderLayoutPanel(4.0, 4.0);
-        WBorder northTile = GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "North");
-        WBorder westTile = GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "West");
+        WBorder northTile = GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "North");
+        WBorder westTile = GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "West");
         panel.add(northTile, WBorderLayout.Constraint.NORTH);
         panel.add(westTile, WBorderLayout.Constraint.WEST);
         panel.add(GalleryScaffold.buildTile(WColor.LIGHT_GRAY, Double.NaN, Double.NaN, "Center"), WBorderLayout.Constraint.CENTER);
@@ -289,12 +289,12 @@ final class LayoutPages {
     /** Nesting another WLayoutPanel in CENTER (preferredSize is computed recursively in Kotlin). */
     private static WComponent buildBorderLayoutNestedExample() {
         WLayoutPanel innerPanel = new WLayoutPanel(new WBorderLayout(4.0, 4.0));
-        innerPanel.add(GalleryScaffold.buildTile(WColor.YELLOW, Double.NaN, Double.NaN, "Inner North"), WBorderLayout.Constraint.NORTH);
+        innerPanel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_YELLOW, Double.NaN, Double.NaN, "Inner North"), WBorderLayout.Constraint.NORTH);
         innerPanel.add(GalleryScaffold.buildTile(WColor.LIGHT_GRAY, Double.NaN, Double.NaN, "Inner Center"), WBorderLayout.Constraint.CENTER);
 
         WLayoutPanel panel = buildBorderLayoutPanel(4.0, 4.0);
-        panel.add(GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "North"), WBorderLayout.Constraint.NORTH);
-        panel.add(GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "West"), WBorderLayout.Constraint.WEST);
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "North"), WBorderLayout.Constraint.NORTH);
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "West"), WBorderLayout.Constraint.WEST);
         panel.add(innerPanel, WBorderLayout.Constraint.CENTER);
         return GalleryScaffold.buildExample("Nested LayoutPanel (another BorderLayout in CENTER)", panel);
     }
@@ -384,10 +384,10 @@ final class LayoutPages {
         grid.addColumn(GridLength.star());
         grid.addColumn(GridLength.star(2.0));
 
-        grid.add(GalleryScaffold.buildTile(WColor.RED, Double.NaN, Double.NaN, "80px"), 0, 0, 1, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.GREEN, Double.NaN, Double.NaN, "1*"), 0, 1, 1, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "2*"), 0, 2, 1, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "Row 2"), 1, 0, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, Double.NaN, Double.NaN, "80px"), 0, 0, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, Double.NaN, Double.NaN, "1*"), 0, 1, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "2*"), 0, 2, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "Row 2"), 1, 0, 1, 1);
         grid.add(GalleryScaffold.buildTile(WColor.PURPLE, Double.NaN, Double.NaN, "Row 2"), 1, 2, 1, 1);
 
         return GalleryScaffold.buildExample("Row/column definitions and cell placement (RowDefinitions / ColumnDefinitions)", grid);
@@ -404,10 +404,10 @@ final class LayoutPages {
             grid.addColumn(GridLength.star());
         }
 
-        grid.add(GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "2 columns"), 0, 0, 1, 2);
-        grid.add(GalleryScaffold.buildTile(WColor.GREEN, Double.NaN, Double.NaN, "2 rows"), 0, 2, 2, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.RED, Double.NaN, Double.NaN, "1 cell"), 1, 0, 1, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "1 cell"), 1, 1, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "2 columns"), 0, 0, 1, 2);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, Double.NaN, Double.NaN, "2 rows"), 0, 2, 2, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, Double.NaN, Double.NaN, "1 cell"), 1, 0, 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "1 cell"), 1, 1, 1, 1);
 
         WButton spacingButton = new WButton("Toggle cell spacing");
         spacingButton.addActionListener(() -> {
@@ -441,10 +441,10 @@ final class LayoutPages {
         panel.setWidth(320.0);
         panel.setHeight(160.0);
 
-        WBorder anchor = GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "Anchor");
-        WBorder right = GalleryScaffold.buildTile(WColor.GREEN, Double.NaN, Double.NaN, "Right");
-        WBorder below = GalleryScaffold.buildTile(WColor.RED, Double.NaN, Double.NaN, "Below");
-        WBorder rightBelow = GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "Right+Below");
+        WBorder anchor = GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "Anchor");
+        WBorder right = GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, Double.NaN, Double.NaN, "Right");
+        WBorder below = GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, Double.NaN, Double.NaN, "Below");
+        WBorder rightBelow = GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "Right+Below");
 
         panel.add(anchor);
         panel.add(right);
@@ -467,12 +467,12 @@ final class LayoutPages {
 
         panel.add(GalleryScaffold.buildTile(WColor.LIGHT_GRAY, 320.0, 160.0)); // the background (visualizes the extent of the panel)
 
-        WBorder topRight = GalleryScaffold.buildTile(WColor.GREEN, 48.0, 48.0);
+        WBorder topRight = GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, 48.0, 48.0);
         panel.add(topRight);
         panel.alignRightWithPanel(topRight, true);
         panel.alignTopWithPanel(topRight, true);
 
-        WBorder bottomRight = GalleryScaffold.buildTile(WColor.RED, 48.0, 48.0);
+        WBorder bottomRight = GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, 48.0, 48.0);
         panel.add(bottomRight);
         panel.alignRightWithPanel(bottomRight, true);
         panel.alignBottomWithPanel(bottomRight, true);
@@ -563,9 +563,9 @@ final class LayoutPages {
     /** The direction children line up in, and the spacing between them. */
     private static WComponent buildStackPanelExample() {
         WPanel panel = new WPanel(8.0);
-        panel.add(GalleryScaffold.buildTile(WColor.RED, 48.0, 48.0));
-        panel.add(GalleryScaffold.buildTile(WColor.GREEN, 48.0, 48.0));
-        panel.add(GalleryScaffold.buildTile(WColor.BLUE, 48.0, 48.0));
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, 48.0, 48.0));
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, 48.0, 48.0));
+        panel.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, 48.0, 48.0));
 
         WButton orientationButton = new WButton("Toggle direction");
         orientationButton.addActionListener(() -> {
@@ -608,10 +608,10 @@ final class LayoutPages {
         grid.setOrientation(Orientation.HORIZONTAL);
         grid.setMaximumRowsOrColumns(4);
 
-        grid.add(GalleryScaffold.buildTile(WColor.BLUE, Double.NaN, Double.NaN, "2×2"), 2, 2);
-        grid.add(GalleryScaffold.buildTile(WColor.RED, Double.NaN, Double.NaN, "1×1"), 1, 1);
-        grid.add(GalleryScaffold.buildTile(WColor.GREEN, Double.NaN, Double.NaN, "1×2"), 1, 2);
-        grid.add(GalleryScaffold.buildTile(WColor.ORANGE, Double.NaN, Double.NaN, "1×1"), 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_BLUE, Double.NaN, Double.NaN, "2×2"), 2, 2);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_RED, Double.NaN, Double.NaN, "1×1"), 1, 1);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_GREEN, Double.NaN, Double.NaN, "1×2"), 1, 2);
+        grid.add(GalleryScaffold.buildTile(GalleryTheme.DEMO_ORANGE, Double.NaN, Double.NaN, "1×1"), 1, 1);
         grid.add(GalleryScaffold.buildTile(WColor.PURPLE, Double.NaN, Double.NaN, "2×1"), 2, 1);
         grid.add(GalleryScaffold.buildTile(WColor.GRAY, Double.NaN, Double.NaN, "1×1"), 1, 1);
 

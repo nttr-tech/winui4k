@@ -477,7 +477,7 @@ private fun buildTitleBarColorExample(): WComponent {
     targetCombo.selectedIndex = 0
 
     val picker = WColorPicker()
-    picker.color = WColor.BLUE
+    picker.color = DEMO_BLUE
 
     val applyButton = WButton("Apply this color")
     applyButton.addActionListener {
