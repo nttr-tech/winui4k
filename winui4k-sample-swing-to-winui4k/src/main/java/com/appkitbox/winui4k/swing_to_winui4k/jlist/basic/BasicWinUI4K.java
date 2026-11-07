@@ -3,6 +3,7 @@ package com.appkitbox.winui4k.swing_to_winui4k.jlist.basic;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WList;
+import com.appkitbox.winui4k.WListSelectionModel;
 import com.appkitbox.winui4k.WinUiUtilities;
 
 /** 3.2 Show fixed items (WinUI4K). */
@@ -13,7 +14,8 @@ public class BasicWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             String[] fruits = {"Apple", "Orange", "Grape", "Peach", "Cherry"};
-            WList list = new WList(fruits);           // single selection by default
+            WList list = new WList(fruits);
+            list.setSelectionMode(WListSelectionModel.SINGLE_SELECTION);
             list.setWidth(200);
             list.setHeight(150);
             frame.add(list);
