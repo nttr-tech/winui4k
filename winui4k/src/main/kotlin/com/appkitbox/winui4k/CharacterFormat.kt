@@ -31,7 +31,7 @@ internal class CharacterFormat private constructor(
             XamlStructs.putColor(format, TextInterop.ITextCharacterFormat_put_ForegroundColor, it.alpha, it.red, it.green, it.blue)
         }
         fontSize?.let { format.call(TextInterop.ITextCharacterFormat_put_Size, (it * POINTS_PER_DIP).toFloat()) }
-        fontFamily?.let { name -> Hstring.use(name) { h -> format.call(TextInterop.ITextCharacterFormat_put_Name, h) } }
+        fontFamily?.let { name -> Hstring.use(WFont.physicalFamily(name)) { h -> format.call(TextInterop.ITextCharacterFormat_put_Name, h) } }
     }
 
     companion object {

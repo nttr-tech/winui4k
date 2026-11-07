@@ -34,6 +34,54 @@ class WFontTest : FunSpec() {
             }
         }
 
+        test("AWT logical font names are replaced with Windows typefaces (case-insensitive)") {
+            val label = onUiThreadGet { WLabel("Logical font") }
+            UiTestHarness.attachAndAwaitLoaded(label)
+            try {
+                onUiThreadGet {
+                    listOf(
+                        WFont.SANS_SERIF,
+                        WFont.DIALOG,
+                        "sansserif",
+                        WFont.SERIF,
+                        WFont.MONOSPACED,
+                        WFont.DIALOG_INPUT,
+                        "Yu Gothic UI",
+                    ).map { name ->
+                        label.font = WFont(name, WFont.PLAIN, 14)
+                        label.font?.name
+                    }
+                } shouldBe listOf(
+                    "Segoe UI",
+                    "Segoe UI",
+                    "Segoe UI",
+                    "Times New Roman",
+                    "Consolas",
+                    "Consolas",
+                    "Yu Gothic UI",
+                )
+            } finally {
+                UiTestHarness.detach(label)
+            }
+        }
+
+        test("logical font names in StyleConstants.setFontFamily of WTextPane are also replaced with Windows typefaces") {
+            onUiThreadGet {
+                val pane = WTextPane()
+                pane.text = "abc"
+                pane.select(0, 3)
+                val attributes = WSimpleAttributeSet()
+                WStyleConstants.setFontFamily(attributes, WFont.MONOSPACED)
+                pane.setCharacterAttributes(attributes, false)
+                pane.caretPosition = 1
+                WStyleConstants.getFontFamily(pane.getCharacterAttributes())
+            } shouldBe "Consolas"
+        }
+
+        test("logical font names are replaced only when passed to the native side, and the name of WFont stays the name passed") {
+            onUiThreadGet { WFont(WFont.SANS_SERIF, WFont.BOLD, 12).name } shouldBe "SansSerif"
+        }
+
         test("making the font larger increases the button's height after layout") {
             val button = onUiThreadGet {
                 val button = WButton("Size")

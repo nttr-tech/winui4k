@@ -6,6 +6,7 @@ import com.appkitbox.winui4k.internal.ffi.api.withScope
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -14,6 +15,10 @@ import kotlin.math.roundToInt
  *
  * The size unit is DIP (WinUI pixels; at 96 dpi, the same visual size as AWT points).
  * [style] is a bitwise OR of [PLAIN] / [BOLD] / [ITALIC]; [BOLD] is FontWeight 700 and [ITALIC] is FontStyle.Italic.
+ *
+ * AWT logical font names ([SANS_SERIF] / [DIALOG] / [SERIF] / [MONOSPACED] / [DIALOG_INPUT]; case-insensitive) are
+ * replaced with Windows typefaces (Segoe UI / Times New Roman / Consolas) when set on a component. [name] stays the name passed, but
+ * reading it back from the component's font gives the name of the replaced typeface.
  */
 class WFont(
     /** The font family name (for example, "Segoe UI"). */
@@ -73,6 +78,34 @@ class WFont(
 
         /** Italic (FontStyle.Italic). */
         const val ITALIC = 2
+
+        /** java.awt.Font.DIALOG-like: a logical font. Becomes Segoe UI (WinUI's default typeface) when set on a component. */
+        const val DIALOG = "Dialog"
+
+        /** java.awt.Font.DIALOG_INPUT-like: a logical font. Becomes the monospaced Consolas when set on a component. */
+        const val DIALOG_INPUT = "DialogInput"
+
+        /** java.awt.Font.SANS_SERIF-like: a logical font. Becomes Segoe UI when set on a component. */
+        const val SANS_SERIF = "SansSerif"
+
+        /** java.awt.Font.SERIF-like: a logical font. Becomes Times New Roman when set on a component. */
+        const val SERIF = "Serif"
+
+        /** java.awt.Font.MONOSPACED-like: a logical font. Becomes Consolas when set on a component. */
+        const val MONOSPACED = "Monospaced"
+
+        /** From logical font names (lowercase) to Windows typeface names. */
+        private val PHYSICAL_FAMILIES = mapOf(
+            "dialog" to "Segoe UI",
+            "sansserif" to "Segoe UI",
+            "serif" to "Times New Roman",
+            "monospaced" to "Consolas",
+            "dialoginput" to "Consolas",
+        )
+
+        /** The Windows typeface name if [name] is an AWT logical font name, otherwise [name] as is (used when setting it on a component). */
+        @JvmSynthetic
+        internal fun physicalFamily(name: String): String = PHYSICAL_FAMILIES[name.lowercase(Locale.ROOT)] ?: name
     }
 }
 

@@ -110,7 +110,7 @@ internal object FontProperties {
 
     /** Sets the font family of [view] to [name]. */
     fun writeFamily(view: ComPtr, slots: FontSlots, name: String) {
-        val family = createFontFamily(name)
+        val family = createFontFamily(WFont.physicalFamily(name))
         try {
             view.call(slots.putFamily, family.ptr)
         } finally {
