@@ -817,6 +817,8 @@ class WFrame @JvmOverloads constructor(title: String = "") :
      * is not pressed.
      * When the window is closed, the button is removed from Enter dispatching (the value that was set and
      * [WButton.isDefaultButton] remain as they are).
+     * Swing's `getRootPane().setDefaultButton(b)` is written `frame.setDefaultButton(b)`. [WContentDialog.defaultButton] takes
+     * a [ContentDialogButton] (one of the dialog's three buttons) instead of a button.
      */
     var defaultButton: WButton? = null
         set(value) {

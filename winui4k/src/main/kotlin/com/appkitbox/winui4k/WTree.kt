@@ -53,7 +53,11 @@ enum class TreeViewSelectionMode(internal val native: Int) {
 }
 
 /**
- * DefaultMutableTreeNode-like: WinUI 3's TreeViewNode.
+ * WinUI 3's TreeViewNode: one node for building nodes directly in a [WTree] ([WTree.addRootNode]).
+ *
+ * When moving from Swing's DefaultMutableTreeNode and TreeModel, use
+ * [com.appkitbox.winui4k.tree.DefaultMutableTreeNode] and [WTree.model] instead of this. This class is not a model, and while a model is shown,
+ * the node APIs such as [WTree.addRootNode] and [WTree.selectedNode] cannot be used (IllegalStateException).
  *
  * A single node of the tree displayed in [WTree]. Holds a [text] label, and
  * [add] / [remove] / [removeAllChildren] edit its child nodes.
