@@ -219,12 +219,40 @@ class WTextField() : WControl(
         set(value) = inspectable.call(XamlInterop.ITextBox_put_TextWrapping, value.native)
 
     /**
-     * JTextField.setHorizontalAlignment-like: the alignment of the text in the field (TextBox.TextAlignment).
-     * The name of Swing's setHorizontalAlignment is used by the field's placement in its parent ([horizontalAlignmentInParent]).
+     * The alignment of the text in the field (TextBox.TextAlignment). What corresponds to Swing's JTextField.setHorizontalAlignment is
+     * [horizontalAlignment], which reads and writes the same state with Swing's values. This one can also use WinUI TextBox values such as
+     * justifying multiple lines (JUSTIFY).
      */
     var textAlignment: TextAlignment
         get() = TextAlignment.of(inspectable.getInt(XamlInterop.ITextBox_get_TextAlignment))
         set(value) = inspectable.call(XamlInterop.ITextBox_put_TextAlignment, value.native)
+
+    /**
+     * JTextField.getHorizontalAlignment / setHorizontalAlignment-like: the horizontal alignment of the text in the field. The default is [HorizontalAlignment.LEFT]
+     * (corresponding to JTextField's default LEADING; when [flowDirection] is right to left, left and right are swapped as in WinUI, so LEFT corresponds to LEADING).
+     *
+     * A view of the same state as [textAlignment] with Swing's names and values: setting it makes [textAlignment] the same direction (LEFT / CENTER / RIGHT), and
+     * reading it gives CENTER if [textAlignment] is CENTER, RIGHT if RIGHT, and LEFT otherwise (LEFT, JUSTIFY, DETECT_FROM_CONTENT).
+     * The position of the field itself in its parent is [horizontalAlignmentInParent], and they do not affect each other.
+     *
+     * Change from earlier versions: the former `horizontalAlignment` was the position in the parent (now [horizontalAlignmentInParent]).
+     *
+     * @throws IllegalArgumentException if [HorizontalAlignment.STRETCH] is passed (a value not available for text alignment; the value does not change)
+     */
+    var horizontalAlignment: HorizontalAlignment
+        get() = when (textAlignment) {
+            TextAlignment.CENTER -> HorizontalAlignment.CENTER
+            TextAlignment.RIGHT -> HorizontalAlignment.RIGHT
+            else -> HorizontalAlignment.LEFT
+        }
+        set(value) {
+            textAlignment = when (value) {
+                HorizontalAlignment.LEFT -> TextAlignment.LEFT
+                HorizontalAlignment.CENTER -> TextAlignment.CENTER
+                HorizontalAlignment.RIGHT -> TextAlignment.RIGHT
+                HorizontalAlignment.STRETCH -> throw IllegalArgumentException("STRETCH cannot be used for the horizontalAlignment of a text field")
+            }
+        }
 
     /**
      * JTextComponent.setMargin(Insets)-like: the inner padding between the component's border and its content (Control.Padding). [WInsets] is top, left, bottom, right, as with Swing's Insets.
