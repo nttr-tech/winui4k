@@ -108,6 +108,17 @@ class WComboBoxRendererTest : FunSpec() {
                     nativeItems(combo)
                 } shouldContainExactly listOf("a", "b")
             }
+
+            test("getRenderer for Java returns a function wrapping Kotlin's renderer, and the Function from setRenderer can be called through renderer") {
+                onUiThreadGet {
+                    val combo = WComboBox(listOf("a", "b"))
+                    val none = combo.getRenderer()
+                    combo.renderer = { value -> "[$value]" }
+                    val wrapped = combo.getRenderer()?.apply("x")
+                    combo.setRenderer(java.util.function.Function { value -> "<$value>" })
+                    listOf(none, wrapped, combo.renderer?.invoke("y")) + nativeItems(combo)
+                } shouldContainExactly listOf(null, "[x]", "<y>", "<a>", "<b>")
+            }
         }
 
         context("Events") {

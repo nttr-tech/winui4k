@@ -12,6 +12,7 @@ import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.lang.ref.WeakReference
 import java.util.function.Consumer
+import java.util.function.Function
 import kotlin.jvm.JvmName
 import kotlin.jvm.JvmSynthetic
 
@@ -335,12 +336,37 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
      * Difference from Swing: it returns only a string, not a component like ListCellRenderer (the same element cannot be placed in
      * it cannot be placed in two places). [getItem] and [selectedItemText] return this text, but the input field of an editable combo box
      * keeps `toString()` because it also represents values not in the list. The function is called on the UI thread for each item whenever the model changes.
+     * From Java, use [setRenderer] / [getRenderer], which take a `java.util.function.Function<Object, String>`.
      */
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     var renderer: ((Any?) -> String)? = null
         set(value) {
             field = value
+            javaRenderer = null
             rebuildNative()
         }
+
+    /** The Java function set with [setRenderer] (kept so that [getRenderer] returns the same one). */
+    private var javaRenderer: Function<Any?, String>? = null
+
+    /**
+     * JComboBox.setRenderer-like (for Java): sets [renderer] with a Java function. null returns to the items' `toString()`.
+     */
+    fun setRenderer(renderer: Function<Any?, String>?) {
+        this.renderer = renderer?.let { { value: Any? -> it.apply(value) } }
+        javaRenderer = renderer
+    }
+
+    /**
+     * JComboBox.getRenderer-like (for Java): returns [renderer] as a Java function. The function set with [setRenderer] if any,
+     * a function wrapping it if set with Kotlin's [renderer], and null if not set.
+     */
+    fun getRenderer(): Function<Any?, String>? {
+        javaRenderer?.let { return it }
+        val current = renderer ?: return null
+        return Function<Any?, String> { current(it) }.also { javaRenderer = it }
+    }
 
     /** Returns the display string (the [renderer] string) of the item at [index]. Throws [IndexOutOfBoundsException] if out of range ([getItemAt] returns null when out of range). */
     fun getItem(index: Int): String {

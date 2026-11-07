@@ -3,8 +3,10 @@ package com.appkitbox.winui4k;
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.Arrays;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -25,6 +27,22 @@ class WComboBoxRendererForJavaTest {
             combo.setRenderer(null);
             assertNull(combo.getRenderer());
             assertEquals("apple", combo.getItem(0));
+        });
+    }
+
+    @Test
+    void setRendererAcceptsAJavaUtilFunctionAndGetRendererReturnsTheSameFunction() {
+        onUiThread(() -> {
+            WComboBox combo = new WComboBox(Arrays.asList("apple", "orange"));
+            Function<Object, String> renderer = value -> "[" + value + "]";
+            combo.setRenderer(renderer);
+            Function<Object, String> read = combo.getRenderer();
+            assertSame(renderer, read);
+            assertEquals("[apple]", combo.getItemAt(0));
+            assertEquals("[orange]", combo.getItem(1));
+            combo.setRenderer(null);
+            assertNull(combo.getRenderer());
+            assertEquals("orange", combo.getItemAt(1));
         });
     }
 }
