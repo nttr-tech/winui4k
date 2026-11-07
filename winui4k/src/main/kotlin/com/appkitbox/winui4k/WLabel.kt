@@ -289,6 +289,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         textElement.verticalAlignment = VerticalAlignment.STRETCH
         val icon = shownIcon
         if (icon == null) {
+            // As with JLabel's default vertical alignment (CENTER), the text is centered vertically even when stretched
+            textElement.verticalAlignment = VerticalAlignment.CENTER
             children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
             revalidate()
             return
@@ -298,6 +300,8 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
         iconElement.verticalAlignment = VerticalAlignment.CENTER
         val group = WGrid()
         group.horizontalAlignment = groupAlignment(textAlignment)
+        // The group of the icon and text is also centered vertically in a stretched label (the same as JLabel's default)
+        group.verticalAlignment = VerticalAlignment.CENTER
         when {
             text.isEmpty() -> group.add(iconElement, 0, 0)
             horizontalTextPosition != HorizontalTextPosition.CENTER -> {
@@ -531,7 +535,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     }
 
     init {
-        children.call(FoundationInterop.IVector_Append, textElement.uiElement.ptr)
+        arrange()
         if (text.isNotEmpty()) this.text = text
     }
 }

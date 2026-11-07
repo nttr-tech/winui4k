@@ -20,6 +20,11 @@ internal class AppBarElementContainer : WControl(
         own(inspectable.queryInterface(XamlInterop.IID_IContentControl))
     }
 
+    init {
+        // The default style aligns the content to the top (VerticalContentAlignment = Top). As with JToolBar, center it vertically within the bar's height
+        verticalContentAlignment = VerticalAlignment.CENTER
+    }
+
     /** Sets the container's content (ContentControl.Content) to [component]. null empties it. */
     fun hold(component: WComponent?) {
         contentControl.call(XamlInterop.IContentControl_put_Content, component?.uiElement?.ptr)
