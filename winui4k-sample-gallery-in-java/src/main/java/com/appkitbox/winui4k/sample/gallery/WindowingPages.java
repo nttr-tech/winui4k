@@ -111,6 +111,7 @@ final class WindowingPages {
         titleButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().setTitle(Messages.get("appwindow.basic.newtitle", String.valueOf(System.currentTimeMillis() % 1000)));
             status.setText("Title = \"" + frame.getAppWindow().getTitle() + "\"");
@@ -120,6 +121,7 @@ final class WindowingPages {
         resizeButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().resize(640, 480);
             status.setText("Size = " + frame.getAppWindow().getSize()
@@ -130,6 +132,7 @@ final class WindowingPages {
         moveButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().move(100, 100);
             status.setText("Position = " + frame.getAppWindow().getPosition());
@@ -168,6 +171,7 @@ final class WindowingPages {
         centerButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             WRectangle workArea = WDisplayArea.nearest(frame.getAppWindow()).getWorkArea();
             WDimension size = frame.getAppWindow().getSize();
@@ -393,6 +397,7 @@ final class WindowingPages {
         fullScreenButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().setPresenter(WFullScreenPresenter.create());
             status.setText(Messages.get("appwindow.fullscreen.entered"));
@@ -402,6 +407,7 @@ final class WindowingPages {
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
             status.setText(Messages.get("appwindow.restored"));
@@ -453,6 +459,7 @@ final class WindowingPages {
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             CompactOverlaySize size = CompactOverlaySize.values()[Math.max(sizeCombo.getSelectedIndex(), 0)];
             WCompactOverlayPresenter presenter = WCompactOverlayPresenter.create();
@@ -465,6 +472,7 @@ final class WindowingPages {
         restoreButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             frame.getAppWindow().setPresenter(WAppWindowPresenterKind.DEFAULT);
             status.setText(Messages.get("appwindow.restored"));
@@ -558,6 +566,7 @@ final class WindowingPages {
         applyButton.addActionListener(() -> {
             WFrame frame = child[0];
             if (frame == null) {
+                return;
             }
             TitleBarColorSlot slot = TITLE_BAR_COLOR_SLOTS.get(Math.max(targetCombo.getSelectedIndex(), 0));
             slot.set.accept(frame.getAppWindow().getTitleBar(), picker.getColor());
@@ -613,6 +622,7 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
+                    return;
                 }
                 frame.getAppWindow().getTitleBar().setPreferredHeightOption(option);
                 status.setText("PreferredHeightOption = " + option
@@ -652,6 +662,7 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
+                    return;
                 }
                 frame.getAppWindow().getTitleBar().setPreferredTheme(theme);
                 status.setText("PreferredTheme = " + theme);
@@ -703,6 +714,7 @@ final class WindowingPages {
             button.addActionListener(() -> {
                 WFrame frame = child[0];
                 if (frame == null) {
+                    return;
                 }
                 frame.setSystemBackdrop(type);
                 status.setText("SystemBackdrop = " + frame.getSystemBackdrop());
