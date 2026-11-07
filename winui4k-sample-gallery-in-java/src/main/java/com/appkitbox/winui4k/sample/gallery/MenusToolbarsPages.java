@@ -49,7 +49,7 @@ final class MenusToolbarsPages {
 
     /** AppBarButton page: lines up demos exercising WAppBarButton. */
     static WComponent buildAppBarButtonPage() {
-        WPanel page = GalleryScaffold.buildPage("AppBarButton", "A toolbar button with an icon and label stacked vertically. Try out WAppBarButton.");
+        WPanel page = GalleryScaffold.buildPage("AppBarButton", Messages.get("appbarbutton.description"));
 
         page.add(buildSimpleAppBarButtonExample());
         page.add(buildFlyoutAppBarButtonExample());
@@ -58,20 +58,20 @@ final class MenusToolbarsPages {
 
     /** A basic AppBarButton: a Symbol icon and a click subscription. */
     private static WComponent buildSimpleAppBarButtonExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("appbarbutton.result.click.none"));
 
-        WAppBarButton likeButton = new WAppBarButton("Like", Symbol.LIKE);
+        WAppBarButton likeButton = new WAppBarButton(Messages.get("appbarbutton.like"), Symbol.LIKE);
         likeButton.addActionListener(() -> {
-            result.setText("Click: Like");
+            result.setText(Messages.get("appbarbutton.result.click", Messages.get("appbarbutton.like")));
         });
 
-        WAppBarButton saveButton = new WAppBarButton("Save", Symbol.SAVE);
+        WAppBarButton saveButton = new WAppBarButton(Messages.get("appbarbutton.save"), Symbol.SAVE);
         saveButton.setKeyboardAcceleratorText("Ctrl+S"); // shown in the tooltip
         saveButton.addActionListener(() -> {
-            result.setText("Click: Save");
+            result.setText(Messages.get("appbarbutton.result.click", Messages.get("appbarbutton.save")));
         });
 
-        WAppBarButton disabledButton = new WAppBarButton("Disabled", Symbol.CANCEL);
+        WAppBarButton disabledButton = new WAppBarButton(Messages.get("appbarbutton.disabled"), Symbol.CANCEL);
         disabledButton.setEnabled(false);
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -80,30 +80,30 @@ final class MenusToolbarsPages {
         row.add(disabledButton);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("A simple AppBarButton (Label / Icon / IsEnabled)", row);
+        return GalleryScaffold.buildExample(Messages.get("appbarbutton.example.simple.title"), row);
     }
 
     /** An AppBarButton with a flyout: opens a menu on click. */
     private static WComponent buildFlyoutAppBarButtonExample() {
-        WLabel result = new WLabel("Selected item: none");
+        WLabel result = new WLabel(Messages.get("appbarbutton.result.selected.none"));
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
-        for (String text : Arrays.asList("PNG format", "JPEG format", "SVG format")) {
+        for (String text : Arrays.asList(Messages.get("appbarbutton.format.png"), Messages.get("appbarbutton.format.jpeg"), Messages.get("appbarbutton.format.svg"))) {
             WMenuFlyoutItem item = new WMenuFlyoutItem(text);
             item.addActionListener(() -> {
-                result.setText("Selected item: " + text);
+                result.setText(Messages.get("appbarbutton.result.selected", text));
             });
             menuFlyout.add(item);
         }
 
-        WAppBarButton exportButton = new WAppBarButton("Export", Symbol.DOWNLOAD);
+        WAppBarButton exportButton = new WAppBarButton(Messages.get("appbarbutton.export"), Symbol.DOWNLOAD);
         exportButton.setFlyout(menuFlyout);
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(exportButton);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("An AppBarButton with a menu (Flyout)", row);
+        return GalleryScaffold.buildExample(Messages.get("appbarbutton.example.flyout.title"), row);
     }
 
     // endregion
@@ -112,7 +112,7 @@ final class MenusToolbarsPages {
 
     /** AppBarSeparator page: lines up a WAppBarSeparator demo. */
     static WComponent buildAppBarSeparatorPage() {
-        WPanel page = GalleryScaffold.buildPage("AppBarSeparator", "A divider line that groups commands on a toolbar.");
+        WPanel page = GalleryScaffold.buildPage("AppBarSeparator", Messages.get("appbarseparator.description"));
 
         page.add(buildAppBarSeparatorExample());
         return page;
@@ -121,13 +121,13 @@ final class MenusToolbarsPages {
     /** Dividing a row of AppBarButtons with AppBarSeparator. */
     private static WComponent buildAppBarSeparatorExample() {
         WPanel row = new WPanel(4.0, Orientation.HORIZONTAL);
-        row.add(new WAppBarButton("Back", Symbol.BACK));
-        row.add(new WAppBarButton("Forward", Symbol.FORWARD));
+        row.add(new WAppBarButton(Messages.get("appbarseparator.back"), Symbol.BACK));
+        row.add(new WAppBarButton(Messages.get("appbarseparator.forward"), Symbol.FORWARD));
         row.add(new WAppBarSeparator());
-        row.add(new WAppBarButton("Refresh", Symbol.REFRESH));
+        row.add(new WAppBarButton(Messages.get("appbarseparator.refresh"), Symbol.REFRESH));
         row.add(new WAppBarSeparator());
-        row.add(new WAppBarButton("Favorite", Symbol.FAVORITE));
-        return GalleryScaffold.buildExample("Grouping commands", row);
+        row.add(new WAppBarButton(Messages.get("appbarseparator.favorite"), Symbol.FAVORITE));
+        return GalleryScaffold.buildExample(Messages.get("appbarseparator.example.title"), row);
     }
 
     // endregion
@@ -136,7 +136,7 @@ final class MenusToolbarsPages {
 
     /** AppBarToggleButton page: lines up demos exercising WAppBarToggleButton. */
     static WComponent buildAppBarToggleButtonPage() {
-        WPanel page = GalleryScaffold.buildPage("AppBarToggleButton", "A toolbar button with on/off state. Try out WAppBarToggleButton.");
+        WPanel page = GalleryScaffold.buildPage("AppBarToggleButton", Messages.get("appbartogglebutton.description"));
 
         page.add(buildSimpleAppBarToggleButtonExample());
         return page;
@@ -144,14 +144,14 @@ final class MenusToolbarsPages {
 
     /** A basic AppBarToggleButton: subscribing to and flipping the checked state. */
     private static WComponent buildSimpleAppBarToggleButtonExample() {
-        WLabel result = new WLabel("Shuffle: off");
+        WLabel result = new WLabel(Messages.get("appbartogglebutton.result.shuffle.off"));
 
-        WAppBarToggleButton shuffleButton = new WAppBarToggleButton("Shuffle", Symbol.SHUFFLE);
+        WAppBarToggleButton shuffleButton = new WAppBarToggleButton(Messages.get("appbartogglebutton.shuffle"), Symbol.SHUFFLE);
         shuffleButton.addItemListener(e -> {
-            result.setText("Shuffle: " + (e.getStateChange() == WItemEvent.SELECTED ? "on" : "off"));
+            result.setText(e.getStateChange() == WItemEvent.SELECTED ? Messages.get("appbartogglebutton.result.shuffle.on") : Messages.get("appbartogglebutton.result.shuffle.off"));
         });
 
-        WAppBarToggleButton boldButton = new WAppBarToggleButton("Bold", Symbol.BOLD);
+        WAppBarToggleButton boldButton = new WAppBarToggleButton(Messages.get("appbartogglebutton.bold"), Symbol.BOLD);
         boldButton.setSelected(true);
 
         WPanel row = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -159,7 +159,7 @@ final class MenusToolbarsPages {
         row.add(boldButton);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("A simple AppBarToggleButton (IsChecked)", row);
+        return GalleryScaffold.buildExample(Messages.get("appbartogglebutton.example.simple.title"), row);
     }
 
     // endregion
@@ -168,7 +168,7 @@ final class MenusToolbarsPages {
 
     /** CommandBar page: lines up demos exercising WCommandBar. */
     static WComponent buildCommandBarPage() {
-        WPanel page = GalleryScaffold.buildPage("CommandBar", "A toolbar of commands. Try out WCommandBar.");
+        WPanel page = GalleryScaffold.buildPage("CommandBar", Messages.get("commandbar.description"));
 
         page.add(buildSimpleCommandBarExample());
         page.add(buildCommandBarLabelPositionExample());
@@ -177,26 +177,26 @@ final class MenusToolbarsPages {
 
     /** A basic command bar: Primary / Secondary commands and open/close. */
     private static WComponent buildSimpleCommandBarExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("commandbar.result.click.none"));
 
         BiFunction<String, Symbol, WAppBarButton> appBarButton = (label, icon) -> {
             WAppBarButton button = new WAppBarButton(label, icon);
             button.addActionListener(() -> {
-                result.setText("Click: " + label);
+                result.setText(Messages.get("commandbar.result.click", label));
             });
             return button;
         };
 
         WCommandBar commandBar = new WCommandBar();
-        commandBar.addPrimaryCommand(appBarButton.apply("Add", Symbol.ADD));
-        commandBar.addPrimaryCommand(appBarButton.apply("Edit", Symbol.EDIT));
+        commandBar.addPrimaryCommand(appBarButton.apply(Messages.get("commandbar.add"), Symbol.ADD));
+        commandBar.addPrimaryCommand(appBarButton.apply(Messages.get("commandbar.edit"), Symbol.EDIT));
         commandBar.addPrimaryCommand(new WAppBarSeparator());
-        commandBar.addPrimaryCommand(appBarButton.apply("Share", Symbol.SHARE));
+        commandBar.addPrimaryCommand(appBarButton.apply(Messages.get("commandbar.share"), Symbol.SHARE));
         // Secondary commands go into the overflow menu opened via […]
-        commandBar.addSecondaryCommand(appBarButton.apply("Settings", Symbol.SETTING));
-        commandBar.addSecondaryCommand(appBarButton.apply("Help", Symbol.HELP));
+        commandBar.addSecondaryCommand(appBarButton.apply(Messages.get("commandbar.settings"), Symbol.SETTING));
+        commandBar.addSecondaryCommand(appBarButton.apply(Messages.get("commandbar.help"), Symbol.HELP));
 
-        WButton openButton = new WButton("Toggle IsOpen");
+        WButton openButton = new WButton(Messages.get("commandbar.toggleopen"));
         openButton.addActionListener(() -> {
             commandBar.setOpen(!commandBar.isOpen());
         });
@@ -208,17 +208,17 @@ final class MenusToolbarsPages {
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         controls.add(result);
         body.add(controls);
-        return GalleryScaffold.buildExample("A simple command bar (PrimaryCommands / SecondaryCommands / IsOpen)", body);
+        return GalleryScaffold.buildExample(Messages.get("commandbar.example.simple.title"), body);
     }
 
     /** Changing the label position: showing labels to the right of icons via DefaultLabelPosition. */
     private static WComponent buildCommandBarLabelPositionExample() {
         WCommandBar commandBar = new WCommandBar();
         commandBar.setDefaultLabelPosition(CommandBarDefaultLabelPosition.RIGHT);
-        commandBar.addPrimaryCommand(new WAppBarButton("Add", Symbol.ADD));
-        commandBar.addPrimaryCommand(new WAppBarButton("Edit", Symbol.EDIT));
-        commandBar.addPrimaryCommand(new WAppBarButton("Delete", Symbol.DELETE));
-        return GalleryScaffold.buildExample("Showing labels to the right of icons (DefaultLabelPosition)", commandBar);
+        commandBar.addPrimaryCommand(new WAppBarButton(Messages.get("commandbar.add"), Symbol.ADD));
+        commandBar.addPrimaryCommand(new WAppBarButton(Messages.get("commandbar.edit"), Symbol.EDIT));
+        commandBar.addPrimaryCommand(new WAppBarButton(Messages.get("commandbar.delete"), Symbol.DELETE));
+        return GalleryScaffold.buildExample(Messages.get("commandbar.example.labelposition.title"), commandBar);
     }
 
     // endregion
@@ -227,7 +227,7 @@ final class MenusToolbarsPages {
 
     /** CommandBarFlyout page: lines up demos exercising WCommandBarFlyout. */
     static WComponent buildCommandBarFlyoutPage() {
-        WPanel page = GalleryScaffold.buildPage("CommandBarFlyout", "A context menu with a mini toolbar attached. Try out WCommandBarFlyout.");
+        WPanel page = GalleryScaffold.buildPage("CommandBarFlyout", Messages.get("commandbarflyout.description"));
 
         page.add(buildCommandBarFlyoutExample());
         return page;
@@ -235,32 +235,32 @@ final class MenusToolbarsPages {
 
     /** Attaching a CommandBarFlyout to an image-like tile: opens via right-click or a button. */
     private static WComponent buildCommandBarFlyoutExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("commandbarflyout.result.click.none"));
 
         BiFunction<String, Symbol, WAppBarButton> appBarButton = (label, icon) -> {
             WAppBarButton button = new WAppBarButton(label, icon);
             button.addActionListener(() -> {
-                result.setText("Click: " + label);
+                result.setText(Messages.get("commandbarflyout.result.click", label));
             });
             return button;
         };
 
         WCommandBarFlyout flyout = new WCommandBarFlyout();
-        flyout.addPrimaryCommand(appBarButton.apply("Share", Symbol.SHARE));
-        flyout.addPrimaryCommand(appBarButton.apply("Save", Symbol.SAVE));
-        flyout.addPrimaryCommand(appBarButton.apply("Delete", Symbol.DELETE));
+        flyout.addPrimaryCommand(appBarButton.apply(Messages.get("commandbarflyout.share"), Symbol.SHARE));
+        flyout.addPrimaryCommand(appBarButton.apply(Messages.get("commandbarflyout.save"), Symbol.SAVE));
+        flyout.addPrimaryCommand(appBarButton.apply(Messages.get("commandbarflyout.delete"), Symbol.DELETE));
         // Secondary commands go into the menu below the mini toolbar
-        flyout.addSecondaryCommand(appBarButton.apply("Resize", Symbol.ZOOM));
-        flyout.addSecondaryCommand(appBarButton.apply("Go", Symbol.MOVE_TO_FOLDER));
+        flyout.addSecondaryCommand(appBarButton.apply(Messages.get("commandbarflyout.resize"), Symbol.ZOOM));
+        flyout.addSecondaryCommand(appBarButton.apply(Messages.get("commandbarflyout.move"), Symbol.MOVE_TO_FOLDER));
 
-        WLabel targetLabel = new WLabel("Right-click here");
+        WLabel targetLabel = new WLabel(Messages.get("commandbarflyout.target"));
         targetLabel.setMargin(32.0);
         WBorder target = new WBorder(targetLabel);
         target.setBackground(new WColor(226, 246, 235, 255));
         target.setCornerRadius(8.0);
         target.setContextFlyout(flyout);
 
-        WButton showButton = new WButton("Show flyout");
+        WButton showButton = new WButton(Messages.get("commandbarflyout.show"));
         showButton.addActionListener(() -> {
             flyout.showAt(target);
         });
@@ -272,7 +272,7 @@ final class MenusToolbarsPages {
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         controls.add(result);
         body.add(controls);
-        return GalleryScaffold.buildExample("A context menu with a mini toolbar attached (ContextFlyout / ShowAt)", body);
+        return GalleryScaffold.buildExample(Messages.get("commandbarflyout.example.title"), body);
     }
 
     // endregion
@@ -281,7 +281,7 @@ final class MenusToolbarsPages {
 
     /** MenuBar page: lines up demos exercising WMenuBar / WMenuBarItem. */
     static WComponent buildMenuBarPage() {
-        WPanel page = GalleryScaffold.buildPage("MenuBar", "A menu bar that lines up top-level menus horizontally. Try out WMenuBar / WMenuBarItem.");
+        WPanel page = GalleryScaffold.buildPage("MenuBar", Messages.get("menubar.description"));
 
         page.add(buildSimpleMenuBarExample());
         page.add(buildRichMenuBarExample());
@@ -290,31 +290,31 @@ final class MenusToolbarsPages {
 
     /** A basic menu bar: File / Edit / Help menus, with item-click subscriptions. */
     private static WComponent buildSimpleMenuBarExample() {
-        WLabel result = new WLabel("Selected item: none");
+        WLabel result = new WLabel(Messages.get("menubar.result.selected.none"));
 
         Function<String, WMenuFlyoutItem> item = (text) -> {
             WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text);
             menuItem.addActionListener(() -> {
-                result.setText("Selected item: " + text);
+                result.setText(Messages.get("menubar.result.selected", text));
             });
             return menuItem;
         };
 
-        WMenuBarItem fileMenu = new WMenuBarItem("File");
-        fileMenu.add(item.apply("New"));
-        fileMenu.add(item.apply("Open"));
-        fileMenu.add(item.apply("Save"));
+        WMenuBarItem fileMenu = new WMenuBarItem(Messages.get("menubar.file"));
+        fileMenu.add(item.apply(Messages.get("menubar.new")));
+        fileMenu.add(item.apply(Messages.get("menubar.open")));
+        fileMenu.add(item.apply(Messages.get("menubar.save")));
         fileMenu.add(new WMenuFlyoutSeparator());
-        fileMenu.add(item.apply("Exit"));
+        fileMenu.add(item.apply(Messages.get("menubar.exit")));
 
-        WMenuBarItem editMenu = new WMenuBarItem("Edit");
-        editMenu.add(item.apply("Undo"));
-        editMenu.add(item.apply("Cut"));
-        editMenu.add(item.apply("Copy"));
-        editMenu.add(item.apply("Paste"));
+        WMenuBarItem editMenu = new WMenuBarItem(Messages.get("menubar.edit"));
+        editMenu.add(item.apply(Messages.get("menubar.undo")));
+        editMenu.add(item.apply(Messages.get("menubar.cut")));
+        editMenu.add(item.apply(Messages.get("menubar.copy")));
+        editMenu.add(item.apply(Messages.get("menubar.paste")));
 
-        WMenuBarItem helpMenu = new WMenuBarItem("Help");
-        helpMenu.add(item.apply("About"));
+        WMenuBarItem helpMenu = new WMenuBarItem(Messages.get("menubar.help"));
+        helpMenu.add(item.apply(Messages.get("menubar.about")));
 
         WMenuBar menuBar = new WMenuBar();
         menuBar.add(fileMenu);
@@ -324,35 +324,35 @@ final class MenusToolbarsPages {
         WPanel body = new WPanel(8.0);
         body.add(menuBar);
         body.add(result);
-        return GalleryScaffold.buildExample("A simple menu bar", body);
+        return GalleryScaffold.buildExample(Messages.get("menubar.example.simple.title"), body);
     }
 
     /** A richer menu bar: icons, shortcuts, submenus, toggle and radio items. */
     private static WComponent buildRichMenuBarExample() {
-        WLabel result = new WLabel("Selected item: none");
+        WLabel result = new WLabel(Messages.get("menubar.result.selected.none"));
 
         BiFunction<String, Symbol, WMenuFlyoutItem> item = (text, icon) -> {
             WMenuFlyoutItem menuItem = new WMenuFlyoutItem(text, icon);
             menuItem.addActionListener(() -> {
-                result.setText("Selected item: " + text);
+                result.setText(Messages.get("menubar.result.selected", text));
             });
             return menuItem;
         };
 
         // Icons plus shortcuts that actually fire (work even without opening the menu)
-        WMenuFlyoutItem newItem = item.apply("New", Symbol.ADD);
+        WMenuFlyoutItem newItem = item.apply(Messages.get("menubar.new"), Symbol.ADD);
         newItem.addKeyboardAccelerator(VirtualKey.N, VirtualKeyModifier.CONTROL);
-        WMenuFlyoutItem openItem = item.apply("Open", Symbol.OPEN_FILE);
+        WMenuFlyoutItem openItem = item.apply(Messages.get("menubar.open"), Symbol.OPEN_FILE);
         openItem.addKeyboardAccelerator(VirtualKey.O, VirtualKeyModifier.CONTROL);
-        WMenuFlyoutItem saveItem = item.apply("Save", Symbol.SAVE);
+        WMenuFlyoutItem saveItem = item.apply(Messages.get("menubar.save"), Symbol.SAVE);
         saveItem.addKeyboardAccelerator(VirtualKey.S, VirtualKeyModifier.CONTROL);
 
         // A submenu (cascading)
-        WMenuFlyoutSubItem shareSubMenu = new WMenuFlyoutSubItem("Share", Symbol.SHARE);
-        shareSubMenu.add(item.apply("Send by email", Symbol.MAIL));
-        shareSubMenu.add(item.apply("Copy link", Symbol.LINK));
+        WMenuFlyoutSubItem shareSubMenu = new WMenuFlyoutSubItem(Messages.get("menubar.share"), Symbol.SHARE);
+        shareSubMenu.add(item.apply(Messages.get("menubar.sendmail"), Symbol.MAIL));
+        shareSubMenu.add(item.apply(Messages.get("menubar.copylink"), Symbol.LINK));
 
-        WMenuBarItem fileMenu = new WMenuBarItem("File");
+        WMenuBarItem fileMenu = new WMenuBarItem(Messages.get("menubar.file"));
         fileMenu.add(newItem);
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
@@ -360,28 +360,28 @@ final class MenusToolbarsPages {
         fileMenu.add(shareSubMenu);
 
         // A toggle item and radio items (mutually exclusive selection)
-        WToggleMenuFlyoutItem statusBarItem = new WToggleMenuFlyoutItem("Show status bar");
+        WToggleMenuFlyoutItem statusBarItem = new WToggleMenuFlyoutItem(Messages.get("menubar.statusbar"));
         statusBarItem.setChecked(true);
         statusBarItem.addActionListener(() -> {
-            result.setText("Show status bar: " + statusBarItem.isChecked());
+            result.setText(Messages.get("menubar.result.statusbar", String.valueOf(statusBarItem.isChecked())));
         });
 
         Function<String, WRadioMenuFlyoutItem> radio = (text) -> {
             WRadioMenuFlyoutItem radioItem = new WRadioMenuFlyoutItem(text, "orientation");
             radioItem.addActionListener(() -> {
-                result.setText("Orientation: " + text);
+                result.setText(Messages.get("menubar.result.orientation", text));
             });
             return radioItem;
         };
 
-        WRadioMenuFlyoutItem landscapeItem = radio.apply("Landscape");
+        WRadioMenuFlyoutItem landscapeItem = radio.apply(Messages.get("menubar.landscape"));
         landscapeItem.setChecked(true);
 
-        WMenuBarItem viewMenu = new WMenuBarItem("View");
+        WMenuBarItem viewMenu = new WMenuBarItem(Messages.get("menubar.view"));
         viewMenu.add(statusBarItem);
         viewMenu.add(new WMenuFlyoutSeparator());
         viewMenu.add(landscapeItem);
-        viewMenu.add(radio.apply("Portrait"));
+        viewMenu.add(radio.apply(Messages.get("menubar.portrait")));
 
         WMenuBar menuBar = new WMenuBar();
         menuBar.add(fileMenu);
@@ -390,7 +390,7 @@ final class MenusToolbarsPages {
         WPanel body = new WPanel(8.0);
         body.add(menuBar);
         body.add(result);
-        return GalleryScaffold.buildExample("Icons, shortcuts, submenus, and toggle / radio items", body);
+        return GalleryScaffold.buildExample(Messages.get("menubar.example.rich.title"), body);
     }
 
     // endregion
@@ -399,7 +399,7 @@ final class MenusToolbarsPages {
 
     /** MenuFlyout page: lines up demos exercising WMenuFlyout. */
     static WComponent buildMenuFlyoutPage() {
-        WPanel page = GalleryScaffold.buildPage("MenuFlyout", "A menu that temporarily shows a list of commands. Try out WMenuFlyout and its menu items.");
+        WPanel page = GalleryScaffold.buildPage("MenuFlyout", Messages.get("menuflyout.description"));
 
         page.add(buildSimpleMenuFlyoutExample());
         page.add(buildRadioMenuFlyoutExample());
@@ -409,69 +409,69 @@ final class MenusToolbarsPages {
 
     /** A basic menu flyout: opened from a DropDownButton. */
     private static WComponent buildSimpleMenuFlyoutExample() {
-        WLabel result = new WLabel("Selected item: none");
+        WLabel result = new WLabel(Messages.get("menuflyout.result.selected.none"));
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
-        for (String text : Arrays.asList("Reset items", "Repeat", "Shuffle")) {
+        for (String text : Arrays.asList(Messages.get("menuflyout.reset"), Messages.get("menuflyout.repeat"), Messages.get("menuflyout.shuffle"))) {
             WMenuFlyoutItem item = new WMenuFlyoutItem(text);
             item.addActionListener(() -> {
-                result.setText("Selected item: " + text);
+                result.setText(Messages.get("menuflyout.result.selected", text));
             });
             menuFlyout.add(item);
         }
 
-        WDropDownButton button = new WDropDownButton("Options");
+        WDropDownButton button = new WDropDownButton(Messages.get("menuflyout.options"));
         button.setFlyout(menuFlyout);
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(button);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("A simple menu flyout", row);
+        return GalleryScaffold.buildExample(Messages.get("menuflyout.example.simple.title"), row);
     }
 
     /** A menu flyout with radio items: mutually-exclusive sort criteria. */
     private static WComponent buildRadioMenuFlyoutExample() {
-        WLabel result = new WLabel("Sort by: rating");
+        WLabel result = new WLabel(Messages.get("menuflyout.result.sort", Messages.get("menuflyout.sort.rating")));
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
-        for (String text : Arrays.asList("Rating", "Name", "Date")) {
+        for (String text : Arrays.asList(Messages.get("menuflyout.sort.rating"), Messages.get("menuflyout.sort.name"), Messages.get("menuflyout.sort.date"))) {
             WRadioMenuFlyoutItem item = new WRadioMenuFlyoutItem(text, "sort");
-            item.setChecked(text.equals("Rating"));
+            item.setChecked(text.equals(Messages.get("menuflyout.sort.rating")));
             item.addActionListener(() -> {
-                result.setText("Sort by: " + text);
+                result.setText(Messages.get("menuflyout.result.sort", text));
             });
             menuFlyout.add(item);
         }
 
-        WDropDownButton button = new WDropDownButton("Sort");
+        WDropDownButton button = new WDropDownButton(Messages.get("menuflyout.sort"));
         button.setFlyout(menuFlyout);
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(button);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("Mutually-exclusive selection with radio items (WRadioMenuFlyoutItem)", row);
+        return GalleryScaffold.buildExample(Messages.get("menuflyout.example.radio.title"), row);
     }
 
     /** A context menu: a MenuFlyout opened by right-click (UIElement.ContextFlyout). */
     private static WComponent buildContextMenuFlyoutExample() {
-        WLabel result = new WLabel("Selected item: none");
+        WLabel result = new WLabel(Messages.get("menuflyout.result.selected.none"));
 
         WMenuFlyout menuFlyout = new WMenuFlyout();
-        WMenuFlyoutItem copyItem = new WMenuFlyoutItem("Copy", Symbol.COPY);
+        WMenuFlyoutItem copyItem = new WMenuFlyoutItem(Messages.get("menuflyout.copy"), Symbol.COPY);
         copyItem.setKeyboardAcceleratorText("Ctrl+C"); // a display-only shortcut string
         copyItem.addActionListener(() -> {
-            result.setText("Selected item: Copy");
+            result.setText(Messages.get("menuflyout.result.selected", Messages.get("menuflyout.copy")));
         });
         menuFlyout.add(copyItem);
-        WMenuFlyoutItem deleteItem = new WMenuFlyoutItem("Delete", Symbol.DELETE);
+        WMenuFlyoutItem deleteItem = new WMenuFlyoutItem(Messages.get("menuflyout.delete"), Symbol.DELETE);
         deleteItem.addActionListener(() -> {
-            result.setText("Selected item: Delete");
+            result.setText(Messages.get("menuflyout.result.selected", Messages.get("menuflyout.delete")));
         });
         menuFlyout.add(deleteItem);
 
-        WLabel targetLabel = new WLabel("Right-click here");
+        WLabel targetLabel = new WLabel(Messages.get("menuflyout.target"));
         targetLabel.setMargin(24.0);
         WBorder target = new WBorder(targetLabel);
         target.setBackground(new WColor(226, 235, 246, 255));
@@ -482,7 +482,7 @@ final class MenusToolbarsPages {
         row.add(target);
         result.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
         row.add(result);
-        return GalleryScaffold.buildExample("A context menu (ContextFlyout)", row);
+        return GalleryScaffold.buildExample(Messages.get("menuflyout.example.context.title"), row);
     }
 
     // endregion
@@ -493,7 +493,7 @@ final class MenusToolbarsPages {
     static WComponent buildSwipeControlPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "SwipeControl",
-                "A container that reveals commands on a touch swipe. Swiping is touch/pen only; it doesn't open with a mouse.");
+                Messages.get("swipecontrol.description"));
 
         page.add(buildSwipeControlExample());
         return page;
@@ -501,27 +501,27 @@ final class MenusToolbarsPages {
 
     /** Attaching Reveal / Execute swipe items to list-row-like content. */
     private static WComponent buildSwipeControlExample() {
-        WLabel result = new WLabel("Item run: none");
+        WLabel result = new WLabel(Messages.get("swipecontrol.result.executed.none"));
 
         // Swipe right (from the left edge) -> reveals a pin button (Reveal)
-        WSwipeItem pinItem = new WSwipeItem("Pin", Symbol.PIN);
+        WSwipeItem pinItem = new WSwipeItem(Messages.get("swipecontrol.pin"), Symbol.PIN);
         pinItem.setBackground(new WColor(96, 165, 250, 255));
         pinItem.addActionListener(() -> {
-            result.setText("Item run: Pin");
+            result.setText(Messages.get("swipecontrol.result.executed", Messages.get("swipecontrol.pin")));
         });
         WSwipeItems leftItems = new WSwipeItems(SwipeMode.REVEAL);
         leftItems.add(pinItem);
 
         // Swipe left (from the right edge) -> deletes immediately once fully swiped (Execute)
-        WSwipeItem deleteItem = new WSwipeItem("Delete", Symbol.DELETE);
+        WSwipeItem deleteItem = new WSwipeItem(Messages.get("swipecontrol.delete"), Symbol.DELETE);
         deleteItem.setBackground(new WColor(239, 68, 68, 255));
         deleteItem.addActionListener(() -> {
-            result.setText("Item run: Delete");
+            result.setText(Messages.get("swipecontrol.result.executed", Messages.get("swipecontrol.delete")));
         });
         WSwipeItems rightItems = new WSwipeItems(SwipeMode.EXECUTE);
         rightItems.add(deleteItem);
 
-        WLabel rowContentLabel = new WLabel("Touch-swipe this row left or right");
+        WLabel rowContentLabel = new WLabel(Messages.get("swipecontrol.row"));
         rowContentLabel.setMargin(16.0);
         WBorder rowContent = new WBorder(rowContentLabel);
         rowContent.setBackground(GalleryTheme.CARD_BACKGROUND());
@@ -536,7 +536,7 @@ final class MenusToolbarsPages {
         WPanel body = new WPanel(8.0);
         body.add(swipeControl);
         body.add(result);
-        return GalleryScaffold.buildExample("Swipe items (LeftItems: Reveal / RightItems: Execute)", body);
+        return GalleryScaffold.buildExample(Messages.get("swipecontrol.example.title"), body);
     }
 
     // endregion
@@ -547,7 +547,7 @@ final class MenusToolbarsPages {
     static WComponent buildStandardUICommandPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "StandardUICommand",
-                "A predefined command with an OS-standard label, icon, and shortcut already set. Try out WStandardUICommand.");
+                Messages.get("standarduicommand.description"));
 
         page.add(buildStandardUICommandExample());
         return page;
@@ -555,7 +555,7 @@ final class MenusToolbarsPages {
 
     /** A list of predefined commands: each Kind's label and icon apply automatically. */
     private static WComponent buildStandardUICommandExample() {
-        WLabel result = new WLabel("Command run: none");
+        WLabel result = new WLabel(Messages.get("standarduicommand.result.none"));
 
         WPanel row = new WPanel(4.0, Orientation.HORIZONTAL);
         for (StandardUICommandKind kind : Arrays.asList(
@@ -567,7 +567,7 @@ final class MenusToolbarsPages {
                 StandardUICommandKind.REDO)) {
             WStandardUICommand command = new WStandardUICommand(kind);
             command.addExecuteListener((parameter) -> {
-                result.setText("Command run: " + command.getLabel());
+                result.setText(Messages.get("standarduicommand.result", command.getLabel()));
             });
             // The label, icon, and shortcut (e.g. Ctrl+C) apply automatically from the command
             WAppBarButton button = new WAppBarButton();
@@ -578,7 +578,7 @@ final class MenusToolbarsPages {
         WPanel body = new WPanel(8.0);
         body.add(row);
         body.add(result);
-        return GalleryScaffold.buildExample("A toolbar of predefined commands (Kind / ExecuteRequested)", body);
+        return GalleryScaffold.buildExample(Messages.get("standarduicommand.example.title"), body);
     }
 
     // endregion
@@ -589,7 +589,7 @@ final class MenusToolbarsPages {
     static WComponent buildXamlUICommandPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "XamlUICommand",
-                "A reusable command that bundles a label, icon, and shortcut together. Try out WXamlUICommand.");
+                Messages.get("xamluicommand.description"));
 
         page.add(buildXamlUICommandExample());
         return page;
@@ -597,16 +597,16 @@ final class MenusToolbarsPages {
 
     /** A custom command: sharing the same look and behavior across multiple controls. */
     private static WComponent buildXamlUICommandExample() {
-        WLabel result = new WLabel("Run count: 0");
+        WLabel result = new WLabel(Messages.get("xamluicommand.result.count", "0"));
         int[] count = {0};
 
-        WXamlUICommand command = new WXamlUICommand("Add to favorites");
+        WXamlUICommand command = new WXamlUICommand(Messages.get("xamluicommand.label"));
         command.setIcon(Symbol.FAVORITE);
-        command.setDescription("Adds the selected item to your favorites");
+        command.setDescription(Messages.get("xamluicommand.commanddescription"));
         command.addKeyboardAccelerator(VirtualKey.F, VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT);
         command.addExecuteListener((parameter) -> {
             count[0]++;
-            result.setText("Run count: " + count[0]);
+            result.setText(Messages.get("xamluicommand.result.count", String.valueOf(count[0])));
         });
 
         // Set the same command on a Button and an AppBarButton (label and icon apply automatically)
@@ -624,10 +624,10 @@ final class MenusToolbarsPages {
 
         WPanel body = new WPanel(8.0);
         body.add(row);
-        WLabel shortcutLabel = new WLabel("The Ctrl+Shift+F shortcut also runs it");
+        WLabel shortcutLabel = new WLabel(Messages.get("xamluicommand.shortcut"));
         shortcutLabel.setForeground(GalleryTheme.TEXT_SECONDARY());
         body.add(shortcutLabel);
-        return GalleryScaffold.buildExample("Sharing a command (Label / IconSource / KeyboardAccelerator / ExecuteRequested)", body);
+        return GalleryScaffold.buildExample(Messages.get("xamluicommand.example.title"), body);
     }
 
     // endregion

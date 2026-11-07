@@ -42,7 +42,7 @@ import com.appkitbox.winui4k.WXamlUICommand
 
 /** AppBarButton page: lines up demos exercising WAppBarButton. */
 internal fun buildAppBarButtonPage(): WComponent {
-    val page = buildPage("AppBarButton", "A toolbar button with an icon and label stacked vertically. Try out WAppBarButton.")
+    val page = buildPage("AppBarButton", Messages.get("appbarbutton.description"))
 
     page.add(buildSimpleAppBarButtonExample())
     page.add(buildFlyoutAppBarButtonExample())
@@ -51,16 +51,16 @@ internal fun buildAppBarButtonPage(): WComponent {
 
 /** A basic AppBarButton: a Symbol icon and a click subscription. */
 private fun buildSimpleAppBarButtonExample(): WComponent {
-    val result = WLabel("Click: none")
+    val result = WLabel(Messages.get("appbarbutton.result.click.none"))
 
-    val likeButton = WAppBarButton("Like", Symbol.LIKE)
-    likeButton.addActionListener { result.text = "Click: Like" }
+    val likeButton = WAppBarButton(Messages.get("appbarbutton.like"), Symbol.LIKE)
+    likeButton.addActionListener { result.text = Messages.get("appbarbutton.result.click", Messages.get("appbarbutton.like")) }
 
-    val saveButton = WAppBarButton("Save", Symbol.SAVE)
+    val saveButton = WAppBarButton(Messages.get("appbarbutton.save"), Symbol.SAVE)
     saveButton.keyboardAcceleratorText = "Ctrl+S" // shown in the tooltip
-    saveButton.addActionListener { result.text = "Click: Save" }
+    saveButton.addActionListener { result.text = Messages.get("appbarbutton.result.click", Messages.get("appbarbutton.save")) }
 
-    val disabledButton = WAppBarButton("Disabled", Symbol.CANCEL)
+    val disabledButton = WAppBarButton(Messages.get("appbarbutton.disabled"), Symbol.CANCEL)
     disabledButton.isEnabled = false
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -68,29 +68,29 @@ private fun buildSimpleAppBarButtonExample(): WComponent {
     row.add(saveButton)
     row.add(disabledButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A simple AppBarButton (Label / Icon / IsEnabled)", row)
+    return buildExample(Messages.get("appbarbutton.example.simple.title"), row)
 }
 
 /** An AppBarButton with a flyout: opens a menu on click. */
 private fun buildFlyoutAppBarButtonExample(): WComponent {
-    val result = WLabel("Selected item: none")
+    val result = WLabel(Messages.get("appbarbutton.result.selected.none"))
 
     val menuFlyout = WMenuFlyout()
-    for (text in listOf("PNG format", "JPEG format", "SVG format")) {
+    for (text in listOf(Messages.get("appbarbutton.format.png"), Messages.get("appbarbutton.format.jpeg"), Messages.get("appbarbutton.format.svg"))) {
         menuFlyout.add(
             WMenuFlyoutItem(text).also { item ->
-                item.addActionListener { result.text = "Selected item: $text" }
+                item.addActionListener { result.text = Messages.get("appbarbutton.result.selected", text) }
             },
         )
     }
 
-    val exportButton = WAppBarButton("Export", Symbol.DOWNLOAD)
+    val exportButton = WAppBarButton(Messages.get("appbarbutton.export"), Symbol.DOWNLOAD)
     exportButton.flyout = menuFlyout
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(exportButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("An AppBarButton with a menu (Flyout)", row)
+    return buildExample(Messages.get("appbarbutton.example.flyout.title"), row)
 }
 
 // endregion
@@ -99,7 +99,7 @@ private fun buildFlyoutAppBarButtonExample(): WComponent {
 
 /** AppBarSeparator page: lines up a WAppBarSeparator demo. */
 internal fun buildAppBarSeparatorPage(): WComponent {
-    val page = buildPage("AppBarSeparator", "A divider line that groups commands on a toolbar.")
+    val page = buildPage("AppBarSeparator", Messages.get("appbarseparator.description"))
 
     page.add(buildAppBarSeparatorExample())
     return page
@@ -108,13 +108,13 @@ internal fun buildAppBarSeparatorPage(): WComponent {
 /** Dividing a row of AppBarButtons with AppBarSeparator. */
 private fun buildAppBarSeparatorExample(): WComponent {
     val row = WPanel(spacing = 4.0, orientation = Orientation.HORIZONTAL)
-    row.add(WAppBarButton("Back", Symbol.BACK))
-    row.add(WAppBarButton("Forward", Symbol.FORWARD))
+    row.add(WAppBarButton(Messages.get("appbarseparator.back"), Symbol.BACK))
+    row.add(WAppBarButton(Messages.get("appbarseparator.forward"), Symbol.FORWARD))
     row.add(WAppBarSeparator())
-    row.add(WAppBarButton("Refresh", Symbol.REFRESH))
+    row.add(WAppBarButton(Messages.get("appbarseparator.refresh"), Symbol.REFRESH))
     row.add(WAppBarSeparator())
-    row.add(WAppBarButton("Favorite", Symbol.FAVORITE))
-    return buildExample("Grouping commands", row)
+    row.add(WAppBarButton(Messages.get("appbarseparator.favorite"), Symbol.FAVORITE))
+    return buildExample(Messages.get("appbarseparator.example.title"), row)
 }
 
 // endregion
@@ -123,7 +123,7 @@ private fun buildAppBarSeparatorExample(): WComponent {
 
 /** AppBarToggleButton page: lines up demos exercising WAppBarToggleButton. */
 internal fun buildAppBarToggleButtonPage(): WComponent {
-    val page = buildPage("AppBarToggleButton", "A toolbar button with on/off state. Try out WAppBarToggleButton.")
+    val page = buildPage("AppBarToggleButton", Messages.get("appbartogglebutton.description"))
 
     page.add(buildSimpleAppBarToggleButtonExample())
     return page
@@ -131,21 +131,21 @@ internal fun buildAppBarToggleButtonPage(): WComponent {
 
 /** A basic AppBarToggleButton: subscribing to and flipping the checked state. */
 private fun buildSimpleAppBarToggleButtonExample(): WComponent {
-    val result = WLabel("Shuffle: off")
+    val result = WLabel(Messages.get("appbartogglebutton.result.shuffle.off"))
 
-    val shuffleButton = WAppBarToggleButton("Shuffle", Symbol.SHUFFLE)
+    val shuffleButton = WAppBarToggleButton(Messages.get("appbartogglebutton.shuffle"), Symbol.SHUFFLE)
     shuffleButton.addItemListener { isChecked ->
-        result.text = "Shuffle: ${if (isChecked == true) "on" else "off"}"
+        result.text = if (isChecked == true) Messages.get("appbartogglebutton.result.shuffle.on") else Messages.get("appbartogglebutton.result.shuffle.off")
     }
 
-    val boldButton = WAppBarToggleButton("Bold", Symbol.BOLD)
+    val boldButton = WAppBarToggleButton(Messages.get("appbartogglebutton.bold"), Symbol.BOLD)
     boldButton.isChecked = true
 
     val row = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
     row.add(shuffleButton)
     row.add(boldButton)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A simple AppBarToggleButton (IsChecked)", row)
+    return buildExample(Messages.get("appbartogglebutton.example.simple.title"), row)
 }
 
 // endregion
@@ -154,7 +154,7 @@ private fun buildSimpleAppBarToggleButtonExample(): WComponent {
 
 /** CommandBar page: lines up demos exercising WCommandBar. */
 internal fun buildCommandBarPage(): WComponent {
-    val page = buildPage("CommandBar", "A toolbar of commands. Try out WCommandBar.")
+    val page = buildPage("CommandBar", Messages.get("commandbar.description"))
 
     page.add(buildSimpleCommandBarExample())
     page.add(buildCommandBarLabelPositionExample())
@@ -163,22 +163,22 @@ internal fun buildCommandBarPage(): WComponent {
 
 /** A basic command bar: Primary / Secondary commands and open/close. */
 private fun buildSimpleCommandBarExample(): WComponent {
-    val result = WLabel("Click: none")
+    val result = WLabel(Messages.get("commandbar.result.click.none"))
 
     fun appBarButton(label: String, icon: Symbol) = WAppBarButton(label, icon).also { button ->
-        button.addActionListener { result.text = "Click: $label" }
+        button.addActionListener { result.text = Messages.get("commandbar.result.click", label) }
     }
 
     val commandBar = WCommandBar()
-    commandBar.addPrimaryCommand(appBarButton("Add", Symbol.ADD))
-    commandBar.addPrimaryCommand(appBarButton("Edit", Symbol.EDIT))
+    commandBar.addPrimaryCommand(appBarButton(Messages.get("commandbar.add"), Symbol.ADD))
+    commandBar.addPrimaryCommand(appBarButton(Messages.get("commandbar.edit"), Symbol.EDIT))
     commandBar.addPrimaryCommand(WAppBarSeparator())
-    commandBar.addPrimaryCommand(appBarButton("Share", Symbol.SHARE))
+    commandBar.addPrimaryCommand(appBarButton(Messages.get("commandbar.share"), Symbol.SHARE))
     // Secondary commands go into the overflow menu opened via […]
-    commandBar.addSecondaryCommand(appBarButton("Settings", Symbol.SETTING))
-    commandBar.addSecondaryCommand(appBarButton("Help", Symbol.HELP))
+    commandBar.addSecondaryCommand(appBarButton(Messages.get("commandbar.settings"), Symbol.SETTING))
+    commandBar.addSecondaryCommand(appBarButton(Messages.get("commandbar.help"), Symbol.HELP))
 
-    val openButton = WButton("Toggle IsOpen")
+    val openButton = WButton(Messages.get("commandbar.toggleopen"))
     openButton.addActionListener { commandBar.isOpen = !commandBar.isOpen }
 
     val body = WPanel(spacing = 8.0)
@@ -189,17 +189,17 @@ private fun buildSimpleCommandBarExample(): WComponent {
             controls.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
         },
     )
-    return buildExample("A simple command bar (PrimaryCommands / SecondaryCommands / IsOpen)", body)
+    return buildExample(Messages.get("commandbar.example.simple.title"), body)
 }
 
 /** Changing the label position: showing labels to the right of icons via DefaultLabelPosition. */
 private fun buildCommandBarLabelPositionExample(): WComponent {
     val commandBar = WCommandBar()
     commandBar.defaultLabelPosition = CommandBarDefaultLabelPosition.RIGHT
-    commandBar.addPrimaryCommand(WAppBarButton("Add", Symbol.ADD))
-    commandBar.addPrimaryCommand(WAppBarButton("Edit", Symbol.EDIT))
-    commandBar.addPrimaryCommand(WAppBarButton("Delete", Symbol.DELETE))
-    return buildExample("Showing labels to the right of icons (DefaultLabelPosition)", commandBar)
+    commandBar.addPrimaryCommand(WAppBarButton(Messages.get("commandbar.add"), Symbol.ADD))
+    commandBar.addPrimaryCommand(WAppBarButton(Messages.get("commandbar.edit"), Symbol.EDIT))
+    commandBar.addPrimaryCommand(WAppBarButton(Messages.get("commandbar.delete"), Symbol.DELETE))
+    return buildExample(Messages.get("commandbar.example.labelposition.title"), commandBar)
 }
 
 // endregion
@@ -208,7 +208,7 @@ private fun buildCommandBarLabelPositionExample(): WComponent {
 
 /** CommandBarFlyout page: lines up demos exercising WCommandBarFlyout. */
 internal fun buildCommandBarFlyoutPage(): WComponent {
-    val page = buildPage("CommandBarFlyout", "A context menu with a mini toolbar attached. Try out WCommandBarFlyout.")
+    val page = buildPage("CommandBarFlyout", Messages.get("commandbarflyout.description"))
 
     page.add(buildCommandBarFlyoutExample())
     return page
@@ -216,28 +216,28 @@ internal fun buildCommandBarFlyoutPage(): WComponent {
 
 /** Attaching a CommandBarFlyout to an image-like tile: opens via right-click or a button. */
 private fun buildCommandBarFlyoutExample(): WComponent {
-    val result = WLabel("Click: none")
+    val result = WLabel(Messages.get("commandbarflyout.result.click.none"))
 
     fun appBarButton(label: String, icon: Symbol) = WAppBarButton(label, icon).also { button ->
-        button.addActionListener { result.text = "Click: $label" }
+        button.addActionListener { result.text = Messages.get("commandbarflyout.result.click", label) }
     }
 
     val flyout = WCommandBarFlyout()
-    flyout.addPrimaryCommand(appBarButton("Share", Symbol.SHARE))
-    flyout.addPrimaryCommand(appBarButton("Save", Symbol.SAVE))
-    flyout.addPrimaryCommand(appBarButton("Delete", Symbol.DELETE))
+    flyout.addPrimaryCommand(appBarButton(Messages.get("commandbarflyout.share"), Symbol.SHARE))
+    flyout.addPrimaryCommand(appBarButton(Messages.get("commandbarflyout.save"), Symbol.SAVE))
+    flyout.addPrimaryCommand(appBarButton(Messages.get("commandbarflyout.delete"), Symbol.DELETE))
     // Secondary commands go into the menu below the mini toolbar
-    flyout.addSecondaryCommand(appBarButton("Resize", Symbol.ZOOM))
-    flyout.addSecondaryCommand(appBarButton("Move", Symbol.MOVE_TO_FOLDER))
+    flyout.addSecondaryCommand(appBarButton(Messages.get("commandbarflyout.resize"), Symbol.ZOOM))
+    flyout.addSecondaryCommand(appBarButton(Messages.get("commandbarflyout.move"), Symbol.MOVE_TO_FOLDER))
 
     val target = WBorder(
-        WLabel("Right-click here").also { it.margin = 32.0 },
+        WLabel(Messages.get("commandbarflyout.target")).also { it.margin = 32.0 },
     )
     target.background = WColor(226, 246, 235)
     target.cornerRadius = 8.0
     target.contextFlyout = flyout
 
-    val showButton = WButton("Show flyout")
+    val showButton = WButton(Messages.get("commandbarflyout.show"))
     showButton.addActionListener { flyout.showAt(target) }
 
     val body = WPanel(spacing = 8.0)
@@ -248,7 +248,7 @@ private fun buildCommandBarFlyoutExample(): WComponent {
             controls.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
         },
     )
-    return buildExample("A context menu with a mini toolbar attached (ContextFlyout / ShowAt)", body)
+    return buildExample(Messages.get("commandbarflyout.example.title"), body)
 }
 
 // endregion
@@ -257,7 +257,7 @@ private fun buildCommandBarFlyoutExample(): WComponent {
 
 /** MenuBar page: lines up demos exercising WMenuBar / WMenuBarItem. */
 internal fun buildMenuBarPage(): WComponent {
-    val page = buildPage("MenuBar", "A menu bar that lines up top-level menus horizontally. Try out WMenuBar / WMenuBarItem.")
+    val page = buildPage("MenuBar", Messages.get("menubar.description"))
 
     page.add(buildSimpleMenuBarExample())
     page.add(buildRichMenuBarExample())
@@ -266,27 +266,27 @@ internal fun buildMenuBarPage(): WComponent {
 
 /** A basic menu bar: File / Edit / Help menus, with item-click subscriptions. */
 private fun buildSimpleMenuBarExample(): WComponent {
-    val result = WLabel("Selected item: none")
+    val result = WLabel(Messages.get("menubar.result.selected.none"))
 
     fun item(text: String) = WMenuFlyoutItem(text).also { item ->
-        item.addActionListener { result.text = "Selected item: $text" }
+        item.addActionListener { result.text = Messages.get("menubar.result.selected", text) }
     }
 
-    val fileMenu = WMenuBarItem("File")
-    fileMenu.add(item("New"))
-    fileMenu.add(item("Open"))
-    fileMenu.add(item("Save"))
+    val fileMenu = WMenuBarItem(Messages.get("menubar.file"))
+    fileMenu.add(item(Messages.get("menubar.new")))
+    fileMenu.add(item(Messages.get("menubar.open")))
+    fileMenu.add(item(Messages.get("menubar.save")))
     fileMenu.add(WMenuFlyoutSeparator())
-    fileMenu.add(item("Exit"))
+    fileMenu.add(item(Messages.get("menubar.exit")))
 
-    val editMenu = WMenuBarItem("Edit")
-    editMenu.add(item("Undo"))
-    editMenu.add(item("Cut"))
-    editMenu.add(item("Copy"))
-    editMenu.add(item("Paste"))
+    val editMenu = WMenuBarItem(Messages.get("menubar.edit"))
+    editMenu.add(item(Messages.get("menubar.undo")))
+    editMenu.add(item(Messages.get("menubar.cut")))
+    editMenu.add(item(Messages.get("menubar.copy")))
+    editMenu.add(item(Messages.get("menubar.paste")))
 
-    val helpMenu = WMenuBarItem("Help")
-    helpMenu.add(item("About"))
+    val helpMenu = WMenuBarItem(Messages.get("menubar.help"))
+    helpMenu.add(item(Messages.get("menubar.about")))
 
     val menuBar = WMenuBar()
     menuBar.add(fileMenu)
@@ -296,31 +296,31 @@ private fun buildSimpleMenuBarExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(menuBar)
     body.add(result)
-    return buildExample("A simple menu bar", body)
+    return buildExample(Messages.get("menubar.example.simple.title"), body)
 }
 
 /** A richer menu bar: icons, shortcuts, submenus, toggle and radio items. */
 private fun buildRichMenuBarExample(): WComponent {
-    val result = WLabel("Selected item: none")
+    val result = WLabel(Messages.get("menubar.result.selected.none"))
 
     fun item(text: String, icon: Symbol? = null) = WMenuFlyoutItem(text, icon).also { item ->
-        item.addActionListener { result.text = "Selected item: $text" }
+        item.addActionListener { result.text = Messages.get("menubar.result.selected", text) }
     }
 
     // Icons plus shortcuts that actually fire (work even without opening the menu)
-    val newItem = item("New", Symbol.ADD)
+    val newItem = item(Messages.get("menubar.new"), Symbol.ADD)
     newItem.addKeyboardAccelerator(VirtualKey.N, VirtualKeyModifier.CONTROL)
-    val openItem = item("Open", Symbol.OPEN_FILE)
+    val openItem = item(Messages.get("menubar.open"), Symbol.OPEN_FILE)
     openItem.addKeyboardAccelerator(VirtualKey.O, VirtualKeyModifier.CONTROL)
-    val saveItem = item("Save", Symbol.SAVE)
+    val saveItem = item(Messages.get("menubar.save"), Symbol.SAVE)
     saveItem.addKeyboardAccelerator(VirtualKey.S, VirtualKeyModifier.CONTROL)
 
     // A submenu (cascading)
-    val shareSubMenu = WMenuFlyoutSubItem("Share", Symbol.SHARE)
-    shareSubMenu.add(item("Send by email", Symbol.MAIL))
-    shareSubMenu.add(item("Copy link", Symbol.LINK))
+    val shareSubMenu = WMenuFlyoutSubItem(Messages.get("menubar.share"), Symbol.SHARE)
+    shareSubMenu.add(item(Messages.get("menubar.sendmail"), Symbol.MAIL))
+    shareSubMenu.add(item(Messages.get("menubar.copylink"), Symbol.LINK))
 
-    val fileMenu = WMenuBarItem("File")
+    val fileMenu = WMenuBarItem(Messages.get("menubar.file"))
     fileMenu.add(newItem)
     fileMenu.add(openItem)
     fileMenu.add(saveItem)
@@ -328,24 +328,24 @@ private fun buildRichMenuBarExample(): WComponent {
     fileMenu.add(shareSubMenu)
 
     // A toggle item and radio items (mutually exclusive selection)
-    val statusBarItem = WToggleMenuFlyoutItem("Show status bar")
+    val statusBarItem = WToggleMenuFlyoutItem(Messages.get("menubar.statusbar"))
     statusBarItem.isChecked = true
     statusBarItem.addActionListener {
-        result.text = "Show status bar: ${statusBarItem.isChecked}"
+        result.text = Messages.get("menubar.result.statusbar", statusBarItem.isChecked.toString())
     }
 
     fun radio(text: String) = WRadioMenuFlyoutItem(text, groupName = "orientation").also { item ->
-        item.addActionListener { result.text = "Orientation: $text" }
+        item.addActionListener { result.text = Messages.get("menubar.result.orientation", text) }
     }
 
-    val landscapeItem = radio("Landscape")
+    val landscapeItem = radio(Messages.get("menubar.landscape"))
     landscapeItem.isChecked = true
 
-    val viewMenu = WMenuBarItem("View")
+    val viewMenu = WMenuBarItem(Messages.get("menubar.view"))
     viewMenu.add(statusBarItem)
     viewMenu.add(WMenuFlyoutSeparator())
     viewMenu.add(landscapeItem)
-    viewMenu.add(radio("Portrait"))
+    viewMenu.add(radio(Messages.get("menubar.portrait")))
 
     val menuBar = WMenuBar()
     menuBar.add(fileMenu)
@@ -354,7 +354,7 @@ private fun buildRichMenuBarExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(menuBar)
     body.add(result)
-    return buildExample("Icons, shortcuts, submenus, and toggle / radio items", body)
+    return buildExample(Messages.get("menubar.example.rich.title"), body)
 }
 
 // endregion
@@ -363,7 +363,7 @@ private fun buildRichMenuBarExample(): WComponent {
 
 /** MenuFlyout page: lines up demos exercising WMenuFlyout. */
 internal fun buildMenuFlyoutPage(): WComponent {
-    val page = buildPage("MenuFlyout", "A menu that temporarily shows a list of commands. Try out WMenuFlyout and its menu items.")
+    val page = buildPage("MenuFlyout", Messages.get("menuflyout.description"))
 
     page.add(buildSimpleMenuFlyoutExample())
     page.add(buildRadioMenuFlyoutExample())
@@ -373,64 +373,64 @@ internal fun buildMenuFlyoutPage(): WComponent {
 
 /** A basic menu flyout: opened from a DropDownButton. */
 private fun buildSimpleMenuFlyoutExample(): WComponent {
-    val result = WLabel("Selected item: none")
+    val result = WLabel(Messages.get("menuflyout.result.selected.none"))
 
     val menuFlyout = WMenuFlyout()
-    for (text in listOf("Reset items", "Repeat", "Shuffle")) {
+    for (text in listOf(Messages.get("menuflyout.reset"), Messages.get("menuflyout.repeat"), Messages.get("menuflyout.shuffle"))) {
         menuFlyout.add(
             WMenuFlyoutItem(text).also { item ->
-                item.addActionListener { result.text = "Selected item: $text" }
+                item.addActionListener { result.text = Messages.get("menuflyout.result.selected", text) }
             },
         )
     }
 
-    val button = WDropDownButton("Options")
+    val button = WDropDownButton(Messages.get("menuflyout.options"))
     button.flyout = menuFlyout
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(button)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A simple menu flyout", row)
+    return buildExample(Messages.get("menuflyout.example.simple.title"), row)
 }
 
 /** A menu flyout with radio items: mutually-exclusive sort criteria. */
 private fun buildRadioMenuFlyoutExample(): WComponent {
-    val result = WLabel("Sort by: rating")
+    val result = WLabel(Messages.get("menuflyout.result.sort", Messages.get("menuflyout.sort.rating")))
 
     val menuFlyout = WMenuFlyout()
-    for (text in listOf("Rating", "Name", "Date")) {
+    for (text in listOf(Messages.get("menuflyout.sort.rating"), Messages.get("menuflyout.sort.name"), Messages.get("menuflyout.sort.date"))) {
         val item = WRadioMenuFlyoutItem(text, groupName = "sort")
-        item.isChecked = text == "Rating"
-        item.addActionListener { result.text = "Sort by: $text" }
+        item.isChecked = text == Messages.get("menuflyout.sort.rating")
+        item.addActionListener { result.text = Messages.get("menuflyout.result.sort", text) }
         menuFlyout.add(item)
     }
 
-    val button = WDropDownButton("Sort")
+    val button = WDropDownButton(Messages.get("menuflyout.sort"))
     button.flyout = menuFlyout
 
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(button)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("Mutually-exclusive selection with radio items (WRadioMenuFlyoutItem)", row)
+    return buildExample(Messages.get("menuflyout.example.radio.title"), row)
 }
 
 /** A context menu: a MenuFlyout opened by right-click (UIElement.ContextFlyout). */
 private fun buildContextMenuFlyoutExample(): WComponent {
-    val result = WLabel("Selected item: none")
+    val result = WLabel(Messages.get("menuflyout.result.selected.none"))
 
     val menuFlyout = WMenuFlyout()
-    val copyItem = WMenuFlyoutItem("Copy", Symbol.COPY)
+    val copyItem = WMenuFlyoutItem(Messages.get("menuflyout.copy"), Symbol.COPY)
     copyItem.keyboardAcceleratorText = "Ctrl+C" // a display-only shortcut string
-    copyItem.addActionListener { result.text = "Selected item: Copy" }
+    copyItem.addActionListener { result.text = Messages.get("menuflyout.result.selected", Messages.get("menuflyout.copy")) }
     menuFlyout.add(copyItem)
     menuFlyout.add(
-        WMenuFlyoutItem("Delete", Symbol.DELETE).also { item ->
-            item.addActionListener { result.text = "Selected item: Delete" }
+        WMenuFlyoutItem(Messages.get("menuflyout.delete"), Symbol.DELETE).also { item ->
+            item.addActionListener { result.text = Messages.get("menuflyout.result.selected", Messages.get("menuflyout.delete")) }
         },
     )
 
     val target = WBorder(
-        WLabel("Right-click here").also { it.margin = 24.0 },
+        WLabel(Messages.get("menuflyout.target")).also { it.margin = 24.0 },
     )
     target.background = WColor(226, 235, 246)
     target.cornerRadius = 8.0
@@ -439,7 +439,7 @@ private fun buildContextMenuFlyoutExample(): WComponent {
     val row = WPanel(spacing = 16.0, orientation = Orientation.HORIZONTAL)
     row.add(target)
     row.add(result.also { it.verticalAlignmentInParent = VerticalAlignment.CENTER })
-    return buildExample("A context menu (ContextFlyout)", row)
+    return buildExample(Messages.get("menuflyout.example.context.title"), row)
 }
 
 // endregion
@@ -450,7 +450,7 @@ private fun buildContextMenuFlyoutExample(): WComponent {
 internal fun buildSwipeControlPage(): WComponent {
     val page = buildPage(
         "SwipeControl",
-        "A container that reveals commands on a touch swipe. Swiping is touch/pen only; it doesn't open with a mouse.",
+        Messages.get("swipecontrol.description"),
     )
 
     page.add(buildSwipeControlExample())
@@ -459,24 +459,24 @@ internal fun buildSwipeControlPage(): WComponent {
 
 /** Attaching Reveal / Execute swipe items to list-row-like content. */
 private fun buildSwipeControlExample(): WComponent {
-    val result = WLabel("Item run: none")
+    val result = WLabel(Messages.get("swipecontrol.result.executed.none"))
 
     // Swipe right (from the left edge) -> reveals a pin button (Reveal)
-    val pinItem = WSwipeItem("Pin", Symbol.PIN)
+    val pinItem = WSwipeItem(Messages.get("swipecontrol.pin"), Symbol.PIN)
     pinItem.background = WColor(96, 165, 250)
-    pinItem.addActionListener { result.text = "Item run: Pin" }
+    pinItem.addActionListener { result.text = Messages.get("swipecontrol.result.executed", Messages.get("swipecontrol.pin")) }
     val leftItems = WSwipeItems(SwipeMode.REVEAL)
     leftItems.add(pinItem)
 
     // Swipe left (from the right edge) -> deletes immediately once fully swiped (Execute)
-    val deleteItem = WSwipeItem("Delete", Symbol.DELETE)
+    val deleteItem = WSwipeItem(Messages.get("swipecontrol.delete"), Symbol.DELETE)
     deleteItem.background = WColor(239, 68, 68)
-    deleteItem.addActionListener { result.text = "Item run: Delete" }
+    deleteItem.addActionListener { result.text = Messages.get("swipecontrol.result.executed", Messages.get("swipecontrol.delete")) }
     val rightItems = WSwipeItems(SwipeMode.EXECUTE)
     rightItems.add(deleteItem)
 
     val rowContent = WBorder(
-        WLabel("Touch-swipe this row left or right").also { it.margin = 16.0 },
+        WLabel(Messages.get("swipecontrol.row")).also { it.margin = 16.0 },
     )
     rowContent.background = CARD_BACKGROUND
     rowContent.borderColor = CARD_BORDER
@@ -490,7 +490,7 @@ private fun buildSwipeControlExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(swipeControl)
     body.add(result)
-    return buildExample("Swipe items (LeftItems: Reveal / RightItems: Execute)", body)
+    return buildExample(Messages.get("swipecontrol.example.title"), body)
 }
 
 // endregion
@@ -501,7 +501,7 @@ private fun buildSwipeControlExample(): WComponent {
 internal fun buildStandardUICommandPage(): WComponent {
     val page = buildPage(
         "StandardUICommand",
-        "A predefined command with an OS-standard label, icon, and shortcut already set. Try out WStandardUICommand.",
+        Messages.get("standarduicommand.description"),
     )
 
     page.add(buildStandardUICommandExample())
@@ -510,7 +510,7 @@ internal fun buildStandardUICommandPage(): WComponent {
 
 /** A list of predefined commands: each Kind's label and icon apply automatically. */
 private fun buildStandardUICommandExample(): WComponent {
-    val result = WLabel("Command run: none")
+    val result = WLabel(Messages.get("standarduicommand.result.none"))
 
     val row = WPanel(spacing = 4.0, orientation = Orientation.HORIZONTAL)
     for (kind in listOf(
@@ -522,7 +522,7 @@ private fun buildStandardUICommandExample(): WComponent {
         StandardUICommandKind.REDO,
     )) {
         val command = WStandardUICommand(kind)
-        command.addExecuteListener { result.text = "Command run: ${command.label}" }
+        command.addExecuteListener { result.text = Messages.get("standarduicommand.result", command.label) }
         // The label, icon, and shortcut (e.g. Ctrl+C) apply automatically from the command
         row.add(WAppBarButton().also { it.command = command })
     }
@@ -530,7 +530,7 @@ private fun buildStandardUICommandExample(): WComponent {
     val body = WPanel(spacing = 8.0)
     body.add(row)
     body.add(result)
-    return buildExample("A toolbar of predefined commands (Kind / ExecuteRequested)", body)
+    return buildExample(Messages.get("standarduicommand.example.title"), body)
 }
 
 // endregion
@@ -541,7 +541,7 @@ private fun buildStandardUICommandExample(): WComponent {
 internal fun buildXamlUICommandPage(): WComponent {
     val page = buildPage(
         "XamlUICommand",
-        "A reusable command that bundles a label, icon, and shortcut together. Try out WXamlUICommand.",
+        Messages.get("xamluicommand.description"),
     )
 
     page.add(buildXamlUICommandExample())
@@ -550,16 +550,16 @@ internal fun buildXamlUICommandPage(): WComponent {
 
 /** A custom command: sharing the same look and behavior across multiple controls. */
 private fun buildXamlUICommandExample(): WComponent {
-    val result = WLabel("Run count: 0")
+    val result = WLabel(Messages.get("xamluicommand.result.count", "0"))
     var count = 0
 
-    val command = WXamlUICommand("Add to favorites")
+    val command = WXamlUICommand(Messages.get("xamluicommand.label"))
     command.icon = Symbol.FAVORITE
-    command.description = "Adds the selected item to your favorites"
+    command.description = Messages.get("xamluicommand.commanddescription")
     command.addKeyboardAccelerator(VirtualKey.F, VirtualKeyModifier.CONTROL, VirtualKeyModifier.SHIFT)
     command.addExecuteListener {
         count++
-        result.text = "Run count: $count"
+        result.text = Messages.get("xamluicommand.result.count", count.toString())
     }
 
     // Set the same command on a Button and an AppBarButton (label and icon apply automatically)
@@ -575,8 +575,8 @@ private fun buildXamlUICommandExample(): WComponent {
 
     val body = WPanel(spacing = 8.0)
     body.add(row)
-    body.add(WLabel("The Ctrl+Shift+F shortcut also runs it").also { it.foreground = TEXT_SECONDARY })
-    return buildExample("Sharing a command (Label / IconSource / KeyboardAccelerator / ExecuteRequested)", body)
+    body.add(WLabel(Messages.get("xamluicommand.shortcut")).also { it.foreground = TEXT_SECONDARY })
+    return buildExample(Messages.get("xamluicommand.example.title"), body)
 }
 
 // endregion
