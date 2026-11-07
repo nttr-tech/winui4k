@@ -1,6 +1,5 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jspinner.listener;
 
-import com.appkitbox.winui4k.SpinButtonPlacementMode;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -16,7 +15,6 @@ public class ListenerWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSpinner age = new WSpinner(new WSpinnerNumberModel(20, 0, 120, 1));
-            age.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
             WLabel result = new WLabel("Age: 20");
             age.addChangeListener(e -> {
                 int value = (int) age.getValue();

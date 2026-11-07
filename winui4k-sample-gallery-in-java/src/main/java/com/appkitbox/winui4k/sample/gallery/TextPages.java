@@ -105,6 +105,7 @@ final class TextPages {
         spinner.setHeader("You can also enter an expression (e.g. (5 + 3) * 2)");
         spinner.setPlaceholderText("1 + 2 * 3");
         spinner.setAcceptsExpression(true);
+        spinner.setSpinButtonPlacementMode(SpinButtonPlacementMode.HIDDEN); // No spin buttons, as in the original Gallery
         spinner.addChangeListener(e -> {
             double value = spinner.getValue();
             result.setText(Double.isNaN(value) ? "Not entered" : "Value: " + value);

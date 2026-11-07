@@ -1,6 +1,5 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jspinner.basic;
 
-import com.appkitbox.winui4k.SpinButtonPlacementMode;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -16,7 +15,6 @@ public class BasicWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSpinner quantity = new WSpinner(new WSpinnerNumberModel(1, 0, 10, 1));
-            quantity.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);   // show the up and down buttons
 
             frame.add(new WLabel("Quantity:"));
             frame.add(quantity);

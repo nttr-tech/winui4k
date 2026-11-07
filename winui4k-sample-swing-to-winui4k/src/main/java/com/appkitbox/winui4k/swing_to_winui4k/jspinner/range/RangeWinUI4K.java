@@ -1,6 +1,5 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jspinner.range;
 
-import com.appkitbox.winui4k.SpinButtonPlacementMode;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -20,9 +19,7 @@ public class RangeWinUI4K {
             fromModel.addChangeListener(e -> toModel.setMinimum((Integer) fromModel.getValue()));
 
             WSpinner from = new WSpinner(fromModel);
-            from.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
             WSpinner to = new WSpinner(toModel);
-            to.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
             frame.add(new WLabel("From:"));
             frame.add(from);
             frame.add(new WLabel("To:"));

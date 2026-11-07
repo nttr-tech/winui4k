@@ -1,6 +1,5 @@
 package com.appkitbox.winui4k.swing_to_winui4k.jspinner.decimal;
 
-import com.appkitbox.winui4k.SpinButtonPlacementMode;
 import com.appkitbox.winui4k.WFlowLayout;
 import com.appkitbox.winui4k.WFrame;
 import com.appkitbox.winui4k.WLabel;
@@ -16,7 +15,6 @@ public class DecimalWinUI4K {
             frame.setLayout(new WFlowLayout());
 
             WSpinner price = new WSpinner(new WSpinnerNumberModel(12.0, 0.0, 100.0, 0.5));
-            price.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
             price.setEditor(new WSpinner.NumberEditor(price, "0.00"));
 
             frame.add(new WLabel("Price:"));

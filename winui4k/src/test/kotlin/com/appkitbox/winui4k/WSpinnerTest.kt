@@ -63,6 +63,22 @@ class WSpinnerTest : FunSpec() {
         TestKeyboard.pressEnter()
     }
 
+    /** Whether the upper spin button of the template (UpSpinButton) is shown. false if there is no template yet. */
+    private fun WSpinner.isUpSpinButtonShown(): Boolean {
+        val button = Xaml.appliedTemplatePartOrNull(inspectable, "UpSpinButton") ?: return false
+        return try {
+            button.queryInterface(XamlInterop.IID_IUIElement).let { element ->
+                try {
+                    element.getInt(XamlInterop.IUIElement_get_Visibility) == 0 // Visibility.Visible
+                } finally {
+                    element.release()
+                }
+            }
+        } finally {
+            button.release()
+        }
+    }
+
     /** Places it in the window, runs [block], and removes it at the end. */
     private suspend fun withAttached(spinner: WSpinner, block: suspend () -> Unit) {
         UiTestHarness.attachAndAwaitLoaded(spinner)
@@ -74,6 +90,21 @@ class WSpinnerTest : FunSpec() {
     }
 
     init {
+        test("the default placement of the spin buttons is INLINE, showing the up and down buttons as with JSpinner, also with the constructor taking a model") {
+            onUiThreadGet {
+                listOf(WSpinner().spinButtonPlacementMode, WSpinner(WSpinnerNumberModel(1, 0, 10, 1)).spinButtonPlacementMode)
+            } shouldContainExactly listOf(SpinButtonPlacementMode.INLINE, SpinButtonPlacementMode.INLINE)
+        }
+
+        test("a default spinner shows the up and down buttons when shown, and HIDDEN hides them") {
+            val spinner = onUiThreadGet { WSpinner(WSpinnerNumberModel(1, 0, 10, 1)) }
+            withAttached(spinner) {
+                eventually(3.seconds) { onUiThreadGet { spinner.isUpSpinButtonShown() }.shouldBeTrue() }
+                onUiThread { spinner.spinButtonPlacementMode = SpinButtonPlacementMode.HIDDEN }
+                eventually(3.seconds) { onUiThreadGet { spinner.isUpSpinButtonShown() } shouldBe false }
+            }
+        }
+
         test("the initial value with nothing entered is NaN") {
             onUiThreadGet { WSpinner().value.isNaN() }.shouldBeTrue()
         }

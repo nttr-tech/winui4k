@@ -90,6 +90,7 @@ private fun buildExpressionNumberBoxExample(): WComponent {
     spinner.header = "You can also enter an expression (e.g. (5 + 3) * 2)"
     spinner.placeholderText = "1 + 2 * 3"
     spinner.acceptsExpression = true
+    spinner.spinButtonPlacementMode = SpinButtonPlacementMode.HIDDEN // No spin buttons, as in the original Gallery
     spinner.addChangeListener { value ->
         result.text = if (value.isNaN()) "Not entered" else "Value: $value"
     }

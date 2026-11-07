@@ -21,13 +21,13 @@ import kotlin.jvm.JvmSynthetic
  * Values extracted from the winmd (Hidden=0, Compact=1, Inline=2).
  */
 enum class SpinButtonPlacementMode(internal val native: Int) {
-    /** Don't show spin buttons (default). */
+    /** Does not show the spin buttons (NumberBox's default; the default of [WSpinner] is [INLINE]). */
     HIDDEN(0),
 
     /** Show them in a popup on focus. */
     COMPACT(1),
 
-    /** Always show them at the right edge of the box. */
+    /** Always shows them at the right end of the box (the default of [WSpinner]; corresponds to the up and down arrow buttons of JSpinner). */
     INLINE(2),
     ;
 
@@ -55,6 +55,8 @@ enum class SpinButtonPlacementMode(internal val native: Int) {
  *   rewrites both the display and the model to the edge value (Swing's SpinnerNumberModel does not clamp). Going past the edge with the spin buttons also
  *   gives the edge value instead of stopping as in Swing
  * - The value is committed when focus leaves the input field or Enter is pressed (not on every character)
+ * - The up and down buttons ([spinButtonPlacementMode]) are shown by default, as with JSpinner ([SpinButtonPlacementMode.INLINE]; NumberBox's default is
+ *   HIDDEN, not shown). For a number field without buttons, use [SpinButtonPlacementMode.HIDDEN]. **Change from earlier versions**: the default was HIDDEN
  * - With integer models such as Integer, a typed decimal is truncated toward 0 to an integer, as Swing's NumberFormatter does, and the display goes back to that integer
  *   (unless [editor] is set, the display format stays NumberBox's default, and integer values are shown without a decimal point)
  * - The display format is decided, as in Swing, by setting [editor] to a [NumberEditor] (a DecimalFormat pattern), which corresponds to `JSpinner.NumberEditor`.
@@ -266,7 +268,7 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
             Hstring.use(value) { h -> inspectable.call(XamlInterop.INumberBox_put_PlaceholderText, h) }
         }
 
-    /** Spin button placement (NumberBox.SpinButtonPlacementMode). */
+    /** The placement of the spin buttons (NumberBox.SpinButtonPlacementMode). The default is [SpinButtonPlacementMode.INLINE], showing the up and down buttons as with JSpinner. */
     var spinButtonPlacementMode: SpinButtonPlacementMode
         get() = SpinButtonPlacementMode.of(inspectable.getInt(XamlInterop.INumberBox_get_SpinButtonPlacementMode))
         set(value) = inspectable.call(XamlInterop.INumberBox_put_SpinButtonPlacementMode, value.native)
@@ -337,6 +339,8 @@ class WSpinner @JvmOverloads constructor(value: Double = Double.NaN) : WControl(
     }
 
     init {
+        // As with JSpinner, show the up and down buttons by default (NumberBox's default is Hidden)
+        spinButtonPlacementMode = SpinButtonPlacementMode.INLINE
         numberModel.addChangeListener(modelListener)
         addValueChangedHandler()
         pushToNative()
