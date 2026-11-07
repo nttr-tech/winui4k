@@ -3,8 +3,10 @@ package com.appkitbox.winui4k
 import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.Hstring
+import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.FoundationInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 import java.nio.file.Paths
 
 /**
@@ -24,12 +26,14 @@ sealed interface WIcon
  * Creates a new IconElement that shows this icon. The caller must release it.
  * (Kotlin interfaces cannot have internal members, so this dispatches with a branch over the sealed types)
  * An unsupported implementation created from Java throws [IllegalArgumentException].
+ * [owner] is the component that shows the icon, and is [WComponent.revalidate]d when the [WImageIcon]'s image finishes loading and its size is known
+ * (images load asynchronously, and the icon's size is 0 before loading).
  */
-internal fun WIcon.createIconElement(): ComPtr {
+internal fun WIcon.createIconElement(owner: WComponent? = null): ComPtr {
     requireSupported()
     return when (val icon: Any = this) {
         is Symbol -> icon.createSymbolIconElement()
-        is WImageIcon -> icon.createImageIconElement()
+        is WImageIcon -> icon.createImageIconElement(owner)
         is WFontIcon -> icon.createFontIconElement()
         else -> throw unsupported(icon)
     }
@@ -85,8 +89,8 @@ class WImageIcon(
     val uri: String = toUri(path)
 
     @JvmSynthetic
-    internal fun createImageIconElement(): ComPtr {
-        val imageSource = createImageSource(uri)
+    internal fun createImageIconElement(owner: WComponent? = null): ComPtr {
+        val imageSource = createImageSource(uri, owner)
         val imageIcon = Activation.composeDefault(XamlInterop.CLS_ImageIcon, XamlInterop.IID_IImageIconFactory)
         return try {
             imageIcon.call(XamlInterop.IImageIcon_put_Source, imageSource.ptr)
@@ -197,8 +201,12 @@ class WFontIcon @JvmOverloads constructor(
 /**
  * Creates a new ImageSource (BitmapImage) that loads the image at [uri]. The caller must release it.
  * Shared by the ImageIcon of [WImageIcon] and the Image of [WImage]. Loading is asynchronous and does not throw on failure.
+ *
+ * If [owner] is given, [owner] is [WComponent.revalidate]d when loading finishes (BitmapImage.ImageOpened). Before loading,
+ * the image size is 0, so this keeps [WLayoutPanel] from leaving it laid out with that size (Swing's ImageIcon loads when created).
+ * The handler stays on the native BitmapImage, so [owner] is referenced weakly (doc/memory_management.md "Handling cycles that cross the boundary").
  */
-internal fun createImageSource(uri: String): ComPtr {
+internal fun createImageSource(uri: String, owner: WComponent? = null): ComPtr {
     val uriFactory = Activation.factory(FoundationInterop.CLS_Uri, FoundationInterop.IID_IUriRuntimeClassFactory)
     val nativeUri = try {
         Hstring.use(uri) { h -> uriFactory.getPtr(FoundationInterop.IUriRuntimeClassFactory_CreateUri, h) }
@@ -213,6 +221,14 @@ internal fun createImageSource(uri: String): ComPtr {
         nativeUri.release()
     }
     return try {
+        if (owner != null) {
+            val target = WeakReference(owner)
+            bitmap.addEventHandler(
+                "WinUI4K.ImageOpenedHandler",
+                XamlInterop.IID_RoutedEventHandler,
+                XamlInterop.IBitmapImage_add_ImageOpened,
+            ) { _, _ -> target.get()?.revalidate() }
+        }
         bitmap.queryInterface(XamlInterop.IID_IImageSource)
     } finally {
         bitmap.release()

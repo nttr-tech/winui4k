@@ -66,7 +66,7 @@ class WAppBarButton @JvmOverloads constructor(label: String = "", icon: WIcon? =
         set(value) {
             value?.requireSupported()
             field = value
-            val iconElement = value?.createIconElement()
+            val iconElement = value?.createIconElement(this)
             try {
                 inspectable.call(XamlInterop.IAppBarButton_put_Icon, iconElement?.ptr)
             } finally {

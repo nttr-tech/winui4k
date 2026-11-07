@@ -2206,6 +2206,7 @@ internal object XamlInterop {
     const val IID_IImageSource = "6c2038f6-d6d5-55e9-9b9e-082f12dbff60"
     const val IID_IBitmapImage = "5cc29916-a411-5bc2-a3c5-a00d99a59da8"
     const val IBitmapImage_get_UriSource = 8            // get_UriSource(out Uri)
+    const val IBitmapImage_add_ImageOpened = 22         // add_ImageOpened(RoutedEventHandler, out token)
 
     // ---- Microsoft.UI.Xaml.Controls.Image ----
     const val CLS_Image = "Microsoft.UI.Xaml.Controls.Image"

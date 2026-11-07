@@ -61,7 +61,7 @@ class WImage @JvmOverloads constructor(sourceUri: String? = null) : WComponent(
                 inspectable.call(XamlInterop.IImage_put_Source, null)
                 return
             }
-            val imageSource = createImageSource(WImageIcon(value).uri)
+            val imageSource = createImageSource(WImageIcon(value).uri, this)
             try {
                 inspectable.call(XamlInterop.IImage_put_Source, imageSource.ptr)
             } finally {

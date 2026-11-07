@@ -46,7 +46,7 @@ class WAppBarToggleButton @JvmOverloads constructor(label: String = "", icon: WI
         set(value) {
             value?.requireSupported()
             field = value
-            val iconElement = value?.createIconElement()
+            val iconElement = value?.createIconElement(this)
             try {
                 inspectable.call(XamlInterop.IAppBarToggleButton_put_Icon, iconElement?.ptr)
             } finally {

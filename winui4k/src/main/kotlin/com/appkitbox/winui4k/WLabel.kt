@@ -293,7 +293,7 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
             revalidate()
             return
         }
-        val iconElement = XamlElement.adopt(icon.createIconElement())
+        val iconElement = XamlElement.adopt(icon.createIconElement(this))
         iconElement.horizontalAlignment = HorizontalAlignment.CENTER
         iconElement.verticalAlignment = VerticalAlignment.CENTER
         val group = WGrid()

@@ -130,7 +130,7 @@ internal class ButtonLabel(private val host: WControl, private val contentContro
     private fun showIconLabel() {
         val icon = checkNotNull(currentIcon)
         val label = checkNotNull(iconLabelText)
-        val iconElement = XamlElement.adopt(icon.createIconElement())
+        val iconElement = XamlElement.adopt(icon.createIconElement(host))
         if (label.isEmpty()) {
             releaseLabelAutomationName()
             contentControl.call(XamlInterop.IContentControl_put_Content, iconElement.uiElement.ptr)
