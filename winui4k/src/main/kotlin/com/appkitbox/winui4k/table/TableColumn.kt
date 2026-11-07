@@ -37,10 +37,12 @@ enum class SortCycle(internal val native: Int) {
  * How a cell is displayed is determined in this order of precedence:
  * 1. [cellRenderer] (a component built in Kotlin / Java; implements TableViewColumn's GenerateElementCore)
  * 2. [cellTemplate] (the content of a XAML DataTemplate; `{Binding}` is the cell value; TableViewTemplateColumn)
- * 3. A check box if the type of the model column is Boolean, otherwise a string (TableViewTextColumn)
+ * 3. A check box if the model column's type is Boolean, right-aligned text if it is Number (or a subclass) (as in JTable),
+ *    and text otherwise (TableViewTextColumn)
  *
  * A cell can be edited when both the model's [TableModel.isCellEditable] and [isEditable] are true.
- * The editor is [cellEditor] (if unspecified, the default for the column type: a check box for Boolean, otherwise a text box).
+ * The editor is [cellEditor] (if not given, the default for the column type: a check box for Boolean, a right-aligned
+ * text box for Number, and a text box otherwise).
  */
 open class TableColumn @JvmOverloads constructor(
     modelIndex: Int = 0,

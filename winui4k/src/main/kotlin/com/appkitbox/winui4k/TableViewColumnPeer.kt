@@ -65,7 +65,9 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
         val columnClass = host.columnClassOf(modelIndex)
         val path = TableRowItem.keyOf(modelIndex)
         renderer = column.cellRenderer ?: host.table.getDefaultRenderer(columnClass)
-        val template = column.cellTemplate ?: BOOLEAN_TEMPLATE.takeIf { isBooleanClass(columnClass) }
+        val template = column.cellTemplate
+            ?: BOOLEAN_TEMPLATE.takeIf { isBooleanClass(columnClass) }
+            ?: NUMBER_TEMPLATE.takeIf { isNumberClass(columnClass) }
         native = when {
             renderer != null -> createRendererColumn()
             template != null -> createTemplateColumn(TableViewXaml.valueTemplate(path, template))
@@ -77,6 +79,7 @@ internal class TableViewColumnPeer(val column: TableColumn, private val host: Ta
         Hstring.use(path) { h -> native.call(TabularInterop.ITableViewColumn_put_SortMemberPath, h) }
         val editor = column.cellEditor ?: host.table.getDefaultEditor(columnClass)
             ?: BOOLEAN_EDITOR.takeIf { isBooleanClass(columnClass) }
+            ?: NUMBER_EDITOR.takeIf { isNumberClass(columnClass) }
             ?: TEXT_EDITOR.takeIf { renderer != null || template != null }
         if (editor != null) {
             val editingTemplate = TableViewXaml.createDataTemplate(editor.getCellEditorXaml(path))
@@ -381,6 +384,20 @@ private val BOOLEAN_EDITOR = TableCellEditor { path ->
         "Margin=\"8,0,0,0\" VerticalAlignment=\"Center\" />"
 }
 
+/**
+ * The default display of a Number column: right-aligned, as with JTable's default renderer for Number. TableViewTextColumn has no setting for text
+ * alignment, so it becomes a template column with a TextBlock matching the cells of TableViewTextColumn (Padding 8,4,8,4, truncation, vertically centered).
+ */
+private const val NUMBER_TEMPLATE =
+    "<TextBlock Text=\"{Binding}\" HorizontalAlignment=\"Right\" Padding=\"8,4,8,4\" " +
+        "TextTrimming=\"CharacterEllipsis\" VerticalAlignment=\"Center\" />"
+
+/** The default editor of a Number column (a right-aligned text box, the same as JTable's NumberEditor). */
+private val NUMBER_EDITOR = TableCellEditor { path ->
+    "<TextBox Text=\"{Binding $path, Mode=TwoWay, UpdateSourceTrigger=Explicit}\" MinHeight=\"0\" " +
+        "VerticalAlignment=\"Center\" Padding=\"8,4,8,4\" TextAlignment=\"Right\" />"
+}
+
 /** The default editor (a text box) for template columns and renderer columns. */
 private val TEXT_EDITOR = TableCellEditor { path ->
     "<TextBox Text=\"{Binding $path, Mode=TwoWay, UpdateSourceTrigger=Explicit}\" MinHeight=\"0\" " +
@@ -389,6 +406,9 @@ private val TEXT_EDITOR = TableCellEditor { path ->
 
 private fun isBooleanClass(type: Class<*>): Boolean =
     type == java.lang.Boolean::class.java || type == java.lang.Boolean.TYPE
+
+/** As with JTable, Number and its subclasses (Integer, Double, BigDecimal, etc.) are numeric columns (primitive types are not included). */
+private fun isNumberClass(type: Class<*>): Boolean = Number::class.java.isAssignableFrom(type)
 
 /** Converts a TableView SortDirection (the winmd value) to a [SortOrder]. */
 internal fun sortOrderOf(direction: Int): SortOrder = when (direction) {
