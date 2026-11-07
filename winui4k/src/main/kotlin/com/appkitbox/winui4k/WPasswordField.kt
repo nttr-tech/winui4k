@@ -5,7 +5,6 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.util.function.Consumer
 import kotlin.jvm.JvmName
@@ -60,14 +59,14 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
         this.columns = columns
     }
 
-    /** PasswordChanged event tokens registered via addPasswordChangedListener. */
-    private val passwordChangedTokens = ListenerTokens<Consumer<String>>()
+    /** The listeners added with addPasswordChangedListener (PasswordBox.PasswordChanged is subscribed when the first listener is added). */
+    private val passwordChanges = TextChangeNotices(this, ::nativePassword, ::subscribePasswordChanged)
 
     /** The list of ActionListener-like listeners and the handling of the Enter KeyDown ([ActionEvents]). PasswordBox is single-line, so Enter is not a line break. */
     private val actions = ActionEvents(this, { actionCommand }, { false })
 
     /** DocumentListener-like listeners (subscribes to PasswordBox.PasswordChanging when the first listener is added). */
-    private val documentEvents = DocumentEvents(this, ::nativePassword, ::subscribePasswordChanging)
+    private val documentEvents = DocumentEvents(this, ::nativePassword, ::subscribePasswordChanging) { passwordChanges.fire() }
 
     /**
      * JTextComponent.getDocument-like: the interface to the text of this password field ([WDocument]). Returns the same one every time
@@ -320,42 +319,35 @@ class WPasswordField @JvmOverloads constructor(placeholder: String = "") : WCont
         ) { _, _ -> (anchor.get() as? WPasswordField)?.documentEvents?.onNativeChange(-1) }
     }
 
-    /** Subscribes to password changes (PasswordBox.PasswordChanged). The listener receives the password after the change. */
+    /**
+     * Subscribes to password changes (PasswordBox.PasswordChanged). The listener receives the password after the change.
+     * For programmatic changes such as rewriting [password], [setText] or [document], it is called right at the change, as with Swing's DocumentListener
+     * (even before being added to a window; WinUI's PasswordChanged does not come for changes before that).
+     * User edits such as key input are known through PasswordChanged and arrive after the change (in the message loop).
+     * It is not called if the text is the same as the one notified last (changes before adding are not notified either).
+     * The Kotlin lambda form and the Java Consumer form go into the same list and are called in the order added.
+     */
     @JvmSynthetic
-    fun addPasswordChangedListener(listener: (String) -> Unit) {
-        val adapter = Consumer<String> { listener(it) }
-        addPasswordChangedListenerForJava(adapter)
-        passwordChangedTokens.addKotlinAdapter(listener, adapter)
-    }
+    fun addPasswordChangedListener(listener: (String) -> Unit) = passwordChanges.add(listener, listener)
 
     @JvmName("addPasswordChangedListener")
-    fun addPasswordChangedListenerForJava(listener: Consumer<String>) {
-        // The handler stays in the native object, so the password field is not captured strongly but looked up from listenerAnchor
-        val anchor = listenerAnchor
-        val token = inspectable.addEventHandler(
-            "WinUI4K.PasswordChangedHandler",
-            XamlInterop.IID_RoutedEventHandler,
-            XamlInterop.IPasswordBox_add_PasswordChanged,
-        ) { _, _ ->
-            val field = anchor.get() as? WPasswordField
-            if (field != null) listener.accept(field.password)
-        }
-        passwordChangedTokens.add(listener, token)
-        anchor.listenerAdded()
-    }
+    fun addPasswordChangedListenerForJava(listener: Consumer<String>) = passwordChanges.add(listener) { listener.accept(it) }
 
     /** Unsubscribes a listener registered via [addPasswordChangedListener]. */
     @JvmSynthetic
-    fun removePasswordChangedListener(listener: (String) -> Unit) {
-        val adapter = passwordChangedTokens.removeKotlinAdapter(listener) ?: return
-        removePasswordChangedListenerForJava(adapter)
-    }
+    fun removePasswordChangedListener(listener: (String) -> Unit) = passwordChanges.remove(listener)
 
     @JvmName("removePasswordChangedListener")
-    fun removePasswordChangedListenerForJava(listener: Consumer<String>) {
-        val token = passwordChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(XamlInterop.IPasswordBox_remove_PasswordChanged, token)
-        listenerAnchor.listenerRemoved()
+    fun removePasswordChangedListenerForJava(listener: Consumer<String>) = passwordChanges.remove(listener)
+
+    /** Subscribes to PasswordBox.PasswordChanged. The handler stays on the native side, so the password field is not captured strongly and is taken from [listenerAnchor]. */
+    private fun subscribePasswordChanged() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.PasswordChangedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IPasswordBox_add_PasswordChanged,
+        ) { _, _ -> (anchor.get() as? WPasswordField)?.passwordChanges?.fire() }
     }
 
     private companion object {

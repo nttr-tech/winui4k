@@ -14,6 +14,8 @@ package com.appkitbox.winui4k
  *   replacing the selected range does so inside [replaceRange]. As in Swing, this part reports the REMOVE of the removed
  *   range and the INSERT of the inserted range, and ignores native notifications delivered synchronously during the
  *   rewrite (TextBox.TextChanging is called inside put_Text)
+ * - [written]: called after a programmatic rewrite ([replaceAll], [replaceRange]), after the DocumentListener-like listeners
+ *   (to notify the text change listeners [TextChangeNotices] right away)
  *
  * User edits such as key input are reported as a single REMOVE and INSERT at one place, based on the difference from the
  * previous text ([TextDiff]).
@@ -22,6 +24,7 @@ internal class DocumentEvents(
     private val owner: WComponent,
     private val readText: () -> String,
     private val subscribe: () -> Unit,
+    private val written: () -> Unit = {},
 ) {
     private val listeners = ArrayList<WDocumentListener>()
     private var subscribed = false
@@ -74,10 +77,12 @@ internal class DocumentEvents(
         checkNotNotifying()
         val old = readText()
         write(apply)
-        if (listeners.isEmpty()) return
-        val text = readText()
-        lastText = text
-        if (text != old) fire(0, old.length, text.length)
+        if (listeners.isNotEmpty()) {
+            val text = readText()
+            lastText = text
+            if (text != old) fire(0, old.length, text.length)
+        }
+        written()
     }
 
     /**
@@ -89,10 +94,12 @@ internal class DocumentEvents(
         checkNotNotifying()
         val oldLength = readText().length
         write(apply)
-        if (listeners.isEmpty()) return
-        val text = readText()
-        lastText = text
-        fire(offset, removedLength, text.length - oldLength + removedLength)
+        if (listeners.isNotEmpty()) {
+            val text = readText()
+            lastText = text
+            fire(offset, removedLength, text.length - oldLength + removedLength)
+        }
+        written()
     }
 
     /**

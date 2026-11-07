@@ -44,17 +44,14 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
         this.columns = columns
     }
 
-    /** Listeners registered with addTextChangedListener (the registered object and a function receiving the text). Called in registration order. */
-    private val textChangedListeners = ArrayList<Pair<Any, (String) -> Unit>>()
-
-    /** Whether TextBox.TextChanged has been subscribed (subscribed only once, when the first listener is added). */
-    private var textChangedSubscribed = false
+    /** The listeners added with addTextChangedListener (TextBox.TextChanged is subscribed when the first listener is added). */
+    private val textChanges = TextChangeNotices(this, ::nativeText, ::subscribeTextChanged)
 
     /** ActionListener-style listeners and the handling of Enter's KeyDown ([ActionEvents]). */
     private val actions = ActionEvents(this, { actionCommand }, ::acceptsReturnOf)
 
     /** DocumentListener-style listeners (subscribes to TextBox.TextChanging when the first listener is added). */
-    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging) { textChanges.fire() }
 
     /**
      * JTextComponent.getDocument-like: the interface to the text of this text field ([WDocument]). Returns the same one every time.
@@ -360,11 +357,13 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
      */
     fun undo() {
         writeNative { inspectable.call(XamlInterop.ITextBox_Undo) }
+        textChanges.fire()
     }
 
     /** UndoManager.redo-style: redoes an edit undone by [undo] (TextBox.Redo). Does nothing if there is no edit to redo. */
     fun redo() {
         writeNative { inspectable.call(XamlInterop.ITextBox_Redo) }
+        textChanges.fire()
     }
 
     /** UndoManager.canUndo-style: whether there is an edit that [undo] can undo (TextBox.CanUndo). */
@@ -673,7 +672,10 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
 
     /**
      * Subscribes to text changes (TextBox.TextChanged). The listener receives the text after the change.
-     * TextChanged is delivered later in a batch (in the message loop), so consecutive changes may be merged into one.
+     * For programmatic changes such as rewriting [text], [replaceSelection] or [document], it is called right at the change, as with Swing's DocumentListener
+     * (even before being added to a window; WinUI's TextChanged does not come for changes before that).
+     * User edits such as key input are known through TextChanged and arrive together after the change (in the message loop), so consecutive changes
+     * may be merged into one. It is not called if the text is the same as the one notified last (changes before adding are not notified either).
      * Use [addDocumentListener] when you need the changed position and length.
      * The Kotlin lambda form and the Java Consumer form go into the same list and are called in the order added.
      */
@@ -690,32 +692,18 @@ class WTextField @JvmOverloads constructor(placeholder: String = "") : WControl(
     @JvmName("removeTextChangedListener")
     fun removeTextChangedListenerForJava(listener: Consumer<String>) = removeTextChanged(listener)
 
-    private fun addTextChanged(key: Any, invoke: (String) -> Unit) {
-        if (!textChangedSubscribed) {
-            // The handler stays in the native object, so do not capture the field strongly; look it up from listenerAnchor
-            val anchor = listenerAnchor
-            inspectable.addEventHandler(
-                "WinUI4K.TextChangedHandler",
-                XamlInterop.IID_TextChangedEventHandler,
-                XamlInterop.ITextBox_add_TextChanged,
-            ) { _, _ -> (anchor.get() as? WTextField)?.fireTextChanged() }
-            textChangedSubscribed = true
-        }
-        textChangedListeners += key to invoke
-        listenerAnchor.listenerAdded()
-    }
+    private fun addTextChanged(key: Any, invoke: (String) -> Unit) = textChanges.add(key, invoke)
 
-    private fun removeTextChanged(key: Any) {
-        val index = textChangedListeners.indexOfLast { it.first === key }
-        if (index < 0) return
-        textChangedListeners.removeAt(index)
-        listenerAnchor.listenerRemoved()
-    }
+    private fun removeTextChanged(key: Any) = textChanges.remove(key)
 
-    private fun fireTextChanged() {
-        if (textChangedListeners.isEmpty()) return
-        val current = text
-        for ((_, invoke) in textChangedListeners.toList()) invoke(current)
+    /** Subscribes to TextBox.TextChanged. The handler stays on the native side, so the text field is not captured strongly and is taken from [listenerAnchor]. */
+    private fun subscribeTextChanged() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.TextChangedHandler",
+            XamlInterop.IID_TextChangedEventHandler,
+            XamlInterop.ITextBox_add_TextChanged,
+        ) { _, _ -> (anchor.get() as? WTextField)?.textChanges?.fire() }
     }
 }
 

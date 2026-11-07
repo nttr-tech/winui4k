@@ -6,7 +6,6 @@ import com.appkitbox.winui4k.internal.winrt.Hstring
 import com.appkitbox.winui4k.internal.winrt.PropertyValues
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.getString
-import com.appkitbox.winui4k.internal.winrt.removeEventHandler
 import com.appkitbox.winui4k.internal.winui.TextInterop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
 import java.io.IOException
@@ -64,11 +63,11 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         own(inspectable.getPtr(XamlInterop.IRichEditBox_get_Document))
     }
 
-    /** TextChanged event tokens registered via addTextChangedListener. */
-    private val textChangedTokens = ListenerTokens<Runnable>()
+    /** The listeners added with addTextChangedListener (RichEditBox.TextChanged is subscribed when the first listener is added). */
+    private val textChanges = TextChangeNotices(this, ::nativeText, ::subscribeTextChanged)
 
     /** DocumentListener-style listeners (subscribes to RichEditBox.TextChanging when the first listener is attached). */
-    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging)
+    private val documentEvents = DocumentEvents(this, ::nativeText, ::subscribeTextChanging) { textChanges.fire() }
 
     /**
      * JTextComponent.getDocument-like: the interface to the text of this text pane ([WDocument]). Returns the same one every time
@@ -857,35 +856,35 @@ class WTextPane @JvmOverloads constructor(placeholder: String = "") : WControl(
         ) { _, _ -> (anchor.get() as? WTextPane)?.caret?.check() }
     }
 
-    /** Subscribes to text changes (RichEditBox.TextChanged). */
+    /**
+     * Subscribes to text changes (RichEditBox.TextChanged). The listener is called when [text] changes.
+     * For programmatic changes such as rewriting [text], [replaceSelection] or [document], it is called right at the change, as with Swing's DocumentListener
+     * (even before being added to a window; WinUI's TextChanged does not come for changes before that).
+     * User edits such as key input are known through TextChanged and arrive after the change (in the message loop).
+     * It is not called if the text is the same as the one notified last (format-only changes and changes before adding are not notified).
+     * Listeners in the form of Kotlin lambdas and Java Runnables go into the same list and are called in the order added.
+     */
     @JvmSynthetic
-    fun addTextChangedListener(listener: () -> Unit) {
-        val adapter = Runnable(listener)
-        addTextChangedListenerForJava(adapter)
-        textChangedTokens.addKotlinAdapter(listener, adapter)
-    }
+    fun addTextChangedListener(listener: () -> Unit) = textChanges.add(listener) { listener() }
 
     @JvmName("addTextChangedListener")
-    fun addTextChangedListenerForJava(listener: Runnable) {
-        val token = inspectable.addEventHandler(
-            "WinUI4K.RichEditTextChangedHandler",
-            XamlInterop.IID_RoutedEventHandler,
-            XamlInterop.IRichEditBox_add_TextChanged,
-        ) { _, _ -> listener.run() }
-        textChangedTokens.add(listener, token)
-    }
+    fun addTextChangedListenerForJava(listener: Runnable) = textChanges.add(listener) { listener.run() }
 
     /** Unsubscribes a listener registered via [addTextChangedListener]. */
     @JvmSynthetic
-    fun removeTextChangedListener(listener: () -> Unit) {
-        val adapter = textChangedTokens.removeKotlinAdapter(listener) ?: return
-        removeTextChangedListenerForJava(adapter)
-    }
+    fun removeTextChangedListener(listener: () -> Unit) = textChanges.remove(listener)
 
     @JvmName("removeTextChangedListener")
-    fun removeTextChangedListenerForJava(listener: Runnable) {
-        val token = textChangedTokens.remove(listener) ?: return
-        inspectable.removeEventHandler(XamlInterop.IRichEditBox_remove_TextChanged, token)
+    fun removeTextChangedListenerForJava(listener: Runnable) = textChanges.remove(listener)
+
+    /** Subscribes to RichEditBox.TextChanged. The handler stays on the native side, so the text pane is not captured strongly and is taken from [listenerAnchor]. */
+    private fun subscribeTextChanged() {
+        val anchor = listenerAnchor
+        inspectable.addEventHandler(
+            "WinUI4K.RichEditTextChangedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IRichEditBox_add_TextChanged,
+        ) { _, _ -> (anchor.get() as? WTextPane)?.textChanges?.fire() }
     }
 
     private companion object {
