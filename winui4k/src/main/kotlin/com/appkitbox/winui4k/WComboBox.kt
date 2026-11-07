@@ -39,12 +39,16 @@ import kotlin.jvm.JvmSynthetic
  *
  * The existing [addListSelectionListener] (a Runnable called on every SelectionChanged) can still be used.
  *
+ * As with JComboBox, with every constructor the selection is the first item added to an empty combo box (the first one when a List or array is passed),
+ * and removing the selected item selects the neighboring item (the next one if it was the first, otherwise the previous one). To start with nothing selected (to show
+ * the placeholder text [placeholderText], etc.), set `selectedIndex = -1` after adding the items.
+ * **Change from earlier versions**: with the constructor taking a List and the one without arguments, adding items selected nothing, and removing the selected item
+ * left nothing selected.
+ *
  * Differences from Swing:
  * - Reselecting the current item from the popup delivers no ActionEvent (WinUI reports nothing when the selection does not change)
  * - [popupMenuWillBecomeVisible][WPopupMenuListener.popupMenuWillBecomeVisible] arrives after it starts opening, and
  *   [popupMenuWillBecomeInvisible][WPopupMenuListener.popupMenuWillBecomeInvisible] after it has finished closing
- * - The models made by the constructor taking a List and the no-arg constructor still select nothing when items are added, and removing the selected item leaves it unselected
- *   (JComboBox selects the first item and selects an adjacent one on removal. The constructors taking an array or a model behave like JComboBox)
  * - When the model selects a value not in the list, a non-editable combo box shows nothing ([selectedItem] is that value, and [selectedIndex] is -1).
  *   An editable combo shows that string (after the template that lets WinUI accept custom values is applied, that is, after it is in a window)
  */
@@ -102,8 +106,8 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /** Decides how the drop-down closed (whether it was a cancellation). */
     private val popupClose = ComboBoxPopupClose()
 
-    /** The model of items and selection. The default is a [WDefaultComboBoxModel] that does not move the selection, like the previous WComboBox. */
-    private var dataModel: WComboBoxModel<*> = WDefaultComboBoxModel<String>(movesSelection = false)
+    /** The model of the items and the selection. The default is a [WDefaultComboBoxModel] that moves the selection, as with JComboBox. */
+    private var dataModel: WComboBoxModel<*> = WDefaultComboBoxModel<String>()
 
     /**
      * A listener that copies model changes to native and passes them to this combo's listeners, as in JComboBox. The model references the combo strongly through it,
@@ -121,9 +125,6 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     private var pushing = false
 
     private var loadedHandlerAdded = false
-
-    /** The [selectedIndex] set while there were no items (selected when an item at that position is added). -1 if none. */
-    private var pendingSelectedIndex = -1
 
     /** Whether [model] has been read or written (the first time, the combo is pinned with ListenerAnchor; [pinForModel]). */
     private var modelExposed = false
@@ -193,11 +194,10 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
     /**
      * The selected index. -1 if unselected or if a value not in the list is selected.
      * As with JComboBox.setSelectedIndex, values outside -1 to `itemCount - 1` throw [IllegalArgumentException], and like [setSelectedItem]
-     * it selects that item (the [addActionListener] listeners are called once even if the selection does not change).
+     * selects that item (calls the [addActionListener] listeners once even if the selection does not change). Setting 0 or more when there are no items
+     * throws [IllegalArgumentException], as with JComboBox.
      *
-     * Difference from Swing: setting 0 or more while there are no items does not throw; the value is remembered and the item at that position is selected once when it is added
-     * (the same as the previous WComboBox and WinUI's Selector; `WComboBox().apply { selectedIndex = 2; addItem("a"); addItem("b"); addItem("c") }`
-     * selects "c"). While remembered it reads as -1, and setting it again (including -1) replaces it. -2 or less throws even without items.
+     * **Change from earlier versions**: setting 0 or more when there were no items did not throw; the value was remembered and the item was selected when one was added at that position.
      */
     var selectedIndex: Int
         get() {
@@ -207,12 +207,7 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             return indexOfItem(selected)
         }
         set(value) {
-            if (value >= 0 && itemCount == 0) {
-                pendingSelectedIndex = value
-                return
-            }
             require(value in -1 until itemCount) { "setSelectedIndex: $value out of bounds" }
-            pendingSelectedIndex = -1
             if (value == -1) {
                 setSelectedItem(null)
                 return
@@ -611,12 +606,6 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
             rebuildNative()
         }
         if (selectedItemReminder !== dataModel.selectedItem) selectedItemChanged()
-        selectPendingIndex()
-    }
-
-    /** Selects the item when an item comes to the position of the [selectedIndex] set while there were no items (same as m_selectedIndexValueSetBeforeItemsAvailable of WinUI's Selector). */
-    private fun selectPendingIndex() {
-        if (pendingSelectedIndex in 0 until itemCount) selectedIndex = pendingSelectedIndex
     }
 
     private fun onIntervalRemoved(e: WListDataEvent) {
@@ -821,7 +810,6 @@ class WComboBox @JvmOverloads constructor(items: List<String> = emptyList()) : W
         newModel.addListDataListener(modelListener)
         selectedItemReminder = newModel.selectedItem
         rebuildNative()
-        selectPendingIndex()
     }
 
     /**

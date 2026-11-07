@@ -36,7 +36,8 @@ class WComboBoxEventTest : FunSpec() {
         }
     }
 
-    private fun recorded(vararg items: String) = Recorded(WComboBox(items.toList()))
+    /** A combo box with [items] that starts recording from nothing selected (it is cleared because it selects the first item, as with JComboBox). */
+    private fun recorded(vararg items: String) = Recorded(WComboBox(items.toList()).also { it.selectedIndex = -1 })
 
     /** Records the three PopupMenuListener notifications as "visible", "canceled" and "invisible" (call on the UI thread). */
     private fun popupEvents(comboBox: WComboBox): MutableList<String> {
@@ -134,41 +135,21 @@ class WComboBoxEventTest : FunSpec() {
             }
         }
 
-        test("selectedIndex set while there are no items is remembered and selects the item at that position when it is added (the previous WinUI behavior; only once)") {
+        test("setting selectedIndex to 0 or more with no items throws IllegalArgumentException, as with JComboBox, and adding items later only selects the first one") {
             onUiThreadGet {
                 val combo = recorded()
-                combo.comboBox.selectedIndex = 2
-                val states = mutableListOf(combo.comboBox.selectedIndex)
-                combo.comboBox.addItem("Red")
-                combo.comboBox.addItem("Green")
-                states += combo.comboBox.selectedIndex
-                combo.comboBox.addItem("Blue")
-                states += combo.comboBox.selectedIndex
-                val events = combo.events.toList()
-                combo.comboBox.removeAllItems()
+                shouldThrow<IllegalArgumentException> { combo.comboBox.selectedIndex = 0 }
+                shouldThrow<IllegalArgumentException> { combo.comboBox.selectedIndex = 2 }
+                shouldThrow<IllegalArgumentException> { combo.comboBox.selectedIndex = -2 }
+                combo.comboBox.selectedIndex = -1
+                val before = combo.events.toList()
                 for (item in listOf("Red", "Green", "Blue")) combo.comboBox.addItem(item)
-                states += combo.comboBox.selectedIndex
-                Triple(states, events, combo.comboBox.selectedItem)
-            }.let { (states, events, selected) ->
-                states shouldContainExactly listOf(-1, -1, 2, -1)
-                events shouldContainExactly listOf("SELECTED:Blue", "action:comboBoxChanged")
-                selected.shouldBeNull()
+                Triple(before, combo.events.toList(), combo.comboBox.selectedIndex)
+            }.let { (before, events, index) ->
+                before shouldContainExactly listOf("action:comboBoxChanged")
+                events shouldContainExactly listOf("action:comboBoxChanged", "SELECTED:Red", "action:comboBoxChanged")
+                index shouldBe 0
             }
-        }
-
-        test("selectedIndex remembered while there were no items is replaced by selectedIndex set later (including -1). -2 throws even without items") {
-            onUiThreadGet {
-                val cleared = WComboBox()
-                cleared.selectedIndex = 1
-                cleared.selectedIndex = -1
-                for (item in listOf("Red", "Green")) cleared.addItem(item)
-                val replaced = WComboBox()
-                replaced.selectedIndex = 1
-                replaced.selectedIndex = 0
-                replaced.addItem("Red")
-                shouldThrow<IllegalArgumentException> { WComboBox().selectedIndex = -2 }
-                cleared.selectedIndex to replaced.selectedItem
-            } shouldBe (-1 to "Red")
         }
 
         test("setSelectedItem selects the matching item, and ignores strings not in the list if non-editable (no events either)") {
@@ -220,7 +201,7 @@ class WComboBoxEventTest : FunSpec() {
 
         test("getSelectedObjects is an array of only the selected item, and empty if unselected") {
             onUiThreadGet {
-                val comboBox = WComboBox(listOf("Red", "Green"))
+                val comboBox = WComboBox(listOf("Red", "Green")).also { it.selectedIndex = -1 } // Start with nothing selected
                 val none = comboBox.getSelectedObjects().toList()
                 comboBox.selectedIndex = 1
                 none to comboBox.getSelectedObjects().toList()
@@ -232,7 +213,7 @@ class WComboBoxEventTest : FunSpec() {
 
         test("getItemAt returns null when out of range, and insertItemAt inserts at the given position") {
             onUiThreadGet {
-                val comboBox = WComboBox(listOf("Red", "Blue"))
+                val comboBox = WComboBox(listOf("Red", "Blue")).also { it.selectedIndex = -1 } // Start with nothing selected
                 comboBox.insertItemAt("Green", 1)
                 listOf(comboBox.getItemAt(0), comboBox.getItemAt(1), comboBox.getItemAt(2), comboBox.getItemAt(3), comboBox.getItemAt(-1))
             } shouldContainExactly listOf("Red", "Green", "Blue", null, null)
@@ -264,8 +245,7 @@ class WComboBoxEventTest : FunSpec() {
                 combo.comboBox.selectedIndex = 0
                 combo.events.clear()
                 combo.comboBox.removeAllItems()
-                combo.comboBox.addItem("Blue")
-                combo.comboBox.selectedIndex = 0
+                combo.comboBox.addItem("Blue") // The first item added to an empty combo box is selected, as with JComboBox
                 combo.events.toList()
             } shouldContainExactly listOf("DESELECTED:Red", "action:comboBoxChanged", "SELECTED:Blue", "action:comboBoxChanged")
         }
@@ -282,18 +262,20 @@ class WComboBoxEventTest : FunSpec() {
             }
         }
 
-        test("the array constructor selects the first item as with JComboBox(E[]), and the List constructor still leaves it unselected") {
+        test("every constructor, with an array, a List or no arguments, selects the first item, as with JComboBox, and nothing if empty") {
             onUiThreadGet {
-                WComboBox(arrayOf("Red", "Green")).selectedItem to WComboBox(listOf("Red", "Green")).selectedIndex
-            }.let { (fromArray, fromList) ->
-                fromArray shouldBe "Red"
-                fromList shouldBe -1
-            }
+                listOf(
+                    WComboBox(arrayOf("Red", "Green")).selectedItem,
+                    WComboBox(listOf("Red", "Green")).selectedItem,
+                    WComboBox().also { it.addItem("Red") }.selectedItem,
+                    WComboBox(emptyList()).selectedItem,
+                )
+            } shouldContainExactly listOf("Red", "Red", "Red", null)
         }
 
         test("listeners removed with removeItemListener and removeActionListener are not called, and getItemListeners etc. return them in the order added") {
             onUiThreadGet {
-                val comboBox = WComboBox(listOf("Red", "Green"))
+                val comboBox = WComboBox(listOf("Red", "Green")).also { it.selectedIndex = -1 } // Start with nothing selected
                 val events = mutableListOf<String>()
                 val item: (WItemEvent) -> Unit = { events += "item" }
                 val action: (WActionEvent) -> Unit = { events += "action" }
@@ -452,7 +434,12 @@ class WComboBoxEventTest : FunSpec() {
         }
 
         test("pressing Enter in an editable combo delivers the comboBoxEdited ActionEvent after the selection change events") {
-            val comboBox = onUiThreadGet { WComboBox(listOf("Red", "Green")).apply { isEditable = true } }
+            val comboBox = onUiThreadGet {
+                WComboBox(listOf("Red", "Green")).apply {
+                    isEditable = true
+                    selectedIndex = -1 // Start with nothing selected
+                }
+            }
             val recorded = onUiThreadGet { Recorded(comboBox) }
             UiTestHarness.attachAndAwaitLoaded(comboBox)
             try {

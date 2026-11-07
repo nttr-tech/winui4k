@@ -12,28 +12,23 @@ import java.util.Vector
  *   (listeners receive them starting from the last one added; see [WAbstractListModel])
  * - [getElementAt] returns null when out of range (even if E is non-nullable in Kotlin)
  *
- * Exception: the model that a [WComboBox] created with no arguments or with a List makes internally does not move the selection on additions or removals, as the
- * previous WComboBox did (it does not select the first item, and removing the selected item leaves it unselected).
+ * This is also the model [WComboBox] creates internally with every constructor, and it moves the selection, as with JComboBox.
+ *
+ * @constructor DefaultComboBoxModel()-like: creates an empty model.
  */
-open class WDefaultComboBoxModel<E> internal constructor(
-    /** Whether adding the first item and removing the selected item move the selection, as in Swing. */
-    private val movesSelection: Boolean,
-) : WAbstractListModel<E>(), WMutableComboBoxModel<E> {
+open class WDefaultComboBoxModel<E>() : WAbstractListModel<E>(), WMutableComboBoxModel<E> {
     private val objects = Vector<E>()
 
     private var selectedObject: Any? = null
 
-    /** DefaultComboBoxModel()-like: creates an empty model. */
-    constructor() : this(movesSelection = true)
-
     /** DefaultComboBoxModel(E[])-like: creates a model with [items] as its items and the first one selected (unselected if empty). */
-    constructor(items: Array<out E>) : this(movesSelection = true) {
+    constructor(items: Array<out E>) : this() {
         objects.addAll(items)
         if (objects.isNotEmpty()) selectedObject = objects[0]
     }
 
     /** DefaultComboBoxModel(Vector)-like: creates a model with [items] as its items and the first one selected (unselected if empty). */
-    constructor(items: List<E>) : this(movesSelection = true) {
+    constructor(items: List<E>) : this() {
         objects.addAll(items)
         if (objects.isNotEmpty()) selectedObject = objects[0]
     }
@@ -60,7 +55,7 @@ open class WDefaultComboBoxModel<E> internal constructor(
         objects.addElement(item)
         fireIntervalAdded(this, objects.size - 1, objects.size - 1)
         val isFirst = objects.size == 1 && selectedObject == null
-        if (movesSelection && isFirst && item != null) selectedItem = item
+        if (isFirst && item != null) selectedItem = item
     }
 
     override fun insertElementAt(item: E, index: Int) {
@@ -71,7 +66,6 @@ open class WDefaultComboBoxModel<E> internal constructor(
     override fun removeElementAt(index: Int) {
         if (getElementAt(index) === selectedObject) {
             selectedItem = when {
-                !movesSelection -> null
                 index == 0 -> if (getSize() == 1) null else getElementAt(index + 1)
                 else -> getElementAt(index - 1)
             }

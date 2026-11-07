@@ -63,16 +63,16 @@ class WComboBoxForJavaTest {
     }
 
     @Test
-    void setSelectedIndexBeforeAddingItemsDoesNotThrowAndIsRememberedAndSelectsTheItemWhenAdded() {
+    void setSelectedIndexBeforeAddingItemsThrowsLikeJComboBoxAndTheFirstItemAddedIsSelected() {
         onUiThread(() -> {
             WComboBox comboBox = new WComboBox();
-            comboBox.setSelectedIndex(2);
+            assertThrows(IllegalArgumentException.class, () -> comboBox.setSelectedIndex(2));
             assertEquals(-1, comboBox.getSelectedIndex());
             comboBox.addItem("Red");
             comboBox.addItem("Green");
             comboBox.addItem("Blue");
-            assertEquals(2, comboBox.getSelectedIndex());
-            assertEquals("Blue", comboBox.getSelectedItem());
+            assertEquals(0, comboBox.getSelectedIndex());
+            assertEquals("Red", comboBox.getSelectedItem());
         });
     }
 

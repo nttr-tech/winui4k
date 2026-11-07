@@ -408,6 +408,7 @@ final class BasicInputPages {
         WLabel result = new WLabel("Selected: none");
 
         WComboBox comboBox = new WComboBox(Arrays.asList("Red", "Green", "Blue", "Yellow"));
+        comboBox.setSelectedIndex(-1); // Start with nothing selected, as in the original Gallery (WComboBox selects the first item, as with JComboBox)
         comboBox.setWidth(200.0);
         comboBox.addListSelectionListener(() -> {
             String item = (String) comboBox.getSelectedItem();
@@ -426,6 +427,7 @@ final class BasicInputPages {
     /** Heading and placeholder: header / placeholderText. */
     private static WComponent buildHeaderComboBoxExample() {
         WComboBox comboBox = new WComboBox(Arrays.asList("Meiryo", "Yu Gothic", "BIZ UDGothic"));
+        comboBox.setSelectedIndex(-1); // Show the placeholder text (WComboBox selects the first item, as with JComboBox)
         comboBox.setWidth(200.0);
         comboBox.setHeader("Font");
         comboBox.setPlaceholderText("Choose a font");
@@ -437,6 +439,7 @@ final class BasicInputPages {
         WLabel result = new WLabel("Submitted: none");
 
         WComboBox comboBox = new WComboBox(Arrays.asList("10", "20", "30"));
+        comboBox.setSelectedIndex(-1); // Start with nothing selected, as in the original Gallery (WComboBox selects the first item, as with JComboBox)
         comboBox.setWidth(200.0);
         comboBox.setEditable(true);
         comboBox.addTextSubmitListener((text) -> {

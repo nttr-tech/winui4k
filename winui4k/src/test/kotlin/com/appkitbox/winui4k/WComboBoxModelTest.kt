@@ -191,7 +191,7 @@ class WComboBoxModelTest : FunSpec() {
             } shouldContainExactly listOf(3, 3, "White", listOf("Green", "Blue", "White"))
         }
 
-        test("a combo made from a List still selects nothing when items are added, and removing the selected item leaves it unselected") {
+        test("a combo box created without arguments also selects the first item added and selects the neighboring item when the selected item is removed, as with JComboBox") {
             onUiThreadGet {
                 val comboBox = WComboBox()
                 comboBox.addItem("Red")
@@ -199,8 +199,16 @@ class WComboBoxModelTest : FunSpec() {
                 comboBox.addItem("Green")
                 comboBox.selectedIndex = 1
                 comboBox.removeItemAt(1)
-                afterAdd to comboBox.selectedIndex
-            } shouldBe (-1 to -1)
+                Triple(afterAdd, comboBox.selectedIndex, nativeSelectedIndex(comboBox))
+            } shouldBe Triple(0, 0, 0)
+        }
+
+        test("a combo box created from a List also selects the next item when the selected first item is removed, as with JComboBox") {
+            onUiThreadGet {
+                val comboBox = WComboBox(listOf("Red", "Green", "Blue"))
+                comboBox.removeItemAt(0)
+                comboBox.selectedItem to nativeSelectedIndex(comboBox)
+            } shouldBe ("Green" to 0)
         }
 
         test("a combo made from an array or a model selects the adjacent item when the selected item is removed, as in JComboBox") {
@@ -214,7 +222,7 @@ class WComboBoxModelTest : FunSpec() {
 
         test("removing an unselected item delivers an ActionEvent if nothing was selected before, as in JComboBox") {
             onUiThreadGet {
-                val comboBox = WComboBox(listOf("Red", "Green"))
+                val comboBox = WComboBox(listOf("Red", "Green")).also { it.selectedIndex = -1 } // Start with nothing selected
                 val events = comboBox.recorded()
                 comboBox.removeItemAt(0)
                 events.toList()

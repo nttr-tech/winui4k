@@ -87,13 +87,13 @@ class WComboBoxTest : FunSpec() {
             second shouldBe "Green"
         }
 
-        test("the initial state is unselected (selectedIndex = -1, selectedItem = null)") {
-            val (index, item) = onUiThreadGet {
+        test("creating from a List selects the first item (selectedIndex = 0), as with JComboBox(Vector). Nothing if empty") {
+            val (selected, empty) = onUiThreadGet {
                 val comboBox = WComboBox(listOf("Red", "Green"))
-                comboBox.selectedIndex to comboBox.selectedItem
+                (comboBox.selectedIndex to comboBox.selectedItem) to WComboBox().let { it.selectedIndex to it.selectedItem }
             }
-            index shouldBe -1
-            item.shouldBeNull()
+            selected shouldBe (0 to "Red")
+            empty shouldBe (-1 to null)
         }
 
         test("setting selectedIndex makes selectedItem return the matching string") {
@@ -107,7 +107,7 @@ class WComboBoxTest : FunSpec() {
         test("the ListSelectionListener fires on every selection change") {
             var count = 0
             onUiThread {
-                val comboBox = WComboBox(listOf("Red", "Green", "Blue"))
+                val comboBox = WComboBox(listOf("Red", "Green", "Blue")).also { it.selectedIndex = -1 } // Start with nothing selected
                 comboBox.addListSelectionListener { count++ }
                 comboBox.selectedIndex = 0
                 comboBox.selectedIndex = 1

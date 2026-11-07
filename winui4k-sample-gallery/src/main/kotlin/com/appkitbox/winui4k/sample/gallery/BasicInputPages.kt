@@ -421,6 +421,7 @@ private fun buildSimpleComboBoxExample(): WComponent {
     val result = WLabel("Selected: none")
 
     val comboBox = WComboBox(listOf("Red", "Green", "Blue", "Yellow"))
+    comboBox.selectedIndex = -1 // Start with nothing selected, as in the original Gallery (WComboBox selects the first item, as with JComboBox)
     comboBox.width = 200.0
     comboBox.addListSelectionListener {
         val item = comboBox.selectedItem
@@ -436,6 +437,7 @@ private fun buildSimpleComboBoxExample(): WComponent {
 /** Heading and placeholder: header / placeholderText. */
 private fun buildHeaderComboBoxExample(): WComponent {
     val comboBox = WComboBox(listOf("Meiryo", "Yu Gothic", "BIZ UDGothic"))
+    comboBox.selectedIndex = -1 // Show the placeholder text (WComboBox selects the first item, as with JComboBox)
     comboBox.width = 200.0
     comboBox.header = "Font"
     comboBox.placeholderText = "Choose a font"
@@ -447,6 +449,7 @@ private fun buildEditableComboBoxExample(): WComponent {
     val result = WLabel("Submitted: none")
 
     val comboBox = WComboBox(listOf("10", "20", "30"))
+    comboBox.selectedIndex = -1 // Start with nothing selected, as in the original Gallery (WComboBox selects the first item, as with JComboBox)
     comboBox.width = 200.0
     comboBox.isEditable = true
     comboBox.addTextSubmitListener { text ->
