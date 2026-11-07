@@ -438,6 +438,10 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   おらず (ActualWidth が 0)、UIElement.Focus は false を返す。そのため WFrame は、アクティブになった時にフォーカスの無いウィンドウで
   最後にフォーカスを得た要素か最初にフォーカスを受けられる要素へ Focus(Programmatic) し、読み込む前なら中身の Loaded で試し直す。
   読み込む前の requestFocusInWindow は Swing と同じく頼みを覚えて true を返す (WFrameFocusOwnerTest)
+  中身の子が表示中 (isDisplayable が true) になっても、中身の根の Loaded はまだ来ていないことがある。その間に閉じた (dispose) ウィンドウでは
+  根の Loaded は来ないので、このハンドラはネイティブの根に残る。ハンドラが根のラッパーを強く捕捉していたため、閉じて手放したウィンドウの
+  中身の子が回収されなかった (setContentPane(WLayoutPanel) で毎回、WBorderLayout でもときどき)。ハンドラは WFrame の追跡と根を弱く参照し、
+  閉じた時にも外す (WrapperReleaseLayoutTest)
 - WLayoutPanel (リスナーを持つ ListenerAnchor のある要素) を Window.Content に置いたウィンドウを閉じて参照を手放すと、その子のラッパーが
   回収されなかった (WFrame.setLayout・setContentPane(WLayoutPanel) のどちらでも。既定の WPanel やメニュー バーの Grid の根なら回収される)。
   Window.Closed で Window.Content を null にしても変わらない。根の Unloaded が届かず ListenerAnchor が強く持ったままになっていると

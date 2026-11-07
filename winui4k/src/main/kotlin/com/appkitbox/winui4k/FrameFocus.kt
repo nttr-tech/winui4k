@@ -4,7 +4,9 @@ import com.appkitbox.winui4k.internal.com.ComPtr
 import com.appkitbox.winui4k.internal.com.Guid
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winrt.removeEventHandler
+import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import java.lang.ref.WeakReference
 
 /**
  * Finds the focus owner of a [WFrame] (Window.getFocusOwner / getMostRecentFocusOwner). Remembers the element that last got the focus
@@ -88,8 +90,11 @@ internal class FrameFocusTracker {
     /** The component requested with [WComponent.requestFocusInWindow] between being shown and loading the content ([WFrame.deferFocus]). */
     var pendingFocus: WComponent? = null
 
-    /** Whether [focusAfterLoad] is waiting for the content's Loaded. */
-    private var waitingForLoad = false
+    /** The root (a weak reference) whose Loaded [focusAfterLoad] is waiting for, and the token of that Loaded handler. null if not waiting. */
+    private var loadWait: Pair<WeakReference<WComponent>, Long>? = null
+
+    /** What to call when [focusAfterLoad] loads the root. */
+    private var retryAfterLoad: (() -> Unit)? = null
 
     /**
      * As when a Swing Window gains focus, if no element has focus in the window that became active,
@@ -108,18 +113,36 @@ internal class FrameFocusTracker {
         focusIfNone(content, root)
     }
 
-    /** Calls [retry] once when [root] loads (the handler stays on the native side, so [retry] must reference the WFrame weakly). */
+    /**
+     * Calls [retry] once when [root] loads ([retry] must reference the WFrame weakly). The handler stays on the native side (the root), so
+     * both this tracker and the root's wrapper are referenced weakly. In a window closed before loading, it can stay without Loaded ever coming. Capturing the root's wrapper
+     * strongly kept "the root's native object -> handler -> the root's wrapper -> the children's wrappers" alive, and the children of the content of a window closed and released were
+     * not collected (WrapperReleaseLayoutTest). It is also removed when closed ([forget]).
+     */
     private fun focusAfterLoad(root: WComponent, retry: () -> Unit) {
-        if (waitingForLoad) return
-        waitingForLoad = true
-        val listener = object : Runnable {
-            override fun run() {
-                root.removeLoadedListenerForJava(this)
-                waitingForLoad = false
-                retry()
-            }
-        }
-        root.addLoadedListenerForJava(listener)
+        if (loadWait != null) return
+        val self = WeakReference(this)
+        val token = root.frameworkElement.addEventHandler(
+            "WinUI4K.FrameInitialFocusLoadedHandler",
+            XamlInterop.IID_RoutedEventHandler,
+            XamlInterop.IFrameworkElement_add_Loaded,
+        ) { _, _ -> ModalLoop.duringLayout { self.get()?.onRootLoaded() } }
+        loadWait = WeakReference(root) to token
+        retryAfterLoad = retry
+    }
+
+    private fun onRootLoaded() {
+        val retry = retryAfterLoad ?: return
+        stopWaitingForLoad()
+        retry()
+    }
+
+    /** Removes the Loaded handler of [focusAfterLoad]. */
+    private fun stopWaitingForLoad() {
+        val (root, token) = loadWait ?: return
+        root.get()?.frameworkElement?.removeEventHandler(XamlInterop.IFrameworkElement_remove_Loaded, token)
+        loadWait = null
+        retryAfterLoad = null
     }
 
     /**
@@ -153,6 +176,7 @@ internal class FrameFocusTracker {
     fun forget() {
         memory.forget()
         pendingFocus = null
+        stopWaitingForLoad()
     }
 
     /** The element with the focus in the window (XamlRoot) of [content] (the caller releases it). */

@@ -50,8 +50,15 @@ class WrapperReleaseLayoutTest : FunSpec() {
         awaitDetached(label)
     }
 
-    /** Shows a window whose content is built by [configure], confirms it opened, disposes it, and returns only weak references. */
-    private suspend fun shownAndDisposedFrame(configure: (WFrame, WButton) -> WComponent): BuiltFrame {
+    /**
+     * Shows a window whose content is built with [configure], checks that it opened, disposes it, and returns only weak references.
+     * If [beforeLoad], it is disposed right away when it becomes active (windowActivated) if the content is not loaded yet
+     * (WFrame waits for the content's Loaded to put the initial focus, but Loaded does not come for a closed window).
+     */
+    private suspend fun shownAndDisposedFrame(
+        beforeLoad: Boolean = false,
+        configure: (WFrame, WButton) -> WComponent,
+    ): BuiltFrame {
         val events = events
         val built = onUiThreadGet {
             val frame = WFrame(TITLE)
@@ -59,6 +66,13 @@ class WrapperReleaseLayoutTest : FunSpec() {
                 object : WWindowAdapter() {
                     override fun windowOpened(e: WWindowEvent) {
                         events += "opened"
+                    }
+
+                    override fun windowActivated(e: WWindowEvent) {
+                        if (beforeLoad && !frame.contentPane.isDisplayable) {
+                            events += "disposed before load"
+                            frame.dispose()
+                        }
                     }
 
                     override fun windowClosed(e: WWindowEvent) {
@@ -72,8 +86,12 @@ class WrapperReleaseLayoutTest : FunSpec() {
             BuiltFrame(WeakReference(frame), WeakReference(content), WeakReference(button), NativeProbe(frame.window), NativeProbe(button.inspectable))
         }
         eventually(5.seconds) { events() shouldContain "opened" }
-        eventually(5.seconds) { onUiThreadGet { built.child.get()?.isDisplayable } shouldBe true }
-        onUiThread { built.frame.get()?.dispose() }
+        if (beforeLoad) {
+            eventually(5.seconds) { events() shouldContain "disposed before load" }
+        } else {
+            eventually(5.seconds) { onUiThreadGet { built.child.get()?.isDisplayable } shouldBe true }
+            onUiThread { built.frame.get()?.dispose() }
+        }
         eventually(5.seconds) { events() shouldContain "closed" }
         return built
     }
@@ -201,6 +219,15 @@ class WrapperReleaseLayoutTest : FunSpec() {
 
             test("a window with a WLayoutPanel set as its content with setContentPane, shown, disposed and dropped, has the WFrame, content and children collected and the Window destroyed") {
                 val built = shownAndDisposedFrame { frame, button ->
+                    val panel = WLayoutPanel(WFlowLayout()).also { it.add(button) }
+                    frame.setContentPane(panel)
+                    panel
+                }
+                built.shouldBeReclaimed()
+            }
+
+            test("for a window disposed when it became active before the content loaded, releasing the references also collects the WFrame, the content and the children, and destroys the Window") {
+                val built = shownAndDisposedFrame(beforeLoad = true) { frame, button ->
                     val panel = WLayoutPanel(WFlowLayout()).also { it.add(button) }
                     frame.setContentPane(panel)
                     panel
