@@ -12,6 +12,8 @@
 
 同じ日の 2 回目の修正で、2 の一覧の API の多くを Swing に合わせて直し (`5966d9cd` から `dabb557a` まで)、文書のサンプルを Swing と同じ素直な書き方に戻して画像を撮り直しました。2 の一覧には、直した項目のコミットと、残した項目の理由と案を書いています。
 
+同じ日の 3 回目の修正で、[API 2](#a-alignment) の揃えを Swing と同じ意味にしました (`e3e279f2` から `03d4043a` まで)。文書の揃えの書き方を Swing と同じ `setHorizontalAlignment` に戻し、揃えを使うサンプルの画像を撮り直しました。
+
 **どう調べたか**
 
 - 文書の各章のサンプル ([`winui4k-sample-swing-to-winui4k`](../winui4k-sample-swing-to-winui4k) の `src/main/java/com/appkitbox/winui4k/swing_to_winui4k/<部品>/<ユースケース>/`) を動かして撮った画像 (`doc/images/swing_to_winui4k/` の全部) を、1 枚ずつ見ました。
@@ -155,7 +157,7 @@
 
 - 何が変か: `WCommandBar` に足したボタンが、バーの左ではなく右に寄って並びます。ボタンの間が広く (1 つが 70 前後)、`WAppBarButton("New", ...)` のラベルは出ず、アイコンだけです。右端に「…」ボタンが出ます。バーの高さも 48 ほどで、Swing (約 30) よりかなり高いです。「…」を開いたメニューは、ウィンドウの左端から右端まで広がり、下の「Ready」のラベルも隠します。
 - Swing では: `JToolBar` はボタンを左から詰めて並べ、アイコンだけの小さなボタンになります。
-- 原因の見立て: WinUI の CommandBar の仕様 (PrimaryCommands は右寄せ、DefaultLabelPosition が Bottom のラベルはバーを開いたときだけ出る、ラベルを見せるために「…」が出る、オーバーフローのメニューはバーの幅になる)。ただ、Swing から移す人には「おかしい」と感じる見た目です。`toolBar.setHorizontalAlignment(HorizontalAlignment.LEFT)` は、`WBorderLayout.NORTH` に置いたバーでは効きませんでした。
+- 原因の見立て: WinUI の CommandBar の仕様 (PrimaryCommands は右寄せ、DefaultLabelPosition が Bottom のラベルはバーを開いたときだけ出る、ラベルを見せるために「…」が出る、オーバーフローのメニューはバーの幅になる)。ただ、Swing から移す人には「おかしい」と感じる見た目です。`toolBar.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT)` (親の中での位置) は、`WBorderLayout.NORTH` に置いたバーでは効きませんでした。
 - 文書の節: [23.2](swing_to_winui4k.md#toolbar-basic)、[23.6](swing_to_winui4k.md#toolbar-winui)
 - API の一覧: [API 50](#a-missing-table) (左に寄せる方法)
 
@@ -354,16 +356,14 @@
 - 文書の節: [2.8](swing_to_winui4k.md#textfield-placeholder)、[2.17](swing_to_winui4k.md#textfield-notes)、[12.2](swing_to_winui4k.md#textarea-basic)、[29.4](swing_to_winui4k.md#tooltip-show)
 
 <a id="a-alignment"></a>
-#### API 2. ★ `setHorizontalAlignment` / `setVerticalAlignment` が文字の揃えではない (残した。判断が要る)
+#### API 2. `setHorizontalAlignment` / `setVerticalAlignment` が文字の揃えではない (直した: `e3e279f2` ほか)
 
-- Swing: `JTextField.setHorizontalAlignment(JTextField.RIGHT)`・`JLabel.setHorizontalAlignment(SwingConstants.RIGHT)`・`JLabel.setVerticalAlignment(SwingConstants.TOP)` は、部品の中の文字の揃え。
-- WinUI4K: 同じ名前の `horizontalAlignment` ([`WComponent.kt:1026`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L1026))・`verticalAlignment` ([`WComponent.kt:1036`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L1036)) は、親の中での部品そのものの置き場所。文字の揃えは `textAlignment`。ラベルの中の縦の揃えは無い。`8f7e44ca` で KDoc に、Swing と意味が違うことと代わりの API を書いただけです。
-- 何が不自然か: `SwingConstants.RIGHT` を `HorizontalAlignment.RIGHT` に置き換えるだけの書き換えでコンパイルが通り、文字ではなく部品が右に寄ります。
-- 残した理由: 基底の `horizontalAlignment` は 372 か所で使われていて、名前を移すと利用者のコードも大きく変わります。どちらの案も新しい名前と値の型 (int の定数か列挙か) を決める必要があります。
-- 案 A: 基底の 2 つを別の名前 (`layoutHorizontalAlignment` など) に移し、`WLabel`・`WTextField`・ボタンに Swing と同じ意味の `horizontalAlignment` / `verticalAlignment` を作る。
-- 案 B: 基底はそのままにし、Java 向けに `setHorizontalAlignment(int)` (`SwingConstants` の値) の多重定義を足す。`WLabel` に `textVerticalAlignment` を足す。
-- 決めること: 新しい名前、値の型、`SwingConstants` に当たる定数を作るか。
-- 文書の節: [2.14](swing_to_winui4k.md#textfield-appearance)、[2.17](swing_to_winui4k.md#textfield-notes)、[4.5](swing_to_winui4k.md#label-alignment)
+- 直した後: 基底の親の中での位置は `horizontalAlignmentInParent` / `verticalAlignmentInParent` に移し ([`WComponent.kt:1104`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L1104)・[`WComponent.kt:1121`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WComponent.kt#L1121)。`e3e279f2`)、`horizontalAlignment` / `verticalAlignment` は Swing と同じく部品の中の揃えにしました。`WLabel` は文字 (アイコンがあればアイコンと文字のまとまり) の揃えで、既定は横が左・縦が中央です ([`WLabel.kt:522`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WLabel.kt#L522)。`2271822d`)。`WTextField` は入力欄の中の文字の揃えです ([`WTextField.kt:235`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WTextField.kt#L235)。`a9197bbc`)。どちらも `textAlignment` と同じ設定を Swing の名前で読み書きし、`STRETCH` は `IllegalArgumentException` になります。ボタンの系統 (`WButtonBase`) は中身の揃えで、`horizontalContentAlignment` / `verticalContentAlignment` の別名です ([`WButtonBase.kt:221`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WButtonBase.kt#L221)。`ec8df2a2`)。既定は Swing と同じく `WButton`・`WToggleButton` が中央、`WCheckBox`・`WRadioButton` の横が左です。値は `SwingConstants` の int ではなく列挙型 (`HorizontalAlignment.RIGHT` など) です。文書のサンプルは Swing と同じ `setHorizontalAlignment` / `setVerticalAlignment` の書き方に戻しました (`03d4043a`)。
+- 残る違い:
+  - `WPasswordField` には文字の揃えがありません。WinUI の `PasswordBox` は揃えを持たず、伏せ字は常に左に揃います ([`WPasswordField.kt:50`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WPasswordField.kt#L50))。
+  - `WRadioButton` の中身の縦の揃えの既定は、WinUI のテンプレートどおり上 (`TOP`) です。Swing の `JRadioButton` は中央です ([`WRadioButton.kt:27`](../winui4k/src/main/kotlin/com/appkitbox/winui4k/WRadioButton.kt#L27))。
+  - `new JLabel("x", SwingConstants.CENTER)` のように揃えを受け取る `WLabel` のコンストラクターはありません。作った後で `setHorizontalAlignment` を呼びます。
+- 文書の節: [1.1](swing_to_winui4k.md#button-table)、[2.14](swing_to_winui4k.md#textfield-appearance)、[2.15](swing_to_winui4k.md#textfield-password)、[4.5](swing_to_winui4k.md#label-alignment)、[6.8](swing_to_winui4k.md#radio-notes)、[30.6](swing_to_winui4k.md#layout-gridbag)
 
 <a id="a-contentpane"></a>
 #### API 3. `setLayout` の後の `getContentPane().add(...)` が画面に出ない (直した: `5966d9cd`)
@@ -823,7 +823,7 @@ Swing の部品ごとに、開発者の主な使い方のうち、WinUI4K でそ
 
 - 90 点以上なら、その部品を使う画面の 9 割はそのまま移せる見込みです。
 - 材料は、この文書の 1 と 2 で今も残っている項目と、[swing_to_winui4k.md](swing_to_winui4k.md) の各章のユースケースです。「主な使い方」は、一般的な Swing のアプリでの使われ方からの見立てで、実際に使われ方を測ったものではありません。
-- 2026-11-07 の 2 回目の修正の後の状態で付けています。[API 2](#a-alignment) (`setHorizontalAlignment` を Swing と同じ意味にする) は、直した前提です。
+- 2026-11-07 の 3 回目の修正 ([API 2](#a-alignment) の揃えを Swing と同じ意味にした) の後の状態で付けています。揃えで残る違い (`WPasswordField` に文字の揃えが無い・`WRadioButton` の縦の既定が上・揃えを受け取る `WLabel` のコンストラクターが無い) は、使う場面が少なく、どれも 1 点に満たないと見て引いていません。
 - 「主な減点」の括弧の中は、引いた点です。
 
 <a id="score-button"></a>
@@ -942,16 +942,15 @@ Swing の部品ごとに、開発者の主な使い方のうち、WinUI4K でそ
 <a id="summary"></a>
 ## まとめ: 優先して直したいもの
 
-1 回目 (表示の不具合) と 2 回目 (API) の修正で直したものは、表から外しました ([1.1](#display-bug)・[2.](#api))。残っているものを、移すときに引っかかる重さの順に並べます。**判断が要る** と付けたものは、API の形を決めてから直します。
+1 回目 (表示の不具合)・2 回目 (API)・3 回目 (揃え) の修正で直したものは、表から外しました ([1.1](#display-bug)・[2.](#api))。残っているものを、移すときに引っかかる重さの順に並べます。**判断が要る** と付けたものは、API の形を決めてから直します。
 
 | 順 | 項目 | 種類 | 理由 |
 |---|---|---|---|
-| 1 | [`setHorizontalAlignment` が文字の揃えでない](#a-alignment) (**判断が要る**) | 意味の違い | 機械的な書き換えでコンパイルが通り、黙って違う動きになる。名前と値の型を決める必要がある |
-| 2 | [値を読む側が double](#a-double) (**判断が要る**) | 型の違い | `"Volume: " + slider.getValue()` が黙って「70.0」になる。`int v = progress.getValue();` がコンパイルできない |
-| 3 | [`WTable` の複数の選択](#a-table-selection) (**判断が要る**) | 意味の違い | 例外も出ずに 1 行だけを処理する。警告にするか例外にするかを決める |
-| 4 | [`WList` と `WComboBox` に型引数が無い](#a-generic) (**判断が要る**) | 型の違い | 選んだ値を読むたびにキャストが要る |
-| 5 | [`setStringPainted(true)` が描かない](#a-painted) | 意味の違い | 同じ名前の設定でコンパイルが通り、画面に何も出ない |
-| 6 | [スピナーの一覧・日時、モードレスのダイアログ](#a-exception-settings) | 例外 | Swing では使える設定が実行時に例外になる |
-| 7 | [クラスの別名](#a-class-names)・[サブメニューの `WMenu`](#a-submenu) (別名は **判断が要る**) | 名前の違い | 名前から Swing の部品が引けず、メニューを入れ子にする書き方ができない |
-| 8 | [ツールバーの左寄せ・`setUnitIncrement`](#a-missing-table) (**判断が要る**) | 無いもの | Swing のツールバーと見た目が大きく違う。`setUnitIncrement` の行がコンパイルできない |
-| 9 | [`GridBagLayout` に当たるレイアウト マネージャー](#a-gridbag) | 無いもの | `WGrid` に書き直す必要があり、行と列の順も逆 |
+| 1 | [値を読む側が double](#a-double) (**判断が要る**) | 型の違い | `"Volume: " + slider.getValue()` が黙って「70.0」になる。`int v = progress.getValue();` がコンパイルできない |
+| 2 | [`WTable` の複数の選択](#a-table-selection) (**判断が要る**) | 意味の違い | 例外も出ずに 1 行だけを処理する。警告にするか例外にするかを決める |
+| 3 | [`WList` と `WComboBox` に型引数が無い](#a-generic) (**判断が要る**) | 型の違い | 選んだ値を読むたびにキャストが要る |
+| 4 | [`setStringPainted(true)` が描かない](#a-painted) | 意味の違い | 同じ名前の設定でコンパイルが通り、画面に何も出ない |
+| 5 | [スピナーの一覧・日時、モードレスのダイアログ](#a-exception-settings) | 例外 | Swing では使える設定が実行時に例外になる |
+| 6 | [クラスの別名](#a-class-names)・[サブメニューの `WMenu`](#a-submenu) (別名は **判断が要る**) | 名前の違い | 名前から Swing の部品が引けず、メニューを入れ子にする書き方ができない |
+| 7 | [ツールバーの左寄せ・`setUnitIncrement`](#a-missing-table) (**判断が要る**) | 無いもの | Swing のツールバーと見た目が大きく違う。`setUnitIncrement` の行がコンパイルできない |
+| 8 | [`GridBagLayout` に当たるレイアウト マネージャー](#a-gridbag) | 無いもの | `WGrid` に書き直す必要があり、行と列の順も逆 |

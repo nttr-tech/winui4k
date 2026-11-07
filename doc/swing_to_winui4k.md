@@ -423,7 +423,7 @@ public class HelloWinUI {
 | 時間のかかる処理を裏で動かす | `SwingWorker` | `WSwingWorker` (同じ形。[1.13](#button-background)) |
 
 `WPanel` の縦の並びでは、幅を指定した子は**中央寄せ**になります。左に寄せるときは
-`component.setHorizontalAlignment(HorizontalAlignment.LEFT)` を指定します。
+`component.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT)` (親の中での部品の位置) を指定します。
 
 <a id="basics-kotlin"></a>
 ### 0.3 Kotlin で書く
@@ -477,6 +477,7 @@ Java の `getText()` / `setText(...)` は Kotlin では `text`、`isEnabled()` /
 | 枠を消す | `setBorderPainted(false)` | `setBorderPainted(false)` | 同じ |
 | フォーカスの枠を消す | `setFocusPainted(false)` | `setFocusPainted(false)` | 同じ |
 | アイコンと文字の位置 | `setHorizontalTextPosition(SwingConstants.CENTER)` | `setHorizontalTextPosition(HorizontalTextPosition.CENTER)` | 定数が列挙型になる |
+| 中身の揃え | `setHorizontalAlignment(SwingConstants.LEFT)` / `setVerticalAlignment(SwingConstants.TOP)` | `setHorizontalAlignment(HorizontalAlignment.LEFT)` / `setVerticalAlignment(VerticalAlignment.TOP)` | 定数が列挙型になる。既定も同じ中央で、広げたボタンで効く。親の中でのボタンの位置は `setHorizontalAlignmentInParent` |
 | 大きさ | `setPreferredSize(new Dimension(120, 32))` | `setPreferredSize(new WSize(120, 32))` / `setWidth(120)` | `Dimension` → `WSize` |
 | 内側の余白 | `setMargin(new Insets(2, 8, 2, 8))` | `setMargin(new WInsets(2, 8, 2, 8))` | `Insets` → `WInsets` (同じ上・左・下・右の順)。4 つの数だけの `setMargin(左, 上, 右, 下)` は外側の余白なので取り違えない |
 | 強調したボタン | (なし) | `setAccent(true)` | WinUI のアクセントのスタイル |
@@ -1077,7 +1078,7 @@ Java と同じく `WActionListener` の値 (`val append = WActionListener { e ->
 | フォーカスの通知 | `addFocusListener(...)` | `addFocusListener(...)` | 同じ (`FocusAdapter` → `WFocusAdapter`) |
 | 入力の検証 | `setInputVerifier(...)` | `addFocusListener(...)` で自分で書く | `InputVerifier` は無い |
 | 元に戻す | `UndoManager` を自分で付ける | 組み込み (Ctrl+Z)。`undo()` / `canUndo()` | WinUI の機能 |
-| 文字の揃え | `setHorizontalAlignment(JTextField.RIGHT)` | `setTextAlignment(TextAlignment.RIGHT)` | 名前が違う |
+| 文字の揃え | `setHorizontalAlignment(JTextField.RIGHT)` | `setHorizontalAlignment(HorizontalAlignment.RIGHT)` | 定数が列挙型になる。`WPasswordField` には無い ([2.14](#textfield-appearance)) |
 | 選択の色 | `setSelectionColor(...)` | `setSelectionColor(...)` | 同じ |
 | キャレットの色 | `setCaretColor(...)` | (なし) | 変えられない |
 | 無効なときの文字色 | `setDisabledTextColor(...)` | (なし) | 変えられない |
@@ -1564,7 +1565,7 @@ price.setToolTipText("Amount including tax");
 
 ```java
 WTextField price = new WTextField(10);
-price.setTextAlignment(TextAlignment.RIGHT);
+price.setHorizontalAlignment(HorizontalAlignment.RIGHT);
 price.setFont(new WFont("Consolas", WFont.PLAIN, 14));
 price.setForeground(new WColor(0, 90, 158));
 price.setToolTipText("Amount including tax");
@@ -1576,8 +1577,10 @@ price.setToolTipText("Amount including tax");
 |---|---|
 | ![Appearance (Swing)](images/swing_to_winui4k/JTextField/AppearanceSwing.png) | ![Appearance (WinUI4K)](images/swing_to_winui4k/JTextField/AppearanceWinUI4K.png) |
 
-**注意**: WinUI4K の `setHorizontalAlignment` は入力欄の中の文字ではなく、入力欄そのものを親の中でどこに置くかの設定です
-(すべてのコンポーネントが持つレイアウトの設定)。文字の揃えは `setTextAlignment` を使います。
+`setHorizontalAlignment` は Swing と同じく入力欄の中の文字の揃えで、値は `JTextField.RIGHT` (`int`) ではなく `HorizontalAlignment.RIGHT` (列挙型) です。
+`HorizontalAlignment.STRETCH` は文字の揃えに無い値なので、`IllegalArgumentException` になります。
+入力欄そのものを親の中でどこに置くかは、すべてのコンポーネントが持つ `setHorizontalAlignmentInParent` です。
+複数行の両端揃え (`TextAlignment.JUSTIFY`) など、WinUI の値を使うときは `setTextAlignment` も使えます (同じ設定を別の値で読み書きします)。
 
 <a id="textfield-password"></a>
 ### 2.15 JPasswordField → WPasswordField
@@ -1622,6 +1625,7 @@ password.addActionListener(e -> {
   Swing の `JPasswordField` ほど中身を消し切れないことに気を付けます。
 - WinUI のパスワード欄では入力中に目のボタンで中身を確かめられます。出し方は `setPasswordRevealMode(PasswordRevealMode.HIDDEN)` などで変えます。
 - `WPasswordField` では、利用者の入力は `WDocumentFilter` を通りません (WinUI が入力の前に断る仕組みを持たないため)。
+- `WPasswordField` には文字の揃え (`setHorizontalAlignment`) がありません。WinUI のパスワード欄は揃えを持たず、伏せ字は常に左に揃います。
 
 <a id="textfield-kotlin"></a>
 ### 2.16 Kotlin で書く
@@ -1683,7 +1687,7 @@ fun main() {
         // Right-aligned price, read-only (2.7, 2.14)
         val price = WTextField(10).apply {
             header = "Price"
-            textAlignment = TextAlignment.RIGHT
+            horizontalAlignment = HorizontalAlignment.RIGHT
             text = "1,280"
             isEditable = false
         }
@@ -1703,7 +1707,7 @@ private fun register(name: String) = println("Registered: $name")
 
 - コンストラクターの文字列は Swing と同じく初めの文字列です (`new WTextField("Tokyo")`・`new WTextField("Tokyo", 20)`)。
   未入力のときの薄い文字 (案内文) は `setPlaceholderText(...)` で入れます。
-- `setHorizontalAlignment` は文字の揃えの設定ではありません。文字の揃えは `setTextAlignment` です ([2.14](#textfield-appearance))。
+- 文字の揃えは Swing と同じく `setHorizontalAlignment` ですが、値は `HorizontalAlignment` の列挙型です。`WPasswordField` には文字の揃えがありません ([2.14](#textfield-appearance))。
 - 複数行の入力 (`JTextArea`): 行数 (`setRows`)・`append`・行の数を使うなら `WTextPane` です ([12 章](#textarea))。
   文字を入れるだけなら、`WTextField` に `setAcceptsReturn(true)` と `setTextWrapping(TextWrapping.WRAP)` を設定しても、
   複数行の入力欄になります。高さは `setHeight(...)` で決めます。WinUI の入力欄は中身が増えると入力欄の中でスクロールするので
@@ -2468,9 +2472,9 @@ fun main() {
 | 文字を読み書きする | `getText()` / `setText("...")` | `getText()` / `setText("...")` | 同じ (表示した後に替えても並べ直す。[4.2](#label-basic)) |
 | アイコンだけ | `new JLabel(icon)` | `new WLabel(icon)` | アイコンは `Symbol`・`WImageIcon`・`WFontIcon` |
 | 文字とアイコン | `new JLabel("...", icon, SwingConstants.LEADING)` | `new WLabel("...", icon)` | 揃えの引数は無い |
-| 揃えを指定して作る | `new JLabel("...", SwingConstants.CENTER)` | (なし) | 作った後で `setTextAlignment(TextAlignment.CENTER)` |
-| 水平方向の揃え | `setHorizontalAlignment(SwingConstants.RIGHT)` | `setTextAlignment(TextAlignment.RIGHT)` | **名前が違う**。`setHorizontalAlignment` は親の中でのラベルの位置 ([4.5](#label-alignment)) |
-| 垂直方向の揃え | `setVerticalAlignment(SwingConstants.TOP)` | (なし) | ラベルは文字の高さに縮むので、ラベル自身の位置を `setVerticalAlignment(VerticalAlignment.TOP)` で決める |
+| 揃えを指定して作る | `new JLabel("...", SwingConstants.CENTER)` | (なし) | 作った後で `setHorizontalAlignment(HorizontalAlignment.CENTER)` |
+| 水平方向の揃え | `setHorizontalAlignment(SwingConstants.RIGHT)` | `setHorizontalAlignment(HorizontalAlignment.RIGHT)` | 定数が列挙型になる (既定も同じ左)。親の中でのラベルの位置は `setHorizontalAlignmentInParent` ([4.5](#label-alignment)) |
+| 垂直方向の揃え | `setVerticalAlignment(SwingConstants.TOP)` | `setVerticalAlignment(VerticalAlignment.TOP)` | 定数が列挙型になる (既定も同じ中央)。縦に引き伸ばしたラベルで効く |
 | アイコンと文字の位置 | `setHorizontalTextPosition(SwingConstants.CENTER)` | `setHorizontalTextPosition(HorizontalTextPosition.CENTER)` | 定数が列挙型になる |
 | アイコンと文字の間隔 | `setIconTextGap(4)` | `setIconTextGap(4)` | 同じ (既定も 4) |
 | フォント | `setFont(new Font(...))` | `setFont(new WFont(...))` | `Font` → `WFont` |
@@ -2593,7 +2597,7 @@ profile.setVerticalTextPosition(VerticalTextPosition.BOTTOM); // text below the 
 画像のアイコン (`WImageIcon`) は、読み込み終えたときにアイコンを表示している部品を並べ直し、`ImageIcon` と同じく画像の元の大きさで表示します。
 
 - `new JLabel(text, icon, SwingConstants.LEADING)` の 3 つ目の引数 (ラベルの中での揃え) を取るコンストラクターはありません。
-  揃えは `setTextAlignment` で指定します ([4.5](#label-alignment))。
+  揃えは作った後で `setHorizontalAlignment` で指定します ([4.5](#label-alignment))。
 - 文字の位置は既定で、Swing と同じくアイコンの後ろ (`HorizontalTextPosition.TRAILING`) です。
   ボタンと違い、`HorizontalTextPosition.CENTER` と `VerticalTextPosition.CENTER` で文字をアイコンに重ねることもできます。
 
@@ -2619,9 +2623,9 @@ for (JLabel label : new JLabel[] {left, center, right}) {
 ```java
 WLabel left = new WLabel("Left");                      // LEFT by default
 WLabel center = new WLabel("Center");
-center.setTextAlignment(TextAlignment.CENTER);
+center.setHorizontalAlignment(HorizontalAlignment.CENTER);
 WLabel right = new WLabel("Right");
-right.setTextAlignment(TextAlignment.RIGHT);
+right.setHorizontalAlignment(HorizontalAlignment.RIGHT);
 for (WLabel label : new WLabel[] {left, center, right}) {
     label.setPreferredSize(new WSize(300, 24));
 }
@@ -2633,9 +2637,13 @@ for (WLabel label : new WLabel[] {left, center, right}) {
 |---|---|
 | ![Alignment (Swing)](images/swing_to_winui4k/JLabel/AlignmentSwing.png) | ![Alignment (WinUI4K)](images/swing_to_winui4k/JLabel/AlignmentWinUI4K.png) |
 
-`WLabel` にも `setHorizontalAlignment` がありますが、引数は `HorizontalAlignment` で、**親の中でのラベル自身の位置**を決めるもの
-(WinUI の `HorizontalAlignment`) です。`JLabel.setHorizontalAlignment(SwingConstants.RIGHT)` をそのまま
-`setHorizontalAlignment(HorizontalAlignment.RIGHT)` に直すと、文字ではなくラベルが右に寄ります。ラベルの中の文字の揃えは `setTextAlignment` です。
+`setHorizontalAlignment` と `setVerticalAlignment` は Swing と同じく、ラベルの中での文字 (アイコンがあればアイコンと文字のまとまり) の揃えです。
+値は `SwingConstants` の `int` ではなく `HorizontalAlignment` / `VerticalAlignment` の列挙型で、既定も Swing と同じく横は左、縦は中央です。
+`STRETCH` は揃えに無い値なので、`IllegalArgumentException` になります。
+`new JLabel("Center", SwingConstants.CENTER)` のように揃えを受け取るコンストラクターは無いので、作った後で `setHorizontalAlignment` を呼びます。
+
+ラベル自身を親の中のどこに置くかは、すべてのコンポーネントが持つ `setHorizontalAlignmentInParent` / `setVerticalAlignmentInParent` です。
+折り返した文字の両端揃え (`TextAlignment.JUSTIFY`) など、WinUI の値を使うときは `setTextAlignment` も使えます (横の揃えと同じ設定です)。
 
 <a id="label-labelfor"></a>
 ### 4.6 入力欄に名前を付けてニーモニックで移る
@@ -2731,7 +2739,7 @@ fun main() {
 
         // Alignment (4.5)
         val right = WLabel("Right").apply {
-            textAlignment = TextAlignment.RIGHT
+            horizontalAlignment = HorizontalAlignment.RIGHT
             preferredSize = WSize(300.0, 24.0)
         }
 
@@ -2754,14 +2762,15 @@ fun main() {
 }
 ```
 
-Kotlin では `font`・`foreground`・`textAlignment`・`labelFor` のようにプロパティで書けます。
+Kotlin では `font`・`foreground`・`horizontalAlignment`・`labelFor` のようにプロパティで書けます。
 `font` の型は `WFont?` なので、`deriveFont` を呼ぶときは `!!` か `?.` が要ります (読み出しは null を返しません)。
 `WSize` と `width` は `Double` なので、`300.0` のように小数で書きます。
 
 <a id="label-notes"></a>
 ### 4.9 注意点
 
-- **揃えの名前が違います。** ラベルの中の文字の揃えは `setTextAlignment(TextAlignment.RIGHT)` で、`setHorizontalAlignment` は親の中でのラベルの位置です ([4.5](#label-alignment))。
+- 揃えは Swing と同じ `setHorizontalAlignment` / `setVerticalAlignment` ですが、値は列挙型 (`HorizontalAlignment.RIGHT` など) です。
+  揃えを受け取るコンストラクター (`new JLabel("...", SwingConstants.CENTER)`) はありません。親の中でのラベルの位置は `setHorizontalAlignmentInParent` です ([4.5](#label-alignment))。
 - 背景色は Swing と同じく `setOpaque(true)` の間だけ塗ります。枠は `setBorder(WBorderFactory...)` です。
 - **`setEnabled(false)` で文字は灰色になりません。** `WLabel` の有効・無効は `setDisabledIcon` のアイコンを切り替えるだけです。
   灰色にするときは `setForeground` で色を変えます。
@@ -3027,6 +3036,7 @@ Kotlin では `isSelected`・`isChecked` のようにプロパティで書けま
 | ニーモニック | `setMnemonic(KeyEvent.VK_S)` | `setMnemonic('S')` | 文字に下線は引かれない |
 | アイコン | `setIcon(icon)` | `setIcon(icon)` | **Swing は印を置き換えるが、WinUI4K は印の右にアイコンを足す** |
 | 名前で排他にする | (なし) | `setGroupName("size")` | WinUI の機能。普通は `WButtonGroup` を使う |
+| 中身の揃え | `setHorizontalAlignment(...)` / `setVerticalAlignment(...)` | `setHorizontalAlignment(...)` / `setVerticalAlignment(...)` | 定数が列挙型になる。**縦の既定が上** (Swing は中央。[6.8](#radio-notes)) |
 
 <a id="radio-group"></a>
 ### 6.2 ButtonGroup で 1 つだけ選べるようにする
@@ -3301,6 +3311,8 @@ Kotlin では、グループの選択は `selection` プロパティ (選ばれ�
 - **`getSelection()` はボタンを返します。** `ButtonModel` は無いので、`b.getModel()` を渡していたところはボタンをそのまま渡します ([6.5](#radio-clear))。
 - **アイコンは印を置き換えません。** Swing の `setIcon` は丸い印そのものを絵に替えますが、WinUI4K では印を残して、その右にアイコンを足します。
 - WinUI のラジオボタンは最小の幅が 120 あるので、`FlowLayout` で並べたときの間隔が Swing より広くなります。
+- 中身の縦の揃え (`getVerticalAlignment()`) の既定は、WinUI のテンプレートどおり `VerticalAlignment.TOP` です (Swing は中央)。
+  高くしたラジオボタンで文字を縦の中央に置くときは、`setVerticalAlignment(VerticalAlignment.CENTER)` を呼びます。
 - 枠に題名を付けて囲む `TitledBorder` に当たるものはありません。
 
 <a id="toggle"></a>
@@ -6128,7 +6140,7 @@ WinUI の `ScrollViewer` は見出しを中身の上に重ねて描きますが�
 Swing と同じく、下へスクロールした中身は見出しの下に隠れて透けません (行と列の両方の見出しがあるときは、左上の角も塗ります)。
 
 - 見出しは WinUI の `ScrollViewer` の `TopHeader` / `LeftHeader` に置きます。見出しがあるあいだ、中身は左上に寄せられます
-  (中身の `horizontalAlignment` / `verticalAlignment` が `LEFT` / `TOP` に書き換えられます)。
+  (中身の `horizontalAlignmentInParent` / `verticalAlignmentInParent` が `LEFT` / `TOP` に書き換えられます)。
 - 行番号の右の空きは、Swing と同じく空の枠 (`WBorderFactory.createEmptyBorder`。引数は上・左・下・右) で取ります。`WPanel` の空の枠は内側の余白になります。
 - 角 (`setCorner`) は左上だけに置けます。
 
@@ -9270,7 +9282,7 @@ fun main() {
 
 - ツールバーのボタンは `JButton` → `WAppBarButton`、`JToggleButton` → `WAppBarToggleButton` に替えます。どちらもアイコンとラベル (文字) を持ち、
   ラベルは既定では閉じたバーに出ません。
-- ボタンはバーの右に寄り、右端に「…」ボタンが出ます。左に寄せる API は無く、`toolBar.setHorizontalAlignment(HorizontalAlignment.LEFT)` も `WBorderLayout.NORTH` に置いたバーでは効きません。
+- ボタンはバーの右に寄り、右端に「…」ボタンが出ます。左に寄せる API は無く、`toolBar.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT)` も `WBorderLayout.NORTH` に置いたバーでは効きません。
 - 縦のツールバー、切り離せるツールバー (`setFloatable(true)`) は作れません。`setFloatable` と `setRollover` は呼んでも何も変わりません。
 - バーの高さは Swing のツールバーより高くなります (閉じたバーでも 48 ほど)。
 
@@ -11305,18 +11317,18 @@ grid.addRow();
 grid.addRow(GridLength.star());              // row 2: the rest of the height (weighty = 1)
 
 WLabel name = new WLabel("Name:");
-name.setVerticalAlignment(VerticalAlignment.CENTER);
+name.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 grid.add(name, 0, 0);                        // (row, column): the reverse of gridx / gridy
 WLabel email = new WLabel("Email:");
-email.setVerticalAlignment(VerticalAlignment.CENTER);
+email.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
 grid.add(email, 1, 0);
 
 grid.add(new WTextField(), 0, 1);            // fills the cell (fill = BOTH) by default
 grid.add(new WTextField(), 1, 1);
 
 WButton submit = new WButton("Submit");
-submit.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-submit.setVerticalAlignment(VerticalAlignment.TOP);
+submit.setHorizontalAlignmentInParent(HorizontalAlignment.RIGHT);
+submit.setVerticalAlignmentInParent(VerticalAlignment.TOP);
 grid.add(submit, 2, 0, 1, 2);                // row span 1, column span 2 (gridwidth = 2)
 
 frame.setContentPane(grid);
@@ -11335,8 +11347,8 @@ frame.setContentPane(grid);
 | `gridx` / `gridy` | `add(c, row, column)` | **引数は行が先**。`gridx` (列) と `gridy` (行) の順と逆 |
 | `gridwidth` / `gridheight` | `add(c, row, column, rowSpan, columnSpan)` | こちらも行が先 |
 | `weightx` / `weighty` | `addColumn(GridLength.star(重み))` / `addRow(GridLength.star(重み))` | 子ごとではなく列と行に付ける。`GridLength.AUTO` は中身の大きさ、`GridLength.pixel(80)` は固定の大きさ |
-| `fill` | `setHorizontalAlignment(HorizontalAlignment.STRETCH)` など | 既定は部品ごとに違う (入力欄は広がり、ボタンとラベルは左上に寄る) |
-| `anchor` | `setHorizontalAlignment(...)` / `setVerticalAlignment(...)` | 横と縦を別に指定する |
+| `fill` | `setHorizontalAlignmentInParent(HorizontalAlignment.STRETCH)` など | 既定は部品ごとに違う (入力欄は広がり、ボタンとラベルは左上に寄る) |
+| `anchor` | `setHorizontalAlignmentInParent(...)` / `setVerticalAlignmentInParent(...)` | 横と縦を別に指定する。`setHorizontalAlignment` は Swing と同じく部品の中の揃えなので取り違えない |
 | `insets` | 子の `setMargin(左, 上, 右, 下)`、全体の間隔は `new WGrid(行の間隔, 列の間隔)` | 引数の順が違う (`Insets` は上・左・下・右。外側の余白を `WInsets` で渡す形は無い) |
 | `ipadx` / `ipady` | (なし) | |
 
@@ -11518,7 +11530,7 @@ fun main() {
             addColumn(GridLength.AUTO)
             addColumn(GridLength.pixel(160.0))
             addRow()
-            add(WLabel("Name:").apply { verticalAlignment = VerticalAlignment.CENTER }, 0, 0)
+            add(WLabel("Name:").apply { verticalAlignmentInParent = VerticalAlignment.CENTER }, 0, 0)
             add(WTextField(), 0, 1)
         }
         frame.add(form, WBorderLayout.WEST)
@@ -11559,8 +11571,10 @@ Swing のコードを WinUI4K に移すときに、順に確かめる点です�
 3. パネルの型を替える: `new JPanel()` は `new WLayoutPanel()`、`new JPanel(layout)` は `new WLayoutPanel(layout)` にします。
    `WFrame` と `WContentDialog` の中身の既定は Swing と同じく `WBorderLayout` なので、`frame.add(c, BorderLayout.NORTH)` は `frame.add(c, WBorderLayout.NORTH)` にするだけです。
    `WPanel`・`WUniformGridLayout`・`WVariableSizedWrapGrid` は名前が似ていても `JPanel`・`GridLayout`・`FlowLayout` には当たりません ([30 章](#layout))。
-4. 文字の揃えを確かめる: `setHorizontalAlignment(JTextField.RIGHT)` は `setTextAlignment(TextAlignment.RIGHT)` に直します。
-   WinUI4K の `setHorizontalAlignment` は親の中での部品の位置です ([2.14](#textfield-appearance)・[4.5](#label-alignment))。
+4. 揃えの値を直す: ラベル・入力欄・ボタンの `setHorizontalAlignment(SwingConstants.RIGHT)` / `setVerticalAlignment(...)` は、同じ名前のまま
+   値を列挙型 (`HorizontalAlignment.RIGHT` など) にします。`JPasswordField` の揃えは無く、`WRadioButton` の縦の既定は上です。
+   `GridBagConstraints` の `fill`・`anchor` は、親の中での位置の `setHorizontalAlignmentInParent` / `setVerticalAlignmentInParent` にします
+   ([2.14](#textfield-appearance)・[4.5](#label-alignment)・[6.8](#radio-notes)・[30.6](#layout-gridbag))。
 5. `JScrollPane` を外す: `JList`・`JTable`・`JTree`・`JTextArea` を包んでいた `JScrollPane` は外します ([3.2](#list-basic))。
 6. リストとコンボの型を直す: `JList<E>` / `JComboBox<E>` を `WList` / `WComboBox` にし、`getSelectedValue()` にキャストを足します
    (`WComboBox.getSelectedItem()` は Swing と同じく項目そのものを返すので、キャストはそのまま)。
