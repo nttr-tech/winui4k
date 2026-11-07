@@ -519,3 +519,18 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   WLayoutPanel は子の自然な大きさを測るとき、子の Width / Height を外して UpdateLayout するので、その子には中身の大きさで
   SizeChanged が届き、ScrollViewer はその大きさでスクロールの位置を 0 に丸める。表示した直後には 0 を割り当てることもある。
   WSplitPane は割り当てられた大きさ (Swing の setBounds の大きさ) で仕切りを決め、WScrollPane は測る前の位置を測った後に戻す
+- TableView (2.5.4-experimental) の列ヘッダーは、並べ替えの印 (SortIndicator。幅 16) を見出しの右端に重ねるだけで、見出しの文字の
+  場所を空けない (E2E で測った。見出しの ContentPresenter は左右 8 の余白で列の幅いっぱい)。Auto の列は文字の幅だけになるので、
+  並べ替えると印が文字に重なる。microsoft-ui-xaml の新しい TableView (TableView.cpp の RebuildHeaders) は印の幅を見出しの余白に
+  足している。WTable は並べ替えできる列の文字列の見出しを、右に 16 の余白と省略表示を付けた TextBlock のテンプレートで出す
+  (WTableColumnWidthTest)。また Star の列は、幅の決まらない入れ物 (横にスクロールする ScrollViewer の中など) では既定の幅 120 になる
+- ScrollViewer の見出し (TopHeader / LeftHeader / TopLeftHeader) は中身の後に ScrollContentPresenter の子として足され
+  (ScrollContentPresenter_Partial.cpp の AddHeader。重なりは中身 < 左 < 上 < 左上)、それぞれ見出しの希望の大きさで置かれる
+  (ArrangeOverride)。中身は見出しの下から置かれるが、スクロールすると見出しの下へ入るので、背景の無い見出しや、見出しの部品より
+  外の所では中身が透ける。左上の見出しが無いと、上と左の見出しも角の所でスクロールして見える。WScrollPane は見出しを
+  地の色で塗った帯に載せ、帯を中身と表示領域の大きさまで広げ、両方の見出しがあれば空の角の帯も置く (WScrollPaneHeaderBackgroundTest)
+- 閉じた CommandBar (高さ 48) の AppBarButton / AppBarToggleButton は、ラベルの行のぶん背の高い 64 で、CommandBar がそれを下で
+  切って見せる (ContentRoot の MinHeight = AppBarThemeMinHeight)。CommandBar に Height = 48 を書くとボタンがその高さで測られて
+  48 に縮み、Compact の表示状態の背景の余白 (AppBarButtonInnerBorderCompactMargin = 2,6,2,22) を引いた背景が 6〜26 になって、
+  16〜32 のアイコンが背景の下にはみ出す (選んだトグルボタンで見える)。WLayoutPanel は子に割り当てた大きさを Width / Height に
+  書くので、WCommandBar は自然な高さ以下の割り当てでは Height を書かない (WAppBarToggleButtonLayoutTest)

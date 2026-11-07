@@ -119,6 +119,16 @@ class WrapperReleaseNavigationTest : FunSpec() {
             Reclamation.awaitCollected(reference).shouldBeTrue()
         }
 
+        test("a WScrollPane with column and row headers is also collected after being added to a window and removed (the header bands' handlers do not capture the scroll pane)") {
+            val reference = shownAndHidden {
+                WScrollPane(WLabel("a")).also { pane ->
+                    pane.columnHeaderView = WLabel("column")
+                    pane.rowHeaderView = WLabel("row")
+                }
+            }
+            Reclamation.awaitCollected(reference).shouldBeTrue()
+        }
+
         test("a WScrollView with a ChangeListener is also collected after being put in a window and removed") {
             val sink = received
             val reference = shownAndHidden {
