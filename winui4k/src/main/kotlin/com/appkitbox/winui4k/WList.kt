@@ -254,7 +254,7 @@ class WList(model: WListModel<*>) : WControl(
      */
     fun setSelectedValue(anObject: Any?, shouldScroll: Boolean) {
         selectionSync.setSelectedValue(anObject) { index ->
-            if (shouldScroll) listItems.withItem(index) { item -> listViewBase.call(XamlInterop.IListViewBase_ScrollIntoView, item.ptr) }
+            if (shouldScroll) viewport.ensureIndexIsVisible(index)
         }
     }
 

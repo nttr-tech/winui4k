@@ -248,7 +248,7 @@ class WListBox(model: WListModel<*>) : WControl(
      */
     fun setSelectedValue(anObject: Any?, shouldScroll: Boolean) {
         selectionSync.setSelectedValue(anObject) { index ->
-            if (shouldScroll) listItems.withItem(index) { item -> inspectable.call(XamlInterop.IListBox_ScrollIntoView, item.ptr) }
+            if (shouldScroll) viewport.ensureIndexIsVisible(index)
         }
     }
 
@@ -467,17 +467,12 @@ class WListBox(model: WListModel<*>) : WControl(
      * Scrolls until the item at [index] is visible (ListBox.ScrollIntoView).
      * Items requires the actual object it holds, so it's fetched via GetAt before being passed.
      * Works the same as [ensureIndexIsVisible], which has the same name as in JList, except that an out-of-range [index] throws
-     * (ensureIndexIsVisible does nothing).
+     * (ensureIndexIsVisible does nothing). Even when called before showing, it takes effect when shown.
      * @throws IndexOutOfBoundsException if [index] is outside the elements
      */
     fun scrollIntoView(index: Int) {
         if (index !in 0 until listItems.size) throw IndexOutOfBoundsException("Index: $index, Size: ${listItems.size}")
-        val boxed = itemVector.getPtr(FoundationInterop.IVector_GetAt, index)
-        try {
-            inspectable.call(XamlInterop.IListBox_ScrollIntoView, boxed.ptr)
-        } finally {
-            boxed.release()
-        }
+        viewport.ensureIndexIsVisible(index)
     }
 
     /** ListSelectionListener-like. Backed by a subscription to Selector.SelectionChanged. */
