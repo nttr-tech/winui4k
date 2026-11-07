@@ -283,7 +283,8 @@ class WContentDialog @JvmOverloads constructor(title: String = "", content: WCom
         set(value) = inspectable.putBool(XamlInterop.IContentDialog_put_IsSecondaryButtonEnabled, value)
 
     /**
-     * The default button pressed with the Enter key (ContentDialog.DefaultButton). It is also highlighted.
+     * The default button pressed with the Enter key (ContentDialog.DefaultButton). It is also highlighted. The default is NONE, the same as WinUI, and as with JDialog
+     * Enter presses nothing (the equivalent of `getRootPane().setDefaultButton(ok)` is setting this to PRIMARY etc.; [WOptionPane] sets it to PRIMARY).
      * Unlike JRootPane.setDefaultButton(JButton), you choose one of the dialog's three buttons with [ContentDialogButton] instead of the button itself
      * ([WFrame.defaultButton] takes a [WButton]).
      */

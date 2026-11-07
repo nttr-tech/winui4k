@@ -105,7 +105,10 @@ class WColorPicker() : WControl(
         color = WColor((rgb shr RED_SHIFT) and MAX_COMPONENT, (rgb shr GREEN_SHIFT) and MAX_COMPONENT, rgb and MAX_COMPONENT)
     }
 
-    /** Whether alpha (opacity) can be adjusted (ColorPicker.IsAlphaEnabled). */
+    /**
+     * Whether alpha (opacity) can be adjusted (ColorPicker.IsAlphaEnabled). The default is false, the same as WinUI, and unlike JColorChooser
+     * the transparency slider and field are not shown (set true to let the user choose transparency).
+     */
     var isAlphaEnabled: Boolean
         get() = inspectable.getBool(XamlInterop.IColorPicker_get_IsAlphaEnabled)
         set(value) = inspectable.putBool(XamlInterop.IColorPicker_put_IsAlphaEnabled, value)
