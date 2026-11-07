@@ -540,9 +540,13 @@ class WTextPane() : WControl(
         }
     }
 
-    /** JTextComponent.getSelectedText-style: the selected text. An empty string (not null) if there is no selection. */
-    val selectedText: String
-        get() = nativeText().substring(selectionStart, selectionEnd)
+    /** JTextComponent.getSelectedText-like: the selected text. As in Swing, null if there is no selection. */
+    val selectedText: String?
+        get() {
+            val start = selectionStart
+            val end = selectionEnd
+            return if (start == end) null else nativeText().substring(start, end)
+        }
 
     /**
      * JTextComponent.getSelectionStart / setSelectionStart-style: the start of the selection (the caret position if

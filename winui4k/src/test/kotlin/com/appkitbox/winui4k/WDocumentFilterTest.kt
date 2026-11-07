@@ -153,7 +153,7 @@ class WDocumentFilterTest : FunSpec() {
                     field.select(1, 3)
                     field.replaceSelection("xyz")
                     listOf(field.text, field.caretPosition, field.selectedText)
-                } shouldBe listOf("aXYZd", 4, "")
+                } shouldBe listOf("aXYZd", 4, null)
             }
 
             test("a rewriting filter: the text passed to FilterBypass is put in (WTextPane's append / insert / replaceRange and WPasswordField's setText)") {

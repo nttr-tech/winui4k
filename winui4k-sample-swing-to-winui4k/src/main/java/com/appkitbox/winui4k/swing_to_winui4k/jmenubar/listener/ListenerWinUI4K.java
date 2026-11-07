@@ -29,7 +29,7 @@ public class ListenerWinUI4K {
             editMenu.addMenuListener(new WMenuAdapter() {
                 @Override
                 public void menuSelected(WMenuEvent e) {     // the menu is opening
-                    boolean hasSelection = !field.getSelectedText().isEmpty();
+                    boolean hasSelection = field.getSelectedText() != null;
                     cut.setEnabled(hasSelection);
                     copy.setEnabled(hasSelection);
                 }

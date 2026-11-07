@@ -82,8 +82,8 @@ class WTextFieldEditTest : FunSpec() {
                 field.caretPosition = 0
                 val first = selectionOf(field)
                 field.caretPosition = 5
-                listOf(middle, first to "", selectionOf(field) to "")
-            } shouldContainExactly listOf(Triple(2, 2, 2) to "", Triple(0, 0, 0) to "", Triple(5, 5, 5) to "")
+                listOf(middle, first to null, selectionOf(field) to null)
+            } shouldContainExactly listOf(Triple(2, 2, 2) to null, Triple(0, 0, 0) to null, Triple(5, 5, 5) to null)
         }
 
         test("a caretPosition outside the text throws IllegalArgumentException, and the caret does not move") {

@@ -231,9 +231,9 @@ class WTextField() : WControl(
         get() = inspectable.getInt(XamlInterop.ITextBox_get_MaxLength)
         set(value) = inspectable.call(XamlInterop.ITextBox_put_MaxLength, value)
 
-    /** The selected text (TextBox.SelectedText). Unlike JTextComponent.getSelectedText, it is an empty string (not null) when nothing is selected. */
-    val selectedText: String
-        get() = inspectable.getString(XamlInterop.ITextBox_get_SelectedText)
+    /** JTextComponent.getSelectedText-like: the selected text (TextBox.SelectedText). As in Swing, null if there is no selection. */
+    val selectedText: String?
+        get() = inspectable.getString(XamlInterop.ITextBox_get_SelectedText).ifEmpty { null }
 
     /** The number of selected characters (TextBox.SelectionLength). */
     private val selectionLength: Int

@@ -2,6 +2,7 @@ package com.appkitbox.winui4k;
 
 import static com.appkitbox.winui4k.UiTestHarness.onUiThread;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -37,7 +38,7 @@ class WTextPaneSelectionForJavaTest {
             pane.selectAll();
             assertEquals("abc", pane.getSelectedText());
             pane.setCaretPosition(1);
-            assertEquals("", pane.getSelectedText());
+            assertNull(pane.getSelectedText());
             assertThrows(IllegalArgumentException.class, () -> pane.setCaretPosition(4));
             assertEquals(1, pane.getCaretPosition());
         });

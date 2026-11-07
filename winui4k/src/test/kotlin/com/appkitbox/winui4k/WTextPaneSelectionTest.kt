@@ -97,8 +97,8 @@ class WTextPaneSelectionTest : FunSpec() {
                 pane.caretPosition = 0
                 val first = selectionOf(pane)
                 pane.caretPosition = 5
-                listOf(middle, first to "", selectionOf(pane) to "")
-            } shouldContainExactly listOf(Triple(2, 2, 2) to "", Triple(0, 0, 0) to "", Triple(5, 5, 5) to "")
+                listOf(middle, first to null, selectionOf(pane) to null)
+            } shouldContainExactly listOf(Triple(2, 2, 2) to null, Triple(0, 0, 0) to null, Triple(5, 5, 5) to null)
         }
 
         test("a caretPosition outside the text throws IllegalArgumentException, and the caret does not move") {
