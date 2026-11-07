@@ -60,12 +60,12 @@ private val ALL_DEVICES = setOf(CoreInputDeviceType.PEN, CoreInputDeviceType.MOU
 
 /** Color choices (name and color). */
 private val INK_COLORS = listOf(
-    "Black" to WColor.BLACK,
-    "Red" to DEMO_RED,
-    "Green" to DEMO_GREEN,
-    "Blue" to DEMO_BLUE,
-    "Orange" to DEMO_ORANGE,
-    "Purple" to WColor.PURPLE,
+    Messages.get("inkcanvas.color.black") to WColor.BLACK,
+    Messages.get("inkcanvas.color.red") to DEMO_RED,
+    Messages.get("inkcanvas.color.green") to DEMO_GREEN,
+    Messages.get("inkcanvas.color.blue") to DEMO_BLUE,
+    Messages.get("inkcanvas.color.orange") to DEMO_ORANGE,
+    Messages.get("inkcanvas.color.purple") to WColor.PURPLE,
 )
 
 /** A label that shows a Segoe Fluent Icons glyph (the code point equals the Symbol value). */
@@ -101,12 +101,28 @@ private fun waveStroke(top: Double, attributes: InkDrawingAttributes): InkStroke
 
 /** Describes a pointer event. If the arguments cannot be read by the time WinUI delivers it, says so. */
 private fun describe(event: InkPointerEvent): String {
-    val point = event.pointerPoint ?: return "Position and other details could not be retrieved (a limitation of WinUI 2.5 experimental)"
-    return "${point.deviceType} (%.0f, %.0f) pressure %.2f modifiers ${event.modifiers}".format(point.x, point.y, point.pressure)
+    val point = event.pointerPoint ?: return Messages.get("inkcanvas.event.nopoint")
+    return Messages.get(
+        "inkcanvas.event.point",
+        point.deviceType.toString(),
+        "%.0f".format(point.x),
+        "%.0f".format(point.y),
+        "%.2f".format(point.pressure),
+        event.modifiers.toString(),
+    )
 }
 
-private fun describe(rect: InkRect): String =
-    if (rect.isEmpty) "None" else "x=%.0f y=%.0f width=%.0f height=%.0f".format(rect.x, rect.y, rect.width, rect.height)
+private fun describe(rect: InkRect): String = if (rect.isEmpty) {
+    Messages.get("inkcanvas.rect.none")
+} else {
+    Messages.get(
+        "inkcanvas.rect.bounds",
+        "%.0f".format(rect.x),
+        "%.0f".format(rect.y),
+        "%.0f".format(rect.width),
+        "%.0f".format(rect.height),
+    )
+}
 
 // region InkCanvas page
 
@@ -114,8 +130,7 @@ private fun describe(rect: InkRect): String =
 internal fun buildInkCanvasPage(): WComponent {
     val page = buildPage(
         "InkCanvas",
-        "A canvas for drawing handwritten strokes (ink) with a pen, mouse, or touch. Like Swing's JTable and TableModel, " +
-            "the stroke data is held by InkStrokeModel (com.appkitbox.winui4k.ink), and WInkCanvas handles its display and input.",
+        Messages.get("inkcanvas.description"),
     )
     page.add(buildInkCanvasGuideExample())
     page.add(buildInkCanvasBasicExample())
@@ -131,35 +146,35 @@ internal fun buildInkCanvasPage(): WComponent {
 /** Guide: the roles of the classes involved. */
 private fun buildInkCanvasGuideExample(): WComponent {
     val body = WPanel(spacing = 8.0)
-    body.add(WLabel("• WInkCanvas — the canvas that draws strokes (the view). Writes drawn and erased strokes back to the model"))
-    body.add(WLabel("• WInkPresenter — input devices, processing mode, drawing attributes for new strokes, and input events (canvas.inkPresenter)"))
-    body.add(WLabel("• InkStrokeModel / DefaultInkStrokeModel — the model of the stroke sequence. One model can be shared by several canvases"))
-    body.add(WLabel("• InkStroke / InkPoint / InkDrawingAttributes — value objects for strokes, points, and drawing attributes (independent of WinUI)"))
+    body.add(WLabel(Messages.get("inkcanvas.guide.canvas")))
+    body.add(WLabel(Messages.get("inkcanvas.guide.presenter")))
+    body.add(WLabel(Messages.get("inkcanvas.guide.model")))
+    body.add(WLabel(Messages.get("inkcanvas.guide.values")))
     body.add(
         WLabel(
-            "Strokes added to, replaced in, or removed from the model appear on the canvas, and strokes drawn on the canvas, strokes erased with the eraser, " +
-                "and moving or deleting a selection are reflected in the model.",
+            Messages.get("inkcanvas.guide.sync"),
         ).also { it.textWrapping = TextWrapping.WRAP },
     )
     val note = WInfoBar()
     note.isOpen = true
     note.isClosable = false
-    note.message = "InkCanvas is an experimental feature of Windows App SDK 2.5. It accepts only pen input by default, so " +
-        "the canvases on this page also allow drawing with mouse and touch."
+    note.message = Messages.get("inkcanvas.guide.note")
     body.add(note)
-    return buildExample("Guide: the roles of the classes", body)
+    return buildExample(Messages.get("inkcanvas.guide.title"), body)
 }
 
 /** Basics: input devices, enabling input, processing mode, and high contrast. */
 private fun buildInkCanvasBasicExample(): WComponent {
     val canvas = WInkCanvas()
     canvas.inkPresenter.inputDeviceTypes = ALL_DEVICES
-    val count = WLabel("Strokes: 0")
-    canvas.model.addInkStrokeModelListener { count.text = "Strokes: ${canvas.model.getStrokeCount()}" }
+    val count = WLabel(Messages.get("inkcanvas.basic.count", "0"))
+    canvas.model.addInkStrokeModelListener {
+        count.text = Messages.get("inkcanvas.basic.count", canvas.model.getStrokeCount().toString())
+    }
 
-    val pen = WCheckBox("Pen").also { it.isSelected = true }
-    val mouse = WCheckBox("Mouse").also { it.isSelected = true }
-    val touch = WCheckBox("Touch").also { it.isSelected = true }
+    val pen = WCheckBox(Messages.get("inkcanvas.basic.pen")).also { it.isSelected = true }
+    val mouse = WCheckBox(Messages.get("inkcanvas.basic.mouse")).also { it.isSelected = true }
+    val touch = WCheckBox(Messages.get("inkcanvas.basic.touch")).also { it.isSelected = true }
     val updateDevices = { _: Boolean? ->
         canvas.inkPresenter.inputDeviceTypes = buildSet {
             if (pen.isSelected) add(CoreInputDeviceType.PEN)
@@ -176,9 +191,9 @@ private fun buildInkCanvasBasicExample(): WComponent {
 
     // The display order differs from the enum's declaration order (NONE, INKING, ERASING), so keep display names paired with values
     val modes = listOf(
-        "Draw (INKING)" to InkInputProcessingMode.INKING,
-        "Erase (ERASING)" to InkInputProcessingMode.ERASING,
-        "No processing (NONE)" to InkInputProcessingMode.NONE,
+        Messages.get("inkcanvas.basic.mode.inking") to InkInputProcessingMode.INKING,
+        Messages.get("inkcanvas.basic.mode.erasing") to InkInputProcessingMode.ERASING,
+        Messages.get("inkcanvas.basic.mode.none") to InkInputProcessingMode.NONE,
     )
     val mode = WComboBox(modes.map { it.first })
     mode.selectedIndex = 0
@@ -192,7 +207,7 @@ private fun buildInkCanvasBasicExample(): WComponent {
         canvas.inkPresenter.highContrastAdjustment = InkHighContrastAdjustment.entries[highContrast.selectedIndex]
     }
 
-    val clear = WButton("Erase all")
+    val clear = WButton(Messages.get("inkcanvas.basic.clear"))
     clear.addActionListener { canvas.model.clear() }
 
     val example = WPanel(spacing = 8.0)
@@ -200,18 +215,18 @@ private fun buildInkCanvasBasicExample(): WComponent {
     example.add(count)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Input devices (InputDeviceTypes)"))
+    options.add(optionsLabel(Messages.get("inkcanvas.basic.devices")))
     options.add(pen)
     options.add(mouse)
     options.add(touch)
-    options.add(optionsLabel("Accept input (IsInputEnabled)"))
+    options.add(optionsLabel(Messages.get("inkcanvas.basic.inputenabled")))
     options.add(enabled)
-    options.add(optionsLabel("Processing mode (InputProcessingConfiguration.Mode)"))
+    options.add(optionsLabel(Messages.get("inkcanvas.basic.mode")))
     options.add(mode)
-    options.add(optionsLabel("Colors in high contrast (HighContrastAdjustment)"))
+    options.add(optionsLabel(Messages.get("inkcanvas.basic.highcontrast")))
     options.add(highContrast)
     options.add(clear)
-    return buildExample("Drawing and erasing strokes (WInkCanvas / WInkPresenter)", example, options)
+    return buildExample(Messages.get("inkcanvas.basic.title"), example, options)
 }
 
 /** The controls for the drawing attributes demo, and building drawing attributes from their state. */
@@ -261,15 +276,15 @@ private class InkAttributeControls {
     fun options(): WPanel {
         val options = WPanel(spacing = 6.0)
         listOf(
-            "Color (Color)" to color,
-            "Size (Size)" to size,
-            "Rectangular pen tip (PenTip)" to rectangleTip,
-            "Rotate the pen tip 45° (PenTipTransform)" to rotate,
-            "Highlighter (DrawAsHighlighter)" to highlighter,
-            "Pencil (CreateForPencil)" to pencil,
-            "Pencil opacity (PencilProperties.Opacity)" to pencilOpacity,
-            "Fit to curve (FitToCurve)" to fitToCurve,
-            "Ignore pressure (IgnorePressure)" to ignorePressure,
+            Messages.get("inkcanvas.attributes.color") to color,
+            Messages.get("inkcanvas.attributes.size") to size,
+            Messages.get("inkcanvas.attributes.rectangletip") to rectangleTip,
+            Messages.get("inkcanvas.attributes.rotate") to rotate,
+            Messages.get("inkcanvas.attributes.highlighter") to highlighter,
+            Messages.get("inkcanvas.attributes.pencil") to pencil,
+            Messages.get("inkcanvas.attributes.pencilopacity") to pencilOpacity,
+            Messages.get("inkcanvas.attributes.fittocurve") to fitToCurve,
+            Messages.get("inkcanvas.attributes.ignorepressure") to ignorePressure,
         ).forEach { (label, control) ->
             options.add(optionsLabel(label))
             options.add(control)
@@ -287,7 +302,13 @@ private fun buildInkDrawingAttributesExample(): WComponent {
     val apply = {
         canvas.inkPresenter.defaultDrawingAttributes = controls.attributes()
         val read = canvas.inkPresenter.defaultDrawingAttributes
-        current.text = "Current: ${read.kind} / size ${read.width} / pen tip ${read.penTip} / highlighter ${read.drawAsHighlighter}"
+        current.text = Messages.get(
+            "inkcanvas.attributes.current",
+            read.kind.toString(),
+            read.width.toString(),
+            read.penTip.toString(),
+            read.drawAsHighlighter.toString(),
+        )
     }
     controls.addChangeListener(apply)
     apply()
@@ -295,7 +316,22 @@ private fun buildInkDrawingAttributesExample(): WComponent {
     val example = WPanel(spacing = 8.0)
     example.add(inkSurface(canvas))
     example.add(current)
-    return buildExample("How new strokes are drawn (WInkPresenter.defaultDrawingAttributes)", example, controls.options())
+    return buildExample(Messages.get("inkcanvas.attributes.title"), example, controls.options())
+}
+
+/** The kind and range of the model change [e], and the number of strokes after the change [strokeCount]. */
+private fun describe(e: InkStrokeModelEvent, strokeCount: Int): String {
+    val kind = when (e.type) {
+        InkStrokeModelEvent.INSERT -> Messages.get("inkcanvas.model.kind.insert")
+        InkStrokeModelEvent.DELETE -> Messages.get("inkcanvas.model.kind.delete")
+        else -> if (e.isDataChanged) Messages.get("inkcanvas.model.kind.all") else Messages.get("inkcanvas.model.kind.replace")
+    }
+    val count = strokeCount.toString()
+    return if (e.isDataChanged) {
+        Messages.get("inkcanvas.model.log", kind, count)
+    } else {
+        Messages.get("inkcanvas.model.log.range", kind, e.firstIndex.toString(), e.lastIndex.toString(), count)
+    }
 }
 
 /** MVC: two canvases share one model, and the model is manipulated from code. */
@@ -303,27 +339,19 @@ private fun buildInkModelExample(): WComponent {
     val model = DefaultInkStrokeModel()
     val left = WInkCanvas(model).also { it.inkPresenter.inputDeviceTypes = ALL_DEVICES }
     val right = WInkCanvas(model).also { it.inkPresenter.inputDeviceTypes = ALL_DEVICES }
-    val log = WLabel("Model change: none").also { it.textWrapping = TextWrapping.WRAP }
+    val log = WLabel(Messages.get("inkcanvas.model.log.none")).also { it.textWrapping = TextWrapping.WRAP }
     val undone = ArrayDeque<InkStroke>()
-    model.addInkStrokeModelListener { e ->
-        val kind = when (e.type) {
-            InkStrokeModelEvent.INSERT -> "Insert"
-            InkStrokeModelEvent.DELETE -> "Delete"
-            else -> if (e.isDataChanged) "Whole change" else "Replace"
-        }
-        val range = if (e.isDataChanged) "" else " (${e.firstIndex}-${e.lastIndex})"
-        log.text = "Model change: $kind$range / strokes: ${model.getStrokeCount()}"
-    }
+    model.addInkStrokeModelListener { e -> log.text = describe(e, model.getStrokeCount()) }
     // When a new stroke is drawn, discard the redo history
     left.inkPresenter.addStrokesCollectedListener { undone.clear() }
     right.inkPresenter.addStrokesCollectedListener { undone.clear() }
 
-    val addWave = WButton("Add a wavy line from code")
+    val addWave = WButton(Messages.get("inkcanvas.model.addwave"))
     addWave.addActionListener {
         val top = 40.0 + (model.getStrokeCount() % 5) * 40.0
         model.addStroke(waveStroke(top, InkDrawingAttributes.builder().color(DEMO_BLUE).size(4.0).build()))
     }
-    val undo = WButton("Undo the last stroke")
+    val undo = WButton(Messages.get("inkcanvas.model.undo"))
     undo.addActionListener {
         val last = model.getStrokeCount() - 1
         if (last >= 0) {
@@ -331,23 +359,23 @@ private fun buildInkModelExample(): WComponent {
             model.removeStroke(last)
         }
     }
-    val redo = WButton("Redo")
+    val redo = WButton(Messages.get("inkcanvas.model.redo"))
     redo.addActionListener { undone.removeLastOrNull()?.let { model.addStroke(it) } }
-    val recolor = WButton("Make all strokes red")
+    val recolor = WButton(Messages.get("inkcanvas.model.recolor"))
     recolor.addActionListener {
         for (i in 0 until model.getStrokeCount()) {
             val stroke = model.getStroke(i)
             model.setStroke(i, stroke.withDrawingAttributes(stroke.drawingAttributes.toBuilder().color(DEMO_RED).build()))
         }
     }
-    val shift = WButton("Shift all strokes right by 20")
+    val shift = WButton(Messages.get("inkcanvas.model.shift"))
     shift.addActionListener {
         for (i in 0 until model.getStrokeCount()) {
             val stroke = model.getStroke(i)
             model.setStroke(i, stroke.withPointTransform(stroke.pointTransform.then(InkTransform.translation(20.0, 0.0))))
         }
     }
-    val clear = WButton("Empty the model")
+    val clear = WButton(Messages.get("inkcanvas.model.clear"))
     clear.addActionListener { model.clear() }
 
     val canvases = WPanel(spacing = 12.0, orientation = Orientation.HORIZONTAL)
@@ -358,9 +386,9 @@ private fun buildInkModelExample(): WComponent {
     example.add(log)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Whichever canvas you draw on, the stroke also appears on the other one, which shows the same model."))
+    options.add(optionsLabel(Messages.get("inkcanvas.model.hint")))
     listOf(addWave, undo, redo, recolor, shift, clear).forEach { options.add(it) }
-    return buildExample("Sharing one model between two canvases (InkStrokeModel)", example, options)
+    return buildExample(Messages.get("inkcanvas.model.title"), example, options)
 }
 
 /**
@@ -398,53 +426,58 @@ private fun twoWaves(): List<InkStroke> = listOf(
 private fun buildInkSelectionExample(): WComponent {
     val canvas = WInkCanvas(DefaultInkStrokeModel(twoWaves()))
     canvas.inkPresenter.inputDeviceTypes = ALL_DEVICES
-    val info = WLabel("Selection: none").also { it.textWrapping = TextWrapping.WRAP }
+    val info = WLabel(Messages.get("inkcanvas.selection.none")).also { it.textWrapping = TextWrapping.WRAP }
     fun showSelection(rect: InkRect? = null) {
         val selected = canvas.getSelectedStrokeIndices()
-        info.text = "Selection: ${selected.size} strokes ${selected.toList()}" + (rect?.let { " / bounds ${describe(it)}" } ?: "")
+        val size = selected.size.toString()
+        val indices = selected.toList().toString()
+        info.text = if (rect == null) {
+            Messages.get("inkcanvas.selection.info", size, indices)
+        } else {
+            Messages.get("inkcanvas.selection.info.range", size, indices, describe(rect))
+        }
     }
 
     // Lasso: input in no-processing mode and right-drag in inking mode (the RightDragAction default) arrive at UnprocessedInput
     installLasso(canvas, { showSelection(it) }) {
-        info.text = "Could not get the lasso's position (in WinUI 2.5 experimental, ink input positions sometimes cannot be read). " +
-            "Try selecting with the buttons."
+        info.text = Messages.get("inkcanvas.selection.lassounavailable")
     }
 
     val selectMode = WToggleSwitch().also { it.isOn = false }
     selectMode.addItemListener { on ->
         canvas.inkPresenter.inputProcessingMode = if (on) InkInputProcessingMode.NONE else InkInputProcessingMode.INKING
     }
-    val selectAll = WButton("Select all")
+    val selectAll = WButton(Messages.get("inkcanvas.selection.selectall"))
     selectAll.addActionListener {
         canvas.selectAll()
         showSelection()
     }
-    val clearSelection = WButton("Clear selection")
+    val clearSelection = WButton(Messages.get("inkcanvas.selection.clear"))
     clearSelection.addActionListener {
         canvas.clearSelection()
         showSelection()
     }
-    val byLine = WButton("Select strokes crossing the vertical line x=100")
+    val byLine = WButton(Messages.get("inkcanvas.selection.byline"))
     byLine.addActionListener { showSelection(canvas.selectWithLine(100.0, 0.0, 100.0, 260.0)) }
-    val byPolyLine = WButton("Select by enclosing the top half")
+    val byPolyLine = WButton(Messages.get("inkcanvas.selection.bypolyline"))
     byPolyLine.addActionListener {
         val area = listOf(InkPoint(0.0, 0.0), InkPoint(560.0, 0.0), InkPoint(560.0, 110.0), InkPoint(0.0, 110.0))
         showSelection(canvas.selectWithPolyLine(area))
     }
-    val move = WButton("Move the selection down and right")
+    val move = WButton(Messages.get("inkcanvas.selection.move"))
     move.addActionListener { showSelection(canvas.moveSelected(30.0, 20.0)) }
-    val delete = WButton("Delete the selection")
+    val delete = WButton(Messages.get("inkcanvas.selection.delete"))
     delete.addActionListener { showSelection(canvas.deleteSelected()) }
-    val copy = WButton("Copy the selection")
+    val copy = WButton(Messages.get("inkcanvas.selection.copy"))
     copy.addActionListener {
-        runCatching { canvas.copySelectedToClipboard() }.onFailure { info.text = "Could not copy: ${it.message}" }
+        runCatching { canvas.copySelectedToClipboard() }.onFailure { info.text = Messages.get("inkcanvas.selection.copyfailed", it.message) }
     }
-    val paste = WButton("Paste (to the top left)")
+    val paste = WButton(Messages.get("inkcanvas.selection.paste"))
     paste.addActionListener {
         if (canvas.canPasteFromClipboard()) {
             showSelection(canvas.pasteFromClipboard(20.0, 20.0))
         } else {
-            info.text = "There is no ink on the clipboard."
+            info.text = Messages.get("inkcanvas.selection.noink")
         }
     }
 
@@ -453,10 +486,10 @@ private fun buildInkSelectionExample(): WComponent {
     example.add(info)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Select with a lasso (processing mode NONE). In inking mode you can also select by right-dragging with the mouse"))
+    options.add(optionsLabel(Messages.get("inkcanvas.selection.lassohint")))
     options.add(selectMode)
     listOf(selectAll, clearSelection, byLine, byPolyLine, move, delete, copy, paste).forEach { options.add(it) }
-    return buildExample("Selection, moving, deleting, and the clipboard (selectWithPolyLine / moveSelected, etc.)", example, options)
+    return buildExample(Messages.get("inkcanvas.selection.title"), example, options)
 }
 
 /** Saving and loading: ISF / GIF with embedded ISF. */
@@ -467,59 +500,64 @@ private fun buildInkSaveLoadExample(): WComponent {
     canvas.inkPresenter.inputDeviceTypes = ALL_DEVICES
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
 
-    val save = WButton("Save to file")
+    val save = WButton(Messages.get("inkcanvas.save.save"))
     save.addActionListener {
         runCatching {
             val picker = WFileSavePicker(galleryFrame)
             picker.suggestedFileName = "ink"
-            picker.addFileTypeChoice("GIF image with embedded ISF", ".gif")
+            picker.addFileTypeChoice(Messages.get("inkcanvas.save.giftype"), ".gif")
             picker.addFileTypeChoice("Ink Serialized Format", ".isf")
             picker.pickSaveFile { path ->
                 if (path == null) {
-                    result.text = "Canceled."
+                    result.text = Messages.get("inkcanvas.save.cancelled")
                     return@pickSaveFile
                 }
                 runCatching {
                     val format = if (path.endsWith(".isf", ignoreCase = true)) InkPersistenceFormat.ISF else InkPersistenceFormat.GIF_WITH_EMBEDDED_ISF
                     File(path).outputStream().use { canvas.write(it, format) }
-                    result.text = "Saved ${canvas.model.getStrokeCount()} strokes to $path (${File(path).length()} bytes)."
-                }.onFailure { result.text = "Could not save: ${it.message}" }
+                    result.text = Messages.get(
+                        "inkcanvas.save.saved",
+                        canvas.model.getStrokeCount().toString(),
+                        path,
+                        File(path).length().toString(),
+                    )
+                }.onFailure { result.text = Messages.get("inkcanvas.save.savefailed", it.message) }
             }
-        }.onFailure { result.text = "Could not save: ${it.message}" }
+        }.onFailure { result.text = Messages.get("inkcanvas.save.savefailed", it.message) }
     }
-    val load = WButton("Load from file")
+    val load = WButton(Messages.get("inkcanvas.save.load"))
     load.addActionListener {
         runCatching {
             val picker = WFileOpenPicker(galleryFrame)
             picker.addFileTypeFilter(".gif", ".isf")
             picker.pickSingleFile { path ->
                 if (path == null) {
-                    result.text = "Canceled."
+                    result.text = Messages.get("inkcanvas.save.cancelled")
                     return@pickSingleFile
                 }
                 runCatching {
                     File(path).inputStream().use { canvas.read(it) }
-                    result.text = "Loaded ${canvas.model.getStrokeCount()} strokes from $path."
-                }.onFailure { result.text = "Could not load: ${it.message}" }
+                    result.text = Messages.get("inkcanvas.save.loaded", path, canvas.model.getStrokeCount().toString())
+                }.onFailure { result.text = Messages.get("inkcanvas.save.loadfailed", it.message) }
             }
-        }.onFailure { result.text = "Could not load: ${it.message}" }
+        }.onFailure { result.text = Messages.get("inkcanvas.save.loadfailed", it.message) }
     }
 
     val example = WPanel(spacing = 8.0)
     example.add(inkSurface(canvas))
     example.add(result)
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("The GIF can also be opened as an image. Loading replaces the strokes on the canvas and in the model."))
+    options.add(optionsLabel(Messages.get("inkcanvas.save.hint")))
     options.add(save)
     options.add(load)
-    return buildExample("Saving and loading (write / read; ISF and GIF with embedded ISF)", example, options)
+    return buildExample(Messages.get("inkcanvas.save.title"), example, options)
 }
 
 /** Input events: StrokeInput and information about drawn strokes (StrokesCollected). */
 private fun buildInkInputEventsExample(): WComponent {
     val canvas = WInkCanvas()
     canvas.inkPresenter.inputDeviceTypes = ALL_DEVICES
-    val log = WLabel("Input events appear here.").also { it.textWrapping = TextWrapping.WRAP }
+    val log = WLabel(Messages.get("inkcanvas.events.initial")).also { it.textWrapping = TextWrapping.WRAP }
     val lines = ArrayDeque<String>()
     fun append(line: String) {
         lines.addLast(line)
@@ -531,7 +569,7 @@ private fun buildInkInputEventsExample(): WComponent {
         object : InkStrokeInputListener {
             override fun strokeStarted(event: InkPointerEvent) {
                 moves = 0
-                append("Stroke started: " + describe(event))
+                append(Messages.get("inkcanvas.events.started", describe(event)))
             }
 
             override fun strokeContinued(event: InkPointerEvent) {
@@ -539,11 +577,11 @@ private fun buildInkInputEventsExample(): WComponent {
             }
 
             override fun strokeEnded(event: InkPointerEvent) {
-                append("Stroke ended: $moves moves in between / " + describe(event))
+                append(Messages.get("inkcanvas.events.ended", moves.toString(), describe(event)))
             }
 
             override fun strokeCanceled(event: InkPointerEvent) {
-                append("Canceled")
+                append(Messages.get("inkcanvas.events.canceled"))
             }
         },
     )
@@ -551,16 +589,21 @@ private fun buildInkInputEventsExample(): WComponent {
         val index = canvas.model.getStrokeCount() - 1
         val stroke = event.strokes.last()
         append(
-            "Added to the model: ID ${canvas.getStrokeId(index)} / ${stroke.points.size} points / " +
-                "${canvas.getRenderingSegments(index).size} segments / bounds ${describe(canvas.getStrokeBounds(index))}",
+            Messages.get(
+                "inkcanvas.events.collected",
+                canvas.getStrokeId(index).toString(),
+                stroke.points.size.toString(),
+                canvas.getRenderingSegments(index).size.toString(),
+                describe(canvas.getStrokeBounds(index)),
+            ),
         )
     }
-    canvas.inkPresenter.addStrokesErasedListener { append("Erased ${it.strokes.size} strokes with the eraser") }
+    canvas.inkPresenter.addStrokesErasedListener { append(Messages.get("inkcanvas.events.erased", it.strokes.size.toString())) }
 
     val example = WPanel(spacing = 8.0)
     example.add(inkSurface(canvas))
     example.add(log)
-    return buildExample("Input events (StrokeInput / StrokesCollected / StrokesErased)", example)
+    return buildExample(Messages.get("inkcanvas.events.title"), example)
 }
 
 /** Custom drying: the app receives finished strokes and shows them (in a different color) in another canvas's model. */
@@ -575,7 +618,7 @@ private fun buildInkCustomDryingExample(): WComponent {
         dried.addStrokes(strokes.map { it.withDrawingAttributes(it.drawingAttributes.toBuilder().color(DEMO_BLUE).build()) })
         synchronizer.endDry()
     }
-    val clear = WButton("Clear")
+    val clear = WButton(Messages.get("inkcanvas.drying.clear"))
     clear.addActionListener { dried.clear() }
 
     // Overlay the canvas that receives input on top of the canvas that shows the dry ink
@@ -591,11 +634,11 @@ private fun buildInkCustomDryingExample(): WComponent {
     example.add(layers)
     example.add(
         WLabel(
-            "Strokes drawn in black (wet ink) are received by the app when finished (beginDry) and added in blue to the model of the canvas below (endDry).",
+            Messages.get("inkcanvas.drying.explanation"),
         ).also { it.textWrapping = TextWrapping.WRAP },
     )
     example.add(clear)
-    return buildExample("Custom drying of dry ink (activateCustomDrying / WInkSynchronizer)", example)
+    return buildExample(Messages.get("inkcanvas.drying.title"), example)
 }
 
 // endregion
@@ -606,8 +649,7 @@ private fun buildInkCustomDryingExample(): WComponent {
 internal fun buildInkToolbarPage(): WComponent {
     val page = buildPage(
         "InkToolbar",
-        "A toolbar for choosing the pen, pencil, highlighter, eraser, ruler, and protractor used with InkCanvas. " +
-            "When bound to targetInkCanvas, the selected tool, color, and size are applied to the canvas.",
+        Messages.get("inktoolbar.description"),
     )
     page.add(buildInkToolbarBasicExample())
     page.add(buildInkToolbarAppearanceExample())
@@ -634,23 +676,34 @@ private fun buildInkToolbarBasicExample(): WComponent {
     fun showStatus(message: String = "") {
         val attributes = toolbar.inkDrawingAttributes
         val tool = toolbar.activeTool?.toolKind
-        status.text = "Tool: $tool / color: ${attributes?.color?.let { "(${it.red}, ${it.green}, ${it.blue})" }} / " +
-            "size: ${attributes?.width} / kind: ${attributes?.kind}" + (if (message.isEmpty()) "" else "\n$message")
+        val color = attributes?.color?.let { "(${it.red}, ${it.green}, ${it.blue})" }
+        val summary = Messages.get(
+            "inktoolbar.basic.status",
+            tool.toString(),
+            color.toString(),
+            attributes?.width.toString(),
+            attributes?.kind.toString(),
+        )
+        status.text = summary + (if (message.isEmpty()) "" else "\n$message")
     }
     toolbar.addActiveToolChangedListener { showStatus() }
     toolbar.addInkDrawingAttributesChangedListener { showStatus() }
-    toolbar.addEraseAllClickedListener { showStatus("\"Erase all ink\": erasing ${canvas.model.getStrokeCount()} strokes") }
+    toolbar.addEraseAllClickedListener {
+        showStatus(Messages.get("inktoolbar.basic.eraseall", canvas.model.getStrokeCount().toString()))
+    }
     toolbar.addLoadedListener { showStatus() }
 
     val example = toolbarWithCanvas(toolbar, canvas)
     example.add(status)
-    return buildExample("Built-in tools (activeTool / inkDrawingAttributes / EraseAllClicked)", example)
+    return buildExample(Messages.get("inktoolbar.basic.title"), example)
 }
 
 /** Appearance: vertical placement, flyout placement, built-in buttons, and pen color choices. */
 private fun buildInkToolbarAppearanceExample(): WComponent {
     val host = WPanel()
-    val orientation = WComboBox(listOf("Horizontal (HORIZONTAL)", "Vertical (VERTICAL)")).also { it.selectedIndex = 1 }
+    val orientation = WComboBox(
+        listOf(Messages.get("inktoolbar.appearance.horizontal"), Messages.get("inktoolbar.appearance.vertical")),
+    ).also { it.selectedIndex = 1 }
     val placement = WComboBox(InkToolbarButtonFlyoutPlacement.entries.map { it.name }).also { it.selectedIndex = 0 }
     val initial = WComboBox(InkToolbarInitialControls.entries.map { it.name }).also { it.selectedIndex = 0 }
     val customPalette = WToggleSwitch().also { it.isOn = false }
@@ -693,17 +746,17 @@ private fun buildInkToolbarAppearanceExample(): WComponent {
     rebuild()
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Orientation (Orientation)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.appearance.orientation")))
     options.add(orientation)
-    options.add(optionsLabel("Flyout placement (ButtonFlyoutPlacement)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.appearance.placement")))
     options.add(placement)
-    options.add(optionsLabel("Built-in buttons (InitialControls)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.appearance.initialcontrols")))
     options.add(initial)
-    options.add(optionsLabel("Change the ballpoint pen's color choices and size range (Palette / Min/MaxStrokeWidth)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.appearance.palette")))
     options.add(customPalette)
-    options.add(optionsLabel("Show the eraser's \"Erase all ink\" (IsClearAllVisible)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.appearance.clearall")))
     options.add(clearAllVisible)
-    return buildExample("Appearance and built-in buttons", host, options)
+    return buildExample(Messages.get("inktoolbar.appearance.title"), host, options)
 }
 
 /** A calligraphy-style pen: draws in the selected color with a long, thin rectangular pen tip tilted 45°. */
@@ -729,44 +782,44 @@ private fun buildInkToolbarCustomExample(): WComponent {
     calligraphy.palette = INK_COLORS.map { it.second }
     calligraphy.configurationContent = WInkToolbarPenConfigurationControl()
     calligraphy.content = glyph(GLYPH_EDIT)
-    calligraphy.toolTipText = "Calligraphy pen"
+    calligraphy.toolTipText = Messages.get("inktoolbar.custom.calligraphy")
     toolbar.add(calligraphy)
 
     // The lasso tool: selecting it sets the processing mode to NONE, and input arrives at UnprocessedInput
     val lassoTool = WInkToolbarCustomToolButton()
     lassoTool.content = glyph(GLYPH_SELECT_ALL)
-    lassoTool.toolTipText = "Lasso select"
-    lassoTool.configurationContent = WLabel("Selects the strokes you enclose. Selected strokes can be moved with the \"Move\" button.")
+    lassoTool.toolTipText = Messages.get("inktoolbar.custom.lasso")
+    lassoTool.configurationContent = WLabel(Messages.get("inktoolbar.custom.lassoconfig"))
     toolbar.add(lassoTool)
-    installLasso(canvas, { info.text = "Selection: ${canvas.getSelectedStrokeIndices().size} strokes" }) {
-        info.text = "Could not get the lasso's position (a limitation of WinUI 2.5 experimental)."
+    installLasso(canvas, { info.text = Messages.get("inktoolbar.custom.selected", canvas.getSelectedStrokeIndices().size.toString()) }) {
+        info.text = Messages.get("inktoolbar.custom.lassounavailable")
     }
 
     // A toggle that switches whether touch draws (used the same way as in the original UWP sample)
     val touchToggle = WInkToolbarCustomToggleButton()
     touchToggle.content = glyph(GLYPH_TOUCH_POINTER)
-    touchToggle.toolTipText = "Touch writing"
+    touchToggle.toolTipText = Messages.get("inktoolbar.custom.touch")
     touchToggle.isSelected = true
     touchToggle.addItemListener { checked ->
         canvas.inkPresenter.inputDeviceTypes = if (checked == true) ALL_DEVICES else ALL_DEVICES - CoreInputDeviceType.TOUCH
-        info.text = "Touch writing: ${checked == true}"
+        info.text = Messages.get("inktoolbar.custom.touchstate", (checked == true).toString())
     }
     toolbar.add(touchToggle)
 
     toolbar.addActiveToolChangedListener {
         info.text = when (toolbar.activeTool) {
-            calligraphy -> "Calligraphy pen: draws with a ${toolbar.inkDrawingAttributes?.penTip} pen tip"
-            lassoTool -> "Lasso: select strokes by enclosing them (processing mode ${canvas.inkPresenter.inputProcessingMode})"
-            else -> "Tool: ${toolbar.activeTool?.toolKind}"
+            calligraphy -> Messages.get("inktoolbar.custom.calligraphyactive", toolbar.inkDrawingAttributes?.penTip.toString())
+            lassoTool -> Messages.get("inktoolbar.custom.lassoactive", canvas.inkPresenter.inputProcessingMode.toString())
+            else -> Messages.get("inktoolbar.custom.tool", toolbar.activeTool?.toolKind.toString())
         }
     }
-    val move = WButton("Move selected strokes right")
+    val move = WButton(Messages.get("inktoolbar.custom.move"))
     move.addActionListener { canvas.moveSelected(30.0, 0.0) }
 
     val example = toolbarWithCanvas(toolbar, canvas)
     example.add(info)
     example.add(move)
-    return buildExample("Custom pens, tools, and toggles (WInkToolbarCustomPen, etc.)", example)
+    return buildExample(Messages.get("inktoolbar.custom.title"), example)
 }
 
 /** Stencils: the ruler and the protractor. */
@@ -775,13 +828,15 @@ private fun buildInkToolbarStencilExample(): WComponent {
     val toolbar = WInkToolbar()
     val log = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
     toolbar.addStencilCheckedListener { e ->
-        log.text = "Stencil: ${e.stencilKind} / on: ${toolbar.isStencilButtonChecked}"
+        log.text = Messages.get("inktoolbar.stencil.log", e.stencilKind.toString(), toolbar.isStencilButtonChecked.toString())
     }
     val stencil = { toolbar.getMenuButton(InkToolbarMenuKind.STENCIL) as? WInkToolbarStencilButton }
 
     val show = WToggleSwitch().also { it.isOn = false }
     show.addItemListener { toolbar.isStencilButtonChecked = it }
-    val kind = WComboBox(listOf("Ruler (RULER)", "Protractor (PROTRACTOR)")).also { it.selectedIndex = 0 }
+    val kind = WComboBox(
+        listOf(Messages.get("inktoolbar.stencil.ruler"), Messages.get("inktoolbar.stencil.protractor")),
+    ).also { it.selectedIndex = 0 }
     kind.addListSelectionListener { stencil()?.selectedStencil = InkToolbarStencilKind.entries[kind.selectedIndex.coerceAtLeast(0)] }
     val rulerItem = WToggleSwitch().also { it.isOn = true }
     rulerItem.addItemListener { stencil()?.isRulerItemVisible = it }
@@ -791,15 +846,15 @@ private fun buildInkToolbarStencilExample(): WComponent {
     val example = toolbarWithCanvas(toolbar, canvas)
     example.add(log)
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Show the stencil (IsStencilButtonChecked)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.stencil.show")))
     options.add(show)
-    options.add(optionsLabel("Stencil to show (SelectedStencil)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.stencil.selected")))
     options.add(kind)
-    options.add(optionsLabel("Ruler in the menu (IsRulerItemVisible)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.stencil.ruleritem")))
     options.add(rulerItem)
-    options.add(optionsLabel("Protractor in the menu (IsProtractorItemVisible)"))
+    options.add(optionsLabel(Messages.get("inktoolbar.stencil.protractoritem")))
     options.add(protractorItem)
-    return buildExample("Ruler and protractor (WInkToolbarStencilButton)", example, options)
+    return buildExample(Messages.get("inktoolbar.stencil.title"), example, options)
 }
 
 // endregion

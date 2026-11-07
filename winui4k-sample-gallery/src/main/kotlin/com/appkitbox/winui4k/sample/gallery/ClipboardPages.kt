@@ -27,8 +27,7 @@ import com.appkitbox.winui4k.WToggleSwitch
 internal fun buildClipboardPage(): WComponent {
     val page = buildPage(
         "Clipboard",
-        "Reading and writing the OS clipboard. To copy, fill a DataPackage and pass it to Clipboard.setContent; " +
-            "to paste, receive a DataPackageView from Clipboard.getContent and read it.",
+        Messages.get("clipboard.description"),
     )
     page.add(buildClipboardGuideExample())
     page.add(buildCopyTextExample())
@@ -39,81 +38,82 @@ internal fun buildClipboardPage(): WComponent {
     return page
 }
 
+/** A bulleted list with one item per line (file paths or format names). */
+private fun bulletLines(items: List<String>): String = items.joinToString("\n") { Messages.get("clipboard.list.item", it) }
+
 /** Guide: the roles of the classes involved, the copy/paste flow, and caveats. */
 private fun buildClipboardGuideExample(): WComponent {
     val body = WPanel(spacing = 8.0)
-    body.add(WLabel("• Clipboard — the OS clipboard itself. setContent / getContent / clear / addContentChangedListener"))
-    body.add(WLabel("• DataPackage — the container for copied content. setText / setHtmlFormat / setRtf / setUri / setStorageItems"))
-    body.add(WLabel("• DataPackageView — the read-only view when pasting. Check the format with contains, then read via getText and friends"))
-    body.add(WLabel("• StandardDataFormats — format name constants (TEXT / HTML / RTF / WEB_LINK / STORAGE_ITEMS, etc.)"))
-    body.add(WLabel("• ClipboardContentOptions — options controlling history (Win+V) and roaming"))
+    body.add(WLabel(Messages.get("clipboard.guide.clipboard")))
+    body.add(WLabel(Messages.get("clipboard.guide.datapackage")))
+    body.add(WLabel(Messages.get("clipboard.guide.datapackageview")))
+    body.add(WLabel(Messages.get("clipboard.guide.standarddataformats")))
+    body.add(WLabel(Messages.get("clipboard.guide.contentoptions")))
     body.add(
         WLabel(
-            "Reading involves requesting the data from the copying app, so it's asynchronous and " +
-                "results arrive via a callback on the UI thread. A single DataPackage can hold multiple formats at once.",
+            Messages.get("clipboard.guide.async"),
         ).also { it.textWrapping = TextWrapping.WRAP },
     )
 
     val note = WInfoBar()
     note.isOpen = true
     note.isClosable = false
-    note.message = "The clipboard is only accessible while the window is in the foreground. " +
-        "Also, reading and writing images (the Bitmap format) isn't supported yet."
+    note.message = Messages.get("clipboard.guide.note")
     body.add(note)
-    return buildExample("Guide: class roles and the copy/paste flow", body)
+    return buildExample(Messages.get("clipboard.guide.title"), body)
 }
 
 /** Copying text: DataPackage.setText -> Clipboard.setContent. */
 private fun buildCopyTextExample(): WComponent {
-    val input = WTextField().apply { placeholderText = "Text to copy" }
-    input.text = "This text gets copied to the clipboard."
+    val input = WTextField().apply { placeholderText = Messages.get("clipboard.input.placeholder") }
+    input.text = Messages.get("clipboard.copytext.sample")
     input.width = 400.0
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Copy text")
+    val button = WButton(Messages.get("clipboard.copytext.button"))
 
     button.addActionListener {
         runCatching {
             val dataPackage = DataPackage()
             dataPackage.setText(input.text)
             Clipboard.setContent(dataPackage)
-            result.text = "Copied to the clipboard."
-        }.onFailure { result.text = "Couldn't copy: ${it.message}" }
+            result.text = Messages.get("clipboard.copytext.copied")
+        }.onFailure { result.text = Messages.get("clipboard.copyfailed", it.message) }
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(input)
     body.add(button)
     body.add(result)
-    return buildExample("Copying text (DataPackage.setText / Clipboard.setContent)", body)
+    return buildExample(Messages.get("clipboard.copytext.title"), body)
 }
 
 /** Pasting text: Clipboard.getContent -> contains -> getText. */
 private fun buildPasteTextExample(): WComponent {
-    val result = WLabel("Press the button to paste here.").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Paste text")
+    val result = WLabel(Messages.get("clipboard.pastetext.initial")).also { it.textWrapping = TextWrapping.WRAP }
+    val button = WButton(Messages.get("clipboard.pastetext.button"))
 
     button.addActionListener {
         runCatching {
             val view = Clipboard.getContent()
             if (view.contains(StandardDataFormats.TEXT)) {
-                view.getText { text -> result.text = "Pasted: $text" }
+                view.getText { text -> result.text = Messages.get("clipboard.pastetext.result", text) }
             } else {
-                result.text = "There's no text on the clipboard."
+                result.text = Messages.get("clipboard.pastetext.notext")
             }
-        }.onFailure { result.text = "Couldn't paste: ${it.message}" }
+        }.onFailure { result.text = Messages.get("clipboard.pastefailed", it.message) }
     }
 
     val body = WPanel(spacing = 8.0)
     body.add(button)
     body.add(result)
-    return buildExample("Pasting text (Clipboard.getContent / DataPackageView.getText)", body)
+    return buildExample(Messages.get("clipboard.pastetext.title"), body)
 }
 
 /** Copying and pasting files: setStorageItems / getStorageItems and RequestedOperation. */
 private fun buildCopyPasteFilesExample(): WComponent {
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
-    val copyButton = WButton("Pick files and copy")
-    val pasteButton = WButton("Paste files")
+    val copyButton = WButton(Messages.get("clipboard.files.copybutton"))
+    val pasteButton = WButton(Messages.get("clipboard.files.pastebutton"))
 
     val operation = WComboBox(DataPackageOperation.entries.map { it.name })
     operation.selectedIndex = DataPackageOperation.entries.indexOf(DataPackageOperation.COPY)
@@ -130,15 +130,15 @@ private fun buildCopyPasteFilesExample(): WComponent {
                         dataPackage.setStorageItems(*paths.toTypedArray())
                         dataPackage.requestedOperation = DataPackageOperation.entries[operation.selectedIndex]
                         Clipboard.setContent(dataPackage)
-                        result.text = "Copied ${paths.size} file(s). They can be pasted into Explorer."
+                        result.text = Messages.get("clipboard.files.copied", paths.size.toString())
                     } else {
-                        result.text = "Canceled."
+                        result.text = Messages.get("clipboard.files.cancelled")
                     }
-                }.onFailure { result.text = "Couldn't copy: ${it.message}" }
+                }.onFailure { result.text = Messages.get("clipboard.copyfailed", it.message) }
                 copyButton.isEnabled = true
             }
         }.onFailure {
-            result.text = "Couldn't open the dialog: ${it.message}"
+            result.text = Messages.get("clipboard.files.dialogfailed", it.message)
             copyButton.isEnabled = true
         }
     }
@@ -149,12 +149,12 @@ private fun buildCopyPasteFilesExample(): WComponent {
             if (view.contains(StandardDataFormats.STORAGE_ITEMS)) {
                 val requested = view.requestedOperation
                 view.getStorageItems { paths ->
-                    result.text = "Requested operation: $requested\n" + paths.joinToString("\n") { "• $it" }
+                    result.text = Messages.get("clipboard.files.pasted", requested.toString(), bulletLines(paths))
                 }
             } else {
-                result.text = "There are no files on the clipboard. Copy files in Explorer to try this."
+                result.text = Messages.get("clipboard.files.nofiles")
             }
-        }.onFailure { result.text = "Couldn't paste: ${it.message}" }
+        }.onFailure { result.text = Messages.get("clipboard.pastefailed", it.message) }
     }
 
     val buttons = WPanel(spacing = 8.0, orientation = Orientation.HORIZONTAL)
@@ -166,22 +166,22 @@ private fun buildCopyPasteFilesExample(): WComponent {
     body.add(result)
 
     val options = WPanel(spacing = 8.0)
-    options.add(optionsLabel("Operation requested of the paste target (RequestedOperation)"))
+    options.add(optionsLabel(Messages.get("clipboard.files.operation")))
     options.add(operation)
-    return buildExample("Copying and pasting files (setStorageItems / getStorageItems)", body, options)
+    return buildExample(Messages.get("clipboard.files.title"), body, options)
 }
 
 /** History and roaming: setContent with ClipboardContentOptions, and checking the OS settings. */
 private fun buildHistoryRoamingExample(): WComponent {
-    val input = WTextField().apply { placeholderText = "Text to copy" }
-    input.text = "Text whose addition to history can be controlled"
+    val input = WTextField().apply { placeholderText = Messages.get("clipboard.input.placeholder") }
+    input.text = Messages.get("clipboard.history.sample")
     input.width = 400.0
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
-    val button = WButton("Copy with options")
+    val button = WButton(Messages.get("clipboard.history.button"))
 
-    val allowHistory = WToggleSwitch("Keep in history (Win+V) (IsAllowedInHistory)")
+    val allowHistory = WToggleSwitch(Messages.get("clipboard.history.allowhistory"))
     allowHistory.isOn = true
-    val allowRoaming = WToggleSwitch("Sync to other devices (IsRoamable)")
+    val allowRoaming = WToggleSwitch(Messages.get("clipboard.history.allowroaming"))
     allowRoaming.isOn = true
 
     button.addActionListener {
@@ -192,17 +192,23 @@ private fun buildHistoryRoamingExample(): WComponent {
             options.isAllowedInHistory = allowHistory.isOn
             options.isRoamable = allowRoaming.isOn
             result.text = if (Clipboard.setContent(dataPackage, options)) {
-                "Copied. History: ${if (options.isAllowedInHistory) "kept" else "not kept"} / " +
-                    "sync: ${if (options.isRoamable) "on" else "off"}"
+                Messages.get(
+                    "clipboard.history.copied",
+                    if (options.isAllowedInHistory) Messages.get("clipboard.history.keep") else Messages.get("clipboard.history.nokeep"),
+                    if (options.isRoamable) Messages.get("clipboard.history.sync") else Messages.get("clipboard.history.nosync"),
+                )
             } else {
-                "Couldn't set the clipboard content."
+                Messages.get("clipboard.history.setfailed")
             }
-        }.onFailure { result.text = "Couldn't copy: ${it.message}" }
+        }.onFailure { result.text = Messages.get("clipboard.copyfailed", it.message) }
     }
 
     val status = WLabel(
-        "OS settings — history: ${if (Clipboard.isHistoryEnabled) "enabled" else "disabled"} / " +
-            "sync: ${if (Clipboard.isRoamingEnabled) "enabled" else "disabled"}",
+        Messages.get(
+            "clipboard.history.ossettings",
+            if (Clipboard.isHistoryEnabled) Messages.get("clipboard.history.enabled") else Messages.get("clipboard.history.disabled"),
+            if (Clipboard.isRoamingEnabled) Messages.get("clipboard.history.enabled") else Messages.get("clipboard.history.disabled"),
+        ),
     ).also { it.textWrapping = TextWrapping.WRAP }
 
     val body = WPanel(spacing = 8.0)
@@ -214,52 +220,56 @@ private fun buildHistoryRoamingExample(): WComponent {
     val options = WPanel(spacing = 8.0)
     options.add(allowHistory)
     options.add(allowRoaming)
-    return buildExample("History and roaming (ClipboardContentOptions)", body, options)
+    return buildExample(Messages.get("clipboard.history.title"), body, options)
 }
 
 /** Other operations: listing formats, clearing, deleting history, and watching ContentChanged. */
 private fun buildOtherOperationsExample(): WComponent {
     val result = WLabel("").also { it.textWrapping = TextWrapping.WRAP }
 
-    val showFormatsButton = WButton("Show current formats")
+    val showFormatsButton = WButton(Messages.get("clipboard.other.showformats"))
     showFormatsButton.addActionListener {
         runCatching {
             val formats = Clipboard.getContent().availableFormats
             result.text = if (formats.isNotEmpty()) {
-                "Formats on the clipboard:\n" + formats.joinToString("\n") { "• $it" }
+                Messages.get("clipboard.other.formats", bulletLines(formats))
             } else {
-                "The clipboard is empty."
+                Messages.get("clipboard.other.empty")
             }
-        }.onFailure { result.text = "Couldn't read the formats: ${it.message}" }
+        }.onFailure { result.text = Messages.get("clipboard.other.getfailed", it.message) }
     }
 
-    val clearButton = WButton("Empty the clipboard")
+    val clearButton = WButton(Messages.get("clipboard.other.clear"))
     clearButton.addActionListener {
         runCatching {
             Clipboard.clear()
-            result.text = "Emptied the clipboard."
-        }.onFailure { result.text = "Couldn't clear: ${it.message}" }
+            result.text = Messages.get("clipboard.other.cleared")
+        }.onFailure { result.text = Messages.get("clipboard.other.clearfailed", it.message) }
     }
 
-    val clearHistoryButton = WButton("Delete history")
+    val clearHistoryButton = WButton(Messages.get("clipboard.other.clearhistory"))
     clearHistoryButton.addActionListener {
         runCatching {
-            result.text = if (Clipboard.clearHistory()) "Deleted the history (Win+V)." else "Couldn't delete the history."
-        }.onFailure { result.text = "Couldn't delete the history: ${it.message}" }
+            result.text = if (Clipboard.clearHistory()) {
+                Messages.get("clipboard.other.historycleared")
+            } else {
+                Messages.get("clipboard.other.historynotcleared")
+            }
+        }.onFailure { result.text = Messages.get("clipboard.other.historyclearfailed", it.message) }
     }
 
     // Subscribe the listener only while monitoring. Copies in other apps are notified too
     val contentChangedListener: () -> Unit = {
-        result.text = "The clipboard content changed. Check it with \"Show current formats\"."
+        result.text = Messages.get("clipboard.other.changed")
     }
-    val monitor = WToggleSwitch("Watch for content changes (ContentChanged)")
+    val monitor = WToggleSwitch(Messages.get("clipboard.other.monitor"))
     monitor.addItemListener { isOn ->
         if (isOn) {
             Clipboard.addContentChangedListener(contentChangedListener)
-            result.text = "Started watching. Copying in this app or another app triggers a notification."
+            result.text = Messages.get("clipboard.other.monitorstarted")
         } else {
             Clipboard.removeContentChangedListener(contentChangedListener)
-            result.text = "Stopped watching."
+            result.text = Messages.get("clipboard.other.monitorstopped")
         }
     }
 
@@ -272,7 +282,7 @@ private fun buildOtherOperationsExample(): WComponent {
     body.add(buttons)
     body.add(monitor)
     body.add(result)
-    return buildExample("Other operations (availableFormats / clear / clearHistory / ContentChanged)", body)
+    return buildExample(Messages.get("clipboard.other.title"), body)
 }
 
 // endregion
