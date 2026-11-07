@@ -1,11 +1,9 @@
 package com.appkitbox.winui4k
 
 /**
- * javax.swing.border.Border-style: a control's border (set on [WControl.border]).
- * The kinds are the line border [WLineBorder], the empty border [WEmptyBorder] and the combination [WCompoundBorder],
- * created with [WBorderFactory].
- * `WBorder` is the class of a bordered container, so this interface, which corresponds to Swing's `Border`, has a
- * different name.
+ * javax.swing.border.Border-like: the border of a control (set it to [WControl.border], [WLabel.border], [WPanel.border], [WLayoutPanel.border]).
+ * The kinds are the line border [WLineBorder], the empty border [WEmptyBorder] and the compound [WCompoundBorder], created with [WBorderFactory].
+ * `WBorder` is the class of a container with a border, so this interface, which corresponds to Swing's `Border`, has a different name.
  *
  * Swing's TitledBorder, EtchedBorder, BevelBorder and MatteBorder are not supported (TitledBorder needs a place to draw
  * the title, which a WinUI Control's border cannot express). A WinUI border is only a single-color line and inner

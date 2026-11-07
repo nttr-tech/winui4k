@@ -5,6 +5,7 @@ import com.appkitbox.winui4k.internal.winrt.Activation
 import com.appkitbox.winui4k.internal.winrt.addEventHandler
 import com.appkitbox.winui4k.internal.winui.ModalLoop
 import com.appkitbox.winui4k.internal.winui.XamlInterop
+import com.appkitbox.winui4k.internal.winui.XamlStructs
 import java.lang.ref.WeakReference
 
 /**
@@ -44,6 +45,76 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = WFlowLayo
             field = value
             revalidate()
         }
+
+    /**
+     * JComponent.getBorder / setBorder-like: the panel's border (created with [WBorderFactory]). As with Swing's JPanel, the border's width ([WControlBorder.borderInsets],
+     * the sum of the empty borders' padding and the line thickness) becomes the inner margin: setting it replaces [insets] with that width, and the manager lays out the children inside it.
+     * A line border draws a line around the panel (a Canvas has no border, so a Border element is placed behind the children; it is not included in [components]).
+     * The outside / inside order is not distinguished (the same as [WControl.border]). The default is null (no border). Setting null removes the line and returns [insets] to 0.
+     *
+     * @throws IllegalArgumentException for a compound border containing two or more line borders (then neither the panel nor [border] changes)
+     */
+    var border: WControlBorder? = null
+        set(value) {
+            val line = value?.let { FlatBorder.of(it) }?.line // Validate first so that nothing is rewritten on failure
+            field = value
+            showLine(line)
+            insets = value?.borderInsets ?: WInsets()
+        }
+
+    /** The Border element (IUIElement) that draws the line border. Created when a line border is set for the first time. */
+    private var lineElement: ComPtr? = null
+
+    /** Draws the line of [border] around the panel (removes it if [line] is null). */
+    private fun showLine(line: WLineBorder?) {
+        if (line == null) {
+            lineElement?.let { removeDecoration(it) }
+            return
+        }
+        val element = lineElement ?: createLineElement().also { lineElement = it }
+        val view = element.queryInterface(XamlInterop.IID_IBorder)
+        val brush = line.color.createBrush()
+        try {
+            view.call(XamlInterop.IBorder_put_BorderBrush, brush.ptr)
+            val thickness = line.thickness.toDouble()
+            XamlStructs.putThickness(view, XamlInterop.IBorder_put_BorderThickness, thickness, thickness, thickness, thickness)
+        } finally {
+            brush.release()
+            view.release()
+        }
+        insertDecoration(element)
+        sizeLine(layoutSize.width, layoutSize.height)
+    }
+
+    /** Creates a Border element that is not hit-testable (held for the lifetime of this panel). */
+    private fun createLineElement(): ComPtr {
+        val border = Activation.activate(XamlInterop.CLS_Border, XamlInterop.IID_IBorder)
+        try {
+            val element = own(border.queryInterface(XamlInterop.IID_IUIElement))
+            element.putBool(XamlInterop.IUIElement_put_IsHitTestVisible, false)
+            return element
+        } finally {
+            border.release()
+        }
+    }
+
+    /** Makes the line border element the panel's size ([width] x [height]). */
+    private fun sizeLine(width: Double, height: Double) {
+        val element = lineElement ?: return
+        val framework = element.queryInterface(XamlInterop.IID_IFrameworkElement)
+        try {
+            framework.call(XamlInterop.IFrameworkElement_put_Width, width.coerceAtLeast(0.0))
+            framework.call(XamlInterop.IFrameworkElement_put_Height, height.coerceAtLeast(0.0))
+        } finally {
+            framework.release()
+        }
+    }
+
+    override fun onNativeChildrenCleared() {
+        val element = lineElement ?: return
+        val shown = border?.let { FlatBorder.of(it).line } != null
+        if (shown) insertDecoration(element)
+    }
 
     override val isCanvasElement: Boolean get() = true
 
@@ -253,7 +324,10 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = WFlowLayo
     @Suppress("CyclomaticComplexMethod", "ComplexCondition")
     private fun performLayout() {
         layoutPending = false
-        val manager = layout ?: return
+        val manager = layout ?: run {
+            sizeLine(actualWidth, actualHeight)
+            return
+        }
         inLayout = true
         try {
             // 1. Clear the explicit size of any child whose natural size is invalid, 2. run a
@@ -305,6 +379,7 @@ class WLayoutPanel @JvmOverloads constructor(layout: WLayoutManager? = WFlowLayo
                 if (selfSizedHeight) applyHeight(containerHeight)
             }
             layoutSize = WSize(containerWidth, containerHeight)
+            sizeLine(containerWidth, containerHeight)
 
             // 5. Place the children
             manager.layoutContainer(this)

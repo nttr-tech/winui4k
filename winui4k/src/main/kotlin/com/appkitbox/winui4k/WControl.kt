@@ -184,7 +184,7 @@ abstract class WControl internal constructor(inspectable: ComPtr) : WComponent(i
      * [padding] and [WButton.isBorderPainted] also write the same Padding / BorderThickness, so whichever is set last takes
      * effect (reading [border] afterwards still returns the border as set). The template draws the pointer-over and pressed
      * states of buttons with the theme's border color, so the line border's color only affects the normal state.
-     * Only [WControl] has a border; it cannot be set on [WLabel] or [WPanel] (wrap them in a [WBorder] with a border).
+     * The same borders can also be set on [WLabel] / [WPanel] / [WLayoutPanel] ([WLabel.border] etc.).
      *
      * @throws IllegalArgumentException for a combination containing two or more line borders (in which case neither the
      * control nor [border] changes)

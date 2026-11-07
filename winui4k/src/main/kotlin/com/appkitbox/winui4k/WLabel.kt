@@ -144,16 +144,62 @@ class WLabel @JvmOverloads constructor(text: String = "") : WComponent(
     )
 
     init {
-        // A Grid without a Background is not hit-testable where its children do not paint. A transparent brush makes its whole bounds hit-testable
-        val transparent = Xaml.solidBrush(0, TRANSPARENT_RGB, TRANSPARENT_RGB, TRANSPARENT_RGB)
+        paintBackground()
+    }
+
+    /**
+     * JComponent.isOpaque / setOpaque-like: whether to paint the background with [background]. The default is false (as with JLabel, setting a background color does not
+     * paint it). Setting true paints the whole label with the [background] color.
+     */
+    var isOpaque: Boolean = false
+        set(value) {
+            field = value
+            paintBackground()
+        }
+
+    /**
+     * JComponent.getBackground / setBackground-like: the background color. Painted only while [isOpaque] is true (Panel.Background of the root Grid).
+     * The default is null (not painted; Swing returns the parent's background color).
+     */
+    var background: WColor? = null
+        set(value) {
+            field = value
+            paintBackground()
+        }
+
+    /**
+     * A Grid without a Background is not hit-testable where its children draw nothing, so even while not painting, a transparent brush makes the whole bounds
+     * hit-testable.
+     */
+    private fun paintBackground() {
+        val color = background
+        val brush = if (isOpaque && color != null) {
+            color.createBrush()
+        } else {
+            Xaml.solidBrush(0, TRANSPARENT_RGB, TRANSPARENT_RGB, TRANSPARENT_RGB)
+        }
         val panel = inspectable.queryInterface(XamlInterop.IID_IPanel)
         try {
-            panel.call(XamlInterop.IPanel_put_Background, transparent.ptr)
+            panel.call(XamlInterop.IPanel_put_Background, brush.ptr)
         } finally {
             panel.release()
-            transparent.release()
+            brush.release()
         }
     }
+
+    /**
+     * JComponent.getBorder / setBorder-like: the label's border (created with [WBorderFactory]). A line border becomes a line around the label (BorderBrush / BorderThickness
+     * of the root Grid), and an empty border becomes padding around the text (Padding), making the label's preferred size larger by that much
+     * (a compound border does both; the outside / inside order is not distinguished, the same as [WControl.border]). The default is null (no border).
+     *
+     * @throws IllegalArgumentException for a compound border containing two or more line borders (then neither the label nor [border] changes)
+     */
+    var border: WControlBorder? = null
+        set(value) {
+            PanelBorders.GRID.apply(inspectable, value)
+            field = value
+            revalidate() // As with JComponent.setBorder, the size changes, so lay out again
+        }
 
     override val automationTarget: ComPtr get() = textBlock
 

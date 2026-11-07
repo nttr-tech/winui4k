@@ -173,16 +173,37 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
     }
 
     /** The position of [component] in the native Children (IVector<UIElement>.IndexOf), or null if it is not included. */
-    private fun nativeIndexOf(component: WComponent): Int? = Ffi.backend.withScope { scope ->
+    private fun nativeIndexOf(component: WComponent): Int? = nativeIndexOf(component.uiElement)
+
+    /** The position of [element] (IUIElement) in the native Children. null if not contained. */
+    private fun nativeIndexOf(element: ComPtr): Int? = Ffi.backend.withScope { scope ->
         val memory = Ffi.backend.memory
         val index = scope.allocate(4)
         val found = scope.allocate(1)
-        children.call(FoundationInterop.IVector_IndexOf, component.uiElement.ptr, index, found)
+        children.call(FoundationInterop.IVector_IndexOf, element.ptr, index, found)
         if (memory.getByte(found, 0) != 0.toByte()) memory.getInt(index, 0) else null
     }
 
     private fun removeNative(component: WComponent) {
         nativeIndexOf(component)?.let { children.call(FoundationInterop.IVector_RemoveAt, it) }
+    }
+
+    /**
+     * Inserts a decoration element [element] (IUIElement; the border line of [WLayoutPanel]) that has no child wrapper at the start of the native Children (behind the children).
+     * Does nothing if it is already inserted. It is not included in the child list ([components]).
+     */
+    internal fun insertDecoration(element: ComPtr) {
+        if (nativeIndexOf(element) == null) children.call(FoundationInterop.IVector_InsertAt, 0, element.ptr)
+    }
+
+    /** Removes [element] inserted with [insertDecoration]. Does nothing if it is not inserted. */
+    internal fun removeDecoration(element: ComPtr) {
+        nativeIndexOf(element)?.let { children.call(FoundationInterop.IVector_RemoveAt, it) }
+    }
+
+    /** Called after [removeAll] empties the native Children (to insert the decoration elements again). */
+    internal open fun onNativeChildrenCleared() {
+        // Does nothing by default
     }
 
     /** Called after a child is added (to notify the layout manager and so on). Throwing undoes the addition. */
@@ -216,6 +237,7 @@ abstract class WContainer internal constructor(inspectable: ComPtr) : WComponent
     open fun removeAll() {
         while (mutableComponents.isNotEmpty()) remove(mutableComponents.size - 1)
         children.call(FoundationInterop.IVector_Clear) // Also removes elements put directly into the native side, as before
+        onNativeChildrenCleared()
     }
 
     override fun detachChild(child: WComponent) {

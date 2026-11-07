@@ -152,6 +152,9 @@ internal object XamlInterop {
     const val IID_IStackPanel = "493ab00b-3a6a-5e4a-9452-407cd5197406"
     const val IStackPanel_get_Orientation = 8          // get_Orientation(out Orientation)
     const val IStackPanel_put_Orientation = 9          // put_Orientation(Orientation)
+    const val IStackPanel_put_BorderBrush = 13         // put_BorderBrush(Brush)
+    const val IStackPanel_put_BorderThickness = 15     // put_BorderThickness(Thickness)
+    const val IStackPanel_put_Padding = 19             // put_Padding(Thickness)
     const val IStackPanel_get_Spacing = 20
     const val IStackPanel_put_Spacing = 21
     const val IID_IPanel = "27a1b418-56f3-525e-b883-cefed905eed3"
@@ -229,6 +232,8 @@ internal object XamlInterop {
     const val CLS_Grid = "Microsoft.UI.Xaml.Controls.Grid"
     const val IID_IGridFactory = "b16bf561-fc6c-57c6-8ebc-0b06ce4513aa"
     const val IID_IGrid = "c4496219-9014-58a1-b4ad-c5044913a5bb"
+    const val IGrid_put_BorderBrush = 11               // put_BorderBrush(Brush)
+    const val IGrid_put_BorderThickness = 13           // put_BorderThickness(Thickness)
     const val IGrid_put_Padding = 17                   // put_Padding(Thickness)
     const val IGrid_get_RowDefinitions = 6             // get_RowDefinitions(out IVector<RowDefinition>)
     const val IGrid_get_ColumnDefinitions = 7          // get_ColumnDefinitions(out IVector<ColumnDefinition>)
