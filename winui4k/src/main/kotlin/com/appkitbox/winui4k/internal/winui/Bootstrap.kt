@@ -28,13 +28,13 @@ internal object WinAppSdkBootstrap {
 
     /**
      * The version tag of the release channel (WINDOWSAPPSDK_RELEASE_VERSION_TAG_W in WindowsAppSDK-VersionInfo.h).
-     * The runtime package of the experimental 2.5.4-experimental is Microsoft.WindowsAppRuntime.2-experimentalF, and
+     * The runtime package of the experimental 2.6.6-experimental is Microsoft.WindowsAppRuntime.2-experimental0, and
      * without this tag only stable packages (tag "") are searched.
      */
-    private const val WINAPPSDK_VERSION_TAG = "experimentalF"
+    private const val WINAPPSDK_VERSION_TAG = "experimental0"
 
-    /** The minimum runtime version 2.5.4.0 (PACKAGE_VERSION: Major<<48 | Minor<<32 | Build<<16 | Revision). */
-    private const val WINAPPSDK_MIN_VERSION = 0x0002_0005_0004_0000L
+    /** The minimum runtime version 2.6.6.0 (PACKAGE_VERSION: Major<<48 | Minor<<32 | Build<<16 | Revision). */
+    private const val WINAPPSDK_MIN_VERSION = 0x0002_0006_0006_0000L
 
     /** MddBootstrapInitializeOptions_OnNoMatch_ShowUI: prompts the user to install the runtime if it's missing. */
     private const val BOOTSTRAP_ON_NO_MATCH_SHOW_UI = 0x08
@@ -114,7 +114,7 @@ internal object WinAppSdkBootstrap {
                 WINAPPSDK_MIN_VERSION,
                 BOOTSTRAP_ON_NO_MATCH_SHOW_UI,
             ) as Int
-            checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.5.4-experimental runtime installed?)")
+            checkHr(hr, "MddBootstrapInitialize2 (is the Windows App SDK 2.6.6-experimental runtime installed?)")
         }
     }
 

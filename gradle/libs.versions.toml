@@ -8,10 +8,11 @@ ktlint = "1.8.0"
 detekt = "1.23.8"
 nmcp = "1.6.1"
 # NuGet package versions (referenced by winui4k core's fetch tasks)
-# 2.5.4-experimental is the experimental channel that includes TableView (Microsoft.UI.Xaml.Controls.Tabular).
-# Foundation / WebView2 are aligned with the dependency versions of Microsoft.WindowsAppSDK 2.5.4-experimental
-windowsAppSdk = "2.5.4-experimental"
-windowsAppSdkFoundation = "2.3.13-experimental"
+# 2.6.6-experimental is the experimental channel that includes TableView (Microsoft.UI.Xaml.Controls.Tabular), Chart and InkCanvas
+# (the stable 2.6.5 does not have them).
+# Foundation / WebView2 are aligned with the dependency versions of Microsoft.WindowsAppSDK 2.6.6-experimental
+windowsAppSdk = "2.6.6-experimental"
+windowsAppSdkFoundation = "2.6.6-experimental"
 webView2 = "1.0.3719.77"
 
 [libraries]

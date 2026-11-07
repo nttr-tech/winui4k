@@ -6,9 +6,8 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * WinRT ABI constants (IIDs / vtable slot numbers) for Chart (the Microsoft.UI.Xaml.Controls.Charts namespace).
  *
  * All values were mechanically extracted with tools/dump_winmd.py from metadata/Microsoft.UI.Xaml.winmd of
- * Microsoft.WindowsAppSDK.WinUI 2.3.10-experimental (a dependency of Microsoft.WindowsAppSDK 2.5.4-experimental).
- * Not a single value is handwritten or guessed. The types are experimental (WinUIChartingContract), and the
- * implementation lives in a separate DLL (Microsoft.UI.Xaml.Controls.Charts.dll).
+ * Microsoft.WindowsAppSDK.WinUI 2.6.6-experimental (a dependency of Microsoft.WindowsAppSDK 2.6.6-experimental). Not a single value is handwritten or guessed.
+ * The types are experimental (WinUIChartingContract), and the implementation lives in a separate DLL (Microsoft.UI.Xaml.Controls.Charts.dll).
  * Experimental APIs may change before they become stable, so they are kept separate from XamlInterop.
  * Enum values are placed in the public API's enum classes (the com.appkitbox.winui4k.chart package).
  *

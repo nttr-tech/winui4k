@@ -6,10 +6,10 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * WinRT ABI constants (IIDs / vtable slot numbers) for the file/folder pickers
  * (Microsoft.Windows.Storage.Pickers, WinAppSDK).
  *
- * All values come from Microsoft.Windows.Storage.Pickers.winmd (WinAppSDK Foundation 2.3.13-experimental).
+ * All values come from Microsoft.Windows.Storage.Pickers.winmd (WinAppSDK Foundation 2.6.6-experimental).
  * Values are mechanically extracted with tools/dump_winmd.py. Not a single value is
  * handwritten or guessed.
- * (Cross-checked against the Foundation 2.1.0 / 2.3.9 winmd files: all IIDs / slots match)
+ * (Cross-checked against the Foundation 2.1.0 / 2.3.9 / 2.3.13-experimental winmd files: all IIDs / slots match)
  *
  * Slot-number convention: IUnknown = 0..2, IInspectable = 3..5, and the interface body
  * starts at 6 in the winmd's method-declaration order.
@@ -32,7 +32,7 @@ internal object StoragePickersInterop {
     const val IFileOpenPicker_PickSingleFileAsync = 13     // () -> IAsyncOperation<PickFileResult>
     const val IFileOpenPicker_PickMultipleFilesAsync = 14  // () -> IAsyncOperation<IVectorView<PickFileResult>>
 
-    // IFileOpenPicker2 / IFileSavePicker2 / IFolderPicker2 are extracted from the Foundation 2.3.13-experimental winmd (not in 2.1.0)
+    // IFileOpenPicker2 / IFileSavePicker2 / IFolderPicker2 are extracted from the winmd of Foundation 2.3.13-experimental or later (not in 2.1.0)
     const val IID_IFileOpenPicker2 = "b77a4106-895b-5af9-91c3-93e5b058706c"
     const val IFileOpenPicker2_get_Title = 6
     const val IFileOpenPicker2_put_Title = 7               // put_Title(HSTRING)

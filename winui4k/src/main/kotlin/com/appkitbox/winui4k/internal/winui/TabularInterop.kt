@@ -5,12 +5,12 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
 /**
  * WinRT ABI constants (IIDs / vtable slot numbers) for TableView (the Microsoft.UI.Xaml.Controls.Tabular namespace).
  *
- * All values are mechanically extracted with tools/dump_winmd.py from metadata/Microsoft.UI.Xaml.winmd in
- * Microsoft.WindowsAppSDK.WinUI 2.3.10-experimental (a dependency of Microsoft.WindowsAppSDK 2.5.4-experimental).
- * Not a single value is handwritten or guessed.
- * The types are experimental (MUX_PREVIEW), and the implementation lives in a separate DLL
- * (Microsoft.UI.Xaml.Controls.Tabular.dll). Experimental APIs may change before the stable release,
- * so they are kept separate from XamlInterop.
+ * All values were mechanically extracted with tools/dump_winmd.py from metadata/Microsoft.UI.Xaml.winmd of
+ * Microsoft.WindowsAppSDK.WinUI 2.6.6-experimental (a dependency of Microsoft.WindowsAppSDK 2.6.6-experimental). Not a single value is handwritten or guessed.
+ * (Since 2.3.10-experimental the IIDs of ITableView / ITableViewColumn / ITableViewSource changed, and in ITableView
+ * ExpandAllRows / CollapseAllRows were inserted at 46 / 47, shifting the following slots by 2)
+ * The types are experimental (MUX_PREVIEW), and the implementation lives in a separate DLL (Microsoft.UI.Xaml.Controls.Tabular.dll).
+ * Experimental APIs may change before they become stable, so they are kept separate from XamlInterop.
  *
  * Slot-number convention: IUnknown = 0..2, IInspectable = 3..5, and the interface body
  * starts at 6 in the winmd's method-declaration order.
@@ -21,7 +21,7 @@ internal object TabularInterop {
     // ---- Microsoft.UI.Xaml.Controls.Tabular.TableView ----
     // base: Control / composable factory: ITableViewFactory / statics: ITableViewStatics
     const val CLS_TableView = "$NS.TableView"
-    const val IID_ITableView = "f1405dad-df41-5dfd-b370-c901fd8b207c"
+    const val IID_ITableView = "84b1b2a5-1202-51cc-8c26-5e4ae2fa20ed"
     const val IID_ITableViewFactory = "6d4d66de-7e41-5a94-a251-95892f242523"
     const val ITableView_get_ItemsSource = 6                // get_ItemsSource(out object)
     const val ITableView_put_ItemsSource = 7                // put_ItemsSource(object)
@@ -63,20 +63,22 @@ internal object TabularInterop {
     const val ITableView_remove_SelectionChanged = 43       // remove_SelectionChanged(token)
     const val ITableView_ExpandAllGroups = 44               // ExpandAllGroups()
     const val ITableView_CollapseAllGroups = 45             // CollapseAllGroups()
-    const val ITableView_get_CanUserSortColumns = 46        // get_CanUserSortColumns(out boolean)
-    const val ITableView_put_CanUserSortColumns = 47        // put_CanUserSortColumns(boolean)
-    const val ITableView_SortByColumn = 48                  // SortByColumn(TableViewColumn, SortDirection, out boolean)
-    const val ITableView_ToggleSortDirection = 49           // ToggleSortDirection(TableViewColumn, out boolean)
-    const val ITableView_ClearSort = 50                     // ClearSort(out boolean)
-    const val ITableView_add_Sorting = 51                   // add_Sorting(TypedEventHandler<TableView, TableViewSortingEventArgs>, out token)
-    const val ITableView_remove_Sorting = 52                // remove_Sorting(token)
-    const val ITableView_add_Sorted = 53                    // add_Sorted(TypedEventHandler<TableView, TableViewSortedEventArgs>, out token)
-    const val ITableView_remove_Sorted = 54                 // remove_Sorted(token)
+    const val ITableView_ExpandAllRows = 46                 // ExpandAllRows()
+    const val ITableView_CollapseAllRows = 47               // CollapseAllRows()
+    const val ITableView_get_CanUserSortColumns = 48        // get_CanUserSortColumns(out boolean)
+    const val ITableView_put_CanUserSortColumns = 49        // put_CanUserSortColumns(boolean)
+    const val ITableView_SortByColumn = 50                  // SortByColumn(TableViewColumn, SortDirection, out boolean)
+    const val ITableView_ToggleSortDirection = 51           // ToggleSortDirection(TableViewColumn, out boolean)
+    const val ITableView_ClearSort = 52                     // ClearSort(out boolean)
+    const val ITableView_add_Sorting = 53                   // add_Sorting(TypedEventHandler<TableView, TableViewSortingEventArgs>, out token)
+    const val ITableView_remove_Sorting = 54                // remove_Sorting(token)
+    const val ITableView_add_Sorted = 55                    // add_Sorted(TypedEventHandler<TableView, TableViewSortedEventArgs>, out token)
+    const val ITableView_remove_Sorted = 56                 // remove_Sorted(token)
 
     // ---- Microsoft.UI.Xaml.Controls.Tabular.TableViewColumn ----
     // base: DependencyObject / composable factory: ITableViewColumnFactory (overridable: ITableViewColumnOverrides)
     const val CLS_TableViewColumn = "$NS.TableViewColumn"
-    const val IID_ITableViewColumn = "12752b5d-4809-5d2c-8d37-b53e1e9c2a1f"
+    const val IID_ITableViewColumn = "e131e659-596e-5eee-ad84-3778763e383c"
     const val IID_ITableViewCellsPanel = "ebd93156-d2dc-59b6-b3c5-bb1376c7b6d0" // The panel that lays out the cells of rows and the column header in column order
     const val IID_ITableViewColumnFactory = "d50f67a6-cc5b-5946-8394-c61f5725bf6d"
     const val ITableViewColumnFactory_CreateInstance = 6    // CreateInstance(outer, out inner, out TableViewColumn)
@@ -143,7 +145,7 @@ internal object TabularInterop {
     // ---- Microsoft.UI.Xaml.Controls.Tabular.TableViewSource ----
     // base: Object / statics: ITableViewSourceStatics (there is no constructor; instances are created with From)
     const val CLS_TableViewSource = "$NS.TableViewSource"
-    const val IID_ITableViewSource = "b35bc509-3edb-596b-b62d-113b6852e71b"
+    const val IID_ITableViewSource = "d0e692d9-2807-591d-8e7d-6a211b4a0e87"
     const val IID_ITableViewSourceStatics = "1b1343e5-70ba-51f1-8ca7-4c301f864a26"
     const val ITableViewSourceStatics_From = 6              // From(object, out TableViewSource)
     const val ITableViewSource_Filter = 6                   // Filter(TableViewPredicate, out TableViewSource)

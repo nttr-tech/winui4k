@@ -6,10 +6,9 @@ import com.appkitbox.winui4k.internal.winrt.Pinterface
  * WinRT ABI constants (IIDs / vtable slot numbers) for ink (InkCanvas / InkToolbar and the OS-side types they use, such as Windows.UI.Input.Inking)
  * (Microsoft.Windows.Storage.Pickers, WinAppSDK).
  *
- * - Microsoft.UI.Xaml.Controls.Ink* are extracted from metadata/Microsoft.UI.Xaml.winmd in
- *   Microsoft.WindowsAppSDK.WinUI 2.3.10-experimental (a dependency of Microsoft.WindowsAppSDK 2.5.4-experimental).
- *   The types are experimental (MUX_PREVIEW) and may change before the stable release, so they are kept separate
- *   from XamlInterop
+ * - Microsoft.UI.Xaml.Controls.Ink* are extracted from metadata/Microsoft.UI.Xaml.winmd in Microsoft.WindowsAppSDK.WinUI 2.6.6-experimental
+ *   (a dependency of Microsoft.WindowsAppSDK 2.6.6-experimental).
+ *   The types are experimental (MUX_PREVIEW) and may change before the stable release, so they are kept separate from XamlInterop
  * - Windows.UI.Input.Inking / Windows.UI.Core / Windows.UI.Input / Windows.Devices.Input /
  *   Windows.Storage.Streams are extracted from the Windows SDK's Windows.Foundation.UniversalApiContract.winmd
  *
