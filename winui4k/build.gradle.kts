@@ -170,7 +170,7 @@ tasks.register("downloadInstallers") {
             logger.lifecycle("Installer version changed (${versionMarker.readText().trim()} -> $version)")
             dir.listFiles { file -> file.name.startsWith("WindowsAppRuntimeInstall-") }?.forEach { it.delete() }
         }
-        // aka.ms paths have two levels: the channel (major.minor) and the version (e.g. 2.5 / 2.5.4-experimental)
+        // aka.ms paths have two levels: the channel (major.minor) and the version (e.g. 2.6 / 2.6.6-experimental)
         val channel = version.split(".").take(2).joinToString(".")
         for (arch in listOf("x86", "x64", "arm64")) {
             val fileName = "WindowsAppRuntimeInstall-$arch.exe"
