@@ -14,7 +14,20 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
     constructor(text: String = "") : this(
         Activation.composeDefault(XamlInterop.CLS_CheckBox, XamlInterop.IID_ICheckBoxFactory), // Default interface = ICheckBox
     ) {
+        alignTextWithBox()
         if (text.isNotEmpty()) this.text = text
+    }
+
+    /**
+     * Even when the height grows, the text is lined up at the same height as the box (the same as Swing's JCheckBox). WinUI's template puts the box at the vertical center
+     * and the text (ContentPresenter) at the top (VerticalContentAlignment = Top, the top 5 of the padding CheckBoxPadding = 8,5,0,0), so
+     * when stretched to the row height only the text stays at the top. The text is centered vertically too, and the padding is 0 at the top and 2 at the bottom, so at the unstretched height (32)
+     * the center of the text is 1 DIP above the center of the box, the same as the template's default. If the padding is changed with [setPadding] or [border],
+     * that takes effect.
+     */
+    private fun alignTextWithBox() {
+        verticalContentAlignment = VerticalAlignment.CENTER
+        setPadding(TEXT_LEFT_PADDING, 0.0, 0.0, TEXT_BOTTOM_PADDING)
     }
 
     /** JCheckBox(String, boolean)-style: a button with the given text and selection state. */
@@ -57,6 +70,12 @@ open class WCheckBox internal constructor(inspectable: ComPtr) : WToggleButton(i
  * word go to a second line, which is invisible because the height is one line. The assigned width (Width) is rounded the same way, so at least one physical pixel is added.
  */
 internal fun withWrapSlack(size: WSize): WSize = if (size.width > 0.0) WSize(size.width + WRAP_SLACK, size.height) else size
+
+/** The left padding of the CheckBox's text (the left of the template's CheckBoxPadding; DIP). */
+private const val TEXT_LEFT_PADDING = 8.0
+
+/** The bottom padding of the CheckBox's text (DIP). With the text centered vertically, it puts the center of the text 1 DIP above the center of the box. */
+private const val TEXT_BOTTOM_PADDING = 2.0
 
 /** The width [withWrapSlack] adds (DIP). At least one physical pixel at 100% scale or more. */
 private const val WRAP_SLACK = 1.0

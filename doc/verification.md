@@ -500,3 +500,7 @@ Windows 11 x64 + Windows App SDK 2.5.4-experimental (実験版) ランタイム�
   (拡大率 150% で「I agree to the terms of use」の CheckBox が 191.333 DIP)。CheckBox / RadioButton のテンプレートの文字は
   TextWrapping = Wrap なので、その幅を Width にすると最後の単語が 2 行目に回り、1 行分の高さで切れて見えなくなる。Width も同じく
   丸められるので、WCheckBox / WRadioButton は測った幅に 1 DIP (100% 以上で 1 物理ピクセル以上) を足す (WCheckBoxLayoutTest)
+- CheckBox のテンプレートは、四角 (20 × 20 の Grid) を VerticalAlignment = Center に、文字の ContentPresenter を
+  VerticalContentAlignment (既定 Top) と Padding (既定 8,5,0,0) で置く (CheckBox_themeresources.xaml。RadioButton は四角も上)。
+  そのため WLayoutPanel が高さを広げると文字だけが上に残る。WCheckBox は文字も縦の中央に置き、余白を 8,0,0,2 にして、既定の
+  高さ (32) ではテンプレートの既定と同じ見た目 (文字の中心が四角の中心より約 1 DIP 上) にしている (WCheckBoxStretchTest)
