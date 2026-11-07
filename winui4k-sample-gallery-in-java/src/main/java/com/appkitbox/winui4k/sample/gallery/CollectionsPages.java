@@ -64,7 +64,7 @@ final class CollectionsPages {
     static WComponent buildItemsViewPage() {
         WPanel page = GalleryScaffold.buildPage(
                 "ItemsView",
-                "A collection-display control with a swappable layout. Try out WItemsView's various features.");
+                Messages.get("itemsview.description"));
 
         page.add(buildUniformGridItemsViewExample());
         return page;
@@ -72,9 +72,15 @@ final class CollectionsPages {
 
     /** A card grid: UniformGridLayout + ItemContainer + ItemInvoked. */
     private static WComponent buildUniformGridItemsViewExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("itemsview.click.none"));
 
-        List<String> fruits = Arrays.asList("Apple", "Orange", "Grape", "Peach", "Cherry", "Banana");
+        List<String> fruits = Arrays.asList(
+                Messages.get("itemsview.fruit.apple"),
+                Messages.get("itemsview.fruit.mandarin"),
+                Messages.get("itemsview.fruit.grapes"),
+                Messages.get("itemsview.fruit.peach"),
+                Messages.get("itemsview.fruit.cherry"),
+                Messages.get("itemsview.fruit.banana"));
         List<WItemContainer> containers = new ArrayList<>();
         for (String name : fruits) {
             WLabel label = new WLabel(name);
@@ -98,7 +104,7 @@ final class CollectionsPages {
         itemsView.setItemInvokedEnabled(true);
         itemsView.setItems(containers);
         itemsView.addItemInvokedListener(index -> {
-            result.setText("Clicked: " + fruits.get(index) + " (index = " + index + ")");
+            result.setText(Messages.get("itemsview.click.status", fruits.get(index), String.valueOf(index)));
         });
         itemsView.setWidth(520.0);
         itemsView.setHeight(200.0);
@@ -107,7 +113,7 @@ final class CollectionsPages {
         WPanel body = new WPanel(10.0);
         body.add(itemsView);
         body.add(result);
-        return GalleryScaffold.buildExample("A card grid (UniformGridLayout / ItemContainer / ItemInvoked)", body);
+        return GalleryScaffold.buildExample(Messages.get("itemsview.example.cardgrid.title"), body);
     }
 
     // endregion
@@ -117,7 +123,7 @@ final class CollectionsPages {
     /** The ListBox page: lines up demos for trying out WListBox's various features. */
     static WComponent buildListBoxPage() {
         WPanel page = GalleryScaffold.buildPage(
-                "ListBox", "A control for selecting an item from an always-visible list. Try out WListBox's various features.");
+                "ListBox", Messages.get("listbox.description"));
 
         page.add(buildListBoxColorExample());
         page.add(buildListBoxFontExample());
@@ -150,7 +156,7 @@ final class CollectionsPages {
         WPanel body = new WPanel(10.0);
         body.add(listBox);
         body.add(output);
-        return GalleryScaffold.buildExample("A list box with inline items (SelectionChanged)", body);
+        return GalleryScaffold.buildExample(Messages.get("listbox.example.inline.title"), body);
     }
 
     /** Font selection: mirrors example 2 from the official Gallery (fixed height + initial selection + selection changes the font). */
@@ -175,24 +181,26 @@ final class CollectionsPages {
         WPanel body = new WPanel(10.0);
         body.add(listBox);
         body.add(output);
-        return GalleryScaffold.buildExample("A list box with a fixed height (SelectedIndex / FontFamily)", body);
+        return GalleryScaffold.buildExample(Messages.get("listbox.example.font.title"), body);
     }
 
     /** Selection mode: switching selectionMode plus selectAll / selectedItems / scrollIntoView. */
     private static WComponent buildListBoxSelectionModeExample() {
         List<String> items = new ArrayList<>();
         for (int i = 1; i <= 20; i++) {
-            items.add("Option " + i);
+            items.add(Messages.get("listbox.option", String.valueOf(i)));
         }
         WListBox listBox = new WListBox(items);
         listBox.setWidth(240.0);
         listBox.setHeight(200.0);
         listBox.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
-        WLabel selection = new WLabel("Selected: none");
+        WLabel selection = new WLabel(Messages.get("listbox.selection.none"));
         listBox.addListSelectionListener(() -> {
             List<String> selectedItems = listBox.getSelectedItems();
-            selection.setText(selectedItems.isEmpty() ? "Selected: none" : "Selection: " + String.join(", ", selectedItems));
+            selection.setText(selectedItems.isEmpty()
+                    ? Messages.get("listbox.selection.none")
+                    : Messages.get("listbox.selection.status", String.join(", ", selectedItems)));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -203,12 +211,12 @@ final class CollectionsPages {
             });
             buttons.add(button);
         }
-        WButton selectAllButton = new WButton("Select all");
+        WButton selectAllButton = new WButton(Messages.get("listbox.selectall"));
         selectAllButton.addActionListener(() -> {
             listBox.selectAll();
         });
         buttons.add(selectAllButton);
-        WButton scrollButton = new WButton("Scroll to end");
+        WButton scrollButton = new WButton(Messages.get("listbox.scrolltoend"));
         scrollButton.addActionListener(() -> {
             listBox.scrollIntoView(listBox.getItemCount() - 1);
         });
@@ -218,7 +226,7 @@ final class CollectionsPages {
         body.add(buttons);
         body.add(listBox);
         body.add(selection);
-        return GalleryScaffold.buildExample("Selection mode (SelectionMode / SelectAll / SelectedItems / ScrollIntoView)", body);
+        return GalleryScaffold.buildExample(Messages.get("listbox.example.selectionmode.title"), body);
     }
 
     // endregion
@@ -228,7 +236,7 @@ final class CollectionsPages {
     /** The ListView page: lines up demos for trying out WList's various features. */
     static WComponent buildListViewPage() {
         WPanel page = GalleryScaffold.buildPage(
-                "ListView", "A list that lines items up vertically for selection. Try out WList's various features.");
+                "ListView", Messages.get("listview.description"));
 
         page.add(buildSimpleListExample());
         page.add(buildListItemOperationsExample());
@@ -239,55 +247,62 @@ final class CollectionsPages {
 
     /** A basic list: responding to selection changes (SelectionChanged). */
     private static WComponent buildSimpleListExample() {
-        WLabel result = new WLabel("Selected: none");
+        WLabel result = new WLabel(Messages.get("listview.selection.none"));
 
-        WList list = new WList(Arrays.asList("Apple", "Orange", "Grape", "Peach", "Cherry"));
+        WList list = new WList(Arrays.asList(
+                Messages.get("listview.fruit.apple"),
+                Messages.get("listview.fruit.mandarin"),
+                Messages.get("listview.fruit.grapes"),
+                Messages.get("listview.fruit.peach"),
+                Messages.get("listview.fruit.cherry")));
         list.setWidth(240.0);
         list.addListSelectionListener(() -> {
             String item = list.getSelectedItem();
-            result.setText(item == null ? "Selected: none" : "Selected: " + item + " (index = " + list.getSelectedIndex() + ")");
+            result.setText(item == null
+                    ? Messages.get("listview.selection.none")
+                    : Messages.get("listview.selection.status", item, String.valueOf(list.getSelectedIndex())));
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(list);
         row.add(result);
-        return GalleryScaffold.buildExample("A simple list", row);
+        return GalleryScaffold.buildExample(Messages.get("listview.example.simple.title"), row);
     }
 
     /** Adding and removing items: addItem / removeItem / removeAllItems / itemCount. */
     private static WComponent buildListItemOperationsExample() {
         // A fixed-width child gets centered inside a vertical WPanel, so align it left explicitly
-        WList list = new WList(Arrays.asList("Item 1", "Item 2", "Item 3"));
+        WList list = new WList(Arrays.asList(Messages.get("listview.item", "1"), Messages.get("listview.item", "2"), Messages.get("listview.item", "3")));
         list.setWidth(240.0);
         list.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
-        WLabel count = new WLabel("Item count: " + list.getItemCount());
+        WLabel count = new WLabel(Messages.get("listview.itemcount", String.valueOf(list.getItemCount())));
         WTextField input = new WTextField();
-        input.setPlaceholderText("Item name to add");
+        input.setPlaceholderText(Messages.get("listview.newitem.placeholder"));
         input.setWidth(200.0);
 
-        WButton addButton = new WButton("Add");
+        WButton addButton = new WButton(Messages.get("listview.add"));
         addButton.addActionListener(() -> {
             if (!input.getText().isEmpty()) {
                 list.addItem(input.getText());
                 input.setText("");
-                count.setText("Item count: " + list.getItemCount());
+                count.setText(Messages.get("listview.itemcount", String.valueOf(list.getItemCount())));
             }
         });
 
-        WButton removeButton = new WButton("Remove selected");
+        WButton removeButton = new WButton(Messages.get("listview.removeselected"));
         removeButton.addActionListener(() -> {
             int index = list.getSelectedIndex();
             if (index >= 0) {
                 list.removeItem(index);
-                count.setText("Item count: " + list.getItemCount());
+                count.setText(Messages.get("listview.itemcount", String.valueOf(list.getItemCount())));
             }
         });
 
-        WButton clearButton = new WButton("Remove all");
+        WButton clearButton = new WButton(Messages.get("listview.removeall"));
         clearButton.addActionListener(() -> {
             list.removeAllItems();
-            count.setText("Item count: " + list.getItemCount());
+            count.setText(Messages.get("listview.itemcount", String.valueOf(list.getItemCount())));
         });
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
@@ -300,31 +315,31 @@ final class CollectionsPages {
         body.add(buttons);
         body.add(list);
         body.add(count);
-        return GalleryScaffold.buildExample("Adding and removing items", body);
+        return GalleryScaffold.buildExample(Messages.get("listview.example.operations.title"), body);
     }
 
     /** Selection mode: switching selectionMode and selectAll. */
     private static WComponent buildListSelectionModeExample() {
         List<String> items = new ArrayList<>();
         for (int i = 1; i <= 5; i++) {
-            items.add("Option " + i);
+            items.add(Messages.get("listview.option", String.valueOf(i)));
         }
         WList list = new WList(items);
         list.setWidth(240.0);
         list.setHorizontalAlignmentInParent(HorizontalAlignment.LEFT);
 
-        WLabel mode = new WLabel("Selection mode: " + list.getSelectionMode());
+        WLabel mode = new WLabel(Messages.get("listview.selectionmode.status", String.valueOf(list.getSelectionMode())));
 
         WPanel buttons = new WPanel(8.0, Orientation.HORIZONTAL);
         for (ListViewSelectionMode selectionMode : ListViewSelectionMode.values()) {
             WButton button = new WButton(selectionMode.name());
             button.addActionListener(() -> {
                 list.setSelectionMode(selectionMode);
-                mode.setText("Selection mode: " + list.getSelectionMode());
+                mode.setText(Messages.get("listview.selectionmode.status", String.valueOf(list.getSelectionMode())));
             });
             buttons.add(button);
         }
-        WButton selectAllButton = new WButton("Select all");
+        WButton selectAllButton = new WButton(Messages.get("listview.selectall"));
         selectAllButton.addActionListener(() -> {
             list.selectAll();
         });
@@ -334,24 +349,28 @@ final class CollectionsPages {
         body.add(buttons);
         body.add(list);
         body.add(mode);
-        return GalleryScaffold.buildExample("Selection mode (SelectionMode / SelectAll)", body);
+        return GalleryScaffold.buildExample(Messages.get("listview.example.selectionmode.title"), body);
     }
 
     /** ItemClick: enabling isItemClickEnabled and receiving the clicked item. */
     private static WComponent buildListItemClickExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("listview.click.none"));
 
-        WList list = new WList(Arrays.asList("Documents", "Pictures", "Music", "Video"));
+        WList list = new WList(Arrays.asList(
+                Messages.get("listview.folder.documents"),
+                Messages.get("listview.folder.pictures"),
+                Messages.get("listview.folder.music"),
+                Messages.get("listview.folder.videos")));
         list.setWidth(240.0);
         list.setItemClickEnabled(true);
         list.addItemClickListener(item -> {
-            result.setText("Clicked: " + item);
+            result.setText(Messages.get("listview.click.status", item));
         });
 
         WPanel row = new WPanel(16.0, Orientation.HORIZONTAL);
         row.add(list);
         row.add(result);
-        return GalleryScaffold.buildExample("Item clicks (ItemClick)", row);
+        return GalleryScaffold.buildExample(Messages.get("listview.example.itemclick.title"), row);
     }
 
     // endregion
@@ -362,8 +381,7 @@ final class CollectionsPages {
     static WComponent buildTablePage() {
         WPanel page = GalleryScaffold.buildPage(
                 "Table",
-                "A table that displays data in rows and columns. "
-                        + "Like Swing's JTable, try out the various features of WTable, built from TableModel / TableColumnModel / TableRowSorter.");
+                Messages.get("table.description"));
 
         page.add(buildTableBasicExample());
         page.add(buildTableSortFilterExample());
@@ -380,15 +398,20 @@ final class CollectionsPages {
         ProductTableModel() {
             super(
                     Arrays.asList(
-                            Arrays.<Object>asList("Apple", "Fruit", 150, 12, true),
-                            Arrays.<Object>asList("Orange", "Fruit", 80, 30, true),
-                            Arrays.<Object>asList("Grape", "Fruit", 480, 0, false),
-                            Arrays.<Object>asList("Cabbage", "Vegetable", 200, 8, true),
-                            Arrays.<Object>asList("Carrot", "Vegetable", 60, 25, true),
-                            Arrays.<Object>asList("Tomato", "Vegetable", 120, 0, false),
-                            Arrays.<Object>asList("Milk", "Dairy", 230, 15, true),
-                            Arrays.<Object>asList("Cheese", "Dairy", 380, 4, true)),
-                    Arrays.<Object>asList("Product", "Category", "Price", "Stock", "In stock"));
+                            Arrays.<Object>asList(Messages.get("table.product.apple"), Messages.get("table.category.fruit"), 150, 12, true),
+                            Arrays.<Object>asList(Messages.get("table.product.mandarin"), Messages.get("table.category.fruit"), 80, 30, true),
+                            Arrays.<Object>asList(Messages.get("table.product.grapes"), Messages.get("table.category.fruit"), 480, 0, false),
+                            Arrays.<Object>asList(Messages.get("table.product.cabbage"), Messages.get("table.category.vegetable"), 200, 8, true),
+                            Arrays.<Object>asList(Messages.get("table.product.carrot"), Messages.get("table.category.vegetable"), 60, 25, true),
+                            Arrays.<Object>asList(Messages.get("table.product.tomato"), Messages.get("table.category.vegetable"), 120, 0, false),
+                            Arrays.<Object>asList(Messages.get("table.product.milk"), Messages.get("table.category.dairy"), 230, 15, true),
+                            Arrays.<Object>asList(Messages.get("table.product.cheese"), Messages.get("table.category.dairy"), 380, 4, true)),
+                    Arrays.<Object>asList(
+                            Messages.get("table.column.name"),
+                            Messages.get("table.column.category"),
+                            Messages.get("table.column.price"),
+                            Messages.get("table.column.stock"),
+                            Messages.get("table.column.instock")));
         }
 
         @Override
@@ -425,15 +448,15 @@ final class CollectionsPages {
     /** Basics: displaying a TableModel and selecting rows (SelectionMode / Select / SelectionChanged / view-model conversion). */
     private static WComponent buildTableBasicExample() {
         WTable table = buildProductTable(new ProductTableModel());
-        WLabel result = new WLabel("Selected: none");
+        WLabel result = new WLabel(Messages.get("table.basic.selection.none"));
         table.addRowSelectionListener(() -> {
             int row = table.getSelectedRow();
             if (row < 0) {
-                result.setText("Selection: none");
+                result.setText(Messages.get("table.basic.selection.none"));
             } else {
                 int modelRow = table.convertRowIndexToModel(row);
-                result.setText("Selection: " + table.getModel().getValueAt(modelRow, 0)
-                        + " (view row = " + row + " / model row = " + modelRow + ")");
+                result.setText(Messages.get("table.basic.selection.status", String.valueOf(table.getModel().getValueAt(modelRow, 0)),
+                        String.valueOf(row), String.valueOf(modelRow)));
             }
         });
 
@@ -441,21 +464,21 @@ final class CollectionsPages {
         body.add(table);
         body.add(result);
 
-        WComboBox selectionMode = new WComboBox(Arrays.asList("SINGLE (select one row)", "NONE (no selection)"));
+        WComboBox selectionMode = new WComboBox(Arrays.asList(Messages.get("table.basic.mode.single"), Messages.get("table.basic.mode.none")));
         selectionMode.setSelectedIndex(0);
         selectionMode.addListSelectionListener(() -> table.setSelectionMode(
                 selectionMode.getSelectedIndex() == 1 ? TableSelectionMode.NONE : TableSelectionMode.SINGLE));
-        WButton selectThird = new WButton("Select the third row");
+        WButton selectThird = new WButton(Messages.get("table.basic.selectthird"));
         selectThird.addActionListener(() -> table.selectRow(2));
-        WButton clear = new WButton("Clear selection");
+        WButton clear = new WButton(Messages.get("table.basic.clearselection"));
         clear.addActionListener(table::clearSelection);
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("Selection mode (SelectionMode)"));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("table.basic.selectionmode.label")));
         options.add(selectionMode);
         options.add(selectThird);
         options.add(clear);
-        return GalleryScaffold.buildExample("Basics (TableModel / row selection / SelectionChanged)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.basic.title"), body, options);
     }
 
     /** Sorting and filtering: TableRowSorter (header click / SortKeys / Comparator / RowFilter) and Sorting / Sorted. */
@@ -467,24 +490,24 @@ final class CollectionsPages {
         sorter.setComparator(0, Comparator.comparingInt(String::length).thenComparing(Comparator.<String>naturalOrder()));
         table.setRowSorter(sorter);
 
-        WLabel status = new WLabel("Click a column header to sort.");
+        WLabel status = new WLabel(Messages.get("table.sort.hint"));
         status.setTextWrapping(TextWrapping.WRAP);
         boolean[] cancelSorting = {false};
         table.addSortingListener((event) -> {
             event.setCanceled(cancelSorting[0]);
             status.setText(cancelSorting[0]
-                    ? "Canceled sorting by \"" + table.getColumnName(event.getColumn()) + "\" (Cancel in Sorting)"
-                    : "Sorting: " + table.getColumnName(event.getColumn()) + " → " + event.getSortOrder());
+                    ? Messages.get("table.sort.canceled", table.getColumnName(event.getColumn()))
+                    : Messages.get("table.sort.sorting", table.getColumnName(event.getColumn()), String.valueOf(event.getSortOrder())));
         });
-        table.addSortedListener((event) -> status.setText("Sorted: " + table.getColumnName(event.getColumn())
-                + " (" + event.getSortOrder() + ") / showing " + table.getRowCount() + " rows"));
+        table.addSortedListener((event) -> status.setText(Messages.get("table.sort.sorted", table.getColumnName(event.getColumn()),
+                String.valueOf(event.getSortOrder()), String.valueOf(table.getRowCount()))));
 
         WTextField filterText = new WTextField();
-        filterText.setPlaceholderText("Filter by product (regular expression)");
+        filterText.setPlaceholderText(Messages.get("table.sort.filter.placeholder"));
         filterText.setWidth(240.0);
         filterText.addTextChangedListener((text) -> {
             sorter.setRowFilter(text.trim().isEmpty() ? null : RowFilter.regexFilter(text, 0));
-            status.setText("Filtered: showing " + table.getRowCount() + " of " + model.getRowCount() + " rows");
+            status.setText(Messages.get("table.sort.filter.status", String.valueOf(table.getRowCount()), String.valueOf(model.getRowCount())));
         });
 
         WPanel body = new WPanel(8.0);
@@ -492,15 +515,15 @@ final class CollectionsPages {
         body.add(table);
         body.add(status);
 
-        WButton byPrice = new WButton("Highest price first");
+        WButton byPrice = new WButton(Messages.get("table.sort.byprice"));
         byPrice.addActionListener(() -> sorter.setSortKeys(
                 Collections.singletonList(new RowSorter.SortKey(2, SortOrder.DESCENDING))));
-        WButton clearSort = new WButton("Clear sort");
+        WButton clearSort = new WButton(Messages.get("table.sort.clear"));
         clearSort.addActionListener(() -> sorter.setSortKeys(null));
-        WCheckBox inStock = optionCheckBox("Only rows in stock", false,
+        WCheckBox inStock = optionCheckBox(Messages.get("table.sort.instockonly"), false,
                 (only) -> sorter.setRowFilter(only ? RowFilter.regexFilter("true", 4) : null));
-        WCheckBox cancel = optionCheckBox("Cancel sorting (Sorting)", false, (value) -> cancelSorting[0] = value);
-        WCheckBox sortable = optionCheckBox("Category column is sortable", true, (value) -> sorter.setSortable(1, value));
+        WCheckBox cancel = optionCheckBox(Messages.get("table.sort.cancel"), false, (value) -> cancelSorting[0] = value);
+        WCheckBox sortable = optionCheckBox(Messages.get("table.sort.categorysortable"), true, (value) -> sorter.setSortable(1, value));
 
         WPanel options = new WPanel(8.0);
         options.add(GalleryScaffold.optionsLabel("TableRowSorter"));
@@ -509,18 +532,19 @@ final class CollectionsPages {
         options.add(inStock);
         options.add(sortable);
         options.add(cancel);
-        return GalleryScaffold.buildExample("Sorting and filtering (TableRowSorter / RowFilter / Sorting / Sorted)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.sortfilter.title"), body, options);
     }
 
     /** Editing: TableModel.isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding / writing back to the model. */
     private static WComponent buildTableEditingExample() {
         DefaultTableModel model = new DefaultTableModel(
                 Arrays.asList(
-                        Arrays.<Object>asList(1, "Hanako Sato", "Development", 34, true),
-                        Arrays.<Object>asList(2, "Ichiro Suzuki", "Sales", 41, true),
-                        Arrays.<Object>asList(3, "Misaki Takahashi", "Design", 28, false),
-                        Arrays.<Object>asList(4, "Ken Tanaka", "Development", 45, true)),
-                Arrays.<Object>asList("ID", "Name", "Department", "Age", "Employed")) {
+                        Arrays.<Object>asList(1, Messages.get("table.edit.person1"), Messages.get("table.edit.dept.development"), 34, true),
+                        Arrays.<Object>asList(2, Messages.get("table.edit.person2"), Messages.get("table.edit.dept.sales"), 41, true),
+                        Arrays.<Object>asList(3, Messages.get("table.edit.person3"), Messages.get("table.edit.dept.design"), 28, false),
+                        Arrays.<Object>asList(4, Messages.get("table.edit.person4"), Messages.get("table.edit.dept.development"), 45, true)),
+                Arrays.<Object>asList("ID", Messages.get("table.edit.column.name"), Messages.get("table.edit.column.department"),
+                        Messages.get("table.edit.column.age"), Messages.get("table.edit.column.active"))) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0 || columnIndex == 3) {
@@ -539,25 +563,27 @@ final class CollectionsPages {
         table.setHeight(220.0);
         // Edit the department with a combo box and the age with a number box (the same idea as Swing's DefaultCellEditor)
         table.getColumnModel().getColumn(2).setCellEditor(
-                new DefaultCellEditor(new WComboBox(Arrays.asList("Development", "Sales", "Design", "Admin"))));
+                new DefaultCellEditor(new WComboBox(Arrays.asList(Messages.get("table.edit.dept.development"), Messages.get("table.edit.dept.sales"),
+                        Messages.get("table.edit.dept.design"), Messages.get("table.edit.dept.admin")))));
         WSpinner ageSpinner = new WSpinner();
         ageSpinner.setMinimum(18.0);
         ageSpinner.setMaximum(70.0);
         ageSpinner.setSpinButtonPlacementMode(SpinButtonPlacementMode.INLINE);
         table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(ageSpinner));
 
-        WLabel log = new WLabel("Double-click or press F2 to start editing, Enter to commit, and Esc to cancel.");
+        WLabel log = new WLabel(Messages.get("table.edit.hint"));
         log.setTextWrapping(TextWrapping.WRAP);
         table.addBeginningEditListener((event) -> log.setText(
-                "Edit started: " + table.getColumnName(event.getColumn()) + " (row " + (event.getModelRow() + 1) + ")"));
+                Messages.get("table.edit.beginning", table.getColumnName(event.getColumn()), String.valueOf(event.getModelRow() + 1))));
         table.addCellEditEndingListener((event) -> log.setText(
-                "Edit ended: " + table.getColumnName(event.getColumn()) + " → " + event.getAction()));
+                Messages.get("table.edit.ending", table.getColumnName(event.getColumn()), String.valueOf(event.getAction()))));
         // The committed value is written back via TableModel.setValueAt, converted to the column type (getColumnClass)
         model.addTableModelListener((event) -> {
             if (event.getType() == TableModelEvent.UPDATE && event.getFirstRow() == event.getLastRow() && event.getColumn() >= 0) {
                 Object value = model.getValueAt(event.getFirstRow(), event.getColumn());
-                log.setText("Model updated: " + model.getColumnName(event.getColumn()) + " (row " + (event.getFirstRow() + 1)
-                        + ") = " + value + " (" + (value == null ? "null" : value.getClass().getSimpleName()) + ")");
+                log.setText(Messages.get("table.edit.modelupdated", model.getColumnName(event.getColumn()),
+                        String.valueOf(event.getFirstRow() + 1), String.valueOf(value),
+                        value == null ? "null" : value.getClass().getSimpleName()));
             }
         });
 
@@ -565,21 +591,21 @@ final class CollectionsPages {
         body.add(table);
         body.add(log);
 
-        WCheckBox readOnly = optionCheckBox("Make the whole table read-only (IsReadOnly)", false, table::setReadOnly);
-        WCheckBox ageEditable = optionCheckBox("Age column is editable (column IsReadOnly)", true,
+        WCheckBox readOnly = optionCheckBox(Messages.get("table.edit.readonly"), false, table::setReadOnly);
+        WCheckBox ageEditable = optionCheckBox(Messages.get("table.edit.ageeditable"), true,
                 (value) -> table.getColumnModel().getColumn(3).setEditable(value));
-        WButton commit = new WButton("Commit edit (CommitEdit)");
+        WButton commit = new WButton(Messages.get("table.edit.commit"));
         commit.addActionListener(() -> log.setText("CommitEdit → " + table.stopCellEditing()));
-        WButton cancel = new WButton("Cancel edit (CancelEdit)");
+        WButton cancel = new WButton(Messages.get("table.edit.cancel"));
         cancel.addActionListener(() -> log.setText("CancelEdit → " + table.cancelCellEditing()));
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("Editing"));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("table.edit.label")));
         options.add(readOnly);
         options.add(ageEditable);
         options.add(commit);
         options.add(cancel);
-        return GalleryScaffold.buildExample("Editing (isCellEditable / DefaultCellEditor / BeginningEdit / CellEditEnding)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.editing.title"), body, options);
     }
 
     /** Grouping: groupBy / clearGrouping / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate. */
@@ -587,7 +613,8 @@ final class CollectionsPages {
         WTable table = buildProductTable(new ProductTableModel());
         table.groupBy(1); // Group by category
 
-        WComboBox groupBy = new WComboBox(Arrays.asList("Category", "In stock", "Price range (300 yen or more / less)", "No grouping"));
+        WComboBox groupBy = new WComboBox(Arrays.asList(Messages.get("table.group.category"), Messages.get("table.group.instock"),
+                Messages.get("table.group.pricerange"), Messages.get("table.group.none")));
         groupBy.setSelectedIndex(0);
         groupBy.addListSelectionListener(() -> {
             switch (groupBy.getSelectedIndex()) {
@@ -598,43 +625,46 @@ final class CollectionsPages {
                     table.groupBy(4);
                     break;
                 case 2:
-                    table.groupBy((model, row) -> ((Integer) model.getValueAt(row, 2)) >= 300 ? "300 yen or more" : "Under 300 yen");
+                    table.groupBy((model, row) -> ((Integer) model.getValueAt(row, 2)) >= 300 
+                            ? Messages.get("table.group.over300")
+                            : Messages.get("table.group.under300"));
                     break;
                 default:
                     table.clearGrouping();
                     break;
             }
         });
-        WButton expand = new WButton("Expand all");
+        WButton expand = new WButton(Messages.get("table.group.expandall"));
         expand.addActionListener(table::expandAllGroups);
-        WButton collapse = new WButton("Collapse all");
+        WButton collapse = new WButton(Messages.get("table.group.collapseall"));
         collapse.addActionListener(table::collapseAllGroups);
-        WCheckBox customHeader = optionCheckBox("Show headers with a template", false, (custom) -> table.setGroupHeaderTemplate(custom
+        WCheckBox customHeader = optionCheckBox(Messages.get("table.group.customheader"), false, (custom) -> table.setGroupHeaderTemplate(custom
                 ? "<StackPanel Orientation=\"Horizontal\" Spacing=\"8\" Padding=\"8,4\">"
                         + "<TextBlock Text=\"{Binding KeyText}\" FontWeight=\"SemiBold\" Foreground=\"{ThemeResource AccentTextFillColorPrimaryBrush}\" />"
                         + "<TextBlock Text=\"{Binding ItemCount}\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />"
-                        + "<TextBlock Text=\"items\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />"
+                        + "<TextBlock Text=\"" + Messages.get("table.group.items") + "\" Foreground=\"{ThemeResource TextFillColorSecondaryBrush}\" />"
                         + "</StackPanel>"
                 : null));
 
         WPanel options = new WPanel(8.0);
-        options.add(GalleryScaffold.optionsLabel("Key to group by (GroupBy)"));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("table.group.key.label")));
         options.add(groupBy);
         options.add(expand);
         options.add(collapse);
         options.add(customHeader);
-        return GalleryScaffold.buildExample("Grouping (GroupBy / ExpandAllGroups / CollapseAllGroups / GroupHeaderTemplate)", table, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.grouping.title"), table, options);
     }
 
     /** Cell display: TableCellRenderer / XAML cell templates / frozen columns / header and cell tooltips. */
     private static WComponent buildTableCellsExample() {
         DefaultTableModel model = new DefaultTableModel(
                 Arrays.asList(
-                        Arrays.<Object>asList("Review the design document", "In progress", 60, "Check the spec differences and sort out the review comments."),
-                        Arrays.<Object>asList("Automate the tests", "Done", 100, "Add the E2E tests to CI and run them every night."),
-                        Arrays.<Object>asList("Translate the documentation", "Not started", 0, "Translate the README and the API reference into English."),
-                        Arrays.<Object>asList("Measure performance", "In progress", 35, "Measure display speed with a large data set (100,000 rows).")),
-                Arrays.<Object>asList("Task", "Status", "Progress (%)", "Notes")) {
+                        Arrays.<Object>asList(Messages.get("table.cells.task1"), Messages.get("table.cells.state.inprogress"), 60, Messages.get("table.cells.memo1")),
+                        Arrays.<Object>asList(Messages.get("table.cells.task2"), Messages.get("table.cells.state.done"), 100, Messages.get("table.cells.memo2")),
+                        Arrays.<Object>asList(Messages.get("table.cells.task3"), Messages.get("table.cells.state.notstarted"), 0, Messages.get("table.cells.memo3")),
+                        Arrays.<Object>asList(Messages.get("table.cells.task4"), Messages.get("table.cells.state.inprogress"), 35, Messages.get("table.cells.memo4"))),
+                Arrays.<Object>asList(Messages.get("table.cells.column.task"), Messages.get("table.cells.column.state"),
+                        Messages.get("table.cells.column.progress"), Messages.get("table.cells.column.memo"))) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return columnIndex == 2 ? Integer.class : String.class;
@@ -647,14 +677,14 @@ final class CollectionsPages {
         TableColumn task = table.getColumnModel().getColumn(0);
         task.setFrozen(true); // The task name stays visible even when scrolling horizontally
         task.setPreferredWidth(180.0);
-        task.setHeaderToolTip("This column is frozen at the left edge (FrozenEdge = Leading)");
+        task.setHeaderToolTip(Messages.get("table.cells.task.tooltip"));
 
         // Show the status as a colored label with a XAML template ({Binding} is the cell value)
         TableColumn state = table.getColumnModel().getColumn(1);
         state.setCellTemplate("<Border Background=\"{ThemeResource AccentFillColorDefaultBrush}\" CornerRadius=\"10\" "
                 + "Padding=\"10,2\" Margin=\"8,0\" HorizontalAlignment=\"Left\">"
                 + "<TextBlock Text=\"{Binding}\" Foreground=\"{ThemeResource TextOnAccentFillColorPrimaryBrush}\" /></Border>");
-        state.setHeaderToolTip("Displayed with a XAML DataTemplate (TableViewTemplateColumn)");
+        state.setHeaderToolTip(Messages.get("table.cells.state.tooltip"));
 
         // Show the progress with a Java component (a progress bar) via a renderer
         TableColumn progress = table.getColumnModel().getColumn(2);
@@ -665,7 +695,7 @@ final class CollectionsPages {
             bar.setVerticalAlignmentInParent(VerticalAlignment.CENTER);
             return bar;
         });
-        progress.setHeaderToolTip("Displays a WProgressBar via TableCellRenderer (GenerateElementCore)");
+        progress.setHeaderToolTip(Messages.get("table.cells.progress.tooltip"));
 
         // The notes are long, so show the full text in a cell tooltip
         TableColumn memo = table.getColumnModel().getColumn(3);
@@ -674,28 +704,28 @@ final class CollectionsPages {
 
         WPanel body = new WPanel(8.0);
         body.add(table);
-        body.add(GalleryScaffold.optionsLabel("Hover over a column header or a notes cell to show a tooltip. Columns beyond the table's width can be scrolled horizontally."));
-        return GalleryScaffold.buildExample("Cell display (TableCellRenderer / cell templates / frozen columns / tooltips)", body);
+        body.add(GalleryScaffold.optionsLabel(Messages.get("table.cells.note")));
+        return GalleryScaffold.buildExample(Messages.get("table.example.cells.title"), body);
     }
 
     /** Appearance: grid lines / header / density / row background / stripes / display when there are no rows. */
     private static WComponent buildTableAppearanceExample() {
         ProductTableModel model = new ProductTableModel();
         WTable table = buildProductTable(model);
-        table.setEmptyText("No products to show");
+        table.setEmptyText(Messages.get("table.appearance.empty"));
         List<List<Object>> removedRows = new ArrayList<>();
 
-        WCheckBox horizontal = optionCheckBox("Horizontal grid lines", table.getShowHorizontalLines(), table::setShowHorizontalLines);
-        WCheckBox vertical = optionCheckBox("Vertical grid lines", table.getShowVerticalLines(), table::setShowVerticalLines);
-        WCheckBox header = optionCheckBox("Show column headers", table.isHeaderVisible(), table::setHeaderVisible);
-        WCheckBox striped = optionCheckBox("Stripes (AlternatingRowBackground)", false,
+        WCheckBox horizontal = optionCheckBox(Messages.get("table.appearance.horizontal"), table.getShowHorizontalLines(), table::setShowHorizontalLines);
+        WCheckBox vertical = optionCheckBox(Messages.get("table.appearance.vertical"), table.getShowVerticalLines(), table::setShowVerticalLines);
+        WCheckBox header = optionCheckBox(Messages.get("table.appearance.header"), table.isHeaderVisible(), table::setHeaderVisible);
+        WCheckBox striped = optionCheckBox(Messages.get("table.appearance.striped"), false,
                 (value) -> table.setAlternatingRowBackground(value ? new WColor(0x20, 0x80, 0x80, 0x80) : null));
-        WCheckBox resizable = optionCheckBox("Resize columns by dragging (CanUserResizeColumns)", table.getCanUserResizeColumns(),
+        WCheckBox resizable = optionCheckBox(Messages.get("table.appearance.resizable"), table.getCanUserResizeColumns(),
                 table::setCanUserResizeColumns);
         WComboBox density = new WComboBox(Arrays.asList("COMPACT", "STANDARD", "COMFORTABLE"));
         density.setSelectedIndex(table.getDensity().ordinal());
         density.addListSelectionListener(() -> table.setDensity(TableDensity.values()[density.getSelectedIndex()]));
-        WButton clearRows = new WButton("Remove all rows (EmptyTemplate)");
+        WButton clearRows = new WButton(Messages.get("table.appearance.clearrows"));
         clearRows.addActionListener(() -> {
             while (model.getRowCount() > 0) {
                 List<Object> row = new ArrayList<>();
@@ -706,7 +736,7 @@ final class CollectionsPages {
                 model.removeRow(0);
             }
         });
-        WButton restoreRows = new WButton("Restore rows");
+        WButton restoreRows = new WButton(Messages.get("table.appearance.restorerows"));
         restoreRows.addActionListener(() -> {
             for (List<Object> row : removedRows) {
                 model.addRow(row);
@@ -720,11 +750,11 @@ final class CollectionsPages {
         options.add(header);
         options.add(striped);
         options.add(resizable);
-        options.add(GalleryScaffold.optionsLabel("Density (Density)"));
+        options.add(GalleryScaffold.optionsLabel(Messages.get("table.appearance.density.label")));
         options.add(density);
         options.add(clearRows);
         options.add(restoreRows);
-        return GalleryScaffold.buildExample("Appearance (GridLinesVisibility / HeadersVisibility / Density / stripes / empty display)", table, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.appearance.title"), table, options);
     }
 
     /** Column operations: TableColumnModel (move / show and hide / add and remove) and column widths. */
@@ -736,16 +766,16 @@ final class CollectionsPages {
             for (int column = 0; column < table.getColumnCount(); column++) {
                 names.add(table.getColumnName(column));
             }
-            status.setText("Column order: " + String.join(" / ", names));
+            status.setText(Messages.get("table.columns.order", String.join(" / ", names)));
         };
         updateStatus.run();
 
-        WButton moveLast = new WButton("Move the first column to the end");
+        WButton moveLast = new WButton(Messages.get("table.columns.movelast"));
         moveLast.addActionListener(() -> {
             table.moveColumn(0, table.getColumnCount() - 1);
             updateStatus.run();
         });
-        WCheckBox hideCategory = optionCheckBox("Show the category column", true, (visible) -> {
+        WCheckBox hideCategory = optionCheckBox(Messages.get("table.columns.showcategory"), true, (visible) -> {
             for (TableColumn column : table.getColumnModel().getColumns()) {
                 if (column.getModelIndex() == 1) {
                     column.setVisible(visible);
@@ -755,13 +785,13 @@ final class CollectionsPages {
         TableColumn[] taxColumn = {null};
         DefaultTableCellRenderer rightAligned = new DefaultTableCellRenderer();
         rightAligned.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        WButton addTax = new WButton("Add / remove the price-with-tax column");
+        WButton addTax = new WButton(Messages.get("table.columns.addtax"));
         addTax.addActionListener(() -> {
             if (taxColumn[0] == null) {
                 TableColumn column = new TableColumn(2);
-                column.setHeaderValue("Price with tax");
+                column.setHeaderValue(Messages.get("table.columns.tax.header"));
                 column.setCellRenderer((view, value, isSelected, hasFocus, row, col) -> rightAligned.getTableCellRendererComponent(
-                        view, (int) (((Integer) value) * 1.08) + " yen", isSelected, hasFocus, row, col));
+                        view, Messages.get("table.columns.tax.value", String.valueOf((int) (((Integer) value) * 1.08))), isSelected, hasFocus, row, col));
                 table.addColumn(column);
                 taxColumn[0] = column;
             } else {
@@ -770,7 +800,7 @@ final class CollectionsPages {
             }
             updateStatus.run();
         });
-        WButton widen = new WButton("Set the product column width to 200");
+        WButton widen = new WButton(Messages.get("table.columns.widen"));
         widen.addActionListener(() -> {
             for (TableColumn column : table.getColumnModel().getColumns()) {
                 if (column.getModelIndex() == 0) {
@@ -789,7 +819,7 @@ final class CollectionsPages {
         options.add(hideCategory);
         options.add(addTax);
         options.add(widen);
-        return GalleryScaffold.buildExample("Column operations (TableColumnModel / TableColumn)", body, options);
+        return GalleryScaffold.buildExample(Messages.get("table.example.columns.title"), body, options);
     }
 
     // endregion
@@ -799,7 +829,7 @@ final class CollectionsPages {
     /** The Tree page: lines up demos for trying out WTree's various features. */
     static WComponent buildTreePage() {
         WPanel page = GalleryScaffold.buildPage(
-                "Tree", "A tree whose hierarchical data can be expanded and collapsed. Try out WTree's various features.");
+                "Tree", Messages.get("tree.description"));
 
         page.add(buildSimpleTreeExample());
         page.add(buildTreeMultiSelectExample());
@@ -835,7 +865,7 @@ final class CollectionsPages {
 
     /** Basic tree: drag-to-reorder and responding to node clicks (ItemInvoked). */
     private static WComponent buildSimpleTreeExample() {
-        WLabel result = new WLabel("Clicked: none");
+        WLabel result = new WLabel(Messages.get("tree.click.none"));
         result.setTextWrapping(TextWrapping.WRAP);
 
         WTree tree = buildSampleTree();
@@ -843,14 +873,14 @@ final class CollectionsPages {
         tree.setCanReorderItems(true);
         tree.addItemInvokedListener(node -> {
             result.setText(node == null
-                    ? "Clicked: none"
-                    : "Click: " + node.getText() + " (depth = " + node.getDepth() + ")");
+                    ? Messages.get("tree.click.none")
+                    : Messages.get("tree.click.status", node.getText(), String.valueOf(node.getDepth())));
         });
 
         WPanel body = new WPanel(8.0);
         body.add(tree);
         body.add(result);
-        return GalleryScaffold.buildExample("Simple tree (drag & drop reordering / ItemInvoked)", body);
+        return GalleryScaffold.buildExample(Messages.get("tree.example.simple.title"), body);
     }
 
     /** Multiple selection: checkboxes from SelectionMode = MULTIPLE, plus SelectAll / SelectedNodes. */
@@ -858,9 +888,9 @@ final class CollectionsPages {
         WTree tree = buildSampleTree();
         tree.setSelectionMode(TreeViewSelectionMode.MULTIPLE);
 
-        WLabel result = new WLabel("Selected: none");
+        WLabel result = new WLabel(Messages.get("tree.selected.none"));
         result.setTextWrapping(TextWrapping.WRAP);
-        WButton showButton = new WButton("Show selection");
+        WButton showButton = new WButton(Messages.get("tree.showselection"));
         showButton.addActionListener(() -> {
             StringBuilder names = new StringBuilder();
             for (WTreeNode node : tree.getSelectedNodes()) {
@@ -869,9 +899,9 @@ final class CollectionsPages {
                 }
                 names.append(node.getText());
             }
-            result.setText(names.length() == 0 ? "Selected: none" : "Selected: " + names);
+            result.setText(names.length() == 0 ? Messages.get("tree.selected.none") : Messages.get("tree.selected.status", names.toString()));
         });
-        WButton selectAllButton = new WButton("Select all");
+        WButton selectAllButton = new WButton(Messages.get("tree.selectall"));
         selectAllButton.addActionListener(() -> {
             tree.selectAll();
         });
@@ -884,29 +914,29 @@ final class CollectionsPages {
         body.add(tree);
         body.add(buttons);
         body.add(result);
-        return GalleryScaffold.buildExample("Multiple selection (SelectionMode / SelectAll / SelectedNodes)", body);
+        return GalleryScaffold.buildExample(Messages.get("tree.example.multiselect.title"), body);
     }
 
     /** Expand and collapse: the Expand / Collapse methods and the Expanding / Collapsed events. */
     private static WComponent buildTreeExpandCollapseExample() {
-        WLabel log = new WLabel("Event: none");
+        WLabel log = new WLabel(Messages.get("tree.event.none"));
         log.setTextWrapping(TextWrapping.WRAP);
 
         WTree tree = buildSampleTree();
         tree.addExpandingListener(node -> {
-            log.setText("Event: Expanding (" + (node != null ? node.getText() : null) + ")");
+            log.setText(Messages.get("tree.event.expanding", String.valueOf(node != null ? node.getText() : null)));
         });
         tree.addCollapsedListener(node -> {
-            log.setText("Event: Collapsed (" + (node != null ? node.getText() : null) + ")");
+            log.setText(Messages.get("tree.event.collapsed", String.valueOf(node != null ? node.getText() : null)));
         });
 
-        WButton expandButton = new WButton("Expand all");
+        WButton expandButton = new WButton(Messages.get("tree.expandall"));
         expandButton.addActionListener(() -> {
             for (WTreeNode root : tree.getRootNodes()) {
                 tree.expand(root);
             }
         });
-        WButton collapseButton = new WButton("Collapse all");
+        WButton collapseButton = new WButton(Messages.get("tree.collapseall"));
         collapseButton.addActionListener(() -> {
             for (WTreeNode root : tree.getRootNodes()) {
                 tree.collapse(root);
@@ -921,7 +951,7 @@ final class CollectionsPages {
         body.add(buttons);
         body.add(tree);
         body.add(log);
-        return GalleryScaffold.buildExample("Expand and collapse (Expand / Collapse / Expanding / Collapsed)", body);
+        return GalleryScaffold.buildExample(Messages.get("tree.example.expandcollapse.title"), body);
     }
 
     // endregion
